@@ -1,1 +1,22 @@
-//! knit-bind: Language bindings and FFI layer.
+//! knit-bind: Output sinks for serializing Arrow `RecordBatch`es to various formats.
+//!
+//! Supported formats: Parquet, JSON, JSONL, CSV, and Arrow IPC (Feather v2).
+//!
+//! # Usage
+//!
+//! Use [`factory::create_sink`] to obtain a [`traits::Sink`] for a given
+//! [`factory::OutputFormat`], then call [`Sink::write_batch`](traits::Sink::write_batch)
+//! for each batch and [`Sink::finish`](traits::Sink::finish) to finalize.
+
+pub mod csv;
+pub mod error;
+pub mod factory;
+pub mod ipc;
+pub mod json;
+pub mod parquet;
+pub mod traits;
+
+pub use error::BindError;
+pub use factory::{create_sink, OutputFormat, SinkConfig};
+pub use parquet::Compression;
+pub use traits::{Sink, SinkStats};
