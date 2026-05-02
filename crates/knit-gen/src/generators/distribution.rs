@@ -84,6 +84,12 @@ impl FieldGenerator for DistributionGenerator {
             DistributionKind::Uniform => {
                 let lo = self.param("min", 0.0);
                 let hi = self.param("max", 1.0);
+                let (lo, hi) = if lo >= hi {
+                    tracing::warn!(lo, hi, "Uniform min >= max, swapping to fallback (0,1)");
+                    (0.0, 1.0)
+                } else {
+                    (lo, hi)
+                };
                 let dist = rand::distributions::Uniform::new(lo, hi);
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 Arc::new(Float64Array::from(values))
@@ -263,8 +269,11 @@ impl FieldGenerator for DistributionGenerator {
                     tracing::warn!(n, s, "invalid Zipf params, falling back to Zipf(100,1)");
                     rand_distr::Zipf::new(100, 1.0).unwrap()
                 });
-                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                let values: Vec<i64> = (0..count).map(|_| {
+                    let v: f64 = dist.sample(rng);
+                    self.clamp(v) as i64
+                }).collect();
+                Arc::new(Int64Array::from(values))
             }
         }
     }
@@ -274,7 +283,8 @@ impl FieldGenerator for DistributionGenerator {
             DistributionKind::Poisson
             | DistributionKind::Bernoulli
             | DistributionKind::Binomial
-            | DistributionKind::Geometric => DataType::Int64,
+            | DistributionKind::Geometric
+            | DistributionKind::Zipf => DataType::Int64,
             _ => DataType::Float64,
         }
     }
