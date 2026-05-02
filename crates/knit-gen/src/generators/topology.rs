@@ -71,22 +71,26 @@ impl FieldGenerator for BarabasiAlbertGenerator {
             targets[i] = if i == 0 { 0 } else { (i - 1) as i64 };
         }
 
+        // If m=1, seed clique produces no edges. Seed stubs with node 0.
+        if stubs.is_empty() && m > 0 {
+            stubs.push(0);
+            degree[0] += 1;
+        }
+
         // Preferential attachment for remaining nodes.
         for v in m..count {
             let mut added = 0;
             let mut first_target = 0i64;
-            // Try up to m edges, avoiding duplicates within this node's batch.
             let mut attempts = 0;
-            let mut connected = vec![false; count];
-            connected[v] = true; // no self-loops
+            let mut connected = Vec::new(); // track connected targets for this node
 
             while added < m && attempts < m * 10 {
                 attempts += 1;
                 if stubs.is_empty() {
                     // Fallback: uniform random.
                     let t = Uniform::new(0, v).sample(rng);
-                    if !connected[t] {
-                        connected[t] = true;
+                    if !connected.contains(&t) {
+                        connected.push(t);
                         degree[v] += 1;
                         degree[t] += 1;
                         stubs.push(v);
@@ -99,8 +103,8 @@ impl FieldGenerator for BarabasiAlbertGenerator {
                 } else {
                     let idx = Uniform::new(0, stubs.len()).sample(rng);
                     let t = stubs[idx];
-                    if !connected[t] {
-                        connected[t] = true;
+                    if !connected.contains(&t) && t != v {
+                        connected.push(t);
                         degree[v] += 1;
                         degree[t] += 1;
                         stubs.push(v);

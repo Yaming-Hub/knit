@@ -145,7 +145,7 @@ impl FieldGenerator for RelativeGenerator {
             .iter()
             .map(|&b| {
                 let offset = dist.sample(rng).max(0.0);
-                b + (offset * factor as f64) as i64
+                b.saturating_add((offset * factor as f64) as i64)
             })
             .collect();
 
@@ -227,8 +227,8 @@ impl FieldGenerator for TimeSeriesGenerator {
 
         let values: Vec<i64> = (0..count)
             .map(|i| {
-                let idx = base_offset + i as i64;
-                let base_t = self.start + idx * self.interval_ms;
+                let idx = base_offset.saturating_add(i as i64);
+                let base_t = self.start.saturating_add(idx.saturating_mul(self.interval_ms));
                 let trend = (self.trend_slope * idx as f64) as i64;
 
                 let seasonal: f64 = self
@@ -247,7 +247,7 @@ impl FieldGenerator for TimeSeriesGenerator {
                     0
                 };
 
-                base_t + trend + seasonal as i64 + noise
+                base_t.saturating_add(trend).saturating_add(seasonal as i64).saturating_add(noise)
             })
             .collect();
 
@@ -321,9 +321,7 @@ impl FieldGenerator for BusinessHoursGenerator {
             if !self.weekdays_only || wd < 5 {
                 skip -= 1;
             }
-            if skip >= 0 {
-                day_cursor += chrono::Duration::days(1);
-            }
+            day_cursor += chrono::Duration::days(1);
         }
 
         let mut generated = 0;
