@@ -111,7 +111,8 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     let n = clean.len();
 
     let mean = clean.iter().sum::<f64>() / n as f64;
-    let var = clean.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / (n - 1) as f64;
+    // MLE variance uses /n (not /(n-1) which is sample variance)
+    let var = clean.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
     let std_dev = var.sqrt();
     let min_val = clean[0];
     let max_val = clean[n - 1];
@@ -143,7 +144,8 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     if min_val > 0.0 {
         let log_vals: Vec<f64> = clean.iter().map(|v| v.ln()).collect();
         let mu = log_vals.iter().sum::<f64>() / n as f64;
-        let sigma2 = log_vals.iter().map(|v| (v - mu).powi(2)).sum::<f64>() / (n - 1) as f64;
+        // MLE variance uses /n
+        let sigma2 = log_vals.iter().map(|v| (v - mu).powi(2)).sum::<f64>() / n as f64;
         let sigma = sigma2.sqrt();
         if sigma > 0.0 {
             if let Some(d) = LogNormal::new(mu, sigma).ok() {
@@ -223,6 +225,62 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
             let ll = n as f64 * alpha_hat.ln() + n as f64 * alpha_hat * x_m.ln()
                 - (alpha_hat + 1.0) * clean.iter().map(|v| v.ln()).sum::<f64>();
             push_candidate(&mut candidates, Distribution::Pareto(x_m, alpha_hat), ks, ll, n);
+        }
+    }
+
+    // Poisson — non-negative integer-like values
+    if min_val >= 0.0 && mean > 0.0 {
+        // Check if values are approximately integer-valued
+        let is_integer_like = clean.iter().all(|v| (v - v.round()).abs() < 1e-6);
+        if is_integer_like {
+            let lambda = mean; // MLE for Poisson is sample mean
+            // Compute KS using Poisson CDF approximation (normal approximation for large lambda)
+            let ks = ks_stat_continuous(&clean, |x| {
+                // Use normal approximation to Poisson CDF
+                if lambda > 0.0 {
+                    let z = (x + 0.5 - lambda) / lambda.sqrt();
+                    normal_cdf(z)
+                } else {
+                    1.0
+                }
+            });
+            // Poisson log-likelihood: sum(x_i * ln(lambda) - lambda - ln(x_i!))
+            let ll = clean.iter().map(|&x| {
+                x * lambda.ln() - lambda - ln_gamma(x + 1.0)
+            }).sum::<f64>();
+            push_candidate(&mut candidates, Distribution::Poisson(lambda), ks, ll, n);
+        }
+    }
+
+    // Zipf — positive integer-valued data with heavy tail
+    if min_val >= 1.0 && mean > 0.0 {
+        let is_integer_like = clean.iter().all(|v| (v - v.round()).abs() < 1e-6);
+        if is_integer_like {
+            let max_rank = max_val as u64;
+            if max_rank >= 2 && max_rank <= 100_000 {
+                // MLE for Zipf: solve numerically via Newton's method
+                // s_hat ≈ 1 + n / (sum(ln(x_i)))  (approximate)
+                let sum_ln: f64 = clean.iter().map(|v| v.ln()).sum();
+                if sum_ln > 0.0 {
+                    let s_hat = 1.0 + n as f64 / sum_ln;
+                    if s_hat > 1.0 && s_hat.is_finite() && s_hat < 10.0 {
+                        // Zipf log-likelihood: -s * sum(ln(x_i)) - n * ln(H(N,s))
+                        let h_n_s: f64 = (1..=max_rank).map(|k| (k as f64).powf(-s_hat)).sum();
+                        if h_n_s > 0.0 {
+                            let ll = -s_hat * sum_ln - n as f64 * h_n_s.ln();
+                            // KS with Zipf CDF
+                            let ks = ks_stat_continuous(&clean, |x| {
+                                let k = x.floor() as u64;
+                                if k < 1 { return 0.0; }
+                                let k = k.min(max_rank);
+                                let partial: f64 = (1..=k).map(|i| (i as f64).powf(-s_hat)).sum();
+                                (partial / h_n_s).clamp(0.0, 1.0)
+                            });
+                            push_candidate(&mut candidates, Distribution::Zipf(max_rank, s_hat), ks, ll, n);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -342,6 +400,26 @@ fn beta_log_likelihood(data: &[f64], alpha: f64, beta: f64) -> f64 {
 /// Stirling's approximation for ln(Gamma(x)).
 fn ln_gamma(x: f64) -> f64 {
     statrs::function::gamma::ln_gamma(x)
+}
+
+/// Standard normal CDF (used for Poisson approximation).
+fn normal_cdf(x: f64) -> f64 {
+    0.5 * (1.0 + erf(x / std::f64::consts::SQRT_2))
+}
+
+/// Error function approximation (Abramowitz & Stegun).
+fn erf(x: f64) -> f64 {
+    let a1 = 0.254829592;
+    let a2 = -0.284496736;
+    let a3 = 1.421413741;
+    let a4 = -1.453152027;
+    let a5 = 1.061405429;
+    let p = 0.3275911;
+    let sign = if x < 0.0 { -1.0 } else { 1.0 };
+    let x = x.abs();
+    let t = 1.0 / (1.0 + p * x);
+    let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
+    sign * y
 }
 
 #[cfg(test)]

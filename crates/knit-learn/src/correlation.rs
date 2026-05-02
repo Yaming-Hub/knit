@@ -105,18 +105,27 @@ pub fn detect_correlations(
         }
     }
 
-    // Categorical pairs: Cramér's V
+    // Categorical pairs: Cramér's V (row-aligned, skip nulls)
     let str_names: Vec<&String> = string_cols.keys().collect();
     for i in 0..str_names.len() {
         for j in (i + 1)..str_names.len() {
             let a = &string_cols[str_names[i]];
             let b = &string_cols[str_names[j]];
             let n = a.len().min(b.len());
-            if n < 5 {
+            // Collect aligned non-null pairs
+            let mut paired_a = Vec::new();
+            let mut paired_b = Vec::new();
+            for idx in 0..n {
+                if let (Some(av), Some(bv)) = (&a[idx], &b[idx]) {
+                    paired_a.push(av.clone());
+                    paired_b.push(bv.clone());
+                }
+            }
+            if paired_a.len() < 5 {
                 continue;
             }
 
-            let v = cramers_v(&a[..n], &b[..n]);
+            let v = cramers_v(&paired_a, &paired_b);
             if v >= 0.3 {
                 debug!(a = %str_names[i], b = %str_names[j], v, "Cramér's V");
                 results.push(Correlation {
@@ -193,13 +202,16 @@ pub fn cramers_v(a: &[String], b: &[String]) -> f64 {
         return 0.0;
     }
 
-    // Chi-squared statistic
+    // Chi-squared statistic — iterate full Cartesian product of categories
     let nf = n as f64;
     let mut chi2 = 0.0;
-    for (&(ri, ci), &obs) in &contingency {
-        let expected = (row_cats[ri] as f64) * (col_cats[ci] as f64) / nf;
-        if expected > 0.0 {
-            chi2 += (obs as f64 - expected).powi(2) / expected;
+    for (ri, &row_count) in &row_cats {
+        for (ci, &col_count) in &col_cats {
+            let expected = (row_count as f64) * (col_count as f64) / nf;
+            if expected > 0.0 {
+                let obs = contingency.get(&(*ri, *ci)).copied().unwrap_or(0) as f64;
+                chi2 += (obs - expected).powi(2) / expected;
+            }
         }
     }
 
@@ -301,7 +313,8 @@ fn collect_numeric_columns(
         for batch in batches {
             if let Some(col_idx) = batch.schema().index_of(&profile.name).ok() {
                 let col = batch.column(col_idx);
-                append_numeric_values(col, &mut values);
+                // Preserve row alignment: use NaN for null slots
+                append_numeric_values_aligned(col, &mut values);
             }
         }
         if !values.is_empty() {
@@ -316,8 +329,8 @@ fn collect_numeric_columns(
 fn collect_string_columns(
     profiles: &[ColumnProfile],
     batches: &[RecordBatch],
-) -> HashMap<String, Vec<String>> {
-    let mut result: HashMap<String, Vec<String>> = HashMap::new();
+) -> HashMap<String, Vec<Option<String>>> {
+    let mut result: HashMap<String, Vec<Option<String>>> = HashMap::new();
     for profile in profiles {
         if profile.numeric.is_some() || profile.temporal.is_some() {
             continue;
@@ -328,8 +341,10 @@ fn collect_string_columns(
                 let col = batch.column(col_idx);
                 if let Some(arr) = col.as_any().downcast_ref::<StringArray>() {
                     for i in 0..arr.len() {
-                        if !arr.is_null(i) {
-                            values.push(arr.value(i).to_string());
+                        if arr.is_null(i) {
+                            values.push(None);
+                        } else {
+                            values.push(Some(arr.value(i).to_string()));
                         }
                     }
                 }
@@ -343,30 +358,23 @@ fn collect_string_columns(
     result
 }
 
-fn append_numeric_values(col: &dyn Array, values: &mut Vec<f64>) {
+/// Append numeric values preserving row alignment — NaN for null slots.
+fn append_numeric_values_aligned(col: &dyn Array, values: &mut Vec<f64>) {
     if let Some(arr) = col.as_any().downcast_ref::<Float64Array>() {
         for i in 0..arr.len() {
-            if !arr.is_null(i) {
-                values.push(arr.value(i));
-            }
+            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) });
         }
     } else if let Some(arr) = col.as_any().downcast_ref::<arrow::array::Int64Array>() {
         for i in 0..arr.len() {
-            if !arr.is_null(i) {
-                values.push(arr.value(i) as f64);
-            }
+            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) as f64 });
         }
     } else if let Some(arr) = col.as_any().downcast_ref::<arrow::array::Int32Array>() {
         for i in 0..arr.len() {
-            if !arr.is_null(i) {
-                values.push(arr.value(i) as f64);
-            }
+            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) as f64 });
         }
     } else if let Some(arr) = col.as_any().downcast_ref::<arrow::array::Float32Array>() {
         for i in 0..arr.len() {
-            if !arr.is_null(i) {
-                values.push(arr.value(i) as f64);
-            }
+            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) as f64 });
         }
     }
 }
