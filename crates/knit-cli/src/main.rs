@@ -10,8 +10,10 @@
 
 mod commands;
 mod config;
+pub mod suggestions;
 
 use clap::{Parser, Subcommand, ValueEnum};
+use colored::Colorize;
 use tracing_subscriber::EnvFilter;
 
 use commands::{generate, init, learn, plan, schema, validate};
@@ -213,4 +215,10 @@ fn main() -> anyhow::Result<()> {
         Command::Init { output } => init::run(output),
         Command::Learn { source } => learn::run(source),
     }
+    .map_err(|e| {
+        if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {
+            eprintln!("{} {}", "hint:".cyan().bold(), hint);
+        }
+        e
+    })
 }

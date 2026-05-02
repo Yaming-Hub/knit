@@ -21,6 +21,8 @@ pub mod error;
 pub mod generators;
 pub mod keystore;
 pub mod null_mask;
+pub mod plugin;
+pub mod sampled_key_store;
 pub mod traits;
 
 pub use batch::assemble_batch;
@@ -31,6 +33,8 @@ pub use generators::create_generator;
 pub use generators::fk::ForeignKeyGenerator;
 pub use keystore::InMemoryKeyStore;
 pub use null_mask::apply_null_mask;
+pub use plugin::{registry, GeneratorPlugin, Registry};
+pub use sampled_key_store::SampledKeyStore;
 pub use traits::{FieldGenerator, KeyStore};
 
 #[cfg(test)]
