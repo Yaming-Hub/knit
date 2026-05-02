@@ -45,6 +45,14 @@ fn generate_ecommerce_schema() {
                 field.name,
             );
         }
+
+        // At least the first field (typically the PK) should produce non-null values.
+        let first_col = entity_batches[0].column(0);
+        assert!(
+            first_col.null_count() < first_col.len(),
+            "entity '{}': first column is entirely null (generator may have degraded)",
+            entity.name,
+        );
     }
 }
 
@@ -167,14 +175,19 @@ fn generate_hr_org_schema() {
         let entity_batches = batches
             .get(&entity.name)
             .unwrap_or_else(|| panic!("no batches for entity '{}'", entity.name));
-        let rows = total_rows(entity_batches);
 
         if let knit_core::CountSpec::Fixed(expected) = &entity.count {
-            // Self-referential relationships may produce deferred batches,
-            // so total rows can exceed the fixed count. Check >= instead.
+            // Count only "full" batches (those with all entity fields),
+            // excluding deferred FK patch batches which have fewer columns.
+            let field_count = entity.fields.len();
+            let full_rows: usize = entity_batches
+                .iter()
+                .filter(|b| b.num_columns() >= field_count)
+                .map(|b| b.num_rows())
+                .sum();
             assert!(
-                rows as u64 >= *expected,
-                "entity '{}': expected at least {expected} rows, got {rows}",
+                full_rows as u64 >= *expected,
+                "entity '{}': expected at least {expected} full rows, got {full_rows}",
                 entity.name
             );
         }

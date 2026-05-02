@@ -25,7 +25,7 @@ name = "hostname"
 data_type = "string"
 [entities.fields.generator]
 type = "pattern"
-pattern = "web-[a-z]{2}-[0-9]{2}"
+pattern = "web-??-##"
 
 [[entities.fields]]
 name = "region"
@@ -205,7 +205,7 @@ data_type = "string"
 nullable = { probability = 0.4 }
 [entities.fields.generator]
 type = "pattern"
-pattern = "at [a-z_]+::[a-z_]+\\(\\) line [0-9]{2,3}"
+pattern = "at ??_??::??_??() line ###"
 
 # ── Relationships ────────────────────────────────────────────────────
 

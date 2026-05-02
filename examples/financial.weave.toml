@@ -25,7 +25,7 @@ name = "account_number"
 data_type = "string"
 [entities.fields.generator]
 type = "pattern"
-pattern = "[0-9]{4}-[0-9]{4}-[0-9]{4}"
+pattern = "####-####-####"
 
 [[entities.fields]]
 name = "account_type"

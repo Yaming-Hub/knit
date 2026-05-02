@@ -33,7 +33,7 @@ name = "email"
 data_type = "string"
 [entities.fields.generator]
 type = "pattern"
-pattern = "user[0-9]{4}@example\\.com"
+pattern = "user####@example.com"
 
 [[entities.fields]]
 name = "tier"
@@ -81,7 +81,7 @@ name = "sku"
 data_type = "string"
 [entities.fields.generator]
 type = "pattern"
-pattern = "SKU-[A-Z]{3}-[0-9]{4}"
+pattern = "SKU-AAA-####"
 
 [[entities.fields]]
 name = "name"

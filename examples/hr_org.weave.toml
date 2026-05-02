@@ -91,7 +91,7 @@ name = "employee_code"
 data_type = "string"
 [entities.fields.generator]
 type = "pattern"
-pattern = "EMP-[0-9]{5}"
+pattern = "EMP-#####"
 
 [[entities.fields]]
 name = "first_name"

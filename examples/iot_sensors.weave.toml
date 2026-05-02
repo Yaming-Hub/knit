@@ -25,7 +25,7 @@ name = "serial"
 data_type = "string"
 [entities.fields.generator]
 type = "pattern"
-pattern = "DEV-[A-Z]{2}[0-9]{6}"
+pattern = "DEV-AA######"
 
 [[entities.fields]]
 name = "device_type"
