@@ -1,4 +1,27 @@
-//! knit-schema: Parser and validator for the Weave schema language.
+//! # knit-schema — Parser and Validator for the Weave Schema Language
+//!
+//! This crate converts TOML or JSON schema files into a validated
+//! [`DataModel`](knit_core::DataModel), the canonical in-memory representation
+//! consumed by the rest of the knit pipeline.
+//!
+//! ## Pipeline Position
+//!
+//! ```text
+//! Weave Schema (TOML/JSON) → knit-schema → DataModel → knit-plan → knit-gen
+//! ```
+//!
+//! ## Key Entry Points
+//!
+//! - [`parse_toml()`] / [`parse_json()`] — parse from a string
+//! - [`parse_toml_file()`] / [`parse_json_file()`] — parse from a file (with `extends` support)
+//! - [`validate()`] — semantic validation (references, distributions, counts)
+//! - [`merge_models()`] — merge a child model on top of a parent (for `extends` chains)
+//! - [`resolve_extends()`] — resolve an `extends` directive from a file path
+//!
+//! ## Error Handling
+//!
+//! All functions return [`SchemaError`], which wraps TOML/JSON parse errors,
+//! I/O errors, and semantic validation issues.
 
 mod error;
 mod extends;

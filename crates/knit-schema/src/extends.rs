@@ -1,3 +1,10 @@
+//! Schema inheritance via `extends` directives.
+//!
+//! Allows a child schema to inherit from a parent, overriding or adding
+//! entities, fields, relationships, and scalar properties. The merge is
+//! key-based (by name) so child additions are additive and child overrides
+//! replace parent values.
+
 use knit_core::{CountSpec, DataModel, Entity};
 
 use crate::error::SchemaError;
@@ -11,7 +18,7 @@ use crate::error::SchemaError;
 /// - Noise profiles merge by `name`
 /// - Correlations merge by `entity`
 /// - Scalar properties: child overrides parent
-/// - Vec properties: child replaces parent entirely (within merged element)
+/// - Vec properties: child replaces parent only when non-empty (within merged element)
 pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
     let mut result = parent.clone();
 
