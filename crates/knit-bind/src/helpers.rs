@@ -57,8 +57,11 @@ pub fn format_number(value: Value, decimals: u32) -> String {
 
 /// Escape a string for safe inclusion in a SQL literal.
 ///
-/// Doubles single quotes and backslashes. The caller is responsible for
-/// wrapping the result in single quotes in the template.
+/// Escape a string for safe inclusion in a SQL single-quoted literal.
+///
+/// Doubles single quotes, escapes backslashes, and removes NULL bytes which
+/// could truncate strings in some databases. Targets ANSI SQL; for specific
+/// dialects, users should provide their own filter.
 ///
 /// # Example (template)
 /// ```jinja
@@ -69,7 +72,9 @@ pub fn escape_sql(value: Value) -> String {
         Some(s) => s.to_string(),
         None => value.to_string(),
     };
-    s.replace('\\', "\\\\").replace('\'', "''")
+    s.replace('\0', "")
+        .replace('\\', "\\\\")
+        .replace('\'', "''")
 }
 
 /// Escape a string for safe inclusion in XML/HTML content.
@@ -103,7 +108,7 @@ pub fn escape_xml(value: Value) -> String {
 pub fn json_encode(value: Value) -> String {
     // MiniJinja values can be converted via their debug/display; use serde for accuracy.
     let serializable = minijinja_value_to_serde(&value);
-    serde_json::to_string(&serializable).unwrap_or_else(|_| value.to_string())
+    serde_json::to_string(&serializable).unwrap_or_else(|_| "null".to_string())
 }
 
 /// Convert a MiniJinja `Value` to a `serde_json::Value` for serialization.

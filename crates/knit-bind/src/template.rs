@@ -42,9 +42,12 @@ pub enum TemplateMode {
 ///
 /// The generation engine writes batches via [`Sink::write_batch`], and the
 /// sink renders each row (or batch) using the compiled template.
+///
+/// The template is compiled once at construction time and reused for all
+/// batches, avoiding per-batch compilation overhead.
 pub struct TemplateSink<W: Write + Send> {
     writer: W,
-    template_source: String,
+    env: Environment<'static>,
     mode: TemplateMode,
     rows_written: u64,
     bytes_written: u64,
@@ -66,17 +69,17 @@ impl<W: Write + Send> TemplateSink<W> {
         template_source: String,
         mode: Option<TemplateMode>,
     ) -> Result<Self, BindError> {
-        // Validate the template compiles
+        let mode = mode.unwrap_or_else(|| detect_mode(&template_source));
+
+        // Compile the template once and store in the environment for reuse.
         let mut env = Environment::new();
         helpers::register_helpers(&mut env);
-        env.add_template("__validate", &template_source)
+        env.add_template_owned("main".to_string(), template_source)
             .map_err(|e| BindError::Template(e.to_string()))?;
-
-        let mode = mode.unwrap_or_else(|| detect_mode(&template_source));
 
         Ok(Self {
             writer,
-            template_source,
+            env,
             mode,
             rows_written: 0,
             bytes_written: 0,
@@ -113,47 +116,71 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Value {
     }
     match col.data_type() {
         DataType::Boolean => {
-            let arr = col.as_any().downcast_ref::<array::BooleanArray>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::BooleanArray>()
+                .expect("Arrow type mismatch: expected BooleanArray");
             Value::from(arr.value(row))
         }
         DataType::Int8 => typed_int!(col, array::Int8Array, row),
         DataType::Int16 => typed_int!(col, array::Int16Array, row),
         DataType::Int32 => typed_int!(col, array::Int32Array, row),
         DataType::Int64 => {
-            let arr = col.as_any().downcast_ref::<array::Int64Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::Int64Array>()
+                .expect("Arrow type mismatch: expected Int64Array");
             Value::from(arr.value(row))
         }
         DataType::UInt8 => typed_int!(col, array::UInt8Array, row),
         DataType::UInt16 => typed_int!(col, array::UInt16Array, row),
         DataType::UInt32 => typed_int!(col, array::UInt32Array, row),
         DataType::UInt64 => {
-            let arr = col.as_any().downcast_ref::<array::UInt64Array>().unwrap();
-            Value::from(arr.value(row) as i64)
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::UInt64Array>()
+                .expect("Arrow type mismatch: expected UInt64Array");
+            let v = arr.value(row);
+            if v <= i64::MAX as u64 {
+                Value::from(v as i64)
+            } else {
+                // Value exceeds i64 range; represent as string to avoid silent truncation
+                Value::from(v.to_string())
+            }
         }
         DataType::Float32 => {
-            let arr = col.as_any().downcast_ref::<array::Float32Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::Float32Array>()
+                .expect("Arrow type mismatch: expected Float32Array");
             Value::from(arr.value(row) as f64)
         }
         DataType::Float64 => {
-            let arr = col.as_any().downcast_ref::<array::Float64Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::Float64Array>()
+                .expect("Arrow type mismatch: expected Float64Array");
             Value::from(arr.value(row))
         }
         DataType::Utf8 => {
-            let arr = col.as_any().downcast_ref::<array::StringArray>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::StringArray>()
+                .expect("Arrow type mismatch: expected StringArray");
             Value::from(arr.value(row))
         }
         DataType::LargeUtf8 => {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::LargeStringArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected LargeStringArray");
             Value::from(arr.value(row))
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampMicrosecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampMicrosecondArray");
             match chrono::DateTime::from_timestamp_micros(arr.value(row)) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
@@ -163,7 +190,7 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Value {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampMillisecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampMillisecondArray");
             match chrono::DateTime::from_timestamp_millis(arr.value(row)) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
@@ -173,7 +200,7 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Value {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampSecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampSecondArray");
             match chrono::DateTime::from_timestamp(arr.value(row), 0) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
@@ -183,7 +210,7 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Value {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampNanosecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampNanosecondArray");
             let ts = arr.value(row);
             let secs = ts.div_euclid(1_000_000_000);
             let nsecs = ts.rem_euclid(1_000_000_000) as u32;
@@ -211,7 +238,7 @@ macro_rules! typed_int {
         let arr = $col
             .as_any()
             .downcast_ref::<$arr_ty>()
-            .unwrap();
+            .expect(concat!("Arrow type mismatch: expected ", stringify!($arr_ty)));
         Value::from(arr.value($row) as i64)
     }};
 }
@@ -250,11 +277,8 @@ fn schema_to_value(batch: &RecordBatch) -> Value {
 
 impl<W: Write + Send> Sink for TemplateSink<W> {
     fn write_batch(&mut self, batch: &RecordBatch) -> Result<(), BindError> {
-        let mut env = Environment::new();
-        helpers::register_helpers(&mut env);
-        env.add_template("main", &self.template_source)
-            .map_err(|e| BindError::Template(e.to_string()))?;
-        let tmpl = env
+        let tmpl = self
+            .env
             .get_template("main")
             .map_err(|e| BindError::Template(e.to_string()))?;
 
