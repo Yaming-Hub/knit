@@ -760,7 +760,15 @@ dependencies = [
 name = "knit-noise"
 version = "0.1.0"
 dependencies = [
+ "arrow",
+ "bitflags 2.11.1",
+ "chrono",
  "knit-core",
+ "rand",
+ "rand_chacha",
+ "rand_distr",
+ "thiserror",
+ "tracing",
 ]
 
 [[package]]

@@ -6,3 +6,11 @@ description = "Noise injection and data quality simulation"
 
 [dependencies]
 knit-core = { path = "../knit-core" }
+arrow = { version = "54", features = ["prettyprint"] }
+bitflags = "2"
+rand = "0.8"
+rand_chacha = "0.3"
+rand_distr = "0.4"
+thiserror = "2"
+tracing = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
