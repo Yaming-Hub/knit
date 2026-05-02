@@ -14,6 +14,8 @@ use crate::error::SchemaError;
 struct RawSchema {
     schema_version: Option<String>,
     #[serde(default)]
+    extends: Option<String>,
+    #[serde(default)]
     model: RawModel,
     #[serde(default)]
     entities: Vec<Entity>,
