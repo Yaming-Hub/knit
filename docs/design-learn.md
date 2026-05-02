@@ -15,13 +15,14 @@
 - [5. Column Profiling](#5-column-profiling)
 - [6. Type Inference](#6-type-inference)
 - [7. Distribution Fitting](#7-distribution-fitting)
-- [8. Relationship Detection](#8-relationship-detection)
-- [9. Relationship Analysis](#9-relationship-analysis)
-- [10. Cross-Entity Correlation Detection](#10-cross-entity-correlation-detection)
-- [11. Confidence Scoring Model](#11-confidence-scoring-model)
-- [12. Output Format](#12-output-format)
-- [13. Testing Strategy](#13-testing-strategy)
-- [14. Design Decisions](#14-design-decisions)
+- [8. Temporal Pattern Recognition](#8-temporal-pattern-recognition)
+- [9. Relationship Detection](#9-relationship-detection)
+- [10. Relationship Analysis](#10-relationship-analysis)
+- [11. Cross-Entity Correlation Detection](#11-cross-entity-correlation-detection)
+- [12. Confidence Scoring Model](#12-confidence-scoring-model)
+- [13. Output Format](#13-output-format)
+- [14. Testing Strategy](#14-testing-strategy)
+- [15. Design Decisions](#15-design-decisions)
 
 ---
 
@@ -93,10 +94,11 @@ flowchart LR
     ingest --> profile[Phase 2\nProfile]
     profile --> typeinf[Phase 3\nType Inference]
     typeinf --> distfit[Phase 4\nDistribution\nFitting]
-    distfit --> reldet[Phase 5\nRelationship\nDetection]
-    reldet --> relana[Phase 6\nRelationship\nAnalysis]
-    relana --> corr[Phase 7\nCorrelation\nDetection]
-    corr --> assemble[Phase 8\nSchema\nAssembly]
+    distfit --> temporal[Phase 5\nTemporal Pattern\nRecognition]
+    temporal --> reldet[Phase 6\nRelationship\nDetection]
+    reldet --> relana[Phase 7\nRelationship\nAnalysis]
+    relana --> corr[Phase 8\nCorrelation\nDetection]
+    corr --> assemble[Phase 9\nSchema\nAssembly]
     assemble --> output([Candidate\nWeave Schema])
 ```
 
@@ -106,10 +108,11 @@ flowchart LR
 | **2. Profile** | `RecordBatch` stream | `ColumnProfile` per column | Compute statistics: count, null rate, cardinality, min/max, mean, std_dev, percentiles, value frequencies |
 | **3. Type Inference** | `ColumnProfile` | `InferredType` per column | Detect semantic types from data patterns: int vs float, date formats, UUID, categorical vs continuous |
 | **4. Distribution Fitting** | `ColumnProfile` + `InferredType` | `FittedDistribution` per column | Fit candidate distributions, score by KS-test / AIC / BIC, select best fit |
-| **5. Relationship Detection** | All `ColumnProfile`s | `CandidateRelationship` list | FK candidates via value overlap, cardinality analysis, and naming conventions |
-| **6. Relationship Analysis** | `CandidateRelationship`s + data | `AnalyzedRelationship` list | Cardinality distribution fitting, temporal ordering, graph topology inference on confirmed relationships |
-| **7. Correlation Detection** | All columns + relationships | `CandidateCorrelation` list | Cross-entity and intra-entity field correlations, conditional distributions |
-| **8. Schema Assembly** | All inferred elements | `DataModel` with confidence annotations | Build the final Weave schema, attach confidence scores, emit |
+| **5. Temporal Pattern Recognition** | `ColumnProfile` + raw temporal values | `TemporalPatternSpec` per temporal column | Detect periodicity, frequency, seasonality, business-time patterns, and event cadence from timestamp columns |
+| **6. Relationship Detection** | All `ColumnProfile`s | `CandidateRelationship` list | FK candidates via value overlap, cardinality analysis, and naming conventions |
+| **7. Relationship Analysis** | `CandidateRelationship`s + data | `AnalyzedRelationship` list | Cardinality distribution fitting, temporal ordering, graph topology inference on confirmed relationships |
+| **8. Correlation Detection** | All columns + relationships | `CandidateCorrelation` list | Cross-entity and intra-entity field correlations, conditional distributions |
+| **9. Schema Assembly** | All inferred elements | `DataModel` with confidence annotations | Build the final Weave schema, attach confidence scores, emit |
 
 ---
 
@@ -434,7 +437,243 @@ pub struct Alternative {
 
 ---
 
-## 8. Relationship Detection
+## 8. Temporal Pattern Recognition
+
+For every column identified as temporal (date, datetime, timestamp) in Phase 3,
+knit-learn performs dedicated temporal pattern analysis. This goes beyond basic
+profiling (min/max/granularity) to detect **recurring patterns, frequencies, and
+cadence** that are critical for producing realistic time-series synthetic data.
+
+### 8.1 Why a Dedicated Phase
+
+Many real-world datasets are event-driven: orders arrive throughout the week but peak
+on Fridays, batch jobs run every Monday at 02:00, login events cluster around
+business hours. Without temporal pattern detection, regenerated data would produce
+timestamps that are statistically uniform — obviously synthetic.
+
+This phase detects the time-domain structure and encodes it into the Weave schema as
+`time_series`, `temporal_pattern`, or `schedule` generator specifications, enabling
+the forward pipeline to reproduce realistic temporal behaviour.
+
+### 8.2 Detection Algorithms
+
+```mermaid
+flowchart TD
+    ts([Temporal Column\nvalues]) --> delta[Compute\ninter-event\ndeltas]
+    ts --> bucket[Bucket by\nhour / dow / dom / month]
+    delta --> freq[Frequency\nDetection\nACF / FFT]
+    bucket --> dist[Bucket\nDistribution\nAnalysis]
+    freq --> patterns([Detected\nPatterns])
+    dist --> patterns
+    patterns --> spec([TemporalPatternSpec])
+```
+
+#### 8.2.1 Inter-Event Delta Analysis
+
+Compute the vector of time differences between successive events (sorted by timestamp):
+
+```
+Δt_i = t_{i+1} - t_i
+```
+
+Then fit a distribution to the delta vector. Common outcomes:
+
+| Delta Distribution | Interpretation |
+|-------------------|----------------|
+| **Constant** (std_dev ≈ 0) | Fixed-frequency schedule (e.g., every 5 minutes) |
+| **Exponential** | Poisson process — events arrive randomly at a constant rate |
+| **Bimodal** | Mixed schedule (e.g., business-hours vs off-hours arrival rates) |
+| **Log-Normal** | Human-generated events (bursty, with a long tail) |
+
+#### 8.2.2 Periodicity Detection via Autocorrelation (ACF)
+
+1. Aggregate event counts into fixed-width time buckets (hour, day, week)
+2. Compute the **autocorrelation function** (ACF) up to a configurable max lag
+3. Identify significant peaks (above 95% confidence band) → candidate periods
+4. Confirm via **FFT** on the bucketed series for harmonic peaks
+
+Detected periods:
+
+| Period | Example |
+|--------|---------|
+| **24 hours** | Daily pattern (business-hours clustering) |
+| **7 days** | Weekly pattern (e.g., lower traffic on weekends) |
+| **~30 days** | Monthly pattern (end-of-month billing events) |
+| **365 days** | Annual seasonality |
+| **Custom** | Application-specific (e.g., every 15 minutes for monitoring) |
+
+#### 8.2.3 Day-of-Week / Hour-of-Day Distribution
+
+Bucket events by day-of-week (Mon–Sun) and hour-of-day (0–23). Compare the observed
+distribution to a uniform distribution using a chi-squared test:
+
+- If **p < 0.01**: significant non-uniformity → encode as a weighted schedule
+- Extract the distribution as a `weight_by_dow` or `weight_by_hour` array
+
+Example output:
+
+```toml
+generator = { type = "time_series", params = {
+    base_rate = 1200,
+    unit = "events_per_day",
+    weight_by_dow = [0.12, 0.18, 0.17, 0.16, 0.19, 0.11, 0.07],
+    weight_by_hour = [0.01, 0.01, 0.01, 0.01, 0.02, 0.03, 0.05, 0.08, 0.09, 0.08, 0.07, 0.06, 0.06, 0.06, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03, 0.03, 0.02, 0.02, 0.01],
+    timezone = "America/New_York",
+} }
+```
+
+#### 8.2.4 Schedule / Cron Detection
+
+For highly regular events (near-zero delta variance), detect fixed schedules:
+
+| Pattern | Detection | Schema Output |
+|---------|-----------|---------------|
+| Every N minutes | Delta mean ≈ N min, CV < 0.05 | `schedule = { type = "fixed_interval", interval = "5m" }` |
+| Daily at fixed time | All events within ±5 min of same hour | `schedule = { type = "daily", at = "02:00" }` |
+| Weekly on specific day | Events only on one DOW, ~7-day delta | `schedule = { type = "weekly", day = "monday", at = "09:00" }` |
+| Monthly on specific date | Events cluster on same DOM | `schedule = { type = "monthly", day = 1 }` |
+| Cron-like | Combination of above | `schedule = { type = "cron", expression = "0 2 * * MON" }` |
+
+Coefficient of variation (CV = std_dev / mean) below 0.05 on the delta vector triggers
+schedule detection mode.
+
+#### 8.2.5 Trend Detection
+
+Fit a simple linear regression to the event rate over time (bucketed by week):
+
+```
+rate(t) = α + β·t
+```
+
+- If β is significantly non-zero (p < 0.05): report growth/decline trend
+- Also test exponential growth: `rate(t) = α · e^{β·t}` — select by AIC
+
+```toml
+[time_series.trend]
+type = "linear"        # or "exponential"
+slope = 0.03           # 3% growth per period
+```
+
+#### 8.2.6 Seasonality Decomposition
+
+When both trend and periodicity are detected, apply **STL decomposition**
+(Seasonal-Trend-Loess) to separate:
+
+- **Trend component** → encoded as `time_series.trend`
+- **Seasonal component** → encoded as `time_series.seasonality`
+- **Residual** → modeled as noise (distribution fitted to residuals)
+
+```toml
+[entities.fields.generator]
+type = "time_series"
+[entities.fields.generator.params]
+start = "2024-01-01T00:00:00Z"
+trend = { type = "linear", slope = 50.0, unit = "events_per_month" }
+seasonality = [
+    { period = "week", amplitude = 0.3, phase = 0.0 },
+    { period = "year", amplitude = 0.15, phase = 0.5 },
+]
+noise = { distribution = "normal", params = { mean = 0.0, std_dev = 0.05 } }
+timezone = "UTC"
+```
+
+### 8.3 Multi-Column Temporal Relationships
+
+When multiple temporal columns exist within one entity (e.g., `created_at`,
+`updated_at`, `completed_at`), knit-learn detects ordering constraints and
+delay distributions between them:
+
+| Relationship | Detection | Schema Output |
+|-------------|-----------|---------------|
+| `updated_at` always ≥ `created_at` | All deltas non-negative | `constraint = { after = "created_at" }` |
+| `completed_at - created_at` follows log-normal | Fit delta distribution | `delay = { distribution = "log_normal", params = { mu = 2.1, sigma = 0.8 }, unit = "hours" }` |
+| Same timestamp (copied) | Correlation ≈ 1.0, delta ≈ 0 | `derived = { from = "created_at" }` |
+
+### 8.4 Output: TemporalPatternSpec
+
+```rust
+pub struct TemporalPatternSpec {
+    pub column_name: String,
+    pub entity_name: String,
+
+    /// Detected base event rate (events per unit time)
+    pub base_rate: Option<f64>,
+    pub rate_unit: Option<String>,
+
+    /// Fixed schedule (for highly regular events)
+    pub schedule: Option<ScheduleSpec>,
+
+    /// Day-of-week weights (Mon=0 .. Sun=6), normalized to sum=1.0
+    pub weight_by_dow: Option<[f64; 7]>,
+
+    /// Hour-of-day weights (0..23), normalized to sum=1.0
+    pub weight_by_hour: Option<[f64; 24]>,
+
+    /// Detected periodicities with amplitude and phase
+    pub seasonality: Vec<SeasonalityComponent>,
+
+    /// Trend (growth or decline over time)
+    pub trend: Option<TrendSpec>,
+
+    /// Inter-event delta distribution (for non-scheduled events)
+    pub delta_distribution: Option<FittedDistribution>,
+
+    /// Detected timezone
+    pub timezone: Option<String>,
+
+    /// Confidence in the overall temporal pattern
+    pub confidence: f64,
+}
+
+pub struct ScheduleSpec {
+    pub schedule_type: ScheduleType,
+    pub confidence: f64,
+}
+
+pub enum ScheduleType {
+    FixedInterval { interval: Duration },
+    Daily { at: NaiveTime },
+    Weekly { day: Weekday, at: NaiveTime },
+    Monthly { day_of_month: u8 },
+    Cron { expression: String },
+}
+
+pub struct SeasonalityComponent {
+    pub period: String,         // "day", "week", "month", "year", or duration
+    pub amplitude: f64,         // relative to base rate (0.0–1.0)
+    pub phase: f64,             // phase offset (0.0–1.0 of period)
+    pub confidence: f64,
+}
+
+pub enum TrendSpec {
+    Linear { slope: f64, unit: String },
+    Exponential { growth_rate: f64, unit: String },
+}
+```
+
+### 8.5 Confidence Scoring for Temporal Patterns
+
+```
+temporal_confidence =
+    periodicity_strength × sample_coverage × consistency_score
+```
+
+| Factor | Calculation |
+|--------|-------------|
+| `periodicity_strength` | Peak ACF value at detected period (0.0–1.0) |
+| `sample_coverage` | Number of full periods observed / 3 (capped at 1.0 — need ≥3 full cycles) |
+| `consistency_score` | 1 − CV of per-period event counts (higher consistency = higher confidence) |
+
+For schedule detection:
+```
+schedule_confidence = 1.0 - coefficient_of_variation(deltas)
+```
+
+A CV < 0.05 yields confidence > 0.95, indicating a highly regular schedule.
+
+---
+
+## 9. Relationship Detection
 
 knit-learn attempts to detect foreign key relationships between entities using a
 combination of heuristics. No single heuristic is authoritative — confidence is derived
@@ -517,9 +756,9 @@ relationship_confidence =
 
 ---
 
-## 9. Relationship Analysis
+## 10. Relationship Analysis
 
-Once candidate relationships are detected (Phase 5), knit-learn performs **deep
+Once candidate relationships are detected (Phase 6), knit-learn performs **deep
 analysis** on confirmed relationships to extract the statistical and structural
 properties needed to reproduce realistic inter-entity data.
 
@@ -678,7 +917,7 @@ get reduced confidence.
 
 ---
 
-## 10. Cross-Entity Correlation Detection
+## 11. Cross-Entity Correlation Detection
 
 Beyond FK relationships, knit-learn detects **statistical correlations** between fields
 within and across entities. These correlations are essential for producing realistic
@@ -814,7 +1053,7 @@ Where:
 
 ---
 
-## 11. Confidence Scoring Model
+## 12. Confidence Scoring Model
 
 Every inferred element in the output schema carries a confidence score. This is the
 primary mechanism for communicating uncertainty to the reviewer.
@@ -886,7 +1125,7 @@ Thresholds are configurable via CLI flags or configuration file.
 
 ---
 
-## 12. Output Format
+## 13. Output Format
 
 knit-learn emits a standard Weave schema with additional annotation fields that
 communicate inference metadata to reviewers.
@@ -994,7 +1233,7 @@ summarizing the inference results:
 
 ---
 
-## 13. Testing Strategy
+## 14. Testing Strategy
 
 ### Round-Trip Tests
 
@@ -1056,6 +1295,27 @@ For each supported distribution:
   verify no spurious correlations are reported above threshold
 - **Temporal patterns:** Generate data with known seasonality/trend, verify detection
 
+### Temporal Pattern Recognition Tests
+
+- **Fixed schedule detection:** Generate events at exact 5-minute intervals (± small jitter),
+  verify `ScheduleType::FixedInterval { interval: 5m }` is detected with confidence > 0.9
+- **Weekly pattern:** Generate events concentrated on weekdays with low weekend activity,
+  verify `weight_by_dow` reflects the imbalance and weekly periodicity is detected
+- **Business hours:** Generate events between 09:00–17:00 with exponential inter-arrival
+  times, verify `weight_by_hour` shows the business-hours concentration
+- **Monthly seasonality:** Generate event counts that peak at end-of-month, verify
+  seasonality component with period = "month" is detected
+- **Trend detection:** Generate data with linear growth (100 events/day → 200 events/day
+  over 6 months), verify trend slope is recovered within 10% tolerance
+- **Cron-like schedule:** Generate events every Monday at 02:00 (± 1 min), verify
+  `ScheduleType::Weekly { day: Monday, at: 02:00 }` is detected
+- **Multi-column ordering:** Generate `created_at` < `updated_at` < `closed_at` with
+  known delay distributions, verify ordering constraints and delay fits are recovered
+- **Mixed pattern:** Generate events with both weekly seasonality and linear trend,
+  verify both components are detected via STL decomposition
+- **False positive resistance:** Generate truly random (Poisson process) timestamps,
+  verify no spurious periodicity or schedule is reported
+
 ### Edge Cases
 
 | Case | Expected Behavior |
@@ -1070,7 +1330,7 @@ For each supported distribution:
 
 ---
 
-## 14. Design Decisions
+## 15. Design Decisions
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
@@ -1085,3 +1345,6 @@ For each supported distribution:
 | **Deep relationship analysis as separate phase** | Phases 5 (detection) and 6 (analysis) are distinct | Detection is cheap (heuristic scoring); analysis is expensive (joins, graph construction, distribution fitting). Separating them lets users skip deep analysis when only FK structure is needed, and lets us gate analysis on detection confidence (only analyze relationships above a threshold). |
 | **Graph topology model matching** | Match observed graph metrics to known topology models (BA, WS, ER, tree) | These models cover the vast majority of real-world relational structures. Model parameters map directly to Weave `topology` configuration, enabling faithful reproduction. Custom graph structures can always be specified manually. |
 | **Cross-entity correlation via FK joins** | Only detect cross-entity correlations when a FK relationship exists | Without a FK, joining entities is ambiguous (which row pairs?). FK provides the natural join key. Correlations between unrelated entities are meaningless for generation and would produce false positives. |
+| **Dedicated temporal pattern phase** | Temporal pattern recognition is a separate pipeline phase (Phase 5) between distribution fitting and relationship detection | Temporal patterns require specialized algorithms (ACF, FFT, STL decomposition) that operate differently from scalar distribution fitting. Detecting temporal structure early allows relationship analysis (Phase 7) to leverage temporal patterns when analyzing inter-entity temporal ordering. A dedicated phase keeps the pipeline modular and allows users to disable it for non-temporal datasets. |
+| **ACF + FFT dual confirmation for periodicity** | Require both autocorrelation peaks and FFT harmonic confirmation before declaring periodicity | ACF alone can produce false positives from trend; FFT alone can miss weak seasonality. Dual confirmation reduces false positives while maintaining sensitivity to genuine patterns. |
+| **CV threshold for schedule detection** | Use coefficient of variation < 0.05 to trigger schedule mode | Regular schedules (cron jobs, batch processes) have near-zero variance in inter-event deltas. The CV threshold cleanly separates scheduled events from stochastic processes without requiring the user to specify which mode to use. |

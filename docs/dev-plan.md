@@ -488,7 +488,7 @@ SchemaParser
 
 ---
 
-### PR 15: knit-learn — Distribution Fitting + Relationship Analysis
+### PR 15: knit-learn — Distribution Fitting + Temporal Patterns + Relationship Analysis
 
 **Branch:** `feat/learn-fitting-relationships`
 **Est. lines:** ~1800
@@ -501,31 +501,42 @@ SchemaParser
   - AIC/BIC model selection
   - Categorical columns → `one_of` with weights from frequencies
   - Best-fit distribution selection with confidence
-- **Relationship detection (Phase 5):**
+- **Temporal pattern recognition (Phase 5):**
+  - Inter-event delta analysis (compute Δt vector, fit distribution)
+  - Periodicity detection via ACF + FFT dual confirmation
+  - Day-of-week / hour-of-day distribution analysis (chi-squared test)
+  - Schedule / cron detection (CV < 0.05 threshold → fixed interval, daily, weekly, monthly, cron)
+  - Trend detection (linear / exponential regression on event rate)
+  - Seasonality decomposition (STL: trend + seasonal + residual)
+  - Multi-column temporal ordering constraints and delay distribution fitting
+  - Output: `TemporalPatternSpec` → `time_series` / `schedule` generator in schema
+- **Relationship detection (Phase 6):**
   - Column name matching (strip `_id`/`_key`/`_fk`, match entity names)
   - Value overlap ratio computation
   - Cardinality analysis (unique ratios → relationship kind)
   - Self-referential detection (column references own entity PK)
   - Composite key detection (pairs/triples)
   - Confidence scoring (weighted heuristic combination)
-- **Relationship analysis (Phase 6):**
+- **Relationship analysis (Phase 7):**
   - Cardinality distribution fitting (count per parent → fit Zipf/Poisson/etc.)
   - Temporal ordering detection (child timestamps after parent)
   - Graph topology inference (degree distribution → model matching)
   - Junction table detection
-- **Cross-entity correlation detection (Phase 7):**
+- **Cross-entity correlation detection (Phase 8):**
   - Intra-entity: Pearson, Spearman, Cramér's V
   - Cross-entity: conditional distributions via FK joins
   - Significance filtering (p-value < 0.05, |r| ≥ 0.3)
-- **Schema assembly (Phase 8):**
+- **Schema assembly (Phase 9):**
   - Build `DataModel` from all inferred elements
   - Attach confidence scores and alternatives
   - Output annotated Weave schema with `_confidence` fields
   - Human-readable review report
-- Tests: distribution recovery (generate → learn → compare params), FK detection accuracy, correlation detection, round-trip tests
+- Tests: distribution recovery (generate → learn → compare params), temporal pattern recovery (schedule/periodicity/trend), FK detection accuracy, correlation detection, round-trip tests
 
 **Acceptance criteria:**
 - Normal distribution recovers μ and σ within 5% from 100K samples
+- Weekly schedule detection identifies day-of-week with confidence > 0.9
+- Trend detection recovers linear slope within 10% tolerance
 - FK detection finds known relationships with confidence > 0.8
 - Output schema is valid Weave that can be used with `knit generate`
 
