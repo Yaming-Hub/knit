@@ -212,8 +212,13 @@ impl std::fmt::Display for DataType {
 /// Specifies how to generate values for a field.
 ///
 /// Each variant corresponds to a generation strategy. The `knit-plan` compiler
-/// translates these into fully resolved `GeneratorPlan` variants, and `knit-gen`
-/// maps each plan to a concrete generator implementation.
+/// translates supported variants into `GeneratorPlan` entries for `knit-gen`.
+///
+/// **Note:** Some variants (`Pattern`, `Conditional`, `Unique`, `Relative`,
+/// `BusinessHours`) are not yet implemented in the planner/generator and
+/// currently produce null placeholder output. Fully supported variants include
+/// `Distribution`, `Sequence`, `Uuid`, `OneOf`, `Ref`, `TimestampRange`,
+/// `Expression`, `TimeSeries`, and `Constant`.
 ///
 /// Tagged with `#[serde(tag = "type")]` so TOML/JSON uses `type = "distribution"`, etc.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -576,7 +581,9 @@ impl std::fmt::Display for RelationshipKind {
 /// A noise injection profile that degrades generated data to simulate
 /// real-world imperfections (nulls, duplicates, typos, outliers).
 ///
-/// Applied post-generation by `knit-gen` to the specified entity/fields.
+/// Stored as schema metadata and consumed by `knit-noise` perturbators
+/// (not `knit-gen` directly). The CLI orchestrates noise application as
+/// a post-generation step.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NoiseProfile {
     /// Unique profile name (for merging).
@@ -603,10 +610,11 @@ pub struct NoiseProfile {
 
 // ── Constraint ───────────────────────────────────────────────────────
 
-/// An integrity constraint applied to an entity after generation.
+/// An integrity constraint applied to an entity.
 ///
-/// Constraints are checked (and potentially enforced via retries) by
-/// `knit-gen` to ensure the output satisfies business rules.
+/// Constraints are currently used as schema metadata for validation and
+/// documentation. Runtime enforcement (e.g. retry-based generation) is
+/// planned for a future release.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Constraint {

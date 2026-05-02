@@ -18,7 +18,7 @@ use crate::error::SchemaError;
 /// - Noise profiles merge by `name`
 /// - Correlations merge by `entity`
 /// - Scalar properties: child overrides parent
-/// - Vec properties: child replaces parent entirely (within merged element)
+/// - Vec properties: child replaces parent only when non-empty (within merged element)
 pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
     let mut result = parent.clone();
 

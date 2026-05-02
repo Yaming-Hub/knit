@@ -5,8 +5,9 @@ use thiserror::Error;
 
 /// Errors detected during data model validation.
 ///
-/// These are produced by the `knit-schema` validation pass and represent
-/// structural or semantic issues in a Weave schema. Each variant includes
+/// These represent structural or semantic issues in a Weave schema.
+/// `ModelError` is the core error taxonomy; `knit-schema` wraps these
+/// inside its own `SchemaError::Validation` variant. Each variant includes
 /// context (path, entity, or field name) for diagnostic messages.
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum ModelError {
