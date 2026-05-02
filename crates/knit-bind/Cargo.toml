@@ -1,0 +1,8 @@
+[package]
+name = "knit-bind"
+version = "0.1.0"
+edition = "2021"
+description = "Language bindings and FFI layer"
+
+[dependencies]
+knit-core = { path = "../knit-core" }

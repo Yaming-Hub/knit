@@ -1,0 +1,12 @@
+[package]
+name = "knit-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Command-line interface for the Knit toolset"
+
+[[bin]]
+name = "knit"
+path = "src/main.rs"
+
+[dependencies]
+knit-core = { path = "../knit-core" }

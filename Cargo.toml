@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "crates/knit-core",
+    "crates/knit-schema",
+    "crates/knit-plan",
+    "crates/knit-gen",
+    "crates/knit-noise",
+    "crates/knit-bind",
+    "crates/knit-learn",
+    "crates/knit-cli",
+]
+resolver = "2"
