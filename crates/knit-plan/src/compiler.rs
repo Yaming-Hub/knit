@@ -190,10 +190,17 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             },
             GeneratorSpec::OneOf { choices } => {
                 let total_weight: f64 = choices.iter().map(|c| c.weight).sum();
+                // Fall back to uniform weights if total is zero
+                let effective_total = if total_weight == 0.0 {
+                    choices.len() as f64
+                } else {
+                    total_weight
+                };
                 let mut cumulative = Vec::with_capacity(choices.len());
                 let mut running = 0.0;
                 for choice in choices {
-                    running += choice.weight / total_weight;
+                    let w = if total_weight == 0.0 { 1.0 } else { choice.weight };
+                    running += w / effective_total;
                     cumulative.push(running);
                 }
                 GeneratorPlan::OneOf {
@@ -307,9 +314,13 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
 /// Extract field names referenced in a derived expression.
 /// Simple heuristic: look for field names from `all_fields` that appear in the expression.
 fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
+    // Tokenize on non-alphanumeric/underscore boundaries for whole-word matching
+    let tokens: Vec<&str> = expr
+        .split(|c: char| !c.is_alphanumeric() && c != '_')
+        .collect();
     all_fields
         .iter()
-        .filter(|f| expr.contains(&f.name))
+        .filter(|f| tokens.iter().any(|t| *t == f.name))
         .map(|f| f.name.clone())
         .collect()
 }
@@ -952,5 +963,72 @@ mod tests {
             }
             other => panic!("expected ForeignKey, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_one_of_zero_weights() {
+        let model = simple_model(
+            "test",
+            vec![Entity {
+                name: "items".to_string(),
+                description: None,
+                count: CountSpec::Fixed(10),
+                fields: vec![Field {
+                    name: "color".to_string(),
+                    description: None,
+                    data_type: DataType::String,
+                    generator: Some(GeneratorSpec::OneOf {
+                        choices: vec![
+                            WeightedChoice { value: Value::String("red".into()), weight: 0.0 },
+                            WeightedChoice { value: Value::String("blue".into()), weight: 0.0 },
+                        ],
+                    }),
+                    nullable: NullSpec::Never,
+                    primary_key: None,
+                }],
+                constraints: vec![],
+                topology: None,
+            }],
+            vec![],
+        );
+        let plan = compile(&model).unwrap();
+        let ep = &plan.phases[0].entity_plans[0];
+        let fp = ep.field_plans.iter().find(|f| f.field_name == "color").unwrap();
+        match &fp.generator_plan {
+            GeneratorPlan::OneOf { cumulative_weights, .. } => {
+                // Should be uniform [0.5, 1.0], not [inf, inf]
+                assert!(cumulative_weights.iter().all(|w| w.is_finite()));
+                assert!((cumulative_weights.last().unwrap() - 1.0).abs() < 1e-9);
+            }
+            other => panic!("expected OneOf, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_extract_dependencies_no_substring_match() {
+        let fields = vec![
+            Field {
+                name: "p".to_string(),
+                description: None,
+                data_type: DataType::Float,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+            Field {
+                name: "price".to_string(),
+                description: None,
+                data_type: DataType::Float,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+        ];
+        // "price * 2" should match only "price", not "p"
+        let deps = extract_dependencies("price * 2", &fields);
+        assert_eq!(deps, vec!["price".to_string()]);
+        // "p + price" should match both
+        let deps2 = extract_dependencies("p + price", &fields);
+        assert_eq!(deps2.len(), 2);
     }
 }
