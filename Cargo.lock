@@ -645,6 +645,7 @@ name = "knit-gen"
 version = "0.1.0"
 dependencies = [
  "arrow",
+ "chrono",
  "knit-core",
  "knit-plan",
  "rand",

@@ -7,12 +7,15 @@
 
 pub mod composite;
 pub mod constant;
+pub mod correlation;
 pub mod derived;
 pub mod distribution;
 pub mod fk;
 pub mod one_of;
 pub mod pattern;
 pub mod sequence;
+pub mod temporal;
+pub mod topology;
 pub mod uuid_gen;
 
 use knit_plan::GeneratorPlan;
@@ -67,5 +70,40 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             tracing::warn!(plan = %format!("{plan:?}"), "using placeholder null generator");
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
+        GeneratorPlan::Temporal {
+            kind,
+            params,
+            base_field,
+        } => match kind {
+            knit_plan::TemporalKind::Relative => {
+                let base = base_field.clone().unwrap_or_default();
+                Box::new(temporal::RelativeGenerator::new(base, params))
+            }
+            knit_plan::TemporalKind::TimeSeries => {
+                Box::new(temporal::TimeSeriesGenerator::new(params))
+            }
+            knit_plan::TemporalKind::BusinessHours => {
+                Box::new(temporal::BusinessHoursGenerator::new(params))
+            }
+        },
+        GeneratorPlan::Correlated {
+            target_field,
+            correlation,
+        } => Box::new(correlation::CorrelatedGenerator::new(
+            target_field.clone(),
+            *correlation,
+        )),
+        GeneratorPlan::Topology { model, params } => match model {
+            knit_plan::TopologyModel::BarabasiAlbert => {
+                Box::new(topology::BarabasiAlbertGenerator::new(params))
+            }
+            knit_plan::TopologyModel::Tree => {
+                Box::new(topology::TreeGenerator::new(params))
+            }
+            knit_plan::TopologyModel::WattsStrogatz | knit_plan::TopologyModel::ErdosRenyi => {
+                tracing::warn!(model = ?model, "topology model not yet implemented, using placeholder");
+                Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+            }
+        },
     }
 }
