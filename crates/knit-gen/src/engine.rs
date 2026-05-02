@@ -360,9 +360,11 @@ impl GenerationEngine {
                 .map(|(_, b)| b)
                 .collect();
 
-            let mut rng = ChaCha8Rng::seed_from_u64(0xDEFE_AAED); // deterministic deferred seed
+            let base_seed: u64 = 0xDEFE_AAED;
 
-            for batch in source_batches {
+            for (batch_idx, batch) in source_batches.iter().enumerate() {
+                // Per-batch deterministic seed ensures order-independent FK assignment
+                let mut rng = ChaCha8Rng::seed_from_u64(base_seed ^ (batch_idx as u64));
                 let count = batch.num_rows();
                 let fk_values: Vec<Option<i64>> = match &dr.strategy {
                     DeferralStrategy::SelfReference {

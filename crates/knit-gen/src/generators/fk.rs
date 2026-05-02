@@ -39,21 +39,18 @@ impl ForeignKeyGenerator {
 
 impl FieldGenerator for ForeignKeyGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        if self.key_store.is_empty() {
+        let values: Vec<Option<i64>> = (0..count)
+            .map(|_| self.key_store.sample(rng))
+            .collect();
+
+        // If all values are None, the key store was empty — warn once.
+        if values.iter().all(|v| v.is_none()) && count > 0 {
             tracing::warn!(
                 entity = ctx.entity_name,
                 "FK key store is empty — producing null column"
             );
-            return Arc::new(Int64Array::from(vec![None; count]));
         }
 
-        let values: Vec<i64> = (0..count)
-            .map(|_| {
-                self.key_store
-                    .sample(rng)
-                    .expect("key store reported non-empty but sample returned None")
-            })
-            .collect();
         Arc::new(Int64Array::from(values))
     }
 
