@@ -209,6 +209,57 @@ pub enum GeneratorPlan {
         /// The pattern template string.
         pattern: String,
     },
+    /// Temporal generator — relative timestamps, time series, or business hours.
+    Temporal {
+        /// Which temporal strategy to use.
+        kind: TemporalKind,
+        /// Numeric parameters (strategy-specific, e.g. `start_hour`, `trend_slope`).
+        params: BTreeMap<String, f64>,
+        /// Optional base field for relative timestamps.
+        base_field: Option<String>,
+    },
+    /// Correlated field — generates values correlated with an existing column.
+    Correlated {
+        /// Name of the already-generated field to correlate with.
+        target_field: String,
+        /// Target Pearson correlation coefficient (−1.0 to 1.0).
+        correlation: f64,
+    },
+    /// Graph topology generator — preferential attachment, trees, etc.
+    Topology {
+        /// Which graph model to use.
+        model: TopologyModel,
+        /// Numeric parameters (model-specific, e.g. `m`, `max_depth`).
+        params: BTreeMap<String, f64>,
+    },
+}
+
+// ── TemporalKind ─────────────────────────────────────────────────────
+
+/// Temporal generation strategy.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TemporalKind {
+    /// Timestamp relative to another field (offset by a distribution).
+    Relative,
+    /// Synthetic time series with trend, seasonality, and noise.
+    TimeSeries,
+    /// Timestamps constrained to business hours (and optionally weekdays).
+    BusinessHours,
+}
+
+// ── TopologyModel ───────────────────────────────────────────────────
+
+/// Graph topology model for generating edge or parent-id columns.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TopologyModel {
+    /// Barabási–Albert preferential attachment.
+    BarabasiAlbert,
+    /// Random hierarchical tree with Poisson branching.
+    Tree,
+    /// Watts–Strogatz small-world (placeholder for future PR).
+    WattsStrogatz,
+    /// Erdős–Rényi random graph (placeholder for future PR).
+    ErdosRenyi,
 }
 
 // ── NullPlan ─────────────────────────────────────────────────────────
