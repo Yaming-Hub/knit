@@ -1,0 +1,123 @@
+//! Distribution-based generator supporting multiple statistical distributions.
+
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
+use arrow::array::{ArrayRef, Float64Array, Int64Array};
+use arrow::datatypes::DataType;
+use rand::RngCore;
+use rand_distr::Distribution;
+
+use knit_core::DistributionKind;
+
+use crate::context::GenContext;
+use crate::traits::FieldGenerator;
+
+/// Generates values drawn from a statistical distribution.
+///
+/// Supports Uniform, Normal, LogNormal, Exponential, and Poisson for this PR.
+/// Additional distributions will be added in future PRs.
+pub struct DistributionGenerator {
+    kind: DistributionKind,
+    params: BTreeMap<String, f64>,
+    clamp_min: Option<f64>,
+    clamp_max: Option<f64>,
+}
+
+impl DistributionGenerator {
+    /// Create a new distribution generator.
+    pub fn new(
+        kind: DistributionKind,
+        params: BTreeMap<String, f64>,
+        clamp_min: Option<f64>,
+        clamp_max: Option<f64>,
+    ) -> Self {
+        Self {
+            kind,
+            params,
+            clamp_min,
+            clamp_max,
+        }
+    }
+
+    /// Helper to get a named parameter, with a default fallback.
+    fn param(&self, name: &str, default: f64) -> f64 {
+        self.params.get(name).copied().unwrap_or(default)
+    }
+
+    /// Clamp a value to the configured bounds.
+    fn clamp(&self, v: f64) -> f64 {
+        let v = match self.clamp_min {
+            Some(lo) => v.max(lo),
+            None => v,
+        };
+        match self.clamp_max {
+            Some(hi) => v.min(hi),
+            None => v,
+        }
+    }
+}
+
+impl FieldGenerator for DistributionGenerator {
+    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+        match self.kind {
+            DistributionKind::Uniform => {
+                let lo = self.param("min", 0.0);
+                let hi = self.param("max", 1.0);
+                let dist = rand::distributions::Uniform::new(lo, hi);
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Normal => {
+                let mean = self.param("mean", 0.0);
+                let std_dev = self.param("std_dev", 1.0);
+                let dist =
+                    rand_distr::Normal::new(mean, std_dev).expect("invalid Normal parameters");
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::LogNormal => {
+                let mu = self.param("mu", 0.0);
+                let sigma = self.param("sigma", 1.0);
+                let dist = rand_distr::LogNormal::new(mu, sigma)
+                    .expect("invalid LogNormal parameters");
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Exponential => {
+                let lambda = self.param("lambda", 1.0);
+                let dist = rand_distr::Exp::new(lambda).expect("invalid Exponential parameters");
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Poisson => {
+                let lambda = self.param("lambda", 1.0);
+                let dist =
+                    rand_distr::Poisson::new(lambda).expect("invalid Poisson parameters");
+                let values: Vec<i64> = (0..count)
+                    .map(|_| {
+                        let v: f64 = dist.sample(rng);
+                        let v = self.clamp(v);
+                        v as i64
+                    })
+                    .collect();
+                Arc::new(Int64Array::from(values))
+            }
+            _ => {
+                tracing::warn!(
+                    kind = %self.kind,
+                    "unsupported distribution kind, producing zeros"
+                );
+                let values: Vec<f64> = vec![0.0; count];
+                Arc::new(Float64Array::from(values))
+            }
+        }
+    }
+
+    fn output_type(&self) -> DataType {
+        match self.kind {
+            DistributionKind::Poisson => DataType::Int64,
+            _ => DataType::Float64,
+        }
+    }
+}
