@@ -8,5 +8,6 @@ members = [
     "crates/knit-bind",
     "crates/knit-learn",
     "crates/knit-cli",
+    "crates/knit-integration-tests",
 ]
 resolver = "2"

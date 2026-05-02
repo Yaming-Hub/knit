@@ -1,0 +1,13 @@
+[package]
+name = "knit-integration-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Integration tests for the knit workspace"
+
+[dependencies]
+knit-core = { path = "../knit-core" }
+knit-schema = { path = "../knit-schema" }
+knit-plan = { path = "../knit-plan" }
+knit-gen = { path = "../knit-gen" }
+arrow = { version = "54", features = ["prettyprint"] }
