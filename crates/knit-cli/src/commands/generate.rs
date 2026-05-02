@@ -72,6 +72,28 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     let compression = map_compression(cli.compression);
     let extension = format_extension(cli.format);
 
+    // ── JSON start event ──────────────────────────────────────────
+    let total_estimated_rows: u64 = plan
+        .phases
+        .iter()
+        .flat_map(|p| &p.entity_plans)
+        .map(|ep| ep.estimated_row_count)
+        .sum();
+    let entity_count = plan
+        .phases
+        .iter()
+        .flat_map(|p| &p.entity_plans)
+        .count();
+
+    if cli.json {
+        let start_event = serde_json::json!({
+            "event": "start",
+            "entities": entity_count,
+            "total_rows": total_estimated_rows,
+        });
+        println!("{}", start_event);
+    }
+
     // ── Set up progress bars ────────────────────────────────────────
     let multi = MultiProgress::new();
     let entity_bars = create_progress_bars(&plan, &multi, cli.quiet);
@@ -98,13 +120,39 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
         }
     }
 
+    // Track per-entity row counts for JSON progress events
+    let mut entity_row_counts: HashMap<String, u64> = HashMap::new();
+    let mut entity_total_rows: HashMap<String, u64> = HashMap::new();
+    for phase in &plan.phases {
+        for ep in &phase.entity_plans {
+            entity_total_rows.insert(ep.entity_name.clone(), ep.estimated_row_count);
+        }
+    }
+    let json_mode = cli.json;
+
     // Execute generation
     engine
         .execute(&plan, |entity_name, batch: RecordBatch| {
             let row_count = batch.num_rows() as u64;
             total_rows += row_count;
 
-            // Update progress
+            // Track per-entity progress
+            let done = entity_row_counts.entry(entity_name.to_string()).or_insert(0);
+            *done += row_count;
+
+            // Emit JSON progress event
+            if json_mode {
+                let entity_total = entity_total_rows.get(entity_name).copied().unwrap_or(0);
+                let progress_event = serde_json::json!({
+                    "event": "progress",
+                    "entity": entity_name,
+                    "rows_done": *done,
+                    "rows_total": entity_total,
+                });
+                println!("{}", progress_event);
+            }
+
+            // Update progress bar
             if let Some(pb) = entity_bars.get(entity_name) {
                 pb.inc(row_count);
             }
@@ -184,14 +232,15 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     };
 
     if cli.json {
-        let summary = serde_json::json!({
+        let complete_event = serde_json::json!({
+            "event": "complete",
+            "elapsed_ms": elapsed.as_millis() as u64,
             "rows": total_rows,
             "bytes": total_bytes,
-            "elapsed_ms": elapsed.as_millis(),
             "throughput_rows_per_sec": throughput as u64,
             "output_dir": output_dir,
         });
-        println!("{}", serde_json::to_string_pretty(&summary)?);
+        println!("{}", complete_event);
     } else if !cli.quiet {
         println!();
         println!("{}", "═══ Generation Complete ═══".green().bold());
