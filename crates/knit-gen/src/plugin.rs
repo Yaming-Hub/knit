@@ -1,9 +1,13 @@
 //! Plugin registry for custom generator extensions.
 //!
 //! This module provides a [`Registry`] that allows external code to register
-//! custom [`FieldGenerator`] implementations at runtime. The generation engine
-//! consults the registry when it encounters an unknown generator type in a
-//! schema, enabling extensibility without modifying `knit-gen` itself.
+//! custom [`FieldGenerator`] implementations at runtime. Registered plugins
+//! can be discovered by name via [`Registry::find`].
+//!
+//! **Note:** The generation engine does not yet automatically consult the
+//! registry for unknown generator types. Integration with the schema parser
+//! and plan compiler is planned for a future release. Currently, plugins must
+//! be manually instantiated after lookup.
 //!
 //! # Usage
 //!

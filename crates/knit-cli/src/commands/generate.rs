@@ -140,23 +140,6 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
             let done = entity_row_counts.entry(entity_name.to_string()).or_insert(0);
             *done += row_count;
 
-            // Emit JSON progress event
-            if json_mode {
-                let entity_total = entity_total_rows.get(entity_name).copied().unwrap_or(0);
-                let progress_event = serde_json::json!({
-                    "event": "progress",
-                    "entity": entity_name,
-                    "rows_done": *done,
-                    "rows_total": entity_total,
-                });
-                println!("{}", progress_event);
-            }
-
-            // Update progress bar
-            if let Some(pb) = entity_bars.get(entity_name) {
-                pb.inc(row_count);
-            }
-
             // Lazily create sink
             if !sinks.contains_key(entity_name) {
                 let file_path = out_path.join(format!("{}.{}", entity_name, extension));
@@ -193,6 +176,23 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
             })?;
             sink.write_batch(&batch)
                 .map_err(|e| knit_gen::GenError::Generation(format!("sink write error: {}", e)))?;
+
+            // Emit JSON progress event only after successful write
+            if json_mode {
+                let entity_total = entity_total_rows.get(entity_name).copied().unwrap_or(0);
+                let progress_event = serde_json::json!({
+                    "event": "progress",
+                    "entity": entity_name,
+                    "rows_done": *done,
+                    "rows_total": entity_total,
+                });
+                println!("{}", progress_event);
+            }
+
+            // Update progress bar
+            if let Some(pb) = entity_bars.get(entity_name) {
+                pb.inc(row_count);
+            }
 
             Ok(())
         })

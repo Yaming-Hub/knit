@@ -4,6 +4,10 @@
 //! memory is impractical. [`SampledKeyStore`] maintains a fixed-capacity
 //! reservoir sample using Algorithm R, giving each key an equal probability
 //! of being retained regardless of insertion order.
+//!
+//! **Note:** This store is not yet integrated with `ForeignKeyGenerator` or
+//! the `KeyStoreKind::SampledSubset` plan variant. It is provided as
+//! infrastructure for future large-table FK support.
 
 use knit_core::Value;
 use rand::RngCore;
