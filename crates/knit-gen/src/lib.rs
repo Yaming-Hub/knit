@@ -16,6 +16,7 @@
 
 pub mod batch;
 pub mod context;
+pub mod engine;
 pub mod error;
 pub mod generators;
 pub mod keystore;
@@ -24,8 +25,10 @@ pub mod traits;
 
 pub use batch::assemble_batch;
 pub use context::GenContext;
+pub use engine::GenerationEngine;
 pub use error::GenError;
 pub use generators::create_generator;
+pub use generators::fk::ForeignKeyGenerator;
 pub use keystore::InMemoryKeyStore;
 pub use null_mask::apply_null_mask;
 pub use traits::{FieldGenerator, KeyStore};

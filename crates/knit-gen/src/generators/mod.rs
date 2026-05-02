@@ -9,6 +9,7 @@ pub mod composite;
 pub mod constant;
 pub mod derived;
 pub mod distribution;
+pub mod fk;
 pub mod one_of;
 pub mod pattern;
 pub mod sequence;
