@@ -10,6 +10,7 @@ use crate::error::BindError;
 use crate::ipc::ArrowIpcSink;
 use crate::json::{JsonMode, JsonSink};
 use crate::parquet::{Compression, ParquetSink};
+use crate::template::{TemplateSink, TemplateMode};
 use crate::traits::Sink;
 
 /// Supported output formats.
@@ -25,6 +26,8 @@ pub enum OutputFormat {
     Csv,
     /// Arrow IPC / Feather v2 format.
     ArrowIpc,
+    /// Template-based output rendered via MiniJinja.
+    Template,
 }
 
 /// Configuration for creating an output sink.
@@ -40,6 +43,10 @@ pub struct SinkConfig {
     pub csv_header: bool,
     /// String representation for null values in CSV.
     pub null_representation: String,
+    /// MiniJinja template source string (used when format is `Template`).
+    pub template_source: String,
+    /// Template rendering mode (`None` for auto-detection).
+    pub template_mode: Option<TemplateMode>,
 }
 
 impl Default for SinkConfig {
@@ -50,6 +57,8 @@ impl Default for SinkConfig {
             csv_delimiter: b',',
             csv_header: true,
             null_representation: String::new(),
+            template_source: String::new(),
+            template_mode: None,
         }
     }
 }
@@ -86,6 +95,14 @@ pub fn create_sink(
         }
         OutputFormat::ArrowIpc => {
             let sink = ArrowIpcSink::new(writer, schema)?;
+            Ok(Box::new(sink))
+        }
+        OutputFormat::Template => {
+            let sink = TemplateSink::new(
+                writer,
+                config.template_source.clone(),
+                config.template_mode,
+            )?;
             Ok(Box::new(sink))
         }
     }

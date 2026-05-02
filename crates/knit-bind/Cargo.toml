@@ -8,6 +8,7 @@ description = "Output sinks for serializing Arrow RecordBatches to various forma
 arrow = { version = "54", features = ["csv", "ipc", "json"] }
 parquet = { version = "54", features = ["arrow"] }
 serde_json = "1"
+minijinja = "2"
 thiserror = "2"
 tracing = "0.1"
 chrono = "0.4"

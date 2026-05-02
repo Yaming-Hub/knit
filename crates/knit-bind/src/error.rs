@@ -19,6 +19,10 @@ pub enum BindError {
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
 
+    /// A template rendering or compilation error.
+    #[error("template error: {0}")]
+    Template(String),
+
     /// A general bind error with a descriptive message.
     #[error("bind error: {0}")]
     Other(String),
