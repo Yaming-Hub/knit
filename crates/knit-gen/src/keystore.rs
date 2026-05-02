@@ -45,7 +45,16 @@ impl KeyStore for InMemoryKeyStore {
         if keys.is_empty() {
             return None;
         }
-        let idx = (rng.next_u64() as usize) % keys.len();
+        // Unbiased sampling via rejection method: find the largest multiple of len
+        // that fits in u64, reject samples above it, then take modulo.
+        let len = keys.len() as u64;
+        let threshold = u64::MAX - (u64::MAX % len);
+        let idx = loop {
+            let r = rng.next_u64();
+            if r < threshold {
+                break (r % len) as usize;
+            }
+        };
         Some(keys[idx])
     }
 

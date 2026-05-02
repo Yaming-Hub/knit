@@ -70,30 +70,42 @@ impl FieldGenerator for DistributionGenerator {
             }
             DistributionKind::Normal => {
                 let mean = self.param("mean", 0.0);
-                let std_dev = self.param("std_dev", 1.0);
+                let std_dev = self.param("std_dev", 1.0).abs().max(f64::EPSILON);
                 let dist =
-                    rand_distr::Normal::new(mean, std_dev).expect("invalid Normal parameters");
+                    rand_distr::Normal::new(mean, std_dev).unwrap_or_else(|_| {
+                        tracing::warn!(mean, std_dev, "invalid Normal params, falling back to N(0,1)");
+                        rand_distr::Normal::new(0.0, 1.0).unwrap()
+                    });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 Arc::new(Float64Array::from(values))
             }
             DistributionKind::LogNormal => {
                 let mu = self.param("mu", 0.0);
-                let sigma = self.param("sigma", 1.0);
+                let sigma = self.param("sigma", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::LogNormal::new(mu, sigma)
-                    .expect("invalid LogNormal parameters");
+                    .unwrap_or_else(|_| {
+                        tracing::warn!(mu, sigma, "invalid LogNormal params, falling back to LN(0,1)");
+                        rand_distr::LogNormal::new(0.0, 1.0).unwrap()
+                    });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 Arc::new(Float64Array::from(values))
             }
             DistributionKind::Exponential => {
-                let lambda = self.param("lambda", 1.0);
-                let dist = rand_distr::Exp::new(lambda).expect("invalid Exponential parameters");
+                let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::Exp::new(lambda).unwrap_or_else(|_| {
+                    tracing::warn!(lambda, "invalid Exponential params, falling back to Exp(1)");
+                    rand_distr::Exp::new(1.0).unwrap()
+                });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 Arc::new(Float64Array::from(values))
             }
             DistributionKind::Poisson => {
-                let lambda = self.param("lambda", 1.0);
+                let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
                 let dist =
-                    rand_distr::Poisson::new(lambda).expect("invalid Poisson parameters");
+                    rand_distr::Poisson::new(lambda).unwrap_or_else(|_| {
+                        tracing::warn!(lambda, "invalid Poisson params, falling back to Poisson(1)");
+                        rand_distr::Poisson::new(1.0).unwrap()
+                    });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
                         let v: f64 = dist.sample(rng);

@@ -37,6 +37,10 @@ pub fn apply_null_mask(
         }
         NullPlan::Pattern { every_n } => {
             let every_n = *every_n;
+            if every_n == 0 {
+                // every_n=0 is nonsensical; treat as "never null"
+                return array;
+            }
             let keep: BooleanArray = (0..count)
                 .map(|i| Some(i % every_n != 0))
                 .collect();
