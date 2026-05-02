@@ -1,10 +1,20 @@
+//! Semantic validation of a parsed [`DataModel`](knit_core::DataModel).
+//!
+//! Checks include: duplicate entity/field/relationship names, missing
+//! distribution parameters, invalid count specs, unknown entity references
+//! in relationships, noise profiles, and correlations.
+
 use std::collections::HashSet;
 
 use knit_core::*;
 
 use crate::error::SchemaError;
 
-/// Validate a DataModel and return all errors found.
+/// Validate a [`DataModel`] and return all semantic errors found.
+///
+/// This performs a full pass over entities, relationships, noise profiles,
+/// and correlations. It does **not** short-circuit — all errors are collected
+/// so the user can fix them in one go.
 pub fn validate(model: &DataModel) -> Vec<SchemaError> {
     let mut errors = Vec::new();
     validate_entities(model, &mut errors);

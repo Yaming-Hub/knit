@@ -1,3 +1,9 @@
+//! TOML and JSON parsing for Weave schema files.
+//!
+//! Converts raw schema text into a [`DataModel`](knit_core::DataModel) via an
+//! intermediate `RawSchema` representation that handles the TOML/JSON
+//! structural differences (e.g. `[model]` section, `[[entities]]` arrays).
+
 use serde::Deserialize;
 use std::collections::BTreeMap;
 

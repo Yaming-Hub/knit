@@ -1,3 +1,10 @@
+//! Schema inheritance via `extends` directives.
+//!
+//! Allows a child schema to inherit from a parent, overriding or adding
+//! entities, fields, relationships, and scalar properties. The merge is
+//! key-based (by name) so child additions are additive and child overrides
+//! replace parent values.
+
 use knit_core::{CountSpec, DataModel, Entity};
 
 use crate::error::SchemaError;
