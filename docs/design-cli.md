@@ -136,34 +136,29 @@ knit schema diff <a> <b>            Compare two schemas
 
 ### 4.1 `knit init`
 
-Interactive wizard that scaffolds a new Weave schema.
+Scaffolds a new `.weave.toml` starter schema with documentation comments.
 
-**Flow:**
+The data model schema language is the single source of truth for all data
+definitions. The `init` command creates a minimal, well-commented schema file
+that demonstrates available generator types and relationship patterns, which
+the user then edits to define their specific data model.
 
-```mermaid
-flowchart TD
-    start([Start]) --> template["Choose template\n(e-commerce, IoT, logs, financial, blank)"]
-    template --> entities["Configure entity count"]
-    entities --> fields["Select field types\nand generators"]
-    fields --> rels["Define relationships"]
-    rels --> output["Write .weave.toml"]
-    output --> done([Done])
+**Usage:**
+
+```bash
+knit init                    # creates .weave.toml in cwd
+knit init -o my_schema.toml  # custom output path
 ```
 
 **Details:**
 
-- **Template library** — Pre-built templates for common domains:
-  - **E-commerce** — users, products, orders, reviews
-  - **IoT** — devices, sensors, readings, alerts
-  - **Logs** — services, requests, errors, metrics
-  - **Financial** — accounts, transactions, holdings, market data
-  - **Blank** — empty scaffold with model metadata only
-- **Interactive prompts** — Uses `dialoguer` for selections, confirmations, and
-  free-text input. Each step displays sensible defaults the user can accept.
+- **Scaffold content** — A valid schema with one example entity showing common
+  generator types (sequence, pattern, distribution, temporal) plus commented
+  examples of foreign keys and relationships.
+- **Self-documenting** — The generated file lists all available generator types
+  and configuration options as comments.
 - **Output** — Writes a `.weave.toml` file to the current directory (or path
-  specified with `-o`).
-- **Non-interactive mode** — `knit init --template ecommerce` skips prompts and
-  writes the template directly.
+  specified with `-o`). Refuses to overwrite existing files.
 
 ---
 

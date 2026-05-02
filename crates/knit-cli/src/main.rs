@@ -1,16 +1,21 @@
 //! knit CLI — synthetic data generation toolset.
 //!
-//! Provides three core commands:
+//! Provides commands for schema management, planning, and data generation:
 //! - `validate` — parse and validate a schema file
 //! - `plan` — show the execution plan (dry run)
 //! - `generate` — run the full forward pipeline
+//! - `schema expand|normalize|diff` — schema manipulation
+//! - `init` — interactive project setup wizard
+//! - `learn` — infer schema from data (placeholder)
 
 mod commands;
+mod config;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use tracing_subscriber::EnvFilter;
 
-use commands::{generate, plan, validate};
+use commands::{generate, init, learn, plan, schema, validate};
+use config::resolve_config;
 
 /// Knit — deterministic synthetic data generation.
 #[derive(Parser, Debug)]
@@ -102,6 +107,44 @@ enum Command {
         #[arg(short, long, default_value = "output")]
         output: String,
     },
+    /// Schema manipulation operations.
+    Schema {
+        #[command(subcommand)]
+        action: SchemaAction,
+    },
+    /// Initialize a new knit project with a starter schema.
+    Init {
+        /// Output file path.
+        #[arg(short, long, default_value = ".weave.toml")]
+        output: String,
+    },
+    /// Infer a schema from existing data (not yet implemented).
+    Learn {
+        /// Path to the data source to learn from.
+        source: String,
+    },
+}
+
+/// Schema subcommands.
+#[derive(Subcommand, Debug)]
+enum SchemaAction {
+    /// Flatten extends chain into a standalone schema.
+    Expand {
+        /// Path to the schema file.
+        file: String,
+    },
+    /// Reformat schema to canonical style.
+    Normalize {
+        /// Path to the schema file.
+        file: String,
+    },
+    /// Compare two schemas and show differences.
+    Diff {
+        /// Path to the first schema file.
+        a: String,
+        /// Path to the second schema file.
+        b: String,
+    },
 }
 
 /// Parse `key=value` pairs for `--param`.
@@ -130,8 +173,27 @@ fn init_tracing(quiet: bool, verbose: bool) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
     init_tracing(cli.quiet, cli.verbose);
+
+    // Load config (file + env vars); CLI flags take final precedence.
+    let config = resolve_config();
+
+    // Apply config defaults where CLI flags weren't explicitly set.
+    // CLI flags (non-default) > env vars > config file.
+    if cli.seed.is_none() {
+        cli.seed = config.seed;
+    }
+    if cli.parallel == 0 {
+        if let Some(p) = config.parallel {
+            cli.parallel = p;
+        }
+    }
+    if cli.batch_size == 8192 {
+        if let Some(bs) = config.batch_size {
+            cli.batch_size = bs;
+        }
+    }
 
     match &cli.command {
         Command::Validate { schema } => validate::run(schema, &cli),
@@ -143,5 +205,12 @@ fn main() -> anyhow::Result<()> {
                 generate::run(schema, output, &cli)
             }
         }
+        Command::Schema { action } => match action {
+            SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
+            SchemaAction::Normalize { file } => schema::run_normalize(file, cli.json),
+            SchemaAction::Diff { a, b } => schema::run_diff(a, b),
+        },
+        Command::Init { output } => init::run(output),
+        Command::Learn { source } => learn::run(source),
     }
 }
