@@ -6,3 +6,13 @@ description = "Data generation engine"
 
 [dependencies]
 knit-core = { path = "../knit-core" }
+knit-plan = { path = "../knit-plan" }
+arrow = { version = "54", features = ["prettyprint"] }
+rand = "0.8"
+rand_chacha = "0.3"
+rand_distr = "0.4"
+uuid = { version = "1", features = ["v4"] }
+thiserror = "2"
+tracing = "0.1"
+
+[dev-dependencies]
