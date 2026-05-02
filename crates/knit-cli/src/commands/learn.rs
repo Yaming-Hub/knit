@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use arrow::array::{Array, AsArray, StringArray};
+use arrow::array::{Array, AsArray, LargeStringArray, StringArray};
 use arrow::compute::concat_batches;
 use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
@@ -374,32 +374,38 @@ fn extract_timestamp_seconds(batch: &RecordBatch, col_name: &str) -> Vec<f64> {
     let col = batch.column(idx);
     let mut out = Vec::new();
 
-    match col.data_type() {
-        DataType::Timestamp(TimeUnit::Second, _) => {
-            let a = col.as_any().downcast_ref::<arrow::array::TimestampSecondArray>().unwrap();
-            for i in 0..a.len() {
-                if !a.is_null(i) { out.push(a.value(i) as f64); }
+    let divisor_and_array: Option<(f64, &dyn Array)> = match col.data_type() {
+        DataType::Timestamp(TimeUnit::Second, _) => Some((1.0, col.as_ref())),
+        DataType::Timestamp(TimeUnit::Millisecond, _) => Some((1_000.0, col.as_ref())),
+        DataType::Timestamp(TimeUnit::Microsecond, _) => Some((1_000_000.0, col.as_ref())),
+        DataType::Timestamp(TimeUnit::Nanosecond, _) => Some((1_000_000_000.0, col.as_ref())),
+        _ => None,
+    };
+
+    if let Some((divisor, arr)) = divisor_and_array {
+        // Use i64 values from the underlying primitive array
+        if let Some(prim) = arr.as_any().downcast_ref::<arrow::array::Int64Array>() {
+            for i in 0..prim.len() {
+                if !prim.is_null(i) {
+                    out.push(prim.value(i) as f64 / divisor);
+                }
             }
-        }
-        DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let a = col.as_any().downcast_ref::<arrow::array::TimestampMillisecondArray>().unwrap();
-            for i in 0..a.len() {
-                if !a.is_null(i) { out.push(a.value(i) as f64 / 1_000.0); }
+        } else {
+            // Fallback: try each concrete timestamp type
+            macro_rules! try_ts {
+                ($ty:ty) => {
+                    if let Some(a) = arr.as_any().downcast_ref::<$ty>() {
+                        for i in 0..a.len() {
+                            if !a.is_null(i) { out.push(a.value(i) as f64 / divisor); }
+                        }
+                    }
+                };
             }
+            try_ts!(arrow::array::TimestampSecondArray);
+            try_ts!(arrow::array::TimestampMillisecondArray);
+            try_ts!(arrow::array::TimestampMicrosecondArray);
+            try_ts!(arrow::array::TimestampNanosecondArray);
         }
-        DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let a = col.as_any().downcast_ref::<arrow::array::TimestampMicrosecondArray>().unwrap();
-            for i in 0..a.len() {
-                if !a.is_null(i) { out.push(a.value(i) as f64 / 1_000_000.0); }
-            }
-        }
-        DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let a = col.as_any().downcast_ref::<arrow::array::TimestampNanosecondArray>().unwrap();
-            for i in 0..a.len() {
-                if !a.is_null(i) { out.push(a.value(i) as f64 / 1_000_000_000.0); }
-            }
-        }
-        _ => {}
     }
     out.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     out
@@ -412,8 +418,17 @@ fn extract_string_values(batch: &RecordBatch, col_name: &str) -> Vec<Option<Stri
     };
     let col = batch.column(idx);
     match col.data_type() {
-        DataType::Utf8 | DataType::LargeUtf8 => {
+        DataType::Utf8 => {
             if let Some(a) = col.as_any().downcast_ref::<StringArray>() {
+                (0..a.len())
+                    .map(|i| if a.is_null(i) { None } else { Some(a.value(i).to_string()) })
+                    .collect()
+            } else {
+                Vec::new()
+            }
+        }
+        DataType::LargeUtf8 => {
+            if let Some(a) = col.as_any().downcast_ref::<LargeStringArray>() {
                 (0..a.len())
                     .map(|i| if a.is_null(i) { None } else { Some(a.value(i).to_string()) })
                     .collect()
@@ -435,8 +450,18 @@ fn extract_distinct_string_values(batch: &RecordBatch, col_name: &str) -> HashSe
     let cap = 10_000;
 
     match col.data_type() {
-        DataType::Utf8 | DataType::LargeUtf8 => {
+        DataType::Utf8 => {
             if let Some(a) = col.as_any().downcast_ref::<StringArray>() {
+                for i in 0..a.len() {
+                    if !a.is_null(i) {
+                        set.insert(a.value(i).to_string());
+                        if set.len() >= cap { break; }
+                    }
+                }
+            }
+        }
+        DataType::LargeUtf8 => {
+            if let Some(a) = col.as_any().downcast_ref::<LargeStringArray>() {
                 for i in 0..a.len() {
                     if !a.is_null(i) {
                         set.insert(a.value(i).to_string());
