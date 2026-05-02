@@ -117,12 +117,6 @@ enum Command {
         /// Output file path.
         #[arg(short, long, default_value = ".weave.toml")]
         output: String,
-        /// Template name for non-interactive mode (e-commerce, iot, logs, financial, custom).
-        #[arg(long)]
-        template: Option<String>,
-        /// Row count per entity for non-interactive mode.
-        #[arg(long, default_value_t = 1000)]
-        count: u64,
     },
     /// Infer a schema from existing data (not yet implemented).
     Learn {
@@ -216,17 +210,7 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Normalize { file } => schema::run_normalize(file, cli.json),
             SchemaAction::Diff { a, b } => schema::run_diff(a, b),
         },
-        Command::Init {
-            output,
-            template,
-            count,
-        } => {
-            if let Some(tpl) = template {
-                init::run_non_interactive(tpl, *count, cli.seed.unwrap_or(42), output)
-            } else {
-                init::run(Some(output.as_str()))
-            }
-        }
+        Command::Init { output } => init::run(output),
         Command::Learn { source } => learn::run(source),
     }
 }

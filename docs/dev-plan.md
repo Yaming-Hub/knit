@@ -436,14 +436,13 @@ SchemaParser
 - **`knit schema expand <file>`** — flatten extends chain → standalone schema
 - **`knit schema normalize <file>`** — reformat to canonical style (key ordering, whitespace)
 - **`knit schema diff <a> <b>`** — compare two schemas, show added/removed/changed elements
-- **`knit init`** — interactive wizard:
-  - Choose from templates (e-commerce, IoT, logs, financial, custom)
-  - Configure entity count, field types, relationships
-  - Output `.weave.toml` starter file
+- **`knit init`** — scaffold a minimal `.weave.toml` starter schema with documentation comments
+  - The data model schema is the single source of truth; no domain templates needed
+  - Output includes commented examples of all generator types and relationships
 - **`knit learn` command** (wiring only, delegates to knit-learn)
 - **Config file support:** `knit.toml` in cwd or `~/.config/knit/config.toml`
 - **Environment variables:** `KNIT_SEED`, `KNIT_PARALLEL`, `KNIT_FORMAT`, etc.
-- Tests: expand/normalize golden tests, diff output tests, init template tests
+- Tests: expand/normalize golden tests, diff output tests, init scaffold tests
 
 **Acceptance criteria:**
 - `knit schema expand` produces correct flattened output
