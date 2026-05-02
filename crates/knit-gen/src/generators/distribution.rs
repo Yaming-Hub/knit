@@ -84,6 +84,12 @@ impl FieldGenerator for DistributionGenerator {
             DistributionKind::Uniform => {
                 let lo = self.param("min", 0.0);
                 let hi = self.param("max", 1.0);
+                let (lo, hi) = if lo >= hi {
+                    tracing::warn!(lo, hi, "Uniform min >= max, swapping to fallback (0,1)");
+                    (0.0, 1.0)
+                } else {
+                    (lo, hi)
+                };
                 let dist = rand::distributions::Uniform::new(lo, hi);
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 Arc::new(Float64Array::from(values))
@@ -135,20 +141,150 @@ impl FieldGenerator for DistributionGenerator {
                     .collect();
                 Arc::new(Int64Array::from(values))
             }
-            _ => {
-                tracing::warn!(
-                    kind = %self.kind,
-                    "unsupported distribution kind, producing zeros"
-                );
-                let values: Vec<f64> = vec![0.0; count];
+            DistributionKind::Bernoulli => {
+                let p = self.param("p", 0.5).clamp(0.0, 1.0);
+                let dist = rand_distr::Bernoulli::new(p).unwrap_or_else(|_| {
+                    tracing::warn!(p, "invalid Bernoulli params, falling back to p=0.5");
+                    rand_distr::Bernoulli::new(0.5).unwrap()
+                });
+                let values: Vec<i64> = (0..count)
+                    .map(|_| if dist.sample(rng) { 1 } else { 0 })
+                    .collect();
+                Arc::new(Int64Array::from(values))
+            }
+            DistributionKind::Binomial => {
+                let n = self.param("n", 10.0).max(0.0) as u64;
+                let p = self.param("p", 0.5).clamp(0.0, 1.0);
+                let dist = rand_distr::Binomial::new(n, p).unwrap_or_else(|_| {
+                    tracing::warn!(n, p, "invalid Binomial params, falling back to B(10,0.5)");
+                    rand_distr::Binomial::new(10, 0.5).unwrap()
+                });
+                let values: Vec<i64> = (0..count)
+                    .map(|_| {
+                        let v = dist.sample(rng) as f64;
+                        self.clamp(v) as i64
+                    })
+                    .collect();
+                Arc::new(Int64Array::from(values))
+            }
+            DistributionKind::Geometric => {
+                let p = self.param("p", 0.5).clamp(f64::EPSILON, 1.0);
+                let dist = rand_distr::Geometric::new(p).unwrap_or_else(|_| {
+                    tracing::warn!(p, "invalid Geometric params, falling back to p=0.5");
+                    rand_distr::Geometric::new(0.5).unwrap()
+                });
+                let values: Vec<i64> = (0..count)
+                    .map(|_| {
+                        let v = dist.sample(rng) as f64;
+                        self.clamp(v) as i64
+                    })
+                    .collect();
+                Arc::new(Int64Array::from(values))
+            }
+            DistributionKind::Pareto => {
+                let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
+                let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::Pareto::new(scale, shape).unwrap_or_else(|_| {
+                    tracing::warn!(scale, shape, "invalid Pareto params, falling back to Pareto(1,1)");
+                    rand_distr::Pareto::new(1.0, 1.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Weibull => {
+                let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
+                let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::Weibull::new(scale, shape).unwrap_or_else(|_| {
+                    tracing::warn!(scale, shape, "invalid Weibull params, falling back to Weibull(1,1)");
+                    rand_distr::Weibull::new(1.0, 1.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Gamma => {
+                let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
+                let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::Gamma::new(shape, scale).unwrap_or_else(|_| {
+                    tracing::warn!(shape, scale, "invalid Gamma params, falling back to Gamma(1,1)");
+                    rand_distr::Gamma::new(1.0, 1.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Beta => {
+                let alpha = self.param("alpha", 2.0).abs().max(f64::EPSILON);
+                let beta = self.param("beta", 2.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::Beta::new(alpha, beta).unwrap_or_else(|_| {
+                    tracing::warn!(alpha, beta, "invalid Beta params, falling back to Beta(2,2)");
+                    rand_distr::Beta::new(2.0, 2.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Cauchy => {
+                let median = self.param("median", 0.0);
+                let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::Cauchy::new(median, scale).unwrap_or_else(|_| {
+                    tracing::warn!(median, scale, "invalid Cauchy params, falling back to Cauchy(0,1)");
+                    rand_distr::Cauchy::new(0.0, 1.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::ChiSquared => {
+                let k = self.param("k", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::ChiSquared::new(k).unwrap_or_else(|_| {
+                    tracing::warn!(k, "invalid ChiSquared params, falling back to ChiSquared(1)");
+                    rand_distr::ChiSquared::new(1.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::StudentT => {
+                let n = self.param("n", 1.0).abs().max(f64::EPSILON);
+                let dist = rand_distr::StudentT::new(n).unwrap_or_else(|_| {
+                    tracing::warn!(n, "invalid StudentT params, falling back to StudentT(1)");
+                    rand_distr::StudentT::new(1.0).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Triangular => {
+                let min = self.param("min", 0.0);
+                let max = self.param("max", 1.0);
+                let mode = self.param("mode", (min + max) / 2.0);
+                let (min, max) = if min >= max { (0.0, 1.0) } else { (min, max) };
+                let mode = mode.clamp(min, max);
+                let dist = rand_distr::Triangular::new(min, max, mode).unwrap_or_else(|_| {
+                    tracing::warn!(min, max, mode, "invalid Triangular params, falling back to Tri(0,1,0.5)");
+                    rand_distr::Triangular::new(0.0, 1.0, 0.5).unwrap()
+                });
+                let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
+                Arc::new(Float64Array::from(values))
+            }
+            DistributionKind::Zipf => {
+                let n = self.param("n", 100.0).max(1.0) as u64;
+                let s = self.param("s", 1.0).max(f64::EPSILON);
+                let dist = rand_distr::Zipf::new(n, s).unwrap_or_else(|_| {
+                    tracing::warn!(n, s, "invalid Zipf params, falling back to Zipf(100,1)");
+                    rand_distr::Zipf::new(100, 1.0).unwrap()
+                });
+                let values: Vec<i64> = (0..count).map(|_| {
+                    let v: f64 = dist.sample(rng);
+                    self.clamp(v) as i64
+                }).collect();
+                Arc::new(Int64Array::from(values))
             }
         }
     }
 
     fn output_type(&self) -> DataType {
         match self.kind {
-            DistributionKind::Poisson => DataType::Int64,
+            DistributionKind::Poisson
+            | DistributionKind::Bernoulli
+            | DistributionKind::Binomial
+            | DistributionKind::Geometric
+            | DistributionKind::Zipf => DataType::Int64,
             _ => DataType::Float64,
         }
     }

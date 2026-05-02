@@ -5,8 +5,12 @@
 //! appropriate concrete type, serving as the single construction point used by
 //! the batch-generation loop.
 
+pub mod composite;
 pub mod constant;
+pub mod derived;
 pub mod distribution;
+pub mod one_of;
+pub mod pattern;
 pub mod sequence;
 pub mod uuid_gen;
 
@@ -17,9 +21,8 @@ use crate::traits::FieldGenerator;
 /// Create a boxed [`FieldGenerator`] from a compiled [`GeneratorPlan`].
 ///
 /// This is the factory function invoked once per field during engine
-/// initialisation. Variants not yet implemented (Faker, OneOf, Derived,
-/// Composite, ForeignKey) return a placeholder that produces null arrays
-/// and emits a `tracing::warn` event.
+/// initialisation. The `Faker` and `ForeignKey` variants are not yet
+/// implemented and return placeholder null generators with a `tracing::warn`.
 ///
 /// # Panics
 ///
@@ -45,12 +48,21 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             Box::new(constant::ConstantGenerator::new(value.clone()))
         }
         GeneratorPlan::Uuid => Box::new(uuid_gen::UuidGenerator),
+        GeneratorPlan::OneOf {
+            choices,
+            cumulative_weights: _,
+        } => Box::new(one_of::OneOfGenerator::new(choices.clone())),
+        GeneratorPlan::Pattern { pattern } => {
+            Box::new(pattern::PatternGenerator::new(pattern.clone()))
+        }
+        GeneratorPlan::Derived { expr, depends_on } => {
+            Box::new(derived::DerivedGenerator::new(expr.clone(), depends_on.clone()))
+        }
+        GeneratorPlan::Composite { element, length } => {
+            Box::new(composite::CompositeGenerator::new(element, length))
+        }
         // Placeholders for future PRs.
-        GeneratorPlan::Faker { .. }
-        | GeneratorPlan::OneOf { .. }
-        | GeneratorPlan::Derived { .. }
-        | GeneratorPlan::Composite { .. }
-        | GeneratorPlan::ForeignKey { .. } => {
+        GeneratorPlan::Faker { .. } | GeneratorPlan::ForeignKey { .. } => {
             tracing::warn!(plan = %format!("{plan:?}"), "using placeholder null generator");
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }

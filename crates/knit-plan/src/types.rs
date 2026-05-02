@@ -204,6 +204,11 @@ pub enum GeneratorPlan {
     },
     /// Random UUID v4.
     Uuid,
+    /// Pattern-based string generation (e.g. `"###-???-AAA"`).
+    Pattern {
+        /// The pattern template string.
+        pattern: String,
+    },
 }
 
 // ── NullPlan ─────────────────────────────────────────────────────────
