@@ -1,4 +1,8 @@
-//! Batch assembly — combines per-field arrays into an Arrow `RecordBatch`.
+//! Batch assembly — combine per-field arrays into an Arrow `RecordBatch`.
+//!
+//! Called once per batch after all field generators have run. The resulting
+//! `RecordBatch` is handed to the output sink (Parquet writer, JSON serializer,
+//! etc.) in downstream pipeline stages (`knit-bind`).
 
 use arrow::array::ArrayRef;
 use arrow::datatypes::{Field, Schema};
@@ -9,8 +13,14 @@ use crate::error::GenError;
 
 /// Assemble field arrays into a [`RecordBatch`].
 ///
-/// The resulting batch has one column per field, using the supplied names
-/// and the data types inferred from each array.
+/// Constructs a schema from the provided field names and the data types
+/// inferred from each array. All fields are marked nullable.
+///
+/// # Errors
+///
+/// Returns [`GenError::Generation`] if `field_names` and `field_arrays` have
+/// different lengths, or [`GenError::Arrow`] if Arrow rejects the batch
+/// (e.g. arrays have inconsistent row counts).
 pub fn assemble_batch(
     field_names: &[String],
     field_arrays: Vec<ArrayRef>,

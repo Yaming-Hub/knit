@@ -1,14 +1,29 @@
 //! Thread-safe in-memory key store for foreign-key sampling.
+//!
+//! This module provides [`InMemoryKeyStore`], the default [`KeyStore`]
+//! implementation used during generation. Primary-key generators insert keys
+//! as rows are produced; foreign-key generators in downstream entities sample
+//! from this store to maintain referential integrity.
 
 use rand::RngCore;
 use std::sync::RwLock;
 
 use crate::traits::KeyStore;
 
-/// In-memory key store backed by a `Vec<i64>` behind a `RwLock`.
+/// In-memory key store backed by a `Vec<i64>` behind a [`RwLock`].
 ///
 /// Suitable for entities with up to ~10 M rows. Larger entities should
 /// use memory-mapped or sampled stores (future PRs).
+///
+/// # Thread Safety
+///
+/// Uses [`RwLock`] to allow concurrent readers (FK samplers) with exclusive
+/// writers (PK inserters). The generation engine ensures inserts complete
+/// before downstream FK generators begin sampling.
+///
+/// # Sampling Fairness
+///
+/// Uses rejection-based uniform sampling to avoid modulo bias.
 pub struct InMemoryKeyStore {
     keys: RwLock<Vec<i64>>,
 }

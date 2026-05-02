@@ -1,4 +1,12 @@
 //! Distribution-based generator supporting multiple statistical distributions.
+//!
+//! This is the most commonly-used generator type, covering Uniform, Normal,
+//! LogNormal, Exponential, and Poisson distributions. Additional distributions
+//! (Zipf, Binomial, etc.) will be added in future PRs.
+//!
+//! Invalid user-supplied parameters (negative std_dev, zero lambda) are handled
+//! gracefully — the generator logs a warning via `tracing` and falls back to
+//! safe defaults rather than panicking.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -13,10 +21,22 @@ use knit_core::DistributionKind;
 use crate::context::GenContext;
 use crate::traits::FieldGenerator;
 
-/// Generates values drawn from a statistical distribution.
+/// Generate values drawn from a configurable statistical distribution.
 ///
-/// Supports Uniform, Normal, LogNormal, Exponential, and Poisson for this PR.
-/// Additional distributions will be added in future PRs.
+/// Created by [`create_generator`](crate::create_generator) when the plan
+/// contains a [`GeneratorPlan::Distribution`](knit_plan::GeneratorPlan::Distribution).
+///
+/// # Parameters
+///
+/// Distribution parameters are stored in a `BTreeMap<String, f64>`:
+/// - **Uniform**: `min`, `max`
+/// - **Normal**: `mean`, `std_dev`
+/// - **LogNormal**: `mu`, `sigma`
+/// - **Exponential**: `lambda`
+/// - **Poisson**: `lambda`
+///
+/// Optional `clamp_min` / `clamp_max` bounds are applied after sampling to
+/// truncate extreme values (useful for ensuring realistic ranges).
 pub struct DistributionGenerator {
     kind: DistributionKind,
     params: BTreeMap<String, f64>,

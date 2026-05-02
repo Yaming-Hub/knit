@@ -1,4 +1,8 @@
 //! Fixed-value generator.
+//!
+//! Produces the same constant value for every row in the batch. Useful for
+//! status flags, type discriminators, or placeholder columns that will be
+//! overridden by noise injection.
 
 use std::sync::Arc;
 
@@ -11,9 +15,11 @@ use knit_core::Value;
 use crate::context::GenContext;
 use crate::traits::FieldGenerator;
 
-/// Produces the same value for every row.
+/// Produce the same [`Value`] for every row in the batch.
 ///
-/// Handles [`Value`] variants String, Int, Float, Bool, and Null.
+/// Handles all primitive `Value` variants: String, Int, Float, Bool, and Null.
+/// Complex variants (DateTime, Array, Map) fall back to null arrays with a
+/// tracing warning until dedicated generators are introduced.
 pub struct ConstantGenerator {
     value: Value,
 }

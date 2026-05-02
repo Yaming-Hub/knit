@@ -1,4 +1,9 @@
 //! Concrete [`FieldGenerator`](crate::FieldGenerator) implementations and factory.
+//!
+//! Each sub-module provides a generator for one category of synthetic values.
+//! The [`create_generator`] factory maps a [`GeneratorPlan`] variant to the
+//! appropriate concrete type, serving as the single construction point used by
+//! the batch-generation loop.
 
 pub mod constant;
 pub mod distribution;
@@ -9,10 +14,17 @@ use knit_plan::GeneratorPlan;
 
 use crate::traits::FieldGenerator;
 
-/// Create a [`FieldGenerator`] from a [`GeneratorPlan`].
+/// Create a boxed [`FieldGenerator`] from a compiled [`GeneratorPlan`].
 ///
-/// Variants not yet implemented (Faker, OneOf, Derived, Composite, ForeignKey)
-/// return a placeholder that produces null arrays.
+/// This is the factory function invoked once per field during engine
+/// initialisation. Variants not yet implemented (Faker, OneOf, Derived,
+/// Composite, ForeignKey) return a placeholder that produces null arrays
+/// and emits a `tracing::warn` event.
+///
+/// # Panics
+///
+/// Does not panic. Invalid distribution parameters are handled gracefully
+/// with fallback defaults and warning logs.
 pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
     match plan {
         GeneratorPlan::Distribution {

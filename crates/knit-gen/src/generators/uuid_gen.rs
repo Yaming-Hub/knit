@@ -1,4 +1,8 @@
 //! UUID v4 generator with deterministic output.
+//!
+//! Generates RFC 4122 compliant UUID v4 strings using bytes drawn from the
+//! provided RNG, ensuring reproducibility for a given seed. Useful for
+//! generating globally unique identifiers without relying on system randomness.
 
 use std::sync::Arc;
 
@@ -9,10 +13,15 @@ use rand::RngCore;
 use crate::context::GenContext;
 use crate::traits::FieldGenerator;
 
-/// Generates random UUID v4 strings.
+/// Generate deterministic UUID v4 strings.
 ///
-/// Uses the provided RNG to construct UUID bytes, ensuring deterministic
-/// output for a given seed.
+/// Each call to [`generate`](FieldGenerator::generate) produces `count` unique
+/// UUID v4 values formatted as lowercase hyphenated strings
+/// (e.g. `550e8400-e29b-41d4-a716-446655440000`).
+///
+/// # Determinism
+///
+/// Output is fully determined by the RNG state — same seed yields same UUIDs.
 pub struct UuidGenerator;
 
 impl FieldGenerator for UuidGenerator {

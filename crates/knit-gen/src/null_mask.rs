@@ -1,4 +1,9 @@
 //! Null-mask application based on [`NullPlan`].
+//!
+//! After a field generator produces an array of non-null values,
+//! [`apply_null_mask`] introduces nulls according to the field's [`NullPlan`].
+//! This separation keeps generators simple (they never worry about nulls) while
+//! giving users fine-grained control over null distribution.
 
 use arrow::array::{ArrayRef, BooleanArray, NullArray};
 use arrow::compute::kernels::zip::zip;
@@ -9,10 +14,17 @@ use knit_plan::NullPlan;
 
 /// Apply a null mask to a generated array according to the given [`NullPlan`].
 ///
-/// - `Never`  — returns the array unchanged.
-/// - `Always` — returns an all-null [`NullArray`].
+/// Called by the batch-generation loop *after* each field generator runs.
+/// The original array is combined with an all-null array using Arrow's `zip`
+/// kernel, guided by a boolean keep-mask.
+///
+/// # Variants
+///
+/// - `Never`  — returns the array unchanged (no nulls introduced).
+/// - `Always` — returns an all-null [`NullArray`] of the same length.
 /// - `Probability(p)` — each element is independently null with probability *p*.
 /// - `Pattern { every_n }` — every *n*-th element (0-indexed) is null.
+///   If `every_n` is 0, behaves as `Never` (no division by zero).
 pub fn apply_null_mask(
     array: ArrayRef,
     null_plan: &NullPlan,
