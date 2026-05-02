@@ -952,7 +952,18 @@ dependencies = [
 name = "knit-learn"
 version = "0.1.0"
 dependencies = [
+ "arrow",
+ "arrow-csv",
+ "arrow-json",
+ "chrono",
  "knit-core",
+ "parquet",
+ "rand",
+ "regex",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tracing",
 ]
 
 [[package]]
