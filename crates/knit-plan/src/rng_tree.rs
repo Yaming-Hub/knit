@@ -1,4 +1,12 @@
 //! RNG tree construction for deterministic seed derivation.
+//!
+//! The RNG tree provides hierarchical deterministic seeding so that:
+//! - Adding/removing entities or fields does not affect existing seeds
+//! - Partition seeds are independent of thread count or execution order
+//! - The same schema always produces identical seeds on any platform
+//!
+//! Derivation chain: `global_seed → entity_seed → field_seed → partition_seed`
+//! using SipHash for fast, high-quality mixing.
 
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
@@ -7,15 +15,26 @@ use siphasher::sip::SipHasher;
 
 use crate::types::{EntitySeedNode, FieldSeedNode, RngTree};
 
-/// Derive a child seed from a parent seed and a key.
+/// Derive a child seed from a parent seed and a key using SipHash.
+///
+/// This is the fundamental building block of the seed hierarchy. It produces
+/// a deterministic, well-distributed 64-bit seed from any parent seed and
+/// arbitrary key bytes (entity name, field name, or partition ID).
 pub fn derive_seed(parent_seed: u64, key: &[u8]) -> u64 {
     let mut hasher = SipHasher::new_with_keys(parent_seed, parent_seed.wrapping_mul(0x517cc1b727220a95));
     key.hash(&mut hasher);
     hasher.finish()
 }
 
-/// Build the full RNG tree from a global seed, entity names with field names,
-/// and the number of partitions per entity.
+/// Build the full RNG tree from a global seed and entity/field/partition info.
+///
+/// Each entity gets a seed derived from `global_seed + entity_name`. Each field
+/// gets a seed derived from its entity seed + field name. Each partition gets a
+/// seed derived from its field seed + partition index.
+///
+/// # Arguments
+/// - `global_seed` — The schema's top-level seed (from `model.seed`)
+/// - `entities` — Tuples of `(entity_name, field_names, num_partitions)`
 pub fn build_rng_tree(
     global_seed: u64,
     entities: &[(String, Vec<String>, u32)], // (entity_name, field_names, num_partitions)

@@ -1,4 +1,8 @@
-//! Main compilation logic: DataModel → ExecutionPlan.
+//! Main compilation logic: [`DataModel`](knit_core::DataModel) → [`ExecutionPlan`].
+//!
+//! This module contains the [`compile()`] function — the primary entry point for
+//! `knit-plan`. It orchestrates dependency analysis, partition planning, RNG tree
+//! construction, and field plan compilation into a single coherent execution plan.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -10,7 +14,19 @@ use crate::partition;
 use crate::rng_tree;
 use crate::types::*;
 
-/// Compile a validated `DataModel` into an `ExecutionPlan`.
+/// Compile a validated [`DataModel`](knit_core::DataModel) into an [`ExecutionPlan`].
+///
+/// This is the main entry point for the planning phase. It performs:
+/// 1. Dependency graph construction and phase assignment
+/// 2. Row count resolution and partition planning
+/// 3. Field plan compilation (GeneratorSpec → GeneratorPlan)
+/// 4. RNG tree construction for deterministic seeding
+/// 5. Index strategy selection based on entity sizes
+///
+/// # Errors
+///
+/// Returns [`PlanError::UnknownEntity`] if a relationship references an entity
+/// that doesn't exist in the model.
 pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     // 1. Build dependency graph and assign phases.
     let assignment = graph::assign_phases(model)?;

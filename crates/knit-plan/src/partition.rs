@@ -1,13 +1,23 @@
-//! Partition planning.
+//! Partition planning — divides entity row spaces into parallel work units.
+//!
+//! Each partition is a contiguous, non-overlapping range of rows that can be
+//! generated independently by a single thread with its own deterministic RNG.
+//! Partition boundaries depend only on entity row count and target size,
+//! ensuring reproducibility regardless of available thread count.
 
 use knit_core::CountSpec;
 
 use crate::types::PartitionRange;
 
 /// Default target partition size: 2^20 = 1,048,576 rows.
+/// Entities with fewer rows use a single partition.
 const TARGET_PARTITION_SIZE: u64 = 1_048_576;
 
-/// Resolve a `CountSpec` to a concrete row count.
+/// Resolve a [`CountSpec`] to a concrete row count for planning purposes.
+///
+/// - `Fixed(n)` → use `n` directly
+/// - `Range { min, max }` → use `max` (plan for worst case)
+/// - `Distribution(spec)` → use the expected value of the distribution
 pub fn resolve_count(count: &CountSpec) -> u64 {
     match count {
         CountSpec::Fixed(n) => *n,
@@ -45,7 +55,12 @@ pub fn resolve_count(count: &CountSpec) -> u64 {
 }
 
 /// Compute partition ranges for a given total row count.
-/// Uses the entity-level seed to derive per-partition seeds.
+///
+/// Divides `total_rows` into contiguous, non-overlapping partitions of
+/// approximately `TARGET_PARTITION_SIZE` rows each. Each partition gets a
+/// deterministic seed derived from `entity_seed` for reproducible generation.
+///
+/// Returns at least one partition even if `total_rows` is 0.
 pub fn compute_partitions(total_rows: u64, entity_seed: u64) -> Vec<PartitionRange> {
     if total_rows == 0 {
         return vec![PartitionRange {

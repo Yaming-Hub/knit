@@ -1,4 +1,11 @@
 //! Dependency graph construction and phase assignment.
+//!
+//! Builds a directed graph from the model's relationships, detects strongly
+//! connected components (cycles) via Tarjan's algorithm, and assigns entities
+//! to generation phases via topological sorting of the condensation DAG.
+//!
+//! Cyclic relationships (self-referential or mutual) produce [`DeferredRef`]
+//! entries that `knit-gen` backpatches after the initial generation phase.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -11,12 +18,15 @@ use knit_core::DataModel;
 use crate::error::PlanError;
 use crate::types::{DeferralStrategy, DeferredRef};
 
-/// A phase-assigned entity group.
+/// Result of dependency graph analysis: entities grouped into ordered phases,
+/// plus any deferred references needed for cycle-breaking.
 #[derive(Debug, Clone)]
 pub struct PhaseAssignment {
-    /// Entities in topological phase order. Each inner Vec is one phase.
+    /// Entities in topological phase order. Each inner `Vec` is one phase;
+    /// entities within a phase have no inter-dependencies and can run in parallel.
     pub phases: Vec<Vec<String>>,
-    /// Deferred references (cycle-breaking edges).
+    /// Deferred references (cycle-breaking edges) that must be backpatched
+    /// after their phase completes.
     pub deferred_refs: Vec<DeferredRef>,
 }
 
@@ -189,7 +199,10 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
     })
 }
 
-/// Map from entity name to its resolved row count.
+/// Resolve each entity's [`CountSpec`](knit_core::CountSpec) to a concrete row count.
+///
+/// Returns a sorted map from entity name to resolved row count. Used by the
+/// compiler to size partitions and estimate output bytes.
 pub fn resolve_row_counts(model: &DataModel) -> BTreeMap<String, u64> {
     let mut counts = BTreeMap::new();
     for entity in &model.entities {
