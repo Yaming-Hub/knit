@@ -1,5 +1,0 @@
-[[entities]]
-name = "parent"
-
-[entities.count]
-fixed = 10

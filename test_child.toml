@@ -1,5 +1,0 @@
-[[entities]]
-name = "malicious"
-
-[entities.count]
-fixed = 1
