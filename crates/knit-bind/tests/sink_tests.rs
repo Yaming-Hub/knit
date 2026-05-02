@@ -410,4 +410,124 @@ mod factory_tests {
         assert!(stats.bytes_written > 0);
         assert_eq!(stats.files_created, 1);
     }
+
+    #[test]
+    fn create_template_sink_via_factory() {
+        let batch = test_batch();
+        let config = SinkConfig {
+            format: OutputFormat::Template,
+            template_source: "{{ row.id }},{{ row.name }}".to_string(),
+            template_mode: None,
+            ..Default::default()
+        };
+        let writer: Box<dyn std::io::Write + Send> = Box::new(Vec::new());
+        let mut sink = create_sink(writer, batch.schema(), &config).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 3);
+        assert!(stats.bytes_written > 0);
+    }
 }
+
+mod template_tests {
+    use super::*;
+    use knit_bind::template::{TemplateSink, TemplateMode};
+    use knit_bind::traits::Sink;
+
+    #[test]
+    fn sql_insert_template() {
+        let batch = test_batch();
+        let tmpl = "INSERT INTO users (id, name, score, active) VALUES ({{ row.id }}, '{{ row.name | escape_sql }}', {{ row.score }}, {{ row.active }});";
+        let buf = Cursor::new(Vec::new());
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let output = String::from_utf8(sink.into_inner().into_inner()).unwrap();
+        let lines: Vec<&str> = output.lines().collect();
+        assert_eq!(lines.len(), 3);
+        assert!(lines[0].contains("VALUES (1,"));
+        assert!(lines[0].contains("'alice'"));
+        assert!(lines[0].contains("95.5"));
+        // Second row has null name
+        assert!(lines[1].contains("VALUES (2,"));
+    }
+
+    #[test]
+    fn xml_document_template() {
+        let batch = test_batch();
+        let tmpl = r#"<?xml version="1.0"?>
+<records>
+{% for r in rows %}  <record id="{{ r.id }}">
+    <name>{{ r.name | escape_xml }}</name>
+    <score>{{ r.score }}</score>
+    <active>{{ r.active }}</active>
+  </record>
+{% endfor %}</records>"#;
+        let buf = Cursor::new(Vec::new());
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerBatch)).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let output = String::from_utf8(sink.into_inner().into_inner()).unwrap();
+        assert!(output.contains("<?xml version=\"1.0\"?>"));
+        assert!(output.contains("<name>alice</name>"));
+        assert!(output.contains("<name>charlie</name>"));
+        assert!(output.contains("<records>"));
+        assert!(output.contains("</records>"));
+    }
+
+    #[test]
+    fn template_with_helpers() {
+        let batch = test_batch();
+        let tmpl = "{{ row.name | upper | pad_right(10) }}|{{ row.score | format_number(1) }}";
+        let buf = Cursor::new(Vec::new());
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let output = String::from_utf8(sink.into_inner().into_inner()).unwrap();
+        let lines: Vec<&str> = output.lines().collect();
+        assert!(lines[0].contains("ALICE"));
+        assert!(lines[0].contains("95.5"));
+    }
+
+    #[test]
+    fn template_multiple_batches() {
+        let batch = test_batch();
+        let tmpl = "{{ row.id }}";
+        let buf = Cursor::new(Vec::new());
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        sink.write_batch(&batch).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 6);
+        assert_eq!(stats.files_created, 1);
+    }
+
+    #[test]
+    fn template_batch_with_schema() {
+        let batch = test_batch();
+        let tmpl = "{% for f in schema.fields %}{{ f.name }},{% endfor %}";
+        let buf = Cursor::new(Vec::new());
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerBatch)).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let output = String::from_utf8(sink.into_inner().into_inner()).unwrap();
+        assert!(output.contains("id,"));
+        assert!(output.contains("name,"));
+        assert!(output.contains("score,"));
+        assert!(output.contains("active,"));
+    }
+
+    #[test]
+    fn template_timestamp_formatting() {
+        let batch = timestamp_batch();
+        let tmpl = "{{ row.created_at | format_date(\"%Y-%m-%d\") }}";
+        let buf = Cursor::new(Vec::new());
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let output = String::from_utf8(sink.into_inner().into_inner()).unwrap();
+        assert!(output.contains("2024-01-15"));
+    }
+}
+
