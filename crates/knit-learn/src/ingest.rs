@@ -110,16 +110,17 @@ pub fn read_parquet(path: &Path) -> LearnResult<Vec<RecordBatch>> {
 pub fn read_json(path: &Path, batch_size: usize) -> LearnResult<Vec<RecordBatch>> {
     info!(path = %path.display(), "Reading JSON file");
 
-    let file = File::open(path)?;
-    let buf = BufReader::new(file);
-
-    // Infer schema from reading the file
+    // Infer schema from a first pass
+    let infer_file = File::open(path)?;
     let (inferred_schema, _) =
-        arrow_json::reader::infer_json_schema(BufReader::new(File::open(path)?), None)?;
+        arrow_json::reader::infer_json_schema(BufReader::new(infer_file), None)?;
     let schema = Arc::new(inferred_schema);
 
     debug!(fields = schema.fields().len(), "Inferred JSON schema");
 
+    // Reopen for reading
+    let file = File::open(path)?;
+    let buf = BufReader::new(file);
     let reader = JsonReaderBuilder::new(schema)
         .with_batch_size(batch_size)
         .build(buf)?;

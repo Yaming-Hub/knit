@@ -165,7 +165,13 @@ fn profile_column(name: &str, data_type: &DataType, array: &dyn Array) -> Column
     }
 }
 
+/// Maximum number of distinct values to track before switching to approximate.
+const MAX_DISTINCT_TRACK: usize = 100_000;
+
 /// Compute distinct count for supported types.
+///
+/// Caps tracking at [`MAX_DISTINCT_TRACK`] entries to bound memory usage.
+/// When the cap is reached, returns the cap value as an approximation.
 fn compute_distinct(data_type: &DataType, array: &dyn Array) -> (Option<u64>, Option<f64>) {
     let non_null = array.len() - array.null_count();
     if non_null == 0 {
@@ -179,6 +185,9 @@ fn compute_distinct(data_type: &DataType, array: &dyn Array) -> (Option<u64>, Op
             for i in 0..arr.len() {
                 if !arr.is_null(i) {
                     set.insert(arr.value(i).to_string());
+                    if set.len() >= MAX_DISTINCT_TRACK {
+                        break;
+                    }
                 }
             }
             set.len() as u64
@@ -189,6 +198,9 @@ fn compute_distinct(data_type: &DataType, array: &dyn Array) -> (Option<u64>, Op
             for i in 0..arr.len() {
                 if !arr.is_null(i) {
                     set.insert(arr.value(i));
+                    if set.len() >= MAX_DISTINCT_TRACK {
+                        break;
+                    }
                 }
             }
             set.len() as u64
@@ -265,6 +277,7 @@ fn extract_f64_values(data_type: &DataType, array: &dyn Array) -> Option<Vec<f64
                 (0..arr.len())
                     .filter(|&i| !arr.is_null(i))
                     .map(|i| arr.value(i) as f64)
+                    .filter(|v| v.is_finite())
                     .collect(),
             )
         }
@@ -274,6 +287,7 @@ fn extract_f64_values(data_type: &DataType, array: &dyn Array) -> Option<Vec<f64
                 (0..arr.len())
                     .filter(|&i| !arr.is_null(i))
                     .map(|i| arr.value(i))
+                    .filter(|v| v.is_finite())
                     .collect(),
             )
         }

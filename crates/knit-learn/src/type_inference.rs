@@ -195,7 +195,7 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
     }
 
     let email_re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
-    let phone_re = Regex::new(r"^\+?[\d\s\-\(\)]{7,15}$").unwrap();
+    let phone_re = Regex::new(r"^\+?\d[\d\s\-\(\)]{6,14}$").unwrap();
     let uuid_re = Regex::new(
         r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
     )
