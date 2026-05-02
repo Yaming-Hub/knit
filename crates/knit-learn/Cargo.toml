@@ -1,0 +1,8 @@
+[package]
+name = "knit-learn"
+version = "0.1.0"
+edition = "2021"
+description = "Schema inference from existing data sources"
+
+[dependencies]
+knit-core = { path = "../knit-core" }

@@ -1,0 +1,8 @@
+[package]
+name = "knit-gen"
+version = "0.1.0"
+edition = "2021"
+description = "Data generation engine"
+
+[dependencies]
+knit-core = { path = "../knit-core" }

@@ -1,0 +1,8 @@
+[package]
+name = "knit-plan"
+version = "0.1.0"
+edition = "2021"
+description = "Execution planner and dependency resolver"
+
+[dependencies]
+knit-core = { path = "../knit-core" }
