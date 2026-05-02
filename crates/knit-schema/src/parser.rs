@@ -72,15 +72,35 @@ pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
 }
 
 /// Parse a Weave schema from a TOML file.
+///
+/// If the schema specifies an `extends` field, the parent schema is resolved
+/// and merged automatically.
 pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let content = std::fs::read_to_string(path)?;
-    parse_toml(&content)
+    let raw: RawSchema = toml::from_str(&content)?;
+    let extends = raw.extends.clone();
+    let model = raw.into_data_model()?;
+    if let Some(ref parent_ref) = extends {
+        crate::resolve_extends(path, &model, parent_ref)
+    } else {
+        Ok(model)
+    }
 }
 
 /// Parse a Weave schema from a JSON file.
+///
+/// If the schema specifies an `extends` field, the parent schema is resolved
+/// and merged automatically.
 pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let content = std::fs::read_to_string(path)?;
-    parse_json(&content)
+    let raw: RawSchema = serde_json::from_str(&content)?;
+    let extends = raw.extends.clone();
+    let model = raw.into_data_model()?;
+    if let Some(ref parent_ref) = extends {
+        crate::resolve_extends(path, &model, parent_ref)
+    } else {
+        Ok(model)
+    }
 }
 
 // ── Tests ───────────────────────────────────────────────────────────

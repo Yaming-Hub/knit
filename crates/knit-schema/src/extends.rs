@@ -81,6 +81,12 @@ fn merge_entity(parent: &mut Entity, child: &Entity) {
     if child.description.is_some() {
         parent.description = child.description.clone();
     }
+    if child.topology.is_some() {
+        parent.topology = child.topology.clone();
+    }
+    if !child.constraints.is_empty() {
+        parent.constraints = child.constraints.clone();
+    }
 
     // Merge fields by name
     for child_field in &child.fields {
@@ -93,11 +99,29 @@ fn merge_entity(parent: &mut Entity, child: &Entity) {
 }
 
 /// Resolve an extends chain by parsing the parent file and merging.
+///
+/// The `extends` path is resolved relative to `schema_path`'s parent directory.
+/// Absolute paths and path traversal (`..`) are rejected for safety.
 pub fn resolve_extends(
     schema_path: &std::path::Path,
     child: &DataModel,
     extends: &str,
 ) -> Result<DataModel, SchemaError> {
+    // Reject absolute paths and path traversal
+    let extends_path = std::path::Path::new(extends);
+    if extends_path.is_absolute() {
+        return Err(SchemaError::Validation {
+            path: "extends".to_string(),
+            message: "absolute paths are not allowed in extends".to_string(),
+        });
+    }
+    if extends_path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+        return Err(SchemaError::Validation {
+            path: "extends".to_string(),
+            message: "path traversal ('..') is not allowed in extends".to_string(),
+        });
+    }
+
     let parent_path = schema_path
         .parent()
         .unwrap_or(std::path::Path::new("."))
@@ -306,5 +330,67 @@ mod tests {
             .unwrap();
         assert_eq!(user_order.kind, RelationshipKind::ManyToMany);
         assert!(merged.relationships.iter().any(|r| r.name == "order_item"));
+    }
+
+    #[test]
+    fn test_merge_entity_preserves_parent_constraints_and_topology() {
+        let mut parent = parent_model();
+        parent.entities[0].constraints = vec![Constraint::Unique {
+            fields: vec!["email".to_string()],
+        }];
+        parent.entities[0].topology = Some(TopologySpec::Tree { max_depth: 5, branching_factor: 3 });
+        // Child overrides entity with no constraints/topology
+        let mut child = child_model();
+        child.entities.push(Entity {
+            name: "user".to_string(),
+            description: Some("updated".to_string()),
+            count: CountSpec::default(),
+            fields: vec![],
+            constraints: vec![],
+            topology: None,
+        });
+        let merged = merge_models(&parent, &child);
+        // Parent constraints & topology preserved since child has empty/None
+        assert_eq!(merged.entities[0].constraints.len(), 1);
+        assert!(merged.entities[0].topology.is_some());
+        assert_eq!(merged.entities[0].description, Some("updated".to_string()));
+    }
+
+    #[test]
+    fn test_resolve_extends_rejects_path_traversal() {
+        let result = crate::resolve_extends(
+            std::path::Path::new("schema.toml"),
+            &child_model(),
+            "../../../etc/passwd",
+        );
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            format!("{}", err).contains("path traversal"),
+            "expected path traversal error, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_resolve_extends_rejects_absolute_path() {
+        // Use a Windows-style absolute path for cross-platform test
+        let abs_path = if cfg!(windows) {
+            "C:\\schema.toml"
+        } else {
+            "/etc/passwd"
+        };
+        let result = crate::resolve_extends(
+            std::path::Path::new("schema.toml"),
+            &child_model(),
+            abs_path,
+        );
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            format!("{}", err).contains("absolute"),
+            "expected absolute path error, got: {}",
+            err
+        );
     }
 }

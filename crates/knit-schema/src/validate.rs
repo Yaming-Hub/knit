@@ -118,6 +118,17 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                     message: "uniform distribution requires 'max' param".to_string(),
                 });
             }
+            if let (Some(&min), Some(&max)) = (params.get("min"), params.get("max")) {
+                if min >= max {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "uniform distribution requires min < max, got min={}, max={}",
+                            min, max
+                        ),
+                    });
+                }
+            }
         }
         DistributionKind::Exponential => {
             if !params.contains_key("lambda") {
@@ -171,8 +182,15 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
 
 fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
     let names = entity_names(model);
+    let mut seen = HashSet::new();
     for rel in &model.relationships {
         let path = format!("relationships.{}", rel.name);
+        if !seen.insert(&rel.name) {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!("duplicate relationship name '{}'", rel.name),
+            });
+        }
         if !names.contains(rel.from.as_str()) {
             errors.push(SchemaError::Validation {
                 path: path.clone(),
@@ -202,8 +220,15 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
 fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
     let names = entity_names(model);
+    let mut seen = HashSet::new();
     for noise in &model.noise_profiles {
         let path = format!("noise.{}", noise.name);
+        if !seen.insert(&noise.name) {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!("duplicate noise profile name '{}'", noise.name),
+            });
+        }
         if !names.contains(noise.entity.as_str()) {
             errors.push(SchemaError::Validation {
                 path: path.clone(),
@@ -498,6 +523,77 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("matrix"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_duplicate_relationship_names() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            description: None,
+            count: CountSpec::Fixed(50),
+            fields: vec![],
+            constraints: vec![],
+            topology: None,
+        });
+        let rel = Relationship {
+            name: "user_order".to_string(),
+            from: "user".to_string(),
+            to: "order".to_string(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: None,
+            cardinality: None,
+        };
+        model.relationships.push(rel.clone());
+        model.relationships.push(rel);
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate relationship"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_duplicate_noise_profile_names() {
+        let mut model = minimal_model();
+        let noise = NoiseProfile {
+            name: "n1".to_string(),
+            entity: "user".to_string(),
+            fields: vec![],
+            null_rate: 0.0,
+            duplicate_rate: 0.0,
+            typo_rate: 0.0,
+            outlier_rate: 0.0,
+        };
+        model.noise_profiles.push(noise.clone());
+        model.noise_profiles.push(noise);
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate noise profile"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_uniform_min_ge_max() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "score".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Uniform,
+                    params: [("min".to_string(), 100.0), ("max".to_string(), 10.0)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("min < max"))
         }));
     }
 }
