@@ -17,10 +17,15 @@
 //! let profiles = compute_profiles(&batches).unwrap();
 //! ```
 
+pub mod correlation;
 pub mod error;
+pub mod fitting;
 pub mod ingest;
 pub mod profile;
+pub mod relationships;
 pub mod sampling;
+pub mod schema_assembly;
+pub mod temporal;
 pub mod type_inference;
 
 pub use error::{LearnError, LearnResult};
