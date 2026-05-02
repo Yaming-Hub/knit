@@ -1,6 +1,7 @@
 //! Arrow IPC (Feather v2) output sink.
 
 use std::io::Write;
+use std::sync::{Arc, Mutex};
 
 use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
@@ -9,10 +10,29 @@ use tracing::debug;
 use crate::error::BindError;
 use crate::traits::{Sink, SinkStats};
 
+/// Wrapper that counts bytes written through it.
+struct CountingWriter<W: Write> {
+    inner: W,
+    count: Arc<Mutex<u64>>,
+}
+
+impl<W: Write> Write for CountingWriter<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let n = self.inner.write(buf)?;
+        *self.count.lock().unwrap() += n as u64;
+        Ok(n)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.inner.flush()
+    }
+}
+
 /// Sink that writes `RecordBatch`es in Arrow IPC format (Feather v2).
 pub struct ArrowIpcSink<W: Write + Send> {
-    writer: Option<FileWriter<W>>,
+    writer: Option<FileWriter<CountingWriter<W>>>,
     rows_written: u64,
+    byte_count: Arc<Mutex<u64>>,
 }
 
 impl<W: Write + Send> ArrowIpcSink<W> {
@@ -21,10 +41,16 @@ impl<W: Write + Send> ArrowIpcSink<W> {
         writer: W,
         schema: std::sync::Arc<arrow::datatypes::Schema>,
     ) -> Result<Self, BindError> {
-        let ipc_writer = FileWriter::try_new(writer, &schema)?;
+        let byte_count = Arc::new(Mutex::new(0u64));
+        let counting = CountingWriter {
+            inner: writer,
+            count: Arc::clone(&byte_count),
+        };
+        let ipc_writer = FileWriter::try_new(counting, &schema)?;
         Ok(Self {
             writer: Some(ipc_writer),
             rows_written: 0,
+            byte_count,
         })
     }
 }
@@ -47,10 +73,8 @@ impl<W: Write + Send> Sink for ArrowIpcSink<W> {
             .writer
             .take()
             .ok_or_else(|| BindError::Other("sink already finished".into()))?;
-        let inner = writer.into_inner()?;
-        // Get total bytes from the underlying writer if it supports it.
-        // For generic writers we can't know, so we use stream_position if seekable.
-        let bytes_written = get_stream_position(&inner);
+        let _inner = writer.into_inner()?;
+        let bytes_written = *self.byte_count.lock().unwrap();
         debug!(rows = self.rows_written, bytes = bytes_written, "ipc sink finished");
         Ok(SinkStats {
             rows_written: self.rows_written,
@@ -58,11 +82,4 @@ impl<W: Write + Send> Sink for ArrowIpcSink<W> {
             files_created: 1,
         })
     }
-}
-
-/// Attempt to get the current position of a writer for byte counting.
-fn get_stream_position<W: Write>(_writer: &W) -> u64 {
-    // Generic writers don't necessarily implement Seek.
-    // For Vec<u8> and Cursor types used in tests, the caller can check length.
-    0
 }

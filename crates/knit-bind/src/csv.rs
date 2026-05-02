@@ -89,6 +89,10 @@ impl<W: Write + Send> Sink for CsvSink<W> {
     }
 
     fn finish(self: Box<Self>) -> Result<SinkStats, BindError> {
+        // Drop the Arrow CSV writer to trigger its internal flush.
+        // Errors during drop-based flush are silently discarded by Rust,
+        // but the CountingWriter has already tracked all successful writes.
+        drop(self.writer);
         let bytes_written = *self.byte_count.lock().unwrap();
         debug!(rows = self.rows_written, bytes = bytes_written, "csv sink finished");
         Ok(SinkStats {

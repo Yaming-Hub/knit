@@ -53,52 +53,70 @@ fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
     }
     match col.data_type() {
         DataType::Boolean => {
-            let arr = col.as_any().downcast_ref::<array::BooleanArray>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::BooleanArray>()
+                .expect("Arrow type mismatch: expected BooleanArray");
             serde_json::Value::Bool(arr.value(row))
         }
         DataType::Int8 => json_number!(col, array::Int8Array, row),
         DataType::Int16 => json_number!(col, array::Int16Array, row),
         DataType::Int32 => json_number!(col, array::Int32Array, row),
         DataType::Int64 => {
-            let arr = col.as_any().downcast_ref::<array::Int64Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::Int64Array>()
+                .expect("Arrow type mismatch: expected Int64Array");
             serde_json::Value::Number(arr.value(row).into())
         }
         DataType::UInt8 => json_number!(col, array::UInt8Array, row),
         DataType::UInt16 => json_number!(col, array::UInt16Array, row),
         DataType::UInt32 => json_number!(col, array::UInt32Array, row),
         DataType::UInt64 => {
-            let arr = col.as_any().downcast_ref::<array::UInt64Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::UInt64Array>()
+                .expect("Arrow type mismatch: expected UInt64Array");
             serde_json::Value::Number(arr.value(row).into())
         }
         DataType::Float32 => {
-            let arr = col.as_any().downcast_ref::<array::Float32Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::Float32Array>()
+                .expect("Arrow type mismatch: expected Float32Array");
             let v = arr.value(row) as f64;
             serde_json::Number::from_f64(v)
                 .map(serde_json::Value::Number)
                 .unwrap_or(serde_json::Value::Null)
         }
         DataType::Float64 => {
-            let arr = col.as_any().downcast_ref::<array::Float64Array>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::Float64Array>()
+                .expect("Arrow type mismatch: expected Float64Array");
             serde_json::Number::from_f64(arr.value(row))
                 .map(serde_json::Value::Number)
                 .unwrap_or(serde_json::Value::Null)
         }
         DataType::Utf8 => {
-            let arr = col.as_any().downcast_ref::<array::StringArray>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<array::StringArray>()
+                .expect("Arrow type mismatch: expected StringArray");
             serde_json::Value::String(arr.value(row).to_string())
         }
         DataType::LargeUtf8 => {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::LargeStringArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected LargeStringArray");
             serde_json::Value::String(arr.value(row).to_string())
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampMicrosecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampMicrosecondArray");
             let ts = arr.value(row);
             let dt = chrono::DateTime::from_timestamp_micros(ts);
             match dt {
@@ -110,7 +128,7 @@ fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampMillisecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampMillisecondArray");
             let ts = arr.value(row);
             let dt = chrono::DateTime::from_timestamp_millis(ts);
             match dt {
@@ -122,7 +140,7 @@ fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampSecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampSecondArray");
             let ts = arr.value(row) as i64;
             let dt = chrono::DateTime::from_timestamp(ts, 0);
             match dt {
@@ -134,10 +152,10 @@ fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
             let arr = col
                 .as_any()
                 .downcast_ref::<array::TimestampNanosecondArray>()
-                .unwrap();
+                .expect("Arrow type mismatch: expected TimestampNanosecondArray");
             let ts = arr.value(row);
-            let secs = ts / 1_000_000_000;
-            let nsecs = (ts % 1_000_000_000) as u32;
+            let secs = ts.div_euclid(1_000_000_000);
+            let nsecs = ts.rem_euclid(1_000_000_000) as u32;
             let dt = chrono::DateTime::from_timestamp(secs, nsecs);
             match dt {
                 Some(d) => serde_json::Value::String(d.to_rfc3339()),
@@ -160,7 +178,10 @@ fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
 
 macro_rules! json_number {
     ($col:expr, $arr_ty:ty, $row:expr) => {{
-        let arr = $col.as_any().downcast_ref::<$arr_ty>().unwrap();
+        let arr = $col
+            .as_any()
+            .downcast_ref::<$arr_ty>()
+            .expect(concat!("Arrow type mismatch: expected ", stringify!($arr_ty)));
         serde_json::Value::Number(arr.value($row).into())
     }};
 }
@@ -170,11 +191,13 @@ impl<W: Write + Send> Sink for JsonSink<W> {
     fn write_batch(&mut self, batch: &RecordBatch) -> Result<(), BindError> {
         let schema = batch.schema();
         let columns = batch.columns();
+        // Pre-collect field names to avoid per-row cloning
+        let field_names: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
 
         for row in 0..batch.num_rows() {
-            let mut map = serde_json::Map::with_capacity(schema.fields().len());
-            for (i, field) in schema.fields().iter().enumerate() {
-                map.insert(field.name().clone(), cell_to_json(columns[i].as_ref(), row));
+            let mut map = serde_json::Map::with_capacity(field_names.len());
+            for (i, name) in field_names.iter().enumerate() {
+                map.insert((*name).to_string(), cell_to_json(columns[i].as_ref(), row));
             }
             let obj = serde_json::Value::Object(map);
 
