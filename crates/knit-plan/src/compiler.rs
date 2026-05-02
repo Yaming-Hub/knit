@@ -250,8 +250,10 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 target_field: field.clone(),
                 key_store_kind: KeyStoreKind::InMemoryVec,
             },
-            GeneratorSpec::Pattern { pattern: _ }
-            | GeneratorSpec::Conditional { .. }
+            GeneratorSpec::Pattern { pattern } => {
+                GeneratorPlan::Pattern { pattern: pattern.clone() }
+            }
+            GeneratorSpec::Conditional { .. }
             | GeneratorSpec::Unique { .. }
             | GeneratorSpec::Relative { .. }
             | GeneratorSpec::BusinessHours { .. } => {

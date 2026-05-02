@@ -288,11 +288,7 @@ choices = [
 
 ### `pattern` — Pattern-Based Strings
 
-> ⚠️ **Not yet implemented:** The `pattern` generator is defined in the schema
-> language but currently produces **null output**. Use `one_of` or `sequence`
-> with a prefix as alternatives.
-
-Generate strings from a format pattern (planned):
+Generate strings from a format pattern:
 
 | Token | Meaning | Example |
 |-------|---------|---------|
