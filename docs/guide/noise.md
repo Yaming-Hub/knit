@@ -55,10 +55,11 @@ graph LR
 Replaces values with NULL. Tests missing-data handling.
 
 ```toml
-[[noise_profiles]]
-target = "users.email"
-type = "null_inject"
-probability = 0.05      # 5% of emails become NULL
+[[noise]]
+name = "null_emails"
+entity = "users"
+fields = ["email"]
+null_rate = 0.05          # 5% of emails become NULL
 ```
 
 - **Stage:** Constrained (violates NOT NULL if field is non-nullable)
@@ -69,11 +70,11 @@ probability = 0.05      # 5% of emails become NULL
 Introduces character-level errors: swaps, insertions, deletions, substitutions.
 
 ```toml
-[[noise_profiles]]
-target = "users.name"
-type = "typo"
-probability = 0.02      # 2% of names get a typo
-error_rate = 0.1         # Per-character error rate within affected strings
+[[noise]]
+name = "name_typos"
+entity = "users"
+fields = ["name"]
+typo_rate = 0.02          # 2% of names get a typo
 ```
 
 - **Stage:** Clean (preserves all constraints)
@@ -85,12 +86,11 @@ error_rate = 0.1         # Per-character error rate within affected strings
 Creates duplicate rows. Tests deduplication logic.
 
 ```toml
-[[noise_profiles]]
-target = "orders"
-type = "duplicate"
-probability = 0.01      # 1% of rows are duplicated
-count = 1                # Number of copies per duplicate
-near_duplicate = true    # Slight variations in duplicates
+[[noise]]
+name = "duplicate_orders"
+entity = "orders"
+fields = ["id"]
+duplicate_rate = 0.01     # 1% of rows are duplicated
 ```
 
 - **Stage:** Constrained (violates uniqueness)
@@ -101,12 +101,11 @@ near_duplicate = true    # Slight variations in duplicates
 Replaces values with extreme outliers outside normal ranges.
 
 ```toml
-[[noise_profiles]]
-target = "orders.amount"
-type = "outlier"
-probability = 0.01      # 1% of amounts become outliers
-multiplier = 10.0        # How extreme (multiple of std_dev from mean)
-direction = "both"       # "high", "low", or "both"
+[[noise]]
+name = "amount_outliers"
+entity = "orders"
+fields = ["amount"]
+outlier_rate = 0.01       # 1% of amounts become outliers
 ```
 
 - **Stage:** Constrained / Breaking (violates range constraints)
@@ -118,39 +117,42 @@ Gradually shifts numeric values over time, simulating sensor drift or
 calibration issues.
 
 ```toml
-[[noise_profiles]]
-target = "readings.value"
-type = "drift"
-drift_rate = 0.001       # Drift amount per record
-direction = "up"         # "up", "down", or "random"
+[[noise]]
+name = "sensor_drift"
+entity = "readings"
+fields = ["value"]
+outlier_rate = 0.01       # Controls drift injection rate
 ```
 
 - **Stage:** Clean (preserves constraints)
 - **Use case:** IoT sensor calibration testing
 
-### 6. ColumnSwapper
+### 6. StringTruncator
 
-Swaps values between records in the same column, creating misattributed data.
+Truncates string values to shorter lengths, simulating data loss or
+field-length issues.
 
 ```toml
-[[noise_profiles]]
-target = "orders.customer_id"
-type = "swap"
-probability = 0.005      # 0.5% of values swapped with another row
+[[noise]]
+name = "truncate_names"
+entity = "users"
+fields = ["name"]
+typo_rate = 0.01          # Controls truncation rate
 ```
 
-- **Stage:** Clean (values remain valid, just misplaced)
-- **Use case:** Testing join integrity and data lineage
+- **Stage:** Clean (preserves type constraints)
+- **Use case:** Testing handling of unexpectedly short string values
 
 ### 7. FormatVariator
 
 Corrupts known formats (emails, dates, UUIDs) into invalid strings.
 
 ```toml
-[[noise_profiles]]
-target = "users.email"
-type = "format_error"
-probability = 0.01       # 1% of emails become malformed
+[[noise]]
+name = "bad_emails"
+entity = "users"
+fields = ["email"]
+typo_rate = 0.01          # Controls format corruption rate
 ```
 
 - **Stage:** Breaking (violates type safety)
@@ -161,7 +163,7 @@ probability = 0.01       # 1% of emails become malformed
 
 ## Configuring Noise in a Schema
 
-Add `[[noise_profiles]]` sections to your `.weave.toml`:
+Add `[[noise]]` sections to your `.weave.toml`:
 
 ```toml
 schema_version = "1.0"
@@ -176,75 +178,32 @@ count = 10000
 # ... fields ...
 
 # ── Noise Configuration ────────────────────────────────────
-[[noise_profiles]]
-target = "orders.amount"
-type = "outlier"
-probability = 0.01
-multiplier = 5.0
-direction = "high"
+[[noise]]
+name = "amount_outliers"
+entity = "orders"
+fields = ["amount"]
+outlier_rate = 0.01
 
-[[noise_profiles]]
-target = "orders.status"
-type = "typo"
-probability = 0.02
+[[noise]]
+name = "status_typos"
+entity = "orders"
+fields = ["status"]
+typo_rate = 0.02
 
-[[noise_profiles]]
-target = "orders.customer_id"
-type = "null_inject"
-probability = 0.05
+[[noise]]
+name = "null_customer_ids"
+entity = "orders"
+fields = ["customer_id"]
+null_rate = 0.05
 ```
 
 ### Targeting
 
-The `target` field uses `entity.field` notation:
+Each `[[noise]]` entry specifies:
 
-- `"orders.amount"` — Apply to the `amount` field in `orders`
-- `"orders"` — Apply to the entire entity (for `duplicate` type)
-
-### Scoped Noise
-
-Apply noise only to records matching a condition:
-
-```toml
-[[noise_profiles]]
-target = "orders.amount"
-type = "outlier"
-probability = 0.05
-scope = { where = "status == 'refunded'" }
-```
-
-This injects outliers only in refunded orders — useful for testing fraud
-detection pipelines.
-
----
-
-## Noise Rates and Interactions
-
-### Rate Stacking
-
-Multiple noise profiles on the same field stack independently:
-
-```toml
-# 5% become NULL + 2% get typos = ~7% of emails have some issue
-[[noise_profiles]]
-target = "users.email"
-type = "null_inject"
-probability = 0.05
-
-[[noise_profiles]]
-target = "users.email"
-type = "typo"
-probability = 0.02
-```
-
-### Pipeline Order
-
-The three stages execute sequentially. A value nullified in stage 2 won't
-receive a typo from stage 1 (clean runs first). This means:
-
-1. **Clean perturbators** run first (typos, jitter, drift, swaps)
-2. **Constrained perturbators** run next (null injection, outliers, duplicates)
-3. **Breaking perturbators** run last (format corruption, FK violation)
+- `name` — A unique name for the noise profile
+- `entity` — The entity to apply noise to
+- `fields` — An array of field names to target
 
 ---
 
@@ -256,47 +215,72 @@ Add a realistic mix of quality issues:
 
 ```toml
 # 5% null injection on non-nullable fields
-[[noise_profiles]]
-target = "customers.email"
-type = "null_inject"
-probability = 0.05
+[[noise]]
+name = "null_emails"
+entity = "customers"
+fields = ["email"]
+null_rate = 0.05
 
 # 2% typos in names
-[[noise_profiles]]
-target = "customers.name"
-type = "typo"
-probability = 0.02
+[[noise]]
+name = "name_typos"
+entity = "customers"
+fields = ["name"]
+typo_rate = 0.02
 
 # 1% extreme outliers in amounts
-[[noise_profiles]]
-target = "orders.amount"
-type = "outlier"
-probability = 0.01
-multiplier = 10.0
+[[noise]]
+name = "amount_outliers"
+entity = "orders"
+fields = ["amount"]
+outlier_rate = 0.01
 
 # 0.5% duplicate orders
-[[noise_profiles]]
-target = "orders"
-type = "duplicate"
-probability = 0.005
+[[noise]]
+name = "duplicate_orders"
+entity = "orders"
+fields = ["id"]
+duplicate_rate = 0.005
 ```
 
 ### Testing Format Validation
 
 ```toml
 # 3% malformed emails
-[[noise_profiles]]
-target = "users.email"
-type = "format_error"
-probability = 0.03
-
-# 1% broken FK references
-[[noise_profiles]]
-target = "orders.customer_id"
-type = "fk_violate"
-probability = 0.01
-strategy = "out_of_range"
+[[noise]]
+name = "bad_emails"
+entity = "users"
+fields = ["email"]
+typo_rate = 0.03
 ```
+
+### Rate Stacking
+
+Multiple noise profiles on the same field stack independently:
+
+```toml
+# 5% become NULL + 2% get typos = ~7% of emails have some issue
+[[noise]]
+name = "null_emails"
+entity = "users"
+fields = ["email"]
+null_rate = 0.05
+
+[[noise]]
+name = "typo_emails"
+entity = "users"
+fields = ["email"]
+typo_rate = 0.02
+```
+
+### Pipeline Order
+
+The three stages execute sequentially. A value nullified in stage 2 won't
+receive a typo from stage 1 (clean runs first). This means:
+
+1. **Clean perturbators** run first (typos, truncation, drift)
+2. **Constrained perturbators** run next (null injection, outliers, duplicates)
+3. **Breaking perturbators** run last (format corruption)
 
 ---
 

@@ -80,7 +80,7 @@ erDiagram
 | Feature | How It's Used |
 |---------|---------------|
 | **`sequence`** | Auto-increment IDs for all entities |
-| **`pattern`** | Emails (`user####@example.com`), SKUs (`SKU-AAA-####`) |
+| **`pattern`** | Emails (`user####@example.com`), SKUs (`SKU-AAA-####`) — ⚠️ currently produces null output |
 | **`one_of`** (weighted) | User tiers (60% basic, 25% premium, 15% VIP) |
 | **`distribution` (normal)** | Age centered around 35 |
 | **`distribution` (log_normal)** | Prices — right-skewed, most items $20–$80 |
@@ -145,7 +145,7 @@ erDiagram
 | **`distribution` (beta)** | Quality scores — skewed toward high quality |
 | **`distribution` (bernoulli)** | Active status (95% active), acknowledged alerts |
 | **`one_of`** | Device types (temperature, humidity, pressure, motion, light) |
-| **`pattern`** | Serial numbers: `DEV-AA######` |
+| **`pattern`** | Serial numbers: `DEV-AA######` — ⚠️ currently produces null output |
 | **`nullable`** | Battery percentage: 5% null (wired devices) |
 
 ### What to Expect
@@ -202,8 +202,8 @@ erDiagram
 | **`one_of`** (weighted) | HTTP methods (60% GET, 20% POST), status codes (70% 200) |
 | **`distribution` (log_normal)** | Response times — most fast, some slow |
 | **`distribution` (pareto)** | Bytes sent — heavy-tail distribution |
-| **`pattern`** | Hostnames: `web-??-##`, stack traces: `at ??_??::??_??() line ###` |
-| **`faker`** | Error messages: realistic sentence structures |
+| **`pattern`** | Hostnames: `web-??-##`, stack traces: `at ??_??::??_??() line ###` — ⚠️ currently produces null output |
+| **`faker`** | Error messages: realistic sentence structures — ⚠️ currently produces placeholder null output |
 | **`nullable`** | Stack traces: 40% null (not all errors have traces) |
 
 ### What to Expect
@@ -250,7 +250,7 @@ erDiagram
 
 | Feature | How It's Used |
 |---------|---------------|
-| **`pattern`** | Account numbers: `####-####-####` |
+| **`pattern`** | Account numbers: `####-####-####` — ⚠️ currently produces null output |
 | **`distribution` (log_normal)** | Balance and transaction amounts |
 | **`distribution` (beta)** | Risk scores — most accounts low-risk |
 | **`distribution` (bernoulli)** | Active status (98%), fraud flags (2%) |
@@ -321,8 +321,8 @@ erDiagram
 |---------|---------------|
 | **Self-referential FK** | `manager_id` → `employees.id` (org hierarchy) |
 | **`nullable`** | `manager_id`: 4% null (top-level executives) |
-| **`pattern`** | Employee codes: `EMP-#####` |
-| **`faker`** | First and last names |
+| **`pattern`** | Employee codes: `EMP-#####` — ⚠️ currently produces null output |
+| **`faker`** | First and last names — ⚠️ currently produces placeholder null output |
 | **`distribution` (log_normal)** | Salary — right-skewed income distribution |
 | **`distribution` (exponential)** | Years of experience — many junior, few senior |
 | **`distribution` (beta)** | Performance ratings — bell-curved around 0.6–0.8 |

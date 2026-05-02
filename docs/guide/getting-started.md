@@ -68,8 +68,14 @@ step = 1
 name = "email"
 data_type = "string"
 [entities.fields.generator]
-type = "pattern"
-pattern = "user####@example.com"
+type = "one_of"
+choices = [
+  { value = "alice@example.com" },
+  { value = "bob@example.com" },
+  { value = "carol@example.com" },
+  { value = "dave@example.com" },
+  { value = "eve@example.com" },
+]
 
 [[entities.fields]]
 name = "age"
@@ -202,8 +208,14 @@ step = 1
 name = "email"
 data_type = "string"
 [entities.fields.generator]
-type = "pattern"
-pattern = "user####@example.com"
+type = "one_of"
+choices = [
+  { value = "alice@example.com" },
+  { value = "bob@example.com" },
+  { value = "carol@example.com" },
+  { value = "dave@example.com" },
+  { value = "eve@example.com" },
+]
 
 [[entities.fields]]
 name = "age"
@@ -215,7 +227,7 @@ kind = "normal"
 mean = 35.0
 std_dev = 10.0
 
-# ── Orders ─────────────────────────────────────────────────
+# ── Orders─────────────────────────────────────────────────
 [[entities]]
 name = "orders"
 count = 500
@@ -233,7 +245,7 @@ step = 1
 name = "customer_id"
 data_type = "int"
 [entities.fields.generator]
-type = "ref"
+type = "lookup"
 entity = "customers"
 field = "id"
 
@@ -264,9 +276,8 @@ choices = [
 name = "order_customer"
 from = "orders"
 to = "customers"
-kind = "many_to_one"
-from_field = "customer_id"
-to_field = "id"
+kind = "one_to_many"
+foreign_key = "customer_id"
 ```
 
 Generate the two-table dataset:

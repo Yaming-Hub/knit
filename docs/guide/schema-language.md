@@ -48,6 +48,9 @@ seed = 42
 # ... noise configuration (optional) ...
 ```
 
+> **Note:** The actual TOML section for noise is `[[noise]]`, not
+> `[[noise_profiles]]`. See [Noise Injection Guide](noise.md) for details.
+
 ### Required Fields
 
 | Field | Description |
@@ -69,8 +72,11 @@ data_type = "string"      # Data type (required)
 primary_key = false       # Is this the primary key? (default: false)
 nullable = false          # Can this field be null? (default: false)
 [entities.fields.generator]
-type = "pattern"          # Generator type (required)
-pattern = "??##@test.com" # Generator-specific params
+type = "one_of"           # Generator type (required)
+choices = [               # Generator-specific params
+  { value = "user1@test.com" },
+  { value = "user2@test.com" },
+]
 ```
 
 | Attribute | Required | Default | Description |
@@ -130,7 +136,7 @@ step = 1
 | `start` | int | `1` | Starting value |
 | `step` | int | `1` | Increment between values |
 
-### `uuid` — Random UUIDs
+### `uuid_gen` — Random UUIDs
 
 Generates universally unique identifiers.
 
@@ -139,7 +145,7 @@ Generates universally unique identifiers.
 name = "trace_id"
 data_type = "uuid"
 [entities.fields.generator]
-type = "uuid"
+type = "uuid_gen"
 version = 4
 ```
 
@@ -282,7 +288,11 @@ choices = [
 
 ### `pattern` — Pattern-Based Strings
 
-Generate strings from a format pattern:
+> ⚠️ **Not yet implemented:** The `pattern` generator is defined in the schema
+> language but currently produces **null output**. Use `one_of` or `sequence`
+> with a prefix as alternatives.
+
+Generate strings from a format pattern (planned):
 
 | Token | Meaning | Example |
 |-------|---------|---------|
@@ -291,6 +301,7 @@ Generate strings from a format pattern:
 | `A` | Uppercase letter | `AAA` → `KPX` |
 
 ```toml
+# NOTE: Currently produces null output
 # Phone number
 [entities.fields.generator]
 type = "pattern"
@@ -307,7 +318,7 @@ type = "pattern"
 pattern = "user####@example.com"
 ```
 
-### `ref` — Foreign Key References
+### `lookup` — Foreign Key References
 
 Reference a field from another entity (foreign key):
 
@@ -316,7 +327,7 @@ Reference a field from another entity (foreign key):
 name = "customer_id"
 data_type = "int"
 [entities.fields.generator]
-type = "ref"
+type = "lookup"
 entity = "customers"
 field = "id"
 ```
@@ -409,15 +420,14 @@ Available components:
 
 Knit also includes these generators:
 
-| Generator | Purpose |
-|-----------|---------|
-| `faker` | Locale-aware realistic data (names, addresses, companies) |
-| `conditional` | Choose generator based on another field's value |
-| `composite` | Generate arrays of values |
-| `lookup` | Sample from an external data file (CSV, JSON, Parquet) |
-| `unique` | Wrapper enforcing uniqueness on any generator |
-| `relative` | Datetime offset from another field |
-| `business_hours` | Constrained to business hours with timezone awareness |
+| Generator | Purpose | Status |
+|-----------|---------|--------|
+| `faker` | Locale-aware realistic data (names, addresses, companies) | ⚠️ Compiles but outputs placeholder nulls |
+| `composite` | Generate arrays of values | ✅ Working |
+| `conditional` | Choose generator based on another field's value | ❌ Not yet implemented (produces null) |
+| `unique` | Wrapper enforcing uniqueness on any generator | ❌ Not yet implemented (produces null) |
+| `relative` | Datetime offset from another field | ❌ Not yet implemented (produces null) |
+| `business_hours` | Constrained to business hours with timezone awareness | ❌ Not yet implemented (produces null) |
 
 ---
 
@@ -498,16 +508,15 @@ Relationships define foreign key connections between entities.
 name = "order_customer"
 from = "orders"           # Child entity (has the FK)
 to = "customers"          # Parent entity (has the PK)
-kind = "many_to_one"
-from_field = "customer_id"
-to_field = "id"
+kind = "one_to_many"
+foreign_key = "customer_id"
 ```
 
 ### Relationship Kinds
 
 | Kind | Description |
 |------|-------------|
-| `many_to_one` | Many child rows → one parent row |
+| `one_to_many` | One parent row → many child rows |
 | `one_to_one` | One child row → one parent row |
 | `many_to_many` | Many-to-many via junction entity |
 
@@ -520,9 +529,8 @@ Entities can reference themselves — useful for org charts, categories, etc.:
 name = "employee_manager"
 from = "employees"
 to = "employees"
-kind = "many_to_one"
-from_field = "manager_id"
-to_field = "id"
+kind = "one_to_many"
+foreign_key = "manager_id"
 nullable = true
 root_probability = 0.05
 max_depth = 6
@@ -542,9 +550,8 @@ Control how many children each parent gets:
 name = "order_customer"
 from = "orders"
 to = "customers"
-kind = "many_to_one"
-from_field = "customer_id"
-to_field = "id"
+kind = "one_to_many"
+foreign_key = "customer_id"
 degree = { distribution = "zipf", params = { n = 100000, exponent = 1.2 } }
 ```
 
@@ -674,17 +681,17 @@ Add realistic data quality issues to test your pipelines. For a deep dive,
 see the [Noise Injection Guide](noise.md).
 
 ```toml
-[[noise_profiles]]
-target = "users.email"
-type = "typo"
-probability = 0.02
+[[noise]]
+name = "email_typos"
+entity = "users"
+fields = ["email"]
+typo_rate = 0.02
 
-[[noise_profiles]]
-target = "orders.amount"
-type = "outlier"
-probability = 0.01
-multiplier = 10.0
-direction = "high"
+[[noise]]
+name = "amount_outliers"
+entity = "orders"
+fields = ["amount"]
+outlier_rate = 0.01
 ```
 
 ---
