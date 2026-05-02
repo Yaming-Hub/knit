@@ -6,7 +6,7 @@
 //! - `generate` — run the full forward pipeline
 //! - `schema expand|normalize|diff` — schema manipulation
 //! - `init` — interactive project setup wizard
-//! - `learn` — infer schema from data (placeholder)
+//! - `learn` — infer schema from data
 
 mod commands;
 mod config;
@@ -120,10 +120,13 @@ enum Command {
         #[arg(short, long, default_value = ".weave.toml")]
         output: String,
     },
-    /// Infer a schema from existing data (not yet implemented).
+    /// Infer a Weave schema from existing data files or directories.
     Learn {
-        /// Path to the data source to learn from.
+        /// Path to data file or directory to learn from.
         source: String,
+        /// Output schema file path.
+        #[arg(short, long, default_value = "learned.weave.toml")]
+        output: String,
     },
 }
 
@@ -213,7 +216,7 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Diff { a, b } => schema::run_diff(a, b),
         },
         Command::Init { output } => init::run(output),
-        Command::Learn { source } => learn::run(source),
+        Command::Learn { source, output } => learn::run(source, output),
     }
     .map_err(|e| {
         if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {
