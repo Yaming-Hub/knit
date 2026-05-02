@@ -137,7 +137,12 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
             }
 
             // Write batch
-            let sink = sinks.get_mut(entity_name).unwrap();
+            let sink = sinks.get_mut(entity_name).ok_or_else(|| {
+                knit_gen::GenError::Generation(format!(
+                    "sink for entity '{}' not found after creation",
+                    entity_name
+                ))
+            })?;
             sink.write_batch(&batch)
                 .map_err(|e| knit_gen::GenError::Generation(format!("sink write error: {}", e)))?;
 
@@ -222,8 +227,11 @@ fn map_compression(c: CompressionArg) -> Compression {
         CompressionArg::Snappy => Compression::Snappy,
         CompressionArg::Lz4 => Compression::Lz4,
         CompressionArg::Zstd => Compression::Zstd,
-        // Gzip not in knit-bind Compression, fall back to None
-        CompressionArg::Gzip => Compression::None,
+        // Gzip not supported by knit-bind Compression enum
+        CompressionArg::Gzip => {
+            tracing::warn!("gzip compression not supported for this format, using none");
+            Compression::None
+        }
     }
 }
 
@@ -286,7 +294,7 @@ fn create_progress_bars(
     let style = ProgressStyle::with_template(
         "{prefix:>16.cyan} [{bar:30.green/dim}] {pos}/{len} rows ({eta})",
     )
-    .unwrap()
+    .expect("hardcoded progress bar template")
     .progress_chars("━╸─");
 
     for phase in &plan.phases {
