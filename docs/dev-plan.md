@@ -583,7 +583,6 @@ SchemaParser
   - README.md overhaul: features, quickstart, examples, architecture overview
   - CONTRIBUTING.md — build instructions, PR guidelines, testing
   - CLI `--help` text for all commands and flags
-  - Inline rustdoc on all public types and traits
 - **Polish:**
   - Structured logging via `tracing` (debug/trace output for pipeline stages)
   - JSON progress events (`--json` flag for programmatic consumption)
@@ -595,6 +594,28 @@ SchemaParser
 - Custom generator plugin compiles and is discovered at runtime
 - `cargo doc --workspace --no-deps` produces clean documentation
 - README quickstart example works end-to-end
+
+---
+
+### PR 18: Retroactive Rustdoc — Comprehensive Public API Documentation
+
+**Branch:** `feat/rustdoc-retroactive`
+**Est. lines:** ~800
+**Depends on:** PR 4 (can be done in parallel with later PRs)
+
+**Scope:**
+Apply the documentation convention from `agents.md` to all existing code:
+- **knit-core:** Add `///` doc comments to all public types (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `NullSpec`, `CountSpec`, `Relationship`, `NoiseProfile`, `Correlation`, `Constraint`, `Value`, `WeightedChoice`, `TopologySpec`) and `ModelError`. Document each enum variant. Add `//!` crate-level doc.
+- **knit-schema:** Add `///` doc comments to all public functions (`parse_toml`, `parse_json`, `parse_toml_file`, `parse_json_file`, `validate`, `merge_models`, `resolve_extends`) and `SchemaError`. Add `//!` crate-level doc explaining pipeline position.
+- **knit-plan:** Add `///` doc comments to all plan types (`ExecutionPlan`, `Phase`, `EntityPlan`, `FieldPlan`, `GeneratorPlan`, `NullPlan`, `RngTree`, `IndexStrategy`, `KeyStoreKind`, `PlanMetadata`, `DeferredRef`, `DeferralStrategy`), `compile()`, and `PlanError`. Document each type's role and which crate produces/consumes it. Add `//!` crate-level doc.
+- Ensure `cargo doc --workspace --no-deps` produces clean output with no warnings.
+
+**Note:** All new code from PR 5 onward must follow the documentation convention in `agents.md` from the start. This PR retroactively covers PRs 1–4.
+
+**Acceptance criteria:**
+- Every public item in knit-core, knit-schema, and knit-plan has a `///` doc comment
+- Key types document their pipeline role and cross-crate interactions
+- `cargo doc --workspace --no-deps` succeeds with no missing-doc warnings
 
 ---
 
