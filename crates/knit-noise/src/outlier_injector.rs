@@ -157,11 +157,16 @@ fn inject_outliers(
 fn float_range(a: &Float64Array) -> (f64, f64) {
     let mut min = f64::MAX;
     let mut max = f64::MIN;
+    let mut found = false;
     for i in 0..a.len() {
         if a.is_valid(i) {
             min = min.min(a.value(i));
             max = max.max(a.value(i));
+            found = true;
         }
+    }
+    if !found {
+        return (0.0, 0.0);
     }
     (min, max)
 }
@@ -169,11 +174,16 @@ fn float_range(a: &Float64Array) -> (f64, f64) {
 fn int32_range(a: &Int32Array) -> (i32, i32) {
     let mut min = i32::MAX;
     let mut max = i32::MIN;
+    let mut found = false;
     for i in 0..a.len() {
         if a.is_valid(i) {
             min = min.min(a.value(i));
             max = max.max(a.value(i));
+            found = true;
         }
+    }
+    if !found {
+        return (0, 0);
     }
     (min, max)
 }
@@ -181,11 +191,16 @@ fn int32_range(a: &Int32Array) -> (i32, i32) {
 fn int64_range(a: &Int64Array) -> (i64, i64) {
     let mut min = i64::MAX;
     let mut max = i64::MIN;
+    let mut found = false;
     for i in 0..a.len() {
         if a.is_valid(i) {
             min = min.min(a.value(i));
             max = max.max(a.value(i));
+            found = true;
         }
+    }
+    if !found {
+        return (0, 0);
     }
     (min, max)
 }

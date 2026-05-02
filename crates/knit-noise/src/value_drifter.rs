@@ -68,13 +68,7 @@ impl Perturbator for ValueDrifter {
                 continue;
             }
 
-            // Only apply drift to a subset of columns based on probability
-            if rng.gen::<f64>() >= config.probability {
-                columns.push(Arc::clone(col));
-                continue;
-            }
-
-            let drifted = apply_drift(col.as_ref(), self.drift_per_row)?;
+            let drifted = apply_drift(col.as_ref(), self.drift_per_row, config.probability, rng)?;
             trace!(column = field.name(), drift = self.drift_per_row, "applied value drift");
             columns.push(drifted);
         }
@@ -94,7 +88,7 @@ fn should_apply(name: &str, filter: &ColumnFilter) -> bool {
     }
 }
 
-fn apply_drift(array: &dyn Array, drift_per_row: f64) -> Result<Arc<dyn Array>, NoiseError> {
+fn apply_drift(array: &dyn Array, drift_per_row: f64, probability: f64, rng: &mut dyn RngCore) -> Result<Arc<dyn Array>, NoiseError> {
     match array.data_type() {
         DataType::Float64 => {
             let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -102,6 +96,9 @@ fn apply_drift(array: &dyn Array, drift_per_row: f64) -> Result<Arc<dyn Array>, 
                 .map(|i| {
                     if !a.is_valid(i) {
                         return None;
+                    }
+                    if rng.gen::<f64>() >= probability {
+                        return Some(a.value(i));
                     }
                     Some(a.value(i) + drift_per_row * i as f64)
                 })
@@ -115,6 +112,9 @@ fn apply_drift(array: &dyn Array, drift_per_row: f64) -> Result<Arc<dyn Array>, 
                     if !a.is_valid(i) {
                         return None;
                     }
+                    if rng.gen::<f64>() >= probability {
+                        return Some(a.value(i));
+                    }
                     Some((a.value(i) as f64 + drift_per_row * i as f64).round() as i32)
                 })
                 .collect();
@@ -126,6 +126,9 @@ fn apply_drift(array: &dyn Array, drift_per_row: f64) -> Result<Arc<dyn Array>, 
                 .map(|i| {
                     if !a.is_valid(i) {
                         return None;
+                    }
+                    if rng.gen::<f64>() >= probability {
+                        return Some(a.value(i));
                     }
                     Some((a.value(i) as f64 + drift_per_row * i as f64).round() as i64)
                 })

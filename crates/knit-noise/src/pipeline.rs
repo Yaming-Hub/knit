@@ -98,7 +98,9 @@ impl Pipeline {
 
         for (stage, idx) in &order {
             let p = &self.perturbators[*idx];
-            let mut rng = ChaCha8Rng::seed_from_u64(base_seed.wrapping_add(*idx as u64));
+            // Derive uncorrelated per-perturbator seed using XOR with rotated index
+            let derived_seed = base_seed ^ (*idx as u64).wrapping_mul(0x9E3779B97F4A7C15);
+            let mut rng = ChaCha8Rng::seed_from_u64(derived_seed);
             debug!(
                 perturbator = p.name(),
                 stage = ?stage,
