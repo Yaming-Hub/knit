@@ -1,16 +1,21 @@
 //! knit CLI — synthetic data generation toolset.
 //!
-//! Provides three core commands:
+//! Provides commands for schema management, planning, and data generation:
 //! - `validate` — parse and validate a schema file
 //! - `plan` — show the execution plan (dry run)
 //! - `generate` — run the full forward pipeline
+//! - `schema expand|normalize|diff` — schema manipulation
+//! - `init` — interactive project setup wizard
+//! - `learn` — infer schema from data (placeholder)
 
 mod commands;
+mod config;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use tracing_subscriber::EnvFilter;
 
-use commands::{generate, plan, validate};
+use commands::{generate, init, learn, plan, schema, validate};
+use config::resolve_config;
 
 /// Knit — deterministic synthetic data generation.
 #[derive(Parser, Debug)]
@@ -102,6 +107,50 @@ enum Command {
         #[arg(short, long, default_value = "output")]
         output: String,
     },
+    /// Schema manipulation operations.
+    Schema {
+        #[command(subcommand)]
+        action: SchemaAction,
+    },
+    /// Initialize a new knit project with a starter schema.
+    Init {
+        /// Output file path.
+        #[arg(short, long, default_value = ".weave.toml")]
+        output: String,
+        /// Template name for non-interactive mode (e-commerce, iot, logs, financial, custom).
+        #[arg(long)]
+        template: Option<String>,
+        /// Row count per entity for non-interactive mode.
+        #[arg(long, default_value_t = 1000)]
+        count: u64,
+    },
+    /// Infer a schema from existing data (not yet implemented).
+    Learn {
+        /// Path to the data source to learn from.
+        source: String,
+    },
+}
+
+/// Schema subcommands.
+#[derive(Subcommand, Debug)]
+enum SchemaAction {
+    /// Flatten extends chain into a standalone schema.
+    Expand {
+        /// Path to the schema file.
+        file: String,
+    },
+    /// Reformat schema to canonical style.
+    Normalize {
+        /// Path to the schema file.
+        file: String,
+    },
+    /// Compare two schemas and show differences.
+    Diff {
+        /// Path to the first schema file.
+        a: String,
+        /// Path to the second schema file.
+        b: String,
+    },
 }
 
 /// Parse `key=value` pairs for `--param`.
@@ -133,6 +182,9 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     init_tracing(cli.quiet, cli.verbose);
 
+    // Load config (file + env vars); CLI flags take final precedence.
+    let _config = resolve_config();
+
     match &cli.command {
         Command::Validate { schema } => validate::run(schema, &cli),
         Command::Plan { schema } => plan::run(schema, &cli),
@@ -143,5 +195,22 @@ fn main() -> anyhow::Result<()> {
                 generate::run(schema, output, &cli)
             }
         }
+        Command::Schema { action } => match action {
+            SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
+            SchemaAction::Normalize { file } => schema::run_normalize(file, cli.json),
+            SchemaAction::Diff { a, b } => schema::run_diff(a, b),
+        },
+        Command::Init {
+            output,
+            template,
+            count,
+        } => {
+            if let Some(tpl) = template {
+                init::run_non_interactive(tpl, *count, cli.seed.unwrap_or(42), output)
+            } else {
+                init::run(Some(output.as_str()))
+            }
+        }
+        Command::Learn { source } => learn::run(source),
     }
 }

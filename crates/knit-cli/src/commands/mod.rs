@@ -1,7 +1,10 @@
 //! Subcommand implementations for the knit CLI.
 
 pub mod generate;
+pub mod init;
+pub mod learn;
 pub mod plan;
+pub mod schema;
 pub mod validate;
 
 use std::path::Path;
