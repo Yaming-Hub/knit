@@ -10,3 +10,17 @@ path = "src/main.rs"
 
 [dependencies]
 knit-core = { path = "../knit-core" }
+knit-schema = { path = "../knit-schema" }
+knit-plan = { path = "../knit-plan" }
+knit-gen = { path = "../knit-gen" }
+knit-noise = { path = "../knit-noise" }
+knit-bind = { path = "../knit-bind" }
+
+clap = { version = "4", features = ["derive"] }
+indicatif = "0.17"
+colored = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde_json = "1"
+arrow = "54"
+anyhow = "1"
