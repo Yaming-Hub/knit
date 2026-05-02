@@ -1,0 +1,254 @@
+schema_version = "1.0"
+
+[model]
+name = "ecommerce"
+description = "E-commerce platform with users, products, orders, and reviews"
+seed = 20240101
+
+# ── Users ────────────────────────────────────────────────────────────
+
+[[entities]]
+name = "users"
+count = 1000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "username"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "username"
+args = []
+
+[[entities.fields]]
+name = "email"
+data_type = "string"
+[entities.fields.generator]
+type = "pattern"
+pattern = "user####@example.com"
+
+[[entities.fields]]
+name = "tier"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "free", weight = 0.5 },
+    { value = "basic", weight = 0.3 },
+    { value = "premium", weight = 0.15 },
+    { value = "enterprise", weight = 0.05 },
+]
+
+[[entities.fields]]
+name = "age"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "normal"
+[entities.fields.generator.params]
+mean = 35.0
+std_dev = 12.0
+
+[[entities.fields]]
+name = "created_at"
+data_type = "datetime"
+
+# ── Products ─────────────────────────────────────────────────────────
+
+[[entities]]
+name = "products"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "sku"
+data_type = "string"
+[entities.fields.generator]
+type = "pattern"
+pattern = "SKU-AAA-####"
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "word"
+args = []
+
+[[entities.fields]]
+name = "price"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 3.5
+sigma = 1.0
+
+[[entities.fields]]
+name = "category"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "electronics", weight = 0.25 },
+    { value = "clothing", weight = 0.20 },
+    { value = "books", weight = 0.15 },
+    { value = "home", weight = 0.15 },
+    { value = "sports", weight = 0.10 },
+    { value = "toys", weight = 0.10 },
+    { value = "food", weight = 0.05 },
+]
+
+[[entities.fields]]
+name = "in_stock"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "bernoulli"
+[entities.fields.generator.params]
+p = 0.85
+
+# ── Orders ───────────────────────────────────────────────────────────
+
+[[entities]]
+name = "orders"
+count = 5000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "product_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "quantity"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "zipf"
+[entities.fields.generator.params]
+n = 10.0
+s = 1.5
+
+[[entities.fields]]
+name = "total_amount"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "pareto"
+[entities.fields.generator.params]
+scale = 10.0
+shape = 1.5
+
+[[entities.fields]]
+name = "status"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "pending", weight = 0.10 },
+    { value = "shipped", weight = 0.25 },
+    { value = "delivered", weight = 0.55 },
+    { value = "returned", weight = 0.07 },
+    { value = "cancelled", weight = 0.03 },
+]
+
+# ── Reviews ──────────────────────────────────────────────────────────
+
+[[entities]]
+name = "reviews"
+count = 3000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "product_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "rating"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "zipf"
+[entities.fields.generator.params]
+n = 5.0
+s = 1.2
+
+[[entities.fields]]
+name = "comment"
+data_type = "string"
+nullable = { probability = 0.3 }
+[entities.fields.generator]
+type = "faker"
+method = "sentence"
+args = []
+
+# ── Relationships ────────────────────────────────────────────────────
+
+[[relationships]]
+name = "order_user"
+from = "orders"
+to = "users"
+kind = "many_to_one"
+foreign_key = "user_id"
+
+[[relationships]]
+name = "order_product"
+from = "orders"
+to = "products"
+kind = "many_to_one"
+foreign_key = "product_id"
+
+[[relationships]]
+name = "review_user"
+from = "reviews"
+to = "users"
+kind = "many_to_one"
+foreign_key = "user_id"
+
+[[relationships]]
+name = "review_product"
+from = "reviews"
+to = "products"
+kind = "many_to_one"
+foreign_key = "product_id"

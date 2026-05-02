@@ -964,6 +964,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "knit-integration-tests"
+version = "0.1.0"
+dependencies = [
+ "arrow",
+ "knit-core",
+ "knit-gen",
+ "knit-plan",
+ "knit-schema",
+]
+
+[[package]]
 name = "knit-learn"
 version = "0.1.0"
 dependencies = [

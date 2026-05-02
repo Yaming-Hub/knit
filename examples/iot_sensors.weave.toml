@@ -1,0 +1,214 @@
+schema_version = "1.0"
+
+[model]
+name = "iot_sensors"
+description = "IoT sensor network with devices, readings, and alerts"
+seed = 20240201
+
+# ── Devices ──────────────────────────────────────────────────────────
+
+[[entities]]
+name = "devices"
+count = 50
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "serial"
+data_type = "string"
+[entities.fields.generator]
+type = "pattern"
+pattern = "DEV-AA######"
+
+[[entities.fields]]
+name = "device_type"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "temperature", weight = 0.30 },
+    { value = "humidity", weight = 0.25 },
+    { value = "pressure", weight = 0.20 },
+    { value = "motion", weight = 0.15 },
+    { value = "light", weight = 0.10 },
+]
+
+[[entities.fields]]
+name = "firmware_version"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "1.0.0" },
+    { value = "1.1.0" },
+    { value = "2.0.0" },
+    { value = "2.1.0" },
+]
+
+[[entities.fields]]
+name = "latitude"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 37.0
+max = 38.0
+
+[[entities.fields]]
+name = "longitude"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = -122.5
+max = -121.5
+
+[[entities.fields]]
+name = "active"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "bernoulli"
+[entities.fields.generator.params]
+p = 0.92
+
+# ── Readings ─────────────────────────────────────────────────────────
+
+[[entities]]
+name = "readings"
+count = 10000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "device_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "value"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "normal"
+[entities.fields.generator.params]
+mean = 22.0
+std_dev = 5.0
+
+[[entities.fields]]
+name = "unit"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "celsius", weight = 0.30 },
+    { value = "percent", weight = 0.25 },
+    { value = "hpa", weight = 0.20 },
+    { value = "boolean", weight = 0.15 },
+    { value = "lux", weight = 0.10 },
+]
+
+[[entities.fields]]
+name = "quality"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "beta"
+[entities.fields.generator.params]
+alpha = 8.0
+beta = 2.0
+
+[[entities.fields]]
+name = "battery_pct"
+data_type = "float"
+nullable = { probability = 0.05 }
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 0.0
+max = 100.0
+
+# ── Alerts ───────────────────────────────────────────────────────────
+
+[[entities]]
+name = "alerts"
+count = 500
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "device_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "severity"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "info", weight = 0.40 },
+    { value = "warning", weight = 0.35 },
+    { value = "critical", weight = 0.20 },
+    { value = "fatal", weight = 0.05 },
+]
+
+[[entities.fields]]
+name = "message"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "threshold exceeded" },
+    { value = "sensor offline" },
+    { value = "battery low" },
+    { value = "calibration needed" },
+    { value = "firmware update available" },
+]
+
+[[entities.fields]]
+name = "acknowledged"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "bernoulli"
+[entities.fields.generator.params]
+p = 0.6
+
+# ── Relationships ────────────────────────────────────────────────────
+
+[[relationships]]
+name = "reading_device"
+from = "readings"
+to = "devices"
+kind = "many_to_one"
+foreign_key = "device_id"
+
+[[relationships]]
+name = "alert_device"
+from = "alerts"
+to = "devices"
+kind = "many_to_one"
+foreign_key = "device_id"

@@ -1,0 +1,180 @@
+schema_version = "1.0"
+
+[model]
+name = "hr_org"
+description = "HR organisation with departments and employees in a hierarchy"
+seed = 20240501
+
+# ── Departments ──────────────────────────────────────────────────────
+
+[[entities]]
+name = "departments"
+count = 20
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "Engineering" },
+    { value = "Sales" },
+    { value = "Marketing" },
+    { value = "Finance" },
+    { value = "Human Resources" },
+    { value = "Legal" },
+    { value = "Operations" },
+    { value = "Support" },
+    { value = "Research" },
+    { value = "Product" },
+    { value = "Design" },
+    { value = "Data Science" },
+    { value = "Security" },
+    { value = "IT" },
+    { value = "QA" },
+    { value = "DevOps" },
+    { value = "Compliance" },
+    { value = "Analytics" },
+    { value = "Strategy" },
+    { value = "Procurement" },
+]
+
+[[entities.fields]]
+name = "budget"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 100000.0
+max = 5000000.0
+
+[[entities.fields]]
+name = "location"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "New York", weight = 0.30 },
+    { value = "San Francisco", weight = 0.25 },
+    { value = "London", weight = 0.20 },
+    { value = "Berlin", weight = 0.15 },
+    { value = "Tokyo", weight = 0.10 },
+]
+
+# ── Employees ────────────────────────────────────────────────────────
+
+[[entities]]
+name = "employees"
+count = 500
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "employee_code"
+data_type = "string"
+[entities.fields.generator]
+type = "pattern"
+pattern = "EMP-#####"
+
+[[entities.fields]]
+name = "first_name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "first_name"
+args = []
+
+[[entities.fields]]
+name = "last_name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "last_name"
+args = []
+
+[[entities.fields]]
+name = "department_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "manager_id"
+data_type = "int"
+nullable = { probability = 0.04 }
+
+[[entities.fields]]
+name = "title"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "Junior Engineer", weight = 0.25 },
+    { value = "Senior Engineer", weight = 0.20 },
+    { value = "Staff Engineer", weight = 0.10 },
+    { value = "Manager", weight = 0.15 },
+    { value = "Director", weight = 0.08 },
+    { value = "VP", weight = 0.05 },
+    { value = "Analyst", weight = 0.10 },
+    { value = "Coordinator", weight = 0.07 },
+]
+
+[[entities.fields]]
+name = "salary"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 11.2
+sigma = 0.5
+
+[[entities.fields]]
+name = "years_experience"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "exponential"
+[entities.fields.generator.params]
+lambda = 0.15
+
+[[entities.fields]]
+name = "performance_rating"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "beta"
+[entities.fields.generator.params]
+alpha = 5.0
+beta = 2.0
+
+# ── Relationships ────────────────────────────────────────────────────
+
+[[relationships]]
+name = "employee_department"
+from = "employees"
+to = "departments"
+kind = "many_to_one"
+foreign_key = "department_id"
+
+[[relationships]]
+name = "employee_manager"
+from = "employees"
+to = "employees"
+kind = "many_to_one"
+foreign_key = "manager_id"
