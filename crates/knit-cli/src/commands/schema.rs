@@ -157,8 +157,10 @@ pub fn compute_diff(a: &DataModel, b: &DataModel) -> Vec<DiffEntry> {
 
     // Compare common entities
     for name in names_a.intersection(&names_b) {
-        let ea = a.entities.iter().find(|e| e.name == *name).unwrap();
-        let eb = b.entities.iter().find(|e| e.name == *name).unwrap();
+        let ea = a.entities.iter().find(|e| e.name == *name)
+            .expect("entity present in intersection");
+        let eb = b.entities.iter().find(|e| e.name == *name)
+            .expect("entity present in intersection");
         diff_entity(&mut diffs, ea, eb);
     }
 
@@ -197,8 +199,10 @@ fn diff_entity(diffs: &mut Vec<DiffEntry>, a: &Entity, b: &Entity) {
     }
 
     for name in fields_a.intersection(&fields_b) {
-        let fa = a.fields.iter().find(|f| f.name == *name).unwrap();
-        let fb = b.fields.iter().find(|f| f.name == *name).unwrap();
+        let fa = a.fields.iter().find(|f| f.name == *name)
+            .expect("field present in intersection");
+        let fb = b.fields.iter().find(|f| f.name == *name)
+            .expect("field present in intersection");
         diff_field(diffs, entity, fa, fb);
     }
 }

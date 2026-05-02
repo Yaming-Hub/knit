@@ -179,11 +179,27 @@ fn init_tracing(quiet: bool, verbose: bool) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
     init_tracing(cli.quiet, cli.verbose);
 
     // Load config (file + env vars); CLI flags take final precedence.
-    let _config = resolve_config();
+    let config = resolve_config();
+
+    // Apply config defaults where CLI flags weren't explicitly set.
+    // CLI flags (non-default) > env vars > config file.
+    if cli.seed.is_none() {
+        cli.seed = config.seed;
+    }
+    if cli.parallel == 0 {
+        if let Some(p) = config.parallel {
+            cli.parallel = p;
+        }
+    }
+    if cli.batch_size == 8192 {
+        if let Some(bs) = config.batch_size {
+            cli.batch_size = bs;
+        }
+    }
 
     match &cli.command {
         Command::Validate { schema } => validate::run(schema, &cli),
