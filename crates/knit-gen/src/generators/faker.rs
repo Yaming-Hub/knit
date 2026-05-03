@@ -7,6 +7,7 @@
 //! Determinism is guaranteed for a given [`RngCore`] state so that the same
 //! seed reproduces identical datasets across runs.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
@@ -196,12 +197,18 @@ pub struct FakerGenerator {
     /// BCP 47 locale hint (currently unused; reserved for future i18n).
     #[allow(dead_code)]
     locale: String,
+    /// Whether a warning has already been emitted for an unknown category.
+    warned: AtomicBool,
 }
 
 impl FakerGenerator {
     /// Create a new faker generator for the given *category* and *locale*.
     pub fn new(category: String, locale: String) -> Self {
-        Self { category, locale }
+        Self {
+            category,
+            locale,
+            warned: AtomicBool::new(false),
+        }
     }
 
     /// Generate a single value for the configured category.
@@ -228,12 +235,25 @@ impl FakerGenerator {
             "word" => pick(rng, WORDS).to_string(),
             "sentence" => {
                 let word_count = 3 + (rng.next_u32() % 6) as usize; // 3..=8
-                let mut words: Vec<&str> = (0..word_count).map(|_| pick(rng, WORDS)).collect();
-                // Capitalise first word.
-                let first = words[0];
-                let cap = first[..1].to_uppercase() + &first[1..];
-                words[0] = Box::leak(cap.into_boxed_str()); // static lifetime for uniform type
-                let mut s = words.join(" ");
+                let mut s = String::with_capacity(word_count * 7);
+                for i in 0..word_count {
+                    if i > 0 {
+                        s.push(' ');
+                    }
+                    let w = pick(rng, WORDS);
+                    if i == 0 {
+                        // Capitalize first character
+                        let mut chars = w.chars();
+                        if let Some(c) = chars.next() {
+                            for uc in c.to_uppercase() {
+                                s.push(uc);
+                            }
+                            s.push_str(chars.as_str());
+                        }
+                    } else {
+                        s.push_str(w);
+                    }
+                }
                 s.push('.');
                 s
             }
@@ -255,10 +275,12 @@ impl FakerGenerator {
                 format!("{prefix} {suffix}")
             }
             unknown => {
-                tracing::warn!(
-                    category = unknown,
-                    "unknown faker category, returning category name as constant"
-                );
+                if !self.warned.swap(true, Ordering::Relaxed) {
+                    tracing::warn!(
+                        category = unknown,
+                        "unknown faker category, returning category name as constant"
+                    );
+                }
                 unknown.to_string()
             }
         }
