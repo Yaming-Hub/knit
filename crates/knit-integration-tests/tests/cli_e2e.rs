@@ -5,6 +5,7 @@
 
 use assert_cmd::Command;
 use predicates::prelude::*;
+use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -666,6 +667,85 @@ fn learn_missing_source_fails() {
         .args(["learn", "nonexistent_dir", "-o", "out.weave.toml"])
         .assert()
         .failure();
+}
+
+#[test]
+fn learn_quiet_suppresses_output() {
+    let data_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            data_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--seed",
+            "42",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let learned = data_dir.path().join("learned.weave.toml");
+    let output = knit()
+        .args([
+            "learn",
+            data_dir.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--quiet",
+        ])
+        .output()
+        .expect("failed to run knit learn");
+
+    assert!(output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !stderr.contains("learn:") && !stderr.contains("profiling"),
+        "--quiet should suppress learn progress output, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn learn_json_mode_outputs_summary() {
+    let data_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            data_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--seed",
+            "42",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let learned = data_dir.path().join("learned.weave.toml");
+    let output = knit()
+        .args([
+            "learn",
+            data_dir.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--json",
+            "--quiet",
+        ])
+        .output()
+        .expect("failed to run knit learn");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout)
+        .expect("--json should output valid JSON");
+    assert_eq!(json["event"], "complete");
+    assert_eq!(json["tables"], 1);
+    assert!(json["columns"].as_u64().unwrap() > 0);
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
