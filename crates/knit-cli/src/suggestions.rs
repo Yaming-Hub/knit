@@ -25,11 +25,15 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
     }
 
     if lower.contains("unknown generator type") || lower.contains("unknown variant") {
-        return Some(
-            "Check the generator type spelling. Supported types: distribution, faker, \
-             sequence, one_of, pattern, derived, conditional, composite, lookup, constant, \
-             uuid, unique, relative, business_hours.",
-        );
+        // Only suggest generator types when the error mentions generator/type context,
+        // not for other enum deserialization failures (DataType, DistributionKind, etc.)
+        if lower.contains("generator") || lower.contains("type") {
+            return Some(
+                "Check the generator type spelling. Supported types: distribution, faker, \
+                 sequence, one_of, pattern, derived, conditional, composite, lookup, constant, \
+                 uuid, unique, relative, business_hours.",
+            );
+        }
     }
 
     if lower.contains("entity") && lower.contains("not found") {
@@ -64,7 +68,7 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
         );
     }
 
-    if lower.contains("distribution requires") {
+    if lower.contains("distribution requires") && lower.contains("param") {
         return Some(
             "Distribution parameters must be in a [entities.fields.generator.params] sub-table. \
              Example: [entities.fields.generator.params] mean = 50.0, std_dev = 10.0.",
@@ -108,9 +112,16 @@ mod tests {
 
     #[test]
     fn suggests_for_unknown_variant() {
-        let msg = suggest_fix("unknown variant `temporal`, expected one of ...");
+        let msg = suggest_fix("unknown variant `temporal`, expected one of type variants");
         assert!(msg.is_some());
         assert!(msg.unwrap().contains("Supported types"));
+    }
+
+    #[test]
+    fn no_suggestion_for_non_generator_variant() {
+        // DataType or DistributionKind enum errors should NOT get a generator hint
+        let msg = suggest_fix("unknown variant `strng` for field data format");
+        assert!(msg.is_none());
     }
 
     #[test]
