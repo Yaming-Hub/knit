@@ -1,6 +1,6 @@
 //! `knit generate` — full forward pipeline for synthetic data generation.
 //!
-//! Orchestrates: parse → validate → plan → generate → (noise) → bind.
+//! Orchestrates: parse → validate → plan → generate → noise → bind.
 
 use std::collections::HashMap;
 use std::fs;
@@ -16,7 +16,9 @@ use colored::Colorize;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use knit_bind::{Compression, OutputFormat, Sink, SinkConfig};
+use knit_core::NoiseProfile;
 use knit_gen::GenerationEngine;
+use knit_noise::{Pipeline, PerturbConfig, ColumnFilter};
 use knit_plan::ExecutionPlan;
 
 use crate::{Cli, CompressionArg, Format};
@@ -120,6 +122,19 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
         }
     }
 
+    // ── Build noise pipelines per entity ────────────────────────────
+    let noise_pipelines = build_noise_pipelines(&model.noise_profiles, model.seed);
+
+    if !cli.quiet && !noise_pipelines.is_empty() {
+        let profile_count: usize = model.noise_profiles.len();
+        eprintln!(
+            "{} noise pipeline ({} profile(s) across {} entity/entities)",
+            "✓".green().bold(),
+            profile_count,
+            noise_pipelines.len(),
+        );
+    }
+
     // Track per-entity row counts for JSON progress events
     let mut entity_row_counts: HashMap<String, u64> = HashMap::new();
     let mut entity_total_rows: HashMap<String, u64> = HashMap::new();
@@ -133,6 +148,19 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     // Execute generation
     engine
         .execute(&plan, |entity_name, batch: RecordBatch| {
+            // ── Apply noise pipelines if configured for this entity ──
+            let mut batch = batch;
+            if let Some(pipelines) = noise_pipelines.get(entity_name) {
+                for pipeline in pipelines {
+                    batch = pipeline.run(batch).map_err(|e| {
+                        knit_gen::GenError::Generation(format!(
+                            "noise pipeline error for '{}': {}",
+                            entity_name, e
+                        ))
+                    })?;
+                }
+            }
+
             let row_count = batch.num_rows() as u64;
             total_rows += row_count;
 
@@ -381,4 +409,78 @@ fn format_bytes(b: u64) -> String {
     } else {
         format!("{} B", b)
     }
+}
+
+/// Build noise [`Pipeline`]s per entity from the schema's [`NoiseProfile`]s.
+///
+/// Each perturbator type gets its own pipeline with the appropriate
+/// probability from the profile. Multiple profiles for the same entity
+/// produce multiple pipelines that are run in sequence.
+fn build_noise_pipelines(
+    profiles: &[NoiseProfile],
+    model_seed: u64,
+) -> HashMap<String, Vec<Pipeline>> {
+    use knit_noise::{
+        NullInjector, TypoInjector, OutlierInjector, DuplicateInjector,
+    };
+
+    let base_seed = model_seed;
+    let mut entity_pipelines: HashMap<String, Vec<Pipeline>> = HashMap::new();
+
+    for (prof_idx, profile) in profiles.iter().enumerate() {
+        if profile.entity.is_empty() {
+            tracing::warn!(name = %profile.name, "noise profile has no entity target, skipping");
+            continue;
+        }
+
+        let pipes = entity_pipelines.entry(profile.entity.clone()).or_default();
+
+        let col_filter = if profile.fields.is_empty() {
+            ColumnFilter::All
+        } else {
+            ColumnFilter::ByName(profile.fields.clone())
+        };
+
+        // Derive a per-profile seed offset
+        let prof_seed = base_seed.wrapping_add(prof_idx as u64 * 1000);
+
+        if profile.null_rate > 0.0 {
+            let cfg = PerturbConfig::default()
+                .with_probability(profile.null_rate)
+                .with_seed(prof_seed)
+                .with_columns_filter(col_filter.clone());
+            let mut p = Pipeline::new(cfg);
+            p.add(Box::new(NullInjector::new()));
+            pipes.push(p);
+        }
+        if profile.typo_rate > 0.0 {
+            let cfg = PerturbConfig::default()
+                .with_probability(profile.typo_rate)
+                .with_seed(prof_seed.wrapping_add(1))
+                .with_columns_filter(col_filter.clone());
+            let mut p = Pipeline::new(cfg);
+            p.add(Box::new(TypoInjector::new()));
+            pipes.push(p);
+        }
+        if profile.outlier_rate > 0.0 {
+            let cfg = PerturbConfig::default()
+                .with_probability(profile.outlier_rate)
+                .with_seed(prof_seed.wrapping_add(2))
+                .with_columns_filter(col_filter.clone());
+            let mut p = Pipeline::new(cfg);
+            p.add(Box::new(OutlierInjector::new(5.0)));
+            pipes.push(p);
+        }
+        if profile.duplicate_rate > 0.0 {
+            let cfg = PerturbConfig::default()
+                .with_probability(profile.duplicate_rate)
+                .with_seed(prof_seed.wrapping_add(3))
+                .with_columns_filter(col_filter.clone());
+            let mut p = Pipeline::new(cfg);
+            p.add(Box::new(DuplicateInjector::new()));
+            pipes.push(p);
+        }
+    }
+
+    entity_pipelines
 }
