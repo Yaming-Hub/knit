@@ -293,9 +293,24 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     base_field: None,
                 }
             }
-            GeneratorSpec::Conditional { .. } => {
-                // Conditional generator is not yet implemented.
-                GeneratorPlan::Constant(knit_core::Value::Null)
+            GeneratorSpec::Conditional { field, branches, default } => {
+                // Compile each branch's generator recursively
+                let compiled_branches: Vec<(Value, Box<GeneratorPlan>)> = branches
+                    .iter()
+                    .map(|b| {
+                        let plan = compile_generator_from_spec(&b.generator, all_fields);
+                        (b.condition.clone(), Box::new(plan))
+                    })
+                    .collect();
+                let default_plan = match default {
+                    Some(gen) => Box::new(compile_generator_from_spec(gen, all_fields)),
+                    None => Box::new(GeneratorPlan::Constant(Value::Null)),
+                };
+                GeneratorPlan::Conditional {
+                    field: field.clone(),
+                    branches: compiled_branches,
+                    default: default_plan,
+                }
             }
         },
         None => {
@@ -367,6 +382,15 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
             let base_order = all_fields
                 .iter()
                 .find(|f| f.name == *base)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            base_order + 1
+        }
+        // Conditional depends on the field it branches on
+        Some(GeneratorSpec::Conditional { field: ref_field, .. }) => {
+            let base_order = all_fields
+                .iter()
+                .find(|f| f.name == *ref_field)
                 .map(|f| compute_dependency_order(f, all_fields))
                 .unwrap_or(0);
             base_order + 1

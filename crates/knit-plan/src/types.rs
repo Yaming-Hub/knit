@@ -243,6 +243,18 @@ pub enum GeneratorPlan {
         /// Maximum number of retries per row before accepting a duplicate.
         max_retries: u32,
     },
+    /// Conditional generator — switches generator based on another field's value.
+    ///
+    /// At runtime, reads the reference field from `batch_columns` and for each
+    /// row picks the branch whose condition matches, falling back to `default`.
+    Conditional {
+        /// Name of the field to branch on (must be generated before this field).
+        field: String,
+        /// Ordered list of (condition_value, generator) pairs.
+        branches: Vec<(Value, Box<GeneratorPlan>)>,
+        /// Fallback generator when no branch matches.
+        default: Box<GeneratorPlan>,
+    },
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────

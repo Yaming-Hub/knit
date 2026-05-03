@@ -214,11 +214,10 @@ impl std::fmt::Display for DataType {
 /// Each variant corresponds to a generation strategy. The `knit-plan` compiler
 /// translates supported variants into `GeneratorPlan` entries for `knit-gen`.
 ///
-/// **Note:** The `Conditional` variant is not yet implemented in the
-/// planner/generator and currently produces null placeholder output. All other
-/// variants are fully supported: `Distribution`, `Sequence`, `Uuid`, `OneOf`,
-/// `Pattern`, `Ref`, `TimestampRange`, `Expression`, `TimeSeries`, `Unique`,
-/// `Relative`, `BusinessHours`, `Faker`, and `Constant`.
+/// All variants are fully supported in the planner and generator: `Distribution`,
+/// `Sequence`, `Uuid`, `OneOf`, `Pattern`, `Ref`, `TimestampRange`, `Expression`,
+/// `TimeSeries`, `Unique`, `Relative`, `BusinessHours`, `Faker`, `Conditional`,
+/// and `Constant`.
 ///
 /// Tagged with `#[serde(tag = "type")]` so TOML/JSON uses `type = "distribution"`, etc.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

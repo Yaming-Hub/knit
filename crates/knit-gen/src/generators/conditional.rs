@@ -1,0 +1,289 @@
+//! Conditional generator — switches sub-generator based on another field's value.
+//!
+//! Reads a reference column from [`GenContext::batch_columns`], matches each row's
+//! value against the branch conditions, and delegates to the matching branch's
+//! generator. Rows that match no branch use the default generator.
+//!
+//! Because each branch may produce a different Arrow type, the output is always
+//! a `StringArray` — each sub-generator's output is converted to string per-row.
+
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use arrow::array::{
+    Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray, UInt64Array,
+};
+use arrow::datatypes::DataType;
+use rand::RngCore;
+
+use crate::context::GenContext;
+use crate::traits::FieldGenerator;
+
+use super::create_generator;
+
+/// A conditional generator that switches on a reference field's value.
+///
+/// For each row in the batch:
+/// 1. Read the reference field value from `batch_columns`
+/// 2. Find the first branch whose condition matches (equality check)
+/// 3. Generate using that branch's sub-generator
+/// 4. If no branch matches, use the default generator
+///
+/// All sub-generators produce full batches, and the conditional selects per-row.
+pub struct ConditionalGenerator {
+    /// Name of the field to branch on.
+    field: String,
+    /// Ordered list of (condition_string, generator) pairs.
+    /// Conditions are stored as strings for matching against the reference column.
+    branches: Vec<(String, Box<dyn FieldGenerator>)>,
+    /// Fallback generator when no branch matches.
+    default: Box<dyn FieldGenerator>,
+}
+
+impl ConditionalGenerator {
+    /// Create a new conditional generator.
+    ///
+    /// Branch conditions are converted to strings for matching. Each branch's
+    /// generator plan is compiled via the standard factory.
+    pub fn new(
+        field: String,
+        branches: Vec<(knit_core::Value, knit_plan::GeneratorPlan)>,
+        default_plan: knit_plan::GeneratorPlan,
+    ) -> Self {
+        let compiled_branches: Vec<(String, Box<dyn FieldGenerator>)> = branches
+            .into_iter()
+            .map(|(cond, plan)| {
+                let cond_str = value_to_string(&cond);
+                let gen = create_generator(&plan);
+                (cond_str, gen)
+            })
+            .collect();
+        let default_gen = create_generator(&default_plan);
+        Self {
+            field,
+            branches: compiled_branches,
+            default: default_gen,
+        }
+    }
+}
+
+impl FieldGenerator for ConditionalGenerator {
+    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+        // Read the reference field
+        let ref_col = ctx.batch_columns.get(&self.field);
+        let ref_strings = match ref_col {
+            Some(arr) => array_to_strings(arr, count),
+            None => {
+                tracing::warn!(
+                    field = %self.field,
+                    entity = %ctx.entity_name,
+                    "conditional reference field not found, using default for all rows"
+                );
+                vec![String::new(); count]
+            }
+        };
+
+        // Generate outputs from all branches + default
+        // Each branch generates a full batch; we pick per-row.
+        let branch_outputs: Vec<Vec<String>> = self
+            .branches
+            .iter()
+            .map(|(_, gen)| {
+                let arr = gen.generate(rng, count, ctx);
+                array_to_strings(&arr, count)
+            })
+            .collect();
+        let default_output = {
+            let arr = self.default.generate(rng, count, ctx);
+            array_to_strings(&arr, count)
+        };
+
+        // Select per-row based on condition matching
+        let mut result: Vec<String> = Vec::with_capacity(count);
+        for row in 0..count {
+            let ref_val = &ref_strings[row];
+            let mut matched = false;
+            for (branch_idx, (cond, _)) in self.branches.iter().enumerate() {
+                if ref_val == cond {
+                    result.push(branch_outputs[branch_idx][row].clone());
+                    matched = true;
+                    break;
+                }
+            }
+            if !matched {
+                result.push(default_output[row].clone());
+            }
+        }
+
+        Arc::new(StringArray::from(result))
+    }
+
+    fn output_type(&self) -> DataType {
+        DataType::Utf8
+    }
+}
+
+/// Convert a `knit_core::Value` to its string representation for condition matching.
+fn value_to_string(v: &knit_core::Value) -> String {
+    match v {
+        knit_core::Value::Null => String::new(),
+        knit_core::Value::Bool(b) => b.to_string(),
+        knit_core::Value::Int(n) => n.to_string(),
+        knit_core::Value::Float(f) => format!("{f}"),
+        knit_core::Value::String(s) => s.clone(),
+        other => format!("{other:?}"),
+    }
+}
+
+/// Convert an Arrow array to a Vec<String> for condition matching.
+fn array_to_strings(arr: &ArrayRef, count: usize) -> Vec<String> {
+    let len = arr.len().min(count);
+    if let Some(sa) = arr.as_any().downcast_ref::<StringArray>() {
+        (0..len).map(|i| sa.value(i).to_string()).collect()
+    } else if let Some(ia) = arr.as_any().downcast_ref::<Int64Array>() {
+        (0..len).map(|i| ia.value(i).to_string()).collect()
+    } else if let Some(ua) = arr.as_any().downcast_ref::<UInt64Array>() {
+        (0..len).map(|i| ua.value(i).to_string()).collect()
+    } else if let Some(fa) = arr.as_any().downcast_ref::<Float64Array>() {
+        (0..len).map(|i| format!("{}", fa.value(i))).collect()
+    } else if let Some(ba) = arr.as_any().downcast_ref::<BooleanArray>() {
+        (0..len).map(|i| ba.value(i).to_string()).collect()
+    } else {
+        // Fallback: use debug representation
+        tracing::warn!("unsupported array type for conditional matching, using empty strings");
+        vec![String::new(); len]
+    }
+}
+
+/// Build a lookup map from condition strings to branch indices for O(1) matching.
+/// Not used currently (branches are matched linearly), but available for optimization
+/// when branch count is large.
+#[allow(dead_code)]
+fn build_condition_index(branches: &[(String, Box<dyn FieldGenerator>)]) -> HashMap<String, usize> {
+    branches
+        .iter()
+        .enumerate()
+        .map(|(i, (cond, _))| (cond.clone(), i))
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::context::GenContext;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    use arrow::array::StringArray;
+    use knit_core::Value;
+    use knit_plan::GeneratorPlan;
+
+    #[test]
+    fn test_conditional_branches_on_string_field() {
+        let gen = ConditionalGenerator::new(
+            "status".into(),
+            vec![
+                (
+                    Value::String("active".into()),
+                    GeneratorPlan::Constant(Value::String("welcome@example.com".into())),
+                ),
+                (
+                    Value::String("inactive".into()),
+                    GeneratorPlan::Constant(Value::String("goodbye@example.com".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::String("unknown@example.com".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let status_col: ArrayRef = Arc::new(StringArray::from(vec![
+            "active", "inactive", "active", "pending", "inactive",
+        ]));
+        let mut batch = HashMap::new();
+        batch.insert("status".to_string(), status_col);
+        let ctx = GenContext {
+            batch_columns: &batch,
+            row_offset: 0,
+            partition_index: 0,
+            partition_count: 1,
+            entity_name: "users",
+        };
+
+        let result = gen.generate(&mut rng, 5, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(sa.value(0), "welcome@example.com");
+        assert_eq!(sa.value(1), "goodbye@example.com");
+        assert_eq!(sa.value(2), "welcome@example.com");
+        assert_eq!(sa.value(3), "unknown@example.com"); // default
+        assert_eq!(sa.value(4), "goodbye@example.com");
+    }
+
+    #[test]
+    fn test_conditional_branches_on_int_field() {
+        let gen = ConditionalGenerator::new(
+            "tier".into(),
+            vec![
+                (
+                    Value::Int(1),
+                    GeneratorPlan::Constant(Value::String("basic".into())),
+                ),
+                (
+                    Value::Int(2),
+                    GeneratorPlan::Constant(Value::String("premium".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::String("free".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let tier_col: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 3, 1, 2]));
+        let mut batch = HashMap::new();
+        batch.insert("tier".to_string(), tier_col);
+        let ctx = GenContext {
+            batch_columns: &batch,
+            row_offset: 0,
+            partition_index: 0,
+            partition_count: 1,
+            entity_name: "plans",
+        };
+
+        let result = gen.generate(&mut rng, 5, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(sa.value(0), "basic");
+        assert_eq!(sa.value(1), "premium");
+        assert_eq!(sa.value(2), "free"); // default
+        assert_eq!(sa.value(3), "basic");
+        assert_eq!(sa.value(4), "premium");
+    }
+
+    #[test]
+    fn test_conditional_missing_field_uses_default() {
+        let gen = ConditionalGenerator::new(
+            "nonexistent".into(),
+            vec![(
+                Value::String("x".into()),
+                GeneratorPlan::Constant(Value::String("branch".into())),
+            )],
+            GeneratorPlan::Constant(Value::String("default_val".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let batch = HashMap::new();
+        let ctx = GenContext {
+            batch_columns: &batch,
+            row_offset: 0,
+            partition_index: 0,
+            partition_count: 1,
+            entity_name: "test",
+        };
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        // All rows should use default since ref field is missing
+        for i in 0..3 {
+            assert_eq!(sa.value(i), "default_val");
+        }
+    }
+}

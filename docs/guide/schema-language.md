@@ -420,7 +420,7 @@ Knit also includes these generators:
 |-----------|---------|--------|
 | `faker` | Locale-aware realistic data (names, addresses, companies) | ✅ Working |
 | `composite` | Generate arrays of values | ✅ Working |
-| `conditional` | Choose generator based on another field's value | ❌ Not yet implemented (produces null) |
+| `conditional` | Choose generator based on another field's value | ✅ Working |
 | `unique` | Wrapper enforcing uniqueness on any generator | ✅ Working |
 | `relative` | Datetime offset from another field | ✅ Working |
 | `business_hours` | Constrained to business hours with timezone awareness | ✅ Working |
