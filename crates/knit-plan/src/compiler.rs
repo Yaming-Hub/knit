@@ -386,14 +386,25 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .unwrap_or(0);
             base_order + 1
         }
-        // Conditional depends on the field it branches on
-        Some(GeneratorSpec::Conditional { field: ref_field, .. }) => {
-            let base_order = all_fields
+        // Conditional depends on the field it branches on + any deps inside branches
+        Some(GeneratorSpec::Conditional { field: ref_field, branches, default }) => {
+            // Dependency on the reference field
+            let ref_order = all_fields
                 .iter()
                 .find(|f| f.name == *ref_field)
                 .map(|f| compute_dependency_order(f, all_fields))
                 .unwrap_or(0);
-            base_order + 1
+            // Also check dependencies inside branch generators
+            let branch_max = branches
+                .iter()
+                .map(|b| compute_generator_spec_deps(&b.generator, all_fields))
+                .max()
+                .unwrap_or(0);
+            let default_max = default
+                .as_ref()
+                .map(|d| compute_generator_spec_deps(d, all_fields))
+                .unwrap_or(0);
+            ref_order.max(branch_max).max(default_max) + 1
         }
         _ => 0,
     }
@@ -411,6 +422,20 @@ fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
         .filter(|f| tokens.iter().any(|t| *t == f.name))
         .map(|f| f.name.clone())
         .collect()
+}
+
+/// Compute the dependency order contributed by a GeneratorSpec (for nested generators).
+fn compute_generator_spec_deps(spec: &GeneratorSpec, all_fields: &[Field]) -> u32 {
+    // Create a temporary Field to reuse compute_dependency_order
+    let tmp = Field {
+        name: String::new(),
+        description: None,
+        data_type: knit_core::DataType::String,
+        nullable: NullSpec::default(),
+        generator: Some(spec.clone()),
+        primary_key: None,
+    };
+    compute_dependency_order(&tmp, all_fields)
 }
 
 /// Estimate byte size for an entity based on field types and row count.
