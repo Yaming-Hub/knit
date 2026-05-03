@@ -10,6 +10,7 @@ parquet = { version = "54", features = ["arrow"] }
 serde_json = "1"
 minijinja = "2"
 thiserror = "2"
+parking_lot = "0.12"
 tracing = "0.1"
 chrono = "0.4"
 

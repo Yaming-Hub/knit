@@ -572,6 +572,12 @@ mod tests {
     use super::*;
     use std::io::Write;
 
+    /// Create a quiet Cli for testing (suppresses output).
+    fn quiet_cli() -> crate::Cli {
+        use clap::Parser;
+        crate::Cli::parse_from(["knit", "--quiet", "validate", "x.toml"])
+    }
+
     #[test]
     fn learn_from_csv_produces_valid_toml() {
         let dir = tempfile::tempdir().unwrap();
@@ -589,6 +595,7 @@ mod tests {
         let result = run(
             csv_path.to_str().unwrap(),
             output_path.to_str().unwrap(),
+            &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
         assert!(output_path.exists(), "output file not created");
@@ -627,6 +634,7 @@ mod tests {
         let result = run(
             dir.path().to_str().unwrap(),
             output_path.to_str().unwrap(),
+            &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
         assert!(output_path.exists());
@@ -642,7 +650,7 @@ mod tests {
 
     #[test]
     fn learn_nonexistent_path_errors() {
-        let result = run("nonexistent_path_12345.csv", "out.toml");
+        let result = run("nonexistent_path_12345.csv", "out.toml", &quiet_cli());
         assert!(result.is_err());
     }
 
