@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use knit_core::{DataModel, Entity, Field, GeneratorSpec, NullSpec};
+use knit_core::{DataModel, Entity, Field, GeneratorSpec, NullSpec, Value};
 
 use crate::error::PlanError;
 use crate::graph;
@@ -260,10 +260,39 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     max_retries: *max_retries,
                 }
             }
-            GeneratorSpec::Conditional { .. }
-            | GeneratorSpec::Relative { .. }
-            | GeneratorSpec::BusinessHours { .. } => {
-                // Fallback: treat as a constant placeholder.
+            GeneratorSpec::Relative { field, offset } => {
+                let mut params = BTreeMap::new();
+                // Convert offset to a numeric value for the temporal generator
+                match offset {
+                    Value::Int(n) => { params.insert("offset".into(), *n as f64); }
+                    Value::Float(f) => { params.insert("offset".into(), *f); }
+                    _ => { params.insert("offset".into(), 0.0); }
+                }
+                GeneratorPlan::Temporal {
+                    kind: TemporalKind::Relative,
+                    params,
+                    base_field: Some(field.clone()),
+                }
+            }
+            GeneratorSpec::BusinessHours {
+                start_hour,
+                end_hour,
+                exclude_weekends,
+            } => {
+                let mut params = BTreeMap::new();
+                params.insert("start_hour".into(), *start_hour as f64);
+                params.insert("end_hour".into(), *end_hour as f64);
+                if *exclude_weekends {
+                    params.insert("exclude_weekends".into(), 1.0);
+                }
+                GeneratorPlan::Temporal {
+                    kind: TemporalKind::BusinessHours,
+                    params,
+                    base_field: None,
+                }
+            }
+            GeneratorSpec::Conditional { .. } => {
+                // Conditional generator is not yet implemented.
                 GeneratorPlan::Constant(knit_core::Value::Null)
             }
         },
@@ -1074,6 +1103,49 @@ mod tests {
                 assert!(matches!(*inner, GeneratorPlan::Sequence { start: 1, step: 1 }));
             }
             other => panic!("expected GeneratorPlan::Unique, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_business_hours_compiles_to_temporal() {
+        let spec = GeneratorSpec::BusinessHours {
+            start_hour: 9,
+            end_hour: 17,
+            exclude_weekends: true,
+        };
+        let plan = compile_generator_from_spec(&spec, &[]);
+        match plan {
+            GeneratorPlan::Temporal {
+                kind: TemporalKind::BusinessHours,
+                params,
+                base_field,
+            } => {
+                assert_eq!(params["start_hour"], 9.0);
+                assert_eq!(params["end_hour"], 17.0);
+                assert_eq!(params["exclude_weekends"], 1.0);
+                assert!(base_field.is_none());
+            }
+            other => panic!("expected Temporal/BusinessHours, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_relative_compiles_to_temporal() {
+        let spec = GeneratorSpec::Relative {
+            field: "start_date".to_string(),
+            offset: Value::Int(86400),
+        };
+        let plan = compile_generator_from_spec(&spec, &[]);
+        match plan {
+            GeneratorPlan::Temporal {
+                kind: TemporalKind::Relative,
+                params,
+                base_field,
+            } => {
+                assert_eq!(params["offset"], 86400.0);
+                assert_eq!(base_field, Some("start_date".to_string()));
+            }
+            other => panic!("expected Temporal/Relative, got {other:?}"),
         }
     }
 }

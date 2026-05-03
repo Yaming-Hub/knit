@@ -422,8 +422,8 @@ Knit also includes these generators:
 | `composite` | Generate arrays of values | ✅ Working |
 | `conditional` | Choose generator based on another field's value | ❌ Not yet implemented (produces null) |
 | `unique` | Wrapper enforcing uniqueness on any generator | ✅ Working |
-| `relative` | Datetime offset from another field | ❌ Not yet implemented (produces null) |
-| `business_hours` | Constrained to business hours with timezone awareness | ❌ Not yet implemented (produces null) |
+| `relative` | Datetime offset from another field | ✅ Working |
+| `business_hours` | Constrained to business hours with timezone awareness | ✅ Working |
 
 ---
 
