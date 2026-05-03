@@ -28,7 +28,7 @@ use config::resolve_config;
         " (",
         env!("KNIT_GIT_HASH"),
         " ",
-        env!("KNIT_BUILD_DATE"),
+        env!("KNIT_COMMIT_DATE"),
         ")",
     ),
     about,

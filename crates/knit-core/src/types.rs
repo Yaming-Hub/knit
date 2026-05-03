@@ -305,7 +305,7 @@ pub enum GeneratorSpec {
     Unique {
         /// The wrapped inner generator to enforce uniqueness on.
         inner: Box<GeneratorSpec>,
-        /// Maximum retries before accepting a duplicate (default: 100).
+        /// Maximum retries before accepting a duplicate (default: 1000).
         #[serde(default = "default_max_retries")]
         max_retries: u32,
     },
