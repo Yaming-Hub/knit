@@ -203,7 +203,7 @@ erDiagram
 | **`distribution` (log_normal)** | Response times — most fast, some slow |
 | **`distribution` (pareto)** | Bytes sent — heavy-tail distribution |
 | **`pattern`** | Hostnames: `web-??-##`, stack traces: `at ??_??::??_??() line ###` — ⚠️ currently produces null output |
-| **`faker`** | Error messages: realistic sentence structures — ⚠️ currently produces placeholder null output |
+| **`faker`** | Error messages: realistic sentence structures |
 | **`nullable`** | Stack traces: 40% null (not all errors have traces) |
 
 ### What to Expect
@@ -322,7 +322,7 @@ erDiagram
 | **Self-referential FK** | `manager_id` → `employees.id` (org hierarchy) |
 | **`nullable`** | `manager_id`: 4% null (top-level executives) |
 | **`pattern`** | Employee codes: `EMP-#####` — ⚠️ currently produces null output |
-| **`faker`** | First and last names — ⚠️ currently produces placeholder null output |
+| **`faker`** | First and last names |
 | **`distribution` (log_normal)** | Salary — right-skewed income distribution |
 | **`distribution` (exponential)** | Years of experience — many junior, few senior |
 | **`distribution` (beta)** | Performance ratings — bell-curved around 0.6–0.8 |
