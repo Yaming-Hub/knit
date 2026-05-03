@@ -5,12 +5,17 @@
 //! reservoir sample using Algorithm R, giving each key an equal probability
 //! of being retained regardless of insertion order.
 //!
-//! **Note:** This store is not yet integrated with `ForeignKeyGenerator` or
-//! the `KeyStoreKind::SampledSubset` plan variant. It is provided as
-//! infrastructure for future large-table FK support.
+//! Implements the [`KeyStore`] trait so it can be used as a drop-in
+//! replacement for [`InMemoryKeyStore`](crate::InMemoryKeyStore) in the
+//! generation engine when [`KeyStoreKind::SampledSubset`] is selected.
 
-use knit_core::Value;
+use std::sync::RwLock;
+
 use rand::RngCore;
+use rand_chacha::ChaCha8Rng;
+use rand::SeedableRng;
+
+use crate::traits::KeyStore;
 
 /// A memory-efficient key store that maintains a reservoir sample of keys.
 ///
@@ -24,75 +29,90 @@ use rand::RngCore;
 /// - At most `capacity` keys are held in memory at any time.
 /// - After `n` insertions (where `n > capacity`), each key has a
 ///   `capacity / n` probability of being in the reservoir.
-/// - [`sample`](Self::sample) returns a uniformly random element from the reservoir.
+/// - [`sample`](KeyStore::sample) returns a uniformly random element from the reservoir.
+///
+/// # Thread Safety
+///
+/// Uses [`RwLock`] to allow concurrent readers (FK samplers) with exclusive
+/// writers (PK inserters), matching [`InMemoryKeyStore`](crate::InMemoryKeyStore).
 pub struct SampledKeyStore {
-    keys: Vec<Value>,
+    inner: RwLock<SampledInner>,
+}
+
+struct SampledInner {
+    keys: Vec<i64>,
     capacity: usize,
     total_seen: u64,
+    /// Dedicated RNG for reservoir replacement decisions.
+    rng: ChaCha8Rng,
 }
 
 impl SampledKeyStore {
     /// Create a new sampled key store with the given maximum capacity.
     ///
+    /// The `seed` is used for the internal RNG that drives reservoir
+    /// replacement decisions (separate from the per-field generation RNG).
+    ///
     /// # Panics
     ///
     /// Panics if `capacity` is zero.
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(capacity: usize, seed: u64) -> Self {
         assert!(capacity > 0, "SampledKeyStore capacity must be > 0");
         Self {
-            keys: Vec::with_capacity(capacity),
-            capacity,
-            total_seen: 0,
+            inner: RwLock::new(SampledInner {
+                keys: Vec::with_capacity(capacity),
+                capacity,
+                total_seen: 0,
+                rng: ChaCha8Rng::seed_from_u64(seed),
+            }),
         }
-    }
-
-    /// Insert a key into the reservoir.
-    ///
-    /// If the reservoir is not yet full, the key is appended directly.
-    /// Otherwise, it replaces a random existing key with probability
-    /// `capacity / total_seen`, implementing Algorithm R.
-    pub fn insert(&mut self, key: Value, rng: &mut dyn RngCore) {
-        self.total_seen += 1;
-        if self.keys.len() < self.capacity {
-            self.keys.push(key);
-        } else {
-            // Algorithm R: replace element at random index with probability capacity/total_seen.
-            let j = rng.next_u64() % self.total_seen;
-            if (j as usize) < self.capacity {
-                self.keys[j as usize] = key;
-            }
-        }
-    }
-
-    /// Sample a random key from the reservoir.
-    ///
-    /// Returns `None` if no keys have been inserted.
-    pub fn sample(&self, rng: &mut dyn RngCore) -> Option<&Value> {
-        if self.keys.is_empty() {
-            return None;
-        }
-        let idx = (rng.next_u64() % self.keys.len() as u64) as usize;
-        Some(&self.keys[idx])
-    }
-
-    /// Return the number of keys currently in the reservoir.
-    pub fn len(&self) -> usize {
-        self.keys.len()
-    }
-
-    /// Returns `true` if the reservoir is empty.
-    pub fn is_empty(&self) -> bool {
-        self.keys.is_empty()
     }
 
     /// Return the total number of keys that have been offered for insertion.
     pub fn total_seen(&self) -> u64 {
-        self.total_seen
+        self.inner.read().expect("sampled keystore lock poisoned").total_seen
     }
 
     /// Return the maximum capacity of the reservoir.
     pub fn capacity(&self) -> usize {
-        self.capacity
+        self.inner.read().expect("sampled keystore lock poisoned").capacity
+    }
+}
+
+impl KeyStore for SampledKeyStore {
+    fn insert(&self, key: i64) {
+        let mut inner = self.inner.write().expect("sampled keystore lock poisoned");
+        inner.total_seen += 1;
+        if inner.keys.len() < inner.capacity {
+            inner.keys.push(key);
+        } else {
+            // Algorithm R: replace element at random index with probability capacity/total_seen.
+            let j = inner.rng.next_u64() % inner.total_seen;
+            if (j as usize) < inner.capacity {
+                inner.keys[j as usize] = key;
+            }
+        }
+    }
+
+    fn sample(&self, rng: &mut dyn RngCore) -> Option<i64> {
+        let keys = &self.inner.read().expect("sampled keystore lock poisoned").keys;
+        if keys.is_empty() {
+            return None;
+        }
+        // Unbiased sampling via rejection method.
+        let len = keys.len() as u64;
+        let threshold = u64::MAX - (u64::MAX % len);
+        let idx = loop {
+            let r = rng.next_u64();
+            if r < threshold {
+                break (r % len) as usize;
+            }
+        };
+        Some(keys[idx])
+    }
+
+    fn len(&self) -> usize {
+        self.inner.read().expect("sampled keystore lock poisoned").keys.len()
     }
 }
 
@@ -105,11 +125,10 @@ mod tests {
     #[test]
     fn reservoir_stays_within_capacity() {
         let capacity = 100;
-        let mut store = SampledKeyStore::new(capacity);
-        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let store = SampledKeyStore::new(capacity, 42);
 
-        for i in 0..10_000u64 {
-            store.insert(Value::Int(i as i64), &mut rng);
+        for i in 0..10_000i64 {
+            store.insert(i);
         }
 
         assert_eq!(store.len(), capacity);
@@ -118,18 +137,17 @@ mod tests {
 
     #[test]
     fn sample_returns_none_when_empty() {
-        let store = SampledKeyStore::new(10);
+        let store = SampledKeyStore::new(10, 1);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         assert!(store.sample(&mut rng).is_none());
     }
 
     #[test]
     fn under_capacity_all_keys_retained() {
-        let mut store = SampledKeyStore::new(100);
-        let mut rng = ChaCha8Rng::seed_from_u64(7);
+        let store = SampledKeyStore::new(100, 7);
 
         for i in 0..50 {
-            store.insert(Value::Int(i), &mut rng);
+            store.insert(i);
         }
 
         assert_eq!(store.len(), 50);
@@ -138,23 +156,34 @@ mod tests {
 
     #[test]
     fn sample_returns_valid_key() {
-        let mut store = SampledKeyStore::new(10);
-        let mut rng = ChaCha8Rng::seed_from_u64(99);
+        let store = SampledKeyStore::new(10, 99);
 
         for i in 0..5 {
-            store.insert(Value::Int(i), &mut rng);
+            store.insert(i);
         }
 
+        let mut rng = ChaCha8Rng::seed_from_u64(99);
         let val = store.sample(&mut rng).expect("should have keys");
-        match val {
-            Value::Int(v) => assert!((0..5).contains(v)),
-            _ => panic!("expected Int value"),
-        }
+        assert!((0..5).contains(&val));
     }
 
     #[test]
     #[should_panic(expected = "capacity must be > 0")]
     fn zero_capacity_panics() {
-        SampledKeyStore::new(0);
+        SampledKeyStore::new(0, 0);
+    }
+
+    #[test]
+    fn implements_keystore_trait() {
+        // Verify it can be used as Arc<dyn KeyStore>
+        let store: std::sync::Arc<dyn KeyStore> =
+            std::sync::Arc::new(SampledKeyStore::new(100, 42));
+        store.insert(1);
+        store.insert(2);
+        store.insert(3);
+        assert_eq!(store.len(), 3);
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let val = store.sample(&mut rng).unwrap();
+        assert!((1..=3).contains(&val));
     }
 }

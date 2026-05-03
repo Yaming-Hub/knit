@@ -26,6 +26,7 @@ use crate::generators::create_generator;
 use crate::generators::fk::ForeignKeyGenerator;
 use crate::keystore::InMemoryKeyStore;
 use crate::null_mask::apply_null_mask;
+use crate::sampled_key_store::SampledKeyStore;
 use crate::traits::{FieldGenerator, KeyStore};
 
 /// Default number of rows per Arrow batch.
@@ -140,11 +141,22 @@ impl GenerationEngine {
             KeyStoreKind::InMemoryVec => {
                 Arc::new(InMemoryKeyStore::with_capacity(estimated_rows as usize))
             }
-            // For now, all variants fall back to in-memory.
-            KeyStoreKind::MemoryMapped | KeyStoreKind::SampledSubset { .. } => {
+            KeyStoreKind::SampledSubset { sample_size } => {
+                // Use a deterministic seed derived from entity name for reproducibility.
+                let seed = entity_name.bytes().fold(0u64, |acc, b| {
+                    acc.wrapping_mul(31).wrapping_add(b as u64)
+                });
+                tracing::info!(
+                    entity = entity_name,
+                    sample_size,
+                    "using sampled key store (reservoir sampling)"
+                );
+                Arc::new(SampledKeyStore::new(*sample_size, seed))
+            }
+            KeyStoreKind::MemoryMapped => {
                 tracing::warn!(
                     entity = entity_name,
-                    "mmap/sampled key store not yet implemented — falling back to in-memory"
+                    "mmap key store not yet implemented — falling back to in-memory"
                 );
                 Arc::new(InMemoryKeyStore::with_capacity(estimated_rows as usize))
             }
