@@ -21,7 +21,19 @@ use config::resolve_config;
 
 /// Knit — deterministic synthetic data generation.
 #[derive(Parser, Debug)]
-#[command(name = "knit", version, about, long_about = None)]
+#[command(
+    name = "knit",
+    version = concat!(
+        env!("CARGO_PKG_VERSION"),
+        " (",
+        env!("KNIT_GIT_HASH"),
+        " ",
+        env!("KNIT_BUILD_DATE"),
+        ")",
+    ),
+    about,
+    long_about = None,
+)]
 pub struct Cli {
     #[command(subcommand)]
     command: Command,

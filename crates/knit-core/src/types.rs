@@ -225,81 +225,106 @@ impl std::fmt::Display for DataType {
 pub enum GeneratorSpec {
     /// Sample from a statistical distribution (normal, uniform, etc.).
     Distribution {
+        /// The distribution specification with parameters.
         #[serde(flatten)]
         spec: DistributionSpec,
     },
     /// Generate structured fake data (names, emails, addresses) via locale-aware faker.
     Faker {
+        /// Faker method name (e.g. `"name"`, `"email"`).
         method: String,
+        /// Optional arguments passed to the faker method.
         #[serde(default)]
         args: Vec<Value>,
     },
     /// Auto-incrementing or stepped sequence, optionally with a string prefix.
     Sequence {
+        /// Initial value of the sequence (default: 0).
         #[serde(default)]
         start: i64,
+        /// Increment between consecutive values (default: 1).
         #[serde(default = "default_step")]
         step: i64,
+        /// Optional string prefix prepended to each value.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         prefix: Option<String>,
     },
     /// Weighted random choice from a fixed set of values.
     OneOf {
+        /// The set of weighted values to choose from.
         choices: Vec<WeightedChoice>,
     },
     /// Regex-like pattern expansion (e.g. `"###-???-AAA"`).
     Pattern {
+        /// Regex-like pattern template string.
         pattern: String,
     },
     /// Expression that references other fields in the same entity.
     Derived {
+        /// Expression referencing other fields in the same entity.
         expr: String,
     },
     /// Value depends on another field's value via branch conditions.
     Conditional {
+        /// Name of the field whose value selects the branch.
         field: String,
+        /// Ordered branch conditions and their generators.
         branches: Vec<ConditionalBranch>,
+        /// Fallback generator when no branch matches.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         default: Option<Box<GeneratorSpec>>,
     },
     /// Template-based composition of multiple sub-generators.
     Composite {
+        /// Template string with placeholders for sub-generators.
         template: String,
+        /// Named sub-generators that fill template placeholders.
         #[serde(default)]
         generators: BTreeMap<String, GeneratorSpec>,
     },
     /// Foreign key lookup — copies values from another entity's field.
     Lookup {
+        /// Name of the referenced entity.
         entity: String,
+        /// Field name on the referenced entity to copy from.
         field: String,
     },
     /// Every row receives the same fixed value.
     Constant {
+        /// The fixed value assigned to every row.
         value: Value,
     },
     /// Generate a UUID (v4 by default).
     #[serde(rename = "uuid")]
     UuidGen {
+        /// UUID version to generate (default: 4).
         #[serde(default = "default_uuid_version")]
         version: u8,
     },
     /// Wrap an inner generator with uniqueness enforcement via retry.
     Unique {
+        /// The wrapped inner generator to enforce uniqueness on.
         inner: Box<GeneratorSpec>,
+        /// Maximum retries before accepting a duplicate (default: 100).
         #[serde(default = "default_max_retries")]
         max_retries: u32,
     },
     /// Value relative to another field (e.g. `end_date = start_date + 7 days`).
     Relative {
+        /// Name of the base field to offset from.
         field: String,
+        /// Offset value added to the base field.
         offset: Value,
     },
     /// Timestamps constrained to business hours (and optionally weekdays).
     BusinessHours {
+        /// Start of the business-hours window (default: 9).
         #[serde(default = "default_start_hour")]
         start_hour: u8,
+        /// End of the business-hours window (default: 17).
         #[serde(default = "default_end_hour")]
         end_hour: u8,
+        /// Whether to exclude Saturday and Sunday.
         #[serde(default)]
         exclude_weekends: bool,
     },
@@ -414,7 +439,10 @@ pub enum NullSpec {
     /// Each value has an independent probability of being null.
     Probability(f64),
     /// Every Nth row is null (deterministic pattern).
-    Pattern { every_n: u64 },
+    Pattern {
+        /// Generate null for every Nth row.
+        every_n: u64,
+    },
 }
 
 impl Serialize for NullSpec {
@@ -503,7 +531,12 @@ pub enum CountSpec {
     /// Exact row count.
     Fixed(u64),
     /// Random count drawn uniformly from `[min, max]`.
-    Range { min: u64, max: u64 },
+    Range {
+        /// Minimum count (inclusive).
+        min: u64,
+        /// Maximum count (inclusive).
+        max: u64,
+    },
     /// Row count sampled from a statistical distribution.
     Distribution(DistributionSpec),
 }
@@ -613,17 +646,22 @@ pub struct NoiseProfile {
 pub enum Constraint {
     /// A combination of fields must be unique across all rows.
     Unique {
+        /// Column names that must be unique together.
         fields: Vec<String>,
     },
     /// A boolean expression that every row must satisfy.
     Check {
+        /// Boolean expression that every row must satisfy.
         expr: String,
     },
     /// A field's value must fall within `[min, max]` (inclusive).
     Range {
+        /// Name of the field to constrain.
         field: String,
+        /// Optional inclusive lower bound.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         min: Option<Value>,
+        /// Optional inclusive upper bound.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         max: Option<Value>,
     },
@@ -700,11 +738,24 @@ pub struct ConditionalBranch {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum TopologySpec {
     /// Hierarchical tree with bounded depth and branching factor.
-    Tree { max_depth: u32, branching_factor: u32 },
+    Tree {
+        /// Maximum depth of the tree.
+        max_depth: u32,
+        /// Maximum children per node.
+        branching_factor: u32,
+    },
     /// Directed acyclic graph with bounded depth and maximum parents per node.
-    Dag { max_depth: u32, max_parents: u32 },
+    Dag {
+        /// Maximum depth of the DAG.
+        max_depth: u32,
+        /// Maximum parent nodes per child.
+        max_parents: u32,
+    },
     /// Random graph where each possible edge exists with the given probability.
-    Graph { edge_probability: f64 },
+    Graph {
+        /// Probability that any given edge exists.
+        edge_probability: f64,
+    },
 }
 
 // ── DateRange ────────────────────────────────────────────────────────

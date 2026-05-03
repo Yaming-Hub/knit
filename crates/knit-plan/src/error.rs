@@ -9,11 +9,17 @@ pub enum PlanError {
     /// A dependency cycle exists that the planner cannot break with deferred refs.
     /// This should not occur in practice since Tarjan's SCC + deferral handles all cycles.
     #[error("dependency cycle cannot be resolved: {entities:?}")]
-    UnresolvableCycle { entities: Vec<String> },
+    UnresolvableCycle {
+        /// Entity names involved in the unbreakable cycle.
+        entities: Vec<String>,
+    },
 
     /// A relationship references an entity that doesn't exist in the model.
     #[error("unknown entity in relationship: {name}")]
-    UnknownEntity { name: String },
+    UnknownEntity {
+        /// Name of the missing entity.
+        name: String,
+    },
 
     /// Catch-all for unexpected planning failures.
     #[error("planning error: {0}")]

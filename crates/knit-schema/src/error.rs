@@ -23,7 +23,12 @@ pub enum SchemaError {
     /// A semantic validation error (e.g. unknown entity reference, invalid
     /// distribution parameters, duplicate names).
     #[error("{path}: {message}")]
-    Validation { path: String, message: String },
+    Validation {
+        /// Schema path where the error was found.
+        path: String,
+        /// Description of the validation failure.
+        message: String,
+    },
 
     /// Catch-all for schema issues not covered by other variants.
     #[error("Schema error: {0}")]

@@ -1,5 +1,6 @@
 //! # knit-schema — Parser and Validator for the Weave Schema Language
 //!
+#![warn(missing_docs)]
 //! This crate converts TOML or JSON schema files into a validated
 //! [`DataModel`](knit_core::DataModel), the canonical in-memory representation
 //! consumed by the rest of the knit pipeline.

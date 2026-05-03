@@ -7,7 +7,7 @@
 //!
 //! Implements the [`KeyStore`] trait so it can be used as a drop-in
 //! replacement for [`InMemoryKeyStore`](crate::InMemoryKeyStore) in the
-//! generation engine when [`KeyStoreKind::SampledSubset`] is selected.
+//! generation engine when `KeyStoreKind::SampledSubset` is selected.
 
 use std::collections::BinaryHeap;
 use std::sync::RwLock;

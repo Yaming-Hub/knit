@@ -159,7 +159,9 @@ pub struct FieldPlan {
 pub enum GeneratorPlan {
     /// Statistical distribution with resolved, validated parameters.
     Distribution {
+        /// The distribution family (e.g. Normal, Uniform).
         kind: DistributionKind,
+        /// Resolved numeric parameters for the distribution.
         params: BTreeMap<String, f64>,
         /// Optional lower bound (values below are clamped).
         clamp_min: Option<f64>,
@@ -168,23 +170,29 @@ pub enum GeneratorPlan {
     },
     /// Faker-style structured data (names, emails, addresses) with resolved locale.
     Faker {
+        /// Faker category (e.g. `"name"`, `"email"`).
         category: String,
+        /// Locale for locale-aware fake data.
         locale: String,
     },
     /// Auto-increment or cyclic sequence. Start/step are resolved per-partition
     /// to avoid collisions across parallel workers.
     Sequence {
+        /// Initial value for the sequence.
         start: i64,
+        /// Increment between consecutive values.
         step: i64,
     },
     /// Weighted random choice with pre-computed cumulative weights for O(log n) sampling.
     OneOf {
+        /// The set of weighted values to choose from.
         choices: Vec<WeightedChoice>,
         /// Normalized cumulative distribution for binary-search sampling.
         cumulative_weights: Vec<f64>,
     },
     /// Derived field: expression referencing other fields in the same entity.
     Derived {
+        /// Expression referencing other fields in the same entity.
         expr: String,
         /// Field names this expression depends on (must be generated first).
         depends_on: Vec<String>,
@@ -193,13 +201,18 @@ pub enum GeneratorPlan {
     Constant(Value),
     /// Composite/array generator: produces arrays with element strategy and length distribution.
     Composite {
+        /// Generator plan for each array element.
         element: Box<GeneratorPlan>,
+        /// Generator plan for the array length.
         length: Box<GeneratorPlan>,
     },
     /// Foreign key lookup — samples from a parent entity's key store.
     ForeignKey {
+        /// Name of the parent entity to reference.
         target_entity: String,
+        /// Primary key field on the parent entity.
         target_field: String,
+        /// Storage strategy for the parent's key store.
         key_store_kind: KeyStoreKind,
     },
     /// Random UUID v4.
@@ -298,7 +311,10 @@ pub enum NullPlan {
     /// Each value has an independent probability of being null.
     Probability(f64),
     /// Every Nth row is null (deterministic pattern).
-    Pattern { every_n: usize },
+    Pattern {
+        /// Generate null for every Nth row.
+        every_n: usize,
+    },
 }
 
 // ── DeferredRef ──────────────────────────────────────────────────────
@@ -331,7 +347,10 @@ pub enum DeferralStrategy {
     DistributionSample(DistributionKind, BTreeMap<String, f64>),
     /// Self-referential: sample from own key store (e.g., `employee.manager_id → employee.id`).
     /// A fraction of rows are left null to serve as hierarchy roots.
-    SelfReference { nullable_root_probability: f64 },
+    SelfReference {
+        /// Fraction of rows left null to serve as hierarchy roots.
+        nullable_root_probability: f64,
+    },
 }
 
 // ── RngTree ──────────────────────────────────────────────────────────
@@ -388,7 +407,10 @@ pub enum KeyStoreKind {
     MemoryMapped,
     /// Sampled subset — for > 100M rows. Stores a representative sample for
     /// approximate FK distribution.
-    SampledSubset { sample_size: usize },
+    SampledSubset {
+        /// Number of representative samples to store.
+        sample_size: usize,
+    },
 }
 
 // ── PlanMetadata ─────────────────────────────────────────────────────
