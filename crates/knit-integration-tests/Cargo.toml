@@ -13,3 +13,8 @@ knit-gen = { path = "../knit-gen" }
 knit-learn = { path = "../knit-learn" }
 knit-noise = { path = "../knit-noise" }
 arrow = { version = "54", features = ["prettyprint"] }
+
+[dev-dependencies]
+assert_cmd = "2.2.1"
+predicates = "3.1.4"
+tempfile = "3.27.0"

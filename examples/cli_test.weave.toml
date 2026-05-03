@@ -1,0 +1,40 @@
+schema_version = "1.0"
+
+[model]
+name = "cli_test"
+description = "Minimal schema for CLI end-to-end tests"
+seed = 12345
+
+[[entities]]
+name = "items"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "value"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 0.0
+max = 100.0
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "alpha", weight = 0.5 },
+    { value = "beta", weight = 0.3 },
+    { value = "gamma", weight = 0.2 },
+]
