@@ -28,13 +28,11 @@ use crate::traits::FieldGenerator;
 /// Create a boxed [`FieldGenerator`] from a compiled [`GeneratorPlan`].
 ///
 /// This is the factory function invoked once per field during engine
-/// initialisation. The `ForeignKey` variant is not yet implemented and
-/// returns a placeholder null generator with a `tracing::warn`.
-///
-/// # Panics
-///
-/// Does not panic. Invalid distribution parameters are handled gracefully
-/// with fallback defaults and warning logs.
+/// initialisation. The `ForeignKey` variant is normally handled directly by
+/// the engine (which owns the key-store). If a nested generator (e.g.
+/// `Unique` or `Conditional`) wraps a `ForeignKey`, this factory falls back
+/// to a null-constant generator with a warning, since there is no key-store
+/// available at the factory level.
 pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
     match plan {
         GeneratorPlan::Distribution {
@@ -71,9 +69,12 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::Faker { category, locale } => {
             Box::new(faker::FakerGenerator::new(category.clone(), locale.clone()))
         }
-        // Placeholder for future PR.
+        // FK generators are created directly by the engine (which has access
+        // to the key-store). If we reach here it means an FK was nested inside
+        // another generator (e.g. Unique or Conditional) — fall back to null
+        // with a warning since we lack key-store context.
         GeneratorPlan::ForeignKey { .. } => {
-            tracing::warn!(plan = %format!("{plan:?}"), "using placeholder null generator");
+            tracing::warn!("ForeignKey inside nested generator: no key-store available, emitting nulls");
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
         GeneratorPlan::Temporal {
