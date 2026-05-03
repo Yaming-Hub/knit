@@ -40,7 +40,7 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
 }
 
 /// Print a formatted execution plan to stdout.
-fn print_plan(plan: &knit_plan::ExecutionPlan) {
+pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan) {
     let meta = &plan.metadata;
 
     println!("{}", "═══ Execution Plan ═══".bold());

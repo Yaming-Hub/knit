@@ -208,11 +208,7 @@ fn main() -> anyhow::Result<()> {
         Command::Validate { schema } => validate::run(schema, &cli),
         Command::Plan { schema } => plan::run(schema, &cli),
         Command::Generate { schema, output } => {
-            if cli.dry_run {
-                plan::run(schema, &cli)
-            } else {
-                generate::run(schema, output, &cli)
-            }
+            generate::run(schema, output, &cli)
         }
         Command::Schema { action } => match action {
             SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
