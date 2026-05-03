@@ -209,10 +209,21 @@ fn schema_assembly_produces_valid_model() {
 
     // Build a TableAnalysis from the generated data
     let scores = collect_f64(batches, "score");
+    let uniform_vals = collect_f64(batches, "uniform_val");
     let cats = collect_strings(batches, "category");
 
+    // Guard: ensure extraction actually collected data
+    assert!(scores.len() >= 9000, "too few score values: {}", scores.len());
+    assert!(uniform_vals.len() >= 9000, "too few uniform_val values: {}", uniform_vals.len());
+    assert!(cats.len() >= 9000, "too few category values: {}", cats.len());
+
     let score_fit = fit_distribution(&scores);
+    let uniform_fit = fit_distribution(&uniform_vals);
     let cat_fit = fit_categorical(&cats);
+
+    // Verify fits succeeded before assembling
+    assert!(score_fit.is_some(), "score distribution fit failed");
+    assert!(uniform_fit.is_some(), "uniform_val distribution fit failed");
 
     let columns = vec![
         ColumnAnalysis {
@@ -244,6 +255,15 @@ fn schema_assembly_produces_valid_model() {
             null_rate: 0.0,
             confidence: 0.9,
         },
+        ColumnAnalysis {
+            name: "uniform_val".to_string(),
+            is_primary_key: false,
+            distribution: uniform_fit,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.95,
+        },
     ];
 
     let analysis = TableAnalysis {
@@ -265,6 +285,26 @@ fn schema_assembly_produces_valid_model() {
 
     // Check structural correctness
     assert_eq!(model.entities.len(), 1);
-    assert_eq!(model.entities[0].name, "samples");
-    assert!(model.entities[0].fields.len() >= 3);
+    let entity = &model.entities[0];
+    assert_eq!(entity.name, "samples");
+    assert_eq!(entity.fields.len(), 4, "expected 4 fields (id, score, category, uniform_val)");
+
+    // Verify field names are present
+    let field_names: Vec<&str> = entity.fields.iter().map(|f| f.name.as_str()).collect();
+    assert!(field_names.contains(&"id"), "missing id field");
+    assert!(field_names.contains(&"score"), "missing score field");
+    assert!(field_names.contains(&"category"), "missing category field");
+    assert!(field_names.contains(&"uniform_val"), "missing uniform_val field");
+
+    // Verify that distribution fields got generator specs (not just sequence/default)
+    let score_field = entity.fields.iter().find(|f| f.name == "score").unwrap();
+    assert!(
+        score_field.generator.is_some(),
+        "score field should have a generator"
+    );
+    let cat_field = entity.fields.iter().find(|f| f.name == "category").unwrap();
+    assert!(
+        cat_field.generator.is_some(),
+        "category field should have a generator"
+    );
 }
