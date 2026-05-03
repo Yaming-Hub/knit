@@ -262,12 +262,15 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             }
             GeneratorSpec::Relative { field, offset } => {
                 let mut params = BTreeMap::new();
-                // Convert offset to a numeric value for the temporal generator
-                match offset {
-                    Value::Int(n) => { params.insert("offset".into(), *n as f64); }
-                    Value::Float(f) => { params.insert("offset".into(), *f); }
-                    _ => { params.insert("offset".into(), 0.0); }
-                }
+                // The RelativeGenerator reads offset_mean (seconds) and offset_std
+                let offset_val = match offset {
+                    Value::Int(n) => *n as f64,
+                    Value::Float(f) => *f,
+                    _ => 60.0, // default 60 seconds
+                };
+                params.insert("offset_mean".into(), offset_val);
+                // Default std is 10% of offset or minimum 1.0
+                params.insert("offset_std".into(), (offset_val.abs() * 0.1).max(1.0));
                 GeneratorPlan::Temporal {
                     kind: TemporalKind::Relative,
                     params,
@@ -282,9 +285,8 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 let mut params = BTreeMap::new();
                 params.insert("start_hour".into(), *start_hour as f64);
                 params.insert("end_hour".into(), *end_hour as f64);
-                if *exclude_weekends {
-                    params.insert("exclude_weekends".into(), 1.0);
-                }
+                // Generator reads "weekdays_only" (1.0 = true, 0.0 = false)
+                params.insert("weekdays_only".into(), if *exclude_weekends { 1.0 } else { 0.0 });
                 GeneratorPlan::Temporal {
                     kind: TemporalKind::BusinessHours,
                     params,
@@ -359,6 +361,15 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                     .unwrap_or(0);
                 max_dep_order + 1
             }
+        }
+        // Relative depends on its base_field — must come after it
+        Some(GeneratorSpec::Relative { field: base, .. }) => {
+            let base_order = all_fields
+                .iter()
+                .find(|f| f.name == *base)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            base_order + 1
         }
         _ => 0,
     }
@@ -1122,8 +1133,28 @@ mod tests {
             } => {
                 assert_eq!(params["start_hour"], 9.0);
                 assert_eq!(params["end_hour"], 17.0);
-                assert_eq!(params["exclude_weekends"], 1.0);
+                assert_eq!(params["weekdays_only"], 1.0);
                 assert!(base_field.is_none());
+            }
+            other => panic!("expected Temporal/BusinessHours, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_business_hours_weekends_allowed() {
+        let spec = GeneratorSpec::BusinessHours {
+            start_hour: 8,
+            end_hour: 20,
+            exclude_weekends: false,
+        };
+        let plan = compile_generator_from_spec(&spec, &[]);
+        match plan {
+            GeneratorPlan::Temporal {
+                kind: TemporalKind::BusinessHours,
+                params,
+                ..
+            } => {
+                assert_eq!(params["weekdays_only"], 0.0);
             }
             other => panic!("expected Temporal/BusinessHours, got {other:?}"),
         }
@@ -1142,10 +1173,45 @@ mod tests {
                 params,
                 base_field,
             } => {
-                assert_eq!(params["offset"], 86400.0);
+                assert_eq!(params["offset_mean"], 86400.0);
+                assert!(params["offset_std"] > 0.0);
                 assert_eq!(base_field, Some("start_date".to_string()));
             }
             other => panic!("expected Temporal/Relative, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_relative_dependency_ordering() {
+        // Relative field should have higher order than its base field
+        let fields = vec![
+            Field {
+                name: "end_date".to_string(),
+                description: None,
+                data_type: DataType::Datetime,
+                nullable: NullSpec::default(),
+                generator: Some(GeneratorSpec::Relative {
+                    field: "start_date".to_string(),
+                    offset: Value::Int(3600),
+                }),
+                primary_key: None,
+            },
+            Field {
+                name: "start_date".to_string(),
+                description: None,
+                data_type: DataType::Datetime,
+                nullable: NullSpec::default(),
+                generator: Some(GeneratorSpec::Distribution {
+                    spec: DistributionSpec {
+                        kind: DistributionKind::Uniform,
+                        params: Default::default(),
+                    },
+                }),
+                primary_key: None,
+            },
+        ];
+        let order_end = compute_dependency_order(&fields[0], &fields);
+        let order_start = compute_dependency_order(&fields[1], &fields);
+        assert!(order_end > order_start, "relative field should come after base field");
     }
 }
