@@ -19,6 +19,7 @@ These flags can be used with any command:
 | `--batch-size <N>` | int | `8192` | Rows per Arrow batch |
 | `--param key=value` | string | — | Override schema parameter (repeatable) |
 | `--dry-run` | bool | `false` | Validate and plan only, don't generate |
+| `--no-noise` | bool | `false` | Skip noise injection even if schema defines profiles |
 | `--json` | bool | `false` | Machine-readable JSON output |
 | `-q`, `--quiet` | bool | `false` | Suppress all non-error output |
 | `-v`, `--verbose` | bool | `false` | Extra diagnostic logging |
@@ -152,6 +153,7 @@ knit generate <schema-file> [OPTIONS]
 | `--seed <N>` | — | schema seed | Override RNG seed |
 | `--parallel <N>` | — | auto | Worker threads |
 | `--batch-size <N>` | — | `8192` | Rows per batch |
+| `--no-noise` | — | — | Skip noise injection |
 | `--json` | — | — | JSON progress events |
 | `--quiet` | `-q` | — | Suppress progress bars |
 
@@ -175,6 +177,9 @@ knit generate schema.weave.toml -o ./data --json --quiet
 
 # Tune performance
 knit generate schema.weave.toml -o ./data --parallel 8 --batch-size 16384
+
+# Generate clean data (skip noise profiles defined in schema)
+knit generate schema.weave.toml -o ./clean_data --no-noise
 ```
 
 ### Progress Output
@@ -204,6 +209,13 @@ reviews    [waiting]
 | `json` | `.json` | One JSON array per entity |
 | `jsonl` | `.jsonl` | One JSON object per line (streaming) |
 | `arrow` | `.arrow` | Arrow IPC format (zero-copy reads) |
+
+### Noise Injection
+
+If the schema defines `[[noise]]` profiles, the `generate` command automatically
+applies the noise pipeline after data generation. Use `--no-noise` to produce
+clean data from the same schema. See the [Noise Guide](noise.md) for details
+on configuring noise profiles.
 
 ---
 
