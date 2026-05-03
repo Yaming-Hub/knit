@@ -290,7 +290,7 @@ impl BusinessHoursGenerator {
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
         let start_date = params.get("start_date").copied().unwrap_or(0.0) as i64;
         let start_hour = (params.get("start_hour").copied().unwrap_or(9.0) as u8).min(23);
-        let end_hour = (params.get("end_hour").copied().unwrap_or(17.0) as u8).min(23);
+        let end_hour = (params.get("end_hour").copied().unwrap_or(17.0) as u8).min(24);
         let weekdays_only = params.get("weekdays_only").copied().unwrap_or(1.0) != 0.0;
         Self {
             start_date,
@@ -456,5 +456,31 @@ mod tests {
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 10, &ctx);
         assert_eq!(arr.len(), 10);
+    }
+
+    #[test]
+    fn business_hours_end_24_preserves_full_range() {
+        // end_hour=24 is the exclusive upper bound (midnight), should stay 24
+        let mut params = BTreeMap::new();
+        params.insert("start_date".into(), 1_704_067_200_000.0);
+        params.insert("start_hour".into(), 20.0);
+        params.insert("end_hour".into(), 24.0);
+        params.insert("weekdays_only".into(), 0.0);
+        let gen = BusinessHoursGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 50, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // All timestamps should be in the 20–23 hour range (end_hour=24 is exclusive)
+        for i in 0..50 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let hour = dt.hour();
+            assert!(
+                (20..24).contains(&hour),
+                "row {i}: hour {hour} outside 20–24"
+            );
+        }
     }
 }
