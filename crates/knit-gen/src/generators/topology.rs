@@ -179,7 +179,8 @@ impl FieldGenerator for TreeGenerator {
         queue.push_back((0, 0));
 
         let poisson = Poisson::new(self.branching_mean)
-            .unwrap_or_else(|_| Poisson::new(2.0).unwrap());
+            .unwrap_or_else(|_| Poisson::new(2.0)
+                .expect("lambda=2.0 is always valid"));
 
         while parent_ids.len() < count {
             let (parent_idx, depth) = match queue.pop_front() {
