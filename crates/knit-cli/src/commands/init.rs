@@ -102,17 +102,13 @@ data_type = "float"
 [entities.fields.generator]
 type = "distribution"
 kind = "normal"
+[entities.fields.generator.params]
 mean = 100.0
 std_dev = 25.0
 
 [[entities.fields]]
 name = "created_at"
 data_type = "datetime"
-[entities.fields.generator]
-type = "temporal"
-kind = "datetime"
-start = "2024-01-01T00:00:00Z"
-end = "2024-12-31T23:59:59Z"
 
 # Add more entities and define relationships between them:
 #
@@ -124,9 +120,9 @@ end = "2024-12-31T23:59:59Z"
 # name = "parent_id"
 # data_type = "int"
 # [entities.fields.generator]
-# type = "foreign_key"
-# target_entity = "example"
-# target_field = "id"
+# type = "lookup"
+# entity = "example"
+# field = "id"
 #
 # [[relationships]]
 # name = "child_to_parent"
@@ -137,15 +133,20 @@ end = "2024-12-31T23:59:59Z"
 # kind = "many_to_one"
 
 # Available generator types:
-#   sequence    — incrementing integers (start, step)
-#   uuid        — random UUIDs
-#   pattern     — regex-like pattern strings
-#   distribution — statistical (normal, uniform, exponential, zipf, etc.)
-#   one_of      — weighted random selection from choices
-#   foreign_key — reference to another entity's field
-#   temporal    — datetime generation with range/frequency
-#   derived     — computed from other fields (expressions)
-#   composite   — combine multiple generators
+#   sequence        — incrementing integers (start, step)
+#   uuid            — random UUIDs
+#   pattern         — regex-like pattern strings
+#   distribution    — statistical (normal, uniform, exponential, zipf, etc.)
+#   one_of          — weighted random selection from choices
+#   lookup          — reference to another entity's field (foreign key)
+#   relative        — value relative to another field (e.g. end = start + offset)
+#   business_hours  — timestamps constrained to working hours
+#   derived         — computed from other fields (expressions)
+#   conditional     — branching based on another field's value
+#   composite       — template-based composition of sub-generators
+#   constant        — fixed value for every row
+#   unique          — wrap any generator with uniqueness enforcement
+#   faker           — structured fake data (names, emails, etc.)
 "#
     .to_string()
 }

@@ -444,6 +444,90 @@ fn init_creates_schema_file() {
     );
 }
 
+#[test]
+fn init_output_validates_successfully() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("new.weave.toml");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap()])
+        .assert()
+        .success();
+
+    // The generated schema must pass validation
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn init_output_generates_data() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("new.weave.toml");
+    let out_dir = dir.path().join("data");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap()])
+        .assert()
+        .success();
+
+    // The generated schema must produce output data
+    knit()
+        .args([
+            "generate",
+            schema.to_str().unwrap(),
+            "-o",
+            out_dir.to_str().unwrap(),
+            "--format",
+            "csv",
+        ])
+        .assert()
+        .success();
+
+    assert!(out_dir.exists(), "output directory should be created");
+}
+
+#[test]
+fn init_scaffold_references_only_valid_generator_types() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("new.weave.toml");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap()])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&schema).unwrap();
+    let valid_types = [
+        "sequence",
+        "uuid",
+        "pattern",
+        "distribution",
+        "one_of",
+        "lookup",
+        "relative",
+        "business_hours",
+        "derived",
+        "conditional",
+        "composite",
+        "constant",
+        "unique",
+        "faker",
+    ];
+    let invalid_types = ["temporal", "foreign_key", "auto_increment"];
+    for invalid in &invalid_types {
+        assert!(
+            !content.contains(invalid),
+            "scaffold should not reference invalid generator type '{invalid}'"
+        );
+    }
+    // Verify the reference list mentions valid types
+    for valid in &valid_types {
+        assert!(
+            content.contains(valid),
+            "scaffold should document generator type '{valid}'"
+        );
+    }
+}
+
 // ── Schema subcommands ──────────────────────────────────────────────
 
 #[test]
