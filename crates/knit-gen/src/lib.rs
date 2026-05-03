@@ -661,20 +661,16 @@ mod tests {
 
     #[test]
     fn sampled_keystore_basic() {
-        use knit_core::Value as CoreValue;
-        let mut store = SampledKeyStore::new(100);
+        let store = SampledKeyStore::new(100, 42);
         assert!(store.is_empty());
-        let mut rng = make_rng();
         for i in 0..50 {
-            store.insert(CoreValue::Int(i), &mut rng);
+            store.insert(i);
         }
         assert_eq!(store.len(), 50);
+        let mut rng = make_rng();
         for _ in 0..100 {
             let key = store.sample(&mut rng).expect("store not empty");
-            match key {
-                CoreValue::Int(v) => assert!((0..50).contains(v)),
-                _ => panic!("expected Int value"),
-            }
+            assert!((0..50).contains(&key));
         }
     }
 }
