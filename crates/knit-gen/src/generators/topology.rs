@@ -274,34 +274,40 @@ impl FieldGenerator for WattsStrogatzGenerator {
         }
 
         let n = count;
-        let half_k = (self.k / 2).min(n / 2);
+        let half_k = (self.k / 2).min(n / 2).max(1);
         let uniform_node = Uniform::new(0, n);
         let uniform_01 = Uniform::new(0.0f64, 1.0);
 
-        // Build adjacency: for each node, store its first clockwise neighbour.
-        // We use the "primary edge" approach: each row outputs one edge target.
-        // Start with ring lattice: node i → node (i+1) % n
-        let mut targets: Vec<i64> = (0..n).map(|i| ((i + 1) % n) as i64).collect();
+        // Build neighbour lists: for each node, k/2 clockwise neighbours.
+        // neighbours[i] = [offset_1_target, offset_2_target, ...]
+        let mut neighbours: Vec<Vec<usize>> = (0..n)
+            .map(|i| (1..=half_k).map(|off| (i + off) % n).collect())
+            .collect();
 
-        // Rewire each edge with probability beta
+        // Rewire: for each node's each neighbour slot, rewire with probability beta
         for i in 0..n {
-            for offset in 1..=half_k {
-                let j = (i + offset) % n;
+            for slot in 0..half_k {
                 if uniform_01.sample(rng) < self.beta {
-                    // Rewire: pick a random node != i
                     let mut new_target = uniform_node.sample(rng);
                     let mut attempts = 0;
-                    while new_target == i && attempts < 20 {
+                    while (new_target == i || neighbours[i].contains(&new_target))
+                        && attempts < 20
+                    {
                         new_target = uniform_node.sample(rng);
                         attempts += 1;
                     }
-                    // Update the primary target for node i (last rewire wins)
-                    if offset == 1 {
-                        targets[i] = new_target as i64;
+                    if new_target != i {
+                        neighbours[i][slot] = new_target;
                     }
                 }
             }
         }
+
+        // Output the first neighbour for each node
+        let targets: Vec<i64> = neighbours
+            .iter()
+            .map(|nb| nb.first().copied().unwrap_or(0) as i64)
+            .collect();
 
         Arc::new(Int64Array::from(targets))
     }
@@ -345,6 +351,12 @@ impl FieldGenerator for ErdosRenyiGenerator {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
 
+        // p=0: all nodes are isolated
+        if self.p == 0.0 {
+            let targets: Vec<i64> = (0..count as i64).collect();
+            return Arc::new(Int64Array::from(targets));
+        }
+
         let n = count;
         let uniform_01 = Uniform::new(0.0f64, 1.0);
 
@@ -353,9 +365,6 @@ impl FieldGenerator for ErdosRenyiGenerator {
 
         for i in 0..n {
             let mut first_neighbour: Option<usize> = None;
-            // Check potential edges to other nodes
-            // For efficiency with large n and small p, use geometric distribution
-            // to skip non-edges. For simplicity, iterate when n is small.
             if n <= 10_000 || self.p > 0.5 {
                 // Direct sampling for small graphs or dense graphs
                 for j in 0..n {
@@ -368,23 +377,19 @@ impl FieldGenerator for ErdosRenyiGenerator {
                     }
                 }
             } else {
-                // Geometric skip for large sparse graphs
+                // Geometric skip for large sparse graphs (p > 0 guaranteed here)
+                let log_1mp = (1.0 - self.p).ln();
                 let mut j = 0usize;
                 while j < n {
                     if j == i {
                         j += 1;
                         continue;
                     }
-                    // Geometric: skip ahead by -ln(U)/ln(1-p) edges
-                    let skip = if self.p >= 1.0 {
+                    let u = uniform_01.sample(rng);
+                    let skip = if u <= 0.0 {
                         0
                     } else {
-                        let u = uniform_01.sample(rng);
-                        if u <= 0.0 {
-                            0
-                        } else {
-                            (u.ln() / (1.0 - self.p).ln()).floor() as usize
-                        }
+                        (u.ln() / log_1mp).floor() as usize
                     };
                     j += skip;
                     if j >= n || j == i {
@@ -608,5 +613,26 @@ mod tests {
             .filter(|&i| targets.value(i) == i as i64)
             .count();
         assert!(isolated > 30, "expected many isolated nodes with p=0.01, got {isolated}");
+    }
+
+    #[test]
+    fn erdos_renyi_zero_probability() {
+        let mut params = BTreeMap::new();
+        params.insert("p".into(), 0.0);
+        let gen = ErdosRenyiGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = test_ctx();
+        let arr = gen.generate(&mut rng, 50, &ctx);
+        let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+
+        // All nodes should be isolated (self-referencing)
+        for i in 0..50 {
+            assert_eq!(
+                targets.value(i),
+                i as i64,
+                "row {i}: expected self-reference with p=0"
+            );
+        }
     }
 }
