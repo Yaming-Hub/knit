@@ -6,8 +6,8 @@
 //! # Usage
 //!
 //! Use [`factory::create_sink`] to obtain a [`traits::Sink`] for a given
-//! [`factory::OutputFormat`], then call [`Sink::write_batch`](traits::Sink::write_batch)
-//! for each batch and [`Sink::finish`](traits::Sink::finish) to finalize.
+//! [`factory::OutputFormat`], then call [`Sink::write_batch`]
+//! for each batch and [`Sink::finish`] to finalize.
 
 pub mod csv;
 pub mod error;

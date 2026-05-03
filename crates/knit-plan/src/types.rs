@@ -154,7 +154,7 @@ pub struct FieldPlan {
 /// This is the plan-time counterpart of the schema-level
 /// [`GeneratorSpec`](knit_core::GeneratorSpec).
 ///
-/// `knit-gen` maps each variant to a concrete [`FieldGenerator`] implementation.
+/// `knit-gen` maps each variant to a concrete `FieldGenerator` implementation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GeneratorPlan {
     /// Statistical distribution with resolved, validated parameters.

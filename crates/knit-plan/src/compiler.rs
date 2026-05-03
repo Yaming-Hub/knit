@@ -1,4 +1,4 @@
-//! Main compilation logic: [`DataModel`](knit_core::DataModel) → [`ExecutionPlan`].
+//! Main compilation logic: [`DataModel`] → [`ExecutionPlan`].
 //!
 //! This module contains the [`compile()`] function — the primary entry point for
 //! `knit-plan`. It orchestrates dependency analysis, partition planning, RNG tree
@@ -14,7 +14,7 @@ use crate::partition;
 use crate::rng_tree;
 use crate::types::*;
 
-/// Compile a validated [`DataModel`](knit_core::DataModel) into an [`ExecutionPlan`].
+/// Compile a validated [`DataModel`] into an [`ExecutionPlan`].
 ///
 /// This is the main entry point for the planning phase. It performs:
 /// 1. Dependency graph construction and phase assignment
@@ -143,7 +143,7 @@ fn compile_field_plans(
     entity: &Entity,
     entity_fks: &[(String, String)],
     row_counts: &BTreeMap<String, u64>,
-    index_strategy: &IndexStrategy,
+    _index_strategy: &IndexStrategy,
 ) -> Vec<FieldPlan> {
     let fk_map: HashMap<&str, &str> = entity_fks
         .iter()

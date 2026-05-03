@@ -103,7 +103,6 @@ impl FieldGenerator for UniqueGenerator {
         }
 
         let mut seen = self.seen.lock().unwrap();
-        let mut unique_indices: Vec<usize> = Vec::with_capacity(count);
         let mut collected_arrays: Vec<(ArrayRef, Vec<usize>)> = Vec::new();
         let mut remaining = count;
         let mut retry_round = 0u32;

@@ -364,7 +364,6 @@ mod factory_tests {
     use super::*;
     use knit_bind::factory::{create_sink, OutputFormat, SinkConfig};
     use knit_bind::parquet::Compression;
-    use knit_bind::traits::Sink;
 
     #[test]
     fn create_all_formats() {

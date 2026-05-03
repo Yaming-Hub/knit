@@ -80,9 +80,9 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
     }
 
     // Build index of table names → PK columns
-    let pk_index = build_pk_index(tables);
+    let _pk_index = build_pk_index(tables);
     // Build index of entity names (table names, lowered)
-    let entity_names: HashSet<String> = tables.iter().map(|t| t.name.to_lowercase()).collect();
+    let _entity_names: HashSet<String> = tables.iter().map(|t| t.name.to_lowercase()).collect();
 
     let mut candidates = Vec::new();
 
@@ -249,7 +249,7 @@ fn compute_confidence(name_score: f64, overlap: f64, kind: &RelationshipKind) ->
 }
 
 /// Detect composite key candidates by checking pairs of columns.
-fn detect_composite_keys(tables: &[TableProfile], candidates: &mut Vec<RelationshipCandidate>) {
+fn detect_composite_keys(tables: &[TableProfile], _candidates: &mut Vec<RelationshipCandidate>) {
     // Simple heuristic: if two columns both have FK-like names referencing
     // different tables, flag as potential composite key / junction table
     for table in tables {
