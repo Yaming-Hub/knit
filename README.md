@@ -113,10 +113,13 @@ knit validate demo.weave.toml
 knit plan demo.weave.toml
 
 # Generate data (default: Parquet)
-knit generate demo.weave.toml --output ./data
+knit generate demo.weave.toml -o ./data
 
-# Generate as CSV with JSON progress events
-knit generate demo.weave.toml --format csv --json --output ./data
+# Generate as CSV with a specific seed
+knit generate demo.weave.toml --format csv --seed 123 -o ./data
+
+# Dry run — validate and plan without generating
+knit generate demo.weave.toml --dry-run
 ```
 
 ## Crate Structure
@@ -136,11 +139,32 @@ knit generate demo.weave.toml --format csv --json --output ./data
 
 The `examples/` directory contains sample schemas:
 
-- `ecommerce.weave.toml` — Users, products, orders, reviews
-- `timeseries.weave.toml` — IoT sensor readings with temporal generators
-- `social.weave.toml` — Social graph with topology generators
-- `healthcare.weave.toml` — Patients, encounters, claims
-- `minimal.weave.toml` — Simplest possible schema
+- `ecommerce.weave.toml` — Users, products, orders, reviews with FK relationships
+- `financial.weave.toml` — Accounts, transactions, and market data
+- `hr_org.weave.toml` — Employees, departments with self-referential FKs
+- `iot_sensors.weave.toml` — IoT sensor readings with temporal generators
+- `server_logs.weave.toml` — Web server access logs with correlated fields
+- `cli_test.weave.toml` — Minimal schema for integration testing
+
+Generate all examples:
+
+```bash
+for schema in examples/*.weave.toml; do
+  knit generate "$schema" -o data/$(basename "$schema" .weave.toml) --format csv
+done
+```
+
+### Reverse Engineering
+
+Infer a schema from existing data and re-generate:
+
+```bash
+# Learn a schema from CSV files
+knit learn ./my-data/ -o inferred.weave.toml
+
+# Review and customize the inferred schema, then generate
+knit generate inferred.weave.toml -o ./synthetic-data --format parquet
+```
 
 ## CLI Reference
 
@@ -161,8 +185,10 @@ Global options:
   --compression <ALG>   Compression (none|snappy|lz4|zstd)
   --parallel <N>        Worker threads (0 = auto)
   --batch-size <N>      Rows per batch (default: 8192)
+  --param key=value     Override schema parameter (repeatable)
   --json                Machine-readable JSON output
   --dry-run             Validate and plan only
+  --no-noise            Skip noise injection
   -q, --quiet           Suppress non-error output
   -v, --verbose         Debug logging
   --version             Show version

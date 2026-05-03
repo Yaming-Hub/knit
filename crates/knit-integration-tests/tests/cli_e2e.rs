@@ -444,6 +444,48 @@ fn init_creates_schema_file() {
     );
 }
 
+#[test]
+fn init_output_validates_successfully() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("new.weave.toml");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap()])
+        .assert()
+        .success();
+
+    // The generated schema must pass validation
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn init_output_generates_data() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("new.weave.toml");
+    let out_dir = dir.path().join("data");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap()])
+        .assert()
+        .success();
+
+    // The generated schema must produce output data
+    knit()
+        .args([
+            "generate",
+            schema.to_str().unwrap(),
+            "-o",
+            out_dir.to_str().unwrap(),
+            "--format",
+            "csv",
+        ])
+        .assert()
+        .success();
+
+    assert!(out_dir.exists(), "output directory should be created");
+}
+
 // ── Schema subcommands ──────────────────────────────────────────────
 
 #[test]
