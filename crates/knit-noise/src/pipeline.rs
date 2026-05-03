@@ -78,6 +78,20 @@ impl Pipeline {
     /// Propagates the first [`NoiseError`] from any perturbator.
     #[instrument(skip_all, fields(num_perturbators = self.perturbators.len()))]
     pub fn run(&self, batch: RecordBatch) -> Result<RecordBatch, NoiseError> {
+        self.run_with_offset(batch, 0)
+    }
+
+    /// Execute all perturbators with a seed offset for batch-level entropy.
+    ///
+    /// Use this when applying noise to multiple batches from the same entity
+    /// to avoid repeating the same corruption pattern. Pass a unique
+    /// `batch_offset` (e.g. batch index or row offset) for each call.
+    #[instrument(skip_all, fields(num_perturbators = self.perturbators.len(), batch_offset))]
+    pub fn run_with_offset(
+        &self,
+        batch: RecordBatch,
+        batch_offset: u64,
+    ) -> Result<RecordBatch, NoiseError> {
         // Build (stage, index) pairs and sort by stage while preserving
         // insertion order within each stage.
         let mut order: Vec<(Stage, usize)> = self
@@ -88,7 +102,7 @@ impl Pipeline {
             .collect();
         order.sort_by_key(|(stage, idx)| (*stage, *idx));
 
-        let base_seed = self.config.seed.unwrap_or(42);
+        let base_seed = self.config.seed.unwrap_or(42).wrapping_add(batch_offset);
         let mut batch = batch;
 
         info!(
