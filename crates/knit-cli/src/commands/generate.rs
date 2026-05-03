@@ -16,7 +16,7 @@ use colored::Colorize;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use knit_bind::{Compression, OutputFormat, Sink, SinkConfig};
-use knit_core::NoiseProfile;
+use knit_core::{CountSpec, DataModel, NoiseProfile};
 use knit_gen::GenerationEngine;
 use knit_noise::{Pipeline, PerturbConfig, ColumnFilter};
 use knit_plan::ExecutionPlan;
@@ -38,6 +38,10 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     // Apply CLI overrides to the model before validation/compilation.
     if let Some(seed) = cli.seed {
         model.seed = seed;
+    }
+    // Apply --count override (absolute or scale factor)
+    if let Some(ref count_str) = cli.count {
+        apply_count_override(&mut model, count_str)?;
     }
     // Note: model.params are currently passed through to the plan metadata
     // but not yet consumed by generators. This wiring prepares for future
@@ -576,4 +580,40 @@ fn build_noise_pipelines(
     }
 
     entity_pipelines
+}
+
+/// Apply `--count` override to all entities in the model.
+///
+/// - `"500"` → set all entities to exactly 500 rows
+/// - `"0.1x"` → multiply each entity's count by 0.1 (10% sample)
+/// - `"10x"` → multiply each entity's count by 10
+fn apply_count_override(model: &mut DataModel, count_str: &str) -> Result<()> {
+    if let Some(factor_str) = count_str.strip_suffix('x') {
+        let factor: f64 = factor_str
+            .parse()
+            .with_context(|| format!("invalid count multiplier: '{count_str}'"))?;
+        if factor <= 0.0 {
+            bail!("count multiplier must be positive, got '{count_str}'");
+        }
+        for entity in &mut model.entities {
+            let current = match &entity.count {
+                CountSpec::Fixed(n) => *n,
+                CountSpec::Range { min, max } => (min + max) / 2,
+                CountSpec::Distribution(_) => 1000, // fallback for distribution-based counts
+            };
+            let scaled = (current as f64 * factor).round() as u64;
+            entity.count = CountSpec::Fixed(scaled.max(1));
+        }
+    } else {
+        let count: u64 = count_str
+            .parse()
+            .with_context(|| format!("invalid count value: '{count_str}'"))?;
+        if count == 0 {
+            bail!("count must be at least 1");
+        }
+        for entity in &mut model.entities {
+            entity.count = CountSpec::Fixed(count);
+        }
+    }
+    Ok(())
 }

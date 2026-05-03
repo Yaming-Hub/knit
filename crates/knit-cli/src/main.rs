@@ -69,6 +69,14 @@ pub struct Cli {
     /// Skip noise injection even if schema defines noise profiles.
     #[arg(long, global = true)]
     no_noise: bool,
+
+    /// Override row count for all entities (absolute value or scale factor).
+    ///
+    /// If the value ends with 'x' (e.g. "0.1x", "10x"), it's treated as a
+    /// multiplier applied to each entity's configured count.
+    /// Otherwise it's treated as an absolute row count for all entities.
+    #[arg(long, global = true)]
+    pub count: Option<String>,
 }
 
 /// Supported output formats for generated data.

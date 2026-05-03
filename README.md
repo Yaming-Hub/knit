@@ -185,6 +185,7 @@ Global options:
   --compression <ALG>   Compression (none|snappy|gzip|lz4|zstd)
   --parallel <N>        Worker threads (0 = auto)
   --batch-size <N>      Rows per batch (default: 8192)
+  --count <N|Nx>        Override row count (absolute or multiplier, e.g. 100, 0.1x, 10x)
   --param key=value     Override schema parameter (repeatable)
   --json                Machine-readable JSON output
   --dry-run             Validate and plan only

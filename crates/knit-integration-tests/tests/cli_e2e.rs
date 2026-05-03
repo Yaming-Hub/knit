@@ -393,6 +393,73 @@ null_rate = 1.0
 }
 
 #[test]
+fn generate_count_absolute_override() {
+    // --count 5 should produce exactly 5 rows per entity
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--count",
+            "5",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // cli_test.weave.toml has 1 entity "items" with count=100
+    // With --count 5 it should have exactly 5 data rows + 1 header
+    let csv_files: Vec<_> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "csv"))
+        .collect();
+    assert!(!csv_files.is_empty());
+    for entry in &csv_files {
+        let content = fs::read_to_string(entry.path()).unwrap();
+        let line_count = content.lines().count();
+        assert_eq!(line_count, 6, "should have 1 header + 5 data rows");
+    }
+}
+
+#[test]
+fn generate_count_multiplier_override() {
+    // --count 0.5x should halve the row counts
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--count",
+            "0.5x",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // cli_test.weave.toml has count=100, so 0.5x → 50 rows
+    let csv_files: Vec<_> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "csv"))
+        .collect();
+    assert!(!csv_files.is_empty());
+    for entry in &csv_files {
+        let content = fs::read_to_string(entry.path()).unwrap();
+        let line_count = content.lines().count();
+        assert_eq!(line_count, 51, "should have 1 header + 50 data rows");
+    }
+}
+
+#[test]
 fn generate_json_progress_events() {
     let dir = TempDir::new().unwrap();
     let output = knit()
