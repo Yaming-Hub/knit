@@ -55,6 +55,8 @@ pub struct GenerationEngine {
     key_stores: HashMap<String, Arc<dyn KeyStore>>,
     /// Maximum rows per Arrow batch.
     batch_size: usize,
+    /// User-supplied parameters passed to generators via GenContext.
+    params: HashMap<String, String>,
 }
 
 impl GenerationEngine {
@@ -63,6 +65,7 @@ impl GenerationEngine {
         Self {
             key_stores: HashMap::new(),
             batch_size: DEFAULT_BATCH_SIZE,
+            params: HashMap::new(),
         }
     }
 
@@ -71,7 +74,14 @@ impl GenerationEngine {
         Self {
             key_stores: HashMap::new(),
             batch_size: batch_size.max(1),
+            params: HashMap::new(),
         }
+    }
+
+    /// Set user-supplied parameters that will be available to generators.
+    pub fn with_params(mut self, params: HashMap<String, String>) -> Self {
+        self.params = params;
+        self
     }
 
     /// Execute the full plan, calling `on_batch` for every produced
@@ -299,13 +309,14 @@ impl GenerationEngine {
         let mut field_arrays = Vec::with_capacity(ep.field_plans.len());
 
         for (i, fp) in ep.field_plans.iter().enumerate() {
-            let ctx = GenContext {
-                batch_columns: &batch_columns,
+            let ctx = GenContext::new(
+                &batch_columns,
                 row_offset,
                 partition_index,
-                partition_count: ep.partitions.len(),
-                entity_name: &ep.entity_name,
-            };
+                ep.partitions.len(),
+                &ep.entity_name,
+            )
+            .with_params(&self.params);
 
             let arr = generators[i].generate(rng, count, &ctx);
             let arr = apply_null_mask(arr, &fp.null_plan, rng, count);

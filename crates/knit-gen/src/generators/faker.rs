@@ -310,13 +310,7 @@ mod tests {
 
     fn make_ctx() -> GenContext<'static> {
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
-        GenContext {
-            batch_columns: map,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        }
+        GenContext::new(map, 0, 0, 1, "test")
     }
 
     fn gen(category: &str, count: usize, seed: u64) -> ArrayRef {

@@ -1088,3 +1088,123 @@ fn sorted_file_names(dir: &std::path::Path) -> Vec<String> {
     names.sort();
     names
 }
+
+#[test]
+fn generate_param_substitution_in_derived() {
+    let tmp = TempDir::new().unwrap();
+    let schema_path = tmp.path().join("param_test.weave.toml");
+    fs::write(
+        &schema_path,
+        r#"
+schema_version = "1.0"
+seed = 1
+
+[[entities]]
+name = "items"
+count = 5
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "derived"
+expr = "${param.prefix}-item-${id}"
+depends_on = ["id"]
+"#,
+    )
+    .unwrap();
+
+    let out_dir = tmp.path().join("output");
+    fs::create_dir_all(&out_dir).unwrap();
+
+    // Generate with --param prefix=ACME
+    knit()
+        .args([
+            "generate",
+            schema_path.to_str().unwrap(),
+            "-o",
+            out_dir.to_str().unwrap(),
+            "--format",
+            "csv",
+            "--param",
+            "prefix=ACME",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Verify the CSV contains param-substituted values
+    let csv_file = out_dir.join("items.csv");
+    let content = fs::read_to_string(&csv_file).unwrap();
+    assert!(
+        content.contains("ACME-item-1"),
+        "expected param substitution in derived field, got:\n{content}"
+    );
+    assert!(content.contains("ACME-item-5"));
+}
+
+#[test]
+fn generate_param_without_flag_leaves_placeholder() {
+    let tmp = TempDir::new().unwrap();
+    let schema_path = tmp.path().join("param_test.weave.toml");
+    fs::write(
+        &schema_path,
+        r#"
+schema_version = "1.0"
+seed = 1
+
+[[entities]]
+name = "items"
+count = 3
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "derived"
+expr = "${param.env}-${id}"
+depends_on = ["id"]
+"#,
+    )
+    .unwrap();
+
+    let out_dir = tmp.path().join("output");
+    fs::create_dir_all(&out_dir).unwrap();
+
+    // Generate WITHOUT --param env=... → placeholder stays literal
+    knit()
+        .args([
+            "generate",
+            schema_path.to_str().unwrap(),
+            "-o",
+            out_dir.to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let csv_file = out_dir.join("items.csv");
+    let content = fs::read_to_string(&csv_file).unwrap();
+    assert!(
+        content.contains("${param.env}-1"),
+        "unresolved param should stay as literal placeholder, got:\n{content}"
+    );
+}

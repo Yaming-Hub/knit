@@ -52,13 +52,7 @@ mod tests {
         // Leak a HashMap so we get a &'static reference for testing.
         let map: &'static HashMap<String, arrow::array::ArrayRef> =
             Box::leak(Box::new(HashMap::new()));
-        GenContext {
-            batch_columns: map,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        }
+        GenContext::new(map, 0, 0, 1, "test")
     }
 
     fn make_rng() -> ChaCha8Rng {
@@ -147,13 +141,7 @@ mod tests {
         };
         let gen = create_generator(&plan);
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
-        let ctx = GenContext {
-            batch_columns: map,
-            row_offset: 100,
-            partition_index: 1,
-            partition_count: 2,
-            entity_name: "test",
-        };
+        let ctx = GenContext::new(map, 100, 1, 2, "test");
         let arr = gen.generate(&mut make_rng(), 5, &ctx);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 

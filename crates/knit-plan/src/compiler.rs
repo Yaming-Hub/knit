@@ -413,8 +413,10 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
 /// Extract field names referenced in a derived expression.
 /// Simple heuristic: look for field names from `all_fields` that appear in the expression.
 fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
+    // Strip ${param.*} references before tokenizing — they are not field deps.
+    let stripped = strip_param_refs(expr);
     // Tokenize on non-alphanumeric/underscore boundaries for whole-word matching
-    let tokens: Vec<&str> = expr
+    let tokens: Vec<&str> = stripped
         .split(|c: char| !c.is_alphanumeric() && c != '_')
         .collect();
     all_fields
@@ -422,6 +424,27 @@ fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
         .filter(|f| tokens.iter().any(|t| *t == f.name))
         .map(|f| f.name.clone())
         .collect()
+}
+
+/// Remove `${param.key}` placeholders from an expression so they don't
+/// interfere with field-dependency extraction.
+fn strip_param_refs(expr: &str) -> String {
+    let mut result = String::with_capacity(expr.len());
+    let mut rest = expr;
+    while let Some(start) = rest.find("${param.") {
+        result.push_str(&rest[..start]);
+        let after = &rest[start + 8..]; // skip "${param."
+        if let Some(end) = after.find('}') {
+            rest = &after[end + 1..];
+        } else {
+            // Malformed — keep the remainder as-is
+            result.push_str(&rest[start..]);
+            rest = "";
+            break;
+        }
+    }
+    result.push_str(rest);
+    result
 }
 
 /// Compute the dependency order contributed by a GeneratorSpec (for nested generators).
@@ -977,6 +1000,55 @@ mod tests {
         // Derived field should have higher dependency_order.
         let price_plan = ep.field_plans.iter().find(|fp| fp.field_name == "price").unwrap();
         assert!(tax_plan.dependency_order > price_plan.dependency_order);
+    }
+
+    #[test]
+    fn test_param_refs_not_treated_as_dependencies() {
+        // A field named "env" exists alongside a derived field using ${param.env}.
+        // The ${param.env} should NOT create a dependency on the "env" field.
+        let mut entity = simple_entity("test", 100);
+        entity.fields.push(Field {
+            name: "env".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Constant {
+                value: knit_core::Value::String("prod".into()),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        entity.fields.push(Field {
+            name: "label".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "${param.env}-${id}".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+
+        let model = simple_model("params", vec![entity], vec![]);
+        let plan = compile(&model).unwrap();
+        let ep = &plan.phases[0].entity_plans[0];
+        let label_plan = ep.field_plans.iter().find(|fp| fp.field_name == "label").unwrap();
+        match &label_plan.generator_plan {
+            GeneratorPlan::Derived { depends_on, .. } => {
+                assert!(
+                    depends_on.contains(&"id".to_string()),
+                    "should depend on 'id'"
+                );
+                assert!(
+                    !depends_on.contains(&"env".to_string()),
+                    "should NOT depend on 'env' (it's a param ref, not a field ref)"
+                );
+                assert!(
+                    !depends_on.contains(&"param".to_string()),
+                    "should NOT depend on 'param'"
+                );
+            }
+            other => panic!("expected Derived, got {other:?}"),
+        }
     }
 
     #[test]
