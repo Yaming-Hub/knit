@@ -19,6 +19,7 @@ use crate::correlation::Correlation;
 use crate::fitting::{Distribution, FitResult};
 use crate::relationships::{RelationshipCandidate, RelationshipKind};
 use crate::temporal::TemporalPatternSpec;
+use crate::type_inference::{InferredType, StringPattern};
 
 /// Analysis results for a single table, used as input to schema assembly.
 #[derive(Debug, Clone)]
@@ -31,6 +32,8 @@ pub struct TableAnalysis {
     pub relationships: Vec<RelationshipCandidate>,
     /// Detected correlations involving this table's columns.
     pub correlations: Vec<Correlation>,
+    /// Number of rows observed in the source data.
+    pub row_count: u64,
 }
 
 /// Analysis results for a single column.
@@ -50,6 +53,10 @@ pub struct ColumnAnalysis {
     pub null_rate: f64,
     /// Confidence score for the overall inference.
     pub confidence: f64,
+    /// Semantic type inferred from string content (UUID, date, email, etc.).
+    pub inferred_type: Option<InferredType>,
+    /// Detected string patterns (email, phone, URL) with match rates.
+    pub string_patterns: Vec<(StringPattern, f64)>,
 }
 
 /// Assemble a Weave schema document from table analyses.
@@ -181,10 +188,16 @@ fn build_entity(
         })
         .collect();
 
+    let count = if table.row_count > 0 {
+        CountSpec::Fixed(table.row_count)
+    } else {
+        CountSpec::Fixed(1000)
+    };
+
     let entity = Entity {
         name: table.name.clone(),
         description: None,
-        count: CountSpec::Fixed(1000),
+        count,
         fields,
         constraints: Vec::new(),
         topology: None,
@@ -206,8 +219,11 @@ fn build_generator(
         };
     }
 
-    // PK → Sequence
+    // PK → Sequence (or UuidGen for UUID columns)
     if col.is_primary_key {
+        if matches!(col.inferred_type, Some(InferredType::Uuid)) {
+            return GeneratorSpec::UuidGen { version: 4 };
+        }
         return GeneratorSpec::Sequence {
             start: 1,
             step: 1,
@@ -228,6 +244,37 @@ fn build_generator(
     // Categorical
     if let Some(weights) = &col.categorical_weights {
         return build_categorical_generator(weights);
+    }
+
+    // Semantic type from string inference
+    if let Some(ref inferred) = col.inferred_type {
+        match inferred {
+            InferredType::Uuid => {
+                return GeneratorSpec::UuidGen { version: 4 };
+            }
+            InferredType::Boolean => {
+                return GeneratorSpec::OneOf {
+                    choices: vec![
+                        WeightedChoice { value: Value::String("true".into()), weight: 0.5 },
+                        WeightedChoice { value: Value::String("false".into()), weight: 0.5 },
+                    ],
+                };
+            }
+            _ => {}
+        }
+    }
+
+    // String pattern → Faker
+    if let Some((pattern, _rate)) = col.string_patterns.first() {
+        match pattern {
+            StringPattern::Email => {
+                return GeneratorSpec::Faker { method: "email".into(), args: vec![] };
+            }
+            StringPattern::Phone => {
+                return GeneratorSpec::Faker { method: "phone".into(), args: vec![] };
+            }
+            _ => {}
+        }
     }
 
     // Fallback: no generator (let the planner decide)
@@ -304,7 +351,7 @@ fn build_distribution_generator(dist: &Distribution) -> GeneratorSpec {
 fn build_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
     let choices: Vec<WeightedChoice> = weights
         .iter()
-        .take(50)
+        .take(200)
         .map(|(val, w)| WeightedChoice {
             value: Value::String(val.clone()),
             weight: *w,
@@ -330,6 +377,10 @@ fn infer_data_type(
     col: &ColumnAnalysis,
     fk: Option<&RelationshipCandidate>,
 ) -> knit_core::DataType {
+    // UUID columns keep their type even as PK/FK
+    if matches!(col.inferred_type, Some(InferredType::Uuid)) {
+        return knit_core::DataType::Uuid;
+    }
     if fk.is_some() || col.is_primary_key {
         return knit_core::DataType::Int;
     }
@@ -369,7 +420,11 @@ fn assemble_column(
     let generator = if let Some(rel) = fk {
         format!("ref({}.{})", rel.to_table, rel.to_column)
     } else if col.is_primary_key {
-        "auto_increment()".to_string()
+        if matches!(col.inferred_type, Some(InferredType::Uuid)) {
+            "uuid()".to_string()
+        } else {
+            "auto_increment()".to_string()
+        }
     } else if let Some(spec) = &col.temporal_pattern {
         if spec.generator_expr.is_empty() {
             "timestamp()".to_string()
@@ -380,6 +435,14 @@ fn assemble_column(
         distribution_to_generator(&fit.best.distribution)
     } else if let Some(weights) = &col.categorical_weights {
         categorical_to_generator(weights)
+    } else if matches!(col.inferred_type, Some(InferredType::Uuid)) {
+        "uuid()".to_string()
+    } else if matches!(col.inferred_type, Some(InferredType::Boolean)) {
+        "one_of(\"true\" => 50%, \"false\" => 50%)".to_string()
+    } else if col.string_patterns.iter().any(|(p, _)| *p == StringPattern::Email) {
+        "faker(\"email\")".to_string()
+    } else if col.string_patterns.iter().any(|(p, _)| *p == StringPattern::Phone) {
+        "faker(\"phone\")".to_string()
     } else {
         "unknown()".to_string()
     };
@@ -487,6 +550,8 @@ mod tests {
                     categorical_weights: None,
                     null_rate: 0.0,
                     confidence: 1.0,
+                    inferred_type: None,
+                    string_patterns: vec![],
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -496,10 +561,13 @@ mod tests {
                     categorical_weights: None,
                     null_rate: 0.02,
                     confidence: 0.85,
+                    inferred_type: None,
+                    string_patterns: vec![],
                 },
             ],
             relationships: vec![],
             correlations: vec![],
+            row_count: 5000,
         }];
 
         let schema = assemble_schema(&tables);
@@ -522,6 +590,8 @@ mod tests {
                 categorical_weights: None,
                 null_rate: 0.0,
                 confidence: 0.9,
+                inferred_type: None,
+                string_patterns: vec![],
             }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -533,6 +603,7 @@ mod tests {
                 is_self_ref: false,
             }],
             correlations: vec![],
+            row_count: 1000,
         }];
 
         let schema = assemble_schema(&tables);
@@ -554,9 +625,12 @@ mod tests {
                 ]),
                 null_rate: 0.0,
                 confidence: 0.95,
+                inferred_type: None,
+                string_patterns: vec![],
             }],
             relationships: vec![],
             correlations: vec![],
+            row_count: 500,
         }];
 
         let schema = assemble_schema(&tables);
@@ -582,9 +656,12 @@ mod tests {
                 categorical_weights: None,
                 null_rate: 0.0,
                 confidence: 0.9,
+                inferred_type: None,
+                string_patterns: vec![],
             }],
             relationships: vec![],
             correlations: vec![],
+            row_count: 2000,
         }];
 
         let schema = assemble_schema(&tables);
@@ -605,5 +682,181 @@ mod tests {
         assert!(distribution_to_generator(&Distribution::Beta(2.0, 5.0)).contains("beta"));
         assert!(distribution_to_generator(&Distribution::Gamma(1.0, 2.0)).contains("gamma"));
         assert!(distribution_to_generator(&Distribution::Pareto(1.0, 2.0)).contains("pareto"));
+    }
+
+    #[test]
+    fn row_count_preserved() {
+        let tables = vec![TableAnalysis {
+            name: "big_table".into(),
+            columns: vec![ColumnAnalysis {
+                name: "id".into(),
+                is_primary_key: true,
+                distribution: None,
+                temporal_pattern: None,
+                categorical_weights: None,
+                null_rate: 0.0,
+                confidence: 1.0,
+                inferred_type: None,
+                string_patterns: vec![],
+            }],
+            relationships: vec![],
+            correlations: vec![],
+            row_count: 50_000,
+        }];
+
+        let model = assemble_data_model("test", &tables);
+        assert_eq!(model.entities[0].count, CountSpec::Fixed(50_000));
+    }
+
+    #[test]
+    fn uuid_pk_uses_uuid_gen() {
+        let tables = vec![TableAnalysis {
+            name: "items".into(),
+            columns: vec![ColumnAnalysis {
+                name: "id".into(),
+                is_primary_key: true,
+                distribution: None,
+                temporal_pattern: None,
+                categorical_weights: None,
+                null_rate: 0.0,
+                confidence: 0.95,
+                inferred_type: Some(InferredType::Uuid),
+                string_patterns: vec![],
+            }],
+            relationships: vec![],
+            correlations: vec![],
+            row_count: 100,
+        }];
+
+        let model = assemble_data_model("test", &tables);
+        let field = &model.entities[0].fields[0];
+        assert!(
+            matches!(field.generator, Some(GeneratorSpec::UuidGen { version: 4 })),
+            "expected UuidGen, got {:?}",
+            field.generator,
+        );
+        assert_eq!(field.data_type, knit_core::DataType::Uuid);
+    }
+
+    #[test]
+    fn uuid_non_pk_uses_uuid_gen() {
+        let col = ColumnAnalysis {
+            name: "trace_id".into(),
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.95,
+            inferred_type: Some(InferredType::Uuid),
+            string_patterns: vec![],
+        };
+        let gen = build_generator(&col, None);
+        assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
+    }
+
+    #[test]
+    fn boolean_uses_one_of() {
+        let col = ColumnAnalysis {
+            name: "active".into(),
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: Some(InferredType::Boolean),
+            string_patterns: vec![],
+        };
+        let gen = build_generator(&col, None);
+        assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
+    }
+
+    #[test]
+    fn email_pattern_uses_faker() {
+        let col = ColumnAnalysis {
+            name: "email".into(),
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: Some(InferredType::Text),
+            string_patterns: vec![(StringPattern::Email, 0.95)],
+        };
+        let gen = build_generator(&col, None);
+        assert!(
+            matches!(gen, GeneratorSpec::Faker { ref method, .. } if method == "email"),
+            "expected Faker(email), got {:?}",
+            gen,
+        );
+    }
+
+    #[test]
+    fn phone_pattern_uses_faker() {
+        let col = ColumnAnalysis {
+            name: "phone".into(),
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: Some(InferredType::Text),
+            string_patterns: vec![(StringPattern::Phone, 0.9)],
+        };
+        let gen = build_generator(&col, None);
+        assert!(
+            matches!(gen, GeneratorSpec::Faker { ref method, .. } if method == "phone"),
+            "expected Faker(phone), got {:?}",
+            gen,
+        );
+    }
+
+    #[test]
+    fn uuid_dsl_output() {
+        let tables = vec![TableAnalysis {
+            name: "traces".into(),
+            columns: vec![ColumnAnalysis {
+                name: "trace_id".into(),
+                is_primary_key: false,
+                distribution: None,
+                temporal_pattern: None,
+                categorical_weights: None,
+                null_rate: 0.0,
+                confidence: 0.95,
+                inferred_type: Some(InferredType::Uuid),
+                string_patterns: vec![],
+            }],
+            relationships: vec![],
+            correlations: vec![],
+            row_count: 100,
+        }];
+        let schema = assemble_schema(&tables);
+        assert!(schema.contains("uuid()"), "schema: {}", schema);
+    }
+
+    #[test]
+    fn email_dsl_output() {
+        let tables = vec![TableAnalysis {
+            name: "contacts".into(),
+            columns: vec![ColumnAnalysis {
+                name: "email".into(),
+                is_primary_key: false,
+                distribution: None,
+                temporal_pattern: None,
+                categorical_weights: None,
+                null_rate: 0.0,
+                confidence: 0.9,
+                inferred_type: Some(InferredType::Text),
+                string_patterns: vec![(StringPattern::Email, 0.95)],
+            }],
+            relationships: vec![],
+            correlations: vec![],
+            row_count: 100,
+        }];
+        let schema = assemble_schema(&tables);
+        assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
     }
 }

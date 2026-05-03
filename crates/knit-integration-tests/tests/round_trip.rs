@@ -234,6 +234,8 @@ fn schema_assembly_produces_valid_model() {
             categorical_weights: None,
             null_rate: 0.0,
             confidence: 1.0,
+            inferred_type: None,
+            string_patterns: vec![],
         },
         ColumnAnalysis {
             name: "score".to_string(),
@@ -243,6 +245,8 @@ fn schema_assembly_produces_valid_model() {
             categorical_weights: None,
             null_rate: 0.0,
             confidence: 0.95,
+            inferred_type: None,
+            string_patterns: vec![],
         },
         ColumnAnalysis {
             name: "category".to_string(),
@@ -254,6 +258,8 @@ fn schema_assembly_produces_valid_model() {
             ),
             null_rate: 0.0,
             confidence: 0.9,
+            inferred_type: None,
+            string_patterns: vec![],
         },
         ColumnAnalysis {
             name: "uniform_val".to_string(),
@@ -263,6 +269,8 @@ fn schema_assembly_produces_valid_model() {
             categorical_weights: None,
             null_rate: 0.0,
             confidence: 0.95,
+            inferred_type: None,
+            string_patterns: vec![],
         },
     ];
 
@@ -271,6 +279,7 @@ fn schema_assembly_produces_valid_model() {
         columns,
         relationships: vec![],
         correlations: vec![],
+        row_count: 1000,
     };
 
     // Assemble a DataModel from the inferred analysis
