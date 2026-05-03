@@ -101,18 +101,17 @@ impl GenerationEngine {
             // Collect batches from all entities/partitions in this phase (parallel).
             let batches = self.generate_phase_batches(plan, &phase.entity_plans)?;
 
-            // Deliver batches through the callback (sequential, in order).
-            for (entity_name, batch) in &batches {
-                on_batch(entity_name, batch.clone())?;
-            }
+            // Resolve deferred FK references (cyclic/self-ref backpatch) by
+            // replacing the placeholder FK column in the original batches.
+            let final_batches = if !phase.deferred_refs.is_empty() {
+                self.apply_deferred_refs(&phase.deferred_refs, plan, batches)?
+            } else {
+                batches
+            };
 
-            // Resolve deferred FK references (cyclic/self-ref backpatch).
-            if !phase.deferred_refs.is_empty() {
-                let deferred_batches =
-                    self.resolve_deferred_refs(&phase.deferred_refs, plan, &batches)?;
-                for (entity_name, batch) in &deferred_batches {
-                    on_batch(entity_name, batch.clone())?;
-                }
+            // Deliver batches through the callback (sequential, in order).
+            for (entity_name, batch) in &final_batches {
+                on_batch(entity_name, batch.clone())?;
             }
 
             tracing::info!(phase = phase_idx, "phase complete");
@@ -319,18 +318,15 @@ impl GenerationEngine {
         assemble_batch(&field_names, field_arrays)
     }
 
-    /// Resolve deferred FK references by backpatching null columns with sampled
-    /// values from now-populated key stores.
-    fn resolve_deferred_refs(
+    /// Resolve deferred FK references by replacing the placeholder FK columns
+    /// in the original batches with properly sampled values from the now-populated
+    /// key stores. Returns the full set of batches with replacements applied.
+    fn apply_deferred_refs(
         &self,
         deferred_refs: &[DeferredRef],
         _plan: &ExecutionPlan,
-        _existing_batches: &[(String, RecordBatch)],
+        mut batches: Vec<(String, RecordBatch)>,
     ) -> Result<Vec<(String, RecordBatch)>, GenError> {
-        // For each deferred ref, we generate a standalone "patch" batch containing
-        // the FK column with valid values sampled from the target key store.
-        let mut patch_batches = Vec::new();
-
         for dr in deferred_refs {
             let target_ks = match self.key_stores.get(&dr.to_entity) {
                 Some(ks) => Arc::clone(ks),
@@ -353,18 +349,25 @@ impl GenerationEngine {
                 continue;
             }
 
-            // Find existing batches for the from_entity and produce patch columns.
-            let source_batches: Vec<&RecordBatch> = _existing_batches
-                .iter()
-                .filter(|(name, _)| name == &dr.from_entity)
-                .map(|(_, b)| b)
-                .collect();
-
             let base_seed: u64 = 0xDEFE_AAED;
+            let mut batch_counter = 0usize;
 
-            for (batch_idx, batch) in source_batches.iter().enumerate() {
-                // Per-batch deterministic seed ensures order-independent FK assignment
-                let mut rng = ChaCha8Rng::seed_from_u64(base_seed ^ (batch_idx as u64));
+            for (entity_name, batch) in batches.iter_mut() {
+                if entity_name != &dr.from_entity {
+                    continue;
+                }
+
+                // Find the FK column index in this batch
+                let col_idx = match batch.schema().index_of(&dr.from_field) {
+                    Ok(idx) => idx,
+                    Err(_) => continue, // field not in this batch
+                };
+
+                // Per-batch deterministic seed
+                let mut rng =
+                    ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
+                batch_counter += 1;
+
                 let count = batch.num_rows();
                 let fk_values: Vec<Option<i64>> = match &dr.strategy {
                     DeferralStrategy::SelfReference {
@@ -387,16 +390,30 @@ impl GenerationEngine {
                         .collect(),
                 };
 
-                let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(fk_values));
-                let patch = assemble_batch(
-                    std::slice::from_ref(&dr.from_field),
-                    vec![arr],
-                )?;
-                patch_batches.push((dr.from_entity.clone(), patch));
+                // Replace the FK column in the batch
+                let new_arr: arrow::array::ArrayRef =
+                    Arc::new(Int64Array::from(fk_values));
+
+                // Build a new schema with the FK column typed as Int64
+                let schema = batch.schema();
+                let mut fields: Vec<arrow::datatypes::Field> =
+                    schema.fields().iter().map(|f| f.as_ref().clone()).collect();
+                fields[col_idx] =
+                    arrow::datatypes::Field::new(&dr.from_field, arrow::datatypes::DataType::Int64, true);
+                let new_schema = Arc::new(arrow::datatypes::Schema::new(fields));
+
+                // Replace the column
+                let mut columns: Vec<arrow::array::ArrayRef> = (0..batch.num_columns())
+                    .map(|i| batch.column(i).clone())
+                    .collect();
+                columns[col_idx] = new_arr;
+
+                *batch =
+                    RecordBatch::try_new(new_schema, columns).map_err(GenError::Arrow)?;
             }
         }
 
-        Ok(patch_batches)
+        Ok(batches)
     }
 }
 
@@ -656,6 +673,13 @@ mod tests {
                             partition_seeds: vec![1000],
                         },
                     );
+                    m.insert(
+                        "manager_id".into(),
+                        FieldSeedNode {
+                            field_seed: 200,
+                            partition_seeds: vec![2000],
+                        },
+                    );
                     m
                 },
             },
@@ -674,12 +698,24 @@ mod tests {
                         end_row: 50,
                         seed: 77,
                     }],
-                    field_plans: vec![FieldPlan {
-                        field_name: "id".into(),
-                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
-                        null_plan: NullPlan::Never,
-                        dependency_order: 0,
-                    }],
+                    field_plans: vec![
+                        FieldPlan {
+                            field_name: "id".into(),
+                            generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                            null_plan: NullPlan::Never,
+                            dependency_order: 0,
+                        },
+                        FieldPlan {
+                            field_name: "manager_id".into(),
+                            generator_plan: GeneratorPlan::ForeignKey {
+                                target_entity: "employee".into(),
+                                target_field: "id".into(),
+                                key_store_kind: KeyStoreKind::InMemoryVec,
+                            },
+                            null_plan: NullPlan::Never,
+                            dependency_order: 1,
+                        },
+                    ],
                     estimated_row_count: 50,
                     estimated_byte_size: 400,
                 }],
@@ -723,7 +759,7 @@ mod tests {
 
         let batches = batches.lock().unwrap();
 
-        // Collect employee PKs.
+        // Collect employee PKs from the first column (id).
         let pks: std::collections::HashSet<i64> = batches
             .iter()
             .filter(|(n, _): &&(String, RecordBatch)| n == "employee")
@@ -736,21 +772,20 @@ mod tests {
             })
             .collect();
 
-        // Deferred ref patch batches: manager_id values.
-        let deferred: Vec<&RecordBatch> = batches
+        // With the in-place deferred ref resolution, each batch now contains
+        // both the id column and the resolved manager_id column.
+        let deferred_cols: Vec<&Int64Array> = batches
             .iter()
-            .filter(|(_, b): &&(String, RecordBatch)| {
-                b.schema().fields().len() == 1
-                    && b.schema().field(0).name() == "manager_id"
+            .filter(|(n, _): &&(String, RecordBatch)| n == "employee")
+            .filter_map(|(_, b): &(String, RecordBatch)| {
+                let idx = b.schema().index_of("manager_id").ok()?;
+                b.column(idx).as_any().downcast_ref::<Int64Array>()
             })
-            .map(|(_, b): &(String, RecordBatch)| b)
             .collect();
 
-        assert!(!deferred.is_empty(), "should have deferred patch batches");
+        assert!(!deferred_cols.is_empty(), "should have manager_id column in batches");
 
-        for batch in deferred {
-            let col = batch.column(0);
-            let arr = col.as_any().downcast_ref::<Int64Array>().unwrap();
+        for arr in deferred_cols {
             let mut has_null = false;
             let mut has_valid = false;
             for i in 0..arr.len() {

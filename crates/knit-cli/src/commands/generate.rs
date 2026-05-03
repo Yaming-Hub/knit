@@ -357,14 +357,29 @@ fn build_arrow_schema(ep: &knit_plan::EntityPlan) -> Schema {
 
 /// Infer the Arrow data type from a GeneratorPlan variant.
 fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
+    use knit_core::DistributionKind;
+
     match gp {
-        knit_plan::GeneratorPlan::Distribution { .. } => ArrowDataType::Float64,
+        knit_plan::GeneratorPlan::Distribution { kind, .. } => match kind {
+            DistributionKind::Poisson
+            | DistributionKind::Bernoulli
+            | DistributionKind::Binomial
+            | DistributionKind::Geometric
+            | DistributionKind::Zipf => ArrowDataType::Int64,
+            _ => ArrowDataType::Float64,
+        },
         knit_plan::GeneratorPlan::Sequence { .. } => ArrowDataType::Int64,
         knit_plan::GeneratorPlan::Uuid => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::Faker { .. } => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::Pattern { .. } => ArrowDataType::Utf8,
-        knit_plan::GeneratorPlan::OneOf { .. } => ArrowDataType::Utf8,
-        knit_plan::GeneratorPlan::Constant(_) => ArrowDataType::Utf8,
+        knit_plan::GeneratorPlan::OneOf { choices, .. } => infer_one_of_type(choices),
+        knit_plan::GeneratorPlan::Constant(val) => match val {
+            knit_core::Value::Null => ArrowDataType::Null,
+            knit_core::Value::Bool(_) => ArrowDataType::Boolean,
+            knit_core::Value::Int(_) => ArrowDataType::Int64,
+            knit_core::Value::Float(_) => ArrowDataType::Float64,
+            _ => ArrowDataType::Utf8,
+        },
         knit_plan::GeneratorPlan::Derived { .. } => ArrowDataType::Float64,
         knit_plan::GeneratorPlan::ForeignKey { .. } => ArrowDataType::Int64,
         knit_plan::GeneratorPlan::Temporal { .. } => ArrowDataType::Int64,
@@ -374,6 +389,23 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         knit_plan::GeneratorPlan::Unique { inner, .. } => infer_arrow_type(inner),
         knit_plan::GeneratorPlan::Conditional { default, .. } => infer_arrow_type(default),
     }
+}
+
+/// Infer the Arrow data type for a `OneOf` generator from its choice values.
+///
+/// Mirrors the logic in `knit_gen::generators::one_of::infer_output_type`.
+fn infer_one_of_type(choices: &[knit_core::WeightedChoice]) -> ArrowDataType {
+    for c in choices {
+        match &c.value {
+            knit_core::Value::String(_) => return ArrowDataType::Utf8,
+            knit_core::Value::Int(_) => return ArrowDataType::Int64,
+            knit_core::Value::Float(_) => return ArrowDataType::Float64,
+            knit_core::Value::Bool(_) => return ArrowDataType::Boolean,
+            knit_core::Value::Null => continue,
+            _ => return ArrowDataType::Utf8,
+        }
+    }
+    ArrowDataType::Utf8
 }
 
 /// Create progress bars for each entity in the plan.
