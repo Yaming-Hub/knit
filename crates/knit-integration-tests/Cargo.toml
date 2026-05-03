@@ -10,4 +10,5 @@ knit-core = { path = "../knit-core" }
 knit-schema = { path = "../knit-schema" }
 knit-plan = { path = "../knit-plan" }
 knit-gen = { path = "../knit-gen" }
+knit-learn = { path = "../knit-learn" }
 arrow = { version = "54", features = ["prettyprint"] }

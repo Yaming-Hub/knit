@@ -28,13 +28,13 @@ use crate::traits::FieldGenerator;
 /// Create a boxed [`FieldGenerator`] from a compiled [`GeneratorPlan`].
 ///
 /// This is the factory function invoked once per field during engine
-/// initialisation. The `ForeignKey` variant is not yet implemented and
-/// returns a placeholder null generator with a `tracing::warn`.
+/// initialisation. The `ForeignKey` variant is handled directly by the
+/// engine (which owns the key-store) and will panic if reached here.
 ///
 /// # Panics
 ///
-/// Does not panic. Invalid distribution parameters are handled gracefully
-/// with fallback defaults and warning logs.
+/// Panics if called with a `ForeignKey` variant — those are instantiated
+/// by the engine, not by this factory.
 pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
     match plan {
         GeneratorPlan::Distribution {
@@ -71,10 +71,10 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::Faker { category, locale } => {
             Box::new(faker::FakerGenerator::new(category.clone(), locale.clone()))
         }
-        // Placeholder for future PR.
+        // FK generators are created directly by the engine (which has access
+        // to the key-store). The factory is never called for this variant.
         GeneratorPlan::ForeignKey { .. } => {
-            tracing::warn!(plan = %format!("{plan:?}"), "using placeholder null generator");
-            Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+            unreachable!("ForeignKey generators are instantiated by the engine, not the factory")
         }
         GeneratorPlan::Temporal {
             kind,

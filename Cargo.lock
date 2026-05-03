@@ -971,6 +971,7 @@ dependencies = [
  "arrow",
  "knit-core",
  "knit-gen",
+ "knit-learn",
  "knit-plan",
  "knit-schema",
 ]
