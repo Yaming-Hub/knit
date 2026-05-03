@@ -2,7 +2,7 @@
 //!
 //! Produces monotonically increasing (or decreasing) integer sequences suitable
 //! for surrogate primary keys. Partition-awareness is achieved through the
-//! `row_offset` field in [`GenContext`](crate::GenContext), so parallel
+//! `row_offset` field in [`GenContext`], so parallel
 //! partitions produce non-overlapping key ranges.
 
 use std::sync::Arc;

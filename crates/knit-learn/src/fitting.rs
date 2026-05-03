@@ -5,7 +5,7 @@
 //! goodness-of-fit scoring and AIC/BIC model selection.
 
 use std::collections::HashMap;
-use std::f64::consts::{E, PI};
+use std::f64::consts::PI;
 
 use statrs::distribution::{Beta, ContinuousCDF, Exp, Gamma, LogNormal, Normal, Uniform};
 use tracing::{debug, warn};

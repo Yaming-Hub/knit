@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use arrow::array::{
-    Array, ArrayRef, BooleanArray, Float64Array, Int64Array, NullArray,
+    Array, ArrayRef, BooleanArray, Float64Array, Int64Array,
     StringArray, UInt64Array,
 };
 use arrow::compute;
@@ -355,10 +355,6 @@ mod tests {
 
     #[test]
     fn test_conditional_preserves_numeric_type() {
-        use arrow::array::Float64Array;
-        use knit_core::DistributionKind;
-        use std::collections::BTreeMap;
-
         // Both branches produce Float64 via Constant
         let gen = ConditionalGenerator::new(
             "category".into(),

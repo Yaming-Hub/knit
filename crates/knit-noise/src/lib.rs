@@ -1,7 +1,7 @@
 //! Noise injection and data-quality simulation for the knit pipeline.
 //!
 //! This crate sits between **knit-gen** (which produces clean, schema-conformant
-//! [`RecordBatch`]es) and **knit-bind** (which serialises the final output).
+//! [`RecordBatch`](arrow::record_batch::RecordBatch)es) and **knit-bind** (which serialises the final output).
 //! It introduces controlled imperfections — nulls, typos, outliers, drift, etc.
 //! — so that downstream consumers can test their resilience to real-world data
 //! quality issues.

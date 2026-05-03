@@ -410,9 +410,10 @@ impl FieldGenerator for ErdosRenyiGenerator {
         DataType::Int64
     }
 }
+#[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::array::{Array, Int64Array};
+    use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;

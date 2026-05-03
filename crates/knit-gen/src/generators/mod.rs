@@ -1,4 +1,4 @@
-//! Concrete [`FieldGenerator`](crate::FieldGenerator) implementations and factory.
+//! Concrete [`FieldGenerator`] implementations and factory.
 //!
 //! Each sub-module provides a generator for one category of synthetic values.
 //! The [`create_generator`] factory maps a [`GeneratorPlan`] variant to the

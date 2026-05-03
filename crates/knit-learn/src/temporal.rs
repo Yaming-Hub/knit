@@ -5,9 +5,6 @@
 //! and FFT, checks day-of-week / hour-of-day uniformity, and classifies
 //! temporal patterns.
 
-use std::collections::HashMap;
-use std::f64::consts::PI;
-
 use rustfft::num_complex::Complex;
 use rustfft::FftPlanner;
 use tracing::{debug, warn};
@@ -292,6 +289,7 @@ fn detect_period_fft(deltas: &[f64]) -> Option<f64> {
 }
 
 /// Autocorrelation at a specific lag.
+#[allow(dead_code)]
 fn autocorrelation(series: &[f64], lag: usize) -> f64 {
     let n = series.len();
     if lag >= n || n < 2 {
@@ -312,7 +310,6 @@ fn autocorrelation(series: &[f64], lag: usize) -> f64 {
 
 /// Classify a period (in seconds) into a schedule kind.
 fn classify_schedule(period_secs: f64) -> Option<ScheduleKind> {
-    let hour = 3600.0;
     let day = 86400.0;
     let week = 604800.0;
     let month = 2_592_000.0; // ~30 days

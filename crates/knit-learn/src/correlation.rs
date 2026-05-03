@@ -5,10 +5,9 @@
 
 use std::collections::HashMap;
 
-use arrow::array::{Array, AsArray, Float64Array, StringArray};
-use arrow::datatypes::DataType;
+use arrow::array::{Array, Float64Array, StringArray};
 use arrow::record_batch::RecordBatch;
-use tracing::{debug, warn};
+use tracing::debug;
 
 use crate::profile::ColumnProfile;
 
@@ -57,7 +56,7 @@ pub fn detect_correlations(
         return Vec::new();
     }
 
-    let schema = batches[0].schema();
+    let _schema = batches[0].schema();
     let mut results = Vec::new();
 
     // Collect column data by name
