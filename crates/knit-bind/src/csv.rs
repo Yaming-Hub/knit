@@ -1,7 +1,9 @@
 //! CSV output sink using Arrow's CSV writer.
 
 use std::io::Write;
-use std::sync::{Arc, Mutex};
+
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 use arrow::csv::WriterBuilder;
 use arrow::record_batch::RecordBatch;
@@ -40,7 +42,7 @@ struct CountingWriter<W: Write> {
 impl<W: Write> Write for CountingWriter<W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let n = self.inner.write(buf)?;
-        *self.count.lock().unwrap() += n as u64;
+        *self.count.lock() += n as u64;
         Ok(n)
     }
 
@@ -93,7 +95,7 @@ impl<W: Write + Send> Sink for CsvSink<W> {
         // Errors during drop-based flush are silently discarded by Rust,
         // but the CountingWriter has already tracked all successful writes.
         drop(self.writer);
-        let bytes_written = *self.byte_count.lock().unwrap();
+        let bytes_written = *self.byte_count.lock();
         debug!(rows = self.rows_written, bytes = bytes_written, "csv sink finished");
         Ok(SinkStats {
             rows_written: self.rows_written,

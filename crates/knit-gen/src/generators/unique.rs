@@ -8,7 +8,8 @@
 //! partitions. This is a known limitation.
 
 use std::collections::HashSet;
-use std::sync::Mutex;
+
+use parking_lot::Mutex;
 
 use arrow::array::{
     Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray,
@@ -102,7 +103,7 @@ impl FieldGenerator for UniqueGenerator {
             return self.inner.generate(rng, 0, ctx);
         }
 
-        let mut seen = self.seen.lock().unwrap();
+        let mut seen = self.seen.lock();
         let mut collected_arrays: Vec<(ArrayRef, Vec<usize>)> = Vec::new();
         let mut remaining = count;
         let mut retry_round = 0u32;
