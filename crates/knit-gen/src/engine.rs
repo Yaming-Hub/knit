@@ -99,7 +99,7 @@ impl GenerationEngine {
             }
 
             // Collect batches from all entities/partitions in this phase (parallel).
-            let batches = self.generate_phase_batches(&plan, &phase.entity_plans)?;
+            let batches = self.generate_phase_batches(plan, &phase.entity_plans)?;
 
             // Deliver batches through the callback (sequential, in order).
             for (entity_name, batch) in &batches {
@@ -109,7 +109,7 @@ impl GenerationEngine {
             // Resolve deferred FK references (cyclic/self-ref backpatch).
             if !phase.deferred_refs.is_empty() {
                 let deferred_batches =
-                    self.resolve_deferred_refs(&phase.deferred_refs, &plan, &batches)?;
+                    self.resolve_deferred_refs(&phase.deferred_refs, plan, &batches)?;
                 for (entity_name, batch) in &deferred_batches {
                     on_batch(entity_name, batch.clone())?;
                 }
@@ -389,7 +389,7 @@ impl GenerationEngine {
 
                 let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(fk_values));
                 let patch = assemble_batch(
-                    &[dr.from_field.clone()],
+                    std::slice::from_ref(&dr.from_field),
                     vec![arr],
                 )?;
                 patch_batches.push((dr.from_entity.clone(), patch));

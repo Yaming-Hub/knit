@@ -11,7 +11,7 @@ fn generate_ecommerce_schema() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("ecommerce"))
+                .is_some_and(|n| n.starts_with("ecommerce"))
         })
         .expect("ecommerce.weave.toml not found");
 
@@ -63,7 +63,7 @@ fn generate_iot_sensors_schema() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("iot"))
+                .is_some_and(|n| n.starts_with("iot"))
         })
         .expect("iot_sensors.weave.toml not found");
 
@@ -103,7 +103,7 @@ fn generate_server_logs_schema() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("server_logs"))
+                .is_some_and(|n| n.starts_with("server_logs"))
         })
         .expect("server_logs.weave.toml not found");
 
@@ -133,7 +133,7 @@ fn generate_financial_schema() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("financial"))
+                .is_some_and(|n| n.starts_with("financial"))
         })
         .expect("financial.weave.toml not found");
 
@@ -163,7 +163,7 @@ fn generate_hr_org_schema() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("hr_org"))
+                .is_some_and(|n| n.starts_with("hr_org"))
         })
         .expect("hr_org.weave.toml not found");
 

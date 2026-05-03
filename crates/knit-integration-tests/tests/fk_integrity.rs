@@ -40,7 +40,7 @@ fn ecommerce_order_user_fk_integrity() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("ecommerce"))
+                .is_some_and(|n| n.starts_with("ecommerce"))
         })
         .expect("ecommerce.weave.toml not found");
 
@@ -78,7 +78,7 @@ fn ecommerce_order_product_fk_integrity() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("ecommerce"))
+                .is_some_and(|n| n.starts_with("ecommerce"))
         })
         .expect("ecommerce.weave.toml not found");
 
@@ -119,7 +119,7 @@ fn ecommerce_review_fk_integrity() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("ecommerce"))
+                .is_some_and(|n| n.starts_with("ecommerce"))
         })
         .expect("ecommerce.weave.toml not found");
 
@@ -175,7 +175,7 @@ fn iot_reading_device_fk_integrity() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("iot"))
+                .is_some_and(|n| n.starts_with("iot"))
         })
         .expect("iot_sensors.weave.toml not found");
 
@@ -211,7 +211,7 @@ fn financial_transaction_account_fk_integrity() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("financial"))
+                .is_some_and(|n| n.starts_with("financial"))
         })
         .expect("financial.weave.toml not found");
 

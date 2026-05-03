@@ -133,7 +133,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
 
     // Normal
     if std_dev > 0.0 {
-        if let Some(d) = Normal::new(mean, std_dev).ok() {
+        if let Ok(d) = Normal::new(mean, std_dev) {
             let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
             let ll = normal_log_likelihood(&clean, mean, std_dev);
             push_candidate(&mut candidates, Distribution::Normal(mean, std_dev), ks, ll, n);
@@ -148,7 +148,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         let sigma2 = log_vals.iter().map(|v| (v - mu).powi(2)).sum::<f64>() / n as f64;
         let sigma = sigma2.sqrt();
         if sigma > 0.0 {
-            if let Some(d) = LogNormal::new(mu, sigma).ok() {
+            if let Ok(d) = LogNormal::new(mu, sigma) {
                 let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
                 let ll: f64 = clean
                     .iter()
@@ -166,7 +166,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     // Exponential — positive values only
     if min_val >= 0.0 && mean > 0.0 {
         let lambda = 1.0 / mean;
-        if let Some(d) = Exp::new(lambda).ok() {
+        if let Ok(d) = Exp::new(lambda) {
             let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
             let ll = n as f64 * lambda.ln() - lambda * clean.iter().sum::<f64>();
             push_candidate(&mut candidates, Distribution::Exponential(lambda), ks, ll, n);
@@ -178,7 +178,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         let shape = mean * mean / var;
         let rate = mean / var;
         if shape > 0.0 && rate > 0.0 {
-            if let Some(d) = Gamma::new(shape, 1.0 / rate).ok() {
+            if let Ok(d) = Gamma::new(shape, 1.0 / rate) {
                 let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
                 let ll = gamma_log_likelihood(&clean, shape, rate);
                 push_candidate(&mut candidates, Distribution::Gamma(shape, rate), ks, ll, n);
@@ -195,7 +195,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
             let alpha = m * common;
             let beta_param = (1.0 - m) * common;
             if alpha > 0.0 && beta_param > 0.0 {
-                if let Some(d) = Beta::new(alpha, beta_param).ok() {
+                if let Ok(d) = Beta::new(alpha, beta_param) {
                     let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
                     let ll = beta_log_likelihood(&clean, alpha, beta_param);
                     push_candidate(
@@ -257,7 +257,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         let is_integer_like = clean.iter().all(|v| (v - v.round()).abs() < 1e-6);
         if is_integer_like {
             let max_rank = max_val as u64;
-            if max_rank >= 2 && max_rank <= 100_000 {
+            if (2..=100_000).contains(&max_rank) {
                 // MLE for Zipf: solve numerically via Newton's method
                 // s_hat ≈ 1 + n / (sum(ln(x_i)))  (approximate)
                 let sum_ln: f64 = clean.iter().map(|v| v.ln()).sum();

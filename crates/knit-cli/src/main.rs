@@ -218,10 +218,9 @@ fn main() -> anyhow::Result<()> {
         Command::Init { output } => init::run(output),
         Command::Learn { source, output } => learn::run(source, output),
     }
-    .map_err(|e| {
+    .inspect_err(|e| {
         if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {
             eprintln!("{} {}", "hint:".cyan().bold(), hint);
         }
-        e
     })
 }

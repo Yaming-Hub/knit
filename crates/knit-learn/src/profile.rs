@@ -321,9 +321,9 @@ fn compute_numeric(data_type: &DataType, array: &dyn Array) -> Option<NumericPro
 
     let kurtosis = if std_dev > 0.0 && n > 3.0 {
         let m4 = sorted.iter().map(|v| ((v - mean) / std_dev).powi(4)).sum::<f64>();
-        let k = (n * (n + 1.0) * m4) / ((n - 1.0) * (n - 2.0) * (n - 3.0))
-            - 3.0 * (n - 1.0).powi(2) / ((n - 2.0) * (n - 3.0));
-        k
+        
+        (n * (n + 1.0) * m4) / ((n - 1.0) * (n - 2.0) * (n - 3.0))
+            - 3.0 * (n - 1.0).powi(2) / ((n - 2.0) * (n - 3.0))
     } else {
         0.0
     };

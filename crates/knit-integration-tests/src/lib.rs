@@ -36,7 +36,7 @@ pub fn example_schemas() -> Vec<PathBuf> {
                 && path
                     .file_name()
                     .and_then(|s| s.to_str())
-                    .map_or(false, |n| n.ends_with(".weave.toml"))
+                    .is_some_and(|n| n.ends_with(".weave.toml"))
             {
                 Some(path)
             } else {

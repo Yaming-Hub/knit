@@ -39,7 +39,7 @@ fn timestamp_batch() -> RecordBatch {
         ),
     ]));
     // 2024-01-15T12:00:00Z in microseconds
-    let ts = 1705320000_000_000i64;
+    let ts = 1_705_320_000_000_000i64;
     RecordBatch::try_new(
         schema,
         vec![
