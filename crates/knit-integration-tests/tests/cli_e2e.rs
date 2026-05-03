@@ -539,6 +539,82 @@ fn schema_expand() {
         .stdout(predicate::str::contains("entities").or(predicate::str::contains("name")));
 }
 
+#[test]
+fn schema_normalize() {
+    knit()
+        .args(["schema", "normalize", "examples/ecommerce.weave.toml"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("entities").or(predicate::str::contains("name")));
+}
+
+#[test]
+fn schema_diff_identical() {
+    // Diffing a schema against itself should produce no differences
+    knit()
+        .args([
+            "schema",
+            "diff",
+            "examples/ecommerce.weave.toml",
+            "examples/ecommerce.weave.toml",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("identical"));
+}
+
+#[test]
+fn schema_diff_different_schemas() {
+    // Diffing two different schemas should produce differences
+    knit()
+        .args([
+            "schema",
+            "diff",
+            "examples/ecommerce.weave.toml",
+            "examples/financial.weave.toml",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("change(s) found"));
+}
+
+#[test]
+fn schema_diff_learned_vs_original() {
+    // Generate → learn → diff learned against original
+    let dir = TempDir::new().unwrap();
+    let data_dir = dir.path().join("data");
+    let learned = dir.path().join("learned.weave.toml");
+
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            data_dir.to_str().unwrap(),
+            "--format",
+            "csv",
+        ])
+        .assert()
+        .success();
+
+    knit()
+        .args([
+            "learn",
+            data_dir.to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Diff should succeed (learned schema will differ from original)
+    knit()
+        .args(["schema", "diff", TEST_SCHEMA, learned.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
 // ── Error cases ─────────────────────────────────────────────────────
 
 #[test]
@@ -773,6 +849,64 @@ fn learn_round_trip_generates_data() {
         let line_count = content.lines().count();
         assert!(line_count > 1, "generated file should have header + data rows");
     }
+}
+
+#[test]
+fn learn_json_round_trip_generates_data() {
+    // Full round-trip using JSON format: generate (JSON array) → learn → generate
+    let gen1_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            gen1_dir.path().to_str().unwrap(),
+            "--format",
+            "json",
+            "--seed",
+            "200",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Learn from JSON array files (previously this would fail)
+    let learned = gen1_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            gen1_dir.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Generate from the learned schema
+    let gen2_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            learned.to_str().unwrap(),
+            "-o",
+            gen2_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let files: Vec<_> = fs::read_dir(gen2_dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "csv"))
+        .collect();
+    assert!(
+        !files.is_empty(),
+        "JSON round-trip should produce output files"
+    );
 }
 
 #[test]
