@@ -138,7 +138,8 @@ impl FieldGenerator for RelativeGenerator {
         };
 
         let dist = Normal::new(self.offset_mean, self.offset_std.max(1e-9))
-            .unwrap_or_else(|_| Normal::new(self.offset_mean, 1.0).unwrap());
+            .unwrap_or_else(|_| Normal::new(self.offset_mean, 1.0)
+                .expect("stddev=1.0 is always valid"));
         let factor = self.unit.to_millis();
 
         let values: Vec<i64> = base_values
@@ -222,7 +223,8 @@ impl TimeSeriesGenerator {
 impl FieldGenerator for TimeSeriesGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
         let noise_dist = Normal::new(0.0, self.noise_std.max(1e-9))
-            .unwrap_or_else(|_| Normal::new(0.0, 1.0).unwrap());
+            .unwrap_or_else(|_| Normal::new(0.0, 1.0)
+                .expect("stddev=1.0 is always valid"));
         let base_offset = ctx.row_offset as i64;
 
         let values: Vec<i64> = (0..count)
@@ -284,15 +286,16 @@ impl BusinessHoursGenerator {
     /// Create from plan parameters.
     ///
     /// Expected keys: `start_date` (epoch ms), `start_hour`, `end_hour`, `weekdays_only` (0/1).
+    /// Hours are clamped to 0–23 to prevent `and_hms_opt` failures.
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
         let start_date = params.get("start_date").copied().unwrap_or(0.0) as i64;
-        let start_hour = params.get("start_hour").copied().unwrap_or(9.0) as u8;
-        let end_hour = params.get("end_hour").copied().unwrap_or(17.0) as u8;
+        let start_hour = (params.get("start_hour").copied().unwrap_or(9.0) as u8).min(23);
+        let end_hour = (params.get("end_hour").copied().unwrap_or(17.0) as u8).min(24);
         let weekdays_only = params.get("weekdays_only").copied().unwrap_or(1.0) != 0.0;
         Self {
             start_date,
             start_hour,
-            end_hour: end_hour.max(start_hour + 1),
+            end_hour: end_hour.max(start_hour + 1).min(24),
             weekdays_only,
         }
     }
@@ -310,7 +313,8 @@ impl FieldGenerator for BusinessHoursGenerator {
         let start_dt = Utc
             .timestamp_millis_opt(self.start_date)
             .single()
-            .unwrap_or_else(|| Utc.timestamp_millis_opt(0).unwrap());
+            .unwrap_or_else(|| Utc.timestamp_millis_opt(0).single()
+                .expect("epoch 0 is always valid"));
 
         let mut day_cursor: NaiveDate = start_dt.date_naive();
 
@@ -333,7 +337,7 @@ impl FieldGenerator for BusinessHoursGenerator {
             }
             let day_start = day_cursor
                 .and_hms_opt(self.start_hour as u32, 0, 0)
-                .unwrap();
+                .expect("start_hour is clamped to 0–23; and_hms_opt cannot fail");
             let day_start_ms = day_start.and_utc().timestamp_millis();
             let offset = intra_day.sample(rng);
             values.push(day_start_ms + offset);
@@ -434,6 +438,49 @@ mod tests {
             );
             let wd = dt.weekday().num_days_from_monday();
             assert!(wd < 5, "row {i}: weekday {wd} is weekend");
+        }
+    }
+
+    #[test]
+    fn business_hours_clamps_invalid_hours() {
+        // start_hour=30 should be clamped to 23, end_hour=50 → clamped to 24
+        let mut params = BTreeMap::new();
+        params.insert("start_date".into(), 1_704_067_200_000.0);
+        params.insert("start_hour".into(), 30.0);
+        params.insert("end_hour".into(), 50.0);
+        params.insert("weekdays_only".into(), 0.0);
+        let gen = BusinessHoursGenerator::new(&params);
+
+        // Should not panic — hours are clamped
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 10, &ctx);
+        assert_eq!(arr.len(), 10);
+    }
+
+    #[test]
+    fn business_hours_end_24_preserves_full_range() {
+        // end_hour=24 is the exclusive upper bound (midnight), should stay 24
+        let mut params = BTreeMap::new();
+        params.insert("start_date".into(), 1_704_067_200_000.0);
+        params.insert("start_hour".into(), 20.0);
+        params.insert("end_hour".into(), 24.0);
+        params.insert("weekdays_only".into(), 0.0);
+        let gen = BusinessHoursGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 50, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // All timestamps should be in the 20–23 hour range (end_hour=24 is exclusive)
+        for i in 0..50 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let hour = dt.hour();
+            assert!(
+                (20..24).contains(&hour),
+                "row {i}: hour {hour} outside 20–24"
+            );
         }
     }
 }
