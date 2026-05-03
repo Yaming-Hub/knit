@@ -1,5 +1,6 @@
 //! # knit-core — Shared Type Definitions
 //!
+#![warn(missing_docs)]
 //! This crate provides the canonical data model types used by every other crate
 //! in the knit workspace:
 //!

@@ -508,7 +508,7 @@ fn format_bytes(b: u64) -> String {
 /// All perturbators for the same entity are merged into one pipeline so that
 /// the pipeline's internal stage ordering (clean → constrained → breaking)
 /// is respected. Each perturbator carries its own rate and column filter
-/// overrides via [`PerturbOverrides`], so multiple profiles targeting the
+/// overrides via [`knit_noise::PerturbOverrides`], so multiple profiles targeting the
 /// same entity with different rates and column sets work correctly.
 fn build_noise_pipelines(
     profiles: &[NoiseProfile],

@@ -13,44 +13,81 @@ use thiserror::Error;
 pub enum ModelError {
     /// A required field is absent from the schema definition.
     #[error("{path}: missing required field '{field}'")]
-    MissingField { path: String, field: String },
+    MissingField {
+        /// Schema path where the field was expected.
+        path: String,
+        /// Name of the missing field.
+        field: String,
+    },
 
     /// A reference (e.g. relationship target, lookup entity) points to a name
     /// that does not exist in the model.
     #[error("{path}: invalid reference to '{target}': {message}")]
     InvalidReference {
+        /// Schema path containing the reference.
         path: String,
+        /// Name of the unresolved target.
         target: String,
+        /// Explanation of the resolution failure.
         message: String,
     },
 
     /// A distribution parameter is out of its valid range (e.g. negative std_dev).
     #[error("{distribution:?}.{param} = {value}: {message}")]
     InvalidDistributionParam {
+        /// The distribution kind with the invalid parameter.
         distribution: DistributionKind,
+        /// Name of the offending parameter.
         param: String,
+        /// The invalid value.
         value: f64,
+        /// Explanation of the constraint violation.
         message: String,
     },
 
     /// A probability value is not in the range `[0.0, 1.0]`.
     #[error("{path}: probability {value} outside [0.0, 1.0]")]
-    InvalidProbability { path: String, value: f64 },
+    InvalidProbability {
+        /// Schema path of the field with the invalid probability.
+        path: String,
+        /// The out-of-range value.
+        value: f64,
+    },
 
     /// Two items within the same scope share an identical name.
     #[error("{scope}: duplicate name '{name}'")]
-    DuplicateName { scope: String, name: String },
+    DuplicateName {
+        /// Scope in which the duplicate was found (e.g. "entities").
+        scope: String,
+        /// The duplicated name.
+        name: String,
+    },
 
     /// The correlation matrix for an entity is invalid (e.g. not symmetric,
     /// wrong dimensions, eigenvalues out of range).
     #[error("correlations[{entity}]: {message}")]
-    InvalidCorrelationMatrix { entity: String, message: String },
+    InvalidCorrelationMatrix {
+        /// Name of the entity with the invalid matrix.
+        entity: String,
+        /// Description of the matrix issue.
+        message: String,
+    },
 
     /// An entity's row count specification is invalid (e.g. zero, negative range).
     #[error("{entity}.count: {message}")]
-    InvalidCount { entity: String, message: String },
+    InvalidCount {
+        /// Entity with the invalid count.
+        entity: String,
+        /// Description of the count issue.
+        message: String,
+    },
 
     /// Catch-all for validation issues not covered by other variants.
     #[error("{path}: {message}")]
-    Other { path: String, message: String },
+    Other {
+        /// Schema path of the issue.
+        path: String,
+        /// Description of the error.
+        message: String,
+    },
 }
