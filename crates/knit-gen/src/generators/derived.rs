@@ -123,17 +123,35 @@ fn extract_strings(arr: &ArrayRef, count: usize) -> Vec<String> {
 
 /// Resolve `${param.key}` placeholders in an expression using the params map.
 ///
-/// Params are scalar values constant across all rows — they are substituted
-/// once before per-row field interpolation occurs.
+/// Uses a single forward pass over the expression to avoid order-dependent
+/// behavior when one param value might contain another `${param.*}` pattern.
 fn resolve_params(expr: &str, params: &std::collections::HashMap<String, String>) -> String {
     if params.is_empty() || !expr.contains("${param.") {
         return expr.to_string();
     }
-    let mut result = expr.to_string();
-    for (key, value) in params {
-        let placeholder = format!("${{param.{key}}}");
-        result = result.replace(&placeholder, value);
+    let mut result = String::with_capacity(expr.len());
+    let mut rest = expr;
+    while let Some(start) = rest.find("${param.") {
+        result.push_str(&rest[..start]);
+        let after = &rest[start + 8..]; // skip "${param."
+        if let Some(end) = after.find('}') {
+            let key = &after[..end];
+            match params.get(key) {
+                Some(value) => result.push_str(value),
+                None => {
+                    // Unresolved — keep placeholder literal
+                    result.push_str(&rest[start..start + 8 + end + 1]);
+                }
+            }
+            rest = &after[end + 1..];
+        } else {
+            // Malformed — keep the remainder as-is
+            result.push_str(&rest[start..]);
+            rest = "";
+            break;
+        }
     }
+    result.push_str(rest);
     result
 }
 
