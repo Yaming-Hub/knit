@@ -462,10 +462,11 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                     message: "zipf distribution requires 'n' param".to_string(),
                 });
             } else if let Some(&n) = params.get("n") {
-                if n < 1.0 {
+                if n < 1.0 || n.fract() != 0.0 {
                     errors.push(SchemaError::Validation {
                         path: path.to_string(),
-                        message: "zipf distribution 'n' must be >= 1".to_string(),
+                        message: "zipf distribution 'n' must be >= 1 and integer-valued"
+                            .to_string(),
                     });
                 }
             }
@@ -1033,5 +1034,29 @@ mod tests {
             "expected no beta errors, got: {:?}",
             errors
         );
+    }
+
+    #[test]
+    fn test_validate_zipf_fractional_n() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "rank".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Zipf,
+                    params: [("n".to_string(), 10.5), ("s".to_string(), 1.0)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("zipf") && message.contains("integer"))
+        }));
     }
 }
