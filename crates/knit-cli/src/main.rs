@@ -65,6 +65,10 @@ pub struct Cli {
     /// Enable verbose (debug) logging.
     #[arg(short, long, global = true)]
     verbose: bool,
+
+    /// Skip noise injection even if schema defines noise profiles.
+    #[arg(long, global = true)]
+    no_noise: bool,
 }
 
 /// Supported output formats for generated data.

@@ -123,7 +123,11 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     }
 
     // ── Build noise pipelines per entity ────────────────────────────
-    let noise_pipelines = build_noise_pipelines(&model.noise_profiles, model.seed);
+    let noise_pipelines = if cli.no_noise {
+        HashMap::new()
+    } else {
+        build_noise_pipelines(&model.noise_profiles, model.seed)
+    };
 
     if !cli.quiet && !noise_pipelines.is_empty() {
         let profile_count: usize = model.noise_profiles.len();
@@ -132,6 +136,14 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
             "✓".green().bold(),
             profile_count,
             noise_pipelines.len(),
+        );
+    }
+
+    if !cli.quiet && cli.no_noise && !model.noise_profiles.is_empty() {
+        eprintln!(
+            "{} noise skipped (--no-noise flag, {} profile(s) ignored)",
+            "⊘".yellow().bold(),
+            model.noise_profiles.len(),
         );
     }
 
