@@ -360,13 +360,7 @@ mod tests {
 
     fn empty_ctx() -> GenContext<'static> {
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
-        GenContext {
-            batch_columns: map,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        }
+        GenContext::new(map, 0, 0, 1, "test")
     }
 
     #[test]
@@ -376,13 +370,7 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert("created_at".to_string(), base_arr);
         let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
-        let ctx = GenContext {
-            batch_columns: cols,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        };
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut params = BTreeMap::new();
         params.insert("offset_mean".into(), 10.0);

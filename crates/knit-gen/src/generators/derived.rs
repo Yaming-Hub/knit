@@ -76,6 +76,11 @@ fn parse_numeric_binop(expr: &str) -> Option<NumericBinOp> {
         return None;
     }
 
+    // Reject param references (contain dots) — they are not column names.
+    if left.contains('.') || right.contains('.') {
+        return None;
+    }
+
     Some(NumericBinOp { left, op, right })
 }
 
@@ -116,10 +121,29 @@ fn extract_strings(arr: &ArrayRef, count: usize) -> Vec<String> {
     }
 }
 
+/// Resolve `${param.key}` placeholders in an expression using the params map.
+///
+/// Params are scalar values constant across all rows — they are substituted
+/// once before per-row field interpolation occurs.
+fn resolve_params(expr: &str, params: &std::collections::HashMap<String, String>) -> String {
+    if params.is_empty() || !expr.contains("${param.") {
+        return expr.to_string();
+    }
+    let mut result = expr.to_string();
+    for (key, value) in params {
+        let placeholder = format!("${{param.{key}}}");
+        result = result.replace(&placeholder, value);
+    }
+    result
+}
+
 impl FieldGenerator for DerivedGenerator {
     fn generate(&self, _rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+        // First, resolve any ${param.key} placeholders with user-supplied params.
+        let expr = resolve_params(&self.expr, ctx.params);
+
         // Try numeric binary op first.
-        if let Some(binop) = parse_numeric_binop(&self.expr) {
+        if let Some(binop) = parse_numeric_binop(&expr) {
             let left_arr = ctx.batch_columns.get(&binop.left);
             let right_arr = ctx.batch_columns.get(&binop.right);
 
@@ -181,7 +205,7 @@ impl FieldGenerator for DerivedGenerator {
 
         let values: Vec<String> = (0..count)
             .map(|row| {
-                let mut result = self.expr.clone();
+                let mut result = expr.clone();
                 for (name, strings) in &field_strings {
                     let placeholder = format!("${{{name}}}");
                     result = result.replace(&placeholder, &strings[row]);
@@ -216,13 +240,7 @@ mod tests {
 
     fn make_ctx_with_columns(cols: HashMap<String, ArrayRef>) -> GenContext<'static> {
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
-        GenContext {
-            batch_columns: map,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        }
+        GenContext::new(map, 0, 0, 1, "test")
     }
 
     #[test]
@@ -309,5 +327,60 @@ mod tests {
         let arr = gen.generate(&mut rng, 3, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(f64_arr.values(), &[0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn param_substitution_in_string_template() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "name".to_string(),
+            Arc::new(StringArray::from(vec!["Alice", "Bob"])) as ArrayRef,
+        );
+        let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let params: &'static HashMap<String, String> = Box::leak(Box::new(HashMap::from([
+            ("prefix".to_string(), "Dr.".to_string()),
+        ])));
+        let ctx = GenContext::new(map, 0, 0, 1, "test").with_params(params);
+
+        let gen = DerivedGenerator::new(
+            "${param.prefix} ${name}".into(),
+            vec!["name".into()],
+        );
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 2, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(str_arr.value(0), "Dr. Alice");
+        assert_eq!(str_arr.value(1), "Dr. Bob");
+    }
+
+    #[test]
+    fn param_substitution_no_params_is_noop() {
+        let cols = HashMap::new();
+        let ctx = make_ctx_with_columns(cols);
+
+        let gen = DerivedGenerator::new(
+            "prefix: ${param.missing}".into(),
+            vec![],
+        );
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 2, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        // Unresolved param placeholder stays as-is
+        assert_eq!(str_arr.value(0), "prefix: ${param.missing}");
+    }
+
+    #[test]
+    fn resolve_params_unit() {
+        let params = HashMap::from([
+            ("env".to_string(), "prod".to_string()),
+            ("version".to_string(), "2".to_string()),
+        ]);
+        assert_eq!(
+            resolve_params("${param.env}-v${param.version}", &params),
+            "prod-v2"
+        );
+        // No params → unchanged
+        let empty = HashMap::new();
+        assert_eq!(resolve_params("${param.x}", &empty), "${param.x}");
     }
 }

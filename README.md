@@ -166,6 +166,26 @@ knit learn ./my-data/ -o inferred.weave.toml
 knit generate inferred.weave.toml -o ./synthetic-data --format parquet
 ```
 
+### Parameterized Schemas
+
+Derived expressions can reference `--param` values using `${param.key}` syntax:
+
+```toml
+[[entities.fields]]
+name = "email"
+data_type = "string"
+[entities.fields.generator]
+type = "derived"
+expr = "${name}@${param.domain}"
+depends_on = ["name"]
+```
+
+```bash
+knit generate schema.weave.toml -o out/ --param domain=example.com
+```
+
+Unresolved params stay as literal `${param.key}` in the output.
+
 ## CLI Reference
 
 ```

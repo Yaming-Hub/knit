@@ -235,13 +235,7 @@ mod tests {
         ]));
         let mut batch = HashMap::new();
         batch.insert("status".to_string(), status_col);
-        let ctx = GenContext {
-            batch_columns: &batch,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "users",
-        };
+        let ctx = GenContext::new(&batch, 0, 0, 1, "users");
 
         let result = gen.generate(&mut rng, 5, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
@@ -273,13 +267,7 @@ mod tests {
         let tier_col: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 3, 1, 2]));
         let mut batch = HashMap::new();
         batch.insert("tier".to_string(), tier_col);
-        let ctx = GenContext {
-            batch_columns: &batch,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "plans",
-        };
+        let ctx = GenContext::new(&batch, 0, 0, 1, "plans");
 
         let result = gen.generate(&mut rng, 5, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
@@ -303,13 +291,7 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let batch = HashMap::new();
-        let ctx = GenContext {
-            batch_columns: &batch,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        };
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
         let result = gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
@@ -338,13 +320,7 @@ mod tests {
         ]));
         let mut batch = HashMap::new();
         batch.insert("status".to_string(), status_col);
-        let ctx = GenContext {
-            batch_columns: &batch,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "users",
-        };
+        let ctx = GenContext::new(&batch, 0, 0, 1, "users");
 
         let result = gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
@@ -375,13 +351,7 @@ mod tests {
         let cat_col: ArrayRef = Arc::new(StringArray::from(vec!["high", "low", "other"]));
         let mut batch = HashMap::new();
         batch.insert("category".to_string(), cat_col);
-        let ctx = GenContext {
-            batch_columns: &batch,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "items",
-        };
+        let ctx = GenContext::new(&batch, 0, 0, 1, "items");
 
         let result = gen.generate(&mut rng, 3, &ctx);
         // Should preserve Float64 type since all branches produce same type

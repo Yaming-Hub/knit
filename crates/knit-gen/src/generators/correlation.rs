@@ -131,13 +131,7 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert("x".into(), source_arr);
         let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
-        let ctx = GenContext {
-            batch_columns: cols,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        };
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, n, &ctx);
@@ -164,13 +158,7 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert("x".into(), source_arr);
         let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
-        let ctx = GenContext {
-            batch_columns: cols,
-            row_offset: 0,
-            partition_index: 0,
-            partition_count: 1,
-            entity_name: "test",
-        };
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(7);
         let arr = gen.generate(&mut rng, n, &ctx);

@@ -43,9 +43,7 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     if let Some(ref count_str) = cli.count {
         apply_count_override(&mut model, count_str)?;
     }
-    // Note: model.params are currently passed through to the plan metadata
-    // but not yet consumed by generators. This wiring prepares for future
-    // parameterized expression support.
+    // Store params in the model (for plan metadata) and later pass to engine.
     for (key, value) in &cli.params {
         model.params.insert(
             key.clone(),
@@ -142,7 +140,13 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     } else {
         8192
     };
-    let mut engine = GenerationEngine::with_batch_size(batch_size);
+    // Convert model params to string map for the generation engine.
+    let gen_params: std::collections::HashMap<String, String> = model
+        .params
+        .iter()
+        .map(|(k, v)| (k.clone(), value_to_string(v)))
+        .collect();
+    let mut engine = GenerationEngine::with_batch_size(batch_size).with_params(gen_params);
 
     // Track sinks and schemas per entity
     let mut sinks: HashMap<String, Box<dyn Sink>> = HashMap::new();
@@ -616,4 +620,17 @@ pub(crate) fn apply_count_override(model: &mut DataModel, count_str: &str) -> Re
         }
     }
     Ok(())
+}
+
+/// Convert a knit_core::Value to its string representation for param injection.
+fn value_to_string(v: &knit_core::Value) -> String {
+    match v {
+        knit_core::Value::String(s) => s.clone(),
+        knit_core::Value::Int(n) => n.to_string(),
+        knit_core::Value::Float(f) => f.to_string(),
+        knit_core::Value::Bool(b) => b.to_string(),
+        knit_core::Value::Null => String::new(),
+        knit_core::Value::Array(arr) => serde_json::to_string(arr).unwrap_or_default(),
+        knit_core::Value::Map(map) => serde_json::to_string(map).unwrap_or_default(),
+    }
 }
