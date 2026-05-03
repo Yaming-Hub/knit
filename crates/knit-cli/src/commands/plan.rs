@@ -158,6 +158,11 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
         knit_plan::GeneratorPlan::Unique { inner, max_retries } => {
             format!("unique({}, retries={})", generator_label(inner), max_retries)
         }
+        knit_plan::GeneratorPlan::Conditional {
+            field, branches, ..
+        } => {
+            format!("conditional({}, {} branches)", field, branches.len())
+        }
     }
 }
 

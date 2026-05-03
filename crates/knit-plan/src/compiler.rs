@@ -293,9 +293,24 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     base_field: None,
                 }
             }
-            GeneratorSpec::Conditional { .. } => {
-                // Conditional generator is not yet implemented.
-                GeneratorPlan::Constant(knit_core::Value::Null)
+            GeneratorSpec::Conditional { field, branches, default } => {
+                // Compile each branch's generator recursively
+                let compiled_branches: Vec<(Value, Box<GeneratorPlan>)> = branches
+                    .iter()
+                    .map(|b| {
+                        let plan = compile_generator_from_spec(&b.generator, all_fields);
+                        (b.condition.clone(), Box::new(plan))
+                    })
+                    .collect();
+                let default_plan = match default {
+                    Some(gen) => Box::new(compile_generator_from_spec(gen, all_fields)),
+                    None => Box::new(GeneratorPlan::Constant(Value::Null)),
+                };
+                GeneratorPlan::Conditional {
+                    field: field.clone(),
+                    branches: compiled_branches,
+                    default: default_plan,
+                }
             }
         },
         None => {
@@ -371,6 +386,26 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .unwrap_or(0);
             base_order + 1
         }
+        // Conditional depends on the field it branches on + any deps inside branches
+        Some(GeneratorSpec::Conditional { field: ref_field, branches, default }) => {
+            // Dependency on the reference field
+            let ref_order = all_fields
+                .iter()
+                .find(|f| f.name == *ref_field)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            // Also check dependencies inside branch generators
+            let branch_max = branches
+                .iter()
+                .map(|b| compute_generator_spec_deps(&b.generator, all_fields))
+                .max()
+                .unwrap_or(0);
+            let default_max = default
+                .as_ref()
+                .map(|d| compute_generator_spec_deps(d, all_fields))
+                .unwrap_or(0);
+            ref_order.max(branch_max).max(default_max) + 1
+        }
         _ => 0,
     }
 }
@@ -387,6 +422,20 @@ fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
         .filter(|f| tokens.iter().any(|t| *t == f.name))
         .map(|f| f.name.clone())
         .collect()
+}
+
+/// Compute the dependency order contributed by a GeneratorSpec (for nested generators).
+fn compute_generator_spec_deps(spec: &GeneratorSpec, all_fields: &[Field]) -> u32 {
+    // Create a temporary Field to reuse compute_dependency_order
+    let tmp = Field {
+        name: String::new(),
+        description: None,
+        data_type: knit_core::DataType::String,
+        nullable: NullSpec::default(),
+        generator: Some(spec.clone()),
+        primary_key: None,
+    };
+    compute_dependency_order(&tmp, all_fields)
 }
 
 /// Estimate byte size for an entity based on field types and row count.

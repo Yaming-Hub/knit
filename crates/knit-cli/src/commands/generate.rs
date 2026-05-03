@@ -327,6 +327,7 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         knit_plan::GeneratorPlan::Topology { .. } => ArrowDataType::Int64,
         knit_plan::GeneratorPlan::Composite { .. } => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::Unique { inner, .. } => infer_arrow_type(inner),
+        knit_plan::GeneratorPlan::Conditional { default, .. } => infer_arrow_type(default),
     }
 }
 

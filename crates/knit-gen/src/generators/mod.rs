@@ -6,6 +6,7 @@
 //! the batch-generation loop.
 
 pub mod composite;
+pub mod conditional;
 pub mod constant;
 pub mod correlation;
 pub mod derived;
@@ -114,5 +115,14 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
                 Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
             }
         },
+        GeneratorPlan::Conditional {
+            field,
+            branches,
+            default,
+        } => Box::new(conditional::ConditionalGenerator::new(
+            field.clone(),
+            branches.iter().map(|(v, p)| (v.clone(), (**p).clone())).collect(),
+            (**default).clone(),
+        )),
     }
 }
