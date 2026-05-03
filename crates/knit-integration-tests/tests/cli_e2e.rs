@@ -192,6 +192,8 @@ fn generate_seed_determinism() {
                 "42",
                 "--format",
                 "csv",
+                "--batch-size",
+                "25",
                 "--quiet",
             ])
             .assert()
@@ -234,25 +236,96 @@ fn generate_dry_run_no_output() {
 
 #[test]
 fn generate_no_noise_flag() {
-    let dir = TempDir::new().unwrap();
+    // Use a schema with noise profiles to test that --no-noise actually skips them
+    let tmp = TempDir::new().unwrap();
+    let schema_path = tmp.path().join("noisy.weave.toml");
+    fs::write(
+        &schema_path,
+        r#"
+schema_version = "1.0"
+[model]
+name = "noisy_test"
+seed = 99
+
+[[entities]]
+name = "data"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "score"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 0.0
+max = 100.0
+
+[[noise]]
+name = "inject_nulls"
+entity = "data"
+null_rate = 1.0
+"#,
+    )
+    .unwrap();
+
+    // Generate WITH noise (nulls injected at 100% rate)
+    let noisy_dir = TempDir::new().unwrap();
     knit()
         .args([
             "generate",
-            TEST_SCHEMA,
+            schema_path.to_str().unwrap(),
             "-o",
-            dir.path().to_str().unwrap(),
+            noisy_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Generate WITHOUT noise (--no-noise flag)
+    let clean_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            schema_path.to_str().unwrap(),
+            "-o",
+            clean_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
             "--no-noise",
             "--quiet",
         ])
         .assert()
         .success();
 
-    // Should still produce output files (noise skipped silently if no profiles)
-    let files: Vec<_> = fs::read_dir(dir.path())
-        .unwrap()
-        .filter_map(|e| e.ok())
-        .collect();
-    assert!(!files.is_empty(), "should produce output even with --no-noise");
+    // Clean output should differ from noisy output
+    let noisy_csv = fs::read_to_string(noisy_dir.path().join("data.csv")).unwrap();
+    let clean_csv = fs::read_to_string(clean_dir.path().join("data.csv")).unwrap();
+    assert_ne!(
+        noisy_csv, clean_csv,
+        "--no-noise should produce different output than noisy generation"
+    );
+    // Clean output should have no empty score cells (no nulls injected)
+    let empty_scores = clean_csv
+        .lines()
+        .skip(1) // header
+        .filter(|line| line.ends_with(',') || line.contains(",,"))
+        .count();
+    assert_eq!(
+        empty_scores, 0,
+        "clean output should have no null values, found {empty_scores}"
+    );
 }
 
 #[test]
@@ -272,12 +345,20 @@ fn generate_json_progress_events() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    // JSON mode should emit structured events
-    assert!(
-        stdout.contains("entity") || stdout.contains("complete"),
-        "expected JSON progress events, got: {}",
-        &stdout[..stdout.len().min(200)]
-    );
+
+    // Parse each line as JSON and verify we get progress + complete events
+    let mut has_progress = false;
+    let mut has_complete = false;
+    for line in stdout.lines() {
+        if line.contains("\"progress\"") {
+            has_progress = true;
+        }
+        if line.contains("\"complete\"") {
+            has_complete = true;
+        }
+    }
+    assert!(has_progress, "expected at least one progress event in JSON output");
+    assert!(has_complete, "expected a complete event in JSON output");
 }
 
 // ── Init ────────────────────────────────────────────────────────────
