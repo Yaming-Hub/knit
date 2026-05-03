@@ -1,57 +1,70 @@
-//! Memory-efficient key store using reservoir sampling.
+//! Memory-efficient key store using hash-based reservoir sampling.
 //!
 //! For very large parent entities (>100 M rows), keeping every primary key in
 //! memory is impractical. [`SampledKeyStore`] maintains a fixed-capacity
-//! reservoir sample using Algorithm R, giving each key an equal probability
-//! of being retained regardless of insertion order.
+//! sample using order-independent hash-based selection, giving deterministic
+//! results regardless of insertion order (important for parallel partitions).
 //!
 //! Implements the [`KeyStore`] trait so it can be used as a drop-in
 //! replacement for [`InMemoryKeyStore`](crate::InMemoryKeyStore) in the
 //! generation engine when [`KeyStoreKind::SampledSubset`] is selected.
 
+use std::collections::BinaryHeap;
 use std::sync::RwLock;
 
 use rand::RngCore;
-use rand_chacha::ChaCha8Rng;
-use rand::SeedableRng;
 
 use crate::traits::KeyStore;
 
-/// A memory-efficient key store that maintains a reservoir sample of keys.
+/// Fast bijective hash (splitmix64) for deterministic key priorities.
+fn key_hash(seed: u64, key: i64) -> u64 {
+    let mut x = seed.wrapping_add(key as u64).wrapping_mul(0x9E3779B97F4A7C15);
+    x = (x ^ (x >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94D049BB133111EB);
+    x ^ (x >> 31)
+}
+
+/// A memory-efficient key store that keeps a deterministic sample of keys.
 ///
-/// Uses [Algorithm R](https://en.wikipedia.org/wiki/Reservoir_sampling#Simple_algorithm)
-/// to keep a uniformly random subset of at most `capacity` keys. This enables
-/// foreign-key sampling against entities with hundreds of millions of rows
-/// without storing every key.
+/// Uses hash-based min-sampling: each key gets a deterministic priority via
+/// `key_hash(seed, key)`, and the reservoir keeps the `capacity` keys with
+/// the smallest hash values. This is **order-independent** — the same set of
+/// inserted keys always produces the same reservoir, regardless of insertion
+/// order or thread scheduling.
+///
+/// Internally uses a max-heap (by hash) of size `capacity` for O(log k)
+/// replacement during inserts. On first sample, the heap is flattened to a
+/// Vec for O(1) random access.
 ///
 /// # Guarantees
 ///
 /// - At most `capacity` keys are held in memory at any time.
-/// - After `n` insertions (where `n > capacity`), each key has a
-///   `capacity / n` probability of being in the reservoir.
+/// - The stored sample is deterministic for a given `(seed, key set)` pair.
 /// - [`sample`](KeyStore::sample) returns a uniformly random element from the reservoir.
 ///
 /// # Thread Safety
 ///
-/// Uses [`RwLock`] to allow concurrent readers (FK samplers) with exclusive
-/// writers (PK inserters), matching [`InMemoryKeyStore`](crate::InMemoryKeyStore).
+/// Uses [`RwLock`] for concurrent access. The engine guarantees that inserts
+/// (parent PK generation) complete before samples (child FK generation) begin.
 pub struct SampledKeyStore {
     inner: RwLock<SampledInner>,
 }
 
 struct SampledInner {
-    keys: Vec<i64>,
+    /// Max-heap of (hash, key). Keeps the `capacity` keys with smallest hashes.
+    heap: BinaryHeap<(u64, i64)>,
+    /// Flattened keys for sampling — populated lazily on first `sample()` call.
+    keys_cache: Option<Vec<i64>>,
     capacity: usize,
     total_seen: u64,
-    /// Dedicated RNG for reservoir replacement decisions.
-    rng: ChaCha8Rng,
+    seed: u64,
 }
 
 impl SampledKeyStore {
     /// Create a new sampled key store with the given maximum capacity.
     ///
-    /// The `seed` is used for the internal RNG that drives reservoir
-    /// replacement decisions (separate from the per-field generation RNG).
+    /// The `seed` mixes with each key's value to produce deterministic,
+    /// order-independent priority scores.
     ///
     /// # Panics
     ///
@@ -60,10 +73,11 @@ impl SampledKeyStore {
         assert!(capacity > 0, "SampledKeyStore capacity must be > 0");
         Self {
             inner: RwLock::new(SampledInner {
-                keys: Vec::with_capacity(capacity),
+                heap: BinaryHeap::with_capacity(capacity + 1),
+                keys_cache: None,
                 capacity,
                 total_seen: 0,
-                rng: ChaCha8Rng::seed_from_u64(seed),
+                seed,
             }),
         }
     }
@@ -83,19 +97,29 @@ impl KeyStore for SampledKeyStore {
     fn insert(&self, key: i64) {
         let mut inner = self.inner.write().expect("sampled keystore lock poisoned");
         inner.total_seen += 1;
-        if inner.keys.len() < inner.capacity {
-            inner.keys.push(key);
-        } else {
-            // Algorithm R: replace element at random index with probability capacity/total_seen.
-            let j = inner.rng.next_u64() % inner.total_seen;
-            if (j as usize) < inner.capacity {
-                inner.keys[j as usize] = key;
+        inner.keys_cache = None; // invalidate sampling cache
+
+        let hash = key_hash(inner.seed, key);
+
+        if inner.heap.len() < inner.capacity {
+            inner.heap.push((hash, key));
+        } else if let Some(&(max_hash, _)) = inner.heap.peek() {
+            if hash < max_hash {
+                inner.heap.pop();
+                inner.heap.push((hash, key));
             }
         }
     }
 
     fn sample(&self, rng: &mut dyn RngCore) -> Option<i64> {
-        let keys = &self.inner.read().expect("sampled keystore lock poisoned").keys;
+        let mut inner = self.inner.write().expect("sampled keystore lock poisoned");
+
+        // Lazily flatten heap to vec on first sample call.
+        if inner.keys_cache.is_none() {
+            inner.keys_cache = Some(inner.heap.iter().map(|&(_, k)| k).collect());
+        }
+        let keys = inner.keys_cache.as_ref().expect("just populated");
+
         if keys.is_empty() {
             return None;
         }
@@ -112,7 +136,7 @@ impl KeyStore for SampledKeyStore {
     }
 
     fn len(&self) -> usize {
-        self.inner.read().expect("sampled keystore lock poisoned").keys.len()
+        self.inner.read().expect("sampled keystore lock poisoned").heap.len()
     }
 }
 
@@ -175,7 +199,6 @@ mod tests {
 
     #[test]
     fn implements_keystore_trait() {
-        // Verify it can be used as Arc<dyn KeyStore>
         let store: std::sync::Arc<dyn KeyStore> =
             std::sync::Arc::new(SampledKeyStore::new(100, 42));
         store.insert(1);
@@ -185,5 +208,32 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let val = store.sample(&mut rng).unwrap();
         assert!((1..=3).contains(&val));
+    }
+
+    #[test]
+    fn insertion_order_independent() {
+        // Same keys inserted in different orders must produce the same reservoir.
+        let forward = SampledKeyStore::new(50, 123);
+        for i in 0..1000i64 {
+            forward.insert(i);
+        }
+
+        let reverse = SampledKeyStore::new(50, 123);
+        for i in (0..1000i64).rev() {
+            reverse.insert(i);
+        }
+
+        // Sample enough times to observe all reservoir keys with high probability.
+        let mut rng1 = ChaCha8Rng::seed_from_u64(0);
+        let mut rng2 = ChaCha8Rng::seed_from_u64(0);
+        let fwd_set: std::collections::HashSet<i64> = (0..5000)
+            .filter_map(|_| forward.sample(&mut rng1))
+            .collect();
+        let rev_set: std::collections::HashSet<i64> = (0..5000)
+            .filter_map(|_| reverse.sample(&mut rng2))
+            .collect();
+
+        assert_eq!(fwd_set.len(), 50, "should see all 50 reservoir keys");
+        assert_eq!(fwd_set, rev_set, "reservoir must be order-independent");
     }
 }
