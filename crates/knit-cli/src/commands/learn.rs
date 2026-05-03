@@ -14,6 +14,7 @@ use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
 use colored::Colorize;
 use serde::Serialize;
+use serde_json;
 use tracing::{debug, info};
 
 use knit_learn::correlation::detect_correlations;
@@ -50,7 +51,7 @@ struct RawOutputModel {
 ///
 /// `source` is a path to a single data file or a directory of files.
 /// `output` is the path where the generated schema will be written.
-pub fn run(source: &str, output: &str) -> Result<()> {
+pub fn run(source: &str, output: &str, cli: &crate::Cli) -> Result<()> {
     let source_path = Path::new(source);
     anyhow::ensure!(
         source_path.exists(),
@@ -58,11 +59,13 @@ pub fn run(source: &str, output: &str) -> Result<()> {
         source
     );
 
-    eprintln!(
-        "{} Analysing {}",
-        "learn:".green().bold(),
-        source.cyan()
-    );
+    if !cli.quiet {
+        eprintln!(
+            "{} Analysing {}",
+            "learn:".green().bold(),
+            source.cyan()
+        );
+    }
 
     // 1. Ingest
     let tables = ingest_source(source_path)
@@ -80,11 +83,13 @@ pub fn run(source: &str, output: &str) -> Result<()> {
     let mut total_columns: usize = 0;
 
     for table in &tables {
-        eprintln!(
-            "  {} profiling table {}",
-            "→".dimmed(),
-            table.entity.green()
-        );
+        if !cli.quiet {
+            eprintln!(
+                "  {} profiling table {}",
+                "→".dimmed(),
+                table.entity.green()
+            );
+        }
         let (analysis, rel_profile) = analyse_table(table)
             .with_context(|| format!("failed to analyse table {}", table.entity))?;
         total_columns += analysis.columns.len();
@@ -152,15 +157,28 @@ pub fn run(source: &str, output: &str) -> Result<()> {
     // 7. Summary
     let total_rels = relationships.len();
     let total_corrs: usize = table_analyses.iter().map(|t| t.correlations.len()).sum();
-    eprintln!(
-        "\n{} Wrote {} — {} table(s), {} column(s), {} relationship(s), {} correlation(s)",
-        "✓".green().bold(),
-        output.cyan(),
-        table_analyses.len(),
-        total_columns,
-        total_rels,
-        total_corrs,
-    );
+
+    if cli.json {
+        let summary = serde_json::json!({
+            "event": "complete",
+            "output": output,
+            "tables": table_analyses.len(),
+            "columns": total_columns,
+            "relationships": total_rels,
+            "correlations": total_corrs,
+        });
+        println!("{}", summary);
+    } else if !cli.quiet {
+        eprintln!(
+            "\n{} Wrote {} — {} table(s), {} column(s), {} relationship(s), {} correlation(s)",
+            "✓".green().bold(),
+            output.cyan(),
+            table_analyses.len(),
+            total_columns,
+            total_rels,
+            total_corrs,
+        );
+    }
 
     Ok(())
 }

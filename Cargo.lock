@@ -1019,6 +1019,7 @@ dependencies = [
  "knit-plan",
  "knit-schema",
  "predicates",
+ "serde_json",
  "tempfile",
 ]
 

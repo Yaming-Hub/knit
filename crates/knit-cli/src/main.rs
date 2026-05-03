@@ -216,7 +216,7 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Diff { a, b } => schema::run_diff(a, b),
         },
         Command::Init { output } => init::run(output),
-        Command::Learn { source, output } => learn::run(source, output),
+        Command::Learn { source, output } => learn::run(source, output, &cli),
     }
     .inspect_err(|e| {
         if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {
