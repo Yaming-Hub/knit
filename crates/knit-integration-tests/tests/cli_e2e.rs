@@ -213,6 +213,69 @@ fn generate_seed_determinism() {
 }
 
 #[test]
+fn generate_seed_override_differs_from_schema_default() {
+    // The test schema has seed=12345. Using --seed with a different value
+    // should produce different output, proving the override works.
+    let dir_default = TempDir::new().unwrap();
+    let dir_override = TempDir::new().unwrap();
+
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            dir_default.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            dir_override.path().to_str().unwrap(),
+            "--seed",
+            "99999",
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let c1 = fs::read(dir_default.path().join("items.csv")).unwrap();
+    let c2 = fs::read(dir_override.path().join("items.csv")).unwrap();
+    assert_ne!(c1, c2, "--seed override should produce different output than schema default seed");
+}
+
+#[test]
+fn generate_parallel_flag_works() {
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--parallel",
+            "2",
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let csv = fs::read_to_string(dir.path().join("items.csv")).unwrap();
+    let row_count = csv.lines().count() - 1; // subtract header
+    assert_eq!(row_count, 100, "should generate 100 rows with --parallel 2");
+}
+
+#[test]
 fn generate_dry_run_no_output() {
     let dir = TempDir::new().unwrap();
     knit()

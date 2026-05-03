@@ -968,6 +968,7 @@ dependencies = [
  "knit-noise",
  "knit-plan",
  "knit-schema",
+ "rayon",
  "serde",
  "serde_json",
  "tempfile",

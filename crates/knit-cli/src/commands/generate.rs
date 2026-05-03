@@ -32,8 +32,22 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     let start = Instant::now();
 
     // ── Parse & validate ────────────────────────────────────────────
-    let model = load_schema(schema_path)
+    let mut model = load_schema(schema_path)
         .with_context(|| format!("failed to parse schema `{}`", schema_path))?;
+
+    // Apply CLI overrides to the model before validation/compilation.
+    if let Some(seed) = cli.seed {
+        model.seed = seed;
+    }
+    // Note: model.params are currently passed through to the plan metadata
+    // but not yet consumed by generators. This wiring prepares for future
+    // parameterized expression support.
+    for (key, value) in &cli.params {
+        model.params.insert(
+            key.clone(),
+            knit_core::Value::String(value.clone()),
+        );
+    }
 
     let errors = validate_model(&model);
     if !errors.is_empty() {
@@ -63,6 +77,24 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
             plan.metadata.total_phases,
             format_count(plan.metadata.estimated_total_rows),
         );
+    }
+
+    // ── Dry-run: stop after plan compilation ────────────────────────
+    if cli.dry_run {
+        if cli.json {
+            println!("{}", serde_json::to_string_pretty(&plan)?);
+        } else {
+            super::plan::print_plan(&plan);
+        }
+        return Ok(());
+    }
+
+    // ── Configure parallelism ────────────────────────────────────────
+    if cli.parallel > 0 {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(cli.parallel)
+            .build_global()
+            .map_err(|e| anyhow::anyhow!("failed to set thread pool size: {}", e))?;
     }
 
     // ── Prepare output directory ────────────────────────────────────
