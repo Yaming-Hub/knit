@@ -12,9 +12,14 @@ use super::{load_schema, validate_model};
 /// human-readable (or JSON) summary of the planned generation pipeline.
 pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     // Load and validate
-    let model = load_schema(schema_path).map_err(|e| {
+    let mut model = load_schema(schema_path).map_err(|e| {
         anyhow::anyhow!("failed to parse schema `{}`: {}", schema_path, e)
     })?;
+
+    // Apply --count override so the plan reflects it
+    if let Some(ref count_str) = cli.count {
+        super::generate::apply_count_override(&mut model, count_str)?;
+    }
 
     let errors = validate_model(&model);
     if !errors.is_empty() {
