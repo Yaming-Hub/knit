@@ -404,8 +404,10 @@ impl std::fmt::Display for DistributionKind {
 /// Serialized as a bare boolean (`false`/`true`) or an object
 /// (`{ "probability": 0.05 }`, `{ "every_n": 10 }`).
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub enum NullSpec {
     /// The field never produces nulls (default).
+    #[default]
     Never,
     /// Every value is null.
     Always,
@@ -435,11 +437,6 @@ impl Serialize for NullSpec {
     }
 }
 
-impl Default for NullSpec {
-    fn default() -> Self {
-        NullSpec::Never
-    }
-}
 
 impl<'de> Deserialize<'de> for NullSpec {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -547,10 +544,12 @@ pub struct Relationship {
 /// Cardinality of a [`Relationship`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum RelationshipKind {
     /// Each parent row maps to exactly one child row.
     OneToOne,
     /// Each parent row may have many child rows.
+    #[default]
     OneToMany,
     /// Many child rows map to one parent row (inverse of `OneToMany`).
     ManyToOne,
@@ -558,11 +557,6 @@ pub enum RelationshipKind {
     ManyToMany,
 }
 
-impl Default for RelationshipKind {
-    fn default() -> Self {
-        RelationshipKind::OneToMany
-    }
-}
 
 impl std::fmt::Display for RelationshipKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -880,7 +874,7 @@ mod tests {
             ("null", Value::Null),
             ("true", Value::Bool(true)),
             ("42", Value::Int(42)),
-            ("3.14", Value::Float(3.14)),
+            ("2.72", Value::Float(2.72)),
             ("\"hello\"", Value::String("hello".into())),
             ("[1, 2, 3]", Value::Array(vec![
                 Value::Int(1), Value::Int(2), Value::Int(3),

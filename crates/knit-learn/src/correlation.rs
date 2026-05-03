@@ -310,7 +310,7 @@ fn collect_numeric_columns(
         }
         let mut values = Vec::new();
         for batch in batches {
-            if let Some(col_idx) = batch.schema().index_of(&profile.name).ok() {
+            if let Ok(col_idx) = batch.schema().index_of(&profile.name) {
                 let col = batch.column(col_idx);
                 // Preserve row alignment: use NaN for null slots
                 append_numeric_values_aligned(col, &mut values);
@@ -336,7 +336,7 @@ fn collect_string_columns(
         }
         let mut values = Vec::new();
         for batch in batches {
-            if let Some(col_idx) = batch.schema().index_of(&profile.name).ok() {
+            if let Ok(col_idx) = batch.schema().index_of(&profile.name) {
                 let col = batch.column(col_idx);
                 if let Some(arr) = col.as_any().downcast_ref::<StringArray>() {
                     for i in 0..arr.len() {

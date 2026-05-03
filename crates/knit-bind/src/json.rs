@@ -141,7 +141,7 @@ fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
                 .as_any()
                 .downcast_ref::<array::TimestampSecondArray>()
                 .expect("Arrow type mismatch: expected TimestampSecondArray");
-            let ts = arr.value(row) as i64;
+            let ts = arr.value(row);
             let dt = chrono::DateTime::from_timestamp(ts, 0);
             match dt {
                 Some(d) => serde_json::Value::String(d.to_rfc3339()),

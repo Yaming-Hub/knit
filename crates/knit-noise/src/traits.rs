@@ -35,18 +35,15 @@ bitflags! {
 
 /// Controls which columns a perturbator targets.
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub enum ColumnFilter {
     /// Apply to all columns whose Arrow data type is compatible.
+    #[default]
     All,
     /// Apply only to columns whose names are in this list.
     ByName(Vec<String>),
 }
 
-impl Default for ColumnFilter {
-    fn default() -> Self {
-        Self::All
-    }
-}
 
 /// Per-invocation configuration for a perturbator.
 ///

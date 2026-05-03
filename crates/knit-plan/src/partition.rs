@@ -74,7 +74,7 @@ pub fn compute_partitions(total_rows: u64, entity_seed: u64) -> Vec<PartitionRan
     let num_partitions = if total_rows <= TARGET_PARTITION_SIZE {
         1
     } else {
-        ((total_rows + TARGET_PARTITION_SIZE - 1) / TARGET_PARTITION_SIZE) as u32
+        total_rows.div_ceil(TARGET_PARTITION_SIZE) as u32
     };
 
     let rows_per_partition = total_rows / num_partitions as u64;

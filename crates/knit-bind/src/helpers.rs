@@ -256,7 +256,7 @@ mod tests {
 
     #[test]
     fn test_format_number_float() {
-        let result = format_number(Value::from(3.14159), 2);
+        let result = format_number(Value::from(3.14259), 2);
         assert_eq!(result, "3.14");
     }
 

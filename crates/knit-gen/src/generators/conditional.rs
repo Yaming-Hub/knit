@@ -94,8 +94,8 @@ impl FieldGenerator for ConditionalGenerator {
 
         // Build per-row selection: (source_index, row_index)
         let mut indices: Vec<(usize, usize)> = Vec::with_capacity(count);
-        for row in 0..count {
-            match &ref_values[row] {
+        for (row, ref_val) in ref_values.iter().enumerate() {
+            match ref_val {
                 None => {
                     // Null reference → default
                     indices.push((default_idx, row));

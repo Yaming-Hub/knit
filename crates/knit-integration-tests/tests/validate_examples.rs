@@ -48,7 +48,7 @@ fn ecommerce_schema_has_expected_entities() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("ecommerce"))
+                .is_some_and(|n| n.starts_with("ecommerce"))
         })
         .expect("ecommerce.weave.toml not found");
 
@@ -68,7 +68,7 @@ fn iot_schema_has_expected_entities() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("iot"))
+                .is_some_and(|n| n.starts_with("iot"))
         })
         .expect("iot_sensors.weave.toml not found");
 
@@ -87,7 +87,7 @@ fn server_logs_schema_has_expected_entities() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("server_logs"))
+                .is_some_and(|n| n.starts_with("server_logs"))
         })
         .expect("server_logs.weave.toml not found");
 
@@ -106,7 +106,7 @@ fn financial_schema_has_expected_entities() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("financial"))
+                .is_some_and(|n| n.starts_with("financial"))
         })
         .expect("financial.weave.toml not found");
 
@@ -127,7 +127,7 @@ fn hr_org_schema_has_expected_entities() {
         .find(|p| {
             p.file_name()
                 .and_then(|s| s.to_str())
-                .map_or(false, |n| n.starts_with("hr_org"))
+                .is_some_and(|n| n.starts_with("hr_org"))
         })
         .expect("hr_org.weave.toml not found");
 

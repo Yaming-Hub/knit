@@ -71,17 +71,17 @@ fn inject_nulls(
 ) -> Result<Arc<dyn Array>, NoiseError> {
     let len = array.len();
     let mut null_buf = vec![true; len];
-    for i in 0..len {
+    for item in null_buf.iter_mut() {
         if rng.gen::<f64>() < probability {
-            null_buf[i] = false;
+            *item = false;
         }
     }
 
     // Combine existing null bitmap with our injected nulls
     if let Some(existing) = array.nulls() {
-        for i in 0..len {
+        for (i, item) in null_buf.iter_mut().enumerate() {
             if !existing.is_valid(i) {
-                null_buf[i] = false;
+                *item = false;
             }
         }
     }

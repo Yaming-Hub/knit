@@ -258,7 +258,7 @@ impl WattsStrogatzGenerator {
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
         let k_raw = params.get("k").copied().unwrap_or(4.0).max(2.0) as usize;
         // Ensure k is even
-        let k = if k_raw % 2 == 0 { k_raw } else { k_raw + 1 };
+        let k = if k_raw.is_multiple_of(2) { k_raw } else { k_raw + 1 };
         let beta = params.get("beta").copied().unwrap_or(0.3).clamp(0.0, 1.0);
         Self { k, beta }
     }
@@ -285,19 +285,19 @@ impl FieldGenerator for WattsStrogatzGenerator {
             .collect();
 
         // Rewire: for each node's each neighbour slot, rewire with probability beta
-        for i in 0..n {
+        for (i, node_neighbours) in neighbours.iter_mut().enumerate() {
             for slot in 0..half_k {
                 if uniform_01.sample(rng) < self.beta {
                     let mut new_target = uniform_node.sample(rng);
                     let mut attempts = 0;
-                    while (new_target == i || neighbours[i].contains(&new_target))
+                    while (new_target == i || node_neighbours.contains(&new_target))
                         && attempts < 20
                     {
                         new_target = uniform_node.sample(rng);
                         attempts += 1;
                     }
                     if new_target != i {
-                        neighbours[i][slot] = new_target;
+                        node_neighbours[slot] = new_target;
                     }
                 }
             }
@@ -441,15 +441,14 @@ mod tests {
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // All targets should be valid node ids [0, 200).
-        for i in 0..200 {
-            let t = targets.value(i);
-            assert!(t >= 0 && t < 200, "row {i}: target {t} out of range");
+        for (i, &t) in targets.values().iter().enumerate().take(200) {
+            assert!((0..200).contains(&t), "row {i}: target {t} out of range");
         }
 
         // Check power-law-ish: some nodes should have much higher in-degree than others.
         let mut in_degree = vec![0usize; 200];
-        for i in 0..200 {
-            in_degree[targets.value(i) as usize] += 1;
+        for &t in targets.values().iter().take(200) {
+            in_degree[t as usize] += 1;
         }
         let max_deg = *in_degree.iter().max().unwrap();
         let min_deg = *in_degree.iter().min().unwrap();

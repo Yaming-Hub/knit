@@ -393,12 +393,12 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, 5, &ctx);
         let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
-        for i in 0..5 {
+        for (i, &bv) in base_values.iter().enumerate() {
             assert!(
-                ts.value(i) >= base_values[i],
+                ts.value(i) >= bv,
                 "row {i}: {} < {}",
                 ts.value(i),
-                base_values[i]
+                bv
             );
         }
     }
@@ -441,7 +441,7 @@ mod tests {
             let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
             let hour = dt.hour();
             assert!(
-                hour >= 9 && hour < 17,
+                (9..17).contains(&hour),
                 "row {i}: hour {hour} outside 9–17"
             );
             let wd = dt.weekday().num_days_from_monday();
