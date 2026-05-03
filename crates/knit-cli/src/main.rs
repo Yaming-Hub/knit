@@ -139,6 +139,9 @@ enum Command {
         /// Output schema file path.
         #[arg(short, long, default_value = "learned.weave.toml")]
         output: String,
+        /// Maximum rows to read per entity (for faster profiling of large files).
+        #[arg(long)]
+        sample: Option<usize>,
     },
 }
 
@@ -224,7 +227,7 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Diff { a, b } => schema::run_diff(a, b),
         },
         Command::Init { output } => init::run(output),
-        Command::Learn { source, output } => learn::run(source, output, &cli),
+        Command::Learn { source, output, sample } => learn::run(source, output, *sample, &cli),
     }
     .inspect_err(|e| {
         if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {
