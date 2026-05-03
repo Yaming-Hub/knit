@@ -232,6 +232,17 @@ pub enum GeneratorPlan {
         /// Numeric parameters (model-specific, e.g. `m`, `max_depth`).
         params: BTreeMap<String, f64>,
     },
+    /// Wraps an inner generator plan with uniqueness enforcement.
+    ///
+    /// Generated values are deduplicated via retry. If `max_retries` is
+    /// exceeded for a single row, the duplicate value is included and a
+    /// warning is logged.
+    Unique {
+        /// The inner generator plan to wrap.
+        inner: Box<GeneratorPlan>,
+        /// Maximum number of retries per row before accepting a duplicate.
+        max_retries: u32,
+    },
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────

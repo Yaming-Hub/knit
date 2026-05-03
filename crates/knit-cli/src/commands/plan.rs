@@ -155,6 +155,9 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
         knit_plan::GeneratorPlan::Topology { model, .. } => {
             format!("topology({:?})", model)
         }
+        knit_plan::GeneratorPlan::Unique { inner, max_retries } => {
+            format!("unique({}, retries={})", generator_label(inner), max_retries)
+        }
     }
 }
 
