@@ -1,6 +1,6 @@
 //! `knit generate` — full forward pipeline for synthetic data generation.
 //!
-//! Orchestrates: parse → validate → plan → generate → (noise) → bind.
+//! Orchestrates: parse → validate → plan → generate → noise → bind.
 
 use std::collections::HashMap;
 use std::fs;
@@ -16,7 +16,9 @@ use colored::Colorize;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use knit_bind::{Compression, OutputFormat, Sink, SinkConfig};
+use knit_core::NoiseProfile;
 use knit_gen::GenerationEngine;
+use knit_noise::{Pipeline, PerturbConfig, ColumnFilter};
 use knit_plan::ExecutionPlan;
 
 use crate::{Cli, CompressionArg, Format};
@@ -120,6 +122,19 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
         }
     }
 
+    // ── Build noise pipelines per entity ────────────────────────────
+    let noise_pipelines = build_noise_pipelines(&model.noise_profiles, model.seed);
+
+    if !cli.quiet && !noise_pipelines.is_empty() {
+        let profile_count: usize = model.noise_profiles.len();
+        eprintln!(
+            "{} noise pipeline ({} profile(s) across {} entity/entities)",
+            "✓".green().bold(),
+            profile_count,
+            noise_pipelines.len(),
+        );
+    }
+
     // Track per-entity row counts for JSON progress events
     let mut entity_row_counts: HashMap<String, u64> = HashMap::new();
     let mut entity_total_rows: HashMap<String, u64> = HashMap::new();
@@ -131,10 +146,28 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     let json_mode = cli.json;
 
     // Execute generation
+    let mut batch_counters: HashMap<String, u64> = HashMap::new();
     engine
         .execute(&plan, |entity_name, batch: RecordBatch| {
+            // Track pre-noise row count for progress reporting
             let row_count = batch.num_rows() as u64;
             total_rows += row_count;
+
+            // ── Apply noise pipeline if configured for this entity ──
+            let batch_idx = batch_counters.entry(entity_name.to_string()).or_insert(0);
+            let batch = if let Some(pipeline) = noise_pipelines.get(entity_name) {
+                let result = pipeline.run_with_offset(batch, *batch_idx).map_err(|e| {
+                    knit_gen::GenError::Generation(format!(
+                        "noise pipeline error for '{}': {}",
+                        entity_name, e
+                    ))
+                })?;
+                *batch_idx += 1;
+                result
+            } else {
+                *batch_idx += 1;
+                batch
+            };
 
             // Track per-entity progress
             let done = entity_row_counts.entry(entity_name.to_string()).or_insert(0);
@@ -381,4 +414,87 @@ fn format_bytes(b: u64) -> String {
     } else {
         format!("{} B", b)
     }
+}
+
+/// Build a single noise [`Pipeline`] per entity from the schema's [`NoiseProfile`]s.
+///
+/// All perturbators for the same entity are merged into one pipeline so that
+/// the pipeline's internal stage ordering (clean → constrained → breaking)
+/// is respected. The highest probability across profiles is used as the
+/// pipeline-level config; individual perturbators respect their own rate
+/// through the pipeline's probability setting per type.
+///
+/// Since the Pipeline uses one global probability for all its perturbators,
+/// we create separate pipelines per noise *type* with the correct rate,
+/// but collect them into a wrapper that runs them in stage order.
+/// Actually — to preserve correct ordering — we use a single Pipeline
+/// with the default probability, and accept that all perturbators share it.
+/// For fine-grained per-type rates, we use one Pipeline per entity with
+/// the maximum rate and rely on each perturbator only affecting its target
+/// type... BUT the current Perturbator trait doesn't support per-instance rates.
+///
+/// **Chosen approach:** One Pipeline per entity. The pipeline probability is
+/// set to the maximum rate across all noise types. This is an approximation
+/// that slightly over-perturbs for lower-rate types. A future improvement
+/// would add per-perturbator rate configuration.
+fn build_noise_pipelines(
+    profiles: &[NoiseProfile],
+    model_seed: u64,
+) -> HashMap<String, Pipeline> {
+    use knit_noise::{
+        NullInjector, TypoInjector, OutlierInjector, DuplicateInjector,
+    };
+
+    let mut entity_pipelines: HashMap<String, Pipeline> = HashMap::new();
+
+    for (prof_idx, profile) in profiles.iter().enumerate() {
+        if profile.entity.is_empty() {
+            tracing::warn!(name = %profile.name, "noise profile has no entity target, skipping");
+            continue;
+        }
+
+        // Compute the maximum rate across all noise types in this profile
+        let max_rate = profile.null_rate
+            .max(profile.typo_rate)
+            .max(profile.outlier_rate)
+            .max(profile.duplicate_rate);
+
+        if max_rate <= 0.0 {
+            continue;
+        }
+
+        let col_filter = if profile.fields.is_empty() {
+            ColumnFilter::All
+        } else {
+            ColumnFilter::ByName(profile.fields.clone())
+        };
+
+        let prof_seed = model_seed.wrapping_add(prof_idx as u64 * 1000);
+
+        let pipeline = entity_pipelines
+            .entry(profile.entity.clone())
+            .or_insert_with(|| {
+                let cfg = PerturbConfig::default()
+                    .with_probability(max_rate)
+                    .with_seed(prof_seed)
+                    .with_columns_filter(col_filter.clone());
+                Pipeline::new(cfg)
+            });
+
+        // Add perturbators based on non-zero rates
+        if profile.null_rate > 0.0 {
+            pipeline.add(Box::new(NullInjector::new()));
+        }
+        if profile.typo_rate > 0.0 {
+            pipeline.add(Box::new(TypoInjector::new()));
+        }
+        if profile.outlier_rate > 0.0 {
+            pipeline.add(Box::new(OutlierInjector::new(5.0)));
+        }
+        if profile.duplicate_rate > 0.0 {
+            pipeline.add(Box::new(DuplicateInjector::new()));
+        }
+    }
+
+    entity_pipelines
 }

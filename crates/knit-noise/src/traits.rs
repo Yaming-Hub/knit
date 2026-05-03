@@ -85,6 +85,12 @@ impl PerturbConfig {
         self
     }
 
+    /// Set the column filter directly.
+    pub fn with_columns_filter(mut self, filter: ColumnFilter) -> Self {
+        self.columns = filter;
+        self
+    }
+
     /// Set an explicit RNG seed for reproducibility.
     pub fn with_seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);

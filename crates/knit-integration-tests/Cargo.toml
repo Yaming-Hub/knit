@@ -11,4 +11,5 @@ knit-schema = { path = "../knit-schema" }
 knit-plan = { path = "../knit-plan" }
 knit-gen = { path = "../knit-gen" }
 knit-learn = { path = "../knit-learn" }
+knit-noise = { path = "../knit-noise" }
 arrow = { version = "54", features = ["prettyprint"] }
