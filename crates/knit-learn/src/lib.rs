@@ -17,6 +17,8 @@
 //! let profiles = compute_profiles(&batches).unwrap();
 //! ```
 
+#![warn(missing_docs)]
+
 pub mod correlation;
 pub mod error;
 pub mod fitting;

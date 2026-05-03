@@ -9,6 +9,8 @@
 //! [`factory::OutputFormat`], then call [`Sink::write_batch`]
 //! for each batch and [`Sink::finish`] to finalize.
 
+#![warn(missing_docs)]
+
 pub mod csv;
 pub mod error;
 pub mod factory;

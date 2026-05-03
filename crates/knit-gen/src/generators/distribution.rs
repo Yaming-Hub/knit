@@ -1,8 +1,9 @@
-//! Distribution-based generator supporting multiple statistical distributions.
+//! Distribution-based generator supporting 17 statistical distributions.
 //!
-//! This is the most commonly-used generator type, covering Uniform, Normal,
-//! LogNormal, Exponential, and Poisson distributions. Additional distributions
-//! (Zipf, Binomial, etc.) will be added in future PRs.
+//! Covers continuous (Uniform, Normal, LogNormal, Exponential, etc.), discrete
+//! (Poisson, Bernoulli, Binomial, Geometric, Zipf), and shape-parameterised
+//! (Pareto, Weibull, Gamma, Beta, Cauchy, ChiSquared, StudentT, Triangular)
+//! families.
 //!
 //! Invalid user-supplied parameters (negative std_dev, zero lambda) are handled
 //! gracefully — the generator logs a warning via `tracing` and falls back to
@@ -34,6 +35,18 @@ use crate::traits::FieldGenerator;
 /// - **LogNormal**: `mu`, `sigma`
 /// - **Exponential**: `lambda`
 /// - **Poisson**: `lambda`
+/// - **Bernoulli**: `p`
+/// - **Binomial**: `n`, `p`
+/// - **Geometric**: `p`
+/// - **Pareto**: `scale`, `shape`
+/// - **Weibull**: `scale`, `shape`
+/// - **Gamma**: `shape`, `scale`
+/// - **Beta**: `alpha`, `beta`
+/// - **Cauchy**: `median`, `scale`
+/// - **ChiSquared**: `k`
+/// - **StudentT**: `n`
+/// - **Triangular**: `min`, `max`, `mode`
+/// - **Zipf**: `n`, `s`
 ///
 /// Optional `clamp_min` / `clamp_max` bounds are applied after sampling to
 /// truncate extreme values (useful for ensuring realistic ranges).
