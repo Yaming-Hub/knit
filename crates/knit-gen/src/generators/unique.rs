@@ -1,14 +1,19 @@
 //! Uniqueness-enforcing wrapper generator.
 //!
 //! Wraps any inner [`FieldGenerator`] and deduplicates output values via retry.
-//! Uses interior mutability (`RefCell`) to track seen values across calls,
-//! which is safe because generators are single-threaded per partition.
+//! Uses a [`Mutex`]-protected set to track seen values across calls.
+//!
+//! **Partition scope:** uniqueness is enforced within a single partition. For
+//! multi-partition entities (>1M rows), duplicates may still occur across
+//! partitions. This is a known limitation.
 
-use std::cell::RefCell;
 use std::collections::HashSet;
+use std::sync::Mutex;
 
 use arrow::array::{
     Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray,
+    TimestampMillisecondArray, TimestampMicrosecondArray,
+    TimestampNanosecondArray, TimestampSecondArray, UInt64Array,
 };
 use arrow::datatypes::DataType;
 use rand::RngCore;
@@ -18,39 +23,38 @@ use crate::traits::FieldGenerator;
 
 /// Wrapper generator that enforces uniqueness on an inner generator's output.
 ///
-/// Each call to [`generate`](FieldGenerator::generate) produces values using the
-/// inner generator and retries duplicates up to `max_retries` times per row.
-/// If retries are exhausted the duplicate is included and a warning is logged.
+/// Each call to [`generate`](FieldGenerator::generate) produces a batch from the
+/// inner generator, filters out duplicates, and tops up with retries until the
+/// requested count is met or `max_retries` per-row attempts are exhausted.
 ///
-/// # Interior mutability
+/// # Thread safety
 ///
-/// The seen-value set is stored in a [`RefCell`] because the
-/// [`FieldGenerator`] trait requires `&self`. This is safe because generators
-/// run on a single thread per partition.
+/// The seen-value set is protected by a [`Mutex`], satisfying the
+/// `Send + Sync` requirement of [`FieldGenerator`].
+///
+/// # Limitations
+///
+/// Uniqueness is tracked per generator instance (i.e. per partition). For
+/// multi-partition entities, duplicates can appear across partitions.
 pub struct UniqueGenerator {
     /// The wrapped inner generator.
     inner: Box<dyn FieldGenerator>,
-    /// Maximum retry attempts per row before accepting a duplicate.
+    /// Maximum retry rounds before accepting duplicates for remaining rows.
     max_retries: u32,
-    /// Set of previously emitted values (string representation), using
-    /// interior mutability for `&self` compatibility.
-    seen: RefCell<HashSet<String>>,
+    /// Set of previously emitted values (string representation).
+    seen: Mutex<HashSet<String>>,
 }
-
-// SAFETY: `RefCell` is not `Sync`, but generators are used single-threaded
-// per partition. We implement `Sync` to satisfy the trait bound.
-unsafe impl Sync for UniqueGenerator {}
 
 impl UniqueGenerator {
     /// Create a new uniqueness-enforcing wrapper.
     ///
     /// * `inner` – the generator to wrap.
-    /// * `max_retries` – how many times to retry when a duplicate is produced.
+    /// * `max_retries` – how many retry rounds when duplicates are produced.
     pub fn new(inner: Box<dyn FieldGenerator>, max_retries: u32) -> Self {
         Self {
             inner,
             max_retries,
-            seen: RefCell::new(HashSet::new()),
+            seen: Mutex::new(HashSet::new()),
         }
     }
 }
@@ -60,19 +64,36 @@ fn array_value_to_string(array: &dyn Array, index: usize) -> String {
     if array.is_null(index) {
         return "__null__".to_string();
     }
-    if let Some(arr) = array.as_any().downcast_ref::<StringArray>() {
-        return arr.value(index).to_string();
+    if let Some(a) = array.as_any().downcast_ref::<StringArray>() {
+        return a.value(index).to_string();
     }
-    if let Some(arr) = array.as_any().downcast_ref::<Int64Array>() {
-        return arr.value(index).to_string();
+    if let Some(a) = array.as_any().downcast_ref::<Int64Array>() {
+        return a.value(index).to_string();
     }
-    if let Some(arr) = array.as_any().downcast_ref::<Float64Array>() {
-        return arr.value(index).to_string();
+    if let Some(a) = array.as_any().downcast_ref::<UInt64Array>() {
+        return a.value(index).to_string();
     }
-    if let Some(arr) = array.as_any().downcast_ref::<BooleanArray>() {
-        return arr.value(index).to_string();
+    if let Some(a) = array.as_any().downcast_ref::<Float64Array>() {
+        return format!("{:.17e}", a.value(index));
     }
-    format!("__unknown_{index}__")
+    if let Some(a) = array.as_any().downcast_ref::<BooleanArray>() {
+        return a.value(index).to_string();
+    }
+    // Timestamp types
+    if let Some(a) = array.as_any().downcast_ref::<TimestampSecondArray>() {
+        return a.value(index).to_string();
+    }
+    if let Some(a) = array.as_any().downcast_ref::<TimestampMillisecondArray>() {
+        return a.value(index).to_string();
+    }
+    if let Some(a) = array.as_any().downcast_ref::<TimestampMicrosecondArray>() {
+        return a.value(index).to_string();
+    }
+    if let Some(a) = array.as_any().downcast_ref::<TimestampNanosecondArray>() {
+        return a.value(index).to_string();
+    }
+    // Fallback: use debug format of the scalar
+    format!("{:?}@{index}", array.data_type())
 }
 
 impl FieldGenerator for UniqueGenerator {
@@ -81,42 +102,94 @@ impl FieldGenerator for UniqueGenerator {
             return self.inner.generate(rng, 0, ctx);
         }
 
-        let mut result_arrays: Vec<ArrayRef> = Vec::with_capacity(count);
-        let mut seen = self.seen.borrow_mut();
+        let mut seen = self.seen.lock().unwrap();
+        let mut unique_indices: Vec<usize> = Vec::with_capacity(count);
+        let mut collected_arrays: Vec<(ArrayRef, Vec<usize>)> = Vec::new();
+        let mut remaining = count;
+        let mut retry_round = 0u32;
 
-        for _ in 0..count {
-            let mut attempts = 0u32;
-            loop {
-                let single = self.inner.generate(rng, 1, ctx);
-                let key = array_value_to_string(single.as_ref(), 0);
+        while remaining > 0 && retry_round <= self.max_retries {
+            // Generate a batch from the inner generator
+            let batch = self.inner.generate(rng, remaining, ctx);
+            let mut batch_unique_indices = Vec::new();
 
-                if !seen.contains(&key) {
-                    seen.insert(key);
-                    result_arrays.push(single);
+            for i in 0..batch.len() {
+                if remaining == 0 {
                     break;
                 }
-
-                attempts += 1;
-                if attempts >= self.max_retries {
-                    tracing::warn!(
-                        attempts = self.max_retries,
-                        "unique generator exceeded max retries, accepting duplicate"
-                    );
-                    seen.insert(key);
-                    result_arrays.push(single);
-                    break;
+                let key = array_value_to_string(batch.as_ref(), i);
+                if seen.insert(key) {
+                    batch_unique_indices.push(i);
+                    remaining -= 1;
                 }
+            }
+
+            if batch_unique_indices.is_empty() {
+                retry_round += 1;
+            } else {
+                retry_round = 0; // reset on progress
+            }
+
+            if !batch_unique_indices.is_empty() {
+                collected_arrays.push((batch, batch_unique_indices));
             }
         }
 
-        // Concatenate single-element arrays into one array of length `count`.
-        let refs: Vec<&dyn Array> = result_arrays.iter().map(|a| a.as_ref()).collect();
-        arrow::compute::concat(&refs).expect("concat of same-type arrays should not fail")
+        if remaining > 0 {
+            tracing::warn!(
+                remaining,
+                max_retries = self.max_retries,
+                "unique generator exhausted retries, filling remaining with duplicates"
+            );
+            // Fill remaining with whatever the inner generator produces
+            let fill = self.inner.generate(rng, remaining, ctx);
+            let all: Vec<usize> = (0..fill.len()).collect();
+            collected_arrays.push((fill, all));
+        }
+
+        // Build the final array by taking selected indices from each batch
+        build_result_array(&collected_arrays)
     }
 
     fn output_type(&self) -> DataType {
         self.inner.output_type()
     }
+}
+
+/// Construct the final `ArrayRef` by taking selected indices from collected batches.
+fn build_result_array(collected: &[(ArrayRef, Vec<usize>)]) -> ArrayRef {
+    use arrow::compute::concat;
+
+    // Fast path: single batch with all indices sequential
+    if collected.len() == 1 {
+        let (arr, indices) = &collected[0];
+        if indices.len() == arr.len()
+            && indices.iter().enumerate().all(|(i, &idx)| i == idx)
+        {
+            return arr.clone();
+        }
+    }
+
+    // Take selected rows from each batch
+    let mut slices: Vec<ArrayRef> = Vec::new();
+    for (arr, indices) in collected {
+        for &idx in indices {
+            slices.push(arr.slice(idx, 1));
+        }
+    }
+
+    if slices.is_empty() {
+        // Shouldn't happen, but handle gracefully
+        return collected
+            .first()
+            .map(|(a, _)| a.slice(0, 0))
+            .unwrap_or_else(|| {
+                std::sync::Arc::new(arrow::array::NullArray::new(0)) as ArrayRef
+            });
+    }
+
+    let refs: Vec<&dyn Array> = slices.iter().map(|a| a.as_ref()).collect();
+    concat(&refs).expect("concat of same-type arrays should not fail")
 }
 
 #[cfg(test)]
