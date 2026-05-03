@@ -507,23 +507,9 @@ fn format_bytes(b: u64) -> String {
 ///
 /// All perturbators for the same entity are merged into one pipeline so that
 /// the pipeline's internal stage ordering (clean → constrained → breaking)
-/// is respected. The highest probability across profiles is used as the
-/// pipeline-level config; individual perturbators respect their own rate
-/// through the pipeline's probability setting per type.
-///
-/// Since the Pipeline uses one global probability for all its perturbators,
-/// we create separate pipelines per noise *type* with the correct rate,
-/// but collect them into a wrapper that runs them in stage order.
-/// Actually — to preserve correct ordering — we use a single Pipeline
-/// with the default probability, and accept that all perturbators share it.
-/// For fine-grained per-type rates, we use one Pipeline per entity with
-/// the maximum rate and rely on each perturbator only affecting its target
-/// type... BUT the current Perturbator trait doesn't support per-instance rates.
-///
-/// **Chosen approach:** One Pipeline per entity. The pipeline probability is
-/// set to the maximum rate across all noise types. This is an approximation
-/// that slightly over-perturbs for lower-rate types. A future improvement
-/// would add per-perturbator rate configuration.
+/// is respected. Each perturbator is added with its own rate via
+/// [`Pipeline::add_with_rate`], so noise types with different probabilities
+/// are correctly applied without over-perturbation.
 fn build_noise_pipelines(
     profiles: &[NoiseProfile],
     model_seed: u64,
@@ -540,13 +526,12 @@ fn build_noise_pipelines(
             continue;
         }
 
-        // Compute the maximum rate across all noise types in this profile
-        let max_rate = profile.null_rate
-            .max(profile.typo_rate)
-            .max(profile.outlier_rate)
-            .max(profile.duplicate_rate);
+        let has_any = profile.null_rate > 0.0
+            || profile.typo_rate > 0.0
+            || profile.outlier_rate > 0.0
+            || profile.duplicate_rate > 0.0;
 
-        if max_rate <= 0.0 {
+        if !has_any {
             continue;
         }
 
@@ -561,25 +546,27 @@ fn build_noise_pipelines(
         let pipeline = entity_pipelines
             .entry(profile.entity.clone())
             .or_insert_with(|| {
+                // Pipeline default probability is unused — each perturbator
+                // gets its own rate via add_with_rate().
                 let cfg = PerturbConfig::default()
-                    .with_probability(max_rate)
+                    .with_probability(0.0)
                     .with_seed(prof_seed)
                     .with_columns_filter(col_filter.clone());
                 Pipeline::new(cfg)
             });
 
-        // Add perturbators based on non-zero rates
+        // Add perturbators with their individual rates
         if profile.null_rate > 0.0 {
-            pipeline.add(Box::new(NullInjector::new()));
+            pipeline.add_with_rate(Box::new(NullInjector::new()), profile.null_rate);
         }
         if profile.typo_rate > 0.0 {
-            pipeline.add(Box::new(TypoInjector::new()));
+            pipeline.add_with_rate(Box::new(TypoInjector::new()), profile.typo_rate);
         }
         if profile.outlier_rate > 0.0 {
-            pipeline.add(Box::new(OutlierInjector::new(5.0)));
+            pipeline.add_with_rate(Box::new(OutlierInjector::new(5.0)), profile.outlier_rate);
         }
         if profile.duplicate_rate > 0.0 {
-            pipeline.add(Box::new(DuplicateInjector::new()));
+            pipeline.add_with_rate(Box::new(DuplicateInjector::new()), profile.duplicate_rate);
         }
     }
 

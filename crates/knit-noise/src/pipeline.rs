@@ -39,19 +39,22 @@ fn classify(invariants: InvariantSet) -> Stage {
 
 /// Three-stage perturbation pipeline.
 ///
-/// Add perturbators with [`Pipeline::add`], then call [`Pipeline::run`] to
-/// apply them all in the correct stage order.
+/// Add perturbators with [`Pipeline::add`] or [`Pipeline::add_with_rate`],
+/// then call [`Pipeline::run`] to apply them all in the correct stage order.
+///
+/// Each perturbator can have its own probability override. If not set,
+/// the pipeline's default probability from [`PerturbConfig`] is used.
 ///
 /// # Example
 ///
 /// ```ignore
 /// let mut pipe = Pipeline::new(PerturbConfig::default());
 /// pipe.add(Box::new(GaussianNoise::default()));
-/// pipe.add(Box::new(NullInjector::default()));
+/// pipe.add_with_rate(Box::new(NullInjector::default()), 0.10);
 /// let noisy = pipe.run(batch)?;
 /// ```
 pub struct Pipeline {
-    perturbators: Vec<Box<dyn Perturbator>>,
+    perturbators: Vec<(Box<dyn Perturbator>, Option<f64>)>,
     config: PerturbConfig,
 }
 
@@ -64,9 +67,16 @@ impl Pipeline {
         }
     }
 
-    /// Append a perturbator to the pipeline.
+    /// Append a perturbator using the pipeline's default probability.
     pub fn add(&mut self, p: Box<dyn Perturbator>) {
-        self.perturbators.push(p);
+        self.perturbators.push((p, None));
+    }
+
+    /// Append a perturbator with a specific probability override.
+    ///
+    /// The `rate` overrides `config.probability` for this perturbator only.
+    pub fn add_with_rate(&mut self, p: Box<dyn Perturbator>, rate: f64) {
+        self.perturbators.push((p, Some(rate)));
     }
 
     /// Execute all perturbators in stage order against `batch`.
@@ -98,7 +108,7 @@ impl Pipeline {
             .perturbators
             .iter()
             .enumerate()
-            .map(|(i, p)| (classify(p.breaks()), i))
+            .map(|(i, (p, _))| (classify(p.breaks()), i))
             .collect();
         order.sort_by_key(|(stage, idx)| (*stage, *idx));
 
@@ -111,16 +121,28 @@ impl Pipeline {
         );
 
         for (stage, idx) in &order {
-            let p = &self.perturbators[*idx];
+            let (p, rate_override) = &self.perturbators[*idx];
             // Derive uncorrelated per-perturbator seed using XOR with rotated index
             let derived_seed = base_seed ^ (*idx as u64).wrapping_mul(0x9E3779B97F4A7C15);
             let mut rng = ChaCha8Rng::seed_from_u64(derived_seed);
+
+            // Use per-perturbator rate if set, otherwise pipeline default.
+            let effective_config = match rate_override {
+                Some(rate) => {
+                    let mut cfg = self.config.clone();
+                    cfg.probability = *rate;
+                    cfg
+                }
+                None => self.config.clone(),
+            };
+
             debug!(
                 perturbator = p.name(),
                 stage = ?stage,
+                probability = effective_config.probability,
                 "applying perturbator"
             );
-            batch = p.perturb(batch, &mut rng, &self.config)?;
+            batch = p.perturb(batch, &mut rng, &effective_config)?;
         }
 
         info!("noise pipeline complete");
@@ -200,7 +222,7 @@ mod tests {
             .perturbators
             .iter()
             .enumerate()
-            .map(|(i, p)| (classify(p.breaks()), i))
+            .map(|(i, (p, _))| (classify(p.breaks()), i))
             .collect();
         let mut sorted = order.clone();
         sorted.sort_by_key(|(s, i)| (*s, *i));
@@ -216,5 +238,75 @@ mod tests {
         let batch = sample_batch();
         let result = pipe.run(batch.clone()).unwrap();
         assert_eq!(result.num_rows(), batch.num_rows());
+    }
+
+    /// Perturbator that records the probability it received.
+    struct ProbRecorder {
+        received_prob: std::sync::Mutex<f64>,
+    }
+
+    impl ProbRecorder {
+        fn new() -> Self {
+            Self {
+                received_prob: std::sync::Mutex::new(0.0),
+            }
+        }
+    }
+
+    impl Perturbator for ProbRecorder {
+        fn name(&self) -> &str {
+            "ProbRecorder"
+        }
+        fn breaks(&self) -> InvariantSet {
+            InvariantSet::empty()
+        }
+        fn perturb(
+            &self,
+            batch: RecordBatch,
+            _rng: &mut dyn rand::RngCore,
+            cfg: &PerturbConfig,
+        ) -> Result<RecordBatch, NoiseError> {
+            *self.received_prob.lock().unwrap() = cfg.probability;
+            Ok(batch)
+        }
+    }
+
+    #[test]
+    fn per_perturbator_rate_override() {
+        use crate::NullInjector;
+
+        let cfg = PerturbConfig::default()
+            .with_probability(0.05)
+            .with_seed(0);
+        let mut pipe = Pipeline::new(cfg);
+
+        // NullInjector with pipeline default (0.05)
+        pipe.add(Box::new(NullInjector::new()));
+        // NullInjector with override (0.42)
+        pipe.add_with_rate(Box::new(NullInjector::new()), 0.42);
+
+        // Run on a batch with 1000 nullable rows; compare null counts
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("a", DataType::Int32, true),
+            Field::new("b", DataType::Int32, true),
+        ]));
+        let big_batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int32Array::from((0..1000).collect::<Vec<_>>())),
+                Arc::new(Int32Array::from((0..1000).collect::<Vec<_>>())),
+            ],
+        )
+        .unwrap();
+
+        let result = pipe.run(big_batch).unwrap();
+        // Column "a" gets nulled at 0.05 then again at 0.42.
+        // With 1000 rows and high rate on second pass, we expect significant nulls.
+        let total_nulls_a = result.column(0).null_count();
+        // At 0.42 rate on the second pass alone, we expect ~420 nulls.
+        assert!(
+            total_nulls_a > 200,
+            "expected substantial nulls from 0.42-rate pass, got {total_nulls_a}"
+        );
     }
 }
