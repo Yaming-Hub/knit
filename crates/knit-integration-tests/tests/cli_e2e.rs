@@ -473,6 +473,201 @@ fn generate_missing_schema_fails() {
         .stderr(predicate::str::contains("error"));
 }
 
+// ── Learn ───────────────────────────────────────────────────────────
+
+#[test]
+fn learn_from_csv_produces_valid_schema() {
+    // Step 1: Generate CSV data from a known schema
+    let data_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            data_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--seed",
+            "42",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Step 2: Learn schema from the generated CSV
+    let learned_schema = data_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            data_dir.path().to_str().unwrap(),
+            "-o",
+            learned_schema.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(learned_schema.exists(), "learned schema should be created");
+
+    // Step 3: Validate the learned schema
+    knit()
+        .args(["validate", learned_schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn learn_from_parquet_produces_valid_schema() {
+    // Generate Parquet data
+    let data_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            data_dir.path().to_str().unwrap(),
+            "--format",
+            "parquet",
+            "--seed",
+            "42",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Learn from Parquet
+    let learned_schema = data_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            data_dir.path().to_str().unwrap(),
+            "-o",
+            learned_schema.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(learned_schema.exists());
+
+    // Validate
+    knit()
+        .args(["validate", learned_schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn learn_from_json_produces_valid_schema() {
+    // Note: knit generates JSON as arrays (standard JSON), but the learn
+    // ingestion expects newline-delimited JSON (JSONL). Use JSONL format
+    // for learn round-trip. This test uses a hand-crafted JSONL file.
+    let data_dir = TempDir::new().unwrap();
+    let jsonl_path = data_dir.path().join("items.jsonl");
+    fs::write(
+        &jsonl_path,
+        r#"{"id":1,"value":42.5,"label":"alpha"}
+{"id":2,"value":88.1,"label":"beta"}
+{"id":3,"value":15.3,"label":"gamma"}
+{"id":4,"value":67.9,"label":"alpha"}
+{"id":5,"value":23.4,"label":"beta"}
+"#,
+    )
+    .unwrap();
+
+    // Learn from JSONL
+    let learned_schema = data_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            data_dir.path().to_str().unwrap(),
+            "-o",
+            learned_schema.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(learned_schema.exists());
+
+    // Validate
+    knit()
+        .args(["validate", learned_schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn learn_round_trip_generates_data() {
+    // Full round-trip: generate → learn → generate from learned schema
+    let gen1_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            TEST_SCHEMA,
+            "-o",
+            gen1_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--seed",
+            "100",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Learn
+    let learned = gen1_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            gen1_dir.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Generate from the learned schema
+    let gen2_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            learned.to_str().unwrap(),
+            "-o",
+            gen2_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Verify the second generation produced data
+    let files: Vec<_> = fs::read_dir(gen2_dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "csv"))
+        .collect();
+    assert!(!files.is_empty(), "round-trip generation should produce CSV files");
+
+    // Verify the generated file has rows
+    for entry in &files {
+        let content = fs::read_to_string(entry.path()).unwrap();
+        let line_count = content.lines().count();
+        assert!(line_count > 1, "generated file should have header + data rows");
+    }
+}
+
+#[test]
+fn learn_missing_source_fails() {
+    knit()
+        .args(["learn", "nonexistent_dir", "-o", "out.weave.toml"])
+        .assert()
+        .failure();
+}
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 fn sorted_file_names(dir: &std::path::Path) -> Vec<String> {
