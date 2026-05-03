@@ -110,9 +110,11 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             knit_plan::TopologyModel::Tree => {
                 Box::new(topology::TreeGenerator::new(params))
             }
-            knit_plan::TopologyModel::WattsStrogatz | knit_plan::TopologyModel::ErdosRenyi => {
-                tracing::warn!(model = ?model, "topology model not yet implemented, using placeholder");
-                Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+            knit_plan::TopologyModel::WattsStrogatz => {
+                Box::new(topology::WattsStrogatzGenerator::new(params))
+            }
+            knit_plan::TopologyModel::ErdosRenyi => {
+                Box::new(topology::ErdosRenyiGenerator::new(params))
             }
         },
         GeneratorPlan::Conditional {
