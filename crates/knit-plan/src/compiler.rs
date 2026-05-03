@@ -253,8 +253,14 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             GeneratorSpec::Pattern { pattern } => {
                 GeneratorPlan::Pattern { pattern: pattern.clone() }
             }
+            GeneratorSpec::Unique { inner, max_retries } => {
+                let inner_plan = compile_generator_from_spec(inner, all_fields);
+                GeneratorPlan::Unique {
+                    inner: Box::new(inner_plan),
+                    max_retries: *max_retries,
+                }
+            }
             GeneratorSpec::Conditional { .. }
-            | GeneratorSpec::Unique { .. }
             | GeneratorSpec::Relative { .. }
             | GeneratorSpec::BusinessHours { .. } => {
                 // Fallback: treat as a constant placeholder.
@@ -1048,5 +1054,26 @@ mod tests {
         // "p + price" should match both
         let deps2 = extract_dependencies("p + price", &fields);
         assert_eq!(deps2.len(), 2);
+    }
+
+    #[test]
+    fn test_unique_spec_compiles_to_unique_plan() {
+        let inner_spec = GeneratorSpec::Sequence {
+            start: 1,
+            step: 1,
+            prefix: None,
+        };
+        let spec = GeneratorSpec::Unique {
+            inner: Box::new(inner_spec),
+            max_retries: 50,
+        };
+        let plan = compile_generator_from_spec(&spec, &[]);
+        match plan {
+            GeneratorPlan::Unique { inner, max_retries } => {
+                assert_eq!(max_retries, 50);
+                assert!(matches!(*inner, GeneratorPlan::Sequence { start: 1, step: 1 }));
+            }
+            other => panic!("expected GeneratorPlan::Unique, got {other:?}"),
+        }
     }
 }

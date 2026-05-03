@@ -17,6 +17,7 @@ pub mod pattern;
 pub mod sequence;
 pub mod temporal;
 pub mod topology;
+pub mod unique;
 pub mod uuid_gen;
 
 use knit_plan::GeneratorPlan;
@@ -97,6 +98,10 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             target_field.clone(),
             *correlation,
         )),
+        GeneratorPlan::Unique { inner, max_retries } => {
+            let inner_gen = create_generator(inner);
+            Box::new(unique::UniqueGenerator::new(inner_gen, *max_retries))
+        }
         GeneratorPlan::Topology { model, params } => match model {
             knit_plan::TopologyModel::BarabasiAlbert => {
                 Box::new(topology::BarabasiAlbertGenerator::new(params))
