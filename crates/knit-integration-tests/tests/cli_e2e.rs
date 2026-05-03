@@ -644,9 +644,7 @@ fn learn_from_parquet_produces_valid_schema() {
 
 #[test]
 fn learn_from_jsonl_produces_valid_schema() {
-    // The learn ingestion expects newline-delimited JSON (JSONL), not JSON arrays.
-    // Note: `knit generate --format json` outputs arrays, which is a known
-    // incompatibility tracked separately. This test verifies JSONL ingestion.
+    // Verifies JSONL (newline-delimited JSON) ingestion.
     let data_dir = TempDir::new().unwrap();
     let jsonl_path = data_dir.path().join("items.jsonl");
     fs::write(
@@ -676,6 +674,38 @@ fn learn_from_jsonl_produces_valid_schema() {
     assert!(learned_schema.exists());
 
     // Validate
+    knit()
+        .args(["validate", learned_schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn learn_from_json_array_produces_valid_schema() {
+    // JSON arrays (as produced by `knit generate --format json`) should work with learn.
+    let data_dir = TempDir::new().unwrap();
+    let json_path = data_dir.path().join("items.json");
+    fs::write(
+        &json_path,
+        r#"[{"id":1,"value":42.5,"label":"alpha"},{"id":2,"value":88.1,"label":"beta"},{"id":3,"value":15.3,"label":"gamma"},{"id":4,"value":67.9,"label":"alpha"},{"id":5,"value":23.4,"label":"beta"}]"#,
+    )
+    .unwrap();
+
+    let learned_schema = data_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            data_dir.path().to_str().unwrap(),
+            "-o",
+            learned_schema.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(learned_schema.exists());
+
+    // Validate the inferred schema
     knit()
         .args(["validate", learned_schema.to_str().unwrap()])
         .assert()
