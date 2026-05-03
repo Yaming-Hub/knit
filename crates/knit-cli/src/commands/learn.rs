@@ -24,7 +24,7 @@ use knit_learn::profile::{compute_profiles, ColumnProfile};
 use knit_learn::relationships::{detect_relationships, RelColumn, TableProfile};
 use knit_learn::schema_assembly::{assemble_data_model, ColumnAnalysis, TableAnalysis};
 use knit_learn::temporal::{detect_temporal_pattern, TemporalPatternSpec};
-use knit_learn::type_inference::{infer_type, InferredType};
+use knit_learn::type_inference::{infer_type, InferredType, StringPattern};
 
 /// Intermediate struct for TOML serialization matching the Weave schema format.
 #[derive(Serialize)]
@@ -254,12 +254,11 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         ca.is_primary_key = rc.is_primary_key;
     }
 
-    let analysis = TableAnalysis {
-        name: table.entity.clone(),
-        columns: col_analyses,
-        relationships: Vec::new(),
-        correlations: Vec::new(),
-    };
+    let analysis = TableAnalysis::new(
+        table.entity.clone(),
+        col_analyses,
+        row_count,
+    );
 
     let rel_profile = TableProfile {
         name: table.entity.clone(),
@@ -318,6 +317,9 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     }
 
     // String columns → type inference and categorical fitting
+    let mut inferred_type: Option<InferredType> = None;
+    let mut string_patterns: Vec<(StringPattern, f64)> = Vec::new();
+
     if profile.string.is_some() {
         let string_values = extract_string_values(batch, &profile.name);
         let refs: Vec<Option<&str>> = string_values.iter().map(|s| s.as_deref()).collect();
@@ -325,6 +327,9 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         if !refs.is_empty() {
             let inference = infer_type(&refs, 0.05);
             confidence = inference.confidence;
+            string_patterns = inference.patterns.into_iter().collect();
+            // Sort by match rate descending for deterministic generator selection
+            string_patterns.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
             match inference.inferred_type {
                 InferredType::Categorical => {
@@ -333,6 +338,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                     let mut weights: Vec<(String, f64)> = cat_fit.weights.into_iter().collect();
                     weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                     categorical_weights = Some(weights);
+                    inferred_type = Some(InferredType::Categorical);
                 }
                 InferredType::Integer | InferredType::Float => {
                     // Try parsing as numeric for distribution fitting
@@ -343,21 +349,22 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                     if !nums.is_empty() {
                         distribution = fit_distribution(&nums);
                     }
+                    inferred_type = Some(inference.inferred_type);
                 }
-                _ => {}
+                ref other => {
+                    inferred_type = Some(other.clone());
+                }
             }
         }
     }
 
-    ColumnAnalysis {
-        name: profile.name.clone(),
-        is_primary_key: false, // set later by analyse_table
-        distribution,
-        temporal_pattern,
-        categorical_weights,
-        null_rate: profile.null_rate,
-        confidence,
-    }
+    let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, confidence);
+    ca.distribution = distribution;
+    ca.temporal_pattern = temporal_pattern;
+    ca.categorical_weights = categorical_weights;
+    ca.inferred_type = inferred_type;
+    ca.string_patterns = string_patterns;
+    ca
 }
 
 /// Extract f64 values from a numeric column in a record batch.

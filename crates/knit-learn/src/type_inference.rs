@@ -170,7 +170,7 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         distinct.insert(v);
     }
     let cardinality_ratio = distinct.len() as f64 / total;
-    if cardinality_ratio <= categorical_threshold && distinct.len() <= 50 {
+    if cardinality_ratio <= categorical_threshold && distinct.len() <= 200 {
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,

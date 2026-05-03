@@ -225,53 +225,21 @@ fn schema_assembly_produces_valid_model() {
     assert!(score_fit.is_some(), "score distribution fit failed");
     assert!(uniform_fit.is_some(), "uniform_val distribution fit failed");
 
-    let columns = vec![
-        ColumnAnalysis {
-            name: "id".to_string(),
-            is_primary_key: true,
-            distribution: None,
-            temporal_pattern: None,
-            categorical_weights: None,
-            null_rate: 0.0,
-            confidence: 1.0,
-        },
-        ColumnAnalysis {
-            name: "score".to_string(),
-            is_primary_key: false,
-            distribution: score_fit,
-            temporal_pattern: None,
-            categorical_weights: None,
-            null_rate: 0.0,
-            confidence: 0.95,
-        },
-        ColumnAnalysis {
-            name: "category".to_string(),
-            is_primary_key: false,
-            distribution: None,
-            temporal_pattern: None,
-            categorical_weights: Some(
-                cat_fit.weights.into_iter().collect(),
-            ),
-            null_rate: 0.0,
-            confidence: 0.9,
-        },
-        ColumnAnalysis {
-            name: "uniform_val".to_string(),
-            is_primary_key: false,
-            distribution: uniform_fit,
-            temporal_pattern: None,
-            categorical_weights: None,
-            null_rate: 0.0,
-            confidence: 0.95,
-        },
-    ];
+    let mut id_col = ColumnAnalysis::new("id".to_string(), 0.0, 1.0);
+    id_col.is_primary_key = true;
 
-    let analysis = TableAnalysis {
-        name: "samples".to_string(),
-        columns,
-        relationships: vec![],
-        correlations: vec![],
-    };
+    let mut score_col = ColumnAnalysis::new("score".to_string(), 0.0, 0.95);
+    score_col.distribution = score_fit;
+
+    let mut cat_col = ColumnAnalysis::new("category".to_string(), 0.0, 0.9);
+    cat_col.categorical_weights = Some(cat_fit.weights.into_iter().collect());
+
+    let mut uniform_col = ColumnAnalysis::new("uniform_val".to_string(), 0.0, 0.95);
+    uniform_col.distribution = uniform_fit;
+
+    let columns = vec![id_col, score_col, cat_col, uniform_col];
+
+    let analysis = TableAnalysis::new("samples".to_string(), columns, 1000);
 
     // Assemble a DataModel from the inferred analysis
     let model = assemble_data_model("roundtrip_inferred", &[analysis]);
