@@ -15,6 +15,7 @@ knit-plan = { path = "../knit-plan" }
 knit-gen = { path = "../knit-gen" }
 knit-noise = { path = "../knit-noise" }
 knit-bind = { path = "../knit-bind" }
+knit-learn = { path = "../knit-learn" }
 
 clap = { version = "4", features = ["derive"] }
 indicatif = "0.17"

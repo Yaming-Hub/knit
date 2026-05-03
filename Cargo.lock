@@ -923,6 +923,7 @@ dependencies = [
  "knit-bind",
  "knit-core",
  "knit-gen",
+ "knit-learn",
  "knit-noise",
  "knit-plan",
  "knit-schema",

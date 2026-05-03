@@ -235,17 +235,54 @@ explaining each generator type.
 
 ## `knit learn`
 
-> ⚠️ **Not yet implemented.** Running `knit learn` today prints a placeholder
-> message and exits. See the [Reverse Engineering Guide](learn.md) for the
-> planned functionality.
+Infer a Weave schema from existing data files or a directory of files.
 
 ```bash
-knit learn <PATH>
+knit learn <PATH> [OPTIONS]
 ```
 
-The `learn` command currently accepts a path argument but has no additional
-flags. The `-o`, `--format`, and `--review` flags described in early design
-documents are not yet available.
+### Options
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--output <PATH>` | `-o` | `learned.weave.toml` | Output schema file path |
+
+### Examples
+
+```bash
+# Learn from a single CSV file
+knit learn data/sales.csv
+
+# Learn from a Parquet file with custom output
+knit learn data/events.parquet -o events.weave.toml
+
+# Learn from a directory of files (each file → one entity)
+knit learn data/
+
+# Verbose logging to see analysis details
+knit learn data/sales.csv -v
+```
+
+### Supported Input Formats
+
+| Format | Extension |
+|--------|-----------|
+| CSV | `.csv` |
+| TSV | `.tsv` |
+| Parquet | `.parquet` |
+| JSON | `.json` |
+| JSON Lines | `.jsonl` |
+
+### What It Does
+
+1. **Ingest** — reads files into Arrow record batches
+2. **Profile** — computes statistics for every column
+3. **Infer types** — detects semantic types in string columns
+4. **Fit distributions** — MLE fitting with KS-test scoring
+5. **Detect temporal patterns** — periodicity and schedule detection
+6. **Detect relationships** — FK inference via naming and value overlap
+7. **Detect correlations** — Pearson, Spearman, and Cramér's V
+8. **Assemble schema** — writes a Weave TOML with confidence annotations
 
 ---
 

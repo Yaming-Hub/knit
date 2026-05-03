@@ -1,36 +1,26 @@
 # Reverse Engineering Guide
 
-> ⚠️ **Not Yet Implemented:** The `knit learn` command is planned but not yet
-> implemented. Running `knit learn` today will print a placeholder message and
-> exit. This page describes the **planned** functionality for future releases.
-> All CLI examples below are aspirational — they will not work until the
-> feature is completed.
-
-Knit will be able to analyze existing datasets and automatically infer a
-Weave schema — the reverse of data generation. This will be useful when you
+Knit can analyze existing datasets and automatically infer a
+Weave schema — the reverse of data generation. This is useful when you
 have production data and want to generate realistic synthetic equivalents.
 
 **[← Back to User Guide](index.md)**
 
 ---
 
-## What `knit learn` Will Do
+## What `knit learn` Does
 
-When implemented, the `knit learn` command will read your data, profile every
-column, fit statistical distributions, detect relationships, and output a
+The `knit learn` command reads your data, profiles every column, fits
+statistical distributions, detects relationships, and outputs a
 `.weave.toml` schema that can reproduce data with similar characteristics.
 
 ```bash
-# PLANNED — not yet implemented
 knit learn data/users.csv
+knit learn data/users.csv -o my_schema.weave.toml
 ```
 
-The output schema will include **confidence annotations** on every inferred
+The output schema includes **confidence annotations** on every inferred
 element, so you know which decisions are solid and which need manual review.
-
-> **Current status:** `knit learn <PATH>` accepts a path argument but only
-> prints a placeholder message. The flags `-o`, `--format`, and `--review`
-> shown below do not exist yet.
 
 ---
 
@@ -43,10 +33,9 @@ element, so you know which decisions are solid and which need manual review.
 | JSON | `.json` | Expects an array of objects |
 | JSON Lines | `.jsonl` | One JSON object per line |
 
-You will also be able to point `knit learn` at a **directory** of files:
+You can also point `knit learn` at a **directory** of files:
 
 ```bash
-# PLANNED — not yet implemented
 knit learn data/users/
 knit learn data/
 ```
@@ -181,19 +170,7 @@ All inferred information is assembled into a complete Weave schema with:
 
 ---
 
-## Planned Usage (Not Yet Implemented)
-
-The examples below show the **planned** interface. None of these commands
-work today.
-
-### Basic Usage
-
-```bash
-# PLANNED — not yet implemented
-knit learn data/sales.csv
-knit learn data/events.parquet
-knit learn data/
-```
+## Planned Features
 
 ### Interactive Review Mode (Planned)
 
@@ -205,13 +182,13 @@ An interactive review mode is planned for low-confidence decisions:
   Accept? [Y/n/edit]
 ```
 
-### Roundtrip Workflow (Planned)
+### Roundtrip Workflow
 
-A common workflow will be to learn a schema, tune it, and generate:
+A common workflow is to learn a schema, tune it, and generate:
 
 ```bash
-# Step 1: Infer schema from production data (PLANNED)
-knit learn prod_export.csv
+# Step 1: Infer schema from production data
+knit learn prod_export.csv -o schema.weave.toml
 
 # Step 2: Review and tune the schema (edit in your editor)
 # - Adjust distributions
