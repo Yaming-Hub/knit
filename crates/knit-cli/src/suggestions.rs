@@ -19,16 +19,21 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
 
     if lower.contains("unknown generator type") && lower.contains("faker") {
         return Some(
-            "Faker generators are not yet supported. Use 'pattern' for formatted strings \
-             or 'one_of' for categorical values.",
+            "Ensure the faker method name is correct. Example: \
+             type = \"faker\", method = \"name\", args = [].",
         );
     }
 
-    if lower.contains("unknown generator type") {
-        return Some(
-            "Check the generator type spelling. Supported types: sequence, distribution, \
-             constant, uuid, one_of, pattern, derived, composite, temporal, correlated, topology.",
-        );
+    if lower.contains("unknown generator type") || lower.contains("unknown variant") {
+        // Only suggest generator types when the error mentions generator/type context,
+        // not for other enum deserialization failures (DataType, DistributionKind, etc.)
+        if lower.contains("generator") || lower.contains("type") {
+            return Some(
+                "Check the generator type spelling. Supported types: distribution, faker, \
+                 sequence, one_of, pattern, derived, conditional, composite, lookup, constant, \
+                 uuid, unique, relative, business_hours.",
+            );
+        }
     }
 
     if lower.contains("entity") && lower.contains("not found") {
@@ -63,10 +68,24 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
         );
     }
 
+    if lower.contains("distribution requires") && lower.contains("param") {
+        return Some(
+            "Distribution parameters must be in a [entities.fields.generator.params] sub-table. \
+             Example: [entities.fields.generator.params] mean = 50.0, std_dev = 10.0.",
+        );
+    }
+
     if lower.contains("permission denied") || lower.contains("access") {
         return Some(
             "Check file permissions on the schema file and output directory. \
              On Unix, try: chmod +r <schema> && chmod +w <output-dir>.",
+        );
+    }
+
+    if lower.contains("toml parse error") {
+        return Some(
+            "Check TOML syntax near the reported line. Common issues: missing quotes \
+             around strings, duplicate keys, or incorrect table nesting.",
         );
     }
 
@@ -81,7 +100,7 @@ mod tests {
     fn suggests_for_faker() {
         let msg = suggest_fix("unknown generator type 'faker'");
         assert!(msg.is_some());
-        assert!(msg.unwrap().contains("pattern"));
+        assert!(msg.unwrap().contains("faker"));
     }
 
     #[test]
@@ -89,6 +108,20 @@ mod tests {
         let msg = suggest_fix("unknown generator type 'foobar'");
         assert!(msg.is_some());
         assert!(msg.unwrap().contains("Supported types"));
+    }
+
+    #[test]
+    fn suggests_for_unknown_variant() {
+        let msg = suggest_fix("unknown variant `temporal`, expected one of type variants");
+        assert!(msg.is_some());
+        assert!(msg.unwrap().contains("Supported types"));
+    }
+
+    #[test]
+    fn no_suggestion_for_non_generator_variant() {
+        // DataType or DistributionKind enum errors should NOT get a generator hint
+        let msg = suggest_fix("unknown variant `strng` for field data format");
+        assert!(msg.is_none());
     }
 
     #[test]
@@ -122,5 +155,19 @@ mod tests {
         let msg = suggest_fix("invalid schema_version format");
         assert!(msg.is_some());
         assert!(msg.unwrap().contains("1.0"));
+    }
+
+    #[test]
+    fn suggests_for_distribution_params() {
+        let msg = suggest_fix("distribution requires parameter 'mean'");
+        assert!(msg.is_some());
+        assert!(msg.unwrap().contains("sub-table"));
+    }
+
+    #[test]
+    fn suggests_for_toml_parse() {
+        let msg = suggest_fix("toml parse error at line 12");
+        assert!(msg.is_some());
+        assert!(msg.unwrap().contains("TOML syntax"));
     }
 }
