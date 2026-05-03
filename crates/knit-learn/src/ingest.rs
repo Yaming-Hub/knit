@@ -104,20 +104,30 @@ pub fn read_parquet(path: &Path) -> LearnResult<Vec<RecordBatch>> {
 /// Supports both JSON arrays (`[{...}, {...}]`) and JSONL (one object per line).
 /// If the file starts with `[`, it is treated as a JSON array and each element
 /// is converted to a newline-delimited object before passing to Arrow's reader.
+/// JSONL files are streamed directly from disk without buffering the entire file.
 ///
 /// # Errors
 ///
 /// Returns `LearnError` if the file cannot be opened or parsed.
 pub fn read_json(path: &Path, batch_size: usize) -> LearnResult<Vec<RecordBatch>> {
+    use std::io::{BufReader, Read};
+
     info!(path = %path.display(), "Reading JSON file");
 
     // Peek at the first non-whitespace byte to detect format
-    let raw = std::fs::read_to_string(path)?;
-    let trimmed = raw.trim_start();
+    let mut peek_buf = [0u8; 64];
+    let mut file = File::open(path)?;
+    let n = file.read(&mut peek_buf)?;
+    let first_char = peek_buf[..n]
+        .iter()
+        .find(|b| !b.is_ascii_whitespace())
+        .copied();
 
-    let data: Vec<u8> = if trimmed.starts_with('[') {
-        // JSON array: parse and re-serialize as JSONL
+    if first_char == Some(b'[') {
+        // JSON array: must buffer to convert to JSONL for Arrow
         debug!("Detected JSON array format, converting to JSONL");
+        let raw = std::fs::read_to_string(path)?;
+        let trimmed = raw.trim_start();
         let arr: Vec<serde_json::Value> = serde_json::from_str(trimmed).map_err(|e| {
             LearnError::Arrow(arrow::error::ArrowError::JsonError(format!(
                 "Failed to parse JSON array: {e}"
@@ -132,27 +142,34 @@ pub fn read_json(path: &Path, batch_size: usize) -> LearnResult<Vec<RecordBatch>
             })?;
             buf.push(b'\n');
         }
-        buf
+
+        let (inferred_schema, _) =
+            arrow_json::reader::infer_json_schema(std::io::Cursor::new(&buf), None)?;
+        let schema = Arc::new(inferred_schema);
+        debug!(fields = schema.fields().len(), "Inferred JSON schema");
+
+        let reader = JsonReaderBuilder::new(schema)
+            .with_batch_size(batch_size)
+            .build(std::io::Cursor::new(buf))?;
+        let batches: Vec<RecordBatch> = reader.collect::<Result<Vec<_>, _>>()?;
+        info!(batches = batches.len(), "JSON array ingestion complete");
+        Ok(batches)
     } else {
-        // Already JSONL
-        raw.into_bytes()
-    };
+        // JSONL: stream directly from disk
+        let infer_file = File::open(path)?;
+        let (inferred_schema, _) =
+            arrow_json::reader::infer_json_schema(BufReader::new(infer_file), None)?;
+        let schema = Arc::new(inferred_schema);
+        debug!(fields = schema.fields().len(), "Inferred JSON schema");
 
-    // Infer schema
-    let (inferred_schema, _) =
-        arrow_json::reader::infer_json_schema(std::io::Cursor::new(&data), None)?;
-    let schema = Arc::new(inferred_schema);
-
-    debug!(fields = schema.fields().len(), "Inferred JSON schema");
-
-    // Build reader
-    let reader = JsonReaderBuilder::new(schema)
-        .with_batch_size(batch_size)
-        .build(std::io::Cursor::new(&data))?;
-    let batches: Vec<RecordBatch> = reader.collect::<Result<Vec<_>, _>>()?;
-
-    info!(batches = batches.len(), "JSON ingestion complete");
-    Ok(batches)
+        let file = File::open(path)?;
+        let reader = JsonReaderBuilder::new(schema)
+            .with_batch_size(batch_size)
+            .build(BufReader::new(file))?;
+        let batches: Vec<RecordBatch> = reader.collect::<Result<Vec<_>, _>>()?;
+        info!(batches = batches.len(), "JSON ingestion complete");
+        Ok(batches)
+    }
 }
 
 /// Detect file format from extension and read into record batches.
