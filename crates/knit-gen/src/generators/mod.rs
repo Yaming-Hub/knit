@@ -10,6 +10,7 @@ pub mod constant;
 pub mod correlation;
 pub mod derived;
 pub mod distribution;
+pub mod faker;
 pub mod fk;
 pub mod one_of;
 pub mod pattern;
@@ -25,8 +26,8 @@ use crate::traits::FieldGenerator;
 /// Create a boxed [`FieldGenerator`] from a compiled [`GeneratorPlan`].
 ///
 /// This is the factory function invoked once per field during engine
-/// initialisation. The `Faker` and `ForeignKey` variants are not yet
-/// implemented and return placeholder null generators with a `tracing::warn`.
+/// initialisation. The `ForeignKey` variant is not yet implemented and
+/// returns a placeholder null generator with a `tracing::warn`.
 ///
 /// # Panics
 ///
@@ -65,8 +66,11 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::Composite { element, length } => {
             Box::new(composite::CompositeGenerator::new(element, length))
         }
-        // Placeholders for future PRs.
-        GeneratorPlan::Faker { .. } | GeneratorPlan::ForeignKey { .. } => {
+        GeneratorPlan::Faker { category, locale } => {
+            Box::new(faker::FakerGenerator::new(category.clone(), locale.clone()))
+        }
+        // Placeholder for future PR.
+        GeneratorPlan::ForeignKey { .. } => {
             tracing::warn!(plan = %format!("{plan:?}"), "using placeholder null generator");
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }

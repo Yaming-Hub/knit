@@ -418,7 +418,7 @@ Knit also includes these generators:
 
 | Generator | Purpose | Status |
 |-----------|---------|--------|
-| `faker` | Locale-aware realistic data (names, addresses, companies) | ⚠️ Compiles but outputs placeholder nulls |
+| `faker` | Locale-aware realistic data (names, addresses, companies) | ✅ Working |
 | `composite` | Generate arrays of values | ✅ Working |
 | `conditional` | Choose generator based on another field's value | ❌ Not yet implemented (produces null) |
 | `unique` | Wrapper enforcing uniqueness on any generator | ❌ Not yet implemented (produces null) |
