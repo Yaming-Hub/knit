@@ -558,10 +558,10 @@ fn learn_from_parquet_produces_valid_schema() {
 }
 
 #[test]
-fn learn_from_json_produces_valid_schema() {
-    // Note: knit generates JSON as arrays (standard JSON), but the learn
-    // ingestion expects newline-delimited JSON (JSONL). Use JSONL format
-    // for learn round-trip. This test uses a hand-crafted JSONL file.
+fn learn_from_jsonl_produces_valid_schema() {
+    // The learn ingestion expects newline-delimited JSON (JSONL), not JSON arrays.
+    // Note: `knit generate --format json` outputs arrays, which is a known
+    // incompatibility tracked separately. This test verifies JSONL ingestion.
     let data_dir = TempDir::new().unwrap();
     let jsonl_path = data_dir.path().join("items.jsonl");
     fs::write(
