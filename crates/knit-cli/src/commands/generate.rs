@@ -507,15 +507,16 @@ fn format_bytes(b: u64) -> String {
 ///
 /// All perturbators for the same entity are merged into one pipeline so that
 /// the pipeline's internal stage ordering (clean → constrained → breaking)
-/// is respected. Each perturbator is added with its own rate via
-/// [`Pipeline::add_with_rate`], so noise types with different probabilities
-/// are correctly applied without over-perturbation.
+/// is respected. Each perturbator carries its own rate and column filter
+/// overrides via [`PerturbOverrides`], so multiple profiles targeting the
+/// same entity with different rates and column sets work correctly.
 fn build_noise_pipelines(
     profiles: &[NoiseProfile],
     model_seed: u64,
 ) -> HashMap<String, Pipeline> {
     use knit_noise::{
         NullInjector, TypoInjector, OutlierInjector, DuplicateInjector,
+        PerturbOverrides,
     };
 
     let mut entity_pipelines: HashMap<String, Pipeline> = HashMap::new();
@@ -536,9 +537,9 @@ fn build_noise_pipelines(
         }
 
         let col_filter = if profile.fields.is_empty() {
-            ColumnFilter::All
+            None // use pipeline default (All)
         } else {
-            ColumnFilter::ByName(profile.fields.clone())
+            Some(ColumnFilter::ByName(profile.fields.clone()))
         };
 
         let prof_seed = model_seed.wrapping_add(prof_idx as u64 * 1000);
@@ -546,27 +547,30 @@ fn build_noise_pipelines(
         let pipeline = entity_pipelines
             .entry(profile.entity.clone())
             .or_insert_with(|| {
-                // Pipeline default probability is unused — each perturbator
-                // gets its own rate via add_with_rate().
                 let cfg = PerturbConfig::default()
                     .with_probability(0.0)
-                    .with_seed(prof_seed)
-                    .with_columns_filter(col_filter.clone());
+                    .with_seed(prof_seed);
                 Pipeline::new(cfg)
             });
 
-        // Add perturbators with their individual rates
+        // Helper to build overrides with this profile's rate and column filter.
+        let make_overrides = |rate: f64| PerturbOverrides {
+            probability: Some(rate),
+            columns: col_filter.clone(),
+        };
+
+        // Add perturbators with their individual rates and column filters
         if profile.null_rate > 0.0 {
-            pipeline.add_with_rate(Box::new(NullInjector::new()), profile.null_rate);
+            pipeline.add_with_overrides(Box::new(NullInjector::new()), make_overrides(profile.null_rate));
         }
         if profile.typo_rate > 0.0 {
-            pipeline.add_with_rate(Box::new(TypoInjector::new()), profile.typo_rate);
+            pipeline.add_with_overrides(Box::new(TypoInjector::new()), make_overrides(profile.typo_rate));
         }
         if profile.outlier_rate > 0.0 {
-            pipeline.add_with_rate(Box::new(OutlierInjector::new(5.0)), profile.outlier_rate);
+            pipeline.add_with_overrides(Box::new(OutlierInjector::new(5.0)), make_overrides(profile.outlier_rate));
         }
         if profile.duplicate_rate > 0.0 {
-            pipeline.add_with_rate(Box::new(DuplicateInjector::new()), profile.duplicate_rate);
+            pipeline.add_with_overrides(Box::new(DuplicateInjector::new()), make_overrides(profile.duplicate_rate));
         }
     }
 

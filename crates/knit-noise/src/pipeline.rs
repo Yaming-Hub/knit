@@ -15,7 +15,7 @@ use rand_chacha::ChaCha8Rng;
 use tracing::{debug, info, instrument};
 
 use crate::error::NoiseError;
-use crate::traits::{InvariantSet, PerturbConfig, Perturbator};
+use crate::traits::{ColumnFilter, InvariantSet, PerturbConfig, Perturbator};
 
 /// Categorises a perturbator into a pipeline stage.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -37,13 +37,23 @@ fn classify(invariants: InvariantSet) -> Stage {
     }
 }
 
+/// Per-perturbator overrides for rate and column filter.
+#[derive(Debug, Clone, Default)]
+pub struct PerturbOverrides {
+    /// Probability override (clamped to `[0.0, 1.0]`).
+    pub probability: Option<f64>,
+    /// Column filter override. If `None`, uses the pipeline default.
+    pub columns: Option<ColumnFilter>,
+}
+
 /// Three-stage perturbation pipeline.
 ///
-/// Add perturbators with [`Pipeline::add`] or [`Pipeline::add_with_rate`],
-/// then call [`Pipeline::run`] to apply them all in the correct stage order.
+/// Add perturbators with [`Pipeline::add`], [`Pipeline::add_with_rate`], or
+/// [`Pipeline::add_with_overrides`], then call [`Pipeline::run`] to apply
+/// them all in the correct stage order.
 ///
-/// Each perturbator can have its own probability override. If not set,
-/// the pipeline's default probability from [`PerturbConfig`] is used.
+/// Each perturbator can have its own probability and column filter overrides.
+/// If not set, the pipeline's defaults from [`PerturbConfig`] are used.
 ///
 /// # Example
 ///
@@ -54,7 +64,7 @@ fn classify(invariants: InvariantSet) -> Stage {
 /// let noisy = pipe.run(batch)?;
 /// ```
 pub struct Pipeline {
-    perturbators: Vec<(Box<dyn Perturbator>, Option<f64>)>,
+    perturbators: Vec<(Box<dyn Perturbator>, PerturbOverrides)>,
     config: PerturbConfig,
 }
 
@@ -67,16 +77,29 @@ impl Pipeline {
         }
     }
 
-    /// Append a perturbator using the pipeline's default probability.
+    /// Append a perturbator using the pipeline's default probability and columns.
     pub fn add(&mut self, p: Box<dyn Perturbator>) {
-        self.perturbators.push((p, None));
+        self.perturbators.push((p, PerturbOverrides::default()));
     }
 
     /// Append a perturbator with a specific probability override.
     ///
-    /// The `rate` overrides `config.probability` for this perturbator only.
+    /// The `rate` is clamped to `[0.0, 1.0]` and overrides `config.probability`
+    /// for this perturbator only.
     pub fn add_with_rate(&mut self, p: Box<dyn Perturbator>, rate: f64) {
-        self.perturbators.push((p, Some(rate)));
+        self.perturbators.push((p, PerturbOverrides {
+            probability: Some(rate.clamp(0.0, 1.0)),
+            columns: None,
+        }));
+    }
+
+    /// Append a perturbator with full overrides for probability and column filter.
+    pub fn add_with_overrides(&mut self, p: Box<dyn Perturbator>, overrides: PerturbOverrides) {
+        let mut overrides = overrides;
+        if let Some(rate) = overrides.probability {
+            overrides.probability = Some(rate.clamp(0.0, 1.0));
+        }
+        self.perturbators.push((p, overrides));
     }
 
     /// Execute all perturbators in stage order against `batch`.
@@ -121,20 +144,19 @@ impl Pipeline {
         );
 
         for (stage, idx) in &order {
-            let (p, rate_override) = &self.perturbators[*idx];
+            let (p, overrides) = &self.perturbators[*idx];
             // Derive uncorrelated per-perturbator seed using XOR with rotated index
             let derived_seed = base_seed ^ (*idx as u64).wrapping_mul(0x9E3779B97F4A7C15);
             let mut rng = ChaCha8Rng::seed_from_u64(derived_seed);
 
-            // Use per-perturbator rate if set, otherwise pipeline default.
-            let effective_config = match rate_override {
-                Some(rate) => {
-                    let mut cfg = self.config.clone();
-                    cfg.probability = *rate;
-                    cfg
-                }
-                None => self.config.clone(),
-            };
+            // Build effective config with per-perturbator overrides.
+            let mut effective_config = self.config.clone();
+            if let Some(rate) = overrides.probability {
+                effective_config.probability = rate;
+            }
+            if let Some(ref cols) = overrides.columns {
+                effective_config.columns = cols.clone();
+            }
 
             debug!(
                 perturbator = p.name(),
