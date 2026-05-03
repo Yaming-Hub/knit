@@ -22,5 +22,8 @@
 pub mod error;
 pub mod types;
 
+#[cfg(test)]
+mod tests;
+
 pub use error::*;
 pub use types::*;
