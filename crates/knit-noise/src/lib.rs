@@ -41,7 +41,7 @@ pub mod format_corruptor;
 
 pub use error::NoiseError;
 pub use traits::{Perturbator, InvariantSet, PerturbConfig, ColumnFilter};
-pub use pipeline::Pipeline;
+pub use pipeline::{Pipeline, PerturbOverrides};
 pub use null_injector::NullInjector;
 pub use gaussian_noise::GaussianNoise;
 pub use typo_injector::TypoInjector;

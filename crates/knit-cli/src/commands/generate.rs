@@ -507,29 +507,16 @@ fn format_bytes(b: u64) -> String {
 ///
 /// All perturbators for the same entity are merged into one pipeline so that
 /// the pipeline's internal stage ordering (clean → constrained → breaking)
-/// is respected. The highest probability across profiles is used as the
-/// pipeline-level config; individual perturbators respect their own rate
-/// through the pipeline's probability setting per type.
-///
-/// Since the Pipeline uses one global probability for all its perturbators,
-/// we create separate pipelines per noise *type* with the correct rate,
-/// but collect them into a wrapper that runs them in stage order.
-/// Actually — to preserve correct ordering — we use a single Pipeline
-/// with the default probability, and accept that all perturbators share it.
-/// For fine-grained per-type rates, we use one Pipeline per entity with
-/// the maximum rate and rely on each perturbator only affecting its target
-/// type... BUT the current Perturbator trait doesn't support per-instance rates.
-///
-/// **Chosen approach:** One Pipeline per entity. The pipeline probability is
-/// set to the maximum rate across all noise types. This is an approximation
-/// that slightly over-perturbs for lower-rate types. A future improvement
-/// would add per-perturbator rate configuration.
+/// is respected. Each perturbator carries its own rate and column filter
+/// overrides via [`PerturbOverrides`], so multiple profiles targeting the
+/// same entity with different rates and column sets work correctly.
 fn build_noise_pipelines(
     profiles: &[NoiseProfile],
     model_seed: u64,
 ) -> HashMap<String, Pipeline> {
     use knit_noise::{
         NullInjector, TypoInjector, OutlierInjector, DuplicateInjector,
+        PerturbOverrides,
     };
 
     let mut entity_pipelines: HashMap<String, Pipeline> = HashMap::new();
@@ -540,20 +527,19 @@ fn build_noise_pipelines(
             continue;
         }
 
-        // Compute the maximum rate across all noise types in this profile
-        let max_rate = profile.null_rate
-            .max(profile.typo_rate)
-            .max(profile.outlier_rate)
-            .max(profile.duplicate_rate);
+        let has_any = profile.null_rate > 0.0
+            || profile.typo_rate > 0.0
+            || profile.outlier_rate > 0.0
+            || profile.duplicate_rate > 0.0;
 
-        if max_rate <= 0.0 {
+        if !has_any {
             continue;
         }
 
         let col_filter = if profile.fields.is_empty() {
-            ColumnFilter::All
+            None // use pipeline default (All)
         } else {
-            ColumnFilter::ByName(profile.fields.clone())
+            Some(ColumnFilter::ByName(profile.fields.clone()))
         };
 
         let prof_seed = model_seed.wrapping_add(prof_idx as u64 * 1000);
@@ -562,24 +548,29 @@ fn build_noise_pipelines(
             .entry(profile.entity.clone())
             .or_insert_with(|| {
                 let cfg = PerturbConfig::default()
-                    .with_probability(max_rate)
-                    .with_seed(prof_seed)
-                    .with_columns_filter(col_filter.clone());
+                    .with_probability(0.0)
+                    .with_seed(prof_seed);
                 Pipeline::new(cfg)
             });
 
-        // Add perturbators based on non-zero rates
+        // Helper to build overrides with this profile's rate and column filter.
+        let make_overrides = |rate: f64| PerturbOverrides {
+            probability: Some(rate),
+            columns: col_filter.clone(),
+        };
+
+        // Add perturbators with their individual rates and column filters
         if profile.null_rate > 0.0 {
-            pipeline.add(Box::new(NullInjector::new()));
+            pipeline.add_with_overrides(Box::new(NullInjector::new()), make_overrides(profile.null_rate));
         }
         if profile.typo_rate > 0.0 {
-            pipeline.add(Box::new(TypoInjector::new()));
+            pipeline.add_with_overrides(Box::new(TypoInjector::new()), make_overrides(profile.typo_rate));
         }
         if profile.outlier_rate > 0.0 {
-            pipeline.add(Box::new(OutlierInjector::new(5.0)));
+            pipeline.add_with_overrides(Box::new(OutlierInjector::new(5.0)), make_overrides(profile.outlier_rate));
         }
         if profile.duplicate_rate > 0.0 {
-            pipeline.add(Box::new(DuplicateInjector::new()));
+            pipeline.add_with_overrides(Box::new(DuplicateInjector::new()), make_overrides(profile.duplicate_rate));
         }
     }
 
