@@ -1090,6 +1090,27 @@ fn sorted_file_names(dir: &std::path::Path) -> Vec<String> {
 }
 
 #[test]
+fn learn_sample_zero_rejected() {
+    let tmp = TempDir::new().unwrap();
+    let csv_path = tmp.path().join("data.csv");
+    fs::write(&csv_path, "id,value\n1,10\n").unwrap();
+    let out = tmp.path().join("out.weave.toml");
+
+    knit()
+        .args([
+            "learn",
+            csv_path.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--sample",
+            "0",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("--sample must be at least 1"));
+}
+
+#[test]
 fn learn_sample_limits_rows() {
     let tmp = TempDir::new().unwrap();
 

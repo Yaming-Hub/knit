@@ -60,6 +60,10 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
         source
     );
 
+    if let Some(0) = sample {
+        anyhow::bail!("--sample must be at least 1");
+    }
+
     if !cli.quiet {
         eprintln!(
             "{} Analysing {}",
@@ -200,15 +204,12 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
             .and_then(|s| s.to_str())
             .unwrap_or("data")
             .to_string();
-        let batches = ingest::read_auto(path).map_err(|e| anyhow::anyhow!("{e}"))?;
+        let batches = ingest::read_auto_with_limit(path, max_rows)
+            .map_err(|e| anyhow::anyhow!("{e}"))?;
         let schema = batches
             .first()
             .map(|b| b.schema())
             .ok_or_else(|| anyhow::anyhow!("file produced no data"))?;
-        let batches = match max_rows {
-            Some(limit) => ingest::truncate_batches(batches, limit),
-            None => batches,
-        };
         Ok(vec![IngestionResult {
             entity,
             schema,

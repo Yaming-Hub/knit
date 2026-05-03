@@ -50,7 +50,19 @@ impl Default for CsvOptions {
 ///
 /// Returns `LearnError` if the file cannot be opened or parsed.
 pub fn read_csv(path: &Path, opts: &CsvOptions) -> LearnResult<Vec<RecordBatch>> {
-    info!(path = %path.display(), "Reading CSV file");
+    read_csv_with_limit(path, opts, None)
+}
+
+/// Read a CSV file with an optional row limit.
+///
+/// Stops reading batches from disk once `max_rows` is reached, avoiding
+/// full-file I/O for large CSVs.
+pub fn read_csv_with_limit(
+    path: &Path,
+    opts: &CsvOptions,
+    max_rows: Option<usize>,
+) -> LearnResult<Vec<RecordBatch>> {
+    info!(path = %path.display(), ?max_rows, "Reading CSV file");
 
     // Infer schema
     let mut schema_file = File::open(path)?;
@@ -68,9 +80,27 @@ pub fn read_csv(path: &Path, opts: &CsvOptions) -> LearnResult<Vec<RecordBatch>>
         .with_header(opts.has_header)
         .with_batch_size(opts.batch_size)
         .build(file)?;
-    let batches: Vec<RecordBatch> = reader.collect::<Result<Vec<_>, _>>()?;
 
-    info!(batches = batches.len(), "CSV ingestion complete");
+    let mut batches = Vec::new();
+    let mut rows_read: usize = 0;
+    for batch_result in reader {
+        let batch = batch_result?;
+        rows_read += batch.num_rows();
+        batches.push(batch);
+        if let Some(limit) = max_rows {
+            if rows_read >= limit {
+                break;
+            }
+        }
+    }
+
+    // Final truncation to exact limit (last batch may overshoot)
+    let batches = match max_rows {
+        Some(limit) => truncate_batches(batches, limit),
+        None => batches,
+    };
+
+    info!(batches = batches.len(), rows = rows_read, "CSV ingestion complete");
     Ok(batches)
 }
 
@@ -180,6 +210,12 @@ pub fn read_json(path: &Path, batch_size: usize) -> LearnResult<Vec<RecordBatch>
 ///
 /// Returns `LearnError::UnsupportedFormat` for unknown extensions.
 pub fn read_auto(path: &Path) -> LearnResult<Vec<RecordBatch>> {
+    read_auto_with_limit(path, None)
+}
+
+/// Read with an optional row limit. For CSV/TSV, stops I/O early.
+/// For Parquet/JSON, reads fully then truncates (documented limitation).
+pub fn read_auto_with_limit(path: &Path, max_rows: Option<usize>) -> LearnResult<Vec<RecordBatch>> {
     let ext = path
         .extension()
         .and_then(|e| e.to_str())
@@ -187,16 +223,28 @@ pub fn read_auto(path: &Path) -> LearnResult<Vec<RecordBatch>> {
         .to_lowercase();
 
     match ext.as_str() {
-        "csv" => read_csv(path, &CsvOptions::default()),
+        "csv" => read_csv_with_limit(path, &CsvOptions::default(), max_rows),
         "tsv" => {
             let opts = CsvOptions {
                 delimiter: b'\t',
                 ..Default::default()
             };
-            read_csv(path, &opts)
+            read_csv_with_limit(path, &opts, max_rows)
         }
-        "parquet" => read_parquet(path),
-        "json" | "jsonl" => read_json(path, 8192),
+        "parquet" => {
+            let batches = read_parquet(path)?;
+            Ok(match max_rows {
+                Some(limit) => truncate_batches(batches, limit),
+                None => batches,
+            })
+        }
+        "json" | "jsonl" => {
+            let batches = read_json(path, 8192)?;
+            Ok(match max_rows {
+                Some(limit) => truncate_batches(batches, limit),
+                None => batches,
+            })
+        }
         other => Err(LearnError::UnsupportedFormat(other.to_string())),
     }
 }
@@ -283,16 +331,11 @@ pub fn ingest_directory_with_limit(
             .unwrap_or("unknown")
             .to_string();
 
-        let batches = read_auto(&path)?;
+        let batches = read_auto_with_limit(&path, max_rows)?;
         let schema = if let Some(b) = batches.first() {
             b.schema()
         } else {
             continue;
-        };
-
-        let batches = match max_rows {
-            Some(limit) => truncate_batches(batches, limit),
-            None => batches,
         };
 
         results.push(IngestionResult {
