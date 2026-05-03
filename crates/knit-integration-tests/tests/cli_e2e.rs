@@ -701,10 +701,16 @@ fn learn_quiet_suppresses_output() {
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
+    // Filter out Windows incremental compilation notes
+    let meaningful_stderr: String = stderr
+        .lines()
+        .filter(|l| !l.contains("error finalizing incremental"))
+        .collect::<Vec<_>>()
+        .join("\n");
     assert!(
-        !stderr.contains("learn:") && !stderr.contains("profiling"),
-        "--quiet should suppress learn progress output, got: {}",
-        stderr
+        meaningful_stderr.trim().is_empty(),
+        "--quiet should suppress all learn output on stderr, got: {}",
+        meaningful_stderr
     );
 }
 
