@@ -51,7 +51,8 @@ struct RawOutputModel {
 ///
 /// `source` is a path to a single data file or a directory of files.
 /// `output` is the path where the generated schema will be written.
-pub fn run(source: &str, output: &str, cli: &crate::Cli) -> Result<()> {
+/// `sample` limits each entity to at most N rows for faster profiling.
+pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) -> Result<()> {
     let source_path = Path::new(source);
     anyhow::ensure!(
         source_path.exists(),
@@ -65,10 +66,13 @@ pub fn run(source: &str, output: &str, cli: &crate::Cli) -> Result<()> {
             "learn:".green().bold(),
             source.cyan()
         );
+        if let Some(n) = sample {
+            eprintln!("  {} sampling first {} rows per entity", "→".dimmed(), n);
+        }
     }
 
     // 1. Ingest
-    let tables = ingest_source(source_path)
+    let tables = ingest_source(source_path, sample)
         .with_context(|| format!("failed to ingest data from {source}"))?;
 
     if tables.is_empty() {
@@ -184,10 +188,10 @@ pub fn run(source: &str, output: &str, cli: &crate::Cli) -> Result<()> {
 }
 
 /// Ingest data from a file or directory into per-table batches.
-fn ingest_source(path: &Path) -> Result<Vec<IngestionResult>> {
+fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionResult>> {
     if path.is_dir() {
         info!(dir = %path.display(), "ingesting directory");
-        ingest::ingest_directory(path)
+        ingest::ingest_directory_with_limit(path, max_rows)
             .map_err(|e| anyhow::anyhow!("{e}"))
     } else {
         info!(file = %path.display(), "ingesting single file");
@@ -201,6 +205,10 @@ fn ingest_source(path: &Path) -> Result<Vec<IngestionResult>> {
             .first()
             .map(|b| b.schema())
             .ok_or_else(|| anyhow::anyhow!("file produced no data"))?;
+        let batches = match max_rows {
+            Some(limit) => ingest::truncate_batches(batches, limit),
+            None => batches,
+        };
         Ok(vec![IngestionResult {
             entity,
             schema,
@@ -595,6 +603,7 @@ mod tests {
         let result = run(
             csv_path.to_str().unwrap(),
             output_path.to_str().unwrap(),
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -634,6 +643,7 @@ mod tests {
         let result = run(
             dir.path().to_str().unwrap(),
             output_path.to_str().unwrap(),
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -650,7 +660,7 @@ mod tests {
 
     #[test]
     fn learn_nonexistent_path_errors() {
-        let result = run("nonexistent_path_12345.csv", "out.toml", &quiet_cli());
+        let result = run("nonexistent_path_12345.csv", "out.toml", None, &quiet_cli());
         assert!(result.is_err());
     }
 

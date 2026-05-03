@@ -212,17 +212,50 @@ pub struct IngestionResult {
     pub batches: Vec<RecordBatch>,
 }
 
+/// Truncate a list of record batches to at most `max_rows` total rows.
+///
+/// Returns early once the row budget is exhausted, slicing the last batch
+/// if needed.
+pub fn truncate_batches(batches: Vec<RecordBatch>, max_rows: usize) -> Vec<RecordBatch> {
+    let mut result = Vec::new();
+    let mut remaining = max_rows;
+    for batch in batches {
+        if remaining == 0 {
+            break;
+        }
+        let n = batch.num_rows();
+        if n <= remaining {
+            remaining -= n;
+            result.push(batch);
+        } else {
+            result.push(batch.slice(0, remaining));
+            break;
+        }
+    }
+    result
+}
+
 /// Ingest all supported files from a directory.
 ///
 /// Each file becomes an entity whose name is the file stem (e.g.,
 /// `customers.csv` → entity `"customers"`). Unsupported files are skipped.
+///
+/// If `max_rows` is `Some(n)`, each entity is limited to at most `n` rows.
 ///
 /// # Errors
 ///
 /// Returns `LearnError` if the directory cannot be read or a supported file
 /// fails to parse.
 pub fn ingest_directory(dir: &Path) -> LearnResult<Vec<IngestionResult>> {
-    info!(dir = %dir.display(), "Ingesting directory");
+    ingest_directory_with_limit(dir, None)
+}
+
+/// Ingest with an optional per-entity row limit.
+pub fn ingest_directory_with_limit(
+    dir: &Path,
+    max_rows: Option<usize>,
+) -> LearnResult<Vec<IngestionResult>> {
+    info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
 
     let mut results = Vec::new();
     let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)?
@@ -255,6 +288,11 @@ pub fn ingest_directory(dir: &Path) -> LearnResult<Vec<IngestionResult>> {
             b.schema()
         } else {
             continue;
+        };
+
+        let batches = match max_rows {
+            Some(limit) => truncate_batches(batches, limit),
+            None => batches,
         };
 
         results.push(IngestionResult {
@@ -363,5 +401,56 @@ mod tests {
         let names: Vec<&str> = results.iter().map(|r| r.entity.as_str()).collect();
         assert!(names.contains(&"users"));
         assert!(names.contains(&"orders"));
+    }
+
+    #[test]
+    fn truncate_batches_limits_rows() {
+        use arrow::array::Int32Array;
+        use arrow::datatypes::{Field as ArrowField, Schema as ArrowSchema};
+
+        let schema = Arc::new(ArrowSchema::new(vec![ArrowField::new(
+            "x",
+            arrow::datatypes::DataType::Int32,
+            false,
+        )]));
+
+        // Create 3 batches of 10 rows each (30 total)
+        let batches: Vec<RecordBatch> = (0..3)
+            .map(|i| {
+                let arr = Int32Array::from((i * 10..(i + 1) * 10).collect::<Vec<i32>>());
+                RecordBatch::try_new(schema.clone(), vec![Arc::new(arr)]).unwrap()
+            })
+            .collect();
+
+        // Truncate to 15 rows: should get first batch (10) + half of second (5)
+        let result = truncate_batches(batches.clone(), 15);
+        let total: usize = result.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total, 15);
+        assert_eq!(result.len(), 2);
+
+        // Truncate to 0: should get nothing
+        let result = truncate_batches(batches.clone(), 0);
+        assert!(result.is_empty());
+
+        // Truncate to more than available: should get all
+        let result = truncate_batches(batches, 100);
+        let total: usize = result.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total, 30);
+    }
+
+    #[test]
+    fn ingest_directory_with_limit_truncates() {
+        let dir = tempfile::tempdir().unwrap();
+        // 5 rows of data
+        write_csv(
+            dir.path(),
+            "data.csv",
+            "id,val\n1,a\n2,b\n3,c\n4,d\n5,e\n",
+        );
+
+        let results = ingest_directory_with_limit(dir.path(), Some(3)).unwrap();
+        assert_eq!(results.len(), 1);
+        let total: usize = results[0].batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total, 3);
     }
 }

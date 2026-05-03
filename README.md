@@ -162,6 +162,9 @@ Infer a schema from existing data and re-generate:
 # Learn a schema from CSV files
 knit learn ./my-data/ -o inferred.weave.toml
 
+# Learn from a large dataset (sample first 10k rows per table)
+knit learn ./big-data/ -o inferred.weave.toml --sample 10000
+
 # Review and customize the inferred schema, then generate
 knit generate inferred.weave.toml -o ./synthetic-data --format parquet
 ```

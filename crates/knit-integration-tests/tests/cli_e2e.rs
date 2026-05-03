@@ -1090,6 +1090,41 @@ fn sorted_file_names(dir: &std::path::Path) -> Vec<String> {
 }
 
 #[test]
+fn learn_sample_limits_rows() {
+    let tmp = TempDir::new().unwrap();
+
+    // Create a CSV with 100 rows
+    let csv_path = tmp.path().join("big.csv");
+    let mut csv_content = String::from("id,value\n");
+    for i in 1..=100 {
+        csv_content.push_str(&format!("{},{}\n", i, i * 10));
+    }
+    fs::write(&csv_path, &csv_content).unwrap();
+
+    let learned = tmp.path().join("learned.weave.toml");
+
+    // Learn with --sample 10 (only first 10 rows)
+    knit()
+        .args([
+            "learn",
+            csv_path.to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--sample",
+            "10",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(learned.exists(), "learned schema should be created");
+    let content = fs::read_to_string(&learned).unwrap();
+    // Should still produce a valid schema with entity "big"
+    assert!(content.contains("big"), "entity name should come from file stem");
+    assert!(content.contains("[[entities.fields]]"));
+}
+
+#[test]
 fn generate_param_substitution_in_derived() {
     let tmp = TempDir::new().unwrap();
     let schema_path = tmp.path().join("param_test.weave.toml");
