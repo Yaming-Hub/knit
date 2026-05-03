@@ -23,6 +23,7 @@ use crate::type_inference::{InferredType, StringPattern};
 
 /// Analysis results for a single table, used as input to schema assembly.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct TableAnalysis {
     /// Table / entity name.
     pub name: String,
@@ -36,8 +37,22 @@ pub struct TableAnalysis {
     pub row_count: u64,
 }
 
+impl TableAnalysis {
+    /// Create a new `TableAnalysis` with the given name, columns, and row count.
+    pub fn new(name: String, columns: Vec<ColumnAnalysis>, row_count: u64) -> Self {
+        Self {
+            name,
+            columns,
+            relationships: Vec::new(),
+            correlations: Vec::new(),
+            row_count,
+        }
+    }
+}
+
 /// Analysis results for a single column.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ColumnAnalysis {
     /// Column name.
     pub name: String,
@@ -57,6 +72,23 @@ pub struct ColumnAnalysis {
     pub inferred_type: Option<InferredType>,
     /// Detected string patterns (email, phone, URL) with match rates.
     pub string_patterns: Vec<(StringPattern, f64)>,
+}
+
+impl ColumnAnalysis {
+    /// Create a new `ColumnAnalysis` with required fields; optional fields default to `None`/empty.
+    pub fn new(name: String, null_rate: f64, confidence: f64) -> Self {
+        Self {
+            name,
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate,
+            confidence,
+            inferred_type: None,
+            string_patterns: vec![],
+        }
+    }
 }
 
 /// Assemble a Weave schema document from table analyses.
@@ -188,16 +220,10 @@ fn build_entity(
         })
         .collect();
 
-    let count = if table.row_count > 0 {
-        CountSpec::Fixed(table.row_count)
-    } else {
-        CountSpec::Fixed(1000)
-    };
-
     let entity = Entity {
         name: table.name.clone(),
         description: None,
-        count,
+        count: CountSpec::Fixed(table.row_count),
         fields,
         constraints: Vec::new(),
         topology: None,
@@ -255,8 +281,8 @@ fn build_generator(
             InferredType::Boolean => {
                 return GeneratorSpec::OneOf {
                     choices: vec![
-                        WeightedChoice { value: Value::String("true".into()), weight: 0.5 },
-                        WeightedChoice { value: Value::String("false".into()), weight: 0.5 },
+                        WeightedChoice { value: Value::Bool(true), weight: 0.5 },
+                        WeightedChoice { value: Value::Bool(false), weight: 0.5 },
                     ],
                 };
             }
@@ -380,6 +406,9 @@ fn infer_data_type(
     // UUID columns keep their type even as PK/FK
     if matches!(col.inferred_type, Some(InferredType::Uuid)) {
         return knit_core::DataType::Uuid;
+    }
+    if matches!(col.inferred_type, Some(InferredType::Boolean)) {
+        return knit_core::DataType::Bool;
     }
     if fk.is_some() || col.is_primary_key {
         return knit_core::DataType::Int;

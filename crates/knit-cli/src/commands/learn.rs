@@ -254,13 +254,11 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         ca.is_primary_key = rc.is_primary_key;
     }
 
-    let analysis = TableAnalysis {
-        name: table.entity.clone(),
-        columns: col_analyses,
-        relationships: Vec::new(),
-        correlations: Vec::new(),
+    let analysis = TableAnalysis::new(
+        table.entity.clone(),
+        col_analyses,
         row_count,
-    };
+    );
 
     let rel_profile = TableProfile {
         name: table.entity.clone(),
@@ -330,6 +328,8 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
             let inference = infer_type(&refs, 0.05);
             confidence = inference.confidence;
             string_patterns = inference.patterns.into_iter().collect();
+            // Sort by match rate descending for deterministic generator selection
+            string_patterns.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
             match inference.inferred_type {
                 InferredType::Categorical => {
@@ -358,17 +358,13 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         }
     }
 
-    ColumnAnalysis {
-        name: profile.name.clone(),
-        is_primary_key: false, // set later by analyse_table
-        distribution,
-        temporal_pattern,
-        categorical_weights,
-        null_rate: profile.null_rate,
-        confidence,
-        inferred_type,
-        string_patterns,
-    }
+    let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, confidence);
+    ca.distribution = distribution;
+    ca.temporal_pattern = temporal_pattern;
+    ca.categorical_weights = categorical_weights;
+    ca.inferred_type = inferred_type;
+    ca.string_patterns = string_patterns;
+    ca
 }
 
 /// Extract f64 values from a numeric column in a record batch.
