@@ -608,11 +608,12 @@ fn schema_diff_learned_vs_original() {
         .assert()
         .success();
 
-    // Diff should succeed (learned schema will differ from original)
+    // Diff should succeed and report differences (learned schema differs from original)
     knit()
         .args(["schema", "diff", TEST_SCHEMA, learned.to_str().unwrap()])
         .assert()
-        .success();
+        .success()
+        .stdout(predicate::str::contains("change(s) found"));
 }
 
 // ── Error cases ─────────────────────────────────────────────────────
@@ -907,6 +908,13 @@ fn learn_json_round_trip_generates_data() {
         !files.is_empty(),
         "JSON round-trip should produce output files"
     );
+
+    // Verify generated files have actual data rows
+    for entry in &files {
+        let content = fs::read_to_string(entry.path()).unwrap();
+        let line_count = content.lines().count();
+        assert!(line_count > 1, "generated file should have header + data rows");
+    }
 }
 
 #[test]
