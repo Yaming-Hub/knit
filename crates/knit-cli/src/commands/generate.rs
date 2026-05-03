@@ -587,19 +587,19 @@ fn build_noise_pipelines(
 /// - `"500"` → set all entities to exactly 500 rows
 /// - `"0.1x"` → multiply each entity's count by 0.1 (10% sample)
 /// - `"10x"` → multiply each entity's count by 10
-fn apply_count_override(model: &mut DataModel, count_str: &str) -> Result<()> {
+pub(crate) fn apply_count_override(model: &mut DataModel, count_str: &str) -> Result<()> {
     if let Some(factor_str) = count_str.strip_suffix('x') {
         let factor: f64 = factor_str
             .parse()
             .with_context(|| format!("invalid count multiplier: '{count_str}'"))?;
-        if factor <= 0.0 {
-            bail!("count multiplier must be positive, got '{count_str}'");
+        if !factor.is_finite() || factor <= 0.0 {
+            bail!("count multiplier must be a finite positive number, got '{count_str}'");
         }
         for entity in &mut model.entities {
             let current = match &entity.count {
                 CountSpec::Fixed(n) => *n,
-                CountSpec::Range { min, max } => (min + max) / 2,
-                CountSpec::Distribution(_) => 1000, // fallback for distribution-based counts
+                CountSpec::Range { max, .. } => *max,
+                CountSpec::Distribution(_) => 1000,
             };
             let scaled = (current as f64 * factor).round() as u64;
             entity.count = CountSpec::Fixed(scaled.max(1));
