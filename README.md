@@ -140,10 +140,10 @@ knit generate demo.weave.toml --dry-run
 The `examples/` directory contains sample schemas:
 
 - `ecommerce.weave.toml` — Users, products, orders, reviews with FK relationships
-- `financial.weave.toml` — Accounts, transactions, and market data
+- `financial.weave.toml` — Accounts and transactions with risk scoring
 - `hr_org.weave.toml` — Employees, departments with self-referential FKs
-- `iot_sensors.weave.toml` — IoT sensor readings with temporal generators
-- `server_logs.weave.toml` — Web server access logs with correlated fields
+- `iot_sensors.weave.toml` — Devices, sensor readings, and alerts with FK chains
+- `server_logs.weave.toml` — Servers, HTTP requests, and error logs
 - `cli_test.weave.toml` — Minimal schema for integration testing
 
 Generate all examples:
@@ -182,7 +182,7 @@ Commands:
 Global options:
   --seed <N>            Override schema seed
   --format <FMT>        Output format (parquet|csv|json|jsonl|arrow)
-  --compression <ALG>   Compression (none|snappy|lz4|zstd)
+  --compression <ALG>   Compression (none|snappy|gzip|lz4|zstd)
   --parallel <N>        Worker threads (0 = auto)
   --batch-size <N>      Rows per batch (default: 8192)
   --param key=value     Override schema parameter (repeatable)
