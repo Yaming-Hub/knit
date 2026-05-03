@@ -378,7 +378,10 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
             knit_core::Value::Bool(_) => ArrowDataType::Boolean,
             knit_core::Value::Int(_) => ArrowDataType::Int64,
             knit_core::Value::Float(_) => ArrowDataType::Float64,
-            _ => ArrowDataType::Utf8,
+            knit_core::Value::String(_) => ArrowDataType::Utf8,
+            // Complex types (Array, Map, DateTime, etc.) are not yet supported
+            // by ConstantGenerator — it emits NullArray for them.
+            _ => ArrowDataType::Null,
         },
         knit_plan::GeneratorPlan::Derived { .. } => ArrowDataType::Float64,
         knit_plan::GeneratorPlan::ForeignKey { .. } => ArrowDataType::Int64,
