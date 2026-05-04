@@ -168,4 +168,127 @@ mod tests {
             assert_eq!(str_arr.value(i), "[]");
         }
     }
+
+    #[test]
+    fn composite_with_floats() {
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::Float(3.14)),
+            &GeneratorPlan::Constant(Value::Int(2)),
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 1, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let val = str_arr.value(0);
+        // Should be a JSON array of two float values
+        assert!(val.starts_with('[') && val.ends_with(']'), "should be JSON array: {val}");
+        assert!(val.contains("3.14"), "should contain 3.14: {val}");
+    }
+
+    #[test]
+    fn composite_single_element() {
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::String("only".into())),
+            &GeneratorPlan::Constant(Value::Int(1)),
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 1, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(str_arr.value(0), "[\"only\"]");
+    }
+
+    #[test]
+    fn composite_string_with_special_chars() {
+        // Test JSON escaping of quotes and backslashes
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::String("path\\name \"quoted\"".into())),
+            &GeneratorPlan::Constant(Value::Int(1)),
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 1, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let val = str_arr.value(0);
+        // Quotes should be escaped
+        assert!(val.contains("\\\""), "quotes should be escaped in JSON: {val}");
+        // Backslashes should be escaped (original \ becomes \\)
+        assert!(val.contains("\\\\"), "backslashes should be escaped in JSON: {val}");
+    }
+
+    #[test]
+    fn composite_output_type_is_utf8() {
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::Int(1)),
+            &GeneratorPlan::Constant(Value::Int(1)),
+        );
+        assert_eq!(gen.output_type(), DataType::Utf8);
+    }
+
+    #[test]
+    fn composite_multiple_rows_different_lengths() {
+        use knit_core::WeightedChoice;
+        // Use OneOf to produce varying lengths [1, 3]
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::Int(7)),
+            &GeneratorPlan::OneOf {
+                choices: vec![
+                    WeightedChoice { value: Value::Int(1), weight: 1.0 },
+                    WeightedChoice { value: Value::Int(3), weight: 1.0 },
+                ],
+                cumulative_weights: vec![0.5, 1.0],
+            },
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 10, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let mut seen_lengths = std::collections::HashSet::new();
+        for i in 0..10 {
+            let val = str_arr.value(i);
+            assert!(val.starts_with('[') && val.ends_with(']'), "row {i}: should be JSON array: {val}");
+            let inner = &val[1..val.len()-1];
+            let elem_count = if inner.is_empty() { 0 } else { inner.split(',').count() };
+            seen_lengths.insert(elem_count);
+            if !inner.is_empty() {
+                for part in inner.split(',') {
+                    assert_eq!(part.trim(), "7", "row {i}: element should be 7: {val}");
+                }
+            }
+        }
+        assert!(seen_lengths.contains(&1), "should produce length-1 arrays");
+        assert!(seen_lengths.contains(&3), "should produce length-3 arrays");
+    }
+
+    #[test]
+    fn composite_deterministic() {
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::Int(42)),
+            &GeneratorPlan::Constant(Value::Int(2)),
+        );
+        let ctx = make_ctx();
+        let a = gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 5, &ctx);
+        let b = gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 5, &ctx);
+        let a_s = a.as_any().downcast_ref::<StringArray>().unwrap();
+        let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..5 {
+            assert_eq!(a_s.value(i), b_s.value(i), "row {i} should be deterministic");
+        }
+    }
+
+    #[test]
+    fn composite_negative_length_clamped_to_zero() {
+        // Negative length should be clamped to 0, producing empty arrays
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::Int(42)),
+            &GeneratorPlan::Constant(Value::Int(-5)),
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 3, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..3 {
+            assert_eq!(str_arr.value(i), "[]", "negative length should produce empty array");
+        }
+    }
 }

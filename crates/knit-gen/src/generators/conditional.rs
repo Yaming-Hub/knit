@@ -354,9 +354,186 @@ mod tests {
         let ctx = GenContext::new(&batch, 0, 0, 1, "items");
 
         let result = gen.generate(&mut rng, 3, &ctx);
-        // Should preserve Float64 type since all branches produce same type
-        // ConstantGenerator with Float produces StringArray with the float string,
-        // but interleave should work since they're all the same type
-        assert_eq!(result.len(), 3);
+        assert_eq!(result.data_type(), &DataType::Float64, "should preserve Float64 type");
+        let fa = result.as_any().downcast_ref::<Float64Array>().unwrap();
+        assert!((fa.value(0) - 100.0).abs() < 1e-10, "high → 100.0");
+        assert!((fa.value(1) - 10.0).abs() < 1e-10, "low → 10.0");
+        assert!((fa.value(2) - 0.0).abs() < 1e-10, "other → 0.0 (default)");
+    }
+
+    #[test]
+    fn test_conditional_boolean_reference() {
+        let gen = ConditionalGenerator::new(
+            "active".into(),
+            vec![
+                (
+                    Value::Bool(true),
+                    GeneratorPlan::Constant(Value::String("enabled".into())),
+                ),
+                (
+                    Value::Bool(false),
+                    GeneratorPlan::Constant(Value::String("disabled".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::String("unknown".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let bool_col: ArrayRef = Arc::new(BooleanArray::from(vec![true, false, true]));
+        let mut batch = HashMap::new();
+        batch.insert("active".to_string(), bool_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "flags");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(sa.value(0), "enabled");
+        assert_eq!(sa.value(1), "disabled");
+        assert_eq!(sa.value(2), "enabled");
+    }
+
+    #[test]
+    fn test_conditional_float_reference() {
+        let gen = ConditionalGenerator::new(
+            "score".into(),
+            vec![
+                (
+                    Value::Float(1.5),
+                    GeneratorPlan::Constant(Value::String("matched_1.5".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::String("default".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let float_col: ArrayRef = Arc::new(Float64Array::from(vec![1.5, 2.0, 1.5]));
+        let mut batch = HashMap::new();
+        batch.insert("score".to_string(), float_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "scores");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(sa.value(0), "matched_1.5");
+        assert_eq!(sa.value(1), "default");
+        assert_eq!(sa.value(2), "matched_1.5");
+    }
+
+    #[test]
+    fn test_conditional_all_nulls_use_default() {
+        let gen = ConditionalGenerator::new(
+            "status".into(),
+            vec![(
+                Value::String("active".into()),
+                GeneratorPlan::Constant(Value::String("branch".into())),
+            )],
+            GeneratorPlan::Constant(Value::String("fallback".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let null_col: ArrayRef = Arc::new(StringArray::from(vec![
+            None::<&str>,
+            None,
+            None,
+        ]));
+        let mut batch = HashMap::new();
+        batch.insert("status".to_string(), null_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..3 {
+            assert_eq!(sa.value(i), "fallback", "row {i}: all nulls should use default");
+        }
+    }
+
+    #[test]
+    fn test_conditional_output_type_matches_default() {
+        let gen = ConditionalGenerator::new(
+            "x".into(),
+            vec![],
+            GeneratorPlan::Constant(Value::Int(42)),
+        );
+        // ConstantGenerator for Int produces Int64
+        assert_eq!(gen.output_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn test_conditional_first_matching_branch_wins() {
+        // Two branches match the same value — first one should win
+        let gen = ConditionalGenerator::new(
+            "key".into(),
+            vec![
+                (
+                    Value::String("match".into()),
+                    GeneratorPlan::Constant(Value::String("first".into())),
+                ),
+                (
+                    Value::String("match".into()),
+                    GeneratorPlan::Constant(Value::String("second".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::String("default".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let key_col: ArrayRef = Arc::new(StringArray::from(vec!["match"]));
+        let mut batch = HashMap::new();
+        batch.insert("key".to_string(), key_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
+
+        let result = gen.generate(&mut rng, 1, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(sa.value(0), "first", "first matching branch should win");
+    }
+
+    #[test]
+    fn test_conditional_no_branches_always_default() {
+        let gen = ConditionalGenerator::new(
+            "x".into(),
+            vec![],
+            GeneratorPlan::Constant(Value::String("always_default".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let col: ArrayRef = Arc::new(StringArray::from(vec!["a", "b", "c"]));
+        let mut batch = HashMap::new();
+        batch.insert("x".to_string(), col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..3 {
+            assert_eq!(sa.value(i), "always_default");
+        }
+    }
+
+    #[test]
+    fn test_conditional_unsupported_ref_type_uses_default() {
+        // Timestamp array is unsupported — all rows should route to default
+        use arrow::datatypes::TimeUnit;
+        let gen = ConditionalGenerator::new(
+            "ts".into(),
+            vec![(
+                Value::String("some_value".into()),
+                GeneratorPlan::Constant(Value::String("branch".into())),
+            )],
+            GeneratorPlan::Constant(Value::String("default_for_unsupported".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ts_col: ArrayRef = Arc::new(
+            arrow::array::TimestampMillisecondArray::from(vec![1000i64, 2000, 3000]),
+        );
+        let mut batch = HashMap::new();
+        batch.insert("ts".to_string(), ts_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..3 {
+            assert_eq!(
+                sa.value(i), "default_for_unsupported",
+                "unsupported type should fallback to default"
+            );
+        }
     }
 }
