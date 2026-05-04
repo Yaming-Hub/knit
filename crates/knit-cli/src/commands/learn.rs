@@ -330,6 +330,20 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     let mut is_integer_valued = false;
     let mut has_time_component = false;
 
+    // Complex types (List, Map, Struct) → serialize to JSON, treat as categorical
+    if is_complex_type(&profile.data_type) {
+        let json_values = extract_json_values(batch, &profile.name);
+        if !json_values.is_empty() {
+            let cat_fit = fit_categorical(&json_values);
+            let mut weights: Vec<(String, f64)> = cat_fit.weights.into_iter().collect();
+            weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+            let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, 0.8);
+            ca.categorical_weights = Some(weights);
+            ca.inferred_type = Some(InferredType::Categorical);
+            return ca;
+        }
+    }
+
     // Boolean columns (Arrow auto-detected) → weighted OneOf
     if matches!(profile.data_type, DataType::Boolean) {
         let col_idx = batch.schema().index_of(&profile.name).ok();
@@ -643,6 +657,40 @@ fn extract_string_values(batch: &RecordBatch, col_name: &str) -> Vec<Option<Stri
         }
         _ => Vec::new(),
     }
+}
+
+/// Check if a data type is a complex/nested type (List, Map, Struct).
+fn is_complex_type(dt: &DataType) -> bool {
+    matches!(
+        dt,
+        DataType::List(_)
+            | DataType::LargeList(_)
+            | DataType::FixedSizeList(_, _)
+            | DataType::Map(_, _)
+            | DataType::Struct(_)
+    )
+}
+
+/// Extract JSON string representations of complex-typed column values.
+fn extract_json_values(batch: &RecordBatch, col_name: &str) -> Vec<String> {
+    use arrow::util::display::ArrayFormatter;
+
+    let Some(idx) = batch.schema().index_of(col_name).ok() else {
+        return Vec::new();
+    };
+    let col = batch.column(idx);
+    let mut values = Vec::new();
+
+    // Use Arrow's display formatter to get string representations
+    let options = arrow::util::display::FormatOptions::default();
+    if let Ok(formatter) = ArrayFormatter::try_new(col.as_ref(), &options) {
+        for i in 0..col.len() {
+            if !col.is_null(i) {
+                values.push(format!("{}", formatter.value(i)));
+            }
+        }
+    }
+    values
 }
 
 /// Extract distinct string representations of column values for relationship detection.
