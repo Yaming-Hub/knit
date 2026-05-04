@@ -216,7 +216,7 @@ pub fn resolve_row_counts(model: &DataModel) -> BTreeMap<String, u64> {
 mod tests {
     use super::*;
     use std::collections::BTreeMap;
-    use knit_core::{CountSpec, Entity, Relationship, RelationshipKind};
+    use knit_core::{CountSpec, DistributionKind, DistributionSpec, Entity, Relationship, RelationshipKind};
 
     /// Helper to build a minimal entity with a given name and count.
     fn entity(name: &str, count: u64) -> Entity {
@@ -409,21 +409,22 @@ mod tests {
     }
 
     #[test]
-    fn explicit_foreign_key_name() {
+    fn explicit_foreign_key_name_in_deferred_ref() {
+        // Self-referential with explicit FK name — should appear in deferred ref
         let model = model_with(
-            vec![entity("users", 100), entity("orders", 500)],
+            vec![entity("employees", 100)],
             vec![Relationship {
-                name: "orders_users".to_string(),
-                from: "orders".to_string(),
-                to: "users".to_string(),
+                name: "manager".to_string(),
+                from: "employees".to_string(),
+                to: "employees".to_string(),
                 kind: RelationshipKind::OneToMany,
-                foreign_key: Some("customer_id".to_string()),
+                foreign_key: Some("manager_id".to_string()),
                 cardinality: None,
             }],
         );
         let result = assign_phases(&model).unwrap();
-        // No deferred refs for simple dependencies
-        assert!(result.deferred_refs.is_empty());
+        assert_eq!(result.deferred_refs.len(), 1);
+        assert_eq!(result.deferred_refs[0].from_field, "manager_id");
     }
 
     #[test]
@@ -477,6 +478,30 @@ mod tests {
         let counts = resolve_row_counts(&model);
         // Range resolves to max
         assert_eq!(counts["x"], 150);
+    }
+
+    #[test]
+    fn resolve_counts_distribution() {
+        let mut params = BTreeMap::new();
+        params.insert("mean".to_string(), 500.0);
+        params.insert("std_dev".to_string(), 50.0);
+        let model = model_with(
+            vec![Entity {
+                name: "d".to_string(),
+                description: None,
+                count: CountSpec::Distribution(DistributionSpec {
+                    kind: DistributionKind::Normal,
+                    params,
+                }),
+                fields: vec![],
+                constraints: vec![],
+                topology: None,
+            }],
+            vec![],
+        );
+        let counts = resolve_row_counts(&model);
+        // Normal distribution resolves to mean
+        assert_eq!(counts["d"], 500);
     }
 }
 
