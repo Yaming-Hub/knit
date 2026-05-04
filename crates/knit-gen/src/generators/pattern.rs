@@ -140,4 +140,75 @@ mod tests {
             assert_eq!(a_s.value(i), b_s.value(i));
         }
     }
+
+    #[test]
+    fn empty_pattern() {
+        let gen = PatternGenerator::new(String::new());
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 5, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..5 {
+            assert_eq!(str_arr.value(i), "");
+        }
+    }
+
+    #[test]
+    fn digits_only_pattern() {
+        let gen = PatternGenerator::new("######".into());
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..100 {
+            let s = str_arr.value(i);
+            assert_eq!(s.len(), 6);
+            assert!(s.chars().all(|c| c.is_ascii_digit()), "expected all digits: {s}");
+        }
+    }
+
+    #[test]
+    fn special_chars_pass_through() {
+        // Characters like @, ., -, space should pass through literally
+        let gen = PatternGenerator::new("##@#.#-# #".into());
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 50, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..50 {
+            let s = str_arr.value(i);
+            let chars: Vec<char> = s.chars().collect();
+            assert_eq!(chars[2], '@');
+            assert_eq!(chars[4], '.');
+            assert_eq!(chars[6], '-');
+            assert_eq!(chars[8], ' ');
+        }
+    }
+
+    #[test]
+    fn output_type_is_utf8() {
+        let gen = PatternGenerator::new("##".into());
+        assert_eq!(gen.output_type(), DataType::Utf8);
+    }
+
+    #[test]
+    fn zero_count_produces_empty_array() {
+        let gen = PatternGenerator::new("###".into());
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 0, &ctx);
+        assert_eq!(arr.len(), 0);
+    }
+
+    #[test]
+    fn values_vary_across_rows() {
+        // With enough rows, pattern output should not be all identical
+        let gen = PatternGenerator::new("????".into());
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let unique: std::collections::HashSet<&str> = (0..100).map(|i| str_arr.value(i)).collect();
+        assert!(unique.len() > 10, "expected variety, got {} unique values", unique.len());
+    }
 }

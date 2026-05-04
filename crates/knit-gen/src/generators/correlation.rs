@@ -171,6 +171,146 @@ mod tests {
         );
     }
 
+    #[test]
+    fn perfect_positive_correlation() {
+        // r=1.0 → complement=0, output should be exactly x_norm (scaled source)
+        let n = 1_000usize;
+        let source: Vec<f64> = (0..n).map(|i| i as f64 * 3.0 + 5.0).collect();
+        let source_arr: ArrayRef = Arc::new(Float64Array::from(source.clone()));
+
+        let gen = CorrelatedGenerator::new("x".into(), 1.0);
+        let mut cols = HashMap::new();
+        cols.insert("x".into(), source_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, n, &ctx);
+        let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
+        let r = pearson(&source, &y_vals);
+        assert!(
+            (r - 1.0).abs() < 0.001,
+            "perfect positive correlation should be ~1.0, got {r:.4}"
+        );
+    }
+
+    #[test]
+    fn perfect_negative_correlation() {
+        let n = 1_000usize;
+        let source: Vec<f64> = (0..n).map(|i| i as f64).collect();
+        let source_arr: ArrayRef = Arc::new(Float64Array::from(source.clone()));
+
+        let gen = CorrelatedGenerator::new("x".into(), -1.0);
+        let mut cols = HashMap::new();
+        cols.insert("x".into(), source_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, n, &ctx);
+        let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
+        let r = pearson(&source, &y_vals);
+        assert!(
+            (r - (-1.0)).abs() < 0.001,
+            "perfect negative correlation should be ~-1.0, got {r:.4}"
+        );
+    }
+
+    #[test]
+    fn zero_correlation_produces_uncorrelated_output() {
+        let n = 10_000usize;
+        let source: Vec<f64> = (0..n).map(|i| i as f64).collect();
+        let source_arr: ArrayRef = Arc::new(Float64Array::from(source.clone()));
+
+        let gen = CorrelatedGenerator::new("x".into(), 0.0);
+        let mut cols = HashMap::new();
+        cols.insert("x".into(), source_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, n, &ctx);
+        let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
+        let r = pearson(&source, &y_vals);
+        assert!(
+            r.abs() < 0.1,
+            "zero target correlation should yield ~0 actual, got {r:.4}"
+        );
+    }
+
+    #[test]
+    fn int64_source_column() {
+        let n = 5_000usize;
+        let source_i64: Vec<i64> = (0..n as i64).collect();
+        let source_arr: ArrayRef = Arc::new(Int64Array::from(source_i64));
+        let source_f64: Vec<f64> = (0..n).map(|i| i as f64).collect();
+
+        let gen = CorrelatedGenerator::new("x".into(), 0.9);
+        let mut cols = HashMap::new();
+        cols.insert("x".into(), source_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, n, &ctx);
+        let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
+        let r = pearson(&source_f64, &y_vals);
+        assert!(
+            (r - 0.9).abs() < 0.1,
+            "int64 source should work, got r={r:.4}"
+        );
+    }
+
+    #[test]
+    fn missing_target_field_produces_output() {
+        // Target field not in batch_columns → produces uncorrelated noise
+        let gen = CorrelatedGenerator::new("nonexistent".into(), 0.8);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        assert_eq!(arr.len(), 100);
+        assert_eq!(gen.output_type(), DataType::Float64);
+    }
+
+    #[test]
+    fn constant_source_column() {
+        // All same values → std=0 → falls back to max(std, 1e-12)
+        let n = 100usize;
+        let source: Vec<f64> = vec![42.0; n];
+        let source_arr: ArrayRef = Arc::new(Float64Array::from(source));
+
+        let gen = CorrelatedGenerator::new("x".into(), 0.5);
+        let mut cols = HashMap::new();
+        cols.insert("x".into(), source_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, n, &ctx);
+        assert_eq!(arr.len(), n);
+        // Should not panic/NaN — all values should be finite
+        let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        for i in 0..n {
+            assert!(y.value(i).is_finite(), "row {i}: value should be finite");
+        }
+    }
+
+    #[test]
+    fn correlation_clamped_to_bounds() {
+        // r > 1.0 should be clamped to 1.0
+        let gen = CorrelatedGenerator::new("x".into(), 5.0);
+        assert_eq!(gen.correlation, 1.0);
+        // r < -1.0 should be clamped to -1.0
+        let gen2 = CorrelatedGenerator::new("x".into(), -3.0);
+        assert_eq!(gen2.correlation, -1.0);
+    }
+
     fn pearson(x: &[f64], y: &[f64]) -> f64 {
         let n = x.len() as f64;
         let mx = x.iter().sum::<f64>() / n;
