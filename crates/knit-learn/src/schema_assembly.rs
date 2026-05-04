@@ -254,24 +254,15 @@ fn build_generator(
         };
     }
 
-    // PK → Sequence (or UuidGen for UUID columns, prefixed for string PKs)
+    // PK → Sequence (or UuidGen for UUID columns)
     if col.is_primary_key {
         if matches!(col.inferred_type, Some(InferredType::Uuid)) {
             return GeneratorSpec::UuidGen { version: 4 };
         }
-        // String-typed PKs get a prefix to produce string values
-        let is_string_pk = matches!(
-            col.inferred_type,
-            Some(InferredType::Text) | Some(InferredType::Categorical)
-        ) || !col.string_patterns.is_empty();
         return GeneratorSpec::Sequence {
             start: 1,
             step: 1,
-            prefix: if is_string_pk {
-                Some(format!("{}_", col.name))
-            } else {
-                None
-            },
+            prefix: None,
         };
     }
 
@@ -489,9 +480,15 @@ fn days_to_ymd(days: i64) -> (i32, u32, u32) {
 }
 
 /// Map common column names to faker methods using keyword heuristics.
+/// More specific patterns are checked first to avoid false positives
+/// (e.g., "company_url" should match url, not company).
 fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
     let lower = name.to_lowercase();
-    // Check for known semantic keywords in the column name
+    // URL-like patterns (checked first — most specific)
+    if lower.contains("url") || lower.contains("website") || lower.contains("homepage") {
+        return Some("url");
+    }
+    // Geographic / address patterns
     if lower.contains("address") || lower.contains("street") {
         return Some("address");
     }
@@ -507,17 +504,15 @@ fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
     if lower.contains("zip") || lower.contains("postal") {
         return Some("zip_code");
     }
-    if lower.contains("company") || lower.contains("organization") || lower.contains("organisation") {
+    // Organization
+    if lower == "company" || lower.ends_with("_company") || lower.starts_with("company_")
+        || lower.contains("organization") || lower.contains("organisation")
+    {
         return Some("company");
     }
-    if lower.contains("url") || lower.contains("website") || lower.contains("homepage") {
-        return Some("url");
-    }
-    if lower.contains("domain") {
+    // Domain (exact or boundary match to avoid "domain_id" → faker)
+    if lower == "domain" || lower.ends_with("_domain") || lower == "domain_name" {
         return Some("domain");
-    }
-    if lower.contains("title") && !lower.contains("subtitle") {
-        return Some("title");
     }
     None
 }
@@ -542,14 +537,6 @@ fn infer_data_type(
         };
     }
     if fk.is_some() || col.is_primary_key {
-        // If the column has string content, keep it as String
-        let is_string = matches!(
-            col.inferred_type,
-            Some(InferredType::Text) | Some(InferredType::Categorical)
-        ) || !col.string_patterns.is_empty();
-        if is_string {
-            return knit_core::DataType::String;
-        }
         return knit_core::DataType::Int;
     }
     if col.temporal_pattern.is_some() {
