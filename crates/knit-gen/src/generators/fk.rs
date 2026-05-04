@@ -58,3 +58,90 @@ impl FieldGenerator for ForeignKeyGenerator {
         DataType::Int64
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::context::GenContext;
+    use crate::keystore::InMemoryKeyStore;
+    use arrow::array::Array;
+    use rand_chacha::ChaCha8Rng;
+    use rand::SeedableRng;
+    use std::collections::HashMap;
+
+    fn make_ctx() -> GenContext<'static> {
+        let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
+        GenContext::new(map, 0, 0, 1, "test")
+    }
+
+    #[test]
+    fn fk_samples_from_store() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        for i in 1..=100 {
+            store.insert(i);
+        }
+        let gen = ForeignKeyGenerator::new(store);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 50, &make_ctx());
+
+        assert_eq!(arr.len(), 50);
+        assert_eq!(arr.null_count(), 0);
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..50 {
+            let v = int_arr.value(i);
+            assert!((1..=100).contains(&v), "FK value {v} out of parent range");
+        }
+    }
+
+    #[test]
+    fn fk_empty_store_produces_nulls() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        let gen = ForeignKeyGenerator::new(store);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 10, &make_ctx());
+
+        assert_eq!(arr.len(), 10);
+        assert_eq!(arr.null_count(), 10);
+    }
+
+    #[test]
+    fn fk_output_type() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        let gen = ForeignKeyGenerator::new(store);
+        assert_eq!(gen.output_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn fk_deterministic_with_same_seed() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        for i in 1..=50 {
+            store.insert(i);
+        }
+        let gen = ForeignKeyGenerator::new(store);
+
+        let mut rng1 = ChaCha8Rng::seed_from_u64(99);
+        let arr1 = gen.generate(&mut rng1, 20, &make_ctx());
+        let mut rng2 = ChaCha8Rng::seed_from_u64(99);
+        let arr2 = gen.generate(&mut rng2, 20, &make_ctx());
+
+        let v1 = arr1.as_any().downcast_ref::<Int64Array>().unwrap();
+        let v2 = arr2.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..20 {
+            assert_eq!(v1.value(i), v2.value(i));
+        }
+    }
+
+    #[test]
+    fn fk_single_key_always_sampled() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        store.insert(42);
+        let gen = ForeignKeyGenerator::new(store);
+        let mut rng = ChaCha8Rng::seed_from_u64(0);
+        let arr = gen.generate(&mut rng, 10, &make_ctx());
+
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..10 {
+            assert_eq!(int_arr.value(i), 42);
+        }
+    }
+}
