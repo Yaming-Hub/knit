@@ -185,8 +185,305 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
             }
         }
-        // For other distributions, no specific param validation yet
-        _ => {}
+        DistributionKind::LogNormal => {
+            if !params.contains_key("mu") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "lognormal distribution requires 'mu' param".to_string(),
+                });
+            }
+            if !params.contains_key("sigma") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "lognormal distribution requires 'sigma' param".to_string(),
+                });
+            } else if let Some(&s) = params.get("sigma") {
+                if s <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "lognormal distribution 'sigma' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Binomial => {
+            if !params.contains_key("n") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "binomial distribution requires 'n' param".to_string(),
+                });
+            } else if let Some(&n) = params.get("n") {
+                if n < 0.0 || n.fract() != 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "binomial distribution 'n' must be >= 0 and integer-valued"
+                            .to_string(),
+                    });
+                }
+            }
+            if !params.contains_key("p") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "binomial distribution requires 'p' param".to_string(),
+                });
+            } else if let Some(&p) = params.get("p") {
+                if !(0.0..=1.0).contains(&p) {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "binomial distribution 'p' must be in [0, 1]".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Geometric => {
+            if !params.contains_key("p") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "geometric distribution requires 'p' param".to_string(),
+                });
+            } else if let Some(&p) = params.get("p") {
+                if p <= 0.0 || p > 1.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "geometric distribution 'p' must be in (0, 1]".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Pareto => {
+            if !params.contains_key("scale") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "pareto distribution requires 'scale' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("scale") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "pareto distribution 'scale' must be > 0".to_string(),
+                    });
+                }
+            }
+            if !params.contains_key("shape") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "pareto distribution requires 'shape' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("shape") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "pareto distribution 'shape' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Weibull => {
+            if !params.contains_key("scale") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "weibull distribution requires 'scale' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("scale") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "weibull distribution 'scale' must be > 0".to_string(),
+                    });
+                }
+            }
+            if !params.contains_key("shape") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "weibull distribution requires 'shape' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("shape") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "weibull distribution 'shape' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Gamma => {
+            if !params.contains_key("shape") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "gamma distribution requires 'shape' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("shape") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "gamma distribution 'shape' must be > 0".to_string(),
+                    });
+                }
+            }
+            if !params.contains_key("scale") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "gamma distribution requires 'scale' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("scale") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "gamma distribution 'scale' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Beta => {
+            if !params.contains_key("alpha") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "beta distribution requires 'alpha' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("alpha") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "beta distribution 'alpha' must be > 0".to_string(),
+                    });
+                }
+            }
+            if !params.contains_key("beta") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "beta distribution requires 'beta' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("beta") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "beta distribution 'beta' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Cauchy => {
+            if !params.contains_key("median") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "cauchy distribution requires 'median' param".to_string(),
+                });
+            }
+            if !params.contains_key("scale") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "cauchy distribution requires 'scale' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("scale") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "cauchy distribution 'scale' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::ChiSquared => {
+            if !params.contains_key("k") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "chi-squared distribution requires 'k' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("k") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "chi-squared distribution 'k' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::StudentT => {
+            if !params.contains_key("n") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "student-t distribution requires 'n' param".to_string(),
+                });
+            } else if let Some(&v) = params.get("n") {
+                if v <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "student-t distribution 'n' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
+        DistributionKind::Triangular => {
+            if !params.contains_key("min") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "triangular distribution requires 'min' param".to_string(),
+                });
+            }
+            if !params.contains_key("max") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "triangular distribution requires 'max' param".to_string(),
+                });
+            }
+            if !params.contains_key("mode") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "triangular distribution requires 'mode' param".to_string(),
+                });
+            }
+            if let (Some(&min), Some(&max)) = (params.get("min"), params.get("max")) {
+                if min >= max {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "triangular distribution requires min < max, got min={}, max={}",
+                            min, max
+                        ),
+                    });
+                }
+                if let Some(&mode) = params.get("mode") {
+                    if mode < min || mode > max {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "triangular distribution requires min <= mode <= max, got min={}, mode={}, max={}",
+                                min, mode, max
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+        DistributionKind::Zipf => {
+            if !params.contains_key("n") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "zipf distribution requires 'n' param".to_string(),
+                });
+            } else if let Some(&n) = params.get("n") {
+                if n < 1.0 || n.fract() != 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "zipf distribution 'n' must be >= 1 and integer-valued"
+                            .to_string(),
+                    });
+                }
+            }
+            if !params.contains_key("s") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "zipf distribution requires 's' param".to_string(),
+                });
+            } else if let Some(&s) = params.get("s") {
+                if s <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "zipf distribution 's' must be > 0".to_string(),
+                    });
+                }
+            }
+        }
     }
 }
 
@@ -604,6 +901,162 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("min < max"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_binomial_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "trials".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Binomial,
+                    params: [("n".to_string(), 10.0), ("p".to_string(), 0.5)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("binomial"))
+            }),
+            "expected no binomial errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_validate_binomial_p_gt_1() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "trials".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Binomial,
+                    params: [("n".to_string(), 10.0), ("p".to_string(), 1.5)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("binomial") && message.contains("'p'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_triangular_min_ge_max() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Triangular,
+                    params: [
+                        ("min".to_string(), 10.0),
+                        ("max".to_string(), 5.0),
+                        ("mode".to_string(), 7.0),
+                    ]
+                    .into_iter()
+                    .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("triangular") && message.contains("min < max"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_zipf_n_lt_1() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "rank".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Zipf,
+                    params: [("n".to_string(), 0.0), ("s".to_string(), 1.0)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("zipf") && message.contains("'n'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_beta_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ratio".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Beta,
+                    params: [("alpha".to_string(), 2.0), ("beta".to_string(), 5.0)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("beta"))
+            }),
+            "expected no beta errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_validate_zipf_fractional_n() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "rank".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Zipf,
+                    params: [("n".to_string(), 10.5), ("s".to_string(), 1.0)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("zipf") && message.contains("integer"))
         }));
     }
 }

@@ -14,6 +14,8 @@
 //! - [`create_generator`] — factory that maps a [`GeneratorPlan`](knit_plan::GeneratorPlan)
 //!   to a concrete `FieldGenerator`.
 
+#![warn(missing_docs)]
+
 pub mod batch;
 pub mod context;
 pub mod engine;

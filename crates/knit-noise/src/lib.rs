@@ -27,6 +27,8 @@
 //! | [`ValueDrifter`] | `TYPE_RANGE` |
 //! | [`FormatCorruptor`] | `FORMAT` |
 
+#![warn(missing_docs)]
+
 pub mod error;
 pub mod traits;
 pub mod pipeline;
