@@ -178,4 +178,91 @@ mod tests {
         assert_eq!(result.column(0).null_count(), 0);
         assert_eq!(result.column(1).null_count(), 0);
     }
+
+    #[test]
+    fn null_injection_partial_probability() {
+        let injector = NullInjector::new();
+        let config = PerturbConfig::default().with_probability(0.5).with_seed(42);
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        // Use a larger batch for statistical assertions
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("val", DataType::Float64, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Float64Array::from(vec![1.0; 1000]))],
+        )
+        .unwrap();
+        let result = injector.perturb(batch, &mut rng, &config).unwrap();
+        let nulls = result.column(0).null_count();
+        // Expect ~50% nulls (allow 40-60%)
+        assert!(
+            nulls >= 400 && nulls <= 600,
+            "expected ~500 nulls, got {nulls}"
+        );
+    }
+
+    #[test]
+    fn null_injection_column_filter() {
+        let injector = NullInjector::new();
+        let config = PerturbConfig::default()
+            .with_probability(1.0)
+            .with_columns(vec!["name".to_string()]);
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let result = injector.perturb(sample_batch(), &mut rng, &config).unwrap();
+        // Only "name" column should be nulled
+        assert_eq!(result.column(0).null_count(), 0, "id should be unchanged");
+        assert_eq!(result.column(1).null_count(), 5, "name should be all null");
+    }
+
+    #[test]
+    fn null_injection_non_nullable_column_skipped() {
+        let injector = NullInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int32, false), // NOT nullable
+            Field::new("val", DataType::Float64, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3])),
+                Arc::new(Float64Array::from(vec![1.0, 2.0, 3.0])),
+            ],
+        )
+        .unwrap();
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let result = injector.perturb(batch, &mut rng, &config).unwrap();
+        assert_eq!(result.column(0).null_count(), 0, "non-nullable should be skipped");
+        assert_eq!(result.column(1).null_count(), 3, "nullable should be nulled");
+    }
+
+    #[test]
+    fn null_injection_preserves_existing_nulls() {
+        let injector = NullInjector::new();
+        let config = PerturbConfig::default().with_probability(0.0);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("val", DataType::Int64, true),
+        ]));
+        // Array with pre-existing nulls
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int64Array::from(vec![Some(1), None, Some(3), None, Some(5)]))],
+        )
+        .unwrap();
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let result = injector.perturb(batch, &mut rng, &config).unwrap();
+        // With p=0, existing nulls should remain but no new ones added
+        assert_eq!(result.column(0).null_count(), 2);
+    }
+
+    #[test]
+    fn null_injection_name() {
+        assert_eq!(NullInjector::new().name(), "NullInjector");
+    }
+
+    #[test]
+    fn null_injection_breaks_not_null() {
+        assert_eq!(NullInjector::new().breaks(), InvariantSet::NOT_NULL);
+    }
 }

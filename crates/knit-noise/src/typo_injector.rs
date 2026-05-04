@@ -177,4 +177,99 @@ mod tests {
             let _ = apply_typo("abcdef", &mut rng);
         }
     }
+
+    #[test]
+    fn typo_all_kinds_exercised() {
+        use std::collections::HashSet;
+        // With enough iterations, all 4 typo kinds should be exercised
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let original = "hello";
+        let mut results = HashSet::new();
+        for _ in 0..200 {
+            let r = apply_typo(original, &mut rng);
+            results.insert(r.len());
+        }
+        // swap: same length; insert: +1; delete: -1; substitute: same length
+        assert!(results.contains(&4), "delete should produce length 4");
+        assert!(results.contains(&5), "swap/substitute should produce length 5");
+        assert!(results.contains(&6), "insert should produce length 6");
+    }
+
+    #[test]
+    fn typo_empty_string_unchanged() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = apply_typo("", &mut rng);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn typo_single_char() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        // Single char: swap is impossible (len<2), so only insert/delete/substitute
+        let mut results = std::collections::HashSet::new();
+        for _ in 0..100 {
+            results.insert(apply_typo("x", &mut rng).len());
+        }
+        // delete→0, substitute→1, insert→2 (swap would stay 1)
+        assert!(results.contains(&0) || results.contains(&2),
+            "single char should produce varied lengths: {:?}", results);
+    }
+
+    #[test]
+    fn typo_zero_probability_unchanged() {
+        let t = TypoInjector::new();
+        let config = PerturbConfig::default().with_probability(0.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = t.perturb(string_batch(), &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let orig = ["hello", "world", "testing", "typos", "here"];
+        for i in 0..5 {
+            assert_eq!(arr.value(i), orig[i]);
+        }
+    }
+
+    #[test]
+    fn typo_skips_non_utf8_columns() {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("num", DataType::Int32, false),
+            Field::new("text", DataType::Utf8, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3])),
+                Arc::new(StringArray::from(vec!["abc", "def", "ghi"])),
+            ],
+        )
+        .unwrap();
+        let t = TypoInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = t.perturb(batch, &mut rng, &config).unwrap();
+        // Int column unchanged
+        let nums = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        assert_eq!(nums.value(0), 1);
+        assert_eq!(nums.value(1), 2);
+        assert_eq!(nums.value(2), 3);
+    }
+
+    #[test]
+    fn typo_null_values_preserved() {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("word", DataType::Utf8, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(StringArray::from(vec![Some("hello"), None, Some("world")]))],
+        )
+        .unwrap();
+        let t = TypoInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = t.perturb(batch, &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        assert!(arr.is_valid(0));
+        assert!(!arr.is_valid(1), "null should remain null");
+        assert!(arr.is_valid(2));
+    }
 }

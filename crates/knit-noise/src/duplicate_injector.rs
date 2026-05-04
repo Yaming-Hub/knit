@@ -115,4 +115,67 @@ mod tests {
         let result = d.perturb(sample_batch(), &mut rng, &config).unwrap();
         assert_eq!(result.num_rows(), 5);
     }
+
+    #[test]
+    fn duplicated_rows_match_originals() {
+        let d = DuplicateInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = d.perturb(sample_batch(), &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        // First 5 are original, last 5 are duplicates of the same values
+        let originals: Vec<i32> = (0..5).map(|i| arr.value(i)).collect();
+        let duplicates: Vec<i32> = (5..10).map(|i| arr.value(i)).collect();
+        // Each duplicate should be one of the original values
+        for &v in &duplicates {
+            assert!(originals.contains(&v), "duplicate {v} not in originals");
+        }
+    }
+
+    #[test]
+    fn empty_batch_unchanged() {
+        let d = DuplicateInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int32, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int32Array::from(Vec::<i32>::new()))],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        assert_eq!(result.num_rows(), 0);
+    }
+
+    #[test]
+    fn partial_probability_adds_some_rows() {
+        let d = DuplicateInjector::new();
+        let config = PerturbConfig::default().with_probability(0.5);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        // Use larger batch for statistical assertions
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int32, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int32Array::from((0..100).collect::<Vec<i32>>()))],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        // Should have 100 originals + ~50 duplicates (allow 130-170)
+        assert!(
+            result.num_rows() >= 130 && result.num_rows() <= 170,
+            "expected ~150 rows, got {}",
+            result.num_rows()
+        );
+    }
+
+    #[test]
+    fn duplicate_name_and_breaks() {
+        let d = DuplicateInjector::new();
+        assert_eq!(d.name(), "DuplicateInjector");
+        assert_eq!(d.breaks(), InvariantSet::UNIQUE);
+    }
 }
