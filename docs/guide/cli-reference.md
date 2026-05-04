@@ -23,7 +23,7 @@ These flags can be used with any command:
 | `--json` | bool | `false` | Machine-readable JSON output |
 | `-q`, `--quiet` | bool | `false` | Suppress all non-error output |
 | `-v`, `--verbose` | bool | `false` | Extra diagnostic logging |
-| `--count <SPEC>` | string | — | Override row count for all entities (e.g. `1000`, `0.1x`, `10x`) |
+| `--count <SPEC>` | string | — | Override row count for `plan`/`generate` (e.g. `1000`, `0.1x`, `10x`) |
 | `--version` | — | — | Print version and exit |
 | `--help` | — | — | Print help and exit |
 
@@ -316,14 +316,15 @@ Resolves any `extends` directives and prints the fully merged schema as TOML
 
 ### `knit schema normalize`
 
-Reformat a schema to canonical style.
+Resolve and reformat a schema to canonical style.
 
 ```bash
 knit schema normalize <schema-file>
 ```
 
-Parses and re-serializes the schema in a consistent format. Useful for
-tidying hand-edited files. Use `--json` for JSON output.
+Parses the schema (resolving any `extends` chain), then re-serializes it as a
+standalone file in a consistent format. Note that inheritance structure is
+flattened in the output. Use `--json` for JSON output.
 
 ### `knit schema diff`
 
