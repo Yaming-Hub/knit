@@ -61,7 +61,7 @@ pub trait FieldGenerator: Send + Sync {
 /// # Thread Safety
 ///
 /// Implementations must be `Send + Sync` because generation partitions run in
-/// parallel via Rayon (future PR).
+/// parallel via Rayon.
 pub trait KeyStore: Send + Sync {
     /// Insert a primary-key value into the store.
     fn insert(&self, key: i64);

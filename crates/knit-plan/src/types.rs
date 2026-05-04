@@ -292,9 +292,9 @@ pub enum TopologyModel {
     BarabasiAlbert,
     /// Random hierarchical tree with Poisson branching.
     Tree,
-    /// Watts–Strogatz small-world (placeholder for future PR).
+    /// Watts–Strogatz small-world network with ring lattice and random rewiring.
     WattsStrogatz,
-    /// Erdős–Rényi random graph (placeholder for future PR).
+    /// Erdős–Rényi G(n, p) random graph.
     ErdosRenyi,
 }
 
