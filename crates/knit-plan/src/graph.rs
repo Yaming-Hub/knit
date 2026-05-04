@@ -211,3 +211,297 @@ pub fn resolve_row_counts(model: &DataModel) -> BTreeMap<String, u64> {
     }
     counts
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+    use knit_core::{CountSpec, DistributionKind, DistributionSpec, Entity, Relationship, RelationshipKind};
+
+    /// Helper to build a minimal entity with a given name and count.
+    fn entity(name: &str, count: u64) -> Entity {
+        Entity {
+            name: name.to_string(),
+            description: None,
+            count: CountSpec::Fixed(count),
+            fields: vec![],
+            constraints: vec![],
+            topology: None,
+        }
+    }
+
+    /// Helper to build a relationship.
+    fn rel(name: &str, from: &str, to: &str) -> Relationship {
+        Relationship {
+            name: name.to_string(),
+            from: from.to_string(),
+            to: to.to_string(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: None,
+            cardinality: None,
+        }
+    }
+
+    fn model_with(entities: Vec<Entity>, relationships: Vec<Relationship>) -> DataModel {
+        DataModel {
+            name: "test".to_string(),
+            description: None,
+            seed: 42,
+            locale: "en_US".to_string(),
+            timezone: "UTC".to_string(),
+            entities,
+            relationships,
+            noise_profiles: vec![],
+            correlations: vec![],
+            params: BTreeMap::new(),
+            schema_version: "1.0".to_string(),
+        }
+    }
+
+    // ── assign_phases tests ──────────────────────────────────────────
+
+    #[test]
+    fn single_entity_no_deps() {
+        let model = model_with(vec![entity("users", 100)], vec![]);
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.phases.len(), 1);
+        assert_eq!(result.phases[0], vec!["users"]);
+        assert!(result.deferred_refs.is_empty());
+    }
+
+    #[test]
+    fn two_independent_entities_same_phase() {
+        let model = model_with(
+            vec![entity("users", 100), entity("products", 50)],
+            vec![],
+        );
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.phases.len(), 1);
+        // Both in phase 0, sorted alphabetically
+        assert!(result.phases[0].contains(&"users".to_string()));
+        assert!(result.phases[0].contains(&"products".to_string()));
+    }
+
+    #[test]
+    fn linear_dependency_chain() {
+        // orders → users (orders depend on users)
+        let model = model_with(
+            vec![entity("users", 100), entity("orders", 500)],
+            vec![rel("orders_users", "orders", "users")],
+        );
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.phases.len(), 2);
+        assert_eq!(result.phases[0], vec!["users"]);
+        assert_eq!(result.phases[1], vec!["orders"]);
+        assert!(result.deferred_refs.is_empty());
+    }
+
+    #[test]
+    fn three_level_chain() {
+        // line_items → orders → users
+        let model = model_with(
+            vec![
+                entity("users", 100),
+                entity("orders", 500),
+                entity("line_items", 2000),
+            ],
+            vec![
+                rel("orders_users", "orders", "users"),
+                rel("items_orders", "line_items", "orders"),
+            ],
+        );
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.phases.len(), 3);
+        assert_eq!(result.phases[0], vec!["users"]);
+        assert_eq!(result.phases[1], vec!["orders"]);
+        assert_eq!(result.phases[2], vec!["line_items"]);
+    }
+
+    #[test]
+    fn diamond_dependency() {
+        // D depends on B and C; B and C both depend on A.
+        // A(phase 0) → B,C(phase 1) → D(phase 2)
+        let model = model_with(
+            vec![
+                entity("A", 10),
+                entity("B", 20),
+                entity("C", 30),
+                entity("D", 40),
+            ],
+            vec![
+                rel("B_A", "B", "A"),
+                rel("C_A", "C", "A"),
+                rel("D_B", "D", "B"),
+                rel("D_C", "D", "C"),
+            ],
+        );
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.phases.len(), 3);
+        assert_eq!(result.phases[0], vec!["A"]);
+        let mut phase1 = result.phases[1].clone();
+        phase1.sort();
+        assert_eq!(phase1, vec!["B", "C"]);
+        assert_eq!(result.phases[2], vec!["D"]);
+    }
+
+    #[test]
+    fn self_referential_entity() {
+        // employees references itself (manager_id → employees.id)
+        let model = model_with(
+            vec![entity("employees", 100)],
+            vec![rel("self_ref", "employees", "employees")],
+        );
+        let result = assign_phases(&model).unwrap();
+        // Still one phase (self-ref is deferred)
+        assert_eq!(result.phases.len(), 1);
+        assert_eq!(result.phases[0], vec!["employees"]);
+        // Should have a deferred ref with SelfReference strategy
+        assert_eq!(result.deferred_refs.len(), 1);
+        let dr = &result.deferred_refs[0];
+        assert_eq!(dr.from_entity, "employees");
+        assert_eq!(dr.to_entity, "employees");
+        assert_eq!(dr.from_field, "employees_id"); // default FK naming
+        assert!(matches!(dr.strategy, DeferralStrategy::SelfReference { .. }));
+    }
+
+    #[test]
+    fn mutual_cycle_produces_deferred_refs() {
+        // A → B and B → A (mutual dependency)
+        let model = model_with(
+            vec![entity("A", 10), entity("B", 20)],
+            vec![
+                rel("A_B", "A", "B"),
+                rel("B_A", "B", "A"),
+            ],
+        );
+        let result = assign_phases(&model).unwrap();
+        // Both in same phase (SCC)
+        assert_eq!(result.phases.len(), 1);
+        assert_eq!(result.deferred_refs.len(), 2);
+        // Both should be UniformSample strategy
+        for dr in &result.deferred_refs {
+            assert!(matches!(dr.strategy, DeferralStrategy::UniformSample));
+        }
+    }
+
+    #[test]
+    fn cycle_with_external_dep() {
+        // A and B are in a cycle; C depends on A.
+        // The SCC {A,B} goes to phase 0, C to phase 1.
+        let model = model_with(
+            vec![entity("A", 10), entity("B", 20), entity("C", 30)],
+            vec![
+                rel("A_B", "A", "B"),
+                rel("B_A", "B", "A"),
+                rel("C_A", "C", "A"),
+            ],
+        );
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.phases.len(), 2);
+        // Phase 0 has A and B (the cycle)
+        let mut phase0 = result.phases[0].clone();
+        phase0.sort();
+        assert_eq!(phase0, vec!["A", "B"]);
+        // Phase 1 has C
+        assert_eq!(result.phases[1], vec!["C"]);
+        // 2 deferred refs for the cycle
+        assert_eq!(result.deferred_refs.len(), 2);
+    }
+
+    #[test]
+    fn explicit_foreign_key_name_in_deferred_ref() {
+        // Self-referential with explicit FK name — should appear in deferred ref
+        let model = model_with(
+            vec![entity("employees", 100)],
+            vec![Relationship {
+                name: "manager".to_string(),
+                from: "employees".to_string(),
+                to: "employees".to_string(),
+                kind: RelationshipKind::OneToMany,
+                foreign_key: Some("manager_id".to_string()),
+                cardinality: None,
+            }],
+        );
+        let result = assign_phases(&model).unwrap();
+        assert_eq!(result.deferred_refs.len(), 1);
+        assert_eq!(result.deferred_refs[0].from_field, "manager_id");
+    }
+
+    #[test]
+    fn unknown_entity_in_relationship_errors() {
+        let model = model_with(
+            vec![entity("users", 100)],
+            vec![rel("bad_rel", "orders", "users")],
+        );
+        let result = assign_phases(&model);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, PlanError::UnknownEntity { ref name } if name == "orders"));
+    }
+
+    #[test]
+    fn unknown_target_entity_errors() {
+        let model = model_with(
+            vec![entity("orders", 500)],
+            vec![rel("bad_rel", "orders", "users")],
+        );
+        let result = assign_phases(&model);
+        assert!(result.is_err());
+    }
+
+    // ── resolve_row_counts tests ─────────────────────────────────────
+
+    #[test]
+    fn resolve_counts_fixed() {
+        let model = model_with(
+            vec![entity("a", 100), entity("b", 200)],
+            vec![],
+        );
+        let counts = resolve_row_counts(&model);
+        assert_eq!(counts["a"], 100);
+        assert_eq!(counts["b"], 200);
+    }
+
+    #[test]
+    fn resolve_counts_range() {
+        let model = model_with(
+            vec![Entity {
+                name: "x".to_string(),
+                description: None,
+                count: CountSpec::Range { min: 50, max: 150 },
+                fields: vec![],
+                constraints: vec![],
+                topology: None,
+            }],
+            vec![],
+        );
+        let counts = resolve_row_counts(&model);
+        // Range resolves to max
+        assert_eq!(counts["x"], 150);
+    }
+
+    #[test]
+    fn resolve_counts_distribution() {
+        let mut params = BTreeMap::new();
+        params.insert("mean".to_string(), 500.0);
+        params.insert("std_dev".to_string(), 50.0);
+        let model = model_with(
+            vec![Entity {
+                name: "d".to_string(),
+                description: None,
+                count: CountSpec::Distribution(DistributionSpec {
+                    kind: DistributionKind::Normal,
+                    params,
+                }),
+                fields: vec![],
+                constraints: vec![],
+                topology: None,
+            }],
+            vec![],
+        );
+        let counts = resolve_row_counts(&model);
+        // Normal distribution resolves to mean
+        assert_eq!(counts["d"], 500);
+    }
+}
+
