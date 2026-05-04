@@ -270,7 +270,7 @@ fn build_generator(
 
     // Distribution
     if let Some(fit) = &col.distribution {
-        return build_distribution_generator(&fit.best.distribution);
+        return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
     }
 
     // Boolean (check before categorical since bool columns store weights there)
@@ -340,7 +340,7 @@ fn build_generator(
 }
 
 /// Map a fitted distribution to a [`GeneratorSpec::Distribution`].
-fn build_distribution_generator(dist: &Distribution) -> GeneratorSpec {
+fn build_distribution_generator(dist: &Distribution, round: bool) -> GeneratorSpec {
     let (kind, params) = match dist {
         Distribution::Normal(mean, std_dev) => {
             let mut p = BTreeMap::new();
@@ -397,7 +397,7 @@ fn build_distribution_generator(dist: &Distribution) -> GeneratorSpec {
     };
 
     GeneratorSpec::Distribution {
-        spec: DistributionSpec { kind, params },
+        spec: DistributionSpec { kind, params, round },
     }
 }
 

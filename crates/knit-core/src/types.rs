@@ -356,6 +356,9 @@ pub struct DistributionSpec {
     /// Named numeric parameters (distribution-specific).
     #[serde(default)]
     pub params: BTreeMap<String, f64>,
+    /// When true, round sampled values to the nearest integer.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub round: bool,
 }
 
 /// Statistical distribution families supported by knit.

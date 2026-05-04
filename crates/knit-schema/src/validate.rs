@@ -1173,6 +1173,7 @@ mod tests {
                     params: [("min".to_string(), 100.0), ("max".to_string(), 10.0)]
                         .into_iter()
                         .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1197,6 +1198,7 @@ mod tests {
                     params: [("n".to_string(), 10.0), ("p".to_string(), 0.5)]
                         .into_iter()
                         .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1225,6 +1227,7 @@ mod tests {
                     params: [("n".to_string(), 10.0), ("p".to_string(), 1.5)]
                         .into_iter()
                         .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1253,6 +1256,7 @@ mod tests {
                     ]
                     .into_iter()
                     .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1277,6 +1281,7 @@ mod tests {
                     params: [("n".to_string(), 0.0), ("s".to_string(), 1.0)]
                         .into_iter()
                         .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1301,6 +1306,7 @@ mod tests {
                     params: [("alpha".to_string(), 2.0), ("beta".to_string(), 5.0)]
                         .into_iter()
                         .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1329,6 +1335,7 @@ mod tests {
                     params: [("n".to_string(), 10.5), ("s".to_string(), 1.0)]
                         .into_iter()
                         .collect(),
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1372,6 +1379,7 @@ mod tests {
         model.entities[0].count = CountSpec::Distribution(DistributionSpec {
             kind: DistributionKind::Normal,
             params: BTreeMap::new(), // missing mean and std_dev
+            round: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1558,6 +1566,7 @@ mod tests {
                     spec: DistributionSpec {
                         kind: DistributionKind::Normal,
                         params: BTreeMap::new(), // missing mean & std_dev
+                        round: false,
                     },
                 }),
                 max_retries: 100,

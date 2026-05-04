@@ -55,6 +55,7 @@ pub struct DistributionGenerator {
     params: BTreeMap<String, f64>,
     clamp_min: Option<f64>,
     clamp_max: Option<f64>,
+    round: bool,
 }
 
 impl DistributionGenerator {
@@ -64,12 +65,14 @@ impl DistributionGenerator {
         params: BTreeMap<String, f64>,
         clamp_min: Option<f64>,
         clamp_max: Option<f64>,
+        round: bool,
     ) -> Self {
         Self {
             kind,
             params,
             clamp_min,
             clamp_max,
+            round,
         }
     }
 
@@ -89,6 +92,16 @@ impl DistributionGenerator {
             None => v,
         }
     }
+
+    /// Convert sampled f64 values to an Arrow array, rounding to Int64 when configured.
+    fn to_array(&self, values: Vec<f64>) -> ArrayRef {
+        if self.round {
+            let ints: Vec<i64> = values.iter().map(|v| v.round() as i64).collect();
+            Arc::new(Int64Array::from(ints))
+        } else {
+            Arc::new(Float64Array::from(values))
+        }
+    }
 }
 
 impl FieldGenerator for DistributionGenerator {
@@ -105,7 +118,7 @@ impl FieldGenerator for DistributionGenerator {
                 };
                 let dist = rand::distributions::Uniform::new(lo, hi);
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Normal => {
                 let mean = self.param("mean", 0.0);
@@ -116,7 +129,7 @@ impl FieldGenerator for DistributionGenerator {
                         rand_distr::Normal::new(0.0, 1.0).unwrap()
                     });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::LogNormal => {
                 let mu = self.param("mu", 0.0);
@@ -127,7 +140,7 @@ impl FieldGenerator for DistributionGenerator {
                         rand_distr::LogNormal::new(0.0, 1.0).unwrap()
                     });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Exponential => {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
@@ -136,7 +149,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Exp::new(1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Poisson => {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
@@ -202,7 +215,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Pareto::new(1.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Weibull => {
                 let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
@@ -212,7 +225,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Weibull::new(1.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Gamma => {
                 let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
@@ -222,7 +235,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Gamma::new(1.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Beta => {
                 let alpha = self.param("alpha", 2.0).abs().max(f64::EPSILON);
@@ -232,7 +245,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Beta::new(2.0, 2.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Cauchy => {
                 let median = self.param("median", 0.0);
@@ -242,7 +255,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Cauchy::new(0.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::ChiSquared => {
                 let k = self.param("k", 1.0).abs().max(f64::EPSILON);
@@ -251,7 +264,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::ChiSquared::new(1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::StudentT => {
                 let n = self.param("n", 1.0).abs().max(f64::EPSILON);
@@ -260,7 +273,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::StudentT::new(1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Triangular => {
                 let min = self.param("min", 0.0);
@@ -273,7 +286,7 @@ impl FieldGenerator for DistributionGenerator {
                     rand_distr::Triangular::new(0.0, 1.0, 0.5).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                Arc::new(Float64Array::from(values))
+                self.to_array(values)
             }
             DistributionKind::Zipf => {
                 let n = self.param("n", 100.0).max(1.0) as u64;
@@ -292,6 +305,9 @@ impl FieldGenerator for DistributionGenerator {
     }
 
     fn output_type(&self) -> DataType {
+        if self.round {
+            return DataType::Int64;
+        }
         match self.kind {
             DistributionKind::Poisson
             | DistributionKind::Bernoulli
@@ -318,7 +334,7 @@ mod tests {
 
     fn gen_f64(kind: DistributionKind, params: &[(&str, f64)], count: usize) -> Vec<f64> {
         let p: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.to_string(), *v)).collect();
-        let g = DistributionGenerator::new(kind, p, None, None);
+        let g = DistributionGenerator::new(kind, p, None, None, false);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -328,7 +344,7 @@ mod tests {
 
     fn gen_i64(kind: DistributionKind, params: &[(&str, f64)], count: usize) -> Vec<i64> {
         let p: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.to_string(), *v)).collect();
-        let g = DistributionGenerator::new(kind, p, None, None);
+        let g = DistributionGenerator::new(kind, p, None, None, false);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -344,7 +360,7 @@ mod tests {
         count: usize,
     ) -> Vec<f64> {
         let p: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.to_string(), *v)).collect();
-        let g = DistributionGenerator::new(kind, p, clamp_min, clamp_max);
+        let g = DistributionGenerator::new(kind, p, clamp_min, clamp_max, false);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -557,7 +573,7 @@ mod tests {
             DistributionKind::Triangular,
         ];
         for kind in &continuous {
-            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None);
+            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None, false);
             assert_eq!(g.output_type(), DataType::Float64, "expected Float64 for {kind:?}");
         }
     }
@@ -572,7 +588,7 @@ mod tests {
             DistributionKind::Zipf,
         ];
         for kind in &discrete {
-            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None);
+            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None, false);
             assert_eq!(g.output_type(), DataType::Int64, "expected Int64 for {kind:?}");
         }
     }
