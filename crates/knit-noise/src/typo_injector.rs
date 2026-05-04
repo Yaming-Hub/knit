@@ -171,10 +171,148 @@ mod tests {
 
     #[test]
     fn typo_apply_swap() {
+        // Deterministically exercise the swap path by testing that adjacent chars get swapped
         let mut rng = ChaCha8Rng::seed_from_u64(0);
-        // Just test that apply_typo doesn't panic
-        for _ in 0..100 {
-            let _ = apply_typo("abcdef", &mut rng);
+        let mut saw_swap = false;
+        for _ in 0..200 {
+            let result = apply_typo("abcdef", &mut rng);
+            // A swap produces same length but different content with adjacent pair swapped
+            if result.len() == 6 && result != "abcdef" {
+                let chars: Vec<char> = result.chars().collect();
+                let orig: Vec<char> = "abcdef".chars().collect();
+                // Check if exactly one adjacent pair is swapped
+                let diffs: Vec<usize> = (0..6).filter(|&i| chars[i] != orig[i]).collect();
+                if diffs.len() == 2 && diffs[1] == diffs[0] + 1 {
+                    // Adjacent positions differ, and they swapped values
+                    if chars[diffs[0]] == orig[diffs[1]] && chars[diffs[1]] == orig[diffs[0]] {
+                        saw_swap = true;
+                        break;
+                    }
+                }
+            }
         }
+        assert!(saw_swap, "expected to see at least one swap in 200 iterations");
+    }
+
+    #[test]
+    fn typo_all_kinds_exercised() {
+        use std::collections::HashSet;
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let original = "hello";
+        let orig_chars: Vec<char> = original.chars().collect();
+        let mut saw_delete = false;
+        let mut saw_insert = false;
+        let mut saw_swap = false;
+        let mut saw_substitute = false;
+
+        for _ in 0..500 {
+            let r = apply_typo(original, &mut rng);
+            let r_chars: Vec<char> = r.chars().collect();
+            match r.len() {
+                4 => saw_delete = true,
+                6 => saw_insert = true,
+                5 if r != original => {
+                    // Distinguish swap vs substitute: swap has exactly 2 adjacent diffs
+                    let diffs: Vec<usize> = (0..5)
+                        .filter(|&i| r_chars[i] != orig_chars[i])
+                        .collect();
+                    if diffs.len() == 2
+                        && diffs[1] == diffs[0] + 1
+                        && r_chars[diffs[0]] == orig_chars[diffs[1]]
+                        && r_chars[diffs[1]] == orig_chars[diffs[0]]
+                    {
+                        saw_swap = true;
+                    } else {
+                        saw_substitute = true;
+                    }
+                }
+                _ => {}
+            }
+            if saw_delete && saw_insert && saw_swap && saw_substitute {
+                break;
+            }
+        }
+        assert!(saw_delete, "delete kind not observed");
+        assert!(saw_insert, "insert kind not observed");
+        assert!(saw_swap, "swap kind not observed");
+        assert!(saw_substitute, "substitute kind not observed");
+    }
+
+    #[test]
+    fn typo_empty_string_unchanged() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = apply_typo("", &mut rng);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn typo_single_char() {
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        // Single char: swap is impossible (len<2), so only insert/delete/substitute
+        let mut results = std::collections::HashSet::new();
+        for _ in 0..100 {
+            results.insert(apply_typo("x", &mut rng).len());
+        }
+        // delete→0, substitute→1, insert→2 (swap would stay 1)
+        assert!(results.contains(&0) || results.contains(&2),
+            "single char should produce varied lengths: {:?}", results);
+    }
+
+    #[test]
+    fn typo_zero_probability_unchanged() {
+        let t = TypoInjector::new();
+        let config = PerturbConfig::default().with_probability(0.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = t.perturb(string_batch(), &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let orig = ["hello", "world", "testing", "typos", "here"];
+        for i in 0..5 {
+            assert_eq!(arr.value(i), orig[i]);
+        }
+    }
+
+    #[test]
+    fn typo_skips_non_utf8_columns() {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("num", DataType::Int32, false),
+            Field::new("text", DataType::Utf8, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3])),
+                Arc::new(StringArray::from(vec!["abc", "def", "ghi"])),
+            ],
+        )
+        .unwrap();
+        let t = TypoInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = t.perturb(batch, &mut rng, &config).unwrap();
+        // Int column unchanged
+        let nums = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        assert_eq!(nums.value(0), 1);
+        assert_eq!(nums.value(1), 2);
+        assert_eq!(nums.value(2), 3);
+    }
+
+    #[test]
+    fn typo_null_values_preserved() {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("word", DataType::Utf8, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(StringArray::from(vec![Some("hello"), None, Some("world")]))],
+        )
+        .unwrap();
+        let t = TypoInjector::new();
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = t.perturb(batch, &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        assert!(arr.is_valid(0));
+        assert!(!arr.is_valid(1), "null should remain null");
+        assert!(arr.is_valid(2));
     }
 }
