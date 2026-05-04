@@ -38,6 +38,7 @@ fn entity_field_names<'a>(model: &'a DataModel, entity_name: &str) -> HashSet<&'
 }
 
 fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
+    let names = entity_names(model);
     let mut seen = HashSet::new();
     for entity in &model.entities {
         if !seen.insert(&entity.name) {
@@ -46,12 +47,16 @@ fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 message: format!("duplicate entity name '{}'", entity.name),
             });
         }
-        validate_fields(entity, errors);
+        validate_fields(entity, &names, errors);
         validate_entity_count(entity, errors);
     }
 }
 
-fn validate_fields(entity: &Entity, errors: &mut Vec<SchemaError>) {
+fn validate_fields(
+    entity: &Entity,
+    entity_names: &HashSet<&str>,
+    errors: &mut Vec<SchemaError>,
+) {
     let mut seen = HashSet::new();
     let mut pk_count = 0u32;
     for field in &entity.fields {
@@ -64,10 +69,13 @@ fn validate_fields(entity: &Entity, errors: &mut Vec<SchemaError>) {
         if field.primary_key == Some(true) {
             pk_count += 1;
         }
-        if let Some(GeneratorSpec::Distribution { spec }) = &field.generator {
-            validate_distribution(
+        if let Some(gen) = &field.generator {
+            validate_generator(
                 &format!("entities.{}.fields.{}.generator", entity.name, field.name),
-                spec,
+                gen,
+                &field.name,
+                entity,
+                entity_names,
                 errors,
             );
         }
@@ -80,15 +88,44 @@ fn validate_fields(entity: &Entity, errors: &mut Vec<SchemaError>) {
     }
 }
 
-fn validate_entity_count(entity: &Entity, errors: &mut Vec<SchemaError>) {
-    if let CountSpec::Fixed(n) = &entity.count {
-        if *n == 0 {
+fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaError>) {
+    match count {
+        CountSpec::Fixed(0) => {
             errors.push(SchemaError::Validation {
-                path: format!("entities.{}.count", entity.name),
-                message: "entity count must be > 0".to_string(),
+                path: path.to_string(),
+                message: "count must be > 0".to_string(),
             });
         }
+        CountSpec::Range { min, max } => {
+            if *min == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "range min must be > 0".to_string(),
+                });
+            }
+            if min > max {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "range requires min <= max, got min={}, max={}",
+                        min, max
+                    ),
+                });
+            }
+        }
+        CountSpec::Distribution(spec) => {
+            validate_distribution(path, spec, errors);
+        }
+        _ => {}
     }
+}
+
+fn validate_entity_count(entity: &Entity, errors: &mut Vec<SchemaError>) {
+    validate_count_spec(
+        &format!("entities.{}.count", entity.name),
+        &entity.count,
+        errors,
+    );
 }
 
 fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<SchemaError>) {
@@ -487,6 +524,186 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
     }
 }
 
+const KNOWN_FAKER_METHODS: &[&str] = &[
+    "first_name",
+    "last_name",
+    "full_name",
+    "name",
+    "username",
+    "email",
+    "word",
+    "sentence",
+    "phone",
+    "address",
+    "city",
+    "company",
+];
+
+fn validate_generator(
+    path: &str,
+    gen: &GeneratorSpec,
+    field_name: &str,
+    entity: &Entity,
+    entity_names: &HashSet<&str>,
+    errors: &mut Vec<SchemaError>,
+) {
+    match gen {
+        GeneratorSpec::Distribution { spec } => {
+            validate_distribution(path, spec, errors);
+        }
+        GeneratorSpec::Sequence { step, .. } => {
+            if *step == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "sequence step must not be 0".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::OneOf { choices } => {
+            if choices.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "oneOf requires at least one choice".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::Faker { method, .. } => {
+            if !KNOWN_FAKER_METHODS.contains(&method.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "unknown faker method '{}', expected one of: {}",
+                        method,
+                        KNOWN_FAKER_METHODS.join(", ")
+                    ),
+                });
+            }
+        }
+        GeneratorSpec::UuidGen { version } => {
+            if *version != 4 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "only UUID version 4 is supported, got {}",
+                        version
+                    ),
+                });
+            }
+        }
+        GeneratorSpec::BusinessHours {
+            start_hour,
+            end_hour,
+            ..
+        } => {
+            if *start_hour > 23 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "business_hours start_hour must be in [0, 23]".to_string(),
+                });
+            }
+            if *end_hour < 1 || *end_hour > 24 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "business_hours end_hour must be in [1, 24]".to_string(),
+                });
+            }
+            if *start_hour >= *end_hour {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "business_hours requires start_hour < end_hour".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::Lookup {
+            entity: ref lookup_entity,
+            ..
+        } => {
+            if !entity_names.contains(lookup_entity.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "lookup references unknown entity '{}'",
+                        lookup_entity
+                    ),
+                });
+            }
+        }
+        GeneratorSpec::Conditional {
+            field,
+            branches,
+            default,
+        } => {
+            let field_names: HashSet<&str> =
+                entity.fields.iter().map(|f| f.name.as_str()).collect();
+            if !field_names.contains(field.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "conditional references unknown field '{}' in entity '{}'",
+                        field, entity.name
+                    ),
+                });
+            }
+            for (i, branch) in branches.iter().enumerate() {
+                validate_generator(
+                    &format!("{}.branches[{}]", path, i),
+                    &branch.generator,
+                    field_name,
+                    entity,
+                    entity_names,
+                    errors,
+                );
+            }
+            if let Some(def) = default {
+                validate_generator(
+                    &format!("{}.default", path),
+                    def,
+                    field_name,
+                    entity,
+                    entity_names,
+                    errors,
+                );
+            }
+        }
+        GeneratorSpec::Relative { field, .. } => {
+            let field_names: HashSet<&str> =
+                entity.fields.iter().map(|f| f.name.as_str()).collect();
+            if !field_names.contains(field.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "relative references unknown field '{}' in entity '{}'",
+                        field, entity.name
+                    ),
+                });
+            }
+            if field == field_name {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "relative cannot reference itself".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::Unique { inner, .. } => {
+            validate_generator(path, inner, field_name, entity, entity_names, errors);
+        }
+        GeneratorSpec::Composite { generators, .. } => {
+            for (key, sub_gen) in generators {
+                validate_generator(
+                    &format!("{}.generators.{}", path, key),
+                    sub_gen,
+                    field_name,
+                    entity,
+                    entity_names,
+                    errors,
+                );
+            }
+        }
+        // Pattern, Derived, Constant — no additional validation needed
+        _ => {}
+    }
+}
+
 fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
     let names = entity_names(model);
     let mut seen = HashSet::new();
@@ -514,13 +731,20 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
             let fields = entity_field_names(model, &rel.from);
             if !fields.contains(fk.as_str()) {
                 errors.push(SchemaError::Validation {
-                    path,
+                    path: path.clone(),
                     message: format!(
                         "foreign_key '{}' not found in entity '{}'",
                         fk, rel.from
                     ),
                 });
             }
+        }
+        if let Some(ref count) = rel.cardinality {
+            validate_count_spec(
+                &format!("{}.cardinality", path),
+                count,
+                errors,
+            );
         }
     }
 }
@@ -1057,6 +1281,253 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("zipf") && message.contains("integer"))
+        }));
+    }
+
+    // ── Count spec validation ───────────────────────────────────────
+
+    #[test]
+    fn test_validate_count_range_min_gt_max() {
+        let mut model = minimal_model();
+        model.entities[0].count = CountSpec::Range { min: 100, max: 10 };
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("min <= max"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_count_range_min_zero() {
+        let mut model = minimal_model();
+        model.entities[0].count = CountSpec::Range { min: 0, max: 10 };
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("range min must be > 0"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_count_distribution() {
+        let mut model = minimal_model();
+        model.entities[0].count = CountSpec::Distribution(DistributionSpec {
+            kind: DistributionKind::Normal,
+            params: BTreeMap::new(), // missing mean and std_dev
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("normal") && message.contains("mean"))
+        }));
+    }
+
+    // ── Generator validation ────────────────────────────────────────
+
+    #[test]
+    fn test_validate_sequence_step_zero() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "seq".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 1,
+                step: 0,
+                prefix: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence step must not be 0"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_oneof_empty() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "choice".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::OneOf { choices: vec![] }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("oneOf requires at least one choice"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_faker_unknown_method() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "fake".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Faker {
+                method: "bogus".to_string(),
+                args: vec![],
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown faker method 'bogus'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_faker_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "fake".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Faker {
+                method: "email".to_string(),
+                args: vec![],
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("faker"))
+            }),
+            "expected no faker errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_validate_uuid_version_3() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "uid".to_string(),
+            description: None,
+            data_type: DataType::Uuid,
+            generator: Some(GeneratorSpec::UuidGen { version: 3 }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("only UUID version 4 is supported"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_invalid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 20,
+                end_hour: 10,
+                exclude_weekends: false,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("start_hour < end_hour"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_end_24_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 20,
+                end_hour: 24,
+                exclude_weekends: false,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("business_hours"))
+            }),
+            "expected no business_hours errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_validate_lookup_unknown_entity() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ref_field".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Lookup {
+                entity: "nonexistent".to_string(),
+                field: "id".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("lookup references unknown entity 'nonexistent'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_unique_nested_invalid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "uniq".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Unique {
+                inner: Box::new(GeneratorSpec::Distribution {
+                    spec: DistributionSpec {
+                        kind: DistributionKind::Normal,
+                        params: BTreeMap::new(), // missing mean & std_dev
+                    },
+                }),
+                max_retries: 100,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("normal") && message.contains("mean"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relative_self_ref() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "self_field".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Relative {
+                field: "self_field".to_string(),
+                offset: Value::Int(1),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("relative cannot reference itself"))
         }));
     }
 }
