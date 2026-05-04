@@ -146,6 +146,45 @@ static COMPANY_SUFFIXES: &[&str] = &[
     "Research", "Financial", "Logistics", "Media", "Health", "Bio", "Soft",
 ];
 
+/// US state names (~50 entries).
+static US_STATES: &[&str] = &[
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+    "Wisconsin", "Wyoming",
+];
+
+/// Country names (~60 entries).
+static COUNTRIES: &[&str] = &[
+    "United States", "Canada", "United Kingdom", "France", "Germany", "Italy", "Spain",
+    "Australia", "Japan", "China", "India", "Brazil", "Mexico", "South Korea", "Russia",
+    "Netherlands", "Switzerland", "Sweden", "Norway", "Denmark", "Finland", "Belgium",
+    "Austria", "Ireland", "Portugal", "Poland", "Czech Republic", "Greece", "Turkey",
+    "Israel", "South Africa", "Egypt", "Nigeria", "Kenya", "Argentina", "Colombia",
+    "Chile", "Peru", "Thailand", "Vietnam", "Indonesia", "Philippines", "Malaysia",
+    "Singapore", "New Zealand", "Saudi Arabia", "United Arab Emirates", "Pakistan",
+    "Bangladesh", "Taiwan", "Hong Kong", "Ukraine", "Romania", "Hungary", "Croatia",
+    "Serbia", "Slovakia", "Slovenia", "Iceland", "Luxembourg",
+];
+
+/// Color names for `color` method.
+static COLORS: &[&str] = &[
+    "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown",
+    "black", "white", "gray", "cyan", "magenta", "lime", "teal", "navy",
+    "maroon", "olive", "aqua", "coral", "crimson", "gold", "indigo", "ivory",
+    "khaki", "lavender", "orchid", "plum", "salmon", "sienna", "silver", "tan",
+    "turquoise", "violet", "wheat", "beige", "azure", "chartreuse", "fuchsia", "scarlet",
+];
+
+/// Top-level domains for URL generation.
+static TLDS: &[&str] = &[
+    "com", "org", "net", "io", "dev", "co", "app", "tech",
+];
+
 /// Email domains.
 static DOMAINS: &[&str] = &[
     "example.com", "mail.com", "email.com", "inbox.com", "webmail.com",
@@ -185,8 +224,11 @@ fn pick<'a>(rng: &mut dyn RngCore, list: &'a [&str]) -> &'a str {
 
 /// Produce realistic synthetic strings for a given faker *category* (method).
 ///
-/// Supported categories: `first_name`, `last_name`, `full_name`, `username`,
-/// `email`, `word`, `sentence`, `phone`, `address`, `city`, `company`.
+/// Supported categories: `first_name`, `last_name`, `full_name` / `name`,
+/// `username`, `email`, `word`, `sentence`, `paragraph`, `title`, `phone`,
+/// `address`, `city`, `state`, `country`, `zip_code` / `zipcode` / `postal_code`,
+/// `company`, `url`, `domain`, `ipv4` / `ip_address`, `ipv6`, `color`,
+/// `hex_color`.
 ///
 /// Unknown categories emit a `tracing::warn` on first call and produce the
 /// category name as a constant string — this keeps pipelines running while
@@ -273,6 +315,95 @@ impl FakerGenerator {
                 let prefix = pick(rng, COMPANY_PREFIXES);
                 let suffix = pick(rng, COMPANY_SUFFIXES);
                 format!("{prefix} {suffix}")
+            }
+            "state" => pick(rng, US_STATES).to_string(),
+            "country" => pick(rng, COUNTRIES).to_string(),
+            "zip_code" | "zipcode" | "postal_code" => {
+                let code = rng.next_u32() % 100000;
+                format!("{code:05}")
+            }
+            "url" => {
+                let word = pick(rng, WORDS);
+                let tld = pick(rng, TLDS);
+                format!("https://{word}.{tld}")
+            }
+            "domain" => {
+                let word = pick(rng, WORDS);
+                let tld = pick(rng, TLDS);
+                format!("{word}.{tld}")
+            }
+            "ipv4" | "ip_address" => {
+                let a = rng.next_u32() % 256;
+                let b = rng.next_u32() % 256;
+                let c = rng.next_u32() % 256;
+                let d = rng.next_u32() % 256;
+                format!("{a}.{b}.{c}.{d}")
+            }
+            "ipv6" => {
+                let mut parts = [0u16; 8];
+                for p in &mut parts {
+                    *p = (rng.next_u32() & 0xFFFF) as u16;
+                }
+                format!(
+                    "{:04x}:{:04x}:{:04x}:{:04x}:{:04x}:{:04x}:{:04x}:{:04x}",
+                    parts[0], parts[1], parts[2], parts[3],
+                    parts[4], parts[5], parts[6], parts[7]
+                )
+            }
+            "color" => pick(rng, COLORS).to_string(),
+            "hex_color" => {
+                let r = rng.next_u32() % 256;
+                let g = rng.next_u32() % 256;
+                let b = rng.next_u32() % 256;
+                format!("#{r:02x}{g:02x}{b:02x}")
+            }
+            "paragraph" => {
+                let sentence_count = 2 + (rng.next_u32() % 4) as usize; // 2..=5
+                let mut para = String::with_capacity(sentence_count * 50);
+                for i in 0..sentence_count {
+                    if i > 0 {
+                        para.push(' ');
+                    }
+                    let word_count = 4 + (rng.next_u32() % 8) as usize; // 4..=11
+                    for j in 0..word_count {
+                        if j > 0 {
+                            para.push(' ');
+                        }
+                        let w = pick(rng, WORDS);
+                        if j == 0 {
+                            let mut chars = w.chars();
+                            if let Some(c) = chars.next() {
+                                for uc in c.to_uppercase() {
+                                    para.push(uc);
+                                }
+                                para.push_str(chars.as_str());
+                            }
+                        } else {
+                            para.push_str(w);
+                        }
+                    }
+                    para.push('.');
+                }
+                para
+            }
+            "title" => {
+                let word_count = 2 + (rng.next_u32() % 4) as usize; // 2..=5
+                let mut t = String::with_capacity(word_count * 7);
+                for i in 0..word_count {
+                    if i > 0 {
+                        t.push(' ');
+                    }
+                    let w = pick(rng, WORDS);
+                    // Title case: capitalize first char of each word
+                    let mut chars = w.chars();
+                    if let Some(c) = chars.next() {
+                        for uc in c.to_uppercase() {
+                            t.push(uc);
+                        }
+                        t.push_str(chars.as_str());
+                    }
+                }
+                t
             }
             unknown => {
                 if !self.warned.swap(true, Ordering::Relaxed) {
@@ -476,6 +607,143 @@ mod tests {
         let arr = gen("name", 20, 55);
         for v in strings(&arr) {
             assert!(v.contains(' '), "name alias missing space: {v}");
+        }
+    }
+
+    #[test]
+    fn state_produces_known_state() {
+        let arr = gen("state", 50, 20);
+        for v in strings(&arr) {
+            assert!(!v.is_empty(), "state should not be empty");
+        }
+    }
+
+    #[test]
+    fn country_produces_nonempty() {
+        let arr = gen("country", 50, 21);
+        for v in strings(&arr) {
+            assert!(!v.is_empty(), "country should not be empty");
+        }
+    }
+
+    #[test]
+    fn zip_code_five_digits() {
+        let arr = gen("zip_code", 100, 22);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 5, "zip_code should be 5 chars: {v}");
+            assert!(v.chars().all(|c| c.is_ascii_digit()), "zip_code should be digits: {v}");
+        }
+    }
+
+    #[test]
+    fn zip_code_aliases() {
+        // All aliases should produce 5-digit codes
+        for alias in &["zip_code", "zipcode", "postal_code"] {
+            let arr = gen(alias, 10, 23);
+            for v in strings(&arr) {
+                assert_eq!(v.len(), 5, "{alias} should produce 5-digit code: {v}");
+            }
+        }
+    }
+
+    #[test]
+    fn url_format() {
+        let arr = gen("url", 50, 24);
+        for v in strings(&arr) {
+            assert!(v.starts_with("https://"), "url should start with https://: {v}");
+            assert!(v.contains('.'), "url should contain a dot: {v}");
+        }
+    }
+
+    #[test]
+    fn domain_format() {
+        let arr = gen("domain", 50, 25);
+        for v in strings(&arr) {
+            assert!(!v.starts_with("https://"), "domain should not have scheme: {v}");
+            assert!(v.contains('.'), "domain should contain a dot: {v}");
+        }
+    }
+
+    #[test]
+    fn ipv4_format() {
+        let arr = gen("ipv4", 50, 26);
+        for v in strings(&arr) {
+            let octets: Vec<&str> = v.split('.').collect();
+            assert_eq!(octets.len(), 4, "ipv4 should have 4 octets: {v}");
+            for octet in &octets {
+                let n: u32 = octet.parse().unwrap_or(999);
+                assert!(n < 256, "ipv4 octet out of range: {v}");
+            }
+        }
+    }
+
+    #[test]
+    fn ip_address_alias() {
+        let arr = gen("ip_address", 10, 27);
+        for v in strings(&arr) {
+            assert_eq!(v.split('.').count(), 4, "ip_address should produce ipv4: {v}");
+        }
+    }
+
+    #[test]
+    fn ipv6_format() {
+        let arr = gen("ipv6", 50, 28);
+        for v in strings(&arr) {
+            let groups: Vec<&str> = v.split(':').collect();
+            assert_eq!(groups.len(), 8, "ipv6 should have 8 groups: {v}");
+            for g in &groups {
+                assert_eq!(g.len(), 4, "ipv6 group should be 4 hex chars: {v}");
+                assert!(
+                    g.chars().all(|c| c.is_ascii_hexdigit()),
+                    "ipv6 group should be hex: {v}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn color_nonempty() {
+        let arr = gen("color", 50, 29);
+        for v in strings(&arr) {
+            assert!(!v.is_empty(), "color should not be empty");
+        }
+    }
+
+    #[test]
+    fn hex_color_format() {
+        let arr = gen("hex_color", 50, 30);
+        for v in strings(&arr) {
+            assert!(v.starts_with('#'), "hex_color should start with #: {v}");
+            assert_eq!(v.len(), 7, "hex_color should be 7 chars: {v}");
+            assert!(
+                v[1..].chars().all(|c| c.is_ascii_hexdigit()),
+                "hex_color should be hex digits: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn paragraph_multiple_sentences() {
+        let arr = gen("paragraph", 20, 31);
+        for v in strings(&arr) {
+            assert!(v.ends_with('.'), "paragraph should end with period: {v}");
+            let sentence_count = v.matches('.').count();
+            assert!(sentence_count >= 2, "paragraph should have >=2 sentences: {v}");
+        }
+    }
+
+    #[test]
+    fn title_title_case() {
+        let arr = gen("title", 50, 32);
+        for v in strings(&arr) {
+            assert!(!v.is_empty(), "title should not be empty");
+            // Each word should start with uppercase
+            for word in v.split_whitespace() {
+                assert!(
+                    word.chars().next().unwrap().is_uppercase(),
+                    "title word should be capitalized: {word} in {v}"
+                );
+            }
         }
     }
 }
