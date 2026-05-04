@@ -166,13 +166,14 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         }
     }
 
-    // Check categorical (low cardinality)
+    // Check categorical (low cardinality), but only if no strong semantic pattern was detected
+    let has_strong_pattern = patterns.values().any(|&rate| rate > 0.8);
     let mut distinct: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for v in &non_null {
         distinct.insert(v);
     }
     let cardinality_ratio = distinct.len() as f64 / total;
-    if cardinality_ratio <= categorical_threshold && distinct.len() <= 200 {
+    if !has_strong_pattern && cardinality_ratio <= categorical_threshold && distinct.len() <= 200 {
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,

@@ -74,6 +74,8 @@ pub struct ColumnAnalysis {
     pub string_patterns: Vec<(StringPattern, f64)>,
     /// Whether a numeric column contains only integer values.
     pub is_integer_valued: bool,
+    /// Whether a temporal column has time-of-day precision (vs date-only).
+    pub has_time_component: bool,
 }
 
 impl ColumnAnalysis {
@@ -90,6 +92,7 @@ impl ColumnAnalysis {
             inferred_type: None,
             string_patterns: vec![],
             is_integer_valued: false,
+            has_time_component: false,
         }
     }
 }
@@ -261,8 +264,8 @@ fn build_generator(
     }
 
     // Temporal pattern
-    if let Some(spec) = &col.temporal_pattern {
-        return build_temporal_generator(spec);
+    if col.temporal_pattern.is_some() {
+        return build_temporal_generator(col);
     }
 
     // Distribution
@@ -302,7 +305,8 @@ fn build_generator(
                 return GeneratorSpec::UuidGen { version: 4 };
             }
             InferredType::Date(_) => {
-                return GeneratorSpec::Faker { method: "date".into(), args: vec![] };
+                let method = if col.has_time_component { "datetime" } else { "date" };
+                return GeneratorSpec::Faker { method: method.into(), args: vec![] };
             }
             _ => {}
         }
@@ -412,11 +416,10 @@ fn build_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
 }
 
 /// Map a temporal pattern to a [`GeneratorSpec`].
-fn build_temporal_generator(_spec: &TemporalPatternSpec) -> GeneratorSpec {
-    // For now, emit a faker date generator.
-    // Full TimeSeries support (trends, seasonality) will be added later.
+fn build_temporal_generator(col: &ColumnAnalysis) -> GeneratorSpec {
+    let method = if col.has_time_component { "datetime" } else { "date" };
     GeneratorSpec::Faker {
-        method: "date".into(),
+        method: method.into(),
         args: vec![],
     }
 }
@@ -616,6 +619,7 @@ mod tests {
                     inferred_type: None,
                     string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -628,6 +632,7 @@ mod tests {
                     inferred_type: None,
                     string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 },
             ],
             relationships: vec![],
@@ -658,6 +663,7 @@ mod tests {
                 inferred_type: None,
                 string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -694,6 +700,7 @@ mod tests {
                 inferred_type: None,
                 string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -726,6 +733,7 @@ mod tests {
                 inferred_type: None,
                 string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -767,6 +775,7 @@ mod tests {
                 inferred_type: None,
                 string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -792,6 +801,7 @@ mod tests {
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -821,6 +831,7 @@ mod tests {
             inferred_type: Some(InferredType::Uuid),
             string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -839,6 +850,7 @@ mod tests {
             inferred_type: Some(InferredType::Boolean),
             string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
@@ -857,6 +869,7 @@ mod tests {
             inferred_type: Some(InferredType::Text),
             string_patterns: vec![(StringPattern::Email, 0.95)],
             is_integer_valued: false,
+            has_time_component: false,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -879,6 +892,7 @@ mod tests {
             inferred_type: Some(InferredType::Text),
             string_patterns: vec![(StringPattern::Phone, 0.9)],
             is_integer_valued: false,
+            has_time_component: false,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -903,6 +917,7 @@ mod tests {
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
                     is_integer_valued: false,
+                    has_time_component: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -927,6 +942,7 @@ mod tests {
                 inferred_type: Some(InferredType::Text),
                 string_patterns: vec![(StringPattern::Email, 0.95)],
                 is_integer_valued: false,
+                has_time_component: false,
             }],
             relationships: vec![],
             correlations: vec![],

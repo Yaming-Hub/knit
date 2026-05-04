@@ -328,6 +328,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     let mut categorical_weights: Option<Vec<(String, f64)>> = None;
     let mut confidence = 1.0;
     let mut is_integer_valued = false;
+    let mut has_time_component = false;
 
     // Boolean columns (Arrow auto-detected) → weighted OneOf
     if matches!(profile.data_type, DataType::Boolean) {
@@ -336,12 +337,15 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
             let arr = batch.column(idx);
             let bool_arr = arr.as_any().downcast_ref::<arrow::array::BooleanArray>();
             if let Some(ba) = bool_arr {
-                let total = ba.len() as f64;
+                let non_null_count = (0..ba.len()).filter(|&i| !ba.is_null(i)).count();
                 let true_count = (0..ba.len()).filter(|&i| !ba.is_null(i) && ba.value(i)).count();
-                let true_rate = true_count as f64 / total;
+                let true_rate = if non_null_count > 0 {
+                    true_count as f64 / non_null_count as f64
+                } else {
+                    0.5
+                };
                 let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, 1.0);
                 ca.inferred_type = Some(InferredType::Boolean);
-                // Store the actual true/false proportions in categorical_weights
                 let mut weights = vec![
                     ("true".to_string(), true_rate),
                     ("false".to_string(), 1.0 - true_rate),
@@ -426,6 +430,16 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                     inferred_type = Some(inference.inferred_type);
                 }
                 ref other => {
+                    // For string-detected dates, check if values contain time info
+                    if matches!(other, InferredType::Date(_)) {
+                        let time_count = refs.iter()
+                            .filter_map(|s| *s)
+                            .filter(|v| v.contains('T') || v.contains(' ') && v.len() > 10)
+                            .count();
+                        if time_count as f64 / refs.len().max(1) as f64 > 0.5 {
+                            has_time_component = true;
+                        }
+                    }
                     inferred_type = Some(other.clone());
                 }
             }
@@ -439,6 +453,11 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     ca.inferred_type = inferred_type;
     ca.string_patterns = string_patterns;
     ca.is_integer_valued = is_integer_valued;
+    // Timestamp types have time-of-day; Date32/Date64 are date-only; string dates checked above
+    ca.has_time_component = has_time_component || matches!(
+        profile.data_type,
+        DataType::Timestamp(_, _)
+    );
     ca
 }
 
