@@ -13,7 +13,7 @@ use arrow_csv::ReaderBuilder as CsvReaderBuilder;
 use arrow_json::ReaderBuilder as JsonReaderBuilder;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use serde_json;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::error::{LearnError, LearnResult};
 
@@ -299,24 +299,54 @@ pub fn ingest_directory(dir: &Path) -> LearnResult<Vec<IngestionResult>> {
 }
 
 /// Recursively collect all files from a directory tree.
-fn collect_files_recursive(dir: &Path) -> Vec<PathBuf> {
+///
+/// Propagates the root directory read error. Unreadable subdirectories
+/// are logged and skipped. Directory symlinks are skipped to avoid cycles.
+fn collect_files_recursive(dir: &Path) -> LearnResult<Vec<PathBuf>> {
+    use std::collections::HashSet;
+
     let mut files = Vec::new();
     let mut dirs = vec![dir.to_path_buf()];
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+
+    // Canonicalize and visit the root; propagate error if unreadable
+    let root_canonical = dir.canonicalize().map_err(|e| {
+        LearnError::Io(std::io::Error::new(e.kind(), format!("cannot read directory {}: {e}", dir.display())))
+    })?;
+    visited.insert(root_canonical);
+
+    let mut first = true;
     while let Some(d) = dirs.pop() {
         let entries = match std::fs::read_dir(&d) {
             Ok(e) => e,
-            Err(_) => continue,
+            Err(e) => {
+                if first {
+                    return Err(LearnError::Io(e));
+                }
+                warn!(dir = %d.display(), error = %e, "skipping unreadable subdirectory");
+                continue;
+            }
         };
+        first = false;
+
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
-            if path.is_dir() {
-                dirs.push(path);
-            } else if path.is_file() {
+            let ft = match entry.file_type() {
+                Ok(ft) => ft,
+                Err(_) => continue,
+            };
+            if ft.is_dir() && !ft.is_symlink() {
+                if let Ok(canonical) = path.canonicalize() {
+                    if visited.insert(canonical) {
+                        dirs.push(path);
+                    }
+                }
+            } else if ft.is_file() {
                 files.push(path);
             }
         }
     }
-    files
+    Ok(files)
 }
 
 /// Ingest with an optional per-entity row limit.
@@ -329,8 +359,28 @@ pub fn ingest_directory_with_limit(
     info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
 
     let mut results = Vec::new();
-    let mut entries: Vec<PathBuf> = collect_files_recursive(dir);
+    let mut entries: Vec<PathBuf> = collect_files_recursive(dir)?;
     entries.sort();
+
+    // Derive unique entity names: use file_stem, but prefix with parent dir
+    // name when duplicates would occur.
+    let stems: Vec<String> = entries
+        .iter()
+        .filter(|p| {
+            let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+            ["csv", "tsv", "parquet", "json", "jsonl"].contains(&ext.as_str())
+        })
+        .map(|p| p.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown").to_string())
+        .collect();
+    let mut stem_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for s in &stems {
+        *stem_counts.entry(s.clone()).or_insert(0) += 1;
+    }
+    let duplicated_stems: std::collections::HashSet<&str> = stem_counts
+        .iter()
+        .filter(|(_, c)| **c > 1)
+        .map(|(s, _)| s.as_str())
+        .collect();
 
     for path in entries {
         let ext = path
@@ -344,11 +394,23 @@ pub fn ingest_directory_with_limit(
             continue;
         }
 
-        let entity = path
+        let stem = path
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
             .to_string();
+
+        let entity = if duplicated_stems.contains(stem.as_str()) {
+            // Prefix with parent directory name to disambiguate
+            let parent = path
+                .parent()
+                .and_then(|p| p.file_name())
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown");
+            format!("{parent}_{stem}")
+        } else {
+            stem
+        };
 
         let batches = read_auto_with_limit(&path, max_rows)?;
         let schema = if let Some(b) = batches.first() {
@@ -485,6 +547,26 @@ mod tests {
         assert!(names.contains(&"customers"));
         assert!(names.contains(&"products"));
         assert!(names.contains(&"meta"));
+    }
+
+    #[test]
+    fn directory_ingestion_disambiguates_duplicates() {
+        let dir = tempfile::tempdir().unwrap();
+        let sub1 = dir.path().join("alpha");
+        let sub2 = dir.path().join("beta");
+        std::fs::create_dir(&sub1).unwrap();
+        std::fs::create_dir(&sub2).unwrap();
+
+        // Both subdirs have a file named "test.csv"
+        write_csv(&sub1, "test.csv", "id,name\n1,Alice\n2,Bob\n");
+        write_csv(&sub2, "test.csv", "id,val\n10,x\n11,y\n");
+
+        let results = ingest_directory(dir.path()).unwrap();
+        assert_eq!(results.len(), 2);
+        let names: Vec<&str> = results.iter().map(|r| r.entity.as_str()).collect();
+        // Should be disambiguated with parent dir prefix
+        assert!(names.contains(&"alpha_test"), "expected alpha_test, got {names:?}");
+        assert!(names.contains(&"beta_test"), "expected beta_test, got {names:?}");
     }
 
     #[test]
