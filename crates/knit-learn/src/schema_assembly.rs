@@ -330,6 +330,12 @@ fn build_generator(
             StringPattern::Date => {
                 return GeneratorSpec::Faker { method: "date".into(), args: vec![] };
             }
+            StringPattern::HexString(len) => {
+                return GeneratorSpec::Faker {
+                    method: "hex_string".into(),
+                    args: vec![knit_core::Value::Int(*len as i64)],
+                };
+            }
             _ => {}
         }
     }
@@ -548,6 +554,11 @@ fn assemble_column(
         "faker(\"phone\")".to_string()
     } else if col.string_patterns.iter().any(|(p, _)| *p == StringPattern::Name) {
         "faker(\"name\")".to_string()
+    } else if col.string_patterns.iter().any(|(p, _)| matches!(p, StringPattern::HexString(_))) {
+        let len = col.string_patterns.iter()
+            .find_map(|(p, _)| if let StringPattern::HexString(n) = p { Some(*n) } else { None })
+            .unwrap_or(32);
+        format!("faker(\"hex_string\", {})", len)
     } else {
         "unknown()".to_string()
     };

@@ -402,6 +402,20 @@ impl FakerGenerator {
                 let b = rng.next_u32() % 256;
                 format!("#{r:02x}{g:02x}{b:02x}")
             }
+            "hex_string" => {
+                // Generate a random hex string; length from first arg (default 32)
+                let len = self.args.first()
+                    .and_then(|v| match v {
+                        knit_core::Value::Int(n) if *n > 0 => Some((*n as usize).min(1024)),
+                        _ => None,
+                    })
+                    .unwrap_or(32);
+                let byte_count = (len + 1) / 2;
+                let mut bytes = vec![0u8; byte_count];
+                rng.fill_bytes(&mut bytes);
+                let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+                hex[..len].to_string()
+            }
             "paragraph" => {
                 let sentence_count = 2 + (rng.next_u32() % 4) as usize; // 2..=5
                 let mut para = String::with_capacity(sentence_count * 50);
@@ -519,6 +533,13 @@ mod tests {
 
     fn gen(category: &str, count: usize, seed: u64) -> ArrayRef {
         let g = FakerGenerator::new(category.into(), "en_US".into(), vec![]);
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        g.generate(&mut rng, count, &ctx)
+    }
+
+    fn gen_with_args(category: &str, args: Vec<knit_core::Value>, count: usize, seed: u64) -> ArrayRef {
+        let g = FakerGenerator::new(category.into(), "en_US".into(), args);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
         g.generate(&mut rng, count, &ctx)
@@ -826,6 +847,30 @@ mod tests {
                     "title word should be capitalized: {word} in {v}"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn hex_string_default_length() {
+        let arr = gen("hex_string", 50, 40);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 32, "default hex_string should be 32 chars: {v}");
+            assert!(
+                v.chars().all(|c| c.is_ascii_hexdigit()),
+                "hex_string should be hex digits: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn hex_string_custom_length() {
+        let arr = gen_with_args("hex_string", vec![knit_core::Value::Int(40)], 50, 41);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 40, "hex_string with arg 40 should be 40 chars: {v}");
+            assert!(
+                v.chars().all(|c| c.is_ascii_hexdigit()),
+                "hex_string should be hex digits: {v}"
+            );
         }
     }
 }
