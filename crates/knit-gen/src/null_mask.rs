@@ -89,6 +89,12 @@ mod tests {
         let result = apply_null_mask(arr.clone(), &NullPlan::Never, &mut make_rng(), 100).unwrap();
         assert_eq!(result.null_count(), 0);
         assert_eq!(result.len(), 100);
+        // Verify values are unchanged
+        let orig = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        let res = result.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..100 {
+            assert_eq!(orig.value(i), res.value(i));
+        }
     }
 
     #[test]
@@ -104,8 +110,14 @@ mod tests {
     fn probability_zero_no_nulls() {
         let arr = make_int_array(100);
         let result =
-            apply_null_mask(arr, &NullPlan::Probability(0.0), &mut make_rng(), 100).unwrap();
+            apply_null_mask(arr.clone(), &NullPlan::Probability(0.0), &mut make_rng(), 100).unwrap();
         assert_eq!(result.null_count(), 0);
+        // Verify values preserved
+        let orig = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        let res = result.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..100 {
+            assert_eq!(orig.value(i), res.value(i));
+        }
     }
 
     #[test]
@@ -158,9 +170,15 @@ mod tests {
     fn pattern_every_n_zero_no_nulls() {
         let arr = make_int_array(10);
         let result =
-            apply_null_mask(arr, &NullPlan::Pattern { every_n: 0 }, &mut make_rng(), 10).unwrap();
+            apply_null_mask(arr.clone(), &NullPlan::Pattern { every_n: 0 }, &mut make_rng(), 10).unwrap();
         // every_n=0 treated as "never null"
         assert_eq!(result.null_count(), 0);
+        // Verify values preserved
+        let orig = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        let res = result.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..10 {
+            assert_eq!(orig.value(i), res.value(i));
+        }
     }
 
     #[test]

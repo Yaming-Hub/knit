@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn concurrent_insert_and_sample() {
-        use std::sync::Arc;
+        use std::sync::{Arc, Barrier};
         use std::thread;
 
         let store = Arc::new(InMemoryKeyStore::new());
@@ -182,17 +182,22 @@ mod tests {
             store.insert(k);
         }
 
-        // Insert 1000 more keys from one thread
+        // Use a barrier to ensure both threads start at the same time
+        let barrier = Arc::new(Barrier::new(2));
+
         let s = Arc::clone(&store);
+        let b1 = Arc::clone(&barrier);
         let writer = thread::spawn(move || {
+            b1.wait(); // sync start
             for k in 100..1100 {
                 s.insert(k);
             }
         });
 
-        // Sample from another thread (store is never empty)
         let s2 = Arc::clone(&store);
+        let b2 = Arc::clone(&barrier);
         let reader = thread::spawn(move || {
+            b2.wait(); // sync start
             let mut rng = ChaCha8Rng::seed_from_u64(42);
             let mut sampled = 0u32;
             for _ in 0..500 {
