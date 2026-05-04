@@ -281,6 +281,13 @@ mod tests {
         assert_eq!(strs.value(0), "a");
         assert_eq!(strs.value(1), "b");
         assert_eq!(strs.value(2), "c");
+        // Float column SHOULD be noised
+        let floats = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
+        let changed = (0..3).filter(|&i| {
+            let orig = [10.0, 20.0, 30.0];
+            (floats.value(i) - orig[i]).abs() > 0.01
+        }).count();
+        assert!(changed > 0, "numeric column should be noised in mixed-type batch");
     }
 
     #[test]

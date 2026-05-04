@@ -171,28 +171,71 @@ mod tests {
 
     #[test]
     fn typo_apply_swap() {
+        // Deterministically exercise the swap path by testing that adjacent chars get swapped
         let mut rng = ChaCha8Rng::seed_from_u64(0);
-        // Just test that apply_typo doesn't panic
-        for _ in 0..100 {
-            let _ = apply_typo("abcdef", &mut rng);
+        let mut saw_swap = false;
+        for _ in 0..200 {
+            let result = apply_typo("abcdef", &mut rng);
+            // A swap produces same length but different content with adjacent pair swapped
+            if result.len() == 6 && result != "abcdef" {
+                let chars: Vec<char> = result.chars().collect();
+                let orig: Vec<char> = "abcdef".chars().collect();
+                // Check if exactly one adjacent pair is swapped
+                let diffs: Vec<usize> = (0..6).filter(|&i| chars[i] != orig[i]).collect();
+                if diffs.len() == 2 && diffs[1] == diffs[0] + 1 {
+                    // Adjacent positions differ, and they swapped values
+                    if chars[diffs[0]] == orig[diffs[1]] && chars[diffs[1]] == orig[diffs[0]] {
+                        saw_swap = true;
+                        break;
+                    }
+                }
+            }
         }
+        assert!(saw_swap, "expected to see at least one swap in 200 iterations");
     }
 
     #[test]
     fn typo_all_kinds_exercised() {
         use std::collections::HashSet;
-        // With enough iterations, all 4 typo kinds should be exercised
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let original = "hello";
-        let mut results = HashSet::new();
-        for _ in 0..200 {
+        let orig_chars: Vec<char> = original.chars().collect();
+        let mut saw_delete = false;
+        let mut saw_insert = false;
+        let mut saw_swap = false;
+        let mut saw_substitute = false;
+
+        for _ in 0..500 {
             let r = apply_typo(original, &mut rng);
-            results.insert(r.len());
+            let r_chars: Vec<char> = r.chars().collect();
+            match r.len() {
+                4 => saw_delete = true,
+                6 => saw_insert = true,
+                5 if r != original => {
+                    // Distinguish swap vs substitute: swap has exactly 2 adjacent diffs
+                    let diffs: Vec<usize> = (0..5)
+                        .filter(|&i| r_chars[i] != orig_chars[i])
+                        .collect();
+                    if diffs.len() == 2
+                        && diffs[1] == diffs[0] + 1
+                        && r_chars[diffs[0]] == orig_chars[diffs[1]]
+                        && r_chars[diffs[1]] == orig_chars[diffs[0]]
+                    {
+                        saw_swap = true;
+                    } else {
+                        saw_substitute = true;
+                    }
+                }
+                _ => {}
+            }
+            if saw_delete && saw_insert && saw_swap && saw_substitute {
+                break;
+            }
         }
-        // swap: same length; insert: +1; delete: -1; substitute: same length
-        assert!(results.contains(&4), "delete should produce length 4");
-        assert!(results.contains(&5), "swap/substitute should produce length 5");
-        assert!(results.contains(&6), "insert should produce length 6");
+        assert!(saw_delete, "delete kind not observed");
+        assert!(saw_insert, "insert kind not observed");
+        assert!(saw_swap, "swap kind not observed");
+        assert!(saw_substitute, "substitute kind not observed");
     }
 
     #[test]

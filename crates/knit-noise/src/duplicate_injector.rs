@@ -123,13 +123,12 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = d.perturb(sample_batch(), &mut rng, &config).unwrap();
         let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
-        // First 5 are original, last 5 are duplicates of the same values
+        // p=1.0: every row is duplicated, so result = originals ++ originals (same order)
+        assert_eq!(arr.len(), 10);
         let originals: Vec<i32> = (0..5).map(|i| arr.value(i)).collect();
         let duplicates: Vec<i32> = (5..10).map(|i| arr.value(i)).collect();
-        // Each duplicate should be one of the original values
-        for &v in &duplicates {
-            assert!(originals.contains(&v), "duplicate {v} not in originals");
-        }
+        assert_eq!(originals, vec![1, 2, 3, 4, 5]);
+        assert_eq!(duplicates, vec![1, 2, 3, 4, 5], "duplicates should match originals exactly");
     }
 
     #[test]
