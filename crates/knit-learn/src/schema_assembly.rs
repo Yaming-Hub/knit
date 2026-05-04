@@ -504,8 +504,13 @@ fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
     if lower.contains("zip") || lower.contains("postal") {
         return Some("zip_code");
     }
-    // Organization
-    if lower.contains("company") || lower.contains("organization") || lower.contains("organisation")
+    // Organization — match "company" but exclude non-semantic suffixes like _id, _count
+    if (lower.contains("company") || lower.contains("organization") || lower.contains("organisation"))
+        && !lower.ends_with("_id")
+        && !lower.ends_with("_count")
+        && !lower.ends_with("_num")
+        && !lower.starts_with("is_")
+        && !lower.starts_with("has_")
     {
         return Some("company");
     }
@@ -1113,5 +1118,27 @@ mod tests {
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
+    }
+
+    #[test]
+    fn column_name_heuristic() {
+        assert_eq!(faker_method_from_column_name("Address"), Some("address"));
+        assert_eq!(faker_method_from_column_name("street_address"), Some("address"));
+        assert_eq!(faker_method_from_column_name("City"), Some("city"));
+        assert_eq!(faker_method_from_column_name("Country"), Some("country"));
+        assert_eq!(faker_method_from_column_name("PostalCode"), Some("zip_code"));
+        assert_eq!(faker_method_from_column_name("ZipCode"), Some("zip_code"));
+        assert_eq!(faker_method_from_column_name("CompanyName"), Some("company"));
+        assert_eq!(faker_method_from_column_name("company_url"), Some("url"));
+        // Should NOT match non-semantic suffixes
+        assert_eq!(faker_method_from_column_name("company_id"), None);
+        assert_eq!(faker_method_from_column_name("is_company_verified"), None);
+        assert_eq!(faker_method_from_column_name("company_count"), None);
+        // Domain
+        assert_eq!(faker_method_from_column_name("domain"), Some("domain"));
+        assert_eq!(faker_method_from_column_name("domain_name"), Some("domain"));
+        // Should not match arbitrary columns
+        assert_eq!(faker_method_from_column_name("status"), None);
+        assert_eq!(faker_method_from_column_name("created_at"), None);
     }
 }
