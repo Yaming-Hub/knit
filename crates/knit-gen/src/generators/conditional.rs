@@ -354,10 +354,11 @@ mod tests {
         let ctx = GenContext::new(&batch, 0, 0, 1, "items");
 
         let result = gen.generate(&mut rng, 3, &ctx);
-        // Should preserve Float64 type since all branches produce same type
-        // ConstantGenerator with Float produces StringArray with the float string,
-        // but interleave should work since they're all the same type
-        assert_eq!(result.len(), 3);
+        assert_eq!(result.data_type(), &DataType::Float64, "should preserve Float64 type");
+        let fa = result.as_any().downcast_ref::<Float64Array>().unwrap();
+        assert!((fa.value(0) - 100.0).abs() < 1e-10, "high → 100.0");
+        assert!((fa.value(1) - 10.0).abs() < 1e-10, "low → 10.0");
+        assert!((fa.value(2) - 0.0).abs() < 1e-10, "other → 0.0 (default)");
     }
 
     #[test]
@@ -502,6 +503,37 @@ mod tests {
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(sa.value(i), "always_default");
+        }
+    }
+
+    #[test]
+    fn test_conditional_unsupported_ref_type_uses_default() {
+        // Timestamp array is unsupported — all rows should route to default
+        use arrow::datatypes::TimeUnit;
+        let gen = ConditionalGenerator::new(
+            "ts".into(),
+            vec![(
+                Value::String("some_value".into()),
+                GeneratorPlan::Constant(Value::String("branch".into())),
+            )],
+            GeneratorPlan::Constant(Value::String("default_for_unsupported".into())),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ts_col: ArrayRef = Arc::new(
+            arrow::array::TimestampMillisecondArray::from(vec![1000i64, 2000, 3000]),
+        );
+        let mut batch = HashMap::new();
+        batch.insert("ts".to_string(), ts_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..3 {
+            assert_eq!(
+                sa.value(i), "default_for_unsupported",
+                "unsupported type should fallback to default"
+            );
         }
     }
 }

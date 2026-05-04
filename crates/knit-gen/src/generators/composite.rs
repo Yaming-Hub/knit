@@ -202,7 +202,7 @@ mod tests {
     fn composite_string_with_special_chars() {
         // Test JSON escaping of quotes and backslashes
         let gen = CompositeGenerator::new(
-            &GeneratorPlan::Constant(Value::String("he said \"hi\"".into())),
+            &GeneratorPlan::Constant(Value::String("path\\name \"quoted\"".into())),
             &GeneratorPlan::Constant(Value::Int(1)),
         );
         let ctx = make_ctx();
@@ -210,8 +210,10 @@ mod tests {
         let arr = gen.generate(&mut rng, 1, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let val = str_arr.value(0);
-        // Quotes inside should be escaped
+        // Quotes should be escaped
         assert!(val.contains("\\\""), "quotes should be escaped in JSON: {val}");
+        // Backslashes should be escaped (original \ becomes \\)
+        assert!(val.contains("\\\\"), "backslashes should be escaped in JSON: {val}");
     }
 
     #[test]
@@ -241,17 +243,21 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, 10, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let mut seen_lengths = std::collections::HashSet::new();
         for i in 0..10 {
             let val = str_arr.value(i);
             assert!(val.starts_with('[') && val.ends_with(']'), "row {i}: should be JSON array: {val}");
-            // Parse and check it's a valid array of 7s
             let inner = &val[1..val.len()-1];
+            let elem_count = if inner.is_empty() { 0 } else { inner.split(',').count() };
+            seen_lengths.insert(elem_count);
             if !inner.is_empty() {
                 for part in inner.split(',') {
                     assert_eq!(part.trim(), "7", "row {i}: element should be 7: {val}");
                 }
             }
         }
+        assert!(seen_lengths.contains(&1), "should produce length-1 arrays");
+        assert!(seen_lengths.contains(&3), "should produce length-3 arrays");
     }
 
     #[test]
@@ -267,6 +273,22 @@ mod tests {
         let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
             assert_eq!(a_s.value(i), b_s.value(i), "row {i} should be deterministic");
+        }
+    }
+
+    #[test]
+    fn composite_negative_length_clamped_to_zero() {
+        // Negative length should be clamped to 0, producing empty arrays
+        let gen = CompositeGenerator::new(
+            &GeneratorPlan::Constant(Value::Int(42)),
+            &GeneratorPlan::Constant(Value::Int(-5)),
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let arr = gen.generate(&mut rng, 3, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..3 {
+            assert_eq!(str_arr.value(i), "[]", "negative length should produce empty array");
         }
     }
 }
