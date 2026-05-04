@@ -168,6 +168,7 @@ pub enum GeneratorPlan {
         /// Optional upper bound (values above are clamped).
         clamp_max: Option<f64>,
         /// When true, round sampled values to the nearest integer.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         round: bool,
     },
     /// Faker-style structured data (names, emails, addresses) with resolved locale.
