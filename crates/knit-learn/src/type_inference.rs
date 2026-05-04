@@ -232,6 +232,7 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
     // Only if not already matched as UUID (which has dashes).
     if !result.contains_key(&StringPattern::Uuid) {
         let hex_re = Regex::new(r"(?i)^[0-9a-f]+$").unwrap();
+        let has_alpha_hex = Regex::new(r"(?i)[a-f]").unwrap();
         let hex_matches: Vec<usize> = values
             .iter()
             .filter_map(|v| {
@@ -243,14 +244,22 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
             })
             .collect();
         let hex_rate = hex_matches.len() as f64 / total;
-        if hex_rate > 0.8 {
-            // Use the most common length
+        // Require >80% hex match AND at least some values contain a-f letters
+        // (to avoid classifying pure-numeric ID strings as hex)
+        let has_alpha = values.iter().any(|v| has_alpha_hex.is_match(v));
+        if hex_rate > 0.8 && has_alpha {
+            // Use the most common length, but require it to dominate
             let mut len_counts: HashMap<usize, usize> = HashMap::new();
             for l in &hex_matches {
                 *len_counts.entry(*l).or_insert(0) += 1;
             }
-            if let Some((&dominant_len, _)) = len_counts.iter().max_by_key(|(_, c)| *c) {
-                result.insert(StringPattern::HexString(dominant_len), hex_rate);
+            if let Some((&dominant_len, &count)) =
+                len_counts.iter().max_by_key(|(_, c)| *c)
+            {
+                let dominance = count as f64 / hex_matches.len() as f64;
+                if dominance >= 0.8 {
+                    result.insert(StringPattern::HexString(dominant_len), hex_rate);
+                }
             }
         }
     }
@@ -440,5 +449,35 @@ mod tests {
         assert!(patterns.contains_key(&StringPattern::Uuid));
         let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
         assert!(hex_entry.is_none(), "UUID columns should not also match as hex strings");
+    }
+
+    #[test]
+    fn hex_string_not_detected_for_pure_numeric() {
+        // All digits, no a-f — should not be classified as hex
+        let vals = vec![
+            "12345678901234567890123456789012",
+            "98765432109876543210987654321098",
+            "11111111111111111111111111111111",
+            "22222222222222222222222222222222",
+            "33333333333333333333333333333333",
+        ];
+        let patterns = detect_patterns(&vals);
+        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(hex_entry.is_none(), "pure numeric strings should not be classified as hex");
+    }
+
+    #[test]
+    fn hex_string_not_detected_for_mixed_lengths() {
+        // Mixed lengths: no single length dominates
+        let vals = vec![
+            "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",          // 32
+            "1234567890abcdef1234567890abcdef",              // 32
+            "deadbeefcafebabe0123456789abcdef01234567",      // 40
+            "ffffffffffffffffffffffffffffffff01234567",      // 40
+            "aabbccdd11223344aabbccdd11223344aabbccdd",      // 40
+        ];
+        let patterns = detect_patterns(&vals);
+        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(hex_entry.is_none(), "mixed-length hex should not be classified");
     }
 }

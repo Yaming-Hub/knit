@@ -406,7 +406,7 @@ impl FakerGenerator {
                 // Generate a random hex string; length from first arg (default 32)
                 let len = self.args.first()
                     .and_then(|v| match v {
-                        knit_core::Value::Int(n) => Some(*n as usize),
+                        knit_core::Value::Int(n) if *n > 0 => Some((*n as usize).min(1024)),
                         _ => None,
                     })
                     .unwrap_or(32);
