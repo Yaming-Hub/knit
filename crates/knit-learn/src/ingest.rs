@@ -298,7 +298,30 @@ pub fn ingest_directory(dir: &Path) -> LearnResult<Vec<IngestionResult>> {
     ingest_directory_with_limit(dir, None)
 }
 
+/// Recursively collect all files from a directory tree.
+fn collect_files_recursive(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    let mut dirs = vec![dir.to_path_buf()];
+    while let Some(d) = dirs.pop() {
+        let entries = match std::fs::read_dir(&d) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for entry in entries.filter_map(|e| e.ok()) {
+            let path = entry.path();
+            if path.is_dir() {
+                dirs.push(path);
+            } else if path.is_file() {
+                files.push(path);
+            }
+        }
+    }
+    files
+}
+
 /// Ingest with an optional per-entity row limit.
+///
+/// Recursively discovers all supported data files in subdirectories.
 pub fn ingest_directory_with_limit(
     dir: &Path,
     max_rows: Option<usize>,
@@ -306,11 +329,7 @@ pub fn ingest_directory_with_limit(
     info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
 
     let mut results = Vec::new();
-    let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)?
-        .filter_map(|e| e.ok())
-        .map(|e| e.path())
-        .filter(|p| p.is_file())
-        .collect();
+    let mut entries: Vec<PathBuf> = collect_files_recursive(dir);
     entries.sort();
 
     for path in entries {
@@ -444,6 +463,28 @@ mod tests {
         let names: Vec<&str> = results.iter().map(|r| r.entity.as_str()).collect();
         assert!(names.contains(&"users"));
         assert!(names.contains(&"orders"));
+    }
+
+    #[test]
+    fn directory_ingestion_recursive() {
+        let dir = tempfile::tempdir().unwrap();
+        // Create subdirectories with data files
+        let sub1 = dir.path().join("subdir1");
+        let sub2 = dir.path().join("subdir2");
+        std::fs::create_dir(&sub1).unwrap();
+        std::fs::create_dir(&sub2).unwrap();
+
+        write_csv(&sub1, "customers.csv", "id,name\n1,Alice\n2,Bob\n");
+        write_csv(&sub2, "products.csv", "pid,price\n10,5.99\n11,12.50\n");
+        // Also a file at the top level
+        write_csv(dir.path(), "meta.csv", "key,val\na,1\nb,2\n");
+
+        let results = ingest_directory(dir.path()).unwrap();
+        assert_eq!(results.len(), 3);
+        let names: Vec<&str> = results.iter().map(|r| r.entity.as_str()).collect();
+        assert!(names.contains(&"customers"));
+        assert!(names.contains(&"products"));
+        assert!(names.contains(&"meta"));
     }
 
     #[test]
