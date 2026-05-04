@@ -68,8 +68,8 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::Composite { element, length } => {
             Box::new(composite::CompositeGenerator::new(element, length))
         }
-        GeneratorPlan::Faker { category, locale } => {
-            Box::new(faker::FakerGenerator::new(category.clone(), locale.clone()))
+        GeneratorPlan::Faker { category, locale, args } => {
+            Box::new(faker::FakerGenerator::new(category.clone(), locale.clone(), args.clone()))
         }
         // FK generators are created directly by the engine (which has access
         // to the key-store). If we reach here it means an FK was nested inside

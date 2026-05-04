@@ -193,9 +193,10 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 clamp_max: None,
                 round: dist_spec.round,
             },
-            GeneratorSpec::Faker { method, args: _ } => GeneratorPlan::Faker {
+            GeneratorSpec::Faker { method, args } => GeneratorPlan::Faker {
                 category: method.clone(),
                 locale: "en_US".to_string(),
+                args: args.clone(),
             },
             GeneratorSpec::Sequence {
                 start,

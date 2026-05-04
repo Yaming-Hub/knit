@@ -177,6 +177,9 @@ pub enum GeneratorPlan {
         category: String,
         /// Locale for locale-aware fake data.
         locale: String,
+        /// Optional arguments (e.g. date range).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        args: Vec<knit_core::Value>,
     },
     /// Auto-increment or cyclic sequence. Start/step are resolved per-partition
     /// to avoid collisions across parallel workers.

@@ -132,7 +132,7 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan) {
 fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
     match gp {
         knit_plan::GeneratorPlan::Distribution { kind, .. } => format!("dist({:?})", kind),
-        knit_plan::GeneratorPlan::Faker { category, locale } => {
+        knit_plan::GeneratorPlan::Faker { category, locale, .. } => {
             format!("faker({}, {})", category, locale)
         }
         knit_plan::GeneratorPlan::Sequence { start, step } => {

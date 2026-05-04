@@ -239,18 +239,44 @@ pub struct FakerGenerator {
     /// BCP 47 locale hint (currently unused; reserved for future i18n).
     #[allow(dead_code)]
     locale: String,
+    /// Optional arguments (e.g. date range as ISO strings).
+    args: Vec<knit_core::Value>,
     /// Whether a warning has already been emitted for an unknown category.
     warned: AtomicBool,
 }
 
 impl FakerGenerator {
     /// Create a new faker generator for the given *category* and *locale*.
-    pub fn new(category: String, locale: String) -> Self {
+    pub fn new(category: String, locale: String, args: Vec<knit_core::Value>) -> Self {
         Self {
             category,
             locale,
+            args,
             warned: AtomicBool::new(false),
         }
+    }
+
+    /// Parse date range from args, falling back to 2020-01-01..2024-12-31.
+    fn date_range(&self) -> (i64, i64) {
+        let default_start = days_from_epoch(2020, 1, 1);
+        let default_end = days_from_epoch(2024, 12, 31);
+
+        let parse_date = |v: &knit_core::Value| -> Option<i64> {
+            if let knit_core::Value::String(s) = v {
+                let parts: Vec<&str> = s.split('-').collect();
+                if parts.len() == 3 {
+                    let y = parts[0].parse::<i32>().ok()?;
+                    let m = parts[1].parse::<u32>().ok()?;
+                    let d = parts[2].parse::<u32>().ok()?;
+                    return Some(days_from_epoch(y, m, d));
+                }
+            }
+            None
+        };
+
+        let start = self.args.first().and_then(parse_date).unwrap_or(default_start);
+        let end = self.args.get(1).and_then(parse_date).unwrap_or(default_end);
+        (start, end)
     }
 
     /// Generate a single value for the configured category.
@@ -351,18 +377,16 @@ impl FakerGenerator {
                 )
             }
             "date" => {
-                // Generate a random ISO date: 2020-01-01 to 2024-12-31
-                let start_days = days_from_epoch(2020, 1, 1);
-                let end_days = days_from_epoch(2024, 12, 31);
+                // Generate a random ISO date within configured or default range
+                let (start_days, end_days) = self.date_range();
                 let range = (end_days - start_days + 1).max(1) as u32;
                 let day_offset = rng.next_u32() % range;
                 let (y, m, d) = days_to_ymd(start_days + day_offset as i64);
                 format!("{y:04}-{m:02}-{d:02}")
             }
             "datetime" | "timestamp" => {
-                // ISO datetime with random time: 2020-01-01 to 2024-12-31
-                let start_days = days_from_epoch(2020, 1, 1);
-                let end_days = days_from_epoch(2024, 12, 31);
+                // ISO datetime with random time within configured or default range
+                let (start_days, end_days) = self.date_range();
                 let range = (end_days - start_days + 1).max(1) as u32;
                 let day_offset = rng.next_u32() % range;
                 let (y, m, d) = days_to_ymd(start_days + day_offset as i64);
@@ -494,7 +518,7 @@ mod tests {
     }
 
     fn gen(category: &str, count: usize, seed: u64) -> ArrayRef {
-        let g = FakerGenerator::new(category.into(), "en_US".into());
+        let g = FakerGenerator::new(category.into(), "en_US".into(), vec![]);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
         g.generate(&mut rng, count, &ctx)
@@ -646,7 +670,7 @@ mod tests {
 
     #[test]
     fn output_type_is_utf8() {
-        let g = FakerGenerator::new("email".into(), "en_US".into());
+        let g = FakerGenerator::new("email".into(), "en_US".into(), vec![]);
         assert_eq!(g.output_type(), DataType::Utf8);
     }
 
