@@ -60,7 +60,7 @@ pub struct RelationshipCandidate {
 }
 
 /// Suffix patterns that suggest a foreign key column.
-const FK_SUFFIXES: &[&str] = &["_id", "_key", "_fk", "Id", "Key", "_ref"];
+const FK_SUFFIXES: &[&str] = &["_id", "_key", "_fk", "Id", "ID", "Key", "_ref"];
 
 /// Detect relationships across a set of table profiles.
 ///
