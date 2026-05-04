@@ -104,6 +104,14 @@ mod tests {
     }
 
     #[test]
+    fn combined_offset_and_step() {
+        // Formula: start + (row_offset + i) * step
+        // start=100, step=10, row_offset=3 → 130, 140, 150
+        let vals = gen_seq(100, 10, 3, 3);
+        assert_eq!(vals, vec![130, 140, 150]);
+    }
+
+    #[test]
     fn zero_count() {
         let vals = gen_seq(1, 1, 0, 0);
         assert!(vals.is_empty());

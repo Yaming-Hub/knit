@@ -78,13 +78,17 @@ mod tests {
             assert_eq!(parts[2].len(), 4);
             assert_eq!(parts[3].len(), 4);
             assert_eq!(parts[4].len(), 12, "last part should be 12 chars: {v}");
-            // All hex
+            // All lowercase hex
             for part in &parts {
                 assert!(
                     part.chars().all(|c| c.is_ascii_hexdigit()),
                     "UUID parts should be hex: {v}"
                 );
             }
+            assert_eq!(
+                v, &v.to_ascii_lowercase(),
+                "UUID should be lowercase: {v}"
+            );
         }
     }
 
