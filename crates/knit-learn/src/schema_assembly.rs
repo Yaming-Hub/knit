@@ -602,10 +602,10 @@ fn distribution_to_generator(dist: &Distribution) -> String {
             format!("beta({:.2}, {:.2})", alpha, beta)
         }
         Distribution::Gamma(shape, rate) => {
-            format!("gamma({:.2}, {:.2})", shape, rate)
+            format!("gamma(shape={:.2}, scale={:.2})", shape, 1.0 / rate)
         }
         Distribution::Pareto(x_m, alpha) => {
-            format!("pareto({:.2}, {:.2})", x_m, alpha)
+            format!("pareto(scale={:.2}, shape={:.2})", x_m, alpha)
         }
         Distribution::Zipf(n, s) => {
             format!("zipf({}, {:.2})", n, s)
@@ -812,8 +812,53 @@ mod tests {
         assert!(distribution_to_generator(&Distribution::Exponential(0.5)).contains("exponential"));
         assert!(distribution_to_generator(&Distribution::Uniform(0.0, 100.0)).contains("uniform"));
         assert!(distribution_to_generator(&Distribution::Beta(2.0, 5.0)).contains("beta"));
-        assert!(distribution_to_generator(&Distribution::Gamma(1.0, 2.0)).contains("gamma"));
-        assert!(distribution_to_generator(&Distribution::Pareto(1.0, 2.0)).contains("pareto"));
+        let gamma = distribution_to_generator(&Distribution::Gamma(1.0, 2.0));
+        assert!(gamma.contains("gamma"), "gamma: {}", gamma);
+        assert!(gamma.contains("shape="), "gamma should have shape param: {}", gamma);
+        assert!(gamma.contains("scale="), "gamma should have scale param: {}", gamma);
+        let pareto = distribution_to_generator(&Distribution::Pareto(1.0, 2.0));
+        assert!(pareto.contains("pareto"), "pareto: {}", pareto);
+        assert!(pareto.contains("scale="), "pareto should have scale param: {}", pareto);
+        assert!(pareto.contains("shape="), "pareto should have shape param: {}", pareto);
+    }
+
+    #[test]
+    fn build_distribution_generator_param_names() {
+        use crate::fitting::Distribution;
+
+        // Gamma: shape/scale (rate converted to scale)
+        let spec = build_distribution_generator(&Distribution::Gamma(2.0, 0.5), false);
+        if let GeneratorSpec::Distribution { spec: ds } = &spec {
+            assert_eq!(ds.kind, DistributionKind::Gamma);
+            assert!(ds.params.contains_key("shape"), "Gamma missing shape param");
+            assert!(ds.params.contains_key("scale"), "Gamma missing scale param");
+            assert!((ds.params["shape"] - 2.0).abs() < 1e-10);
+            assert!((ds.params["scale"] - 2.0).abs() < 1e-10); // scale = 1/rate = 1/0.5
+        } else {
+            panic!("Expected Distribution spec for Gamma");
+        }
+
+        // Pareto: scale/shape
+        let spec = build_distribution_generator(&Distribution::Pareto(1.0, 3.0), false);
+        if let GeneratorSpec::Distribution { spec: ds } = &spec {
+            assert_eq!(ds.kind, DistributionKind::Pareto);
+            assert!(ds.params.contains_key("scale"), "Pareto missing scale param");
+            assert!(ds.params.contains_key("shape"), "Pareto missing shape param");
+            assert!((ds.params["scale"] - 1.0).abs() < 1e-10);
+            assert!((ds.params["shape"] - 3.0).abs() < 1e-10);
+        } else {
+            panic!("Expected Distribution spec for Pareto");
+        }
+
+        // Beta: alpha/beta (unchanged)
+        let spec = build_distribution_generator(&Distribution::Beta(2.0, 5.0), false);
+        if let GeneratorSpec::Distribution { spec: ds } = &spec {
+            assert_eq!(ds.kind, DistributionKind::Beta);
+            assert!(ds.params.contains_key("alpha"), "Beta missing alpha param");
+            assert!(ds.params.contains_key("beta"), "Beta missing beta param");
+        } else {
+            panic!("Expected Distribution spec for Beta");
+        }
     }
 
     #[test]

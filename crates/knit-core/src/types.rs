@@ -385,7 +385,7 @@ pub enum DistributionKind {
     Pareto,
     /// Weibull with shape `k` and scale `lambda`.
     Weibull,
-    /// Gamma with shape `alpha` and rate `beta`.
+    /// Gamma with `shape` and `scale` parameters.
     Gamma,
     /// Beta on `[0, 1]` with shape parameters `alpha` and `beta`.
     Beta,
