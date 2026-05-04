@@ -254,15 +254,24 @@ fn build_generator(
         };
     }
 
-    // PK → Sequence (or UuidGen for UUID columns)
+    // PK → Sequence (or UuidGen for UUID columns, prefixed for string PKs)
     if col.is_primary_key {
         if matches!(col.inferred_type, Some(InferredType::Uuid)) {
             return GeneratorSpec::UuidGen { version: 4 };
         }
+        // String-typed PKs get a prefix to produce string values
+        let is_string_pk = matches!(
+            col.inferred_type,
+            Some(InferredType::Text) | Some(InferredType::Categorical)
+        ) || !col.string_patterns.is_empty();
         return GeneratorSpec::Sequence {
             start: 1,
             step: 1,
-            prefix: None,
+            prefix: if is_string_pk {
+                Some(format!("{}_", col.name))
+            } else {
+                None
+            },
         };
     }
 
@@ -315,6 +324,13 @@ fn build_generator(
         }
     }
 
+    // Column name heuristic — map common names to appropriate faker methods.
+    // Placed before string pattern matching so semantic names override generic patterns
+    // (e.g., "PostalCode" → zip_code instead of phone pattern match).
+    if let Some(method) = faker_method_from_column_name(&col.name) {
+        return GeneratorSpec::Faker { method: method.into(), args: vec![] };
+    }
+
     // String pattern → Faker
     if let Some((pattern, _rate)) = col.string_patterns.first() {
         match pattern {
@@ -340,7 +356,17 @@ fn build_generator(
         }
     }
 
-    // Fallback: no generator (let the planner decide)
+    // Fallback: use faker("word") for string/text columns, sequence for others
+    if matches!(
+        col.inferred_type,
+        Some(InferredType::Text) | Some(InferredType::Categorical)
+    ) || !col.string_patterns.is_empty()
+    {
+        return GeneratorSpec::Faker {
+            method: "word".into(),
+            args: vec![],
+        };
+    }
     GeneratorSpec::Sequence {
         start: 1,
         step: 1,
@@ -462,6 +488,40 @@ fn days_to_ymd(days: i64) -> (i32, u32, u32) {
     (y as i32, m, d)
 }
 
+/// Map common column names to faker methods using keyword heuristics.
+fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
+    let lower = name.to_lowercase();
+    // Check for known semantic keywords in the column name
+    if lower.contains("address") || lower.contains("street") {
+        return Some("address");
+    }
+    if lower == "city" || lower.ends_with("_city") || lower.starts_with("city_") {
+        return Some("city");
+    }
+    if lower == "state" || lower == "province" || lower.ends_with("_state") {
+        return Some("state");
+    }
+    if lower == "country" || lower.ends_with("_country") || lower.starts_with("country_") {
+        return Some("country");
+    }
+    if lower.contains("zip") || lower.contains("postal") {
+        return Some("zip_code");
+    }
+    if lower.contains("company") || lower.contains("organization") || lower.contains("organisation") {
+        return Some("company");
+    }
+    if lower.contains("url") || lower.contains("website") || lower.contains("homepage") {
+        return Some("url");
+    }
+    if lower.contains("domain") {
+        return Some("domain");
+    }
+    if lower.contains("title") && !lower.contains("subtitle") {
+        return Some("title");
+    }
+    None
+}
+
 /// Infer a [`knit_core::DataType`] from column analysis.
 fn infer_data_type(
     col: &ColumnAnalysis,
@@ -482,6 +542,14 @@ fn infer_data_type(
         };
     }
     if fk.is_some() || col.is_primary_key {
+        // If the column has string content, keep it as String
+        let is_string = matches!(
+            col.inferred_type,
+            Some(InferredType::Text) | Some(InferredType::Categorical)
+        ) || !col.string_patterns.is_empty();
+        if is_string {
+            return knit_core::DataType::String;
+        }
         return knit_core::DataType::Int;
     }
     if col.temporal_pattern.is_some() {
