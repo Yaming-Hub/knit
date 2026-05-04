@@ -140,9 +140,10 @@ mod tests {
         // Compute Pearson correlation.
         let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
         let r = pearson(&source, &y_vals);
+        // With n=10000, sampling error ~0.004 for r=0.8, use ±0.03
         assert!(
-            (r - target_r).abs() < 0.1,
-            "correlation {r:.4} not within ±0.1 of target {target_r}"
+            (r - target_r).abs() < 0.03,
+            "correlation {r:.4} not within ±0.03 of target {target_r}"
         );
     }
 
@@ -165,15 +166,16 @@ mod tests {
         let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
         let r = pearson(&source, &y_vals);
+        // With n=10000, sampling error ~0.005 for r=-0.7, use ±0.03
         assert!(
-            (r - target_r).abs() < 0.1,
-            "correlation {r:.4} not within ±0.1 of target {target_r}"
+            (r - target_r).abs() < 0.03,
+            "correlation {r:.4} not within ±0.03 of target {target_r}"
         );
     }
 
     #[test]
     fn perfect_positive_correlation() {
-        // r=1.0 → complement=0, output should be exactly x_norm (scaled source)
+        // r=1.0 → complement=0, output = exactly x_norm (no noise)
         let n = 1_000usize;
         let source: Vec<f64> = (0..n).map(|i| i as f64 * 3.0 + 5.0).collect();
         let source_arr: ArrayRef = Arc::new(Float64Array::from(source.clone()));
@@ -187,12 +189,20 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, n, &ctx);
         let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
-        let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
-        let r = pearson(&source, &y_vals);
-        assert!(
-            (r - 1.0).abs() < 0.001,
-            "perfect positive correlation should be ~1.0, got {r:.4}"
-        );
+
+        // With r=1.0, output should be exactly x_norm (complement=0, noise eliminated)
+        // Verify directly: each y[i] should equal (source[i] - mean) / std
+        let mean = source.iter().sum::<f64>() / n as f64;
+        let var = source.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
+        let std = var.sqrt();
+        for i in 0..n {
+            let expected = (source[i] - mean) / std;
+            assert!(
+                (y.value(i) - expected).abs() < 1e-10,
+                "row {i}: expected exactly x_norm={expected}, got {}",
+                y.value(i)
+            );
+        }
     }
 
     #[test]
@@ -210,12 +220,19 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, n, &ctx);
         let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
-        let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
-        let r = pearson(&source, &y_vals);
-        assert!(
-            (r - (-1.0)).abs() < 0.001,
-            "perfect negative correlation should be ~-1.0, got {r:.4}"
-        );
+
+        // With r=-1.0, output should be exactly -x_norm
+        let mean = source.iter().sum::<f64>() / n as f64;
+        let var = source.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
+        let std = var.sqrt();
+        for i in 0..n {
+            let expected = -1.0 * (source[i] - mean) / std;
+            assert!(
+                (y.value(i) - expected).abs() < 1e-10,
+                "row {i}: expected exactly -x_norm={expected}, got {}",
+                y.value(i)
+            );
+        }
     }
 
     #[test]
@@ -235,8 +252,9 @@ mod tests {
         let y = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         let y_vals: Vec<f64> = (0..n).map(|i| y.value(i)).collect();
         let r = pearson(&source, &y_vals);
+        // With n=10000, sampling error ~0.01, use ±0.03
         assert!(
-            r.abs() < 0.1,
+            r.abs() < 0.03,
             "zero target correlation should yield ~0 actual, got {r:.4}"
         );
     }

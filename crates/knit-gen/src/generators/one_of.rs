@@ -372,7 +372,7 @@ mod tests {
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let dominant = (0..str_arr.len()).filter(|&i| str_arr.value(i) == "dominant").count();
         let ratio = dominant as f64 / 10_000.0;
-        assert!(ratio > 0.95, "dominant should be ~99.8%, got {:.1}%", ratio * 100.0);
+        assert!(ratio > 0.98, "dominant should be ~99.8%, got {:.1}%", ratio * 100.0);
     }
 
     #[test]
@@ -412,7 +412,7 @@ mod tests {
         assert_eq!(counts.len(), 3, "all 3 choices should appear");
         for (k, v) in &counts {
             let ratio = *v as f64 / 10_000.0;
-            assert!(ratio > 0.25 && ratio < 0.42, "choice '{k}' should be ~33%, got {:.1}%", ratio * 100.0);
+            assert!(ratio > 0.29 && ratio < 0.38, "choice '{k}' should be ~33%, got {:.1}%", ratio * 100.0);
         }
     }
 }
