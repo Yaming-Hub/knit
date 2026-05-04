@@ -387,14 +387,15 @@ fn build_distribution_generator(dist: &Distribution, round: bool) -> GeneratorSp
         }
         Distribution::Gamma(shape, rate) => {
             let mut p = BTreeMap::new();
-            p.insert("alpha".into(), *shape);
-            p.insert("beta".into(), *rate);
+            p.insert("shape".into(), *shape);
+            // Generator expects scale (= 1/rate)
+            p.insert("scale".into(), 1.0 / *rate);
             (DistributionKind::Gamma, p)
         }
         Distribution::Pareto(x_m, alpha) => {
             let mut p = BTreeMap::new();
-            p.insert("x_m".into(), *x_m);
-            p.insert("alpha".into(), *alpha);
+            p.insert("scale".into(), *x_m);
+            p.insert("shape".into(), *alpha);
             (DistributionKind::Pareto, p)
         }
         Distribution::Zipf(n, s) => {

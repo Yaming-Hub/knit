@@ -25,3 +25,4 @@ data/
 *.weave.toml
 !examples/*.weave.toml
 e2e_test/
+test_full_e2e.toml
