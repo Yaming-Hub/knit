@@ -463,19 +463,30 @@ mod tests {
 
     #[test]
     fn beta_in_unit_interval() {
-        let vals = gen_f64(DistributionKind::Beta, &[("alpha", 2.0), ("beta", 5.0)], 500);
+        let vals = gen_f64(DistributionKind::Beta, &[("alpha", 2.0), ("beta", 5.0)], 1000);
         for v in &vals {
             assert!(*v >= 0.0 && *v <= 1.0, "beta should be in [0,1]: {v}");
         }
+        // Beta(2,5) has expected mean = 2/(2+5) ≈ 0.286
+        let mean: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
+        assert!(
+            (mean - 0.286).abs() < 0.05,
+            "beta(2,5) mean should be near 0.286: {mean}"
+        );
     }
 
     #[test]
-    fn cauchy_produces_values() {
-        let vals = gen_f64(DistributionKind::Cauchy, &[("median", 0.0), ("scale", 1.0)], 100);
-        assert_eq!(vals.len(), 100);
-        // Cauchy has heavy tails, just verify it produces finite values mostly
-        let finite_count = vals.iter().filter(|v| v.is_finite()).count();
-        assert!(finite_count > 90, "cauchy should produce mostly finite values");
+    fn cauchy_centered_near_median() {
+        let vals = gen_f64(DistributionKind::Cauchy, &[("median", 50.0), ("scale", 1.0)], 1000);
+        assert_eq!(vals.len(), 1000);
+        // Cauchy has no mean, but median should be near 50. Sort and check.
+        let mut sorted = vals.clone();
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let sample_median = sorted[sorted.len() / 2];
+        assert!(
+            (sample_median - 50.0).abs() < 5.0,
+            "cauchy median should be near 50: got {sample_median}"
+        );
     }
 
     #[test]
@@ -487,9 +498,12 @@ mod tests {
     }
 
     #[test]
-    fn student_t_produces_values() {
-        let vals = gen_f64(DistributionKind::StudentT, &[("n", 5.0)], 500);
-        assert_eq!(vals.len(), 500);
+    fn student_t_symmetric_around_zero() {
+        let vals = gen_f64(DistributionKind::StudentT, &[("n", 5.0)], 2000);
+        assert_eq!(vals.len(), 2000);
+        let mean: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
+        // StudentT(5) has mean 0 and finite variance; sample mean should be near 0
+        assert!(mean.abs() < 1.0, "studentT mean should be near 0: {mean}");
     }
 
     #[test]
@@ -505,10 +519,10 @@ mod tests {
     }
 
     #[test]
-    fn zipf_positive_int() {
-        let vals = gen_i64(DistributionKind::Zipf, &[("n", 100.0), ("s", 1.0)], 500);
+    fn zipf_bounded_by_n() {
+        let vals = gen_i64(DistributionKind::Zipf, &[("n", 50.0), ("s", 1.0)], 500);
         for v in &vals {
-            assert!(*v >= 1, "zipf should be >= 1: {v}");
+            assert!(*v >= 1 && *v <= 50, "zipf(n=50) should be in [1,50]: {v}");
         }
     }
 
@@ -574,5 +588,83 @@ mod tests {
     fn zero_count_returns_empty() {
         let vals = gen_f64(DistributionKind::Uniform, &[("min", 0.0), ("max", 1.0)], 0);
         assert!(vals.is_empty());
+    }
+
+    // ── Invalid parameter fallback tests ──────────────────────────
+
+    #[test]
+    fn normal_negative_std_dev_fallback() {
+        // Negative std_dev is abs'd then clamped to epsilon
+        let vals = gen_f64(DistributionKind::Normal, &[("mean", 0.0), ("std_dev", -5.0)], 100);
+        assert_eq!(vals.len(), 100);
+    }
+
+    #[test]
+    fn exponential_zero_lambda_fallback() {
+        let vals = gen_f64(DistributionKind::Exponential, &[("lambda", 0.0)], 100);
+        assert_eq!(vals.len(), 100);
+        for v in &vals {
+            assert!(*v >= 0.0, "exponential fallback should be non-negative: {v}");
+        }
+    }
+
+    #[test]
+    fn poisson_zero_lambda_fallback() {
+        let vals = gen_i64(DistributionKind::Poisson, &[("lambda", 0.0)], 100);
+        assert_eq!(vals.len(), 100);
+        for v in &vals {
+            assert!(*v >= 0, "poisson fallback should be non-negative: {v}");
+        }
+    }
+
+    #[test]
+    fn bernoulli_out_of_range_clamped() {
+        // p > 1 should be clamped to 1.0
+        let vals = gen_i64(DistributionKind::Bernoulli, &[("p", 5.0)], 50);
+        assert!(vals.iter().all(|v| *v == 1), "p=5 clamped to 1 should produce all ones");
+        // p < 0 should be clamped to 0.0
+        let vals = gen_i64(DistributionKind::Bernoulli, &[("p", -1.0)], 50);
+        assert!(vals.iter().all(|v| *v == 0), "p=-1 clamped to 0 should produce all zeros");
+    }
+
+    #[test]
+    fn pareto_zero_params_fallback() {
+        let vals = gen_f64(DistributionKind::Pareto, &[("scale", 0.0), ("shape", 0.0)], 100);
+        assert_eq!(vals.len(), 100);
+        for v in &vals {
+            assert!(*v > 0.0, "pareto fallback should be positive: {v}");
+        }
+    }
+
+    #[test]
+    fn gamma_zero_shape_fallback() {
+        // shape=0 is abs'd then clamped to epsilon, so produces valid output
+        let vals = gen_f64(DistributionKind::Gamma, &[("shape", 0.0), ("scale", 0.0)], 100);
+        assert_eq!(vals.len(), 100);
+        for v in &vals {
+            assert!(*v >= 0.0, "gamma fallback should be non-negative: {v}");
+        }
+    }
+
+    #[test]
+    fn triangular_invalid_range_fallback() {
+        // min >= max should fallback to (0, 1, 0.5)
+        let vals = gen_f64(
+            DistributionKind::Triangular,
+            &[("min", 5.0), ("max", 5.0), ("mode", 5.0)],
+            100,
+        );
+        for v in &vals {
+            assert!(*v >= 0.0 && *v <= 1.0, "triangular fallback out of [0,1]: {v}");
+        }
+    }
+
+    #[test]
+    fn lognormal_zero_sigma_fallback() {
+        let vals = gen_f64(DistributionKind::LogNormal, &[("mu", 0.0), ("sigma", 0.0)], 100);
+        assert_eq!(vals.len(), 100);
+        for v in &vals {
+            assert!(*v > 0.0, "lognormal should be positive: {v}");
+        }
     }
 }
