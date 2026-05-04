@@ -132,4 +132,85 @@ mod tests {
             assert_eq!(store.sample(&mut rng1), store.sample(&mut rng2));
         }
     }
+
+    #[test]
+    fn with_capacity_works() {
+        let store = InMemoryKeyStore::with_capacity(100);
+        assert_eq!(store.len(), 0);
+        assert!(store.is_empty());
+        store.insert(1);
+        assert_eq!(store.len(), 1);
+        assert!(!store.is_empty());
+    }
+
+    #[test]
+    fn default_is_empty() {
+        let store = InMemoryKeyStore::default();
+        assert!(store.is_empty());
+        assert_eq!(store.len(), 0);
+    }
+
+    #[test]
+    fn uniform_sampling_no_severe_bias() {
+        // Insert 5 keys, sample 5000 times, expect roughly 1000 each
+        let store = InMemoryKeyStore::new();
+        for k in 0..5 {
+            store.insert(k);
+        }
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let mut counts = [0u32; 5];
+        for _ in 0..5000 {
+            let v = store.sample(&mut rng).unwrap();
+            counts[v as usize] += 1;
+        }
+        for (i, &c) in counts.iter().enumerate() {
+            assert!(
+                c >= 850 && c <= 1150,
+                "key {i} sampled {c} times, expected ~1000 (850-1150)"
+            );
+        }
+    }
+
+    #[test]
+    fn concurrent_insert_and_sample() {
+        use std::sync::{Arc, Barrier};
+        use std::thread;
+
+        let store = Arc::new(InMemoryKeyStore::new());
+        // Pre-insert some keys so sampling always succeeds
+        for k in 0..100 {
+            store.insert(k);
+        }
+
+        // Use a barrier to ensure both threads start at the same time
+        let barrier = Arc::new(Barrier::new(2));
+
+        let s = Arc::clone(&store);
+        let b1 = Arc::clone(&barrier);
+        let writer = thread::spawn(move || {
+            b1.wait(); // sync start
+            for k in 100..1100 {
+                s.insert(k);
+            }
+        });
+
+        let s2 = Arc::clone(&store);
+        let b2 = Arc::clone(&barrier);
+        let reader = thread::spawn(move || {
+            b2.wait(); // sync start
+            let mut rng = ChaCha8Rng::seed_from_u64(42);
+            let mut sampled = 0u32;
+            for _ in 0..500 {
+                if s2.sample(&mut rng).is_some() {
+                    sampled += 1;
+                }
+            }
+            sampled
+        });
+
+        writer.join().unwrap();
+        let sampled = reader.join().unwrap();
+        assert_eq!(sampled, 500, "all samples should succeed since store is never empty");
+        assert_eq!(store.len(), 1100);
+    }
 }
