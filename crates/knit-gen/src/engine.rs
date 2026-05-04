@@ -968,11 +968,19 @@ mod tests {
 
         let mut engine = GenerationEngine::with_batch_size(10);
         let batch_sizes = Arc::new(Mutex::new(Vec::<usize>::new()));
+        let all_ids = Arc::new(Mutex::new(Vec::<i64>::new()));
         let bs = Arc::clone(&batch_sizes);
+        let ids = Arc::clone(&all_ids);
 
         engine
             .execute(&plan, move |_entity, batch| {
                 bs.lock().unwrap().push(batch.num_rows());
+                let col = batch
+                    .column(0)
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .unwrap();
+                ids.lock().unwrap().extend(col.values().iter().copied());
                 Ok(())
             })
             .unwrap();
@@ -982,6 +990,12 @@ mod tests {
         assert_eq!(sizes[0], 10);
         assert_eq!(sizes[1], 10);
         assert_eq!(sizes[2], 5);
+
+        // Verify row offsets are correct: sequence 1..=25 with no gaps or duplicates
+        let mut collected = all_ids.lock().unwrap().clone();
+        collected.sort();
+        let expected: Vec<i64> = (1..=25).collect();
+        assert_eq!(collected, expected, "ids should be exactly 1..=25");
     }
 
     #[test]
@@ -1082,9 +1096,9 @@ mod tests {
         let nulls = *null_count.lock().unwrap();
         let total = *total_count.lock().unwrap();
         let ratio = nulls as f64 / total as f64;
-        // With prob=0.5 and 1000 rows, should be ~50% nulls (allow 40-60%)
+        // With prob=0.5 and 1000 rows (deterministic seed), should be ~50% nulls (allow 45-55%)
         assert!(
-            ratio > 0.35 && ratio < 0.65,
+            ratio > 0.45 && ratio < 0.55,
             "expected ~50% nulls, got {:.1}% ({nulls}/{total})",
             ratio * 100.0
         );
