@@ -567,12 +567,12 @@ mod tests {
         let arr = gen.generate(&mut rng, 10, &ctx);
         let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
 
-        // With trend, gaps between rows should be > interval_ms
+        // With no noise/seasonality: gap = interval_ms + trend_slope = 1000 + 500 = 1500ms exactly
         for i in 1..10 {
             let gap = ts.value(i) - ts.value(i - 1);
-            assert!(
-                gap > 1000,
-                "row {i}: gap {gap} should exceed interval_ms=1000 due to trend"
+            assert_eq!(
+                gap, 1500,
+                "row {i}: gap {gap} should be exactly interval_ms + trend_slope = 1500"
             );
         }
     }
@@ -624,13 +624,17 @@ mod tests {
         let arr = gen.generate(&mut rng, 100, &ctx);
         let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
 
-        // Compute gaps and verify they're not all identical (noise introduces variance)
+        // Compute gaps and verify the empirical std is near the configured noise_std=1000ms
         let gaps: Vec<i64> = (1..100).map(|i| ts.value(i) - ts.value(i - 1)).collect();
-        let min_gap = *gaps.iter().min().unwrap();
-        let max_gap = *gaps.iter().max().unwrap();
+        let mean_gap = gaps.iter().sum::<i64>() as f64 / gaps.len() as f64;
+        let variance = gaps.iter().map(|&g| (g as f64 - mean_gap).powi(2)).sum::<f64>()
+            / gaps.len() as f64;
+        let empirical_std = variance.sqrt();
+        // Each gap has noise contribution of diff of two N(0,1000) draws → std of diff = sqrt(2)*1000 ≈ 1414
+        // Allow 800-2200 range for empirical std with 99 samples
         assert!(
-            max_gap - min_gap > 500,
-            "gaps should vary due to noise: min={min_gap}, max={max_gap}"
+            empirical_std > 800.0 && empirical_std < 2200.0,
+            "empirical std {empirical_std:.0} should be near sqrt(2)*1000 ≈ 1414"
         );
     }
 
