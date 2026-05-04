@@ -614,15 +614,21 @@ mod tests {
     fn state_produces_known_state() {
         let arr = gen("state", 50, 20);
         for v in strings(&arr) {
-            assert!(!v.is_empty(), "state should not be empty");
+            assert!(
+                super::US_STATES.contains(&v.as_str()),
+                "state should be from US_STATES list: {v}"
+            );
         }
     }
 
     #[test]
-    fn country_produces_nonempty() {
+    fn country_produces_known_country() {
         let arr = gen("country", 50, 21);
         for v in strings(&arr) {
-            assert!(!v.is_empty(), "country should not be empty");
+            assert!(
+                super::COUNTRIES.contains(&v.as_str()),
+                "country should be from COUNTRIES list: {v}"
+            );
         }
     }
 
@@ -702,10 +708,13 @@ mod tests {
     }
 
     #[test]
-    fn color_nonempty() {
+    fn color_from_list() {
         let arr = gen("color", 50, 29);
         for v in strings(&arr) {
-            assert!(!v.is_empty(), "color should not be empty");
+            assert!(
+                super::COLORS.contains(&v.as_str()),
+                "color should be from COLORS list: {v}"
+            );
         }
     }
 
