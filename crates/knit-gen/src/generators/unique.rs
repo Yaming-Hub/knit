@@ -283,7 +283,7 @@ mod tests {
     fn unique_wrapping_faker() {
         // Faker generators produce strings; just make sure it doesn't panic.
         use crate::generators::faker::FakerGenerator;
-        let inner = Box::new(FakerGenerator::new("first_name".into(), "en_US".into()));
+        let inner = Box::new(FakerGenerator::new("first_name".into(), "en_US".into(), vec![]));
         let gen = UniqueGenerator::new(inner, 100);
         let mut rng = ChaCha8Rng::seed_from_u64(7);
         let ctx = test_ctx();

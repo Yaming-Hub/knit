@@ -76,6 +76,8 @@ pub struct ColumnAnalysis {
     pub is_integer_valued: bool,
     /// Whether a temporal column has time-of-day precision (vs date-only).
     pub has_time_component: bool,
+    /// Min/max timestamps as seconds since epoch (for temporal range).
+    pub temporal_range: Option<(f64, f64)>,
 }
 
 impl ColumnAnalysis {
@@ -93,6 +95,7 @@ impl ColumnAnalysis {
             string_patterns: vec![],
             is_integer_valued: false,
             has_time_component: false,
+            temporal_range: None,
         }
     }
 }
@@ -418,10 +421,38 @@ fn build_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
 /// Map a temporal pattern to a [`GeneratorSpec`].
 fn build_temporal_generator(col: &ColumnAnalysis) -> GeneratorSpec {
     let method = if col.has_time_component { "datetime" } else { "date" };
+    let args = if let Some((min_s, max_s)) = col.temporal_range {
+        // Convert epoch seconds to ISO date strings for args
+        let min_days = (min_s / 86_400.0).floor() as i64;
+        let max_days = (max_s / 86_400.0).floor() as i64;
+        let (y1, m1, d1) = days_to_ymd(min_days);
+        let (y2, m2, d2) = days_to_ymd(max_days);
+        vec![
+            Value::String(format!("{y1:04}-{m1:02}-{d1:02}")),
+            Value::String(format!("{y2:04}-{m2:02}-{d2:02}")),
+        ]
+    } else {
+        vec![]
+    };
     GeneratorSpec::Faker {
         method: method.into(),
-        args: vec![],
+        args,
     }
+}
+
+/// Convert days since epoch to (year, month, day) — same as in faker.rs.
+fn days_to_ymd(days: i64) -> (i32, u32, u32) {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = (z - era * 146_097) as u32;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = yoe as i64 + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    (y as i32, m, d)
 }
 
 /// Infer a [`knit_core::DataType`] from column analysis.
@@ -628,6 +659,7 @@ mod tests {
                     string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -641,6 +673,7 @@ mod tests {
                     string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 },
             ],
             relationships: vec![],
@@ -672,6 +705,7 @@ mod tests {
                 string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -709,6 +743,7 @@ mod tests {
                 string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -742,6 +777,7 @@ mod tests {
                 string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -784,6 +820,7 @@ mod tests {
                 string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -810,6 +847,7 @@ mod tests {
                 string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -840,6 +878,7 @@ mod tests {
             string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -859,6 +898,7 @@ mod tests {
             string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
@@ -878,6 +918,7 @@ mod tests {
             string_patterns: vec![(StringPattern::Email, 0.95)],
             is_integer_valued: false,
             has_time_component: false,
+            temporal_range: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -901,6 +942,7 @@ mod tests {
             string_patterns: vec![(StringPattern::Phone, 0.9)],
             is_integer_valued: false,
             has_time_component: false,
+            temporal_range: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -926,6 +968,7 @@ mod tests {
                 string_patterns: vec![],
                     is_integer_valued: false,
                     has_time_component: false,
+                    temporal_range: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -951,6 +994,7 @@ mod tests {
                 string_patterns: vec![(StringPattern::Email, 0.95)],
                 is_integer_valued: false,
                 has_time_component: false,
+                temporal_range: None,
             }],
             relationships: vec![],
             correlations: vec![],

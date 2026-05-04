@@ -567,6 +567,7 @@ mod tests {
         let plan = GeneratorPlan::Faker {
             category: "first_name".into(),
             locale: "en_US".into(),
+            args: vec![],
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -584,6 +585,7 @@ mod tests {
         let plan = GeneratorPlan::Faker {
             category: "email".into(),
             locale: "en_US".into(),
+            args: vec![],
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
