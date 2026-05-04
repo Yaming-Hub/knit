@@ -49,13 +49,6 @@ fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
         }
         validate_fields(entity, &names, errors);
         validate_entity_count(entity, errors);
-        if let Some(topo) = &entity.topology {
-            validate_topology(
-                &format!("entities.{}.topology", entity.name),
-                topo,
-                errors,
-            );
-        }
     }
 }
 
@@ -120,50 +113,6 @@ fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<SchemaError>
             }
         }
         _ => {}
-    }
-}
-
-fn validate_topology(path: &str, spec: &TopologySpec, errors: &mut Vec<SchemaError>) {
-    match spec {
-        TopologySpec::Tree { max_depth, branching_factor } => {
-            if *max_depth == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "tree topology max_depth must be > 0".to_string(),
-                });
-            }
-            if *branching_factor == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "tree topology branching_factor must be > 0".to_string(),
-                });
-            }
-        }
-        TopologySpec::Dag { max_depth, max_parents } => {
-            if *max_depth == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "dag topology max_depth must be > 0".to_string(),
-                });
-            }
-            if *max_parents == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "dag topology max_parents must be > 0".to_string(),
-                });
-            }
-        }
-        TopologySpec::Graph { edge_probability } => {
-            if !(*edge_probability >= 0.0 && *edge_probability <= 1.0) {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: format!(
-                        "graph topology edge_probability must be in [0, 1], got {}",
-                        edge_probability
-                    ),
-                });
-            }
-        }
     }
 }
 
@@ -1721,44 +1670,6 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("every_n must be > 0"))
-        }));
-    }
-
-    #[test]
-    fn test_validate_topology_tree_zero_depth() {
-        let mut model = minimal_model();
-        model.entities[0].topology = Some(TopologySpec::Tree {
-            max_depth: 0,
-            branching_factor: 3,
-        });
-        let errors = validate(&model);
-        assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("max_depth must be > 0"))
-        }));
-    }
-
-    #[test]
-    fn test_validate_topology_graph_probability_out_of_range() {
-        let mut model = minimal_model();
-        model.entities[0].topology = Some(TopologySpec::Graph {
-            edge_probability: 1.5,
-        });
-        let errors = validate(&model);
-        assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("edge_probability"))
-        }));
-    }
-
-    #[test]
-    fn test_validate_topology_dag_zero_parents() {
-        let mut model = minimal_model();
-        model.entities[0].topology = Some(TopologySpec::Dag {
-            max_depth: 3,
-            max_parents: 0,
-        });
-        let errors = validate(&model);
-        assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("max_parents must be > 0"))
         }));
     }
 }
