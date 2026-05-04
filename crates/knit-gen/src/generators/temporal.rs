@@ -483,4 +483,246 @@ mod tests {
             );
         }
     }
+
+    // ── New tests below ──────────────────────────────────────────────────
+
+    #[test]
+    fn relative_missing_base_field_uses_epoch_zero() {
+        // base field doesn't exist in context → all offsets relative to 0
+        let mut params = BTreeMap::new();
+        params.insert("offset_mean".into(), 5.0);
+        params.insert("offset_std".into(), 0.0); // deterministic
+        params.insert("unit".into(), 0.0); // seconds
+        let gen = RelativeGenerator::new("nonexistent".into(), &params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 5, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // offset_mean=5s, offset_std≈0 → each value ≈ 5000ms from epoch 0
+        for i in 0..5 {
+            assert!(ts.value(i) >= 0, "row {i}: should be >= 0");
+            // With near-zero std, should be close to 5000ms
+            assert!(
+                (ts.value(i) - 5000).abs() < 100,
+                "row {i}: value {} not near 5000",
+                ts.value(i)
+            );
+        }
+    }
+
+    #[test]
+    fn relative_unit_days() {
+        // offset in days should produce much larger values
+        let base_values: Vec<i64> = vec![0; 5];
+        let base_arr: ArrayRef = Arc::new(TimestampMillisecondArray::from(base_values));
+        let mut cols = HashMap::new();
+        cols.insert("ts".to_string(), base_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut params = BTreeMap::new();
+        params.insert("offset_mean".into(), 1.0);
+        params.insert("offset_std".into(), 0.0);
+        params.insert("unit".into(), 3.0); // days
+        let gen = RelativeGenerator::new("ts".into(), &params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 5, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // 1 day = 86_400_000 ms; with 0 std should be close to that
+        for i in 0..5 {
+            let diff = (ts.value(i) - 86_400_000).abs();
+            assert!(
+                diff < 1_000_000,
+                "row {i}: value {} not near 1 day (86.4M ms)",
+                ts.value(i)
+            );
+        }
+    }
+
+    #[test]
+    fn relative_output_type() {
+        let params = BTreeMap::new();
+        let gen = RelativeGenerator::new("x".into(), &params);
+        assert_eq!(
+            gen.output_type(),
+            DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
+        );
+    }
+
+    #[test]
+    fn time_series_with_positive_trend() {
+        let mut params = BTreeMap::new();
+        params.insert("start".into(), 1_000_000.0);
+        params.insert("interval_ms".into(), 1000.0);
+        params.insert("trend_slope".into(), 500.0); // 500ms added per row
+        params.insert("noise_std".into(), 0.0);
+        let gen = TimeSeriesGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 10, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // With no noise/seasonality: gap = interval_ms + trend_slope = 1000 + 500 = 1500ms exactly
+        for i in 1..10 {
+            let gap = ts.value(i) - ts.value(i - 1);
+            assert_eq!(
+                gap, 1500,
+                "row {i}: gap {gap} should be exactly interval_ms + trend_slope = 1500"
+            );
+        }
+    }
+
+    #[test]
+    fn time_series_with_seasonality() {
+        let mut params = BTreeMap::new();
+        params.insert("start".into(), 0.0);
+        params.insert("interval_ms".into(), 1000.0);
+        params.insert("trend_slope".into(), 0.0);
+        params.insert("noise_std".into(), 0.0);
+        // Add seasonality: period=10000ms, amplitude=2.0, phase=0
+        // Max seasonal swing = amplitude * interval_ms = 2000ms > interval_ms
+        params.insert("s0_period".into(), 10_000.0);
+        params.insert("s0_amplitude".into(), 2.0);
+        params.insert("s0_phase".into(), 0.0);
+        let gen = TimeSeriesGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 20, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // Seasonality should cause some non-monotonic behavior
+        let mut has_decrease = false;
+        for i in 1..20 {
+            if ts.value(i) < ts.value(i - 1) {
+                has_decrease = true;
+                break;
+            }
+        }
+        assert!(
+            has_decrease,
+            "seasonality should cause at least one decrease in timestamps"
+        );
+    }
+
+    #[test]
+    fn time_series_noise_adds_variance() {
+        let mut params = BTreeMap::new();
+        params.insert("start".into(), 0.0);
+        params.insert("interval_ms".into(), 10_000.0);
+        params.insert("trend_slope".into(), 0.0);
+        params.insert("noise_std".into(), 1000.0); // 1 second noise std
+        let gen = TimeSeriesGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // Compute gaps and verify the empirical std is near the configured noise_std=1000ms
+        let gaps: Vec<i64> = (1..100).map(|i| ts.value(i) - ts.value(i - 1)).collect();
+        let mean_gap = gaps.iter().sum::<i64>() as f64 / gaps.len() as f64;
+        let variance = gaps.iter().map(|&g| (g as f64 - mean_gap).powi(2)).sum::<f64>()
+            / gaps.len() as f64;
+        let empirical_std = variance.sqrt();
+        // Each gap has noise contribution of diff of two N(0,1000) draws → std of diff = sqrt(2)*1000 ≈ 1414
+        // Allow 800-2200 range for empirical std with 99 samples
+        assert!(
+            empirical_std > 800.0 && empirical_std < 2200.0,
+            "empirical std {empirical_std:.0} should be near sqrt(2)*1000 ≈ 1414"
+        );
+    }
+
+    #[test]
+    fn time_series_row_offset_continues_sequence() {
+        let mut params = BTreeMap::new();
+        params.insert("start".into(), 0.0);
+        params.insert("interval_ms".into(), 1000.0);
+        params.insert("trend_slope".into(), 0.0);
+        params.insert("noise_std".into(), 0.0);
+        let gen = TimeSeriesGenerator::new(&params);
+
+        let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
+
+        // Partition 0: rows 0-4
+        let ctx0 = GenContext::new(map, 0, 0, 1, "test");
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr0 = gen.generate(&mut rng, 5, &ctx0);
+        let ts0 = arr0.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // Partition 1: rows 5-9 (row_offset=5)
+        let ctx1 = GenContext::new(map, 5, 0, 1, "test");
+        let mut rng2 = ChaCha8Rng::seed_from_u64(99);
+        let arr1 = gen.generate(&mut rng2, 5, &ctx1);
+        let ts1 = arr1.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // First value of partition 1 should continue from where partition 0 left off
+        assert_eq!(ts0.value(4) + 1000, ts1.value(0));
+    }
+
+    #[test]
+    fn time_series_output_type() {
+        let params = BTreeMap::new();
+        let gen = TimeSeriesGenerator::new(&params);
+        assert_eq!(
+            gen.output_type(),
+            DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
+        );
+    }
+
+    #[test]
+    fn business_hours_weekends_allowed() {
+        // weekdays_only=0 should allow Saturday/Sunday
+        let mut params = BTreeMap::new();
+        // 2024-01-06 is a Saturday
+        params.insert("start_date".into(), 1_704_499_200_000.0);
+        params.insert("start_hour".into(), 0.0);
+        params.insert("end_hour".into(), 24.0);
+        params.insert("weekdays_only".into(), 0.0);
+        let gen = BusinessHoursGenerator::new(&params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 7, &ctx);
+        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+
+        // Should include weekend days
+        let mut has_weekend = false;
+        for i in 0..7 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let wd = dt.weekday().num_days_from_monday();
+            if wd >= 5 {
+                has_weekend = true;
+                break;
+            }
+        }
+        assert!(has_weekend, "weekdays_only=false should include weekend days");
+    }
+
+    #[test]
+    fn business_hours_deterministic() {
+        let mut params = BTreeMap::new();
+        params.insert("start_date".into(), 1_704_067_200_000.0);
+        params.insert("start_hour".into(), 9.0);
+        params.insert("end_hour".into(), 17.0);
+        params.insert("weekdays_only".into(), 1.0);
+        let gen = BusinessHoursGenerator::new(&params);
+
+        let ctx = empty_ctx();
+        let mut rng1 = ChaCha8Rng::seed_from_u64(42);
+        let arr1 = gen.generate(&mut rng1, 20, &ctx);
+        let mut rng2 = ChaCha8Rng::seed_from_u64(42);
+        let arr2 = gen.generate(&mut rng2, 20, &ctx);
+
+        let ts1 = arr1.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts2 = arr2.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        for i in 0..20 {
+            assert_eq!(ts1.value(i), ts2.value(i), "row {i} mismatch");
+        }
+    }
 }
