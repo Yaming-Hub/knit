@@ -12,8 +12,8 @@ use crate::traits::KeyStore;
 
 /// In-memory key store backed by a `Vec<i64>` behind a [`RwLock`].
 ///
-/// Suitable for entities with up to ~10 M rows. Larger entities should
-/// use memory-mapped or sampled stores (future PRs).
+/// Suitable for entities with up to ~10 M rows. Larger entities may benefit
+/// from memory-mapped or sampled stores.
 ///
 /// # Thread Safety
 ///

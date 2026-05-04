@@ -80,12 +80,39 @@ fn validate_fields(
                 errors,
             );
         }
+        validate_null_spec(
+            &format!("entities.{}.fields.{}.nullable", entity.name, field.name),
+            &field.nullable,
+            errors,
+        );
     }
     if pk_count > 1 {
         errors.push(SchemaError::Validation {
             path: format!("entities.{}", entity.name),
             message: format!("entity has {} primary keys, expected at most 1", pk_count),
         });
+    }
+}
+
+fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<SchemaError>) {
+    match spec {
+        NullSpec::Probability(p) => {
+            if !(*p >= 0.0 && *p <= 1.0) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!("null probability must be in [0, 1], got {}", p),
+                });
+            }
+        }
+        NullSpec::Pattern { every_n } => {
+            if *every_n == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "null pattern every_n must be > 0".to_string(),
+                });
+            }
+        }
+        _ => {}
     }
 }
 
@@ -1609,6 +1636,40 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("lookup cannot be nested"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_null_probability_out_of_range() {
+        let mut model = minimal_model();
+        model.entities[0].fields[0].nullable = NullSpec::Probability(1.5);
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("null probability"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_null_probability_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields[0].nullable = NullSpec::Probability(0.3);
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("null"))
+            }),
+            "expected no null errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_validate_null_pattern_zero() {
+        let mut model = minimal_model();
+        model.entities[0].fields[0].nullable = NullSpec::Pattern { every_n: 0 };
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("every_n must be > 0"))
         }));
     }
 }
