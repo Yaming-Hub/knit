@@ -307,4 +307,112 @@ mod tests {
         let arr = gen.generate(&mut rng, 5, &ctx);
         assert_eq!(arr.len(), 5);
     }
+
+    #[test]
+    fn float_choices() {
+        let choices = vec![
+            WeightedChoice { value: Value::Float(1.5), weight: 1.0 },
+            WeightedChoice { value: Value::Float(2.5), weight: 1.0 },
+        ];
+        let gen = OneOfGenerator::new(choices);
+        assert_eq!(gen.output_type(), DataType::Float64);
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        for v in f64_arr.values().iter() {
+            assert!(*v == 1.5 || *v == 2.5, "unexpected float value: {v}");
+        }
+    }
+
+    #[test]
+    fn bool_choices() {
+        let choices = vec![
+            WeightedChoice { value: Value::Bool(true), weight: 1.0 },
+            WeightedChoice { value: Value::Bool(false), weight: 1.0 },
+        ];
+        let gen = OneOfGenerator::new(choices);
+        assert_eq!(gen.output_type(), DataType::Boolean);
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 1000, &ctx);
+        let bool_arr = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
+        let true_count = (0..bool_arr.len()).filter(|&i| bool_arr.value(i)).count();
+        // Roughly 50/50 with equal weights
+        assert!(true_count > 300 && true_count < 700, "expected ~50% true, got {true_count}/1000");
+    }
+
+    #[test]
+    fn single_choice_always_selected() {
+        let choices = vec![
+            WeightedChoice { value: Value::String("only".into()), weight: 1.0 },
+        ];
+        let gen = OneOfGenerator::new(choices);
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..100 {
+            assert_eq!(str_arr.value(i), "only");
+        }
+    }
+
+    #[test]
+    fn heavily_skewed_weights() {
+        // One choice has weight 1000, others weight 1
+        let choices = vec![
+            WeightedChoice { value: Value::String("dominant".into()), weight: 1000.0 },
+            WeightedChoice { value: Value::String("rare_a".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("rare_b".into()), weight: 1.0 },
+        ];
+        let gen = OneOfGenerator::new(choices);
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 10_000, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let dominant = (0..str_arr.len()).filter(|&i| str_arr.value(i) == "dominant").count();
+        let ratio = dominant as f64 / 10_000.0;
+        assert!(ratio > 0.98, "dominant should be ~99.8%, got {:.1}%", ratio * 100.0);
+    }
+
+    #[test]
+    fn deterministic_with_same_seed() {
+        let choices = vec![
+            WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
+        ];
+        let gen = OneOfGenerator::new(choices);
+        let ctx = make_ctx();
+        let a = gen.generate(&mut ChaCha8Rng::seed_from_u64(42), 50, &ctx);
+        let b = gen.generate(&mut ChaCha8Rng::seed_from_u64(42), 50, &ctx);
+        let a_s = a.as_any().downcast_ref::<StringArray>().unwrap();
+        let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..50 {
+            assert_eq!(a_s.value(i), b_s.value(i), "row {i} should be deterministic");
+        }
+    }
+
+    #[test]
+    fn all_choices_appear_with_equal_weights() {
+        let choices = vec![
+            WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
+        ];
+        let gen = OneOfGenerator::new(choices);
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 10_000, &ctx);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        let mut counts = HashMap::new();
+        for i in 0..str_arr.len() {
+            *counts.entry(str_arr.value(i).to_string()).or_insert(0usize) += 1;
+        }
+        assert_eq!(counts.len(), 3, "all 3 choices should appear");
+        for (k, v) in &counts {
+            let ratio = *v as f64 / 10_000.0;
+            assert!(ratio > 0.29 && ratio < 0.38, "choice '{k}' should be ~33%, got {:.1}%", ratio * 100.0);
+        }
+    }
 }
