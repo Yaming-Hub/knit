@@ -4,6 +4,7 @@
 //! - `expand` — flatten an extends chain into a standalone schema
 //! - `normalize` — reformat a schema to canonical style
 //! - `diff` — compare two schemas and show differences
+//! - `doc` — generate markdown documentation for a schema
 
 use std::collections::BTreeSet;
 

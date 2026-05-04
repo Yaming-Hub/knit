@@ -23,6 +23,7 @@ These flags can be used with any command:
 | `--json` | bool | `false` | Machine-readable JSON output |
 | `-q`, `--quiet` | bool | `false` | Suppress all non-error output |
 | `-v`, `--verbose` | bool | `false` | Extra diagnostic logging |
+| `--count <SPEC>` | string | — | Override row count for `plan`/`generate` (e.g. `1000`, `0.1x`, `10x`) |
 | `--version` | — | — | Print version and exit |
 | `--help` | — | — | Print help and exit |
 
@@ -302,6 +303,29 @@ knit learn data/sales.csv -v
 
 Utilities for manipulating schema files.
 
+### `knit schema expand`
+
+Flatten an extends chain into a standalone schema.
+
+```bash
+knit schema expand <schema-file>
+```
+
+Resolves any `extends` directives and prints the fully merged schema as TOML
+(or JSON with `--json`).
+
+### `knit schema normalize`
+
+Resolve and reformat a schema to canonical style.
+
+```bash
+knit schema normalize <schema-file>
+```
+
+Parses the schema (resolving any `extends` chain), then re-serializes it as a
+standalone file in a consistent format. Note that inheritance structure is
+flattened in the output. Use `--json` for JSON output.
+
 ### `knit schema diff`
 
 Compare two schema files and show differences.
@@ -319,6 +343,55 @@ knit schema diff v1.weave.toml v2.weave.toml --json
 ```
 
 Output shows added, removed, and changed entities, fields, and relationships.
+
+### `knit schema doc`
+
+Generate markdown documentation for a schema.
+
+```bash
+knit schema doc <schema-file> [--output <path>]
+```
+
+Produces a Markdown document with:
+- Model overview table (version, seed, locale, entity/relationship counts)
+- Per-entity sections with field tables (type, nullable, generator)
+- Relationship table with FK columns
+
+```bash
+# Print to stdout
+knit schema doc ecommerce.weave.toml
+
+# Write to file
+knit schema doc ecommerce.weave.toml --output docs/schema.md
+```
+
+---
+
+## `knit completions`
+
+Generate shell completion scripts for tab-completion support.
+
+```bash
+knit completions <shell>
+```
+
+Supported shells: `bash`, `zsh`, `fish`, `elvish`, `powershell`.
+
+### Examples
+
+```bash
+# Bash — add to ~/.bashrc or ~/.bash_completion
+knit completions bash >> ~/.bash_completion
+
+# Zsh — place in fpath
+knit completions zsh > ~/.zfunc/_knit
+
+# Fish
+knit completions fish > ~/.config/fish/completions/knit.fish
+
+# PowerShell — add to $PROFILE
+knit completions powershell >> $PROFILE
+```
 
 ---
 
