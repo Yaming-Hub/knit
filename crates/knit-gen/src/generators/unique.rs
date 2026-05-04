@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use parking_lot::Mutex;
 
 use arrow::array::{
-    Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray,
+    Array, ArrayRef, BooleanArray, Date32Array, Float64Array, Int64Array, StringArray,
     TimestampMillisecondArray, TimestampMicrosecondArray,
     TimestampNanosecondArray, TimestampSecondArray, UInt64Array,
 };
@@ -91,6 +91,10 @@ fn array_value_to_string(array: &dyn Array, index: usize) -> String {
         return a.value(index).to_string();
     }
     if let Some(a) = array.as_any().downcast_ref::<TimestampNanosecondArray>() {
+        return a.value(index).to_string();
+    }
+    // Date types
+    if let Some(a) = array.as_any().downcast_ref::<Date32Array>() {
         return a.value(index).to_string();
     }
     // Fallback: use debug format of the scalar

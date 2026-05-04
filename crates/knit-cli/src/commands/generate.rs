@@ -416,7 +416,13 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         },
         knit_plan::GeneratorPlan::Sequence { .. } => ArrowDataType::Int64,
         knit_plan::GeneratorPlan::Uuid => ArrowDataType::Utf8,
-        knit_plan::GeneratorPlan::Faker { .. } => ArrowDataType::Utf8,
+        knit_plan::GeneratorPlan::Faker { category, .. } => match category.as_str() {
+            "datetime" | "timestamp" => {
+                ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
+            }
+            "date" => ArrowDataType::Date32,
+            _ => ArrowDataType::Utf8,
+        },
         knit_plan::GeneratorPlan::Pattern { .. } => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::OneOf { choices, .. } => infer_one_of_type(choices),
         knit_plan::GeneratorPlan::Constant(val) => match val {
