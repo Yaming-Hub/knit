@@ -168,8 +168,21 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         }
     }
 
-    // Check categorical (low cardinality), but only if no strong semantic pattern was detected
-    let has_strong_pattern = patterns.values().any(|&rate| rate > 0.8);
+    // Check categorical (low cardinality), but only if no strong semantic pattern was detected.
+    // Only high-specificity patterns (Email, UUID, URL, HexString, Date) gate out categorical.
+    // Name and Phone are too ambiguous (e.g., "Accounting Manager" matches Name regex,
+    // postal codes match Phone) — they don't prevent categorical detection.
+    let has_strong_pattern = patterns.iter().any(|(pattern, &rate)| {
+        rate > 0.8
+            && matches!(
+                pattern,
+                StringPattern::Email
+                    | StringPattern::Uuid
+                    | StringPattern::Url
+                    | StringPattern::Date
+                    | StringPattern::HexString(_)
+            )
+    });
     let mut distinct: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for v in &non_null {
         distinct.insert(v);
@@ -496,5 +509,53 @@ mod tests {
         let patterns = detect_patterns(&vals);
         let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
         assert!(hex_entry.is_none(), "mixed-length hex should not be classified");
+    }
+
+    #[test]
+    fn name_pattern_does_not_block_categorical() {
+        // Values that match the Name regex (2 capitalized words) but represent job titles
+        // with repeated values — should be Categorical, not Text
+        let vals: Vec<Option<&str>> = vec![
+            Some("Accounting Manager"),
+            Some("Marketing Manager"),
+            Some("Sales Representative"),
+            Some("Accounting Manager"),
+            Some("Marketing Manager"),
+            Some("Owner"),
+            Some("Sales Representative"),
+            Some("Accounting Manager"),
+            Some("Marketing Manager"),
+            Some("Sales Representative"),
+            Some("Owner"),
+        ];
+        let result = infer_type(&vals, 0.20);
+        assert_eq!(
+            result.inferred_type,
+            InferredType::Categorical,
+            "Job titles with repeats should be categorical despite matching Name pattern"
+        );
+    }
+
+    #[test]
+    fn unique_names_stay_text() {
+        // All unique person names — should NOT become categorical (PII protection)
+        let vals: Vec<Option<&str>> = vec![
+            Some("Alice Smith"),
+            Some("Bob Johnson"),
+            Some("Carol Williams"),
+            Some("David Brown"),
+            Some("Eve Davis"),
+            Some("Frank Miller"),
+            Some("Grace Wilson"),
+            Some("Henry Moore"),
+            Some("Iris Taylor"),
+            Some("Jack Anderson"),
+        ];
+        let result = infer_type(&vals, 0.20);
+        assert_eq!(
+            result.inferred_type,
+            InferredType::Text,
+            "All-unique names should not become categorical"
+        );
     }
 }
