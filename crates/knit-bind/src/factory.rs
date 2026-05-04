@@ -107,3 +107,107 @@ pub fn create_sink(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::{Int32Array, StringArray};
+    use arrow::datatypes::{DataType, Field as ArrowField};
+
+    fn sample_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            ArrowField::new("id", DataType::Int32, false),
+            ArrowField::new("name", DataType::Utf8, false),
+        ]))
+    }
+
+    fn sample_batch() -> arrow::record_batch::RecordBatch {
+        arrow::record_batch::RecordBatch::try_new(
+            sample_schema(),
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2])),
+                Arc::new(StringArray::from(vec!["a", "b"])),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn factory_csv() {
+        let config = SinkConfig {
+            format: OutputFormat::Csv,
+            ..Default::default()
+        };
+        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+
+    #[test]
+    fn factory_json() {
+        let config = SinkConfig {
+            format: OutputFormat::Json,
+            ..Default::default()
+        };
+        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+
+    #[test]
+    fn factory_jsonl() {
+        let config = SinkConfig {
+            format: OutputFormat::Jsonl,
+            ..Default::default()
+        };
+        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+
+    #[test]
+    fn factory_parquet() {
+        let config = SinkConfig {
+            format: OutputFormat::Parquet,
+            ..Default::default()
+        };
+        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+
+    #[test]
+    fn factory_arrow_ipc() {
+        let config = SinkConfig {
+            format: OutputFormat::ArrowIpc,
+            ..Default::default()
+        };
+        let writer: Box<dyn Write + Send> = Box::new(std::io::Cursor::new(Vec::<u8>::new()));
+        let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+
+    #[test]
+    fn factory_template() {
+        let config = SinkConfig {
+            format: OutputFormat::Template,
+            template_source: "{{ id }},{{ name }}\n".to_string(),
+            ..Default::default()
+        };
+        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = sink.finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+}

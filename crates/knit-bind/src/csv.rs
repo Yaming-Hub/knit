@@ -104,3 +104,83 @@ impl<W: Write + Send> Sink for CsvSink<W> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::{Int32Array, StringArray};
+    use arrow::datatypes::{DataType, Field as ArrowField, Schema};
+
+    fn sample_batch() -> RecordBatch {
+        let schema = Arc::new(Schema::new(vec![
+            ArrowField::new("id", DataType::Int32, false),
+            ArrowField::new("name", DataType::Utf8, false),
+        ]));
+        RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3])),
+                Arc::new(StringArray::from(vec!["alice", "bob", "carol"])),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn csv_write_single_batch() {
+        let buf = std::io::Cursor::new(Vec::new());
+        let config = CsvSinkConfig::default();
+        let mut sink = CsvSink::new(buf, &config);
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 3);
+        assert!(stats.bytes_written > 0);
+        assert_eq!(stats.files_created, 1);
+    }
+
+    #[test]
+    fn csv_write_multiple_batches() {
+        let buf = std::io::Cursor::new(Vec::new());
+        let config = CsvSinkConfig::default();
+        let mut sink = CsvSink::new(buf, &config);
+        sink.write_batch(&sample_batch()).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 6);
+    }
+
+    #[test]
+    fn csv_custom_delimiter_produces_bytes() {
+        let buf = std::io::Cursor::new(Vec::new());
+        let config = CsvSinkConfig {
+            delimiter: b'\t',
+            header: true,
+            null_value: String::new(),
+        };
+        let mut sink = CsvSink::new(buf, &config);
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 3);
+        assert!(stats.bytes_written > 0);
+    }
+
+    #[test]
+    fn csv_no_header_smaller_output() {
+        let buf_with = std::io::Cursor::new(Vec::new());
+        let buf_without = std::io::Cursor::new(Vec::new());
+
+        let config_with = CsvSinkConfig { header: true, ..Default::default() };
+        let config_without = CsvSinkConfig { header: false, ..Default::default() };
+
+        let mut sink_with = CsvSink::new(buf_with, &config_with);
+        sink_with.write_batch(&sample_batch()).unwrap();
+        let stats_with = Box::new(sink_with).finish().unwrap();
+
+        let mut sink_without = CsvSink::new(buf_without, &config_without);
+        sink_without.write_batch(&sample_batch()).unwrap();
+        let stats_without = Box::new(sink_without).finish().unwrap();
+
+        // Without header should be smaller
+        assert!(stats_without.bytes_written < stats_with.bytes_written);
+    }
+}
