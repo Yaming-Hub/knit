@@ -164,8 +164,167 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = d.perturb(float_batch(), &mut rng, &config).unwrap();
         let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
-        // Row 0: 100 + 0 = 100, Row 4: 100 + 4 = 104
-        assert!((arr.value(0) - 100.0).abs() < 1e-10);
-        assert!((arr.value(4) - 104.0).abs() < 1e-10);
+        // Formula: value + drift_per_row * row_index
+        for i in 0..5 {
+            let expected = 100.0 + 1.0 * i as f64;
+            assert!(
+                (arr.value(i) - expected).abs() < 1e-10,
+                "row {i}: expected {expected}, got {}",
+                arr.value(i)
+            );
+        }
+    }
+
+    #[test]
+    fn negative_drift_decreases_over_rows() {
+        let d = ValueDrifter::new(-2.0);
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = d.perturb(float_batch(), &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        for i in 0..5 {
+            let expected = 100.0 + (-2.0) * i as f64;
+            assert!(
+                (arr.value(i) - expected).abs() < 1e-10,
+                "row {i}: expected {expected}, got {}",
+                arr.value(i)
+            );
+        }
+    }
+
+    #[test]
+    fn drift_on_int32() {
+        let d = ValueDrifter::new(1.5);
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("val", DataType::Int32, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int32Array::from(vec![10, 10, 10, 10]))],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        // Row 0: 10+0=10, Row 1: round(10+1.5)=12, Row 2: 10+3=13, Row 3: round(10+4.5)=15
+        assert_eq!(arr.value(0), 10);
+        assert_eq!(arr.value(1), 12); // round(11.5) = 12
+        assert_eq!(arr.value(2), 13); // round(13.0) = 13
+        assert_eq!(arr.value(3), 15); // round(14.5) = 15 (Rust rounds .5 away from zero)
+    }
+
+    #[test]
+    fn drift_on_int64() {
+        let d = ValueDrifter::new(10.0);
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("val", DataType::Int64, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int64Array::from(vec![1000i64, 1000, 1000]))],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<Int64Array>().unwrap();
+        assert_eq!(arr.value(0), 1000); // row 0: no drift
+        assert_eq!(arr.value(1), 1010); // row 1: +10
+        assert_eq!(arr.value(2), 1020); // row 2: +20
+    }
+
+    #[test]
+    fn zero_probability_leaves_values_unchanged() {
+        let d = ValueDrifter::new(100.0);
+        let config = PerturbConfig::default().with_probability(0.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let result = d.perturb(float_batch(), &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        for i in 0..5 {
+            assert!((arr.value(i) - 100.0).abs() < 1e-10, "row {i} should be unchanged");
+        }
+    }
+
+    #[test]
+    fn null_values_preserved() {
+        let d = ValueDrifter::new(1.0);
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("val", DataType::Float64, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Float64Array::from(vec![
+                Some(10.0),
+                None,
+                Some(30.0),
+            ]))],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        assert!(arr.is_valid(0));
+        assert!(!arr.is_valid(1), "null should remain null");
+        assert!(arr.is_valid(2));
+    }
+
+    #[test]
+    fn non_numeric_columns_skipped() {
+        let d = ValueDrifter::new(1.0);
+        let config = PerturbConfig::default().with_probability(1.0);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, false),
+            Field::new("val", DataType::Float64, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(StringArray::from(vec!["a", "b", "c"])),
+                Arc::new(Float64Array::from(vec![1.0, 1.0, 1.0])),
+            ],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        let names = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(names.value(0), "a");
+        assert_eq!(names.value(1), "b");
+    }
+
+    #[test]
+    fn column_filter_by_name() {
+        let d = ValueDrifter::new(100.0);
+        let config = PerturbConfig::default()
+            .with_probability(1.0)
+            .with_columns(vec!["targeted".to_string()]);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("targeted", DataType::Float64, false),
+            Field::new("safe", DataType::Float64, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Float64Array::from(vec![1.0, 1.0, 1.0])),
+                Arc::new(Float64Array::from(vec![1.0, 1.0, 1.0])),
+            ],
+        )
+        .unwrap();
+        let result = d.perturb(batch, &mut rng, &config).unwrap();
+        let targeted = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let safe = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
+        // Row 2: targeted should have drift 100*2 = 200 added
+        assert!((targeted.value(2) - 201.0).abs() < 1e-10, "targeted should drift");
+        assert!((safe.value(2) - 1.0).abs() < 1e-10, "safe should be unchanged");
+    }
+
+    #[test]
+    fn breaks_type_range_invariant() {
+        let d = ValueDrifter::default();
+        assert_eq!(d.breaks(), InvariantSet::TYPE_RANGE);
+        assert_eq!(d.name(), "ValueDrifter");
+        assert!((d.drift_per_row - 0.01).abs() < 1e-10, "default drift should be 0.01");
     }
 }
