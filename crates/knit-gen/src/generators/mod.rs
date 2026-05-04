@@ -40,11 +40,13 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             params,
             clamp_min,
             clamp_max,
+            round,
         } => Box::new(distribution::DistributionGenerator::new(
             kind.clone(),
             params.clone(),
             *clamp_min,
             *clamp_max,
+            *round,
         )),
         GeneratorPlan::Sequence { start, step } => {
             Box::new(sequence::SequenceGenerator::new(*start, *step))

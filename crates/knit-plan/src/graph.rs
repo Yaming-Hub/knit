@@ -492,6 +492,7 @@ mod tests {
                 count: CountSpec::Distribution(DistributionSpec {
                     kind: DistributionKind::Normal,
                     params,
+                    round: false,
                 }),
                 fields: vec![],
                 constraints: vec![],

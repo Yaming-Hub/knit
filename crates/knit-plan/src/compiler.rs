@@ -191,6 +191,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 params: dist_spec.params.clone(),
                 clamp_min: None,
                 clamp_max: None,
+                round: dist_spec.round,
             },
             GeneratorSpec::Faker { method, args: _ } => GeneratorPlan::Faker {
                 category: method.clone(),
@@ -833,6 +834,7 @@ mod tests {
                         p.insert("std_dev".to_string(), 10.0);
                         p
                     },
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -970,6 +972,7 @@ mod tests {
                         p.insert("max".to_string(), 100.0);
                         p
                     },
+                    round: false,
                 },
             }),
             nullable: NullSpec::Never,
@@ -1326,6 +1329,7 @@ mod tests {
                     spec: DistributionSpec {
                         kind: DistributionKind::Uniform,
                         params: Default::default(),
+                        round: false,
                     },
                 }),
                 primary_key: None,

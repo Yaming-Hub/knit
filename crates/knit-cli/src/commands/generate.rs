@@ -400,13 +400,19 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
     use knit_core::DistributionKind;
 
     match gp {
-        knit_plan::GeneratorPlan::Distribution { kind, .. } => match kind {
-            DistributionKind::Poisson
-            | DistributionKind::Bernoulli
-            | DistributionKind::Binomial
-            | DistributionKind::Geometric
-            | DistributionKind::Zipf => ArrowDataType::Int64,
-            _ => ArrowDataType::Float64,
+        knit_plan::GeneratorPlan::Distribution { kind, round, .. } => {
+            if *round {
+                ArrowDataType::Int64
+            } else {
+                match kind {
+                    DistributionKind::Poisson
+                    | DistributionKind::Bernoulli
+                    | DistributionKind::Binomial
+                    | DistributionKind::Geometric
+                    | DistributionKind::Zipf => ArrowDataType::Int64,
+                    _ => ArrowDataType::Float64,
+                }
+            }
         },
         knit_plan::GeneratorPlan::Sequence { .. } => ArrowDataType::Int64,
         knit_plan::GeneratorPlan::Uuid => ArrowDataType::Utf8,

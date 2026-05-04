@@ -73,6 +73,7 @@ mod tests {
             params,
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -109,6 +110,7 @@ mod tests {
             params,
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -217,6 +219,7 @@ mod tests {
             },
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -322,6 +325,7 @@ mod tests {
             params,
             clamp_min: Some(0.0),
             clamp_max: Some(200.0),
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -347,6 +351,7 @@ mod tests {
             params,
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -368,6 +373,7 @@ mod tests {
             params,
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -393,6 +399,7 @@ mod tests {
             params,
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
@@ -414,6 +421,7 @@ mod tests {
             params,
             clamp_min: None,
             clamp_max: None,
+            round: false,
         };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
