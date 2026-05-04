@@ -327,11 +327,39 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     let mut temporal_pattern: Option<TemporalPatternSpec> = None;
     let mut categorical_weights: Option<Vec<(String, f64)>> = None;
     let mut confidence = 1.0;
+    let mut is_integer_valued = false;
+
+    // Boolean columns (Arrow auto-detected) → weighted OneOf
+    if matches!(profile.data_type, DataType::Boolean) {
+        let col_idx = batch.schema().index_of(&profile.name).ok();
+        if let Some(idx) = col_idx {
+            let arr = batch.column(idx);
+            let bool_arr = arr.as_any().downcast_ref::<arrow::array::BooleanArray>();
+            if let Some(ba) = bool_arr {
+                let total = ba.len() as f64;
+                let true_count = (0..ba.len()).filter(|&i| !ba.is_null(i) && ba.value(i)).count();
+                let true_rate = true_count as f64 / total;
+                let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, 1.0);
+                ca.inferred_type = Some(InferredType::Boolean);
+                // Store the actual true/false proportions in categorical_weights
+                let mut weights = vec![
+                    ("true".to_string(), true_rate),
+                    ("false".to_string(), 1.0 - true_rate),
+                ];
+                weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                ca.categorical_weights = Some(weights);
+                ca.is_integer_valued = false;
+                return ca;
+            }
+        }
+    }
 
     // Numeric columns → distribution fitting
     if profile.numeric.is_some() {
         let values = extract_numeric_values(batch, &profile.name);
         if !values.is_empty() {
+            // Check if all values are integers
+            is_integer_valued = values.iter().all(|v| v.fract() == 0.0);
             distribution = fit_distribution(&values);
             if let Some(ref fit) = distribution {
                 confidence = (1.0 - fit.best.ks_stat).max(0.0);
@@ -370,7 +398,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         let refs: Vec<Option<&str>> = string_values.iter().map(|s| s.as_deref()).collect();
 
         if !refs.is_empty() {
-            let inference = infer_type(&refs, 0.05);
+            let inference = infer_type(&refs, 0.20);
             confidence = inference.confidence;
             string_patterns = inference.patterns.into_iter().collect();
             // Sort by match rate descending for deterministic generator selection
@@ -392,6 +420,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                         .filter_map(|s| s.and_then(|v| v.parse::<f64>().ok()))
                         .collect();
                     if !nums.is_empty() {
+                        is_integer_valued = matches!(inference.inferred_type, InferredType::Integer);
                         distribution = fit_distribution(&nums);
                     }
                     inferred_type = Some(inference.inferred_type);
@@ -409,6 +438,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     ca.categorical_weights = categorical_weights;
     ca.inferred_type = inferred_type;
     ca.string_patterns = string_patterns;
+    ca.is_integer_valued = is_integer_valued;
     ca
 }
 
@@ -503,6 +533,30 @@ fn extract_timestamp_seconds(batch: &RecordBatch, col_name: &str) -> Vec<f64> {
         DataType::Timestamp(TimeUnit::Millisecond, _) => Some((1_000.0, col.as_ref())),
         DataType::Timestamp(TimeUnit::Microsecond, _) => Some((1_000_000.0, col.as_ref())),
         DataType::Timestamp(TimeUnit::Nanosecond, _) => Some((1_000_000_000.0, col.as_ref())),
+        DataType::Date32 => {
+            // Date32 = days since epoch → convert to seconds
+            if let Some(a) = col.as_any().downcast_ref::<arrow::array::Date32Array>() {
+                for i in 0..a.len() {
+                    if !a.is_null(i) {
+                        out.push(a.value(i) as f64 * 86_400.0);
+                    }
+                }
+            }
+            out.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            return out;
+        }
+        DataType::Date64 => {
+            // Date64 = milliseconds since epoch → convert to seconds
+            if let Some(a) = col.as_any().downcast_ref::<arrow::array::Date64Array>() {
+                for i in 0..a.len() {
+                    if !a.is_null(i) {
+                        out.push(a.value(i) as f64 / 1_000.0);
+                    }
+                }
+            }
+            out.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            return out;
+        }
         _ => None,
     };
 

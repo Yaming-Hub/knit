@@ -54,6 +54,8 @@ pub enum StringPattern {
     Url,
     /// Date string.
     Date,
+    /// Person name (first + last).
+    Name,
 }
 
 /// Result of type inference on a single column.
@@ -202,6 +204,8 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
     .unwrap();
     let url_re = Regex::new(r"^https?://[^\s]+$").unwrap();
     let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap();
+    // Name pattern: 2-4 capitalized words (e.g., "John Smith", "Mary Jane Watson")
+    let name_re = Regex::new(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$").unwrap();
 
     let checks: Vec<(StringPattern, &Regex)> = vec![
         (StringPattern::Email, &email_re),
@@ -209,6 +213,7 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
         (StringPattern::Uuid, &uuid_re),
         (StringPattern::Url, &url_re),
         (StringPattern::Date, &date_re),
+        (StringPattern::Name, &name_re),
     ];
 
     let mut result = HashMap::new();
