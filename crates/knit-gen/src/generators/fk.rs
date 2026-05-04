@@ -144,4 +144,80 @@ mod tests {
             assert_eq!(int_arr.value(i), 42);
         }
     }
+
+    #[test]
+    fn fk_large_store_uniform_coverage() {
+        // With enough samples from a store of size 10, all keys should appear
+        // and frequencies should be roughly uniform (~100 each for 1000 draws)
+        let store = Arc::new(InMemoryKeyStore::new());
+        for i in 1..=10 {
+            store.insert(i);
+        }
+        let gen = ForeignKeyGenerator::new(store);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 1000, &make_ctx());
+
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        let mut counts = std::collections::HashMap::new();
+        for i in 0..1000 {
+            *counts.entry(int_arr.value(i)).or_insert(0u32) += 1;
+        }
+        assert_eq!(counts.len(), 10, "all 10 keys should be sampled in 1000 draws");
+        // Each key expected ~100 times; allow 60-140 (generous but rejects severe bias)
+        for (&key, &count) in &counts {
+            assert!(
+                count >= 60 && count <= 140,
+                "key {key} sampled {count} times, expected ~100 (60-140 range)"
+            );
+        }
+    }
+
+    #[test]
+    fn fk_count_zero() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        store.insert(1);
+        let gen = ForeignKeyGenerator::new(store);
+        let mut rng = ChaCha8Rng::seed_from_u64(0);
+        let arr = gen.generate(&mut rng, 0, &make_ctx());
+        assert_eq!(arr.len(), 0);
+    }
+
+    #[test]
+    fn fk_different_seeds_different_output() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        for i in 1..=100 {
+            store.insert(i);
+        }
+        let gen = ForeignKeyGenerator::new(store);
+
+        let mut rng1 = ChaCha8Rng::seed_from_u64(1);
+        let arr1 = gen.generate(&mut rng1, 50, &make_ctx());
+        let mut rng2 = ChaCha8Rng::seed_from_u64(2);
+        let arr2 = gen.generate(&mut rng2, 50, &make_ctx());
+
+        let v1 = arr1.as_any().downcast_ref::<Int64Array>().unwrap();
+        let v2 = arr2.as_any().downcast_ref::<Int64Array>().unwrap();
+        let differs = (0..50).any(|i| v1.value(i) != v2.value(i));
+        assert!(differs, "different seeds should produce different FK columns");
+    }
+
+    #[test]
+    fn fk_negative_keys_sampled_correctly() {
+        let store = Arc::new(InMemoryKeyStore::new());
+        store.insert(-100);
+        store.insert(-50);
+        store.insert(0);
+        let gen = ForeignKeyGenerator::new(store);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 30, &make_ctx());
+
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..30 {
+            let v = int_arr.value(i);
+            assert!(
+                v == -100 || v == -50 || v == 0,
+                "unexpected FK value: {v}"
+            );
+        }
+    }
 }

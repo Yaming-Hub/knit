@@ -292,4 +292,115 @@ mod tests {
         assert_eq!(arr.len(), 10);
         assert_eq!(gen.output_type(), DataType::Utf8);
     }
+
+    #[test]
+    fn unique_cross_batch_dedup() {
+        // Use low-cardinality inner so second call MUST rely on persisted seen set
+        let choices = vec![
+            WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("d".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("e".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("f".into()), weight: 1.0 },
+        ];
+        let inner = Box::new(OneOfGenerator::new(choices));
+        let gen = UniqueGenerator::new(inner, 1000);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = test_ctx();
+
+        let arr1 = gen.generate(&mut rng, 3, &ctx);
+        let arr2 = gen.generate(&mut rng, 3, &ctx);
+        let s1 = arr1.as_any().downcast_ref::<StringArray>().unwrap();
+        let s2 = arr2.as_any().downcast_ref::<StringArray>().unwrap();
+
+        let set1: HashSet<&str> = (0..s1.len()).map(|i| s1.value(i)).collect();
+        let set2: HashSet<&str> = (0..s2.len()).map(|i| s2.value(i)).collect();
+        assert_eq!(set1.len(), 3);
+        assert_eq!(set2.len(), 3);
+        assert!(
+            set1.is_disjoint(&set2),
+            "cross-batch values must not overlap: batch1={set1:?}, batch2={set2:?}"
+        );
+    }
+
+    #[test]
+    fn unique_with_int_inner() {
+        // Use OneOf with integer choices to test Int64Array dedup path
+        let choices = vec![
+            WeightedChoice { value: Value::Int(10), weight: 1.0 },
+            WeightedChoice { value: Value::Int(20), weight: 1.0 },
+            WeightedChoice { value: Value::Int(30), weight: 1.0 },
+            WeightedChoice { value: Value::Int(40), weight: 1.0 },
+            WeightedChoice { value: Value::Int(50), weight: 1.0 },
+        ];
+        let inner = Box::new(OneOfGenerator::new(choices));
+        let gen = UniqueGenerator::new(inner, 1000);
+        let mut rng = ChaCha8Rng::seed_from_u64(99);
+        let ctx = test_ctx();
+
+        let arr = gen.generate(&mut rng, 5, &ctx);
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        let values: HashSet<i64> = (0..int_arr.len()).map(|i| int_arr.value(i)).collect();
+        assert_eq!(values.len(), 5, "all 5 unique ints should be produced");
+    }
+
+    #[test]
+    fn unique_max_retries_returns_correct_length() {
+        // Constant inner with max_retries=2: should still produce requested count
+        let inner = Box::new(ConstantGenerator::new(Value::Int(7)));
+        let gen = UniqueGenerator::new(inner, 2);
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let ctx = test_ctx();
+
+        let arr = gen.generate(&mut rng, 5, &ctx);
+        assert_eq!(arr.len(), 5, "should always return requested count");
+        // First value is unique, rest are duplicates filled in
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..5 {
+            assert_eq!(int_arr.value(i), 7, "constant fills all slots");
+        }
+    }
+
+    #[test]
+    fn unique_deterministic_with_same_seed() {
+        use crate::generators::uuid_gen::UuidGenerator;
+
+        let make_gen = || UniqueGenerator::new(Box::new(UuidGenerator), 100);
+        let gen1 = make_gen();
+        let gen2 = make_gen();
+        let ctx = test_ctx();
+
+        let mut rng1 = ChaCha8Rng::seed_from_u64(42);
+        let arr1 = gen1.generate(&mut rng1, 20, &ctx);
+        let mut rng2 = ChaCha8Rng::seed_from_u64(42);
+        let arr2 = gen2.generate(&mut rng2, 20, &ctx);
+
+        let s1 = arr1.as_any().downcast_ref::<StringArray>().unwrap();
+        let s2 = arr2.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..20 {
+            assert_eq!(s1.value(i), s2.value(i), "row {i} must match");
+        }
+    }
+
+    #[test]
+    fn unique_with_float_inner() {
+        // Float dedup uses scientific notation key
+        let choices = vec![
+            WeightedChoice { value: Value::Float(1.1), weight: 1.0 },
+            WeightedChoice { value: Value::Float(2.2), weight: 1.0 },
+            WeightedChoice { value: Value::Float(3.3), weight: 1.0 },
+        ];
+        let inner = Box::new(OneOfGenerator::new(choices));
+        let gen = UniqueGenerator::new(inner, 1000);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = test_ctx();
+
+        let arr = gen.generate(&mut rng, 3, &ctx);
+        let float_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        let values: HashSet<u64> = (0..float_arr.len())
+            .map(|i| float_arr.value(i).to_bits())
+            .collect();
+        assert_eq!(values.len(), 3, "all 3 unique floats should be produced");
+    }
 }
