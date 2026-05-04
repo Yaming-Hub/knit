@@ -432,11 +432,14 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                 ref other => {
                     // For string-detected dates, check if values contain time info
                     if matches!(other, InferredType::Date(_)) {
-                        let time_count = refs.iter()
+                        let non_null_refs: Vec<&str> = refs.iter()
                             .filter_map(|s| *s)
-                            .filter(|v| v.contains('T') || v.contains(' ') && v.len() > 10)
+                            .filter(|v| !v.is_empty())
+                            .collect();
+                        let time_count = non_null_refs.iter()
+                            .filter(|v| v.contains('T') || (v.contains(' ') && v.len() > 10))
                             .count();
-                        if time_count as f64 / refs.len().max(1) as f64 > 0.5 {
+                        if time_count as f64 / non_null_refs.len().max(1) as f64 > 0.5 {
                             has_time_component = true;
                         }
                     }

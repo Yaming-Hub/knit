@@ -437,13 +437,21 @@ fn infer_data_type(
         return knit_core::DataType::Bool;
     }
     if matches!(col.inferred_type, Some(InferredType::Date(_))) {
-        return knit_core::DataType::String;
+        return if col.has_time_component {
+            knit_core::DataType::Datetime
+        } else {
+            knit_core::DataType::Date
+        };
     }
     if fk.is_some() || col.is_primary_key {
         return knit_core::DataType::Int;
     }
     if col.temporal_pattern.is_some() {
-        return knit_core::DataType::String;
+        return if col.has_time_component {
+            knit_core::DataType::Datetime
+        } else {
+            knit_core::DataType::Date
+        };
     }
     if col.distribution.is_some() {
         // Check if all values are whole numbers → Int
