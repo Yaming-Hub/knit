@@ -185,6 +185,14 @@ enum SchemaAction {
         /// Path to the second schema file.
         b: String,
     },
+    /// Generate markdown documentation for a schema.
+    Doc {
+        /// Path to the schema file.
+        file: String,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Parse `key=value` pairs for `--param`.
@@ -245,6 +253,7 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
             SchemaAction::Normalize { file } => schema::run_normalize(file, cli.json),
             SchemaAction::Diff { a, b } => schema::run_diff(a, b),
+            SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
         },
         Command::Init { output } => init::run(output),
         Command::Learn { source, output, sample } => learn::run(source, output, *sample, &cli),
