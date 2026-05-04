@@ -109,14 +109,14 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     let mut doc = String::new();
 
     // Title
-    doc.push_str(&format!("# {}\n\n", model.name));
+    doc.push_str(&format!("# {}\n\n", md_escape(&model.name)));
     if let Some(desc) = &model.description {
         doc.push_str(&format!("{}\n\n", desc));
     }
 
     // Overview table
     doc.push_str("## Overview\n\n");
-    doc.push_str(&format!("| Property | Value |\n|---|---|\n"));
+    doc.push_str("| Property | Value |\n|---|---|\n");
     doc.push_str(&format!("| Schema version | {} |\n", model.schema_version));
     doc.push_str(&format!("| Seed | {} |\n", model.seed));
     doc.push_str(&format!("| Locale | {} |\n", model.locale));
@@ -130,7 +130,7 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     // Entities
     doc.push_str("## Entities\n\n");
     for entity in &model.entities {
-        doc.push_str(&format!("### {}\n\n", entity.name));
+        doc.push_str(&format!("### {}\n\n", md_escape(&entity.name)));
         if let Some(desc) = &entity.description {
             doc.push_str(&format!("{}\n\n", desc));
         }
@@ -147,11 +147,14 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
                 let generator = field
                     .generator
                     .as_ref()
-                    .map(|g| format_generator_spec(g))
+                    .map(|g| md_escape(&format_generator_spec(g)))
                     .unwrap_or_else(|| "—".to_string());
                 doc.push_str(&format!(
-                    "| {} | {:?} | {} | {} |\n",
-                    field.name, field.data_type, nullable, generator
+                    "| {} | {} | {} | {} |\n",
+                    md_escape(&field.name),
+                    field.data_type,
+                    nullable,
+                    generator
                 ));
             }
             doc.push('\n');
@@ -167,8 +170,12 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
             let default_fk = format!("{}_id", rel.to);
             let fk = rel.foreign_key.as_deref().unwrap_or(&default_fk);
             doc.push_str(&format!(
-                "| {} | {} | {} | {:?} | {} |\n",
-                rel.name, rel.from, rel.to, rel.kind, fk
+                "| {} | {} | {} | {} | {} |\n",
+                md_escape(&rel.name),
+                md_escape(&rel.from),
+                md_escape(&rel.to),
+                rel.kind,
+                md_escape(fk)
             ));
         }
         doc.push('\n');
@@ -177,17 +184,22 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     doc
 }
 
+/// Escape characters that break markdown table cells.
+fn md_escape(s: &str) -> String {
+    s.replace('|', "\\|").replace('\n', " ")
+}
+
 fn format_count_spec(count: &knit_core::CountSpec) -> String {
     match count {
         knit_core::CountSpec::Fixed(n) => n.to_string(),
         knit_core::CountSpec::Range { min, max } => format!("{} – {}", min, max),
-        knit_core::CountSpec::Distribution(spec) => format!("{:?}(…)", spec.kind),
+        knit_core::CountSpec::Distribution(spec) => format!("{}(…)", spec.kind),
     }
 }
 
 fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
     match gen {
-        knit_core::GeneratorSpec::Distribution { spec } => format!("{:?}", spec.kind),
+        knit_core::GeneratorSpec::Distribution { spec } => format!("{}", spec.kind),
         knit_core::GeneratorSpec::Faker { method, .. } => format!("faker({})", method),
         knit_core::GeneratorSpec::Sequence { .. } => "sequence".to_string(),
         knit_core::GeneratorSpec::OneOf { choices, .. } => {
@@ -663,8 +675,8 @@ mod tests {
         let doc = generate_schema_doc(&model);
         assert!(doc.contains("# my_schema"));
         assert!(doc.contains("### users"));
-        assert!(doc.contains("| id | Int | no | — |"));
-        assert!(doc.contains("| name | String | no | — |"));
+        assert!(doc.contains("| id | int | no | — |"));
+        assert!(doc.contains("| name | string | no | — |"));
         assert!(doc.contains("| Entities | 1 |"));
     }
 
