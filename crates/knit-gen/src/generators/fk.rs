@@ -148,6 +148,7 @@ mod tests {
     #[test]
     fn fk_large_store_uniform_coverage() {
         // With enough samples from a store of size 10, all keys should appear
+        // and frequencies should be roughly uniform (~100 each for 1000 draws)
         let store = Arc::new(InMemoryKeyStore::new());
         for i in 1..=10 {
             store.insert(i);
@@ -157,9 +158,18 @@ mod tests {
         let arr = gen.generate(&mut rng, 1000, &make_ctx());
 
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
-        let seen: std::collections::HashSet<i64> =
-            (0..1000).map(|i| int_arr.value(i)).collect();
-        assert_eq!(seen.len(), 10, "all 10 keys should be sampled in 1000 draws");
+        let mut counts = std::collections::HashMap::new();
+        for i in 0..1000 {
+            *counts.entry(int_arr.value(i)).or_insert(0u32) += 1;
+        }
+        assert_eq!(counts.len(), 10, "all 10 keys should be sampled in 1000 draws");
+        // Each key expected ~100 times; allow 60-140 (generous but rejects severe bias)
+        for (&key, &count) in &counts {
+            assert!(
+                count >= 60 && count <= 140,
+                "key {key} sampled {count} times, expected ~100 (60-140 range)"
+            );
+        }
     }
 
     #[test]

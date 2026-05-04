@@ -295,25 +295,32 @@ mod tests {
 
     #[test]
     fn unique_cross_batch_dedup() {
-        // Two sequential calls should not produce overlapping values
-        use crate::generators::uuid_gen::UuidGenerator;
-        let inner = Box::new(UuidGenerator);
-        let gen = UniqueGenerator::new(inner, 100);
+        // Use low-cardinality inner so second call MUST rely on persisted seen set
+        let choices = vec![
+            WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("d".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("e".into()), weight: 1.0 },
+            WeightedChoice { value: Value::String("f".into()), weight: 1.0 },
+        ];
+        let inner = Box::new(OneOfGenerator::new(choices));
+        let gen = UniqueGenerator::new(inner, 1000);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
 
-        let arr1 = gen.generate(&mut rng, 20, &ctx);
-        let arr2 = gen.generate(&mut rng, 20, &ctx);
+        let arr1 = gen.generate(&mut rng, 3, &ctx);
+        let arr2 = gen.generate(&mut rng, 3, &ctx);
         let s1 = arr1.as_any().downcast_ref::<StringArray>().unwrap();
         let s2 = arr2.as_any().downcast_ref::<StringArray>().unwrap();
 
         let set1: HashSet<&str> = (0..s1.len()).map(|i| s1.value(i)).collect();
         let set2: HashSet<&str> = (0..s2.len()).map(|i| s2.value(i)).collect();
-        assert_eq!(set1.len(), 20);
-        assert_eq!(set2.len(), 20);
+        assert_eq!(set1.len(), 3);
+        assert_eq!(set2.len(), 3);
         assert!(
             set1.is_disjoint(&set2),
-            "cross-batch values must not overlap"
+            "cross-batch values must not overlap: batch1={set1:?}, batch2={set2:?}"
         );
     }
 
