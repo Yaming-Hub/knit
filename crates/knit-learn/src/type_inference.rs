@@ -54,6 +54,8 @@ pub enum StringPattern {
     Url,
     /// Date string.
     Date,
+    /// Person name (first + last).
+    Name,
 }
 
 /// Result of type inference on a single column.
@@ -164,13 +166,14 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         }
     }
 
-    // Check categorical (low cardinality)
+    // Check categorical (low cardinality), but only if no strong semantic pattern was detected
+    let has_strong_pattern = patterns.values().any(|&rate| rate > 0.8);
     let mut distinct: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for v in &non_null {
         distinct.insert(v);
     }
     let cardinality_ratio = distinct.len() as f64 / total;
-    if cardinality_ratio <= categorical_threshold && distinct.len() <= 200 {
+    if !has_strong_pattern && cardinality_ratio <= categorical_threshold && distinct.len() <= 200 {
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,
@@ -202,6 +205,8 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
     .unwrap();
     let url_re = Regex::new(r"^https?://[^\s]+$").unwrap();
     let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap();
+    // Name pattern: 2-4 capitalized words (e.g., "John Smith", "Mary Jane Watson")
+    let name_re = Regex::new(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$").unwrap();
 
     let checks: Vec<(StringPattern, &Regex)> = vec![
         (StringPattern::Email, &email_re),
@@ -209,6 +214,7 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
         (StringPattern::Uuid, &uuid_re),
         (StringPattern::Url, &url_re),
         (StringPattern::Date, &date_re),
+        (StringPattern::Name, &name_re),
     ];
 
     let mut result = HashMap::new();

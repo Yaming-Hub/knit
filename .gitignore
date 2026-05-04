@@ -24,3 +24,4 @@ target
 data/
 *.weave.toml
 !examples/*.weave.toml
+e2e_test/

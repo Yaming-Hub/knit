@@ -573,6 +573,9 @@ const KNOWN_FAKER_METHODS: &[&str] = &[
     "ipv6",
     "color",
     "hex_color",
+    "date",
+    "datetime",
+    "timestamp",
 ];
 
 fn validate_generator(

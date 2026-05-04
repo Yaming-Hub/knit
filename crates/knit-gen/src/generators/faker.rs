@@ -350,6 +350,27 @@ impl FakerGenerator {
                     parts[4], parts[5], parts[6], parts[7]
                 )
             }
+            "date" => {
+                // Generate a random ISO date: 2020-01-01 to 2024-12-31
+                let start_days = days_from_epoch(2020, 1, 1);
+                let end_days = days_from_epoch(2024, 12, 31);
+                let range = (end_days - start_days + 1).max(1) as u32;
+                let day_offset = rng.next_u32() % range;
+                let (y, m, d) = days_to_ymd(start_days + day_offset as i64);
+                format!("{y:04}-{m:02}-{d:02}")
+            }
+            "datetime" | "timestamp" => {
+                // ISO datetime with random time: 2020-01-01 to 2024-12-31
+                let start_days = days_from_epoch(2020, 1, 1);
+                let end_days = days_from_epoch(2024, 12, 31);
+                let range = (end_days - start_days + 1).max(1) as u32;
+                let day_offset = rng.next_u32() % range;
+                let (y, m, d) = days_to_ymd(start_days + day_offset as i64);
+                let h = rng.next_u32() % 24;
+                let min = rng.next_u32() % 60;
+                let s = rng.next_u32() % 60;
+                format!("{y:04}-{m:02}-{d:02}T{h:02}:{min:02}:{s:02}")
+            }
             "color" => pick(rng, COLORS).to_string(),
             "hex_color" => {
                 let r = rng.next_u32() % 256;
@@ -429,6 +450,34 @@ impl FieldGenerator for FakerGenerator {
     fn output_type(&self) -> DataType {
         DataType::Utf8
     }
+}
+
+/// Convert a civil date to days since Unix epoch (1970-01-01).
+fn days_from_epoch(year: i32, month: u32, day: u32) -> i64 {
+    // Algorithm from http://howardhinnant.github.io/date_algorithms.html
+    let y = if month <= 2 { year as i64 - 1 } else { year as i64 };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = (y - era * 400) as u32;
+    let m = month as u32;
+    let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + day - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    (era * 146097 + doe as i64) - 719468
+}
+
+/// Convert days since Unix epoch back to (year, month, day).
+fn days_to_ymd(days: i64) -> (i32, u32, u32) {
+    // Inverse of days_from_epoch
+    let z = days + 719468;
+    let era = if z >= 0 { z } else { z - 146096 } / 146097;
+    let doe = (z - era * 146097) as u32;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = (yoe as i64) + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = if m <= 2 { y + 1 } else { y };
+    (year as i32, m, d)
 }
 
 #[cfg(test)]

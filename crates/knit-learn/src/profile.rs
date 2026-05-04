@@ -465,6 +465,24 @@ fn compute_temporal(data_type: &DataType, array: &dyn Array) -> Option<TemporalP
                 if arr.is_null(i) { None } else { Some(arr.value(i) / 1_000) }
             })?
         }
+        DataType::Date32 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<arrow::array::Date32Array>()?;
+            // Date32 stores days since epoch; convert to microseconds
+            extract_ts_range(arr.len(), |i| {
+                if arr.is_null(i) { None } else { Some(arr.value(i) as i64 * 86_400_000_000) }
+            })?
+        }
+        DataType::Date64 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<arrow::array::Date64Array>()?;
+            // Date64 stores milliseconds since epoch; convert to microseconds
+            extract_ts_range(arr.len(), |i| {
+                if arr.is_null(i) { None } else { Some(arr.value(i) * 1_000) }
+            })?
+        }
         _ => return None,
     };
 
