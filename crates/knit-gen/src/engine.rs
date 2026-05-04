@@ -903,4 +903,210 @@ mod tests {
 
         assert_eq!(*total_rows.lock().unwrap(), 1000);
     }
+
+    #[test]
+    fn custom_batch_size() {
+        // With batch_size=10 and 25 rows, should produce 3 batches (10+10+5)
+        let mut entity_nodes = BTreeMap::new();
+        entity_nodes.insert(
+            "items".into(),
+            EntitySeedNode {
+                entity_seed: 10,
+                field_seeds: {
+                    let mut m = BTreeMap::new();
+                    m.insert(
+                        "id".into(),
+                        FieldSeedNode {
+                            field_seed: 100,
+                            partition_seeds: vec![1000],
+                        },
+                    );
+                    m
+                },
+            },
+        );
+
+        let plan = ExecutionPlan {
+            phases: vec![Phase {
+                entity_plans: vec![EntityPlan {
+                    entity_name: "items".into(),
+                    partitions: vec![PartitionRange {
+                        partition_id: 0,
+                        start_row: 0,
+                        end_row: 25,
+                        seed: 42,
+                    }],
+                    field_plans: vec![FieldPlan {
+                        field_name: "id".into(),
+                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                        null_plan: NullPlan::Never,
+                        dependency_order: 0,
+                    }],
+                    estimated_row_count: 25,
+                    estimated_byte_size: 200,
+                }],
+                deferred_refs: vec![],
+            }],
+            rng_tree: RngTree {
+                global_seed: 42,
+                entity_nodes,
+            },
+            index_strategy: IndexStrategy {
+                per_entity: BTreeMap::new(),
+            },
+            metadata: PlanMetadata {
+                schema_name: "batch_size_test".into(),
+                total_entities: 1,
+                total_phases: 1,
+                total_partitions: 1,
+                estimated_total_rows: 25,
+                estimated_total_bytes: 200,
+                has_cycles: false,
+                deferred_ref_count: 0,
+            },
+        };
+
+        let mut engine = GenerationEngine::with_batch_size(10);
+        let batch_sizes = Arc::new(Mutex::new(Vec::<usize>::new()));
+        let all_ids = Arc::new(Mutex::new(Vec::<i64>::new()));
+        let bs = Arc::clone(&batch_sizes);
+        let ids = Arc::clone(&all_ids);
+
+        engine
+            .execute(&plan, move |_entity, batch| {
+                bs.lock().unwrap().push(batch.num_rows());
+                let col = batch
+                    .column(0)
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .unwrap();
+                ids.lock().unwrap().extend(col.values().iter().copied());
+                Ok(())
+            })
+            .unwrap();
+
+        let sizes = batch_sizes.lock().unwrap();
+        assert_eq!(sizes.len(), 3, "25 rows / batch_size=10 → 3 batches");
+        assert_eq!(sizes[0], 10);
+        assert_eq!(sizes[1], 10);
+        assert_eq!(sizes[2], 5);
+
+        // Verify row offsets are correct: sequence 1..=25 with no gaps or duplicates
+        let mut collected = all_ids.lock().unwrap().clone();
+        collected.sort();
+        let expected: Vec<i64> = (1..=25).collect();
+        assert_eq!(collected, expected, "ids should be exactly 1..=25");
+    }
+
+    #[test]
+    fn batch_size_clamped_to_minimum_one() {
+        let engine = GenerationEngine::with_batch_size(0);
+        assert_eq!(engine.batch_size, 1, "batch_size=0 should be clamped to 1");
+    }
+
+    #[test]
+    fn callback_error_propagates() {
+        let plan = parent_child_plan();
+        let mut engine = GenerationEngine::new();
+
+        let result = engine.execute(&plan, |_entity, _batch| {
+            Err(GenError::Generation("intentional error".to_string()))
+        });
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("intentional error"));
+    }
+
+    #[test]
+    fn null_plan_injects_nulls() {
+        let mut entity_nodes = BTreeMap::new();
+        entity_nodes.insert(
+            "items".into(),
+            EntitySeedNode {
+                entity_seed: 10,
+                field_seeds: {
+                    let mut m = BTreeMap::new();
+                    m.insert(
+                        "val".into(),
+                        FieldSeedNode {
+                            field_seed: 100,
+                            partition_seeds: vec![1000],
+                        },
+                    );
+                    m
+                },
+            },
+        );
+
+        let plan = ExecutionPlan {
+            phases: vec![Phase {
+                entity_plans: vec![EntityPlan {
+                    entity_name: "items".into(),
+                    partitions: vec![PartitionRange {
+                        partition_id: 0,
+                        start_row: 0,
+                        end_row: 1000,
+                        seed: 42,
+                    }],
+                    field_plans: vec![FieldPlan {
+                        field_name: "val".into(),
+                        generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(42)),
+                        null_plan: NullPlan::Probability(0.5),
+                        dependency_order: 0,
+                    }],
+                    estimated_row_count: 1000,
+                    estimated_byte_size: 8000,
+                }],
+                deferred_refs: vec![],
+            }],
+            rng_tree: RngTree {
+                global_seed: 42,
+                entity_nodes,
+            },
+            index_strategy: IndexStrategy {
+                per_entity: BTreeMap::new(),
+            },
+            metadata: PlanMetadata {
+                schema_name: "null_test".into(),
+                total_entities: 1,
+                total_phases: 1,
+                total_partitions: 1,
+                estimated_total_rows: 1000,
+                estimated_total_bytes: 8000,
+                has_cycles: false,
+                deferred_ref_count: 0,
+            },
+        };
+
+        let mut engine = GenerationEngine::new();
+        let null_count = Arc::new(Mutex::new(0usize));
+        let total_count = Arc::new(Mutex::new(0usize));
+        let nc = Arc::clone(&null_count);
+        let tc = Arc::clone(&total_count);
+
+        engine
+            .execute(&plan, move |_entity, batch| {
+                let col = batch.column(0);
+                *nc.lock().unwrap() += col.null_count();
+                *tc.lock().unwrap() += col.len();
+                Ok(())
+            })
+            .unwrap();
+
+        let nulls = *null_count.lock().unwrap();
+        let total = *total_count.lock().unwrap();
+        let ratio = nulls as f64 / total as f64;
+        // With prob=0.5 and 1000 rows (deterministic seed), should be ~50% nulls (allow 45-55%)
+        assert!(
+            ratio > 0.45 && ratio < 0.55,
+            "expected ~50% nulls, got {:.1}% ({nulls}/{total})",
+            ratio * 100.0
+        );
+    }
+
+    #[test]
+    fn default_engine_has_default_batch_size() {
+        let engine = GenerationEngine::default();
+        assert_eq!(engine.batch_size, DEFAULT_BATCH_SIZE);
+    }
 }
