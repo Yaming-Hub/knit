@@ -239,7 +239,7 @@ mod tests {
         let arr = gen.generate(&mut make_rng(), 10_000, &ctx);
 
         let null_plan = NullPlan::Probability(0.3);
-        let masked = apply_null_mask(arr, &null_plan, &mut make_rng(), 10_000);
+        let masked = apply_null_mask(arr, &null_plan, &mut make_rng(), 10_000).unwrap();
 
         let null_count = masked.null_count();
         let ratio = null_count as f64 / 10_000.0;
@@ -257,7 +257,7 @@ mod tests {
         let arr = gen.generate(&mut make_rng(), 20, &ctx);
 
         let null_plan = NullPlan::Pattern { every_n: 5 };
-        let masked = apply_null_mask(arr, &null_plan, &mut make_rng(), 20);
+        let masked = apply_null_mask(arr, &null_plan, &mut make_rng(), 20).unwrap();
 
         // Indices 0, 5, 10, 15 should be null.
         for i in 0..20 {
@@ -643,7 +643,7 @@ mod tests {
         let gen = create_generator(&plan);
         let ctx = make_ctx();
         let arr = gen.generate(&mut make_rng(), 100, &ctx);
-        let masked = apply_null_mask(arr, &NullPlan::Never, &mut make_rng(), 100);
+        let masked = apply_null_mask(arr, &NullPlan::Never, &mut make_rng(), 100).unwrap();
         assert_eq!(masked.null_count(), 0);
     }
 
@@ -653,7 +653,7 @@ mod tests {
         let gen = create_generator(&plan);
         let ctx = make_ctx();
         let arr = gen.generate(&mut make_rng(), 100, &ctx);
-        let masked = apply_null_mask(arr, &NullPlan::Always, &mut make_rng(), 100);
+        let masked = apply_null_mask(arr, &NullPlan::Always, &mut make_rng(), 100).unwrap();
         // NullPlan::Always produces a NullArray (DataType::Null)
         assert_eq!(*masked.data_type(), DataType::Null);
         assert_eq!(masked.len(), 100);

@@ -10,6 +10,7 @@ use arrow::compute::kernels::zip::zip;
 use rand::RngCore;
 use std::sync::Arc;
 
+use crate::error::GenError;
 use knit_plan::NullPlan;
 
 /// Apply a null mask to a generated array according to the given [`NullPlan`].
@@ -25,15 +26,20 @@ use knit_plan::NullPlan;
 /// - `Probability(p)` — each element is independently null with probability *p*.
 /// - `Pattern { every_n }` — every *n*-th element (0-indexed) is null.
 ///   If `every_n` is 0, behaves as `Never` (no division by zero).
+///
+/// # Errors
+///
+/// Returns [`GenError::Arrow`] if the Arrow `zip` kernel fails (e.g. due to
+/// unexpected type incompatibility between the source and null arrays).
 pub fn apply_null_mask(
     array: ArrayRef,
     null_plan: &NullPlan,
     rng: &mut dyn RngCore,
     count: usize,
-) -> ArrayRef {
+) -> Result<ArrayRef, GenError> {
     match null_plan {
-        NullPlan::Never => array,
-        NullPlan::Always => Arc::new(NullArray::new(count)),
+        NullPlan::Never => Ok(array),
+        NullPlan::Always => Ok(Arc::new(NullArray::new(count))),
         NullPlan::Probability(p) => {
             let p = *p;
             // Build a boolean mask: true = keep, false = null.
@@ -45,19 +51,19 @@ pub fn apply_null_mask(
                 .collect();
             // Create an all-null array of the same type for the "false" branch.
             let null_arr = arrow::array::new_null_array(array.data_type(), count);
-            zip(&keep, &array, &null_arr).expect("zip failed in null_mask")
+            Ok(zip(&keep, &array, &null_arr)?)
         }
         NullPlan::Pattern { every_n } => {
             let every_n = *every_n;
             if every_n == 0 {
                 // every_n=0 is nonsensical; treat as "never null"
-                return array;
+                return Ok(array);
             }
             let keep: BooleanArray = (0..count)
                 .map(|i| Some(i % every_n != 0))
                 .collect();
             let null_arr = arrow::array::new_null_array(array.data_type(), count);
-            zip(&keep, &array, &null_arr).expect("zip failed in null_mask")
+            Ok(zip(&keep, &array, &null_arr)?)
         }
     }
 }

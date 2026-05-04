@@ -331,7 +331,7 @@ impl GenerationEngine {
             .with_params(&self.params);
 
             let arr = generators[i].generate(rng, count, &ctx);
-            let arr = apply_null_mask(arr, &fp.null_plan, rng, count);
+            let arr = apply_null_mask(arr, &fp.null_plan, rng, count)?;
 
             batch_columns.insert(fp.field_name.clone(), Arc::clone(&arr));
             field_names.push(fp.field_name.clone());
