@@ -13,6 +13,7 @@ use arrow::compute::concat_batches;
 use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
 use colored::Colorize;
+use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
 use serde_json;
 use tracing::{debug, info};
@@ -90,22 +91,45 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
     let mut table_profiles_for_rels: Vec<TableProfile> = Vec::new();
     let mut total_columns: usize = 0;
 
+    let pb = if !cli.quiet {
+        let style = ProgressStyle::with_template(
+            "{prefix:>16.cyan} [{bar:30.green/dim}] {pos}/{len} tables ({eta})",
+        )
+        .expect("hardcoded progress bar template")
+        .progress_chars("━╸─");
+        let pb = ProgressBar::new(tables.len() as u64);
+        pb.set_style(style);
+        pb.set_prefix("profiling");
+        Some(pb)
+    } else {
+        None
+    };
+
     for table in &tables {
-        if !cli.quiet {
-            eprintln!(
-                "  {} profiling table {}",
-                "→".dimmed(),
-                table.entity.green()
-            );
+        if let Some(ref pb) = pb {
+            pb.set_message(table.entity.clone());
         }
         let (analysis, rel_profile) = analyse_table(table)
             .with_context(|| format!("failed to analyse table {}", table.entity))?;
         total_columns += analysis.columns.len();
         table_analyses.push(analysis);
         table_profiles_for_rels.push(rel_profile);
+        if let Some(ref pb) = pb {
+            pb.inc(1);
+        }
+    }
+    if let Some(pb) = pb {
+        pb.finish_and_clear();
     }
 
     // 3. Cross-table relationship detection
+    if !cli.quiet {
+        eprintln!(
+            "  {} detecting relationships across {} table(s)",
+            "→".dimmed(),
+            tables.len()
+        );
+    }
     let relationships = detect_relationships(&table_profiles_for_rels);
     info!(count = relationships.len(), "relationships detected");
 
@@ -117,6 +141,20 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
     }
 
     // 4. Per-table correlation detection
+    let corr_pb = if !cli.quiet && tables.len() > 1 {
+        let style = ProgressStyle::with_template(
+            "{prefix:>16.cyan} [{bar:30.green/dim}] {pos}/{len} tables ({eta})",
+        )
+        .expect("hardcoded progress bar template")
+        .progress_chars("━╸─");
+        let pb = ProgressBar::new(tables.len() as u64);
+        pb.set_style(style);
+        pb.set_prefix("correlations");
+        Some(pb)
+    } else {
+        None
+    };
+
     for (i, table) in tables.iter().enumerate() {
         let profiles = compute_profiles(&table.batches)
             .map_err(|e| anyhow::anyhow!("{e}"))
@@ -130,6 +168,12 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
             );
         }
         table_analyses[i].correlations = correlations;
+        if let Some(ref pb) = corr_pb {
+            pb.inc(1);
+        }
+    }
+    if let Some(pb) = corr_pb {
+        pb.finish_and_clear();
     }
 
     // 5. Assemble data model
