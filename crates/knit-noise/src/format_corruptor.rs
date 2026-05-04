@@ -178,6 +178,7 @@ mod tests {
         // remove @, remove first dot, or append @
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
+        let mut seen = std::collections::HashSet::new();
         for seed in 0..20u64 {
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
             let schema = Arc::new(Schema::new(vec![
@@ -193,17 +194,25 @@ mod tests {
             let val = arr.value(0);
             assert_ne!(val, "user@example.com", "seed {seed}: expected corruption");
             // Must match one of the 3 strategies
-            let valid = val == "userexample.com"            // removed @
-                || val == "user@examplecom"                 // removed first dot
-                || val == "user@example.com@";              // appended @
-            assert!(valid, "seed {seed}: unexpected corruption: {val}");
+            let strategy = if val == "userexample.com" {
+                "remove_at"
+            } else if val == "user@examplecom" {
+                "remove_dot"
+            } else if val == "user@example.com@" {
+                "append_at"
+            } else {
+                panic!("seed {seed}: unexpected corruption: {val}");
+            };
+            seen.insert(strategy);
         }
+        assert_eq!(seen.len(), 3, "all 3 email strategies should be exercised: {seen:?}");
     }
 
     #[test]
     fn date_corruption_breaks_date_format() {
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
+        let mut seen = std::collections::HashSet::new();
         for seed in 0..20u64 {
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
             let schema = Arc::new(Schema::new(vec![
@@ -218,18 +227,25 @@ mod tests {
             let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
             let val = arr.value(0);
             assert_ne!(val, "2024-01-15", "seed {seed}: expected corruption");
-            // 3 strategies: remove dashes, replace with /, or invalid month/day
-            let valid = val == "20240115"
-                || val == "2024/01/15"
-                || val == "2024-13-32";
-            assert!(valid, "seed {seed}: unexpected date corruption: {val}");
+            let strategy = if val == "20240115" {
+                "remove_dashes"
+            } else if val == "2024/01/15" {
+                "replace_slash"
+            } else if val == "2024-13-32" {
+                "invalid_monthday"
+            } else {
+                panic!("seed {seed}: unexpected date corruption: {val}");
+            };
+            seen.insert(strategy);
         }
+        assert_eq!(seen.len(), 3, "all 3 date strategies should be exercised: {seen:?}");
     }
 
     #[test]
     fn url_corruption_breaks_url_format() {
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
+        let mut seen = std::collections::HashSet::new();
         for seed in 0..20u64 {
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
             let schema = Arc::new(Schema::new(vec![
@@ -244,10 +260,16 @@ mod tests {
             let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
             let val = arr.value(0);
             assert_ne!(val, "https://example.com", "seed {seed}");
-            let valid = val == "https:/example.com"     // removed one /
-                || val == "htps://example.com";         // http→htp (https→htps)
-            assert!(valid, "seed {seed}: unexpected URL corruption: {val}");
+            let strategy = if val == "https:/example.com" {
+                "remove_slash"
+            } else if val == "htps://example.com" {
+                "replace_http"
+            } else {
+                panic!("seed {seed}: unexpected URL corruption: {val}");
+            };
+            seen.insert(strategy);
         }
+        assert_eq!(seen.len(), 2, "both URL strategies should be exercised: {seen:?}");
     }
 
     #[test]

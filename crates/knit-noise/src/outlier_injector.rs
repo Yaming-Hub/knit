@@ -377,7 +377,13 @@ mod tests {
         )
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
+        let targeted = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
         let safe = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
+        // Targeted column should have extreme outliers
+        let any_changed = (0..targeted.len())
+            .any(|i| (targeted.value(i) - [10.0, 20.0][i]).abs() > 1.0);
+        assert!(any_changed, "targeted column should have outliers injected");
+        // Safe column should be untouched
         assert!((safe.value(0) - 10.0).abs() < 1e-10, "safe col should be untouched");
         assert!((safe.value(1) - 20.0).abs() < 1e-10, "safe col should be untouched");
     }
@@ -385,6 +391,7 @@ mod tests {
     #[test]
     fn constant_array_uses_min_range_of_one() {
         // All same values → range=0, but code uses max(range, 1.0)
+        // Expected offset = max(0,1.0) * 10.0 = 10.0, so values = 5 ± 10
         let o = OutlierInjector::new(10.0);
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
@@ -398,11 +405,12 @@ mod tests {
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
         let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
-        // range forced to 1.0, multiplier=10 → offset=±10
+        let expected_offset = 1.0 * 10.0; // max(range=0, 1.0) * multiplier
         for i in 0..arr.len() {
+            let deviation = (arr.value(i) - 5.0).abs();
             assert!(
-                (arr.value(i) - 5.0).abs() > 0.5,
-                "row {i}: value {} should deviate from 5.0",
+                (deviation - expected_offset).abs() < 1e-10,
+                "row {i}: expected deviation {expected_offset}, got {deviation} (value={})",
                 arr.value(i)
             );
         }

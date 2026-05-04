@@ -164,9 +164,15 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = d.perturb(float_batch(), &mut rng, &config).unwrap();
         let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
-        // Row 0: 100 + 0 = 100, Row 4: 100 + 4 = 104
-        assert!((arr.value(0) - 100.0).abs() < 1e-10);
-        assert!((arr.value(4) - 104.0).abs() < 1e-10);
+        // Formula: value + drift_per_row * row_index
+        for i in 0..5 {
+            let expected = 100.0 + 1.0 * i as f64;
+            assert!(
+                (arr.value(i) - expected).abs() < 1e-10,
+                "row {i}: expected {expected}, got {}",
+                arr.value(i)
+            );
+        }
     }
 
     #[test]
@@ -176,9 +182,14 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = d.perturb(float_batch(), &mut rng, &config).unwrap();
         let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
-        // Row 0: 100 + (-2)*0 = 100, Row 4: 100 + (-2)*4 = 92
-        assert!((arr.value(0) - 100.0).abs() < 1e-10);
-        assert!((arr.value(4) - 92.0).abs() < 1e-10);
+        for i in 0..5 {
+            let expected = 100.0 + (-2.0) * i as f64;
+            assert!(
+                (arr.value(i) - expected).abs() < 1e-10,
+                "row {i}: expected {expected}, got {}",
+                arr.value(i)
+            );
+        }
     }
 
     #[test]
