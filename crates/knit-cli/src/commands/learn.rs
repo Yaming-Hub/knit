@@ -93,13 +93,14 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
 
     let pb = if !cli.quiet {
         let style = ProgressStyle::with_template(
-            "{prefix:>16.cyan} [{bar:30.green/dim}] {pos}/{len} tables ({eta})",
+            "{prefix:>16.cyan} [{bar:30.green/dim}] {pos}/{len} tables — {msg} ({eta})",
         )
         .expect("hardcoded progress bar template")
         .progress_chars("━╸─");
         let pb = ProgressBar::new(tables.len() as u64);
         pb.set_style(style);
         pb.set_prefix("profiling");
+        pb.set_message("");
         Some(pb)
     } else {
         None
