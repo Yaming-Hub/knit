@@ -21,6 +21,7 @@ use arrow::record_batch::RecordBatch;
 use minijinja::{context, Environment, Value};
 use tracing::debug;
 
+use crate::downcast_col;
 use crate::error::BindError;
 use crate::helpers;
 use crate::traits::{Sink, SinkStats};
@@ -110,114 +111,81 @@ fn detect_mode(source: &str) -> TemplateMode {
 }
 
 /// Convert a single Arrow cell to a MiniJinja [`Value`].
-fn cell_to_value(col: &dyn Array, row: usize) -> Value {
+fn cell_to_value(col: &dyn Array, row: usize) -> Result<Value, BindError> {
     if col.is_null(row) {
-        return Value::from(());
+        return Ok(Value::from(()));
     }
     match col.data_type() {
         DataType::Boolean => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::BooleanArray>()
-                .expect("Arrow type mismatch: expected BooleanArray");
-            Value::from(arr.value(row))
+            let arr = downcast_col!(col, array::BooleanArray)?;
+            Ok(Value::from(arr.value(row)))
         }
         DataType::Int8 => typed_int!(col, array::Int8Array, row),
         DataType::Int16 => typed_int!(col, array::Int16Array, row),
         DataType::Int32 => typed_int!(col, array::Int32Array, row),
         DataType::Int64 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::Int64Array>()
-                .expect("Arrow type mismatch: expected Int64Array");
-            Value::from(arr.value(row))
+            let arr = downcast_col!(col, array::Int64Array)?;
+            Ok(Value::from(arr.value(row)))
         }
         DataType::UInt8 => typed_int!(col, array::UInt8Array, row),
         DataType::UInt16 => typed_int!(col, array::UInt16Array, row),
         DataType::UInt32 => typed_int!(col, array::UInt32Array, row),
         DataType::UInt64 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::UInt64Array>()
-                .expect("Arrow type mismatch: expected UInt64Array");
+            let arr = downcast_col!(col, array::UInt64Array)?;
             let v = arr.value(row);
             if v <= i64::MAX as u64 {
-                Value::from(v as i64)
+                Ok(Value::from(v as i64))
             } else {
                 // Value exceeds i64 range; represent as string to avoid silent truncation
-                Value::from(v.to_string())
+                Ok(Value::from(v.to_string()))
             }
         }
         DataType::Float32 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::Float32Array>()
-                .expect("Arrow type mismatch: expected Float32Array");
-            Value::from(arr.value(row) as f64)
+            let arr = downcast_col!(col, array::Float32Array)?;
+            Ok(Value::from(arr.value(row) as f64))
         }
         DataType::Float64 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::Float64Array>()
-                .expect("Arrow type mismatch: expected Float64Array");
-            Value::from(arr.value(row))
+            let arr = downcast_col!(col, array::Float64Array)?;
+            Ok(Value::from(arr.value(row)))
         }
         DataType::Utf8 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::StringArray>()
-                .expect("Arrow type mismatch: expected StringArray");
-            Value::from(arr.value(row))
+            let arr = downcast_col!(col, array::StringArray)?;
+            Ok(Value::from(arr.value(row)))
         }
         DataType::LargeUtf8 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::LargeStringArray>()
-                .expect("Arrow type mismatch: expected LargeStringArray");
-            Value::from(arr.value(row))
+            let arr = downcast_col!(col, array::LargeStringArray)?;
+            Ok(Value::from(arr.value(row)))
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampMicrosecondArray>()
-                .expect("Arrow type mismatch: expected TimestampMicrosecondArray");
-            match chrono::DateTime::from_timestamp_micros(arr.value(row)) {
+            let arr = downcast_col!(col, array::TimestampMicrosecondArray)?;
+            Ok(match chrono::DateTime::from_timestamp_micros(arr.value(row)) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
-            }
+            })
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampMillisecondArray>()
-                .expect("Arrow type mismatch: expected TimestampMillisecondArray");
-            match chrono::DateTime::from_timestamp_millis(arr.value(row)) {
+            let arr = downcast_col!(col, array::TimestampMillisecondArray)?;
+            Ok(match chrono::DateTime::from_timestamp_millis(arr.value(row)) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
-            }
+            })
         }
         DataType::Timestamp(TimeUnit::Second, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampSecondArray>()
-                .expect("Arrow type mismatch: expected TimestampSecondArray");
-            match chrono::DateTime::from_timestamp(arr.value(row), 0) {
+            let arr = downcast_col!(col, array::TimestampSecondArray)?;
+            Ok(match chrono::DateTime::from_timestamp(arr.value(row), 0) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
-            }
+            })
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampNanosecondArray>()
-                .expect("Arrow type mismatch: expected TimestampNanosecondArray");
+            let arr = downcast_col!(col, array::TimestampNanosecondArray)?;
             let ts = arr.value(row);
             let secs = ts.div_euclid(1_000_000_000);
             let nsecs = ts.rem_euclid(1_000_000_000) as u32;
-            match chrono::DateTime::from_timestamp(secs, nsecs) {
+            Ok(match chrono::DateTime::from_timestamp(secs, nsecs) {
                 Some(d) => Value::from(d.to_rfc3339()),
                 None => Value::from(()),
-            }
+            })
         }
         _ => {
             // Fallback: cast to string via Arrow
@@ -228,32 +196,29 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Value {
                         .downcast_ref::<array::StringArray>()
                         .map(|a| a.value(row).to_string())
                 });
-            Value::from(fallback.unwrap_or_default())
+            Ok(Value::from(fallback.unwrap_or_default()))
         }
     }
 }
 
 macro_rules! typed_int {
     ($col:expr, $arr_ty:ty, $row:expr) => {{
-        let arr = $col
-            .as_any()
-            .downcast_ref::<$arr_ty>()
-            .expect(concat!("Arrow type mismatch: expected ", stringify!($arr_ty)));
-        Value::from(arr.value($row) as i64)
+        let arr = downcast_col!($col, $arr_ty)?;
+        Ok(Value::from(arr.value($row) as i64))
     }};
 }
 use typed_int;
 
 /// Build a row context map from a `RecordBatch` at the given row index.
-fn row_to_value(batch: &RecordBatch, row: usize) -> Value {
+fn row_to_value(batch: &RecordBatch, row: usize) -> Result<Value, BindError> {
     let schema = batch.schema();
     let fields = schema.fields();
     let columns = batch.columns();
     let mut map = std::collections::BTreeMap::new();
     for (i, field) in fields.iter().enumerate() {
-        map.insert(field.name().clone(), cell_to_value(columns[i].as_ref(), row));
+        map.insert(field.name().clone(), cell_to_value(columns[i].as_ref(), row)?);
     }
-    Value::from(map)
+    Ok(Value::from(map))
 }
 
 /// Build the schema context for batch-mode rendering.
@@ -285,7 +250,7 @@ impl<W: Write + Send> Sink for TemplateSink<W> {
         match self.mode {
             TemplateMode::PerRow => {
                 for row in 0..batch.num_rows() {
-                    let row_val = row_to_value(batch, row);
+                    let row_val = row_to_value(batch, row)?;
                     let ctx = context! {
                         row => row_val,
                         row_index => self.rows_written + row as u64,
@@ -305,7 +270,7 @@ impl<W: Write + Send> Sink for TemplateSink<W> {
             TemplateMode::PerBatch => {
                 let rows: Vec<Value> = (0..batch.num_rows())
                     .map(|row| row_to_value(batch, row))
-                    .collect();
+                    .collect::<Result<_, _>>()?;
                 let schema = schema_to_value(batch);
                 let ctx = context! {
                     rows => rows,
