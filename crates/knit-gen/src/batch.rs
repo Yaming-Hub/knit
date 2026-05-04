@@ -79,4 +79,79 @@ mod tests {
         // Arrow requires at least one column or an explicit row count
         assert!(matches!(err, GenError::Arrow(_)));
     }
+
+    #[test]
+    fn assemble_single_column() {
+        let names = vec!["x".to_string()];
+        let arrays: Vec<ArrayRef> = vec![Arc::new(Float64Array::from(vec![1.0, 2.0]))];
+        let batch = assemble_batch(&names, arrays).unwrap();
+        assert_eq!(batch.num_rows(), 2);
+        assert_eq!(batch.num_columns(), 1);
+        assert_eq!(batch.schema().field(0).name(), "x");
+    }
+
+    #[test]
+    fn assemble_preserves_data_types() {
+        let names = vec![
+            "int_col".to_string(),
+            "float_col".to_string(),
+            "str_col".to_string(),
+        ];
+        let arrays: Vec<ArrayRef> = vec![
+            Arc::new(Int64Array::from(vec![1, 2])),
+            Arc::new(Float64Array::from(vec![1.5, 2.5])),
+            Arc::new(StringArray::from(vec!["a", "b"])),
+        ];
+        let batch = assemble_batch(&names, arrays).unwrap();
+        assert_eq!(
+            batch.schema().field(0).data_type(),
+            &arrow::datatypes::DataType::Int64
+        );
+        assert_eq!(
+            batch.schema().field(1).data_type(),
+            &arrow::datatypes::DataType::Float64
+        );
+        assert_eq!(
+            batch.schema().field(2).data_type(),
+            &arrow::datatypes::DataType::Utf8
+        );
+    }
+
+    #[test]
+    fn assemble_all_fields_nullable() {
+        let names = vec!["a".to_string(), "b".to_string()];
+        let arrays: Vec<ArrayRef> = vec![
+            Arc::new(Int64Array::from(vec![1])),
+            Arc::new(StringArray::from(vec!["x"])),
+        ];
+        let batch = assemble_batch(&names, arrays).unwrap();
+        for i in 0..batch.num_columns() {
+            assert!(
+                batch.schema().field(i).is_nullable(),
+                "field {} should be nullable",
+                batch.schema().field(i).name()
+            );
+        }
+    }
+
+    #[test]
+    fn assemble_mismatched_row_counts() {
+        // Arrays with different lengths should produce an Arrow error
+        let names = vec!["a".to_string(), "b".to_string()];
+        let arrays: Vec<ArrayRef> = vec![
+            Arc::new(Int64Array::from(vec![1, 2, 3])),
+            Arc::new(StringArray::from(vec!["x"])),
+        ];
+        let err = assemble_batch(&names, arrays).unwrap_err();
+        assert!(matches!(err, GenError::Arrow(_)));
+    }
+
+    #[test]
+    fn assemble_large_batch() {
+        let n = 10_000;
+        let names = vec!["id".to_string()];
+        let arrays: Vec<ArrayRef> = vec![Arc::new(Int64Array::from((0..n).collect::<Vec<i64>>()))];
+        let batch = assemble_batch(&names, arrays).unwrap();
+        assert_eq!(batch.num_rows(), n as usize);
+    }
 }
