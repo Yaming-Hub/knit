@@ -294,6 +294,17 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         });
     }
 
+    // If multiple PK candidates detected, pick only one (best match to table name).
+    let pk_count = rel_columns.iter().filter(|c| c.is_primary_key).count();
+    if pk_count > 1 {
+        let best_idx = pick_best_pk(&rel_columns, &table.entity);
+        for (i, rc) in rel_columns.iter_mut().enumerate() {
+            if rc.is_primary_key && i != best_idx {
+                rc.is_primary_key = false;
+            }
+        }
+    }
+
     // Mark detected PKs in column analyses
     for (ca, rc) in col_analyses.iter_mut().zip(rel_columns.iter()) {
         ca.is_primary_key = rc.is_primary_key;
@@ -756,12 +767,70 @@ fn is_likely_primary_key(profile: &ColumnProfile, row_count: u64) -> bool {
         .map(|r| (r - 1.0).abs() < 1e-9)
         .unwrap_or(false);
     let name_lower = profile.name.to_lowercase();
+    // Check CamelCase "Id"/"ID" suffix: original name must end with "Id" or "ID" (capital I)
+    let has_camel_id = (profile.name.ends_with("Id") || profile.name.ends_with("ID"))
+        && profile.name.len() > 2;
+    // Also support all-lowercase "id" suffix (e.g. "userid", "customerid") but exclude
+    // common English words that happen to end in "id"
+    let has_lower_id = name_lower.ends_with("id")
+        && name_lower.len() > 2
+        && !matches!(
+            name_lower.as_str(),
+            "valid" | "invalid" | "rapid" | "timid" | "vivid" | "stupid"
+                | "hybrid" | "morbid" | "orchid" | "fluid" | "void" | "android"
+                | "paid" | "said" | "laid"
+        );
     let name_suggests_pk = name_lower == "id"
         || name_lower.ends_with("_id")
-        || name_lower.ends_with("_key");
+        || name_lower.ends_with("_key")
+        || has_camel_id
+        || has_lower_id;
 
     // Require both uniqueness AND a PK-like name to avoid false positives
     is_unique && name_suggests_pk && profile.null_count == 0
+}
+
+/// When a table has multiple PK candidates, pick the best one.
+/// Preference order:
+/// 1. Column named exactly "id"
+/// 2. Column named "{table_name}id" or "{table_name}_id" (matches table name)
+/// 3. First candidate in column order (positional heuristic — first column is often PK)
+fn pick_best_pk(columns: &[RelColumn], table_name: &str) -> usize {
+    let table_lower = table_name.to_lowercase();
+    // Strip common suffixes from table name for matching (e.g. "PeopleHistorical_test" → "peoplehistorical")
+    let table_stem = table_lower
+        .trim_end_matches("_test")
+        .trim_end_matches("_tests")
+        .trim_end_matches('s'); // strip plural
+
+    let candidates: Vec<usize> = columns
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| c.is_primary_key)
+        .map(|(i, _)| i)
+        .collect();
+
+    // Priority 1: column named exactly "id"
+    for &i in &candidates {
+        if columns[i].name.to_lowercase() == "id" {
+            return i;
+        }
+    }
+
+    // Priority 2: column name matches "{table_stem}id" or "{table_stem}_id"
+    for &i in &candidates {
+        let col_lower = columns[i].name.to_lowercase();
+        let col_stem = col_lower
+            .trim_end_matches("id")
+            .trim_end_matches("_id")
+            .trim_end_matches('_');
+        if col_stem == table_stem {
+            return i;
+        }
+    }
+
+    // Priority 3: first candidate by position
+    candidates[0]
 }
 
 #[cfg(test)]
@@ -854,6 +923,37 @@ mod tests {
     }
 
     #[test]
+    fn learn_table_with_multiple_id_columns_picks_one_pk() {
+        let dir = tempfile::tempdir().unwrap();
+        // Table with two unique columns ending in "Id" — only one should be PK
+        let mut f = std::fs::File::create(dir.path().join("people_historical.csv")).unwrap();
+        writeln!(f, "PersonId,PeopleHistoricalId,Name").unwrap();
+        for i in 1..=10 {
+            writeln!(f, "{},{},Person{}", i, i + 100, i).unwrap();
+        }
+        drop(f);
+
+        let output_path = dir.path().join("schema.weave.toml");
+        let result = run(
+            dir.path().to_str().unwrap(),
+            output_path.to_str().unwrap(),
+            None,
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn failed: {result:?}");
+
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        let pk_count = content.matches("primary_key = true").count();
+        assert_eq!(pk_count, 1, "should have exactly 1 PK, got {pk_count}");
+        // Should prefer PeopleHistoricalId (matches table name)
+        assert!(
+            content.contains("name = \"PeopleHistoricalId\"")
+                && content.contains("primary_key = true"),
+            "PeopleHistoricalId should be the chosen PK"
+        );
+    }
+
+    #[test]
     fn is_likely_primary_key_id_column() {
         let profile = ColumnProfile {
             name: "user_id".to_string(),
@@ -888,5 +988,104 @@ mod tests {
             !is_likely_primary_key(&profile, 5),
             "unique 'name' column should not be detected as PK"
         );
+    }
+
+    #[test]
+    fn camel_case_id_detected_as_pk() {
+        let profile = ColumnProfile {
+            name: "CustomerID".to_string(),
+            data_type: DataType::Int64,
+            count: 10,
+            null_count: 0,
+            null_rate: 0.0,
+            distinct_count: Some(10),
+            cardinality_ratio: Some(1.0),
+            numeric: None,
+            string: None,
+            temporal: None,
+        };
+        assert!(is_likely_primary_key(&profile, 10));
+    }
+
+    #[test]
+    fn lowercase_id_suffix_detected_as_pk() {
+        let profile = ColumnProfile {
+            name: "userid".to_string(),
+            data_type: DataType::Int64,
+            count: 10,
+            null_count: 0,
+            null_rate: 0.0,
+            distinct_count: Some(10),
+            cardinality_ratio: Some(1.0),
+            numeric: None,
+            string: None,
+            temporal: None,
+        };
+        assert!(is_likely_primary_key(&profile, 10));
+    }
+
+    #[test]
+    fn word_ending_in_id_not_detected_as_pk() {
+        // "valid" ends with "id" but is excluded as a common English word
+        let profile = ColumnProfile {
+            name: "valid".to_string(),
+            data_type: DataType::Int64,
+            count: 10,
+            null_count: 0,
+            null_rate: 0.0,
+            distinct_count: Some(10),
+            cardinality_ratio: Some(1.0),
+            numeric: None,
+            string: None,
+            temporal: None,
+        };
+        assert!(!is_likely_primary_key(&profile, 10));
+    }
+
+    #[test]
+    fn pick_best_pk_prefers_table_name_match() {
+        use std::collections::HashSet;
+        let columns = vec![
+            RelColumn {
+                name: "PersonId".to_string(),
+                is_primary_key: true,
+                distinct_values: HashSet::new(),
+                row_count: 10,
+                distinct_count: 10,
+            },
+            RelColumn {
+                name: "PeopleHistoricalId".to_string(),
+                is_primary_key: true,
+                distinct_values: HashSet::new(),
+                row_count: 10,
+                distinct_count: 10,
+            },
+        ];
+        // "PeopleHistorical_test" → stem "peoplehistorical" matches "PeopleHistoricalId"
+        let best = pick_best_pk(&columns, "PeopleHistorical_test");
+        assert_eq!(best, 1, "should prefer PeopleHistoricalId for PeopleHistorical_test");
+    }
+
+    #[test]
+    fn pick_best_pk_prefers_id_column() {
+        use std::collections::HashSet;
+        let columns = vec![
+            RelColumn {
+                name: "id".to_string(),
+                is_primary_key: true,
+                distinct_values: HashSet::new(),
+                row_count: 10,
+                distinct_count: 10,
+            },
+            RelColumn {
+                name: "UserId".to_string(),
+                is_primary_key: true,
+                distinct_values: HashSet::new(),
+                row_count: 10,
+                distinct_count: 10,
+            },
+        ];
+        let best = pick_best_pk(&columns, "users");
+        assert_eq!(best, 0, "should prefer plain 'id' column");
     }
 }
