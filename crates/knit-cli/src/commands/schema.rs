@@ -80,6 +80,134 @@ pub fn run_diff(path_a: &str, path_b: &str) -> Result<()> {
     Ok(())
 }
 
+/// Run the `schema doc` command.
+///
+/// Generates markdown documentation for the schema including entity descriptions,
+/// field tables, relationships, and generator info.
+pub fn run_doc(path: &str, output: Option<&str>) -> Result<()> {
+    let model = load_schema(path)
+        .with_context(|| format!("failed to load schema `{}`", path))?;
+
+    let markdown = generate_schema_doc(&model);
+
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &markdown)
+            .with_context(|| format!("failed to write to `{}`", out_path))?;
+        println!(
+            "{} documentation written to {}",
+            "✓".green().bold(),
+            out_path.cyan()
+        );
+    } else {
+        print!("{}", markdown);
+    }
+    Ok(())
+}
+
+/// Generate markdown documentation for a data model.
+pub fn generate_schema_doc(model: &DataModel) -> String {
+    let mut doc = String::new();
+
+    // Title
+    doc.push_str(&format!("# {}\n\n", model.name));
+    if let Some(desc) = &model.description {
+        doc.push_str(&format!("{}\n\n", desc));
+    }
+
+    // Overview table
+    doc.push_str("## Overview\n\n");
+    doc.push_str(&format!("| Property | Value |\n|---|---|\n"));
+    doc.push_str(&format!("| Schema version | {} |\n", model.schema_version));
+    doc.push_str(&format!("| Seed | {} |\n", model.seed));
+    doc.push_str(&format!("| Locale | {} |\n", model.locale));
+    doc.push_str(&format!("| Entities | {} |\n", model.entities.len()));
+    doc.push_str(&format!("| Relationships | {} |\n", model.relationships.len()));
+    if !model.noise_profiles.is_empty() {
+        doc.push_str(&format!("| Noise profiles | {} |\n", model.noise_profiles.len()));
+    }
+    doc.push('\n');
+
+    // Entities
+    doc.push_str("## Entities\n\n");
+    for entity in &model.entities {
+        doc.push_str(&format!("### {}\n\n", entity.name));
+        if let Some(desc) = &entity.description {
+            doc.push_str(&format!("{}\n\n", desc));
+        }
+        doc.push_str(&format!("**Rows:** {}\n\n", format_count_spec(&entity.count)));
+
+        if !entity.fields.is_empty() {
+            doc.push_str("| Field | Type | Nullable | Generator |\n");
+            doc.push_str("|---|---|---|---|\n");
+            for field in &entity.fields {
+                let nullable = match &field.nullable {
+                    knit_core::NullSpec::Never => "no",
+                    _ => "yes",
+                };
+                let generator = field
+                    .generator
+                    .as_ref()
+                    .map(|g| format_generator_spec(g))
+                    .unwrap_or_else(|| "—".to_string());
+                doc.push_str(&format!(
+                    "| {} | {:?} | {} | {} |\n",
+                    field.name, field.data_type, nullable, generator
+                ));
+            }
+            doc.push('\n');
+        }
+    }
+
+    // Relationships
+    if !model.relationships.is_empty() {
+        doc.push_str("## Relationships\n\n");
+        doc.push_str("| Name | From | To | Kind | FK Column |\n");
+        doc.push_str("|---|---|---|---|---|\n");
+        for rel in &model.relationships {
+            let default_fk = format!("{}_id", rel.to);
+            let fk = rel.foreign_key.as_deref().unwrap_or(&default_fk);
+            doc.push_str(&format!(
+                "| {} | {} | {} | {:?} | {} |\n",
+                rel.name, rel.from, rel.to, rel.kind, fk
+            ));
+        }
+        doc.push('\n');
+    }
+
+    doc
+}
+
+fn format_count_spec(count: &knit_core::CountSpec) -> String {
+    match count {
+        knit_core::CountSpec::Fixed(n) => n.to_string(),
+        knit_core::CountSpec::Range { min, max } => format!("{} – {}", min, max),
+        knit_core::CountSpec::Distribution(spec) => format!("{:?}(…)", spec.kind),
+    }
+}
+
+fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
+    match gen {
+        knit_core::GeneratorSpec::Distribution { spec } => format!("{:?}", spec.kind),
+        knit_core::GeneratorSpec::Faker { method, .. } => format!("faker({})", method),
+        knit_core::GeneratorSpec::Sequence { .. } => "sequence".to_string(),
+        knit_core::GeneratorSpec::OneOf { choices, .. } => {
+            format!("oneOf({} choices)", choices.len())
+        }
+        knit_core::GeneratorSpec::Pattern { pattern, .. } => format!("pattern({})", pattern),
+        knit_core::GeneratorSpec::Derived { expr, .. } => format!("derived({})", expr),
+        knit_core::GeneratorSpec::Conditional { .. } => "conditional".to_string(),
+        knit_core::GeneratorSpec::Composite { .. } => "composite".to_string(),
+        knit_core::GeneratorSpec::Lookup { entity, field } => {
+            format!("lookup({}.{})", entity, field)
+        }
+        knit_core::GeneratorSpec::Constant { value } => format!("const({:?})", value),
+        knit_core::GeneratorSpec::UuidGen { version } => format!("uuid(v{})", version),
+        knit_core::GeneratorSpec::Unique { .. } => "unique(…)".to_string(),
+        knit_core::GeneratorSpec::Relative { field, .. } => format!("relative({})", field),
+        knit_core::GeneratorSpec::BusinessHours { .. } => "business_hours".to_string(),
+    }
+}
+
 /// A single diff entry describing one change between two schemas.
 #[derive(Debug, PartialEq)]
 pub enum DiffEntry {
@@ -521,5 +649,46 @@ mod tests {
         assert!(output.contains("name = \"test\""));
         assert!(output.contains("[[entities]]"));
         assert!(output.contains("name = \"users\""));
+    }
+
+    #[test]
+    fn doc_contains_title_and_entities() {
+        let model = make_model(
+            "my_schema",
+            vec![make_entity(
+                "users",
+                vec![make_field("id", DataType::Int), make_field("name", DataType::String)],
+            )],
+        );
+        let doc = generate_schema_doc(&model);
+        assert!(doc.contains("# my_schema"));
+        assert!(doc.contains("### users"));
+        assert!(doc.contains("| id | Int | no | — |"));
+        assert!(doc.contains("| name | String | no | — |"));
+        assert!(doc.contains("| Entities | 1 |"));
+    }
+
+    #[test]
+    fn doc_includes_relationships() {
+        use knit_core::Relationship;
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.relationships.push(Relationship {
+            name: "orders_users".to_string(),
+            from: "orders".to_string(),
+            to: "users".to_string(),
+            kind: knit_core::RelationshipKind::OneToMany,
+            foreign_key: Some("user_id".to_string()),
+            cardinality: None,
+        });
+        let doc = generate_schema_doc(&model);
+        assert!(doc.contains("## Relationships"));
+        assert!(doc.contains("| orders_users |"));
+        assert!(doc.contains("| user_id |") || doc.contains("user_id"));
     }
 }
