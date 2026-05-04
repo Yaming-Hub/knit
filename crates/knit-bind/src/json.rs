@@ -148,12 +148,15 @@ fn cell_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindEr
             })
         }
         _ => {
-            // Fallback: use Arrow's display formatting
-            let casted = arrow::compute::cast(col, &DataType::Utf8).unwrap_or_else(|_| {
-                std::sync::Arc::new(array::StringArray::from(vec!["<unsupported>"]))
-            });
-            let formatted = array::cast::as_string_array(&casted).value(row).to_string();
-            Ok(serde_json::Value::String(formatted))
+            // Fallback: cast the entire column to Utf8 and read the row.
+            match arrow::compute::cast(col, &DataType::Utf8) {
+                Ok(casted) => {
+                    let formatted =
+                        array::cast::as_string_array(&casted).value(row).to_string();
+                    Ok(serde_json::Value::String(formatted))
+                }
+                Err(_) => Ok(serde_json::Value::String("<unsupported>".to_string())),
+            }
         }
     }
 }
