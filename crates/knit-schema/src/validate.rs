@@ -76,6 +76,7 @@ fn validate_fields(
                 &field.name,
                 entity,
                 entity_names,
+                false,
                 errors,
             );
         }
@@ -97,12 +98,6 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaErr
             });
         }
         CountSpec::Range { min, max } => {
-            if *min == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "range min must be > 0".to_string(),
-                });
-            }
             if min > max {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -545,6 +540,7 @@ fn validate_generator(
     field_name: &str,
     entity: &Entity,
     entity_names: &HashSet<&str>,
+    nested: bool,
     errors: &mut Vec<SchemaError>,
 ) {
     match gen {
@@ -618,6 +614,13 @@ fn validate_generator(
             entity: ref lookup_entity,
             ..
         } => {
+            if nested {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "lookup cannot be nested inside Unique, Conditional, or Composite"
+                        .to_string(),
+                });
+            }
             if !entity_names.contains(lookup_entity.as_str()) {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -644,6 +647,12 @@ fn validate_generator(
                     ),
                 });
             }
+            if field == field_name {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "conditional cannot reference its own field".to_string(),
+                });
+            }
             for (i, branch) in branches.iter().enumerate() {
                 validate_generator(
                     &format!("{}.branches[{}]", path, i),
@@ -651,6 +660,7 @@ fn validate_generator(
                     field_name,
                     entity,
                     entity_names,
+                    true,
                     errors,
                 );
             }
@@ -661,6 +671,7 @@ fn validate_generator(
                     field_name,
                     entity,
                     entity_names,
+                    true,
                     errors,
                 );
             }
@@ -685,7 +696,7 @@ fn validate_generator(
             }
         }
         GeneratorSpec::Unique { inner, .. } => {
-            validate_generator(path, inner, field_name, entity, entity_names, errors);
+            validate_generator(path, inner, field_name, entity, entity_names, true, errors);
         }
         GeneratorSpec::Composite { generators, .. } => {
             for (key, sub_gen) in generators {
@@ -695,6 +706,7 @@ fn validate_generator(
                     field_name,
                     entity,
                     entity_names,
+                    true,
                     errors,
                 );
             }
@@ -1297,13 +1309,17 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_count_range_min_zero() {
+    fn test_validate_count_range_min_zero_valid() {
         let mut model = minimal_model();
         model.entities[0].count = CountSpec::Range { min: 0, max: 10 };
         let errors = validate(&model);
-        assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("range min must be > 0"))
-        }));
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("range"))
+            }),
+            "Range min=0 should be valid, got: {:?}",
+            errors
+        );
     }
 
     #[test]
@@ -1528,6 +1544,71 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("relative cannot reference itself"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_self_ref() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "status".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Conditional {
+                field: "status".to_string(),
+                branches: vec![],
+                default: Some(Box::new(GeneratorSpec::Constant {
+                    value: Value::String("x".into()),
+                })),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("conditional cannot reference its own field"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_nested_lookup_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "other".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![Field {
+                name: "id".to_string(),
+                description: None,
+                data_type: DataType::Int,
+                generator: Some(GeneratorSpec::Sequence {
+                    start: 0,
+                    step: 1,
+                    prefix: None,
+                }),
+                nullable: NullSpec::Never,
+                primary_key: Some(true),
+            }],
+            constraints: vec![],
+            topology: None,
+        });
+        model.entities[0].fields.push(Field {
+            name: "ref_col".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Unique {
+                inner: Box::new(GeneratorSpec::Lookup {
+                    entity: "other".to_string(),
+                    field: "id".to_string(),
+                }),
+                max_retries: 1000,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("lookup cannot be nested"))
         }));
     }
 }
