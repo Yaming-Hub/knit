@@ -7,12 +7,14 @@
 //! - `schema expand|normalize|diff` — schema manipulation
 //! - `init` — interactive project setup wizard
 //! - `learn` — infer schema from data
+//! - `completions` — generate shell completion scripts
 
 mod commands;
 mod config;
 pub mod suggestions;
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use clap_complete::Shell;
 use colored::Colorize;
 use tracing_subscriber::EnvFilter;
 
@@ -155,6 +157,12 @@ enum Command {
         #[arg(long)]
         sample: Option<usize>,
     },
+    /// Generate shell completion scripts.
+    Completions {
+        /// Shell to generate completions for.
+        #[arg(value_enum)]
+        shell: Shell,
+    },
 }
 
 /// Schema subcommands.
@@ -240,6 +248,15 @@ fn main() -> anyhow::Result<()> {
         },
         Command::Init { output } => init::run(output),
         Command::Learn { source, output, sample } => learn::run(source, output, *sample, &cli),
+        Command::Completions { shell } => {
+            clap_complete::generate(
+                *shell,
+                &mut Cli::command(),
+                "knit",
+                &mut std::io::stdout(),
+            );
+            Ok(())
+        }
     }
     .inspect_err(|e| {
         if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {
