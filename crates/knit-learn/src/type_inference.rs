@@ -56,6 +56,8 @@ pub enum StringPattern {
     Date,
     /// Person name (first + last).
     Name,
+    /// Hex string (e.g., 32-char MD5-like hash).
+    HexString(usize),
 }
 
 /// Result of type inference on a single column.
@@ -226,6 +228,33 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
         }
     }
 
+    // Detect fixed-length hex strings (e.g., 32-char MD5 hashes, 40-char SHA1)
+    // Only if not already matched as UUID (which has dashes).
+    if !result.contains_key(&StringPattern::Uuid) {
+        let hex_re = Regex::new(r"(?i)^[0-9a-f]+$").unwrap();
+        let hex_matches: Vec<usize> = values
+            .iter()
+            .filter_map(|v| {
+                if v.len() >= 16 && hex_re.is_match(v) {
+                    Some(v.len())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let hex_rate = hex_matches.len() as f64 / total;
+        if hex_rate > 0.8 {
+            // Use the most common length
+            let mut len_counts: HashMap<usize, usize> = HashMap::new();
+            for l in &hex_matches {
+                *len_counts.entry(*l).or_insert(0) += 1;
+            }
+            if let Some((&dominant_len, _)) = len_counts.iter().max_by_key(|(_, c)| *c) {
+                result.insert(StringPattern::HexString(dominant_len), hex_rate);
+            }
+        }
+    }
+
     result
 }
 
@@ -372,5 +401,44 @@ mod tests {
         let result = infer_type(&vals, 0.05);
         assert_eq!(result.inferred_type, InferredType::Text);
         assert_eq!(result.confidence, 0.0);
+    }
+
+    #[test]
+    fn detect_hex_string_pattern() {
+        let vals = vec![
+            "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+            "1234567890abcdef1234567890abcdef",
+            "deadbeefcafebabe0123456789abcdef",
+            "ffffffffffffffffffffffffffffffff",
+            "00000000000000000000000000000001",
+        ];
+        let patterns = detect_patterns(&vals);
+        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(hex_entry.is_some(), "should detect hex string pattern");
+        if let Some((StringPattern::HexString(len), rate)) = hex_entry {
+            assert_eq!(*len, 32, "should detect 32-char hex strings");
+            assert!(*rate > 0.8, "rate should be > 0.8");
+        }
+    }
+
+    #[test]
+    fn hex_string_not_detected_for_short_strings() {
+        let vals = vec!["abc123", "def456", "789abc"];
+        let patterns = detect_patterns(&vals);
+        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(hex_entry.is_none(), "short hex strings should not be detected");
+    }
+
+    #[test]
+    fn hex_string_not_detected_when_uuid() {
+        let vals = vec![
+            "a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6",
+            "12345678-90ab-cdef-1234-567890abcdef",
+            "deadbeef-cafe-babe-0123-456789abcdef",
+        ];
+        let patterns = detect_patterns(&vals);
+        assert!(patterns.contains_key(&StringPattern::Uuid));
+        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(hex_entry.is_none(), "UUID columns should not also match as hex strings");
     }
 }

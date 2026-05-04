@@ -573,6 +573,7 @@ const KNOWN_FAKER_METHODS: &[&str] = &[
     "ipv6",
     "color",
     "hex_color",
+    "hex_string",
     "date",
     "datetime",
     "timestamp",
