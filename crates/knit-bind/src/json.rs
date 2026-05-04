@@ -46,143 +46,122 @@ impl<W: Write + Send> JsonSink<W> {
     }
 }
 
+/// Downcast an Arrow column to the expected array type, returning a
+/// [`BindError`] on type mismatch instead of panicking.
+#[macro_export]
+macro_rules! downcast_col {
+    ($col:expr, $arr_ty:ty) => {
+        $col.as_any()
+            .downcast_ref::<$arr_ty>()
+            .ok_or_else(|| {
+                $crate::BindError::Other(format!(
+                    "Arrow type mismatch: expected {}, got {:?}",
+                    stringify!($arr_ty),
+                    $col.data_type(),
+                ))
+            })
+    };
+}
+pub use downcast_col;
+
 /// Convert a single cell value to a `serde_json::Value`.
-fn cell_to_json(col: &dyn Array, row: usize) -> serde_json::Value {
+fn cell_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindError> {
     if col.is_null(row) {
-        return serde_json::Value::Null;
+        return Ok(serde_json::Value::Null);
     }
     match col.data_type() {
         DataType::Boolean => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::BooleanArray>()
-                .expect("Arrow type mismatch: expected BooleanArray");
-            serde_json::Value::Bool(arr.value(row))
+            let arr = downcast_col!(col, array::BooleanArray)?;
+            Ok(serde_json::Value::Bool(arr.value(row)))
         }
         DataType::Int8 => json_number!(col, array::Int8Array, row),
         DataType::Int16 => json_number!(col, array::Int16Array, row),
         DataType::Int32 => json_number!(col, array::Int32Array, row),
         DataType::Int64 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::Int64Array>()
-                .expect("Arrow type mismatch: expected Int64Array");
-            serde_json::Value::Number(arr.value(row).into())
+            let arr = downcast_col!(col, array::Int64Array)?;
+            Ok(serde_json::Value::Number(arr.value(row).into()))
         }
         DataType::UInt8 => json_number!(col, array::UInt8Array, row),
         DataType::UInt16 => json_number!(col, array::UInt16Array, row),
         DataType::UInt32 => json_number!(col, array::UInt32Array, row),
         DataType::UInt64 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::UInt64Array>()
-                .expect("Arrow type mismatch: expected UInt64Array");
-            serde_json::Value::Number(arr.value(row).into())
+            let arr = downcast_col!(col, array::UInt64Array)?;
+            Ok(serde_json::Value::Number(arr.value(row).into()))
         }
         DataType::Float32 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::Float32Array>()
-                .expect("Arrow type mismatch: expected Float32Array");
+            let arr = downcast_col!(col, array::Float32Array)?;
             let v = arr.value(row) as f64;
-            serde_json::Number::from_f64(v)
+            Ok(serde_json::Number::from_f64(v)
                 .map(serde_json::Value::Number)
-                .unwrap_or(serde_json::Value::Null)
+                .unwrap_or(serde_json::Value::Null))
         }
         DataType::Float64 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::Float64Array>()
-                .expect("Arrow type mismatch: expected Float64Array");
-            serde_json::Number::from_f64(arr.value(row))
+            let arr = downcast_col!(col, array::Float64Array)?;
+            Ok(serde_json::Number::from_f64(arr.value(row))
                 .map(serde_json::Value::Number)
-                .unwrap_or(serde_json::Value::Null)
+                .unwrap_or(serde_json::Value::Null))
         }
         DataType::Utf8 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::StringArray>()
-                .expect("Arrow type mismatch: expected StringArray");
-            serde_json::Value::String(arr.value(row).to_string())
+            let arr = downcast_col!(col, array::StringArray)?;
+            Ok(serde_json::Value::String(arr.value(row).to_string()))
         }
         DataType::LargeUtf8 => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::LargeStringArray>()
-                .expect("Arrow type mismatch: expected LargeStringArray");
-            serde_json::Value::String(arr.value(row).to_string())
+            let arr = downcast_col!(col, array::LargeStringArray)?;
+            Ok(serde_json::Value::String(arr.value(row).to_string()))
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampMicrosecondArray>()
-                .expect("Arrow type mismatch: expected TimestampMicrosecondArray");
+            let arr = downcast_col!(col, array::TimestampMicrosecondArray)?;
             let ts = arr.value(row);
             let dt = chrono::DateTime::from_timestamp_micros(ts);
-            match dt {
+            Ok(match dt {
                 Some(d) => serde_json::Value::String(d.to_rfc3339()),
                 None => serde_json::Value::Null,
-            }
+            })
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampMillisecondArray>()
-                .expect("Arrow type mismatch: expected TimestampMillisecondArray");
+            let arr = downcast_col!(col, array::TimestampMillisecondArray)?;
             let ts = arr.value(row);
             let dt = chrono::DateTime::from_timestamp_millis(ts);
-            match dt {
+            Ok(match dt {
                 Some(d) => serde_json::Value::String(d.to_rfc3339()),
                 None => serde_json::Value::Null,
-            }
+            })
         }
         DataType::Timestamp(TimeUnit::Second, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampSecondArray>()
-                .expect("Arrow type mismatch: expected TimestampSecondArray");
+            let arr = downcast_col!(col, array::TimestampSecondArray)?;
             let ts = arr.value(row);
             let dt = chrono::DateTime::from_timestamp(ts, 0);
-            match dt {
+            Ok(match dt {
                 Some(d) => serde_json::Value::String(d.to_rfc3339()),
                 None => serde_json::Value::Null,
-            }
+            })
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let arr = col
-                .as_any()
-                .downcast_ref::<array::TimestampNanosecondArray>()
-                .expect("Arrow type mismatch: expected TimestampNanosecondArray");
+            let arr = downcast_col!(col, array::TimestampNanosecondArray)?;
             let ts = arr.value(row);
             let secs = ts.div_euclid(1_000_000_000);
             let nsecs = ts.rem_euclid(1_000_000_000) as u32;
             let dt = chrono::DateTime::from_timestamp(secs, nsecs);
-            match dt {
+            Ok(match dt {
                 Some(d) => serde_json::Value::String(d.to_rfc3339()),
                 None => serde_json::Value::Null,
-            }
+            })
         }
         _ => {
             // Fallback: use Arrow's display formatting
-            let formatted = array::cast::as_string_array(
-                &arrow::compute::cast(col, &DataType::Utf8).unwrap_or_else(|_| {
-                    std::sync::Arc::new(array::StringArray::from(vec!["<unsupported>"]))
-                }),
-            )
-            .value(row)
-            .to_string();
-            serde_json::Value::String(formatted)
+            let casted = arrow::compute::cast(col, &DataType::Utf8).unwrap_or_else(|_| {
+                std::sync::Arc::new(array::StringArray::from(vec!["<unsupported>"]))
+            });
+            let formatted = array::cast::as_string_array(&casted).value(row).to_string();
+            Ok(serde_json::Value::String(formatted))
         }
     }
 }
 
 macro_rules! json_number {
     ($col:expr, $arr_ty:ty, $row:expr) => {{
-        let arr = $col
-            .as_any()
-            .downcast_ref::<$arr_ty>()
-            .expect(concat!("Arrow type mismatch: expected ", stringify!($arr_ty)));
-        serde_json::Value::Number(arr.value($row).into())
+        let arr = downcast_col!($col, $arr_ty)?;
+        Ok(serde_json::Value::Number(arr.value($row).into()))
     }};
 }
 use json_number;
@@ -197,7 +176,7 @@ impl<W: Write + Send> Sink for JsonSink<W> {
         for row in 0..batch.num_rows() {
             let mut map = serde_json::Map::with_capacity(field_names.len());
             for (i, name) in field_names.iter().enumerate() {
-                map.insert((*name).to_string(), cell_to_json(columns[i].as_ref(), row));
+                map.insert((*name).to_string(), cell_to_json(columns[i].as_ref(), row)?);
             }
             let obj = serde_json::Value::Object(map);
 
@@ -238,5 +217,91 @@ impl<W: Write + Send> Sink for JsonSink<W> {
             bytes_written: self.bytes_written,
             files_created: 1,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::{BooleanArray, Float64Array, Int64Array, StringArray};
+    use arrow::datatypes::{Field, Schema};
+    use std::io::Cursor;
+    use std::sync::Arc;
+
+    fn sample_batch() -> RecordBatch {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int64, false),
+            Field::new("name", DataType::Utf8, false),
+            Field::new("score", DataType::Float64, true),
+            Field::new("active", DataType::Boolean, false),
+        ]));
+        RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int64Array::from(vec![1, 2])),
+                Arc::new(StringArray::from(vec!["alice", "bob"])),
+                Arc::new(Float64Array::from(vec![Some(95.5), None])),
+                Arc::new(BooleanArray::from(vec![true, false])),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn jsonl_basic() {
+        let buf = Cursor::new(Vec::new());
+        let mut sink = JsonSink::new(buf, JsonMode::Jsonl).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+        assert!(stats.bytes_written > 0);
+    }
+
+    #[test]
+    fn json_array_basic() {
+        let buf = Cursor::new(Vec::new());
+        let mut sink = JsonSink::new(buf, JsonMode::JsonArray).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 2);
+    }
+
+    #[test]
+    fn cell_to_json_null_handling() {
+        let arr = Float64Array::from(vec![None, Some(1.0)]);
+        let result = cell_to_json(&arr, 0).unwrap();
+        assert_eq!(result, serde_json::Value::Null);
+        let result = cell_to_json(&arr, 1).unwrap();
+        assert!(result.is_number());
+    }
+
+    #[test]
+    fn cell_to_json_all_basic_types() {
+        // Boolean
+        let arr = BooleanArray::from(vec![true]);
+        assert_eq!(cell_to_json(&arr, 0).unwrap(), serde_json::Value::Bool(true));
+
+        // Int64
+        let arr = Int64Array::from(vec![42]);
+        assert_eq!(cell_to_json(&arr, 0).unwrap(), serde_json::json!(42));
+
+        // Float64
+        let arr = Float64Array::from(vec![3.14]);
+        let val = cell_to_json(&arr, 0).unwrap();
+        assert!(val.is_number());
+
+        // Utf8
+        let arr = StringArray::from(vec!["hello"]);
+        assert_eq!(
+            cell_to_json(&arr, 0).unwrap(),
+            serde_json::Value::String("hello".to_string())
+        );
+    }
+
+    #[test]
+    fn cell_to_json_nan_becomes_null() {
+        let arr = Float64Array::from(vec![f64::NAN]);
+        let val = cell_to_json(&arr, 0).unwrap();
+        assert_eq!(val, serde_json::Value::Null);
     }
 }
