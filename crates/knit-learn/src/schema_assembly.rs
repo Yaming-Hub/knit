@@ -505,8 +505,7 @@ fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
         return Some("zip_code");
     }
     // Organization
-    if lower == "company" || lower.ends_with("_company") || lower.starts_with("company_")
-        || lower.contains("organization") || lower.contains("organisation")
+    if lower.contains("company") || lower.contains("organization") || lower.contains("organisation")
     {
         return Some("company");
     }

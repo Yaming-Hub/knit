@@ -168,8 +168,16 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         }
     }
 
-    // Check categorical (low cardinality), but only if no strong semantic pattern was detected
-    let has_strong_pattern = patterns.values().any(|&rate| rate > 0.8);
+    // Check categorical (low cardinality), but only if no strong semantic pattern was detected.
+    // Only high-specificity patterns (Email, UUID, URL, HexString) gate out categorical.
+    // Name and Phone are too ambiguous (e.g., "Accounting Manager" matches Name regex).
+    let has_strong_pattern = patterns.iter().any(|(pattern, &rate)| {
+        rate > 0.8
+            && matches!(
+                pattern,
+                StringPattern::Email | StringPattern::Uuid | StringPattern::Url | StringPattern::HexString(_)
+            )
+    });
     let mut distinct: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for v in &non_null {
         distinct.insert(v);
