@@ -377,12 +377,14 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         }
     }
 
-    // Temporal columns → pattern detection
+    // Temporal columns → range capture and pattern detection
     let mut temporal_range: Option<(f64, f64)> = None;
     if profile.temporal.is_some() {
         let ts_values = extract_timestamp_seconds(batch, &profile.name);
-        if ts_values.len() >= 3 {
+        if !ts_values.is_empty() {
             temporal_range = Some((ts_values[0], ts_values[ts_values.len() - 1]));
+        }
+        if ts_values.len() >= 3 {
             temporal_pattern = detect_temporal_pattern(&ts_values);
             if let Some(ref spec) = temporal_pattern {
                 confidence = spec.confidence;
