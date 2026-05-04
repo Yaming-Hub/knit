@@ -10,8 +10,8 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, StringArray};
-use arrow::datatypes::DataType;
+use arrow::array::{ArrayRef, Date32Array, StringArray, TimestampNanosecondArray};
+use arrow::datatypes::{DataType, TimeUnit};
 use rand::RngCore;
 
 use crate::context::GenContext;
@@ -479,14 +479,55 @@ impl FakerGenerator {
 
 impl FieldGenerator for FakerGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
-        let values: Vec<String> = (0..count).map(|_| self.generate_one(rng)).collect();
-        Arc::new(StringArray::from(
-            values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
-        ))
+        match self.category.as_str() {
+            "datetime" | "timestamp" => {
+                // Generate timestamp as nanoseconds since epoch
+                let (start_days, end_days) = self.date_range();
+                let values: Vec<i64> = (0..count)
+                    .map(|_| {
+                        let range = (end_days - start_days + 1).max(1) as u32;
+                        let day_offset = rng.next_u32() % range;
+                        let days = start_days + day_offset as i64;
+                        let h = (rng.next_u32() % 24) as i64;
+                        let min = (rng.next_u32() % 60) as i64;
+                        let s = (rng.next_u32() % 60) as i64;
+                        // nanoseconds since epoch
+                        days * 86_400_000_000_000 + h * 3_600_000_000_000
+                            + min * 60_000_000_000 + s * 1_000_000_000
+                    })
+                    .collect();
+                Arc::new(TimestampNanosecondArray::from(values))
+            }
+            "date" => {
+                // Generate date as days since epoch
+                let (start_days, end_days) = self.date_range();
+                let values: Vec<i32> = (0..count)
+                    .map(|_| {
+                        let range = (end_days - start_days + 1).max(1) as u32;
+                        let day_offset = rng.next_u32() % range;
+                        (start_days + day_offset as i64) as i32
+                    })
+                    .collect();
+                Arc::new(Date32Array::from(values))
+            }
+            _ => {
+                let values: Vec<String> =
+                    (0..count).map(|_| self.generate_one(rng)).collect();
+                Arc::new(StringArray::from(
+                    values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+                ))
+            }
+        }
     }
 
     fn output_type(&self) -> DataType {
-        DataType::Utf8
+        match self.category.as_str() {
+            "datetime" | "timestamp" => {
+                DataType::Timestamp(TimeUnit::Nanosecond, None)
+            }
+            "date" => DataType::Date32,
+            _ => DataType::Utf8,
+        }
     }
 }
 
@@ -872,5 +913,33 @@ mod tests {
                 "hex_string should be hex digits: {v}"
             );
         }
+    }
+
+    #[test]
+    fn datetime_produces_timestamp_array() {
+        let g = FakerGenerator::new("datetime".into(), "en_US".into(), vec![]);
+        assert_eq!(
+            g.output_type(),
+            DataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
+        );
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = make_ctx();
+        let arr = g.generate(&mut rng, 10, &ctx);
+        assert_eq!(arr.len(), 10);
+        assert_eq!(
+            *arr.data_type(),
+            DataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
+        );
+    }
+
+    #[test]
+    fn date_produces_date32_array() {
+        let g = FakerGenerator::new("date".into(), "en_US".into(), vec![]);
+        assert_eq!(g.output_type(), DataType::Date32);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = make_ctx();
+        let arr = g.generate(&mut rng, 10, &ctx);
+        assert_eq!(arr.len(), 10);
+        assert_eq!(*arr.data_type(), DataType::Date32);
     }
 }
