@@ -85,3 +85,63 @@ impl<W: Write + Send> Sink for ArrowIpcSink<W> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::{Int32Array, StringArray};
+    use arrow::datatypes::{DataType, Field as ArrowField, Schema};
+
+    fn sample_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            ArrowField::new("id", DataType::Int32, false),
+            ArrowField::new("name", DataType::Utf8, false),
+        ]))
+    }
+
+    fn sample_batch() -> RecordBatch {
+        RecordBatch::try_new(
+            sample_schema(),
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3])),
+                Arc::new(StringArray::from(vec!["alice", "bob", "carol"])),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn ipc_write_and_finish() {
+        let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
+        let mut sink = ArrowIpcSink::new(cursor, sample_schema()).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 3);
+        assert!(stats.bytes_written > 0);
+        assert_eq!(stats.files_created, 1);
+    }
+
+    #[test]
+    fn ipc_multiple_batches() {
+        let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
+        let mut sink = ArrowIpcSink::new(cursor, sample_schema()).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 6);
+    }
+
+    #[test]
+    fn ipc_finish_twice_errors() {
+        let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
+        let sink = ArrowIpcSink::new(cursor, sample_schema()).unwrap();
+        // Manually take the writer to simulate a finished state
+        let mut sink = sink;
+        sink.writer = None;
+        let result = Box::new(sink).finish();
+        assert!(result.is_err());
+    }
+}

@@ -97,3 +97,99 @@ impl<W: Write + Send> Sink for ParquetSink<W> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::{Int32Array, StringArray};
+    use arrow::datatypes::{DataType, Field as ArrowField, Schema};
+
+    fn sample_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            ArrowField::new("id", DataType::Int32, false),
+            ArrowField::new("name", DataType::Utf8, false),
+        ]))
+    }
+
+    fn sample_batch() -> RecordBatch {
+        RecordBatch::try_new(
+            sample_schema(),
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3])),
+                Arc::new(StringArray::from(vec!["alice", "bob", "carol"])),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn parquet_write_and_finish() {
+        let buf = Vec::new();
+        let mut sink =
+            ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 3);
+        assert!(stats.bytes_written > 0);
+        assert_eq!(stats.files_created, 1);
+    }
+
+    #[test]
+    fn parquet_multiple_batches() {
+        let buf = Vec::new();
+        let mut sink =
+            ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 6);
+    }
+
+    #[test]
+    fn parquet_snappy_compression() {
+        let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
+        let mut sink =
+            ParquetSink::new(cursor, sample_schema(), Compression::Snappy, None).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        // Verify the metadata reports snappy compression
+        let writer = sink.writer.take().unwrap();
+        let metadata = writer.close().unwrap();
+        let codec = metadata.row_groups[0].columns[0]
+            .meta_data
+            .as_ref()
+            .expect("column metadata should be present")
+            .codec;
+        assert_eq!(
+            codec,
+            parquet::format::CompressionCodec::SNAPPY
+        );
+    }
+
+    #[test]
+    fn parquet_finish_twice_errors() {
+        let buf = Vec::new();
+        let mut sink =
+            ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
+        sink.writer = None;
+        let result = Box::new(sink).finish();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parquet_custom_row_group_size() {
+        let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
+        let mut sink =
+            ParquetSink::new(cursor, sample_schema(), Compression::None, Some(2)).unwrap();
+        // Write 3 rows with max row group size 2 → should produce 2 row groups
+        sink.write_batch(&sample_batch()).unwrap();
+        let writer = sink.writer.take().unwrap();
+        let metadata = writer.close().unwrap();
+        assert!(
+            metadata.row_groups.len() >= 2,
+            "expected >=2 row groups with max_row_group_size=2, got {}",
+            metadata.row_groups.len()
+        );
+    }
+}
