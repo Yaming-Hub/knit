@@ -68,3 +68,84 @@ impl FieldGenerator for ConstantGenerator {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::context::GenContext;
+    use arrow::array::Array;
+    use rand_chacha::ChaCha8Rng;
+    use rand::SeedableRng;
+    use std::collections::HashMap;
+
+    fn make_ctx() -> GenContext<'static> {
+        let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
+        GenContext::new(map, 0, 0, 1, "test")
+    }
+
+    fn make_rng() -> ChaCha8Rng {
+        ChaCha8Rng::seed_from_u64(42)
+    }
+
+    #[test]
+    fn constant_string() {
+        let gen = ConstantGenerator::new(Value::String("hello".to_string()));
+        let arr = gen.generate(&mut make_rng(), 5, &make_ctx());
+        assert_eq!(arr.len(), 5);
+        let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
+        for i in 0..5 {
+            assert_eq!(str_arr.value(i), "hello");
+        }
+        assert_eq!(gen.output_type(), DataType::Utf8);
+    }
+
+    #[test]
+    fn constant_int() {
+        let gen = ConstantGenerator::new(Value::Int(42));
+        let arr = gen.generate(&mut make_rng(), 3, &make_ctx());
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..3 {
+            assert_eq!(int_arr.value(i), 42);
+        }
+        assert_eq!(gen.output_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn constant_float() {
+        let gen = ConstantGenerator::new(Value::Float(3.14));
+        let arr = gen.generate(&mut make_rng(), 4, &make_ctx());
+        let f_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+        for i in 0..4 {
+            assert!((f_arr.value(i) - 3.14).abs() < f64::EPSILON);
+        }
+        assert_eq!(gen.output_type(), DataType::Float64);
+    }
+
+    #[test]
+    fn constant_bool() {
+        let gen = ConstantGenerator::new(Value::Bool(true));
+        let arr = gen.generate(&mut make_rng(), 3, &make_ctx());
+        let b_arr = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
+        for i in 0..3 {
+            assert!(b_arr.value(i));
+        }
+        assert_eq!(gen.output_type(), DataType::Boolean);
+    }
+
+    #[test]
+    fn constant_null() {
+        let gen = ConstantGenerator::new(Value::Null);
+        let arr = gen.generate(&mut make_rng(), 5, &make_ctx());
+        assert_eq!(arr.len(), 5);
+        // NullArray data type is Null; every element is logically null
+        assert_eq!(*arr.data_type(), DataType::Null);
+        assert_eq!(gen.output_type(), DataType::Null);
+    }
+
+    #[test]
+    fn constant_zero_count() {
+        let gen = ConstantGenerator::new(Value::Int(1));
+        let arr = gen.generate(&mut make_rng(), 0, &make_ctx());
+        assert_eq!(arr.len(), 0);
+    }
+}

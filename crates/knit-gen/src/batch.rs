@@ -43,3 +43,40 @@ pub fn assemble_batch(
     let batch = RecordBatch::try_new(schema, field_arrays)?;
     Ok(batch)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::{Float64Array, Int64Array, StringArray};
+
+    #[test]
+    fn assemble_basic() {
+        let names = vec!["id".to_string(), "name".to_string()];
+        let arrays: Vec<ArrayRef> = vec![
+            Arc::new(Int64Array::from(vec![1, 2, 3])),
+            Arc::new(StringArray::from(vec!["a", "b", "c"])),
+        ];
+        let batch = assemble_batch(&names, arrays).unwrap();
+        assert_eq!(batch.num_rows(), 3);
+        assert_eq!(batch.num_columns(), 2);
+        assert!(batch.schema().field(0).is_nullable());
+    }
+
+    #[test]
+    fn assemble_length_mismatch() {
+        let names = vec!["id".to_string()];
+        let arrays: Vec<ArrayRef> = vec![
+            Arc::new(Int64Array::from(vec![1])),
+            Arc::new(Float64Array::from(vec![2.0])),
+        ];
+        let err = assemble_batch(&names, arrays).unwrap_err();
+        assert!(err.to_string().contains("field_names len"));
+    }
+
+    #[test]
+    fn assemble_empty_columns_fails() {
+        let err = assemble_batch(&[], vec![]).unwrap_err();
+        // Arrow requires at least one column or an explicit row count
+        assert!(matches!(err, GenError::Arrow(_)));
+    }
+}

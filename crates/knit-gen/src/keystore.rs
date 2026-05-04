@@ -77,3 +77,59 @@ impl KeyStore for InMemoryKeyStore {
         self.keys.read().expect("keystore lock poisoned").len()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand_chacha::ChaCha8Rng;
+    use rand::SeedableRng;
+
+    #[test]
+    fn empty_store_returns_none() {
+        let store = InMemoryKeyStore::new();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        assert!(store.sample(&mut rng).is_none());
+        assert!(store.is_empty());
+        assert_eq!(store.len(), 0);
+    }
+
+    #[test]
+    fn single_key_always_returned() {
+        let store = InMemoryKeyStore::new();
+        store.insert(7);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        for _ in 0..100 {
+            assert_eq!(store.sample(&mut rng), Some(7));
+        }
+    }
+
+    #[test]
+    fn all_inserted_keys_sampled() {
+        let store = InMemoryKeyStore::with_capacity(10);
+        for k in 0..10 {
+            store.insert(k);
+        }
+        assert_eq!(store.len(), 10);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let mut seen = std::collections::HashSet::new();
+        // With 10 keys and 1000 samples, we expect to see all keys
+        for _ in 0..1000 {
+            seen.insert(store.sample(&mut rng).unwrap());
+        }
+        assert_eq!(seen.len(), 10, "expected all 10 keys to be sampled");
+    }
+
+    #[test]
+    fn deterministic_sampling() {
+        let store = InMemoryKeyStore::new();
+        for k in 1..=50 {
+            store.insert(k);
+        }
+        let mut rng1 = ChaCha8Rng::seed_from_u64(99);
+        let mut rng2 = ChaCha8Rng::seed_from_u64(99);
+        for _ in 0..100 {
+            assert_eq!(store.sample(&mut rng1), store.sample(&mut rng2));
+        }
+    }
+}
