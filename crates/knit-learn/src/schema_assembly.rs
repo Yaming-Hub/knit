@@ -315,6 +315,13 @@ fn build_generator(
         }
     }
 
+    // Column name heuristic — map common names to appropriate faker methods.
+    // Placed before string pattern matching so semantic names override generic patterns
+    // (e.g., "PostalCode" → zip_code instead of phone pattern match).
+    if let Some(method) = faker_method_from_column_name(&col.name) {
+        return GeneratorSpec::Faker { method: method.into(), args: vec![] };
+    }
+
     // String pattern → Faker
     if let Some((pattern, _rate)) = col.string_patterns.first() {
         match pattern {
@@ -340,7 +347,17 @@ fn build_generator(
         }
     }
 
-    // Fallback: no generator (let the planner decide)
+    // Fallback: use faker("word") for string/text columns, sequence for others
+    if matches!(
+        col.inferred_type,
+        Some(InferredType::Text) | Some(InferredType::Categorical)
+    ) || !col.string_patterns.is_empty()
+    {
+        return GeneratorSpec::Faker {
+            method: "word".into(),
+            args: vec![],
+        };
+    }
     GeneratorSpec::Sequence {
         start: 1,
         step: 1,
@@ -460,6 +477,44 @@ fn days_to_ymd(days: i64) -> (i32, u32, u32) {
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = if m <= 2 { y + 1 } else { y };
     (y as i32, m, d)
+}
+
+/// Map common column names to faker methods using keyword heuristics.
+/// More specific patterns are checked first to avoid false positives
+/// (e.g., "company_url" should match url, not company).
+fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
+    let lower = name.to_lowercase();
+    // URL-like patterns (checked first — most specific)
+    if lower.contains("url") || lower.contains("website") || lower.contains("homepage") {
+        return Some("url");
+    }
+    // Geographic / address patterns
+    if lower.contains("address") || lower.contains("street") {
+        return Some("address");
+    }
+    if lower == "city" || lower.ends_with("_city") || lower.starts_with("city_") {
+        return Some("city");
+    }
+    if lower == "state" || lower == "province" || lower.ends_with("_state") {
+        return Some("state");
+    }
+    if lower == "country" || lower.ends_with("_country") || lower.starts_with("country_") {
+        return Some("country");
+    }
+    if lower.contains("zip") || lower.contains("postal") {
+        return Some("zip_code");
+    }
+    // Organization
+    if lower == "company" || lower.ends_with("_company") || lower.starts_with("company_")
+        || lower.contains("organization") || lower.contains("organisation")
+    {
+        return Some("company");
+    }
+    // Domain (exact or boundary match to avoid "domain_id" → faker)
+    if lower == "domain" || lower.ends_with("_domain") || lower == "domain_name" {
+        return Some("domain");
+    }
+    None
 }
 
 /// Infer a [`knit_core::DataType`] from column analysis.

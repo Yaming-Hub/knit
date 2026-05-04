@@ -175,7 +175,24 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         distinct.insert(v);
     }
     let cardinality_ratio = distinct.len() as f64 / total;
-    if !has_strong_pattern && cardinality_ratio <= categorical_threshold && distinct.len() <= 200 {
+    // For small datasets, relax the threshold so columns with repeated values are captured.
+    // E.g., 11 rows with 5 distinct countries (ratio=0.45) should be categorical.
+    // Also cap distinct count based on dataset size to avoid treating free-text as categorical.
+    let effective_threshold = if total <= 50.0 {
+        categorical_threshold.max(0.8)
+    } else if total <= 200.0 {
+        categorical_threshold.max(0.5)
+    } else {
+        categorical_threshold
+    };
+    let max_distinct = if total <= 50.0 {
+        30_usize
+    } else if total <= 200.0 {
+        50
+    } else {
+        200
+    };
+    if !has_strong_pattern && cardinality_ratio <= effective_threshold && distinct.len() <= max_distinct {
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,
