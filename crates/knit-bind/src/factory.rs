@@ -113,6 +113,34 @@ mod tests {
     use super::*;
     use arrow::array::{Int32Array, StringArray};
     use arrow::datatypes::{DataType, Field as ArrowField};
+    use parking_lot::Mutex;
+
+    /// A writer backed by a shared buffer so we can inspect output after the sink
+    /// consumes the writer.
+    #[derive(Clone)]
+    struct SharedBuf(Arc<Mutex<Vec<u8>>>);
+
+    impl SharedBuf {
+        fn new() -> Self {
+            Self(Arc::new(Mutex::new(Vec::new())))
+        }
+        fn bytes(&self) -> Vec<u8> {
+            self.0.lock().clone()
+        }
+        fn to_string(&self) -> String {
+            String::from_utf8(self.bytes()).unwrap()
+        }
+    }
+
+    impl Write for SharedBuf {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
 
     fn sample_schema() -> Arc<Schema> {
         Arc::new(Schema::new(vec![
@@ -134,80 +162,107 @@ mod tests {
 
     #[test]
     fn factory_csv() {
+        let buf = SharedBuf::new();
         let config = SinkConfig {
             format: OutputFormat::Csv,
             ..Default::default()
         };
-        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let writer: Box<dyn Write + Send> = Box::new(buf.clone());
         let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
+        let content = buf.to_string();
+        assert!(content.contains("id,name"), "CSV output should contain header");
+        assert!(content.contains("1,a"), "CSV output should contain data");
     }
 
     #[test]
     fn factory_json() {
+        let buf = SharedBuf::new();
         let config = SinkConfig {
             format: OutputFormat::Json,
             ..Default::default()
         };
-        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let writer: Box<dyn Write + Send> = Box::new(buf.clone());
         let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
+        let content = buf.to_string();
+        assert!(content.contains('['), "JSON array output should start with [");
+        assert!(content.contains("\"id\""), "JSON output should contain field names");
     }
 
     #[test]
     fn factory_jsonl() {
+        let buf = SharedBuf::new();
         let config = SinkConfig {
             format: OutputFormat::Jsonl,
             ..Default::default()
         };
-        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let writer: Box<dyn Write + Send> = Box::new(buf.clone());
         let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
+        let content = buf.to_string();
+        let lines: Vec<&str> = content.trim().lines().collect();
+        assert_eq!(lines.len(), 2, "JSONL should have one line per record");
+        assert!(lines[0].contains("\"id\""), "JSONL line should contain field name");
     }
 
     #[test]
     fn factory_parquet() {
+        let buf = SharedBuf::new();
         let config = SinkConfig {
             format: OutputFormat::Parquet,
             ..Default::default()
         };
-        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let writer: Box<dyn Write + Send> = Box::new(buf.clone());
         let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
+        // Parquet magic bytes: PAR1
+        let bytes = buf.bytes();
+        assert!(bytes.len() >= 4, "Parquet output should not be empty");
+        assert_eq!(&bytes[..4], b"PAR1", "Parquet output should start with magic bytes");
     }
 
     #[test]
     fn factory_arrow_ipc() {
+        let buf = SharedBuf::new();
         let config = SinkConfig {
             format: OutputFormat::ArrowIpc,
             ..Default::default()
         };
-        let writer: Box<dyn Write + Send> = Box::new(std::io::Cursor::new(Vec::<u8>::new()));
+        let writer: Box<dyn Write + Send> = Box::new(buf.clone());
         let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
+        // Arrow IPC magic bytes: ARROW1
+        let bytes = buf.bytes();
+        assert!(bytes.len() >= 6, "IPC output should not be empty");
+        assert_eq!(&bytes[..6], b"ARROW1", "IPC output should start with magic bytes");
     }
 
     #[test]
     fn factory_template() {
+        let buf = SharedBuf::new();
         let config = SinkConfig {
             format: OutputFormat::Template,
-            template_source: "{{ id }},{{ name }}\n".to_string(),
+            template_source: "ROW:{{ row.id }},{{ row.name }}\n".to_string(),
             ..Default::default()
         };
-        let writer: Box<dyn Write + Send> = Box::new(Vec::<u8>::new());
+        let writer: Box<dyn Write + Send> = Box::new(buf.clone());
         let mut sink = create_sink(writer, sample_schema(), &config).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
+        let content = buf.to_string();
+        assert!(content.contains("ROW:1,a"), "template output should contain rendered row");
+        assert!(content.contains("ROW:2,b"), "template output should contain second row");
     }
 }

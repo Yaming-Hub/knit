@@ -148,11 +148,22 @@ mod tests {
     #[test]
     fn parquet_snappy_compression() {
         let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
         let mut sink =
-            ParquetSink::new(buf, sample_schema(), Compression::Snappy, None).unwrap();
+            ParquetSink::new(cursor, sample_schema(), Compression::Snappy, None).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
-        let stats = Box::new(sink).finish().unwrap();
-        assert_eq!(stats.rows_written, 3);
+        // Verify the metadata reports snappy compression
+        let writer = sink.writer.take().unwrap();
+        let metadata = writer.close().unwrap();
+        let codec = metadata.row_groups[0].columns[0]
+            .meta_data
+            .as_ref()
+            .expect("column metadata should be present")
+            .codec;
+        assert_eq!(
+            codec,
+            parquet::format::CompressionCodec::SNAPPY
+        );
     }
 
     #[test]
@@ -168,10 +179,17 @@ mod tests {
     #[test]
     fn parquet_custom_row_group_size() {
         let buf = Vec::new();
+        let cursor = std::io::Cursor::new(buf);
         let mut sink =
-            ParquetSink::new(buf, sample_schema(), Compression::None, Some(2)).unwrap();
+            ParquetSink::new(cursor, sample_schema(), Compression::None, Some(2)).unwrap();
+        // Write 3 rows with max row group size 2 → should produce 2 row groups
         sink.write_batch(&sample_batch()).unwrap();
-        let stats = Box::new(sink).finish().unwrap();
-        assert_eq!(stats.rows_written, 3);
+        let writer = sink.writer.take().unwrap();
+        let metadata = writer.close().unwrap();
+        assert!(
+            metadata.row_groups.len() >= 2,
+            "expected >=2 row groups with max_row_group_size=2, got {}",
+            metadata.row_groups.len()
+        );
     }
 }

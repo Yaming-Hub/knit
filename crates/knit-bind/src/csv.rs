@@ -111,6 +111,30 @@ mod tests {
     use arrow::array::{Int32Array, StringArray};
     use arrow::datatypes::{DataType, Field as ArrowField, Schema};
 
+    /// A writer backed by a shared buffer so we can inspect output after the sink
+    /// consumes the writer.
+    #[derive(Clone)]
+    struct SharedBuf(Arc<Mutex<Vec<u8>>>);
+
+    impl SharedBuf {
+        fn new() -> Self {
+            Self(Arc::new(Mutex::new(Vec::new())))
+        }
+        fn to_string(&self) -> String {
+            String::from_utf8(self.0.lock().clone()).unwrap()
+        }
+    }
+
+    impl Write for SharedBuf {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
     fn sample_batch() -> RecordBatch {
         let schema = Arc::new(Schema::new(vec![
             ArrowField::new("id", DataType::Int32, false),
@@ -128,19 +152,22 @@ mod tests {
 
     #[test]
     fn csv_write_single_batch() {
-        let buf = std::io::Cursor::new(Vec::new());
+        let buf = SharedBuf::new();
         let config = CsvSinkConfig::default();
-        let mut sink = CsvSink::new(buf, &config);
+        let mut sink = CsvSink::new(buf.clone(), &config);
         sink.write_batch(&sample_batch()).unwrap();
         let stats = Box::new(sink).finish().unwrap();
         assert_eq!(stats.rows_written, 3);
         assert!(stats.bytes_written > 0);
         assert_eq!(stats.files_created, 1);
+        let content = buf.to_string();
+        assert!(content.contains("id,name"), "should contain CSV header");
+        assert!(content.contains("1,alice"), "should contain first data row");
     }
 
     #[test]
     fn csv_write_multiple_batches() {
-        let buf = std::io::Cursor::new(Vec::new());
+        let buf = SharedBuf::new();
         let config = CsvSinkConfig::default();
         let mut sink = CsvSink::new(buf, &config);
         sink.write_batch(&sample_batch()).unwrap();
@@ -150,37 +177,34 @@ mod tests {
     }
 
     #[test]
-    fn csv_custom_delimiter_produces_bytes() {
-        let buf = std::io::Cursor::new(Vec::new());
+    fn csv_custom_delimiter_in_output() {
+        let buf = SharedBuf::new();
         let config = CsvSinkConfig {
             delimiter: b'\t',
             header: true,
             null_value: String::new(),
         };
-        let mut sink = CsvSink::new(buf, &config);
+        let mut sink = CsvSink::new(buf.clone(), &config);
         sink.write_batch(&sample_batch()).unwrap();
-        let stats = Box::new(sink).finish().unwrap();
-        assert_eq!(stats.rows_written, 3);
-        assert!(stats.bytes_written > 0);
+        Box::new(sink).finish().unwrap();
+        let content = buf.to_string();
+        assert!(content.contains("id\tname"), "header should use tab delimiter");
+        assert!(content.contains("1\talice"), "data should use tab delimiter");
+        assert!(!content.contains("id,name"), "should not contain comma delimiter");
     }
 
     #[test]
-    fn csv_no_header_smaller_output() {
-        let buf_with = std::io::Cursor::new(Vec::new());
-        let buf_without = std::io::Cursor::new(Vec::new());
-
-        let config_with = CsvSinkConfig { header: true, ..Default::default() };
-        let config_without = CsvSinkConfig { header: false, ..Default::default() };
-
-        let mut sink_with = CsvSink::new(buf_with, &config_with);
-        sink_with.write_batch(&sample_batch()).unwrap();
-        let stats_with = Box::new(sink_with).finish().unwrap();
-
-        let mut sink_without = CsvSink::new(buf_without, &config_without);
-        sink_without.write_batch(&sample_batch()).unwrap();
-        let stats_without = Box::new(sink_without).finish().unwrap();
-
-        // Without header should be smaller
-        assert!(stats_without.bytes_written < stats_with.bytes_written);
+    fn csv_no_header_omits_header_row() {
+        let buf = SharedBuf::new();
+        let config = CsvSinkConfig {
+            header: false,
+            ..Default::default()
+        };
+        let mut sink = CsvSink::new(buf.clone(), &config);
+        sink.write_batch(&sample_batch()).unwrap();
+        Box::new(sink).finish().unwrap();
+        let content = buf.to_string();
+        assert!(!content.contains("id,name"), "should not contain header row");
+        assert!(content.starts_with("1,alice"), "should start with data row");
     }
 }
