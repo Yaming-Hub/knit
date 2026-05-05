@@ -144,6 +144,10 @@ pub struct Field {
     /// Whether this field is the entity's primary key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub primary_key: Option<bool>,
+    /// Number of decimal places for float output (e.g. `2` for currency).
+    /// When set, generated float values are rounded to this many decimal places.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub precision: Option<u8>,
 }
 
 fn default_data_type() -> DataType {
@@ -987,7 +991,8 @@ mod tests {
                         }),
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
-                    },
+            precision: None,
+        },
                     Field {
                         name: "email".into(),
                         description: Some("User email".into()),
@@ -998,7 +1003,8 @@ mod tests {
                         }),
                         nullable: NullSpec::Probability(0.01),
                         primary_key: None,
-                    },
+            precision: None,
+        },
                 ],
                 constraints: vec![Constraint::Unique {
                     fields: vec!["email".into()],

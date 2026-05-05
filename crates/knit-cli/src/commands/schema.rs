@@ -494,6 +494,9 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
                     out.push_str("primary_key = true\n");
                 }
             }
+            if let Some(prec) = field.precision {
+                out.push_str(&format!("precision = {}\n", prec));
+            }
             // Serialize generator if present
             if let Some(gen) = &field.generator {
                 let gen_val = toml::Value::try_from(gen);
@@ -559,6 +562,7 @@ mod tests {
             generator: None,
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         }
     }
 

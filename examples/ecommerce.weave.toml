@@ -94,6 +94,7 @@ args = []
 [[entities.fields]]
 name = "price"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "log_normal"
@@ -161,6 +162,7 @@ s = 1.5
 [[entities.fields]]
 name = "total_amount"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "pareto"

@@ -189,6 +189,7 @@ fn build_entity(
             generator: Some(generator),
             nullable,
             primary_key: if col.is_primary_key { Some(true) } else { None },
+            precision: None,
         });
     }
 
@@ -1563,7 +1564,8 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
             Field {
                 name: "EndDate".into(),
                 description: None,
@@ -1574,7 +1576,8 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
         ];
         let pairs = find_temporal_pairs(&fields);
         assert_eq!(pairs.len(), 1);
@@ -1592,7 +1595,8 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
             Field {
                 name: "end_balance".into(),
                 description: None,
@@ -1600,7 +1604,8 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
         ];
         let pairs = find_temporal_pairs(&fields);
         assert!(pairs.is_empty(), "non-temporal fields should not be paired");
@@ -1651,7 +1656,8 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
             Field {
                 name: "EndDate".into(),
                 description: None,
@@ -1662,7 +1668,8 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
         ];
         rewrite_temporal_pairs(&mut fields, &cols);
 

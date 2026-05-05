@@ -85,6 +85,13 @@ fn validate_fields(
             &field.nullable,
             errors,
         );
+        // precision is only meaningful for float types
+        if field.precision.is_some() && field.data_type != DataType::Float {
+            errors.push(SchemaError::Validation {
+                path: format!("entities.{}.fields.{}.precision", entity.name, field.name),
+                message: "precision is only valid for float64 fields".to_string(),
+            });
+        }
     }
     if pk_count > 1 {
         errors.push(SchemaError::Validation {
@@ -931,7 +938,8 @@ mod tests {
                         generator: None,
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
-                    },
+            precision: None,
+        },
                     Field {
                         name: "email".to_string(),
                         description: None,
@@ -939,7 +947,8 @@ mod tests {
                         generator: None,
                         nullable: NullSpec::Never,
                         primary_key: None,
-                    },
+            precision: None,
+        },
                 ],
                 constraints: vec![],
                 topology: None,
@@ -979,6 +988,7 @@ mod tests {
             generator: None,
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1027,7 +1037,8 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
-            }],
+            precision: None,
+        }],
             constraints: vec![],
             topology: None,
         });
@@ -1179,6 +1190,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1204,6 +1216,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(
@@ -1233,6 +1246,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1262,6 +1276,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1287,6 +1302,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1312,6 +1328,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(
@@ -1341,6 +1358,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1404,6 +1422,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1421,6 +1440,7 @@ mod tests {
             generator: Some(GeneratorSpec::OneOf { choices: vec![] }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1441,6 +1461,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1461,6 +1482,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(
@@ -1482,6 +1504,7 @@ mod tests {
             generator: Some(GeneratorSpec::UuidGen { version: 3 }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1503,6 +1526,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1524,6 +1548,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(
@@ -1548,6 +1573,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1574,6 +1600,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1594,6 +1621,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1617,6 +1645,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1642,7 +1671,8 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
-            }],
+            precision: None,
+        }],
             constraints: vec![],
             topology: None,
         });
@@ -1659,6 +1689,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {

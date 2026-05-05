@@ -196,6 +196,7 @@ fn compile_field_plans(
             generator_plan,
             null_plan,
             dependency_order,
+            precision: field.precision,
         });
     }
 
@@ -376,6 +377,7 @@ fn compile_generator_from_spec(
         generator: Some(spec.clone()),
         nullable: NullSpec::Never,
         primary_key: None,
+        precision: None,
     };
     compile_generator(&dummy_field, all_fields)
 }
@@ -571,6 +573,7 @@ fn compute_generator_spec_deps(spec: &GeneratorSpec, all_fields: &[Field]) -> u3
         nullable: NullSpec::default(),
         generator: Some(spec.clone()),
         primary_key: None,
+        precision: None,
     };
     compute_dependency_order(&tmp, all_fields)
 }
@@ -647,7 +650,8 @@ mod tests {
                     }),
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
-                },
+            precision: None,
+        },
                 Field {
                     name: "name".to_string(),
                     description: None,
@@ -658,7 +662,8 @@ mod tests {
                     }),
                     nullable: NullSpec::Never,
                     primary_key: None,
-                },
+            precision: None,
+        },
             ],
             constraints: vec![],
             topology: None,
@@ -780,6 +785,7 @@ mod tests {
             generator: None,
             nullable: NullSpec::Probability(0.1),
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model(
@@ -819,6 +825,7 @@ mod tests {
             generator: None,
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let mut entity_b = simple_entity("b", 1000);
@@ -829,6 +836,7 @@ mod tests {
             generator: None,
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model(
@@ -952,6 +960,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -987,6 +996,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("autoround", vec![entity], vec![]);
@@ -1023,6 +1033,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("noround", vec![entity], vec![]);
@@ -1079,6 +1090,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1109,6 +1121,7 @@ mod tests {
             generator: Some(GeneratorSpec::UuidGen { version: 4 }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1130,6 +1143,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1163,6 +1177,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         entity.fields.push(Field {
             name: "tax".to_string(),
@@ -1173,6 +1188,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1205,6 +1221,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
         entity.fields.push(Field {
             name: "label".to_string(),
@@ -1215,6 +1232,7 @@ mod tests {
             }),
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model("params", vec![entity], vec![]);
@@ -1299,6 +1317,7 @@ mod tests {
             generator: None,
             nullable: NullSpec::Never,
             primary_key: None,
+            precision: None,
         });
 
         let model = simple_model(
@@ -1359,7 +1378,8 @@ mod tests {
                     }),
                     nullable: NullSpec::Never,
                     primary_key: None,
-                }],
+            precision: None,
+        }],
                 constraints: vec![],
                 topology: None,
             }],
@@ -1388,7 +1408,8 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
             Field {
                 name: "price".to_string(),
                 description: None,
@@ -1396,7 +1417,8 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            },
+            precision: None,
+        },
         ];
         // "price * 2" should match only "price", not "p"
         let deps = extract_dependencies("price * 2", &fields);
@@ -1505,7 +1527,8 @@ mod tests {
                     offset: Value::Int(3600),
                 }),
                 primary_key: None,
-            },
+            precision: None,
+        },
             Field {
                 name: "start_date".to_string(),
                 description: None,
@@ -1519,7 +1542,8 @@ mod tests {
                     },
                 }),
                 primary_key: None,
-            },
+            precision: None,
+        },
         ];
         let order_end = compute_dependency_order(&fields[0], &fields);
         let order_start = compute_dependency_order(&fields[1], &fields);
