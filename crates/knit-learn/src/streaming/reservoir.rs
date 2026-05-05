@@ -67,9 +67,9 @@ impl ReservoirSample {
 
     /// Merge another reservoir sample into this one.
     ///
-    /// Uses weighted reservoir merging: items from both samples are
+    /// Uses population-weighted selection: items from each source are
     /// retained with probability proportional to their source population
-    /// size.
+    /// size (`total_seen`).
     pub fn merge(&mut self, other: &ReservoirSample) {
         if other.total_seen == 0 {
             return;
@@ -79,11 +79,12 @@ impl ReservoirSample {
             return;
         }
 
-        let combined_total = self.total_seen + other.total_seen;
+        let combined_total = self.total_seen.saturating_add(other.total_seen);
+        let self_weight = self.total_seen as f64 / combined_total as f64;
 
-        // For each slot in the merged reservoir, decide whether it comes
-        // from self or other, weighted by total_seen.
+        let mut rng_state = self.rng_state ^ other.rng_state;
         let mut merged = Vec::with_capacity(self.capacity);
+
         let combined_items: Vec<&String> =
             self.items.iter().chain(other.items.iter()).collect();
 
@@ -91,17 +92,20 @@ impl ReservoirSample {
             // Both fit entirely
             merged = combined_items.into_iter().cloned().collect();
         } else {
-            // Weighted random selection using Fisher-Yates on the combined pool
-            let mut pool: Vec<String> =
-                combined_items.into_iter().cloned().collect();
-            let mut rng_state = self.rng_state ^ other.rng_state;
-            for i in 0..self.capacity.min(pool.len()) {
-                let j = i + (splitmix64(&mut rng_state) as usize
-                    % (pool.len() - i));
-                pool.swap(i, j);
+            // Population-weighted selection: for each slot, pick from self's
+            // items with probability self_weight, else from other's items.
+            for _ in 0..self.capacity {
+                let r = (splitmix64(&mut rng_state) as f64) / (u64::MAX as f64);
+                let source = if r < self_weight {
+                    &self.items
+                } else {
+                    &other.items
+                };
+                if !source.is_empty() {
+                    let idx = splitmix64(&mut rng_state) as usize % source.len();
+                    merged.push(source[idx].clone());
+                }
             }
-            pool.truncate(self.capacity);
-            merged = pool;
             self.rng_state = rng_state;
         }
 

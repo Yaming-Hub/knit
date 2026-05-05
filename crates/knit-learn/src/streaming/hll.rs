@@ -65,11 +65,13 @@ impl HyperLogLog {
         let m = self.registers.len();
         let idx = (hash as usize) & (m - 1);
         let remaining = hash >> self.precision;
-        // Count leading zeros in the remaining bits + 1
+        // Count leading zeros in the remaining bits + 1 (ρ function).
+        // For a k-bit word of all zeros, ρ = k + 1.
+        let bits = (64 - self.precision) as u8;
         let rho = if remaining == 0 {
-            (64 - self.precision) as u8
+            bits + 1
         } else {
-            (remaining.leading_zeros() as u8 - self.precision + 1).min(64 - self.precision)
+            (remaining.leading_zeros() as u8 - self.precision + 1).min(bits + 1)
         };
         if rho > self.registers[idx] {
             self.registers[idx] = rho;

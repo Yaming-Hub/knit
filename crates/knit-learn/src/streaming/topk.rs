@@ -66,11 +66,11 @@ impl TopKTracker {
         if self.items.len() < self.capacity {
             self.items.insert(item.to_string(), 1);
         } else {
-            // Find the minimum-count item
+            // Find the minimum-count item (deterministic tie-breaking by key)
             let min_entry = self
                 .items
                 .iter()
-                .min_by_key(|(_, &count)| count)
+                .min_by(|a, b| a.1.cmp(b.1).then(a.0.cmp(b.0)))
                 .map(|(k, &v)| (k.clone(), v));
 
             if let Some((min_key, min_count)) = min_entry {
@@ -85,7 +85,7 @@ impl TopKTracker {
     ///
     /// Combines counts for shared items and keeps the top-K by count.
     pub fn merge(&mut self, other: &TopKTracker) {
-        self.total += other.total;
+        self.total = self.total.saturating_add(other.total);
 
         // Add all counts from other
         for (item, &count) in &other.items {
@@ -93,11 +93,12 @@ impl TopKTracker {
         }
 
         // Trim to capacity by removing lowest-count items
+        // (deterministic tie-breaking by lexicographic key order)
         while self.items.len() > self.capacity {
             let min_key = self
                 .items
                 .iter()
-                .min_by_key(|(_, &count)| count)
+                .min_by(|a, b| a.1.cmp(b.1).then(a.0.cmp(b.0)))
                 .map(|(k, _)| k.clone());
             if let Some(key) = min_key {
                 self.items.remove(&key);
