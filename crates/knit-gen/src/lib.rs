@@ -25,6 +25,7 @@ pub mod keystore;
 pub mod null_mask;
 pub mod plugin;
 pub mod sampled_key_store;
+pub mod string_keystore;
 pub mod traits;
 
 pub use batch::assemble_batch;
@@ -33,11 +34,13 @@ pub use engine::GenerationEngine;
 pub use error::GenError;
 pub use generators::create_generator;
 pub use generators::fk::ForeignKeyGenerator;
+pub use generators::string_fk::StringForeignKeyGenerator;
 pub use keystore::InMemoryKeyStore;
 pub use null_mask::apply_null_mask;
 pub use plugin::{registry, GeneratorPlugin, Registry};
 pub use sampled_key_store::SampledKeyStore;
-pub use traits::{FieldGenerator, KeyStore};
+pub use string_keystore::InMemoryStringKeyStore;
+pub use traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 #[cfg(test)]
 mod tests {

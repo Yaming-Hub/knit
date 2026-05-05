@@ -16,6 +16,7 @@ pub mod fk;
 pub mod one_of;
 pub mod pattern;
 pub mod sequence;
+pub mod string_fk;
 pub mod temporal;
 pub mod topology;
 pub mod unique;

@@ -79,3 +79,26 @@ pub trait KeyStore: Send + Sync {
         self.len() == 0
     }
 }
+
+/// Thread-safe key store for string/UUID foreign-key resolution.
+///
+/// Parallel to [`KeyStore`] but stores `String` values for UUID and
+/// string-typed primary keys. Used by [`StringForeignKeyGenerator`](crate::generators::string_fk::StringForeignKeyGenerator).
+pub trait StringKeyStore: Send + Sync {
+    /// Insert a primary-key value into the store.
+    fn insert(&self, key: String);
+
+    /// Sample a random key uniformly from the store.
+    ///
+    /// Returns `None` if the store is empty (no parent rows generated yet).
+    /// Clones the sampled value to avoid holding a lock across generation.
+    fn sample(&self, rng: &mut dyn RngCore) -> Option<String>;
+
+    /// Return the number of keys currently stored.
+    fn len(&self) -> usize;
+
+    /// Returns `true` if the store contains no keys.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}

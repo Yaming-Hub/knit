@@ -91,12 +91,19 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
             estimated_total_rows += row_count;
             estimated_total_bytes += estimated_byte_size;
 
+            // Find the primary-key field index explicitly from the source schema.
+            let primary_key_field_index = entity
+                .fields
+                .iter()
+                .position(|f| f.primary_key.unwrap_or(false));
+
             entity_plans.push(EntityPlan {
                 entity_name: entity_name.clone(),
                 partitions,
                 field_plans,
                 estimated_row_count: row_count,
                 estimated_byte_size,
+                primary_key_field_index,
             });
         }
 
@@ -154,14 +161,16 @@ fn compile_field_plans(
 
     for field in &entity.fields {
         // Check if this field is a foreign key.
-        // Only use FK generator if the field's declared type is numeric (Int/Int32).
-        // String/UUID FK columns keep their declared generator (uuid, categorical, etc.)
+        // Use FK generator for Int/Int32/Uuid/String typed fields.
         let generator_plan = if let Some(&target_entity) = fk_map.get(field.name.as_str()) {
-            let is_numeric_fk = matches!(
+            let is_fk_compatible = matches!(
                 field.data_type,
-                knit_core::DataType::Int | knit_core::DataType::Int32
+                knit_core::DataType::Int
+                    | knit_core::DataType::Int32
+                    | knit_core::DataType::Uuid
+                    | knit_core::DataType::String
             );
-            if is_numeric_fk {
+            if is_fk_compatible {
                 let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
                 let key_store_kind = select_key_store_kind(target_rows);
                 GeneratorPlan::ForeignKey {

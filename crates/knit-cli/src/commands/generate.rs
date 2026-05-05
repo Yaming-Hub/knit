@@ -436,9 +436,11 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
 
     let generator_type = infer_arrow_type(&fp.generator_plan);
 
-    // If declared type is String but generator produces non-string (e.g. sequence/distribution
-    // for numeric-string columns), force Utf8 output with cast
-    if fp.data_type == knit_core::DataType::String && generator_type != ArrowDataType::Utf8 {
+    // If declared type is String/Uuid but generator produces non-string (e.g. FK generator
+    // that now produces StringArray, or sequence for numeric-string columns), force Utf8 output
+    if (fp.data_type == knit_core::DataType::String || fp.data_type == knit_core::DataType::Uuid)
+        && generator_type != ArrowDataType::Utf8
+    {
         return ArrowDataType::Utf8;
     }
 
@@ -527,7 +529,7 @@ fn string_to_list_array(
 ) -> Option<ArrayRef> {
     use arrow::array::{
         Array, as_string_array, Int32Builder, Int64Builder, ListBuilder, StringBuilder,
-        GenericListArray, OffsetSizeTrait,
+        GenericListArray,
     };
 
     // Only attempt conversion if source column is actually a string array
