@@ -242,6 +242,13 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
                     batch.schema()
                 });
 
+                // For CSV, flatten nested types in the schema to Utf8
+                let schema = if matches!(format, OutputFormat::Csv) {
+                    Arc::new(flatten_schema_for_csv(&schema))
+                } else {
+                    schema
+                };
+
                 let sink_config = SinkConfig {
                     format,
                     compression,
@@ -258,6 +265,14 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
                 batch.schema()
             });
             let batch = cast_batch_to_schema(&batch, &target_schema)?;
+
+            // For CSV format, flatten nested columns (List, Map) to JSON strings
+            // since CSV doesn't support nested structures.
+            let batch = if matches!(format, OutputFormat::Csv) {
+                flatten_nested_columns(&batch)?
+            } else {
+                batch
+            };
 
             // Write batch
             let sink = sinks.get_mut(entity_name).ok_or_else(|| {
@@ -1035,4 +1050,195 @@ fn value_to_string(v: &knit_core::Value) -> String {
         knit_core::Value::Array(arr) => serde_json::to_string(arr).unwrap_or_default(),
         knit_core::Value::Map(map) => serde_json::to_string(map).unwrap_or_default(),
     }
+}
+
+/// Flatten a schema for CSV output by converting nested types (List, Map, Struct)
+/// to Utf8 (they'll be serialized as JSON strings).
+fn flatten_schema_for_csv(schema: &Schema) -> Schema {
+    let fields: Vec<ArrowField> = schema
+        .fields()
+        .iter()
+        .map(|f| {
+            if is_nested_type(f.data_type()) {
+                ArrowField::new(f.name(), ArrowDataType::Utf8, f.is_nullable())
+            } else {
+                f.as_ref().clone()
+            }
+        })
+        .collect();
+    Schema::new(fields)
+}
+
+/// Convert nested columns (List, Map, Struct) to JSON string representation
+/// for formats that don't support nested structures (e.g. CSV).
+fn flatten_nested_columns(batch: &RecordBatch) -> Result<RecordBatch, knit_gen::GenError> {
+    use arrow::array::StringArray;
+
+    let schema = batch.schema();
+    let mut columns: Vec<arrow::array::ArrayRef> = Vec::with_capacity(batch.num_columns());
+    let mut fields: Vec<ArrowField> = Vec::with_capacity(batch.num_columns());
+
+    for (i, field) in schema.fields().iter().enumerate() {
+        let col = batch.column(i);
+        if is_nested_type(field.data_type()) {
+            let json_strings: Vec<Option<String>> = (0..col.len())
+                .map(|row| {
+                    if col.is_null(row) {
+                        None
+                    } else {
+                        Some(array_value_to_json_string(col, row))
+                    }
+                })
+                .collect();
+            let string_arr = StringArray::from(json_strings);
+            columns.push(Arc::new(string_arr));
+            fields.push(ArrowField::new(field.name(), ArrowDataType::Utf8, field.is_nullable()));
+        } else {
+            columns.push(Arc::clone(col));
+            fields.push(field.as_ref().clone());
+        }
+    }
+
+    RecordBatch::try_new(Arc::new(Schema::new(fields)), columns)
+        .map_err(|e| knit_gen::GenError::Generation(format!("flatten error: {e}")))
+}
+
+/// Check if an Arrow data type is a nested/complex type.
+fn is_nested_type(dt: &ArrowDataType) -> bool {
+    matches!(
+        dt,
+        ArrowDataType::List(_)
+            | ArrowDataType::LargeList(_)
+            | ArrowDataType::FixedSizeList(_, _)
+            | ArrowDataType::Map(_, _)
+            | ArrowDataType::Struct(_)
+    )
+}
+
+/// Serialize a single array element at the given row index to a JSON string.
+fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> String {
+    use arrow::array::*;
+    use serde_json::Value as JVal;
+
+    fn arr_to_json(arr: &dyn Array, row: usize) -> JVal {
+        if arr.is_null(row) {
+            return JVal::Null;
+        }
+        match arr.data_type() {
+            ArrowDataType::Utf8 => {
+                let a = arr.as_any().downcast_ref::<StringArray>().unwrap();
+                JVal::String(a.value(row).to_string())
+            }
+            ArrowDataType::LargeUtf8 => {
+                let a = arr.as_any().downcast_ref::<LargeStringArray>().unwrap();
+                JVal::String(a.value(row).to_string())
+            }
+            ArrowDataType::Int32 => {
+                let a = arr.as_any().downcast_ref::<Int32Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::Int64 => {
+                let a = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::Float64 => {
+                let a = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+                serde_json::Number::from_f64(a.value(row))
+                    .map(JVal::Number)
+                    .unwrap_or(JVal::Null)
+            }
+            ArrowDataType::Boolean => {
+                let a = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
+                JVal::Bool(a.value(row))
+            }
+            ArrowDataType::Int8 => {
+                let a = arr.as_any().downcast_ref::<Int8Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::Int16 => {
+                let a = arr.as_any().downcast_ref::<Int16Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::UInt8 => {
+                let a = arr.as_any().downcast_ref::<UInt8Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::UInt16 => {
+                let a = arr.as_any().downcast_ref::<UInt16Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::UInt32 => {
+                let a = arr.as_any().downcast_ref::<UInt32Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::UInt64 => {
+                let a = arr.as_any().downcast_ref::<UInt64Array>().unwrap();
+                JVal::Number(a.value(row).into())
+            }
+            ArrowDataType::Float32 => {
+                let a = arr.as_any().downcast_ref::<Float32Array>().unwrap();
+                serde_json::Number::from_f64(a.value(row) as f64)
+                    .map(JVal::Number)
+                    .unwrap_or(JVal::Null)
+            }
+            ArrowDataType::Date32 | ArrowDataType::Date64 | ArrowDataType::Timestamp(_, _) => {
+                let formatted = arrow::util::display::array_value_to_string(arr, row)
+                    .unwrap_or_default();
+                JVal::String(formatted)
+            }
+            ArrowDataType::List(_) => {
+                let list = arr.as_any().downcast_ref::<ListArray>().unwrap();
+                let values = list.value(row);
+                let items: Vec<JVal> = (0..values.len())
+                    .map(|i| arr_to_json(values.as_ref(), i))
+                    .collect();
+                JVal::Array(items)
+            }
+            ArrowDataType::LargeList(_) => {
+                let list = arr.as_any().downcast_ref::<LargeListArray>().unwrap();
+                let values = list.value(row);
+                let items: Vec<JVal> = (0..values.len())
+                    .map(|i| arr_to_json(values.as_ref(), i))
+                    .collect();
+                JVal::Array(items)
+            }
+            ArrowDataType::Map(_, _) => {
+                let map = arr.as_any().downcast_ref::<MapArray>().unwrap();
+                let entries = map.value(row);
+                let struct_arr = entries.as_any().downcast_ref::<StructArray>().unwrap();
+                let keys = struct_arr.column(0);
+                let vals = struct_arr.column(1);
+                let mut obj = serde_json::Map::new();
+                for i in 0..entries.len() {
+                    let key = arr_to_json(keys.as_ref(), i);
+                    let val = arr_to_json(vals.as_ref(), i);
+                    // Stringify non-string keys to preserve all entries
+                    let k = match key {
+                        JVal::String(s) => s,
+                        other => other.to_string(),
+                    };
+                    obj.insert(k, val);
+                }
+                JVal::Object(obj)
+            }
+            ArrowDataType::Struct(fields) => {
+                let s = arr.as_any().downcast_ref::<StructArray>().unwrap();
+                let mut obj = serde_json::Map::new();
+                for (fi, field) in fields.iter().enumerate() {
+                    let col = s.column(fi);
+                    obj.insert(field.name().clone(), arr_to_json(col.as_ref(), row));
+                }
+                JVal::Object(obj)
+            }
+            _ => {
+                // Fallback: use Arrow's built-in display for the specific row value
+                JVal::String(
+                    arrow::util::display::array_value_to_string(arr, row)
+                        .unwrap_or_else(|_| format!("<unsupported: {:?}>", arr.data_type()))
+                )
+            }
+        }
+    }
+
+    serde_json::to_string(&arr_to_json(arr, row)).unwrap_or_default()
 }
