@@ -192,6 +192,10 @@ fn build_entity(
         });
     }
 
+    // Detect paired temporal columns (Start/End) and rewrite End generators
+    // to use Relative offsets from Start, ensuring EndDate ≥ StartDate.
+    rewrite_temporal_pairs(&mut fields, &table.columns);
+
     // Build top-level Relationship entries from detected FKs
     let rels: Vec<Relationship> = table
         .relationships
@@ -526,7 +530,108 @@ fn build_temporal_generator(col: &ColumnAnalysis) -> GeneratorSpec {
     }
 }
 
-/// Convert days since epoch to (year, month, day) — same as in faker.rs.
+/// Detect paired temporal columns (e.g. StartDate/EndDate) and rewrite the "end"
+/// field's generator to `Relative`, ensuring generated EndDate ≥ StartDate.
+///
+/// Matching strategy: find columns whose names share a common base with one
+/// containing "start" and the other "end" (case-insensitive). Uses the temporal
+/// ranges from column analysis to estimate the mean offset in seconds.
+fn rewrite_temporal_pairs(fields: &mut [Field], columns: &[ColumnAnalysis]) {
+    // Build a map of column name → temporal range for quick lookup
+    let range_map: BTreeMap<&str, (f64, f64)> = columns
+        .iter()
+        .filter_map(|c| c.temporal_range.map(|r| (c.name.as_str(), r)))
+        .collect();
+
+    // Find start/end pairs by name pattern
+    let pairs = find_temporal_pairs(fields);
+
+    for (start_name, end_idx) in pairs {
+        // Compute mean offset from temporal ranges
+        let offset_seconds = match (range_map.get(start_name.as_str()), range_map.get(fields[end_idx].name.as_str())) {
+            (Some(&(s_min, s_max)), Some(&(e_min, e_max))) => {
+                // Use midpoint difference as the mean offset
+                let s_mid = (s_min + s_max) / 2.0;
+                let e_mid = (e_min + e_max) / 2.0;
+                let diff = e_mid - s_mid;
+                if diff > 0.0 { diff } else { 86_400.0 } // default 1 day if ranges overlap completely
+            }
+            _ => 86_400.0, // default 1 day
+        };
+
+        debug!(
+            start = %start_name,
+            end = %fields[end_idx].name,
+            offset_s = offset_seconds,
+            "rewriting end field as Relative to start"
+        );
+
+        fields[end_idx].generator = Some(GeneratorSpec::Relative {
+            field: start_name,
+            offset: Value::Float(offset_seconds),
+        });
+    }
+}
+
+/// Find temporal column pairs where one is a "start" and the other an "end".
+/// Only considers fields with temporal data types (Datetime, DatetimeUs, Date).
+/// Returns (start_field_name, end_field_index) pairs.
+fn find_temporal_pairs(fields: &[Field]) -> Vec<(String, usize)> {
+    use knit_core::DataType;
+
+    let mut pairs = Vec::new();
+
+    let is_temporal = |dt: &DataType| {
+        matches!(dt, DataType::Datetime | DataType::DatetimeUs | DataType::Date | DataType::Datetimetz)
+    };
+
+    // Common patterns: StartDate/EndDate, start_time/end_time, StartedAt/EndedAt
+    let start_patterns: &[&str] = &["start", "begin", "from"];
+    let end_patterns: &[&str] = &["end", "finish", "until"];
+
+    // Index fields by lowercase name
+    let field_names: Vec<String> = fields.iter().map(|f| f.name.to_lowercase()).collect();
+
+    for (ei, end_lower) in field_names.iter().enumerate() {
+        // Only consider temporal fields
+        if !is_temporal(&fields[ei].data_type) {
+            continue;
+        }
+
+        // Check if this field matches an "end" pattern
+        let end_match = end_patterns.iter().find(|&&pat| end_lower.contains(pat));
+        if end_match.is_none() {
+            continue;
+        }
+        let end_pat = *end_match.unwrap();
+
+        // Try to find a corresponding start field
+        for (si, start_lower) in field_names.iter().enumerate() {
+            if si == ei {
+                continue;
+            }
+            if !is_temporal(&fields[si].data_type) {
+                continue;
+            }
+
+            let start_match = start_patterns.iter().find(|&&pat| start_lower.contains(pat));
+            if start_match.is_none() {
+                continue;
+            }
+            let start_pat = *start_match.unwrap();
+
+            // Check they share a common suffix/prefix (e.g., both end with "Date" or "Time")
+            let end_base = end_lower.replace(end_pat, "");
+            let start_base = start_lower.replace(start_pat, "");
+            if end_base == start_base {
+                pairs.push((fields[si].name.clone(), ei));
+                break;
+            }
+        }
+    }
+
+    pairs
+}
 fn days_to_ymd(days: i64) -> (i32, u32, u32) {
     let z = days + 719_468;
     let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
@@ -1443,5 +1548,136 @@ mod tests {
             )),
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Datetime);
+    }
+
+    #[test]
+    fn temporal_pair_detection_start_end_date() {
+        let fields = vec![
+            Field {
+                name: "StartDate".into(),
+                description: None,
+                data_type: knit_core::DataType::Datetime,
+                generator: Some(GeneratorSpec::Faker {
+                    method: "datetime".into(),
+                    args: vec![],
+                }),
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+            Field {
+                name: "EndDate".into(),
+                description: None,
+                data_type: knit_core::DataType::Datetime,
+                generator: Some(GeneratorSpec::Faker {
+                    method: "datetime".into(),
+                    args: vec![],
+                }),
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+        ];
+        let pairs = find_temporal_pairs(&fields);
+        assert_eq!(pairs.len(), 1);
+        assert_eq!(pairs[0].0, "StartDate");
+        assert_eq!(pairs[0].1, 1); // EndDate index
+    }
+
+    #[test]
+    fn temporal_pair_skips_non_temporal_fields() {
+        let fields = vec![
+            Field {
+                name: "start_balance".into(),
+                description: None,
+                data_type: knit_core::DataType::Float,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+            Field {
+                name: "end_balance".into(),
+                description: None,
+                data_type: knit_core::DataType::Float,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+        ];
+        let pairs = find_temporal_pairs(&fields);
+        assert!(pairs.is_empty(), "non-temporal fields should not be paired");
+    }
+
+    #[test]
+    fn rewrite_temporal_pairs_uses_offset() {
+        let cols = vec![
+            ColumnAnalysis {
+                name: "StartDate".into(),
+                is_primary_key: false,
+                distribution: None,
+                temporal_pattern: None,
+                categorical_weights: None,
+                null_rate: 0.0,
+                confidence: 0.9,
+                inferred_type: None,
+                string_patterns: vec![],
+                is_integer_valued: false,
+                has_time_component: true,
+                temporal_range: Some((1_000_000.0, 1_100_000.0)),
+                source_arrow_type: None,
+            },
+            ColumnAnalysis {
+                name: "EndDate".into(),
+                is_primary_key: false,
+                distribution: None,
+                temporal_pattern: None,
+                categorical_weights: None,
+                null_rate: 0.0,
+                confidence: 0.9,
+                inferred_type: None,
+                string_patterns: vec![],
+                is_integer_valued: false,
+                has_time_component: true,
+                temporal_range: Some((1_050_000.0, 1_200_000.0)),
+                source_arrow_type: None,
+            },
+        ];
+        let mut fields = vec![
+            Field {
+                name: "StartDate".into(),
+                description: None,
+                data_type: knit_core::DataType::Datetime,
+                generator: Some(GeneratorSpec::Faker {
+                    method: "datetime".into(),
+                    args: vec![],
+                }),
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+            Field {
+                name: "EndDate".into(),
+                description: None,
+                data_type: knit_core::DataType::Datetime,
+                generator: Some(GeneratorSpec::Faker {
+                    method: "datetime".into(),
+                    args: vec![],
+                }),
+                nullable: NullSpec::Never,
+                primary_key: None,
+            },
+        ];
+        rewrite_temporal_pairs(&mut fields, &cols);
+
+        // EndDate should now be Relative
+        match &fields[1].generator {
+            Some(GeneratorSpec::Relative { field, offset }) => {
+                assert_eq!(field, "StartDate");
+                // Midpoint diff: (1_125_000 - 1_050_000) = 75_000
+                if let Value::Float(v) = offset {
+                    assert!(*v > 0.0, "offset should be positive");
+                } else {
+                    panic!("expected Float offset");
+                }
+            }
+            other => panic!("expected Relative generator, got {other:?}"),
+        }
     }
 }

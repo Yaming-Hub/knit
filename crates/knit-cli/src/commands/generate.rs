@@ -408,6 +408,9 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
     // If the declared data_type has a specific narrow type, use it
     match &fp.data_type {
         knit_core::DataType::Int32 => return ArrowDataType::Int32,
+        knit_core::DataType::Datetime => {
+            return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
+        }
         knit_core::DataType::DatetimeUs => {
             return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None)
         }
