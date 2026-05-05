@@ -34,6 +34,25 @@ use crate::traits::{FieldGenerator, KeyStore, StringKeyStore};
 /// Default number of rows per Arrow batch.
 const DEFAULT_BATCH_SIZE: usize = 8192;
 
+/// Round float values in an Arrow array to the specified number of decimal places.
+///
+/// Only applies to `Float64` arrays. Other array types pass through unchanged.
+fn apply_precision(arr: arrow::array::ArrayRef, precision: Option<u8>) -> arrow::array::ArrayRef {
+    let Some(places) = precision else {
+        return arr;
+    };
+    if let Some(float_arr) = arr.as_any().downcast_ref::<arrow::array::Float64Array>() {
+        let factor = 10f64.powi(places as i32);
+        let rounded: arrow::array::Float64Array = float_arr
+            .iter()
+            .map(|v| v.map(|x| (x * factor).round() / factor))
+            .collect();
+        Arc::new(rounded)
+    } else {
+        arr
+    }
+}
+
 /// Top-level generation orchestrator.
 ///
 /// Holds the key-store registry shared across entities and phases. Consumes an
@@ -427,6 +446,7 @@ impl GenerationEngine {
             .with_params(&self.params);
 
             let arr = generators[i].generate(rng, count, &ctx);
+            let arr = apply_precision(arr, fp.precision);
             let arr = apply_null_mask(arr, &fp.null_plan, rng, count)?;
 
             batch_columns.insert(fp.field_name.clone(), Arc::clone(&arr));
@@ -631,14 +651,16 @@ mod tests {
                                 generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
-                            },
+            precision: None,
+        },
                             FieldPlan {
                                 field_name: "value".into(),
                                 data_type: knit_core::DataType::Int,
                                 generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(99)),
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
-                            },
+            precision: None,
+        },
                         ],
                         estimated_row_count: 100,
                         estimated_byte_size: 800,
@@ -663,7 +685,8 @@ mod tests {
                                 generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
-                            },
+            precision: None,
+        },
                             FieldPlan {
                                 field_name: "parent_id".into(),
                                 data_type: knit_core::DataType::Int,
@@ -674,7 +697,8 @@ mod tests {
                                 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
-                            },
+            precision: None,
+        },
                         ],
                         estimated_row_count: 500,
                         estimated_byte_size: 4000,
@@ -830,7 +854,8 @@ mod tests {
                             generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                             null_plan: NullPlan::Never,
                             dependency_order: 0,
-                        },
+            precision: None,
+        },
                         FieldPlan {
                             field_name: "manager_id".into(),
                                 data_type: knit_core::DataType::Int,
@@ -841,7 +866,8 @@ mod tests {
                             },
                             null_plan: NullPlan::Never,
                             dependency_order: 1,
-                        },
+            precision: None,
+        },
                     ],
                     estimated_row_count: 50,
                     estimated_byte_size: 400,
@@ -971,7 +997,8 @@ mod tests {
                         generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
-                    }],
+            precision: None,
+        }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
                     primary_key_field_index: Some(0),
@@ -1049,7 +1076,8 @@ mod tests {
                         generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
-                    }],
+            precision: None,
+        }],
                     estimated_row_count: 25,
                     estimated_byte_size: 200,
                     primary_key_field_index: Some(0),
@@ -1163,7 +1191,8 @@ mod tests {
                         generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(42)),
                         null_plan: NullPlan::Probability(0.5),
                         dependency_order: 0,
-                    }],
+            precision: None,
+        }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
                     primary_key_field_index: Some(0),
@@ -1219,5 +1248,51 @@ mod tests {
     fn default_engine_has_default_batch_size() {
         let engine = GenerationEngine::default();
         assert_eq!(engine.batch_size, DEFAULT_BATCH_SIZE);
+    }
+
+    #[test]
+    fn apply_precision_rounds_floats() {
+        use arrow::array::Float64Array;
+
+        let arr: arrow::array::ArrayRef =
+            Arc::new(Float64Array::from(vec![1.23456, 99.999, 0.1]));
+        let result = apply_precision(arr, Some(2));
+        let float_arr = result
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        assert_eq!(float_arr.value(0), 1.23);
+        assert_eq!(float_arr.value(1), 100.0);
+        assert_eq!(float_arr.value(2), 0.1);
+    }
+
+    #[test]
+    fn apply_precision_none_is_noop() {
+        use arrow::array::Float64Array;
+
+        let arr: arrow::array::ArrayRef =
+            Arc::new(Float64Array::from(vec![1.23456789]));
+        let result = apply_precision(arr.clone(), None);
+        let float_arr = result
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        assert_eq!(float_arr.value(0), 1.23456789);
+    }
+
+    #[test]
+    fn apply_precision_preserves_nulls() {
+        use arrow::array::Float64Array;
+
+        let arr: arrow::array::ArrayRef =
+            Arc::new(Float64Array::from(vec![Some(3.14159), None, Some(2.71828)]));
+        let result = apply_precision(arr, Some(2));
+        let float_arr = result
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        assert_eq!(float_arr.value(0), 3.14);
+        assert!(float_arr.is_null(1));
+        assert_eq!(float_arr.value(2), 2.72);
     }
 }
