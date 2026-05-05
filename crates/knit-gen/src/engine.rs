@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use arrow::array::{Array, Int64Array};
+use arrow::array::{Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use rand::{RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -24,10 +24,12 @@ use crate::context::GenContext;
 use crate::error::GenError;
 use crate::generators::create_generator;
 use crate::generators::fk::ForeignKeyGenerator;
+use crate::generators::string_fk::StringForeignKeyGenerator;
 use crate::keystore::InMemoryKeyStore;
 use crate::null_mask::apply_null_mask;
 use crate::sampled_key_store::SampledKeyStore;
-use crate::traits::{FieldGenerator, KeyStore};
+use crate::string_keystore::InMemoryStringKeyStore;
+use crate::traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 /// Default number of rows per Arrow batch.
 const DEFAULT_BATCH_SIZE: usize = 8192;
@@ -52,8 +54,10 @@ const DEFAULT_BATCH_SIZE: usize = 8192;
 /// concurrent partition workers can insert/sample without external
 /// synchronisation.
 pub struct GenerationEngine {
-    /// Entity-name → shared key store for FK resolution.
+    /// Entity-name → shared key store for FK resolution (Int64 keys).
     key_stores: HashMap<String, Arc<dyn KeyStore>>,
+    /// Entity-name → shared string key store for FK resolution (UUID/String keys).
+    string_key_stores: HashMap<String, Arc<dyn StringKeyStore>>,
     /// Maximum rows per Arrow batch.
     batch_size: usize,
     /// User-supplied parameters passed to generators via GenContext.
@@ -65,6 +69,7 @@ impl GenerationEngine {
     pub fn new() -> Self {
         Self {
             key_stores: HashMap::new(),
+            string_key_stores: HashMap::new(),
             batch_size: DEFAULT_BATCH_SIZE,
             params: HashMap::new(),
         }
@@ -74,6 +79,7 @@ impl GenerationEngine {
     pub fn with_batch_size(batch_size: usize) -> Self {
         Self {
             key_stores: HashMap::new(),
+            string_key_stores: HashMap::new(),
             batch_size: batch_size.max(1),
             params: HashMap::new(),
         }
@@ -105,7 +111,16 @@ impl GenerationEngine {
             // Pre-create key stores for entities that need them.
             for ep in &phase.entity_plans {
                 if let Some(kind) = plan.index_strategy.per_entity.get(&ep.entity_name) {
-                    self.ensure_key_store(&ep.entity_name, kind, ep.estimated_row_count);
+                    if self.is_string_pk_entity(ep) {
+                        tracing::debug!(
+                            entity = %ep.entity_name,
+                            pk_idx = ?ep.primary_key_field_index,
+                            "creating string key store"
+                        );
+                        self.ensure_string_key_store(&ep.entity_name, ep.estimated_row_count);
+                    } else {
+                        self.ensure_key_store(&ep.entity_name, kind, ep.estimated_row_count);
+                    }
                 }
             }
 
@@ -162,6 +177,35 @@ impl GenerationEngine {
             }
         };
         self.key_stores.insert(entity_name.to_string(), store);
+    }
+
+    /// Ensure a string key store exists for the entity (UUID/String PKs).
+    fn ensure_string_key_store(&mut self, entity_name: &str, estimated_rows: u64) {
+        if self.string_key_stores.contains_key(entity_name) {
+            return;
+        }
+        let store: Arc<dyn StringKeyStore> =
+            Arc::new(InMemoryStringKeyStore::with_capacity(estimated_rows as usize));
+        self.string_key_stores.insert(entity_name.to_string(), store);
+    }
+
+    /// Check if an entity has a string/UUID primary key (vs Int64).
+    /// Determined by the PK field's generator plan rather than data_type,
+    /// because Sequence generators always produce Int64 regardless of declared type.
+    fn is_string_pk_entity(&self, ep: &EntityPlan) -> bool {
+        if let Some(pk_idx) = ep.primary_key_field_index {
+            if let Some(fp) = ep.field_plans.get(pk_idx) {
+                return matches!(
+                    &fp.generator_plan,
+                    GeneratorPlan::Uuid
+                        | GeneratorPlan::Faker { .. }
+                        | GeneratorPlan::Pattern { .. }
+                );
+            }
+        }
+        // No explicit PK index — conservatively return false to avoid
+        // misidentifying an Int64 PK entity as string-keyed.
+        false
     }
 
     /// Generate all batches for every entity in a phase, using Rayon for
@@ -225,9 +269,10 @@ impl GenerationEngine {
 
         // Build field generators once for this partition.
         let generators = self.build_field_generators(ep, plan);
-        // Identify the primary-key field index (first field with a Sequence generator is PK).
+        // Identify the primary-key field index.
         let pk_field_idx = self.find_pk_field_index(ep);
         let key_store = self.key_stores.get(&ep.entity_name).cloned();
+        let string_key_store = self.string_key_stores.get(&ep.entity_name).cloned();
 
         let mut remaining = total_rows;
         while remaining > 0 {
@@ -243,12 +288,41 @@ impl GenerationEngine {
                 part.partition_id as usize,
             )?;
 
-            // Insert PK values into the key store.
-            if let (Some(idx), Some(ref ks)) = (pk_field_idx, &key_store) {
+            // Insert PK values into the appropriate key store.
+            if let Some(idx) = pk_field_idx {
                 let col = batch.column(idx);
-                if let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>() {
-                    for v in i64_arr.values().iter() {
-                        ks.insert(*v);
+                tracing::trace!(
+                    entity = %ep.entity_name,
+                    pk_idx = idx,
+                    col_type = ?col.data_type(),
+                    "extracting PK values"
+                );
+                if let Some(ref ks) = key_store {
+                    if let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>() {
+                        for v in i64_arr.values().iter() {
+                            ks.insert(*v);
+                        }
+                    }
+                }
+                if let Some(ref sks) = string_key_store {
+                    if let Some(str_arr) = col.as_any().downcast_ref::<StringArray>() {
+                        for i in 0..str_arr.len() {
+                            if !str_arr.is_null(i) {
+                                sks.insert(str_arr.value(i).to_string());
+                            }
+                        }
+                        let inserted = str_arr.len() - str_arr.null_count();
+                        tracing::debug!(
+                            entity = %ep.entity_name,
+                            keys_inserted = inserted,
+                            "string PK values inserted"
+                        );
+                    } else {
+                        tracing::warn!(
+                            entity = %ep.entity_name,
+                            actual_type = ?col.data_type(),
+                            "string key store exists but PK column is not StringArray"
+                        );
                     }
                 }
             }
@@ -280,7 +354,18 @@ impl GenerationEngine {
                     key_store_kind: _,
                     ..
                 } => {
-                    if let Some(ks) = self.key_stores.get(target_entity) {
+                    // Try string key store first (UUID/String FKs), then int key store.
+                    if let Some(sks) = self.string_key_stores.get(target_entity) {
+                        tracing::debug!(
+                            entity = %ep.entity_name,
+                            field = %fp.field_name,
+                            target = %target_entity,
+                            store_len = sks.len(),
+                            "using string FK generator"
+                        );
+                        Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
+                            as Box<dyn FieldGenerator>
+                    } else if let Some(ks) = self.key_stores.get(target_entity) {
                         Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
                     } else {
                         tracing::warn!(
@@ -299,11 +384,22 @@ impl GenerationEngine {
             .collect()
     }
 
-    /// Find the index of the primary-key field (first Sequence field).
+    /// Find the index of the primary-key field.
+    /// Uses explicit `primary_key_field_index` from the plan, falling back to
+    /// first Sequence/Uuid generator heuristic for backward compatibility.
     fn find_pk_field_index(&self, ep: &EntityPlan) -> Option<usize> {
+        if let Some(idx) = ep.primary_key_field_index {
+            return Some(idx);
+        }
+        // Fallback: first Sequence or Uuid field.
         ep.field_plans
             .iter()
-            .position(|fp| matches!(&fp.generator_plan, GeneratorPlan::Sequence { .. }))
+            .position(|fp| {
+                matches!(
+                    &fp.generator_plan,
+                    GeneratorPlan::Sequence { .. } | GeneratorPlan::Uuid
+                )
+            })
     }
 
     /// Generate a single batch for one partition slice.
@@ -546,6 +642,7 @@ mod tests {
                         ],
                         estimated_row_count: 100,
                         estimated_byte_size: 800,
+                        primary_key_field_index: Some(0),
                     }],
                     deferred_refs: vec![],
                 },
@@ -581,6 +678,7 @@ mod tests {
                         ],
                         estimated_row_count: 500,
                         estimated_byte_size: 4000,
+                        primary_key_field_index: Some(0),
                     }],
                     deferred_refs: vec![],
                 },
@@ -747,6 +845,7 @@ mod tests {
                     ],
                     estimated_row_count: 50,
                     estimated_byte_size: 400,
+                    primary_key_field_index: Some(0),
                 }],
                 deferred_refs: vec![DeferredRef {
                     from_entity: "employee".into(),
@@ -875,6 +974,7 @@ mod tests {
                     }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
+                    primary_key_field_index: Some(0),
                 }],
                 deferred_refs: vec![],
             }],
@@ -952,6 +1052,7 @@ mod tests {
                     }],
                     estimated_row_count: 25,
                     estimated_byte_size: 200,
+                    primary_key_field_index: Some(0),
                 }],
                 deferred_refs: vec![],
             }],
@@ -1065,6 +1166,7 @@ mod tests {
                     }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
+                    primary_key_field_index: Some(0),
                 }],
                 deferred_refs: vec![],
             }],

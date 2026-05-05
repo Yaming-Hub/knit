@@ -112,6 +112,10 @@ pub struct EntityPlan {
     pub estimated_row_count: u64,
     /// Estimated output size in bytes (used for progress reporting).
     pub estimated_byte_size: u64,
+    /// Index of the primary-key field within `field_plans`, if any.
+    /// Used by the engine to extract PK values into the key store.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub primary_key_field_index: Option<usize>,
 }
 
 // ── PartitionRange ───────────────────────────────────────────────────
