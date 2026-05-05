@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use knit_core::{DataModel, Entity, Field, GeneratorSpec, NullSpec, Value};
+use knit_core::{DataModel, DataType, Entity, Field, GeneratorSpec, NullSpec, Value};
 
 use crate::error::PlanError;
 use crate::graph;
@@ -206,13 +206,20 @@ fn compile_field_plans(
 fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
     match &field.generator {
         Some(spec) => match spec {
-            GeneratorSpec::Distribution { spec: dist_spec } => GeneratorPlan::Distribution {
-                kind: dist_spec.kind.clone(),
-                params: dist_spec.params.clone(),
-                clamp_min: None,
-                clamp_max: None,
-                round: dist_spec.round,
-            },
+            GeneratorSpec::Distribution { spec: dist_spec } => {
+                // Auto-enable rounding when the field's declared data type is integer.
+                // This ensures distribution generators produce integer values even when
+                // the user doesn't explicitly set `round = true` in the schema.
+                let round = dist_spec.round
+                    || matches!(field.data_type, DataType::Int | DataType::Int32);
+                GeneratorPlan::Distribution {
+                    kind: dist_spec.kind.clone(),
+                    params: dist_spec.params.clone(),
+                    clamp_min: None,
+                    clamp_max: None,
+                    round,
+                }
+            }
             GeneratorSpec::Faker { method, args } => GeneratorPlan::Faker {
                 category: method.clone(),
                 locale: "en_US".to_string(),
@@ -260,7 +267,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 generators,
             } => {
                 if let Some((_, first_gen)) = generators.iter().next() {
-                    let element = Box::new(compile_generator_from_spec(first_gen, all_fields));
+                    let element = Box::new(compile_generator_from_spec(first_gen, all_fields, &field.data_type));
                     let length = Box::new(GeneratorPlan::Constant(knit_core::Value::Int(1)));
                     GeneratorPlan::Composite { element, length }
                 } else {
@@ -276,7 +283,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 GeneratorPlan::Pattern { pattern: pattern.clone() }
             }
             GeneratorSpec::Unique { inner, max_retries } => {
-                let inner_plan = compile_generator_from_spec(inner, all_fields);
+                let inner_plan = compile_generator_from_spec(inner, all_fields, &field.data_type);
                 GeneratorPlan::Unique {
                     inner: Box::new(inner_plan),
                     max_retries: *max_retries,
@@ -315,21 +322,21 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     base_field: None,
                 }
             }
-            GeneratorSpec::Conditional { field, branches, default } => {
+            GeneratorSpec::Conditional { field: cond_field, branches, default } => {
                 // Compile each branch's generator recursively
                 let compiled_branches: Vec<(Value, Box<GeneratorPlan>)> = branches
                     .iter()
                     .map(|b| {
-                        let plan = compile_generator_from_spec(&b.generator, all_fields);
+                        let plan = compile_generator_from_spec(&b.generator, all_fields, &field.data_type);
                         (b.condition.clone(), Box::new(plan))
                     })
                     .collect();
                 let default_plan = match default {
-                    Some(gen) => Box::new(compile_generator_from_spec(gen, all_fields)),
+                    Some(gen) => Box::new(compile_generator_from_spec(gen, all_fields, &field.data_type)),
                     None => Box::new(GeneratorPlan::Constant(Value::Null)),
                 };
                 GeneratorPlan::Conditional {
-                    field: field.clone(),
+                    field: cond_field.clone(),
                     branches: compiled_branches,
                     default: default_plan,
                 }
@@ -351,12 +358,19 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
 }
 
 /// Convert a `GeneratorSpec` directly (for nested generators).
-fn compile_generator_from_spec(spec: &GeneratorSpec, all_fields: &[Field]) -> GeneratorPlan {
+///
+/// `parent_data_type` carries the owning field's declared type so that nested
+/// distribution generators can auto-enable rounding for integer fields.
+fn compile_generator_from_spec(
+    spec: &GeneratorSpec,
+    all_fields: &[Field],
+    parent_data_type: &knit_core::DataType,
+) -> GeneratorPlan {
     // Create a dummy field to reuse compile_generator.
     let dummy_field = Field {
         name: String::new(),
         description: None,
-        data_type: knit_core::DataType::String,
+        data_type: parent_data_type.clone(),
         generator: Some(spec.clone()),
         nullable: NullSpec::Never,
         primary_key: None,
@@ -873,6 +887,79 @@ mod tests {
     }
 
     #[test]
+    fn test_distribution_auto_round_for_int_type() {
+        // When data_type is Int, the compiler should auto-enable rounding
+        // even if the schema doesn't explicitly set round = true.
+        let mut entity = simple_entity("test", 10);
+        entity.fields.push(Field {
+            name: "age".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Normal,
+                    params: {
+                        let mut p = BTreeMap::new();
+                        p.insert("mean".to_string(), 35.0);
+                        p.insert("std_dev".to_string(), 12.0);
+                        p
+                    },
+                    round: false,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+
+        let model = simple_model("autoround", vec![entity], vec![]);
+        let plan = compile(&model).unwrap();
+        let ep = &plan.phases[0].entity_plans[0];
+        let age_plan = ep.field_plans.iter().find(|fp| fp.field_name == "age").unwrap();
+        match &age_plan.generator_plan {
+            GeneratorPlan::Distribution { round, .. } => {
+                assert!(round, "round should be auto-enabled for data_type=Int");
+            }
+            other => panic!("expected Distribution, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_distribution_no_auto_round_for_float_type() {
+        // When data_type is Float, round should stay as-is (false).
+        let mut entity = simple_entity("test", 10);
+        entity.fields.push(Field {
+            name: "score".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Normal,
+                    params: {
+                        let mut p = BTreeMap::new();
+                        p.insert("mean".to_string(), 50.0);
+                        p.insert("std_dev".to_string(), 10.0);
+                        p
+                    },
+                    round: false,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+        });
+
+        let model = simple_model("noround", vec![entity], vec![]);
+        let plan = compile(&model).unwrap();
+        let ep = &plan.phases[0].entity_plans[0];
+        let score_plan = ep.field_plans.iter().find(|fp| fp.field_name == "score").unwrap();
+        match &score_plan.generator_plan {
+            GeneratorPlan::Distribution { round, .. } => {
+                assert!(!round, "round should stay false for data_type=Float");
+            }
+            other => panic!("expected Distribution, got {other:?}"),
+        }
+    }
+
+    #[test]
     fn test_field_plan_sequence() {
         let model = simple_model("fields", vec![simple_entity("test", 100)], vec![]);
         let plan = compile(&model).unwrap();
@@ -1252,7 +1339,7 @@ mod tests {
             inner: Box::new(inner_spec),
             max_retries: 50,
         };
-        let plan = compile_generator_from_spec(&spec, &[]);
+        let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
             GeneratorPlan::Unique { inner, max_retries } => {
                 assert_eq!(max_retries, 50);
@@ -1269,7 +1356,7 @@ mod tests {
             end_hour: 17,
             exclude_weekends: true,
         };
-        let plan = compile_generator_from_spec(&spec, &[]);
+        let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
             GeneratorPlan::Temporal {
                 kind: TemporalKind::BusinessHours,
@@ -1292,7 +1379,7 @@ mod tests {
             end_hour: 20,
             exclude_weekends: false,
         };
-        let plan = compile_generator_from_spec(&spec, &[]);
+        let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
             GeneratorPlan::Temporal {
                 kind: TemporalKind::BusinessHours,
@@ -1311,7 +1398,7 @@ mod tests {
             field: "start_date".to_string(),
             offset: Value::Int(86400),
         };
-        let plan = compile_generator_from_spec(&spec, &[]);
+        let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
             GeneratorPlan::Temporal {
                 kind: TemporalKind::Relative,
