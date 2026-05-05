@@ -249,12 +249,19 @@ fn build_generator(
     col: &ColumnAnalysis,
     fk: Option<&RelationshipCandidate>,
 ) -> GeneratorSpec {
-    // FK → Lookup
+    // FK → Lookup (only for non-string sources; string FKs use categorical)
     if let Some(rel) = fk {
-        return GeneratorSpec::Lookup {
-            entity: rel.to_table.clone(),
-            field: rel.to_column.clone(),
-        };
+        let source_is_string = matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
+        );
+        if !source_is_string {
+            return GeneratorSpec::Lookup {
+                entity: rel.to_table.clone(),
+                field: rel.to_column.clone(),
+            };
+        }
+        // String FK: fall through to categorical/string handling below
     }
 
     // PK → Sequence (or UuidGen for UUID columns)
@@ -262,10 +269,15 @@ fn build_generator(
         if matches!(col.inferred_type, Some(InferredType::Uuid)) {
             return GeneratorSpec::UuidGen { version: 4 };
         }
+        // String PKs with numeric content: use sequence with empty prefix to produce string output
+        let source_is_string = matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
+        );
         return GeneratorSpec::Sequence {
             start: 1,
             step: 1,
-            prefix: None,
+            prefix: if source_is_string { Some(String::new()) } else { None },
         };
     }
 
@@ -276,6 +288,9 @@ fn build_generator(
 
     // Distribution
     if let Some(fit) = &col.distribution {
+        // Use distribution generator regardless of source type.
+        // For string sources with numeric content, resolve_arrow_type will cast
+        // the numeric output to Utf8 at write time since data_type is String.
         return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
     }
 
@@ -301,6 +316,17 @@ fn build_generator(
 
     // Categorical
     if let Some(weights) = &col.categorical_weights {
+        // For numeric source types, produce integer-valued categoricals
+        let is_int_source = is_narrow_int_source(col)
+            || matches!(
+                col.source_arrow_type,
+                Some(arrow::datatypes::DataType::Int64)
+                    | Some(arrow::datatypes::DataType::UInt32)
+                    | Some(arrow::datatypes::DataType::UInt64)
+            );
+        if is_int_source {
+            return build_int_categorical_generator(weights);
+        }
         return build_categorical_generator(weights);
     }
 
@@ -445,6 +471,24 @@ fn build_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
     GeneratorSpec::OneOf { choices }
 }
 
+/// Build a categorical generator that produces integer values.
+/// Used when source column is an integer type with few distinct values.
+fn build_int_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
+    let choices: Vec<WeightedChoice> = weights
+        .iter()
+        .take(200)
+        .map(|(val, w)| {
+            let int_val = val.parse::<i64>().unwrap_or(0);
+            WeightedChoice {
+                value: Value::Int(int_val),
+                weight: *w,
+            }
+        })
+        .collect();
+
+    GeneratorSpec::OneOf { choices }
+}
+
 /// Map a temporal pattern to a [`GeneratorSpec`].
 fn build_temporal_generator(col: &ColumnAnalysis) -> GeneratorSpec {
     let method = if col.has_time_component { "datetime" } else { "date" };
@@ -558,14 +602,27 @@ fn infer_data_type(
     col: &ColumnAnalysis,
     fk: Option<&RelationshipCandidate>,
 ) -> knit_core::DataType {
+    // Respect source string type: if the source column was stored as a string,
+    // preserve it as String regardless of content analysis (numeric-looking strings
+    // should remain strings to maintain fidelity with the source data).
+    let source_is_string = matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
+    );
+
     // UUID columns keep their type even as PK/FK
     if matches!(col.inferred_type, Some(InferredType::Uuid)) {
         return knit_core::DataType::Uuid;
     }
     if matches!(col.inferred_type, Some(InferredType::Boolean)) {
+        // If source is string, keep as categorical string rather than bool
+        if source_is_string {
+            return knit_core::DataType::String;
+        }
         return knit_core::DataType::Bool;
     }
     if matches!(col.inferred_type, Some(InferredType::Date(_))) {
+        // String-encoded dates: preserve as datetime/date (these are genuine temporal values)
         return if col.has_time_component {
             resolve_datetime_type(col)
         } else {
@@ -573,6 +630,10 @@ fn infer_data_type(
         };
     }
     if fk.is_some() || col.is_primary_key {
+        // If the source was a string column (e.g. UUID FK), keep as String
+        if source_is_string {
+            return knit_core::DataType::String;
+        }
         return if is_narrow_int_source(col) {
             knit_core::DataType::Int32
         } else {
@@ -587,6 +648,10 @@ fn infer_data_type(
         };
     }
     if col.distribution.is_some() {
+        // If source is string, keep as string even though content is numeric
+        if source_is_string {
+            return knit_core::DataType::String;
+        }
         // Check if all values are whole numbers → Int
         if col.is_integer_valued {
             return if is_narrow_int_source(col) {
@@ -598,7 +663,38 @@ fn infer_data_type(
         return knit_core::DataType::Float;
     }
     if col.categorical_weights.is_some() {
+        // If source is numeric (Int32/Int*), preserve the int type even for categoricals
+        if is_narrow_int_source(col) {
+            return knit_core::DataType::Int32;
+        }
+        if matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Int64)
+                | Some(arrow::datatypes::DataType::UInt32)
+                | Some(arrow::datatypes::DataType::UInt64)
+        ) {
+            return knit_core::DataType::Int;
+        }
         return knit_core::DataType::String;
+    }
+    // Fallback for numeric source types that didn't match any other pattern
+    // (e.g., constant-valued int32 columns with no variance for distribution fitting)
+    if is_narrow_int_source(col) {
+        return knit_core::DataType::Int32;
+    }
+    if matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::Int64)
+            | Some(arrow::datatypes::DataType::UInt32)
+            | Some(arrow::datatypes::DataType::UInt64)
+    ) {
+        return knit_core::DataType::Int;
+    }
+    if matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::Float32) | Some(arrow::datatypes::DataType::Float64)
+    ) {
+        return knit_core::DataType::Float;
     }
     knit_core::DataType::String
 }

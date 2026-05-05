@@ -413,7 +413,16 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
         }
         _ => {}
     }
-    infer_arrow_type(&fp.generator_plan)
+
+    let generator_type = infer_arrow_type(&fp.generator_plan);
+
+    // If declared type is String but generator produces non-string (e.g. sequence/distribution
+    // for numeric-string columns), force Utf8 output with cast
+    if fp.data_type == knit_core::DataType::String && generator_type != ArrowDataType::Utf8 {
+        return ArrowDataType::Utf8;
+    }
+
+    generator_type
 }
 
 /// Cast columns in a batch to match the target schema types.
