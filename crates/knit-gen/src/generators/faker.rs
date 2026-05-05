@@ -193,28 +193,41 @@ static DOMAINS: &[&str] = &[
     "fakemail.com", "tempmail.net", "quickmail.org", "simplemail.com", "postoffice.net",
 ];
 
-/// Product adjectives for `product_name` generation.
+/// Product adjectives for `product_name` generation (~60 entries).
 static PRODUCT_ADJECTIVES: &[&str] = &[
     "Ultra", "Pro", "Classic", "Premium", "Essential", "Advanced", "Compact",
     "Deluxe", "Elite", "Smart", "Eco", "Turbo", "Slim", "Heavy-Duty", "Portable",
     "Wireless", "Digital", "Organic", "Natural", "Industrial", "Precision", "Royal",
     "Mega", "Mini", "Supreme", "Rapid", "Silent", "Flex", "Hyper", "Quantum",
+    "Vintage", "Modern", "Rugged", "Sleek", "Ergonomic", "Thermal", "Solar", "Vivid",
+    "Arctic", "Tropic", "Nordic", "Alpine", "Coastal", "Urban", "Rustic", "Luxe",
+    "Atomic", "Stealth", "Summit", "Apex", "Prime", "Core", "Nova", "Volt",
+    "Aero", "Titan", "Zenith", "Craft", "Studio", "Trek",
 ];
 
-/// Product materials/descriptors for `product_name` generation.
+/// Product materials/descriptors for `product_name` generation (~50 entries).
 static PRODUCT_MATERIALS: &[&str] = &[
     "Steel", "Bamboo", "Cotton", "Granite", "Leather", "Silk", "Rubber", "Bronze",
     "Ceramic", "Carbon", "Titanium", "Copper", "Wooden", "Plastic", "Glass", "Marble",
-    "Linen", "Concrete", "Frozen", "Fresh", "Soft", "Recycled", "Chrome", "Velvet",
+    "Linen", "Chrome", "Velvet", "Nylon", "Suede", "Denim", "Canvas", "Aluminum",
+    "Iron", "Brass", "Nickel", "Platinum", "Cobalt", "Graphite", "Quartz", "Jade",
+    "Ivory", "Ebony", "Walnut", "Birch", "Maple", "Cedar", "Pine", "Teak",
+    "Acrylic", "Polymer", "Fiber", "Mesh", "Woven", "Forged", "Cast", "Polished",
+    "Matte", "Satin",
 ];
 
-/// Product nouns for `product_name` generation.
+/// Product nouns for `product_name` generation (~80 entries).
 static PRODUCT_NOUNS: &[&str] = &[
     "Headphones", "Keyboard", "Chair", "Lamp", "Backpack", "Wallet", "Watch", "Shoes",
     "Blender", "Towels", "Gloves", "Jacket", "Bottle", "Speaker", "Camera", "Tablet",
-    "Pan", "Socks", "Hat", "Tuna", "Chips", "Soap", "Cheese", "Salad",
-    "Pizza", "Bike", "Ball", "Table", "Shirt", "Pants", "Mouse", "Monitor",
-    "Bench", "Pillow", "Candle", "Knife", "Mug", "Clock", "Brush", "Blanket",
+    "Pan", "Socks", "Hat", "Bike", "Ball", "Table", "Shirt", "Pants",
+    "Mouse", "Monitor", "Bench", "Pillow", "Candle", "Knife", "Mug", "Clock",
+    "Brush", "Blanket", "Desk", "Shelf", "Cabinet", "Rug", "Vase", "Frame",
+    "Cooler", "Grill", "Mixer", "Toaster", "Iron", "Drill", "Wrench", "Pliers",
+    "Scarf", "Belt", "Boots", "Sandals", "Hoodie", "Vest", "Tie", "Ring",
+    "Earbuds", "Charger", "Router", "Printer", "Scanner", "Tripod", "Lens", "Stand",
+    "Mat", "Rack", "Hook", "Tray", "Basket", "Bin", "Crate", "Box",
+    "Pad", "Case", "Cover", "Strap", "Clip", "Band", "Grip", "Mount",
 ];
 
 /// Street name bases.
