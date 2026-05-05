@@ -139,6 +139,9 @@ pub struct PartitionRange {
 pub struct FieldPlan {
     /// Field name (matches [`Field::name`](knit_core::Field)).
     pub field_name: String,
+    /// Declared data type from the schema (used for output type selection).
+    #[serde(default = "default_data_type")]
+    pub data_type: knit_core::DataType,
     /// Compiled generator with all parameters resolved.
     pub generator_plan: GeneratorPlan,
     /// How to apply null values to this field's output.
@@ -146,6 +149,10 @@ pub struct FieldPlan {
     /// Execution order within the entity. Fields with lower values are generated
     /// first. Derived fields have higher order than their dependencies.
     pub dependency_order: u32,
+}
+
+fn default_data_type() -> knit_core::DataType {
+    knit_core::DataType::String
 }
 
 // ── GeneratorPlan ────────────────────────────────────────────────────

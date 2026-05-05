@@ -163,6 +163,9 @@ pub enum DataType {
     Bool,
     /// Signed 64-bit integer.
     Int,
+    /// Signed 32-bit integer.
+    #[serde(rename = "int32")]
+    Int32,
     /// 64-bit IEEE 754 floating point.
     Float,
     /// Variable-length UTF-8 string.
@@ -192,6 +195,7 @@ impl std::fmt::Display for DataType {
         match self {
             DataType::Bool => write!(f, "bool"),
             DataType::Int => write!(f, "int"),
+            DataType::Int32 => write!(f, "int32"),
             DataType::Float => write!(f, "float"),
             DataType::String => write!(f, "string"),
             DataType::Uuid => write!(f, "uuid"),

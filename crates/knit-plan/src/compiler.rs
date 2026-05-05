@@ -171,6 +171,7 @@ fn compile_field_plans(
 
         plans.push(FieldPlan {
             field_name: field.name.clone(),
+            data_type: field.data_type.clone(),
             generator_plan,
             null_plan,
             dependency_order,
@@ -470,7 +471,7 @@ fn estimate_byte_size(entity: &Entity, row_count: u64) -> u64 {
         .iter()
         .map(|f| match f.data_type {
             knit_core::DataType::Bool => 1,
-            knit_core::DataType::Int => 8,
+            knit_core::DataType::Int | knit_core::DataType::Int32 => 8,
             knit_core::DataType::Float => 8,
             knit_core::DataType::String => 64,
             knit_core::DataType::Uuid => 16,

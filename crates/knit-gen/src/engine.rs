@@ -531,12 +531,14 @@ mod tests {
                         field_plans: vec![
                             FieldPlan {
                                 field_name: "id".into(),
+                                data_type: knit_core::DataType::Int,
                                 generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
                             },
                             FieldPlan {
                                 field_name: "value".into(),
+                                data_type: knit_core::DataType::Int,
                                 generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(99)),
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
@@ -560,12 +562,14 @@ mod tests {
                         field_plans: vec![
                             FieldPlan {
                                 field_name: "id".into(),
+                                data_type: knit_core::DataType::Int,
                                 generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
                             },
                             FieldPlan {
                                 field_name: "parent_id".into(),
+                                data_type: knit_core::DataType::Int,
                                 generator_plan: GeneratorPlan::ForeignKey {
                                     target_entity: "parent".into(),
                                     target_field: "id".into(),
@@ -724,12 +728,14 @@ mod tests {
                     field_plans: vec![
                         FieldPlan {
                             field_name: "id".into(),
+                                data_type: knit_core::DataType::Int,
                             generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                             null_plan: NullPlan::Never,
                             dependency_order: 0,
                         },
                         FieldPlan {
                             field_name: "manager_id".into(),
+                                data_type: knit_core::DataType::Int,
                             generator_plan: GeneratorPlan::ForeignKey {
                                 target_entity: "employee".into(),
                                 target_field: "id".into(),
@@ -862,6 +868,7 @@ mod tests {
                     ],
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
+                                data_type: knit_core::DataType::Int,
                         generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
@@ -938,6 +945,7 @@ mod tests {
                     }],
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
+                                data_type: knit_core::DataType::Int,
                         generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
@@ -1050,6 +1058,7 @@ mod tests {
                     }],
                     field_plans: vec![FieldPlan {
                         field_name: "val".into(),
+                                data_type: knit_core::DataType::Int,
                         generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(42)),
                         null_plan: NullPlan::Probability(0.5),
                         dependency_order: 0,

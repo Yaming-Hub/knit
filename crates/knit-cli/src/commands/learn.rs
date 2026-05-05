@@ -492,6 +492,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         DataType::Timestamp(_, _)
     );
     ca.temporal_range = temporal_range;
+    ca.source_arrow_type = Some(profile.data_type.clone());
     ca
 }
 

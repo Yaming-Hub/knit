@@ -78,6 +78,8 @@ pub struct ColumnAnalysis {
     pub has_time_component: bool,
     /// Min/max timestamps as seconds since epoch (for temporal range).
     pub temporal_range: Option<(f64, f64)>,
+    /// Original Arrow DataType from the source data (for type precision, e.g. Int32 vs Int64).
+    pub source_arrow_type: Option<arrow::datatypes::DataType>,
 }
 
 impl ColumnAnalysis {
@@ -96,6 +98,7 @@ impl ColumnAnalysis {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
+            source_arrow_type: None,
         }
     }
 }
@@ -521,6 +524,18 @@ fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
     None
 }
 
+/// Check whether a column's source Arrow type is a narrow integer (Int32 or smaller).
+fn is_narrow_int_source(col: &ColumnAnalysis) -> bool {
+    matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::Int8)
+            | Some(arrow::datatypes::DataType::Int16)
+            | Some(arrow::datatypes::DataType::Int32)
+            | Some(arrow::datatypes::DataType::UInt8)
+            | Some(arrow::datatypes::DataType::UInt16)
+    )
+}
+
 /// Infer a [`knit_core::DataType`] from column analysis.
 fn infer_data_type(
     col: &ColumnAnalysis,
@@ -541,7 +556,11 @@ fn infer_data_type(
         };
     }
     if fk.is_some() || col.is_primary_key {
-        return knit_core::DataType::Int;
+        return if is_narrow_int_source(col) {
+            knit_core::DataType::Int32
+        } else {
+            knit_core::DataType::Int
+        };
     }
     if col.temporal_pattern.is_some() {
         return if col.has_time_component {
@@ -553,7 +572,11 @@ fn infer_data_type(
     if col.distribution.is_some() {
         // Check if all values are whole numbers → Int
         if col.is_integer_valued {
-            return knit_core::DataType::Int;
+            return if is_narrow_int_source(col) {
+                knit_core::DataType::Int32
+            } else {
+                knit_core::DataType::Int
+            };
         }
         return knit_core::DataType::Float;
     }
@@ -731,6 +754,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -745,6 +769,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 },
             ],
             relationships: vec![],
@@ -777,6 +802,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -815,6 +841,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -849,6 +876,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -937,6 +965,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -964,6 +993,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -995,6 +1025,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -1015,6 +1046,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
@@ -1035,6 +1067,7 @@ mod tests {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
+                    source_arrow_type: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -1059,6 +1092,7 @@ mod tests {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
+                    source_arrow_type: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -1085,6 +1119,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
+                    source_arrow_type: None,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -1111,6 +1146,7 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: false,
                 temporal_range: None,
+                    source_arrow_type: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1140,5 +1176,65 @@ mod tests {
         // Should not match arbitrary columns
         assert_eq!(faker_method_from_column_name("status"), None);
         assert_eq!(faker_method_from_column_name("created_at"), None);
+    }
+
+    #[test]
+    fn infer_int32_from_narrow_source() {
+        let col = ColumnAnalysis {
+            name: "seconds".into(),
+            is_primary_key: false,
+            distribution: Some(make_fit(Distribution::Uniform(0.0, 86400.0))),
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: None,
+            string_patterns: vec![],
+            is_integer_valued: true,
+            has_time_component: false,
+            temporal_range: None,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int32),
+        };
+        assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
+    }
+
+    #[test]
+    fn infer_int64_from_wide_source() {
+        let col = ColumnAnalysis {
+            name: "big_val".into(),
+            is_primary_key: false,
+            distribution: Some(make_fit(Distribution::Uniform(0.0, 1e12))),
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: None,
+            string_patterns: vec![],
+            is_integer_valued: true,
+            has_time_component: false,
+            temporal_range: None,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int64),
+        };
+        assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int);
+    }
+
+    #[test]
+    fn pk_preserves_int32_from_source() {
+        let col = ColumnAnalysis {
+            name: "id".into(),
+            is_primary_key: true,
+            distribution: None,
+            temporal_pattern: None,
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: None,
+            string_patterns: vec![],
+            is_integer_valued: true,
+            has_time_component: false,
+            temporal_range: None,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int32),
+        };
+        assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
     }
 }

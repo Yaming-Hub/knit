@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{bail, Context, Result};
+use arrow::array::ArrayRef;
 use arrow::datatypes::{DataType as ArrowDataType, Field as ArrowField, Schema};
 use arrow::record_batch::RecordBatch;
 use colored::Colorize;
@@ -252,6 +253,12 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
                 sinks.insert(entity_name.to_string(), sink);
             }
 
+            // Cast columns to match the declared Arrow schema (e.g. Int64 → Int32)
+            let target_schema = entity_schemas.get(entity_name).cloned().unwrap_or_else(|| {
+                batch.schema()
+            });
+            let batch = cast_batch_to_schema(&batch, &target_schema)?;
+
             // Write batch
             let sink = sinks.get_mut(entity_name).ok_or_else(|| {
                 knit_gen::GenError::Generation(format!(
@@ -388,11 +395,79 @@ fn build_arrow_schema(ep: &knit_plan::EntityPlan) -> Schema {
         .field_plans
         .iter()
         .map(|fp| {
-            let dt = infer_arrow_type(&fp.generator_plan);
+            let dt = resolve_arrow_type(fp);
             ArrowField::new(&fp.field_name, dt, true)
         })
         .collect();
     Schema::new(fields)
+}
+
+/// Resolve the Arrow data type for a field plan, considering both the declared
+/// data_type and the generator plan.
+fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
+    // If the declared data_type has a specific narrow type, use it
+    match &fp.data_type {
+        knit_core::DataType::Int32 => return ArrowDataType::Int32,
+        _ => {}
+    }
+    infer_arrow_type(&fp.generator_plan)
+}
+
+/// Cast columns in a batch to match the target schema types.
+/// Only casts when types differ and the cast is supported (e.g., Int64 → Int32).
+fn cast_batch_to_schema(
+    batch: &RecordBatch,
+    target_schema: &Arc<Schema>,
+) -> Result<RecordBatch, knit_gen::GenError> {
+    let mut needs_cast = false;
+    for (i, field) in target_schema.fields().iter().enumerate() {
+        if i < batch.num_columns() && batch.column(i).data_type() != field.data_type() {
+            needs_cast = true;
+            break;
+        }
+    }
+    if !needs_cast {
+        return Ok(batch.clone());
+    }
+
+    let mut adjusted_fields: Vec<ArrowField> = target_schema.fields().iter().map(|f| f.as_ref().clone()).collect();
+
+    let columns: Vec<ArrayRef> = batch
+        .columns()
+        .iter()
+        .enumerate()
+        .map(|(i, col)| {
+            let target_type = target_schema.field(i).data_type();
+            if col.data_type() == target_type {
+                col.clone()
+            } else {
+                match arrow::compute::cast(col.as_ref(), target_type) {
+                    Ok(casted) => casted,
+                    Err(e) => {
+                        tracing::warn!(
+                            column = i,
+                            from = %col.data_type(),
+                            to = %target_type,
+                            error = %e,
+                            "cast failed, keeping original type"
+                        );
+                        // Adjust the schema field to match the actual column type
+                        adjusted_fields[i] = ArrowField::new(
+                            adjusted_fields[i].name(),
+                            col.data_type().clone(),
+                            adjusted_fields[i].is_nullable(),
+                        );
+                        col.clone()
+                    }
+                }
+            }
+        })
+        .collect();
+
+    let final_schema = Arc::new(Schema::new(adjusted_fields));
+    RecordBatch::try_new(final_schema, columns).map_err(|e| {
+        knit_gen::GenError::Generation(format!("schema cast error: {}", e))
+    })
 }
 
 /// Infer the Arrow data type from a GeneratorPlan variant.
