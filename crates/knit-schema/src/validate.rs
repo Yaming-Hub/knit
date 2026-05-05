@@ -573,6 +573,8 @@ const KNOWN_FAKER_METHODS: &[&str] = &[
     "zipcode",
     "postal_code",
     "company",
+    "product_name",
+    "product",
     "url",
     "domain",
     "ipv4",

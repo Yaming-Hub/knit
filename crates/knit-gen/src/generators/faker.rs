@@ -193,6 +193,30 @@ static DOMAINS: &[&str] = &[
     "fakemail.com", "tempmail.net", "quickmail.org", "simplemail.com", "postoffice.net",
 ];
 
+/// Product adjectives for `product_name` generation.
+static PRODUCT_ADJECTIVES: &[&str] = &[
+    "Ultra", "Pro", "Classic", "Premium", "Essential", "Advanced", "Compact",
+    "Deluxe", "Elite", "Smart", "Eco", "Turbo", "Slim", "Heavy-Duty", "Portable",
+    "Wireless", "Digital", "Organic", "Natural", "Industrial", "Precision", "Royal",
+    "Mega", "Mini", "Supreme", "Rapid", "Silent", "Flex", "Hyper", "Quantum",
+];
+
+/// Product materials/descriptors for `product_name` generation.
+static PRODUCT_MATERIALS: &[&str] = &[
+    "Steel", "Bamboo", "Cotton", "Granite", "Leather", "Silk", "Rubber", "Bronze",
+    "Ceramic", "Carbon", "Titanium", "Copper", "Wooden", "Plastic", "Glass", "Marble",
+    "Linen", "Concrete", "Frozen", "Fresh", "Soft", "Recycled", "Chrome", "Velvet",
+];
+
+/// Product nouns for `product_name` generation.
+static PRODUCT_NOUNS: &[&str] = &[
+    "Headphones", "Keyboard", "Chair", "Lamp", "Backpack", "Wallet", "Watch", "Shoes",
+    "Blender", "Towels", "Gloves", "Jacket", "Bottle", "Speaker", "Camera", "Tablet",
+    "Pan", "Socks", "Hat", "Tuna", "Chips", "Soap", "Cheese", "Salad",
+    "Pizza", "Bike", "Ball", "Table", "Shirt", "Pants", "Mouse", "Monitor",
+    "Bench", "Pillow", "Candle", "Knife", "Mug", "Clock", "Brush", "Blanket",
+];
+
 /// Street name bases.
 static STREET_NAMES: &[&str] = &[
     "Main", "Oak", "Pine", "Maple", "Cedar", "Elm", "Park", "Lake",
@@ -227,8 +251,8 @@ fn pick<'a>(rng: &mut dyn RngCore, list: &'a [&str]) -> &'a str {
 /// Supported categories: `first_name`, `last_name`, `full_name` / `name`,
 /// `username`, `email`, `word`, `sentence`, `paragraph`, `title`, `phone`,
 /// `address`, `city`, `state`, `country`, `zip_code` / `zipcode` / `postal_code`,
-/// `company`, `url`, `domain`, `ipv4` / `ip_address`, `ipv6`, `color`,
-/// `hex_color`.
+/// `company`, `product_name` / `product`, `url`, `domain`, `ipv4` / `ip_address`,
+/// `ipv6`, `color`, `hex_color`.
 ///
 /// Unknown categories emit a `tracing::warn` on first call and produce the
 /// category name as a constant string — this keeps pipelines running while
@@ -341,6 +365,12 @@ impl FakerGenerator {
                 let prefix = pick(rng, COMPANY_PREFIXES);
                 let suffix = pick(rng, COMPANY_SUFFIXES);
                 format!("{prefix} {suffix}")
+            }
+            "product_name" | "product" => {
+                let adj = pick(rng, PRODUCT_ADJECTIVES);
+                let material = pick(rng, PRODUCT_MATERIALS);
+                let noun = pick(rng, PRODUCT_NOUNS);
+                format!("{adj} {material} {noun}")
             }
             "state" => pick(rng, US_STATES).to_string(),
             "country" => pick(rng, COUNTRIES).to_string(),
