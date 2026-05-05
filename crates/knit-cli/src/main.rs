@@ -143,7 +143,7 @@ enum Command {
     /// Initialize a new knit project with a starter schema.
     Init {
         /// Output file path.
-        #[arg(short, long, default_value = ".weave.toml")]
+        #[arg(short, long, default_value = "schema.weave.toml")]
         output: String,
     },
     /// Infer a Weave schema from existing data files or directories.

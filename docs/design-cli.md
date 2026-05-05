@@ -136,7 +136,7 @@ knit schema diff <a> <b>            Compare two schemas
 
 ### 4.1 `knit init`
 
-Scaffolds a new `.weave.toml` starter schema with documentation comments.
+Scaffolds a new `schema.weave.toml` starter schema with documentation comments.
 
 The data model schema language is the single source of truth for all data
 definitions. The `init` command creates a minimal, well-commented schema file
@@ -146,7 +146,7 @@ the user then edits to define their specific data model.
 **Usage:**
 
 ```bash
-knit init                    # creates .weave.toml in cwd
+knit init                    # creates schema.weave.toml in cwd
 knit init -o my_schema.toml  # custom output path
 ```
 
@@ -157,7 +157,7 @@ knit init -o my_schema.toml  # custom output path
   examples of foreign keys and relationships.
 - **Self-documenting** — The generated file lists all available generator types
   and configuration options as comments.
-- **Output** — Writes a `.weave.toml` file to the current directory (or path
+- **Output** — Writes a `schema.weave.toml` file to the current directory (or path
   specified with `-o`). Refuses to overwrite existing files.
 
 ---
