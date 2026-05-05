@@ -477,7 +477,7 @@ fn estimate_byte_size(entity: &Entity, row_count: u64) -> u64 {
             knit_core::DataType::Uuid => 16,
             knit_core::DataType::Date => 4,
             knit_core::DataType::Time => 8,
-            knit_core::DataType::Datetime | knit_core::DataType::Datetimetz => 8,
+            knit_core::DataType::Datetime | knit_core::DataType::DatetimeUs | knit_core::DataType::Datetimetz => 8,
             knit_core::DataType::Duration => 8,
             knit_core::DataType::Bytes => 128,
             knit_core::DataType::Array => 128,
