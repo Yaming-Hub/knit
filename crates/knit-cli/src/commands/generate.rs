@@ -414,16 +414,16 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
         knit_core::DataType::Array => {
             // Detect element type from OneOf choices if possible
             let elem_type = detect_list_element_type(fp);
-            return ArrowDataType::List(Arc::new(ArrowField::new("item", elem_type, true)));
+            return ArrowDataType::List(Arc::new(ArrowField::new("element", elem_type, true)));
         }
         knit_core::DataType::Map => {
             let (key_type, val_type) = detect_map_kv_types(fp);
             let entries_field = ArrowField::new(
-                "entries",
+                &fp.field_name,
                 ArrowDataType::Struct(
                     vec![
-                        ArrowField::new("keys", key_type, false),
-                        ArrowField::new("values", val_type, true),
+                        ArrowField::new("key", key_type, false),
+                        ArrowField::new("value", val_type, true),
                     ]
                     .into(),
                 ),
@@ -523,9 +523,11 @@ fn detect_map_kv_types(fp: &knit_plan::FieldPlan) -> (ArrowDataType, ArrowDataTy
 fn string_to_list_array(
     col: &ArrayRef,
     element_type: &ArrowDataType,
+    element_field_name: &str,
 ) -> Option<ArrayRef> {
     use arrow::array::{
         Array, as_string_array, Int32Builder, Int64Builder, ListBuilder, StringBuilder,
+        GenericListArray, OffsetSizeTrait,
     };
 
     // Only attempt conversion if source column is actually a string array
@@ -534,7 +536,7 @@ fn string_to_list_array(
     }
     let str_arr = as_string_array(col.as_ref());
 
-    match element_type {
+    let built_array: Option<ArrayRef> = match element_type {
         ArrowDataType::Utf8 => {
             let mut builder = ListBuilder::new(StringBuilder::new());
             for i in 0..str_arr.len() {
@@ -604,7 +606,21 @@ fn string_to_list_array(
             Some(Arc::new(builder.finish()) as ArrayRef)
         }
         _ => None,
-    }
+    };
+
+    // Re-wrap with correct element field name to match source schema
+    built_array.map(|arr| {
+        let list_arr = arr.as_any().downcast_ref::<GenericListArray<i32>>()
+            .expect("string_to_list_array builds ListArray<i32> via ListBuilder");
+        let field = Arc::new(ArrowField::new(element_field_name, element_type.clone(), true));
+        let new_list = GenericListArray::<i32>::new(
+            field,
+            list_arr.offsets().clone(),
+            list_arr.values().clone(),
+            list_arr.nulls().cloned(),
+        );
+        Arc::new(new_list) as ArrayRef
+    })
 }
 
 /// Convert a string array to a MapArray by parsing JSON.
@@ -612,6 +628,7 @@ fn string_to_map_array(
     col: &ArrayRef,
     key_type: &ArrowDataType,
     value_type: &ArrowDataType,
+    field_names: Option<arrow::array::MapFieldNames>,
 ) -> Option<ArrayRef> {
     use arrow::array::{Array, as_string_array, Int32Builder, MapBuilder, StringBuilder};
 
@@ -628,7 +645,7 @@ fn string_to_map_array(
 
     match value_type {
         ArrowDataType::Int32 => {
-            let mut builder = MapBuilder::new(None, StringBuilder::new(), Int32Builder::new());
+            let mut builder = MapBuilder::new(field_names, StringBuilder::new(), Int32Builder::new());
             for i in 0..str_arr.len() {
                 if str_arr.is_null(i) {
                     builder.append(false).ok()?;
@@ -654,7 +671,7 @@ fn string_to_map_array(
             Some(Arc::new(builder.finish()) as ArrayRef)
         }
         ArrowDataType::Utf8 => {
-            let mut builder = MapBuilder::new(None, StringBuilder::new(), StringBuilder::new());
+            let mut builder = MapBuilder::new(field_names, StringBuilder::new(), StringBuilder::new());
             for i in 0..str_arr.len() {
                 if str_arr.is_null(i) {
                     builder.append(false).ok()?;
@@ -716,14 +733,19 @@ fn cast_batch_to_schema(
                 // Try complex type conversion (string → list/map) before standard cast
                 let complex_result = match target_type {
                     ArrowDataType::List(elem_field) => {
-                        string_to_list_array(col, elem_field.data_type())
+                        string_to_list_array(col, elem_field.data_type(), elem_field.name())
                     }
                     ArrowDataType::Map(entries_field, _) => {
                         if let ArrowDataType::Struct(fields) = entries_field.data_type() {
                             if fields.len() == 2 {
                                 let key_type = fields[0].data_type();
                                 let val_type = fields[1].data_type();
-                                string_to_map_array(col, key_type, val_type)
+                                let map_field_names = Some(arrow::array::MapFieldNames {
+                                    entry: entries_field.name().to_string(),
+                                    key: fields[0].name().to_string(),
+                                    value: fields[1].name().to_string(),
+                                });
+                                string_to_map_array(col, key_type, val_type, map_field_names)
                             } else {
                                 None
                             }
