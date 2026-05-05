@@ -391,15 +391,32 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         if !values.is_empty() {
             // Check if all values are integers
             is_integer_valued = values.iter().all(|v| v.fract() == 0.0);
-            distribution = fit_distribution(&values);
-            if let Some(ref fit) = distribution {
-                confidence = (1.0 - fit.best.ks_stat).max(0.0);
-                debug!(
-                    col = %profile.name,
-                    dist = fit.best.distribution.name(),
-                    ks = fit.best.ks_stat,
-                    "distribution fitted"
-                );
+
+            // For low-cardinality integer-valued numeric columns (≤20 distinct values),
+            // prefer categorical to preserve exact source values (e.g., constant columns,
+            // enum-like integers, status codes)
+            if is_integer_valued {
+                let distinct_vals: HashSet<i64> = values.iter().map(|v| *v as i64).collect();
+                if distinct_vals.len() <= 20 {
+                    let str_values: Vec<String> = values.iter().map(|v| format!("{}", *v as i64)).collect();
+                    let cat_fit = fit_categorical(&str_values);
+                    let mut weights: Vec<(String, f64)> = cat_fit.weights.into_iter().collect();
+                    weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                    categorical_weights = Some(weights);
+                }
+            }
+
+            if categorical_weights.is_none() {
+                distribution = fit_distribution(&values);
+                if let Some(ref fit) = distribution {
+                    confidence = (1.0 - fit.best.ks_stat).max(0.0);
+                    debug!(
+                        col = %profile.name,
+                        dist = fit.best.distribution.name(),
+                        ks = fit.best.ks_stat,
+                        "distribution fitted"
+                    );
+                }
             }
         }
     }
