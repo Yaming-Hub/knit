@@ -119,7 +119,7 @@ choices = [
 
 [[entities.fields]]
 name = "in_stock"
-data_type = "int"
+data_type = "bool"
 [entities.fields.generator]
 type = "distribution"
 kind = "bernoulli"
