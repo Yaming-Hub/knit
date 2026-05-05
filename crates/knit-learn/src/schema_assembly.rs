@@ -536,6 +536,23 @@ fn is_narrow_int_source(col: &ColumnAnalysis) -> bool {
     )
 }
 
+/// Check whether source timestamp uses microsecond precision.
+fn is_microsecond_timestamp(col: &ColumnAnalysis) -> bool {
+    matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, _))
+    )
+}
+
+/// Select the appropriate datetime DataType based on source precision.
+fn resolve_datetime_type(col: &ColumnAnalysis) -> knit_core::DataType {
+    if is_microsecond_timestamp(col) {
+        knit_core::DataType::DatetimeUs
+    } else {
+        knit_core::DataType::Datetime
+    }
+}
+
 /// Infer a [`knit_core::DataType`] from column analysis.
 fn infer_data_type(
     col: &ColumnAnalysis,
@@ -550,7 +567,7 @@ fn infer_data_type(
     }
     if matches!(col.inferred_type, Some(InferredType::Date(_))) {
         return if col.has_time_component {
-            knit_core::DataType::Datetime
+            resolve_datetime_type(col)
         } else {
             knit_core::DataType::Date
         };
@@ -564,7 +581,7 @@ fn infer_data_type(
     }
     if col.temporal_pattern.is_some() {
         return if col.has_time_component {
-            knit_core::DataType::Datetime
+            resolve_datetime_type(col)
         } else {
             knit_core::DataType::Date
         };
@@ -1236,5 +1253,63 @@ mod tests {
             source_arrow_type: Some(arrow::datatypes::DataType::Int32),
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
+    }
+
+    #[test]
+    fn temporal_preserves_microsecond_precision() {
+        let col = ColumnAnalysis {
+            name: "start_date".into(),
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: Some(crate::temporal::TemporalPatternSpec {
+                pattern: crate::temporal::TemporalPattern::FixedInterval {
+                    interval_secs: 86400.0,
+                },
+                generator_expr: "time_series(interval=86400s)".into(),
+                confidence: 0.9,
+            }),
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: None,
+            string_patterns: vec![],
+            is_integer_valued: false,
+            has_time_component: true,
+            temporal_range: Some((1700000000.0, 1710000000.0)),
+            source_arrow_type: Some(arrow::datatypes::DataType::Timestamp(
+                arrow::datatypes::TimeUnit::Microsecond,
+                None,
+            )),
+        };
+        assert_eq!(infer_data_type(&col, None), knit_core::DataType::DatetimeUs);
+    }
+
+    #[test]
+    fn temporal_defaults_to_nanosecond() {
+        let col = ColumnAnalysis {
+            name: "created_at".into(),
+            is_primary_key: false,
+            distribution: None,
+            temporal_pattern: Some(crate::temporal::TemporalPatternSpec {
+                pattern: crate::temporal::TemporalPattern::FixedInterval {
+                    interval_secs: 86400.0,
+                },
+                generator_expr: "time_series(interval=86400s)".into(),
+                confidence: 0.9,
+            }),
+            categorical_weights: None,
+            null_rate: 0.0,
+            confidence: 0.9,
+            inferred_type: None,
+            string_patterns: vec![],
+            is_integer_valued: false,
+            has_time_component: true,
+            temporal_range: Some((1700000000.0, 1710000000.0)),
+            source_arrow_type: Some(arrow::datatypes::DataType::Timestamp(
+                arrow::datatypes::TimeUnit::Nanosecond,
+                None,
+            )),
+        };
+        assert_eq!(infer_data_type(&col, None), knit_core::DataType::Datetime);
     }
 }

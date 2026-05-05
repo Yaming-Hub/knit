@@ -178,6 +178,9 @@ pub enum DataType {
     Time,
     /// Date and time without timezone.
     Datetime,
+    /// Date and time without timezone (microsecond precision).
+    #[serde(rename = "datetime_us")]
+    DatetimeUs,
     /// Date and time with timezone offset.
     Datetimetz,
     /// Time duration / interval.
@@ -202,6 +205,7 @@ impl std::fmt::Display for DataType {
             DataType::Date => write!(f, "date"),
             DataType::Time => write!(f, "time"),
             DataType::Datetime => write!(f, "datetime"),
+            DataType::DatetimeUs => write!(f, "datetime_us"),
             DataType::Datetimetz => write!(f, "datetimetz"),
             DataType::Duration => write!(f, "duration"),
             DataType::Bytes => write!(f, "bytes"),
