@@ -28,6 +28,9 @@ e2e_test/
 test_full_e2e.toml
 
 e2e_output/
+e2e_csv/
+e2e_json/
+e2e_parquet/
 test_e2e_output/
 test_schema.toml
 test_e2e.toml
