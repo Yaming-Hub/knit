@@ -154,13 +154,23 @@ fn compile_field_plans(
 
     for field in &entity.fields {
         // Check if this field is a foreign key.
+        // Only use FK generator if the field's declared type is numeric (Int/Int32).
+        // String/UUID FK columns keep their declared generator (uuid, categorical, etc.)
         let generator_plan = if let Some(&target_entity) = fk_map.get(field.name.as_str()) {
-            let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
-            let key_store_kind = select_key_store_kind(target_rows);
-            GeneratorPlan::ForeignKey {
-                target_entity: target_entity.to_string(),
-                target_field: "id".to_string(),
-                key_store_kind,
+            let is_numeric_fk = matches!(
+                field.data_type,
+                knit_core::DataType::Int | knit_core::DataType::Int32
+            );
+            if is_numeric_fk {
+                let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
+                let key_store_kind = select_key_store_kind(target_rows);
+                GeneratorPlan::ForeignKey {
+                    target_entity: target_entity.to_string(),
+                    target_field: "id".to_string(),
+                    key_store_kind,
+                }
+            } else {
+                compile_generator(field, &entity.fields)
             }
         } else {
             compile_generator(field, &entity.fields)
