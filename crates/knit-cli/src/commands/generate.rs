@@ -411,6 +411,26 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
         knit_core::DataType::DatetimeUs => {
             return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None)
         }
+        knit_core::DataType::Array => {
+            // Detect element type from OneOf choices if possible
+            let elem_type = detect_list_element_type(fp);
+            return ArrowDataType::List(Arc::new(ArrowField::new("item", elem_type, true)));
+        }
+        knit_core::DataType::Map => {
+            let (key_type, val_type) = detect_map_kv_types(fp);
+            let entries_field = ArrowField::new(
+                "entries",
+                ArrowDataType::Struct(
+                    vec![
+                        ArrowField::new("keys", key_type, false),
+                        ArrowField::new("values", val_type, true),
+                    ]
+                    .into(),
+                ),
+                false,
+            );
+            return ArrowDataType::Map(Arc::new(entries_field), false);
+        }
         _ => {}
     }
 
@@ -423,6 +443,246 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
     }
 
     generator_type
+}
+
+/// Detect the element type for a List column by inspecting OneOf choices.
+fn detect_list_element_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
+    if let knit_plan::GeneratorPlan::OneOf { choices, .. } = &fp.generator_plan {
+        // Try parsing first non-empty choice as JSON array to detect element type
+        for choice in choices {
+            let s = match &choice.value {
+                knit_core::Value::String(s) => s.clone(),
+                _ => continue,
+            };
+            if let Ok(arr) = serde_json::from_str::<Vec<serde_json::Value>>(&s) {
+                // Check all numeric values to determine appropriate int width
+                let mut has_number = false;
+                let mut fits_i32 = true;
+                let mut is_float = false;
+                for item in &arr {
+                    match item {
+                        serde_json::Value::Number(n) => {
+                            has_number = true;
+                            if n.is_f64() && !n.is_i64() && !n.is_u64() {
+                                is_float = true;
+                            } else if let Some(v) = n.as_i64() {
+                                if v < i32::MIN as i64 || v > i32::MAX as i64 {
+                                    fits_i32 = false;
+                                }
+                            }
+                        }
+                        serde_json::Value::Null => {}
+                        _ => return ArrowDataType::Utf8,
+                    }
+                }
+                if has_number {
+                    if is_float {
+                        return ArrowDataType::Float64;
+                    } else if fits_i32 {
+                        return ArrowDataType::Int32;
+                    } else {
+                        return ArrowDataType::Int64;
+                    }
+                }
+            }
+        }
+    }
+    ArrowDataType::Utf8
+}
+
+/// Detect key and value types for a Map column by inspecting OneOf choices.
+fn detect_map_kv_types(fp: &knit_plan::FieldPlan) -> (ArrowDataType, ArrowDataType) {
+    if let knit_plan::GeneratorPlan::OneOf { choices, .. } = &fp.generator_plan {
+        for choice in choices {
+            let s = match &choice.value {
+                knit_core::Value::String(s) => s.clone(),
+                _ => continue,
+            };
+            if let Ok(map) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&s)
+            {
+                if let Some(val) = map.values().next() {
+                    let val_type = match val {
+                        serde_json::Value::Number(n) => {
+                            if n.is_i64() || n.is_u64() {
+                                ArrowDataType::Int32
+                            } else {
+                                ArrowDataType::Float64
+                            }
+                        }
+                        _ => ArrowDataType::Utf8,
+                    };
+                    return (ArrowDataType::Utf8, val_type);
+                }
+            }
+        }
+    }
+    (ArrowDataType::Utf8, ArrowDataType::Utf8)
+}
+
+/// Convert a string array to a ListArray by parsing JSON.
+fn string_to_list_array(
+    col: &ArrayRef,
+    element_type: &ArrowDataType,
+) -> Option<ArrayRef> {
+    use arrow::array::{
+        Array, as_string_array, Int32Builder, Int64Builder, ListBuilder, StringBuilder,
+    };
+
+    // Only attempt conversion if source column is actually a string array
+    if !matches!(col.data_type(), ArrowDataType::Utf8 | ArrowDataType::LargeUtf8) {
+        return None;
+    }
+    let str_arr = as_string_array(col.as_ref());
+
+    match element_type {
+        ArrowDataType::Utf8 => {
+            let mut builder = ListBuilder::new(StringBuilder::new());
+            for i in 0..str_arr.len() {
+                if str_arr.is_null(i) {
+                    builder.append_null();
+                } else {
+                    let val = str_arr.value(i);
+                    if let Ok(items) = serde_json::from_str::<Vec<Option<String>>>(val) {
+                        for item in &items {
+                            match item {
+                                Some(s) => builder.values().append_value(s),
+                                None => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    } else {
+                        // Treat as single-element list
+                        builder.values().append_value(val);
+                        builder.append(true);
+                    }
+                }
+            }
+            Some(Arc::new(builder.finish()) as ArrayRef)
+        }
+        ArrowDataType::Int32 => {
+            let mut builder = ListBuilder::new(Int32Builder::new());
+            for i in 0..str_arr.len() {
+                if str_arr.is_null(i) {
+                    builder.append_null();
+                } else {
+                    let val = str_arr.value(i);
+                    if let Ok(items) = serde_json::from_str::<Vec<Option<i32>>>(val) {
+                        for item in &items {
+                            match item {
+                                Some(v) => builder.values().append_value(*v),
+                                None => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    } else {
+                        builder.values().append_null();
+                    }
+                }
+            }
+            Some(Arc::new(builder.finish()) as ArrayRef)
+        }
+        ArrowDataType::Int64 => {
+            let mut builder = ListBuilder::new(Int64Builder::new());
+            for i in 0..str_arr.len() {
+                if str_arr.is_null(i) {
+                    builder.append_null();
+                } else {
+                    let val = str_arr.value(i);
+                    if let Ok(items) = serde_json::from_str::<Vec<Option<i64>>>(val) {
+                        for item in &items {
+                            match item {
+                                Some(v) => builder.values().append_value(*v),
+                                None => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    } else {
+                        builder.values().append_null();
+                    }
+                }
+            }
+            Some(Arc::new(builder.finish()) as ArrayRef)
+        }
+        _ => None,
+    }
+}
+
+/// Convert a string array to a MapArray by parsing JSON.
+fn string_to_map_array(
+    col: &ArrayRef,
+    key_type: &ArrowDataType,
+    value_type: &ArrowDataType,
+) -> Option<ArrayRef> {
+    use arrow::array::{Array, as_string_array, Int32Builder, MapBuilder, StringBuilder};
+
+    // Only attempt conversion if source column is actually a string array
+    if !matches!(col.data_type(), ArrowDataType::Utf8 | ArrowDataType::LargeUtf8) {
+        return None;
+    }
+    let str_arr = as_string_array(col.as_ref());
+
+    // Only support Map<String, Int32> and Map<String, String> for now
+    if *key_type != ArrowDataType::Utf8 {
+        return None;
+    }
+
+    match value_type {
+        ArrowDataType::Int32 => {
+            let mut builder = MapBuilder::new(None, StringBuilder::new(), Int32Builder::new());
+            for i in 0..str_arr.len() {
+                if str_arr.is_null(i) {
+                    builder.append(false).ok()?;
+                } else {
+                    let val = str_arr.value(i);
+                    if let Ok(map) =
+                        serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(val)
+                    {
+                        for (k, v) in &map {
+                            builder.keys().append_value(k);
+                            if v.is_null() {
+                                builder.values().append_null();
+                            } else {
+                                builder.values().append_value(v.as_i64().unwrap_or(0) as i32);
+                            }
+                        }
+                        builder.append(true).ok()?;
+                    } else {
+                        builder.append(true).ok()?;
+                    }
+                }
+            }
+            Some(Arc::new(builder.finish()) as ArrayRef)
+        }
+        ArrowDataType::Utf8 => {
+            let mut builder = MapBuilder::new(None, StringBuilder::new(), StringBuilder::new());
+            for i in 0..str_arr.len() {
+                if str_arr.is_null(i) {
+                    builder.append(false).ok()?;
+                } else {
+                    let val = str_arr.value(i);
+                    if let Ok(map) =
+                        serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(val)
+                    {
+                        for (k, v) in &map {
+                            builder.keys().append_value(k);
+                            if v.is_null() {
+                                builder.values().append_null();
+                            } else {
+                                builder
+                                    .values()
+                                    .append_value(v.as_str().unwrap_or_default());
+                            }
+                        }
+                        builder.append(true).ok()?;
+                    } else {
+                        builder.append(true).ok()?;
+                    }
+                }
+            }
+            Some(Arc::new(builder.finish()) as ArrayRef)
+        }
+        _ => None,
+    }
 }
 
 /// Cast columns in a batch to match the target schema types.
@@ -453,23 +713,48 @@ fn cast_batch_to_schema(
             if col.data_type() == target_type {
                 col.clone()
             } else {
-                match arrow::compute::cast(col.as_ref(), target_type) {
-                    Ok(casted) => casted,
-                    Err(e) => {
-                        tracing::warn!(
-                            column = i,
-                            from = %col.data_type(),
-                            to = %target_type,
-                            error = %e,
-                            "cast failed, keeping original type"
-                        );
-                        // Adjust the schema field to match the actual column type
-                        adjusted_fields[i] = ArrowField::new(
-                            adjusted_fields[i].name(),
-                            col.data_type().clone(),
-                            adjusted_fields[i].is_nullable(),
-                        );
-                        col.clone()
+                // Try complex type conversion (string → list/map) before standard cast
+                let complex_result = match target_type {
+                    ArrowDataType::List(elem_field) => {
+                        string_to_list_array(col, elem_field.data_type())
+                    }
+                    ArrowDataType::Map(entries_field, _) => {
+                        if let ArrowDataType::Struct(fields) = entries_field.data_type() {
+                            if fields.len() == 2 {
+                                let key_type = fields[0].data_type();
+                                let val_type = fields[1].data_type();
+                                string_to_map_array(col, key_type, val_type)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                };
+
+                if let Some(converted) = complex_result {
+                    converted
+                } else {
+                    match arrow::compute::cast(col.as_ref(), target_type) {
+                        Ok(casted) => casted,
+                        Err(e) => {
+                            tracing::warn!(
+                                column = i,
+                                from = %col.data_type(),
+                                to = %target_type,
+                                error = %e,
+                                "cast failed, keeping original type"
+                            );
+                            // Adjust the schema field to match the actual column type
+                            adjusted_fields[i] = ArrowField::new(
+                                adjusted_fields[i].name(),
+                                col.data_type().clone(),
+                                adjusted_fields[i].is_nullable(),
+                            );
+                            col.clone()
+                        }
                     }
                 }
             }

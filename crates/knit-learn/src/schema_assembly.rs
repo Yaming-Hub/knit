@@ -588,6 +588,19 @@ fn is_microsecond_timestamp(col: &ColumnAnalysis) -> bool {
     )
 }
 
+/// Check whether source is a List/LargeList type.
+fn is_list_source(col: &ColumnAnalysis) -> bool {
+    matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::List(_)) | Some(arrow::datatypes::DataType::LargeList(_))
+    )
+}
+
+/// Check whether source is a Map type.
+fn is_map_source(col: &ColumnAnalysis) -> bool {
+    matches!(col.source_arrow_type, Some(arrow::datatypes::DataType::Map(_, _)))
+}
+
 /// Select the appropriate datetime DataType based on source precision.
 fn resolve_datetime_type(col: &ColumnAnalysis) -> knit_core::DataType {
     if is_microsecond_timestamp(col) {
@@ -602,6 +615,14 @@ fn infer_data_type(
     col: &ColumnAnalysis,
     fk: Option<&RelationshipCandidate>,
 ) -> knit_core::DataType {
+    // Complex types (List, Map) → preserve as Array/Map
+    if is_list_source(col) {
+        return knit_core::DataType::Array;
+    }
+    if is_map_source(col) {
+        return knit_core::DataType::Map;
+    }
+
     // Respect source string type: if the source column was stored as a string,
     // preserve it as String regardless of content analysis (numeric-looking strings
     // should remain strings to maintain fidelity with the source data).
