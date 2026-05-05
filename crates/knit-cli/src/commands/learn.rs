@@ -4,7 +4,7 @@
 //! profiles columns, fits distributions, detects relationships and
 //! correlations, and assembles a complete Weave schema.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use anyhow::{Context, Result};
@@ -183,7 +183,18 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
         .and_then(|s| s.to_str())
         .unwrap_or("learned")
         .to_string();
-    let data_model = assemble_data_model(&model_name, &table_analyses);
+    let mut data_model = assemble_data_model(&model_name, &table_analyses);
+
+    // 5b. Extract dictionaries for high-cardinality string columns
+    let output_dir = Path::new(output)
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+    let dict_count = extract_dictionaries(
+        &mut data_model,
+        &tables,
+        output_dir,
+        cli.quiet,
+    )?;
 
     // 6. Serialize to TOML and write output
     // Wrap in RawSchema structure for proper TOML output
@@ -219,17 +230,19 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
             "columns": total_columns,
             "relationships": total_rels,
             "correlations": total_corrs,
+            "dictionaries": dict_count,
         });
         println!("{}", summary);
     } else if !cli.quiet {
         eprintln!(
-            "\n{} Wrote {} — {} table(s), {} column(s), {} relationship(s), {} correlation(s)",
+            "\n{} Wrote {} — {} table(s), {} column(s), {} relationship(s), {} correlation(s), {} dictionary(ies)",
             "✓".green().bold(),
             output.cyan(),
             table_analyses.len(),
             total_columns,
             total_rels,
             total_corrs,
+            dict_count,
         );
     }
 
@@ -1006,6 +1019,271 @@ fn pick_best_pk(columns: &[RelColumn], table_name: &str) -> usize {
 
     // Priority 3: first candidate by position
     candidates[0]
+}
+
+/// Extract dictionaries for high-cardinality string columns.
+///
+/// Walks the assembled data model looking for fields with `Faker { method: "word" }`
+/// generators (the fallback for free-text columns). For each such field, extracts
+/// unique non-null string values from the source data, writes them to a `.dict.txt`
+/// file, and replaces the generator with `Dictionary { file, expansion }`.
+///
+/// Returns the number of dictionary files written.
+fn extract_dictionaries(
+    model: &mut knit_core::DataModel,
+    tables: &[IngestionResult],
+    output_dir: &Path,
+    quiet: bool,
+) -> Result<usize> {
+    use std::io::Write;
+
+    let mut dict_count = 0;
+
+    for entity in &mut model.entities {
+        // Find the matching source table
+        let source_table = tables.iter().find(|t| t.entity == entity.name);
+        let Some(table) = source_table else {
+            continue;
+        };
+
+        for field in &mut entity.fields {
+            // Check if this field uses a fallback faker generator that would benefit
+            // from dictionary extraction. This includes "word" (generic fallback) and
+            // "name" (detected from capitalized multi-word patterns) since the actual
+            // source values are more domain-specific than faker output.
+            let is_extractable_faker = matches!(
+                &field.generator,
+                Some(knit_core::GeneratorSpec::Faker { method, .. })
+                    if method == "word" || method == "name" || method == "product_name"
+            );
+            if !is_extractable_faker {
+                continue;
+            }
+
+            // Extract unique string values from source data
+            let unique_values = extract_unique_strings_from_batches(&table.batches, &field.name);
+            if unique_values.is_empty() {
+                continue;
+            }
+
+            // Only extract dictionary if there are enough distinct values
+            // (categorical columns with ≤50 values are handled by one_of already)
+            if unique_values.len() <= 50 {
+                continue;
+            }
+
+            // Write dictionary file (sanitize filename components)
+            let dict_filename = format!(
+                "{}_{}.dict.txt",
+                sanitize_filename_component(&entity.name),
+                sanitize_filename_component(&field.name)
+            );
+            let dict_path = output_dir.join(&dict_filename);
+            let mut file = std::fs::File::create(&dict_path)
+                .with_context(|| format!("failed to create dictionary file '{}'", dict_path.display()))?;
+
+            // Filter out values containing line breaks (would corrupt one-per-line format)
+            let clean_values: Vec<&String> = unique_values
+                .iter()
+                .filter(|v| !v.contains('\n') && !v.contains('\r'))
+                .collect();
+
+            if clean_values.is_empty() {
+                continue;
+            }
+
+            for val in &clean_values {
+                writeln!(file, "{}", val)?;
+            }
+
+            // Determine expansion strategy based on value structure
+            let owned_clean: Vec<String> = clean_values.iter().map(|s| s.to_string()).collect();
+            let expansion = detect_expansion_strategy(&owned_clean);
+
+            // Replace generator with dictionary reference
+            field.generator = Some(knit_core::GeneratorSpec::Dictionary {
+                file: dict_filename.clone(),
+                expansion,
+            });
+
+            dict_count += 1;
+
+            if !quiet {
+                eprintln!(
+                    "  {} extracted {} → {} unique values ({})",
+                    "📖".dimmed(),
+                    dict_filename,
+                    clean_values.len(),
+                    field.name,
+                );
+            }
+        }
+    }
+
+    Ok(dict_count)
+}
+
+/// Maximum number of entries in an extracted dictionary file.
+///
+/// Prevents unbounded memory/disk usage for very high-cardinality columns.
+const MAX_DICTIONARY_ENTRIES: usize = 10_000;
+
+/// Sanitize a string for use as a filename component.
+///
+/// Replaces characters that are invalid in Windows/Unix filenames with underscores,
+/// and collapses sequences of underscores. Prevents path traversal by stripping
+/// separators and `..`.
+fn sanitize_filename_component(name: &str) -> String {
+    let sanitized: String = name
+        .chars()
+        .map(|c| match c {
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' | '.' => '_',
+            c if c.is_ascii_control() => '_',
+            _ => c,
+        })
+        .collect();
+    // Collapse multiple underscores and trim leading/trailing underscores
+    let mut result = String::new();
+    let mut last_was_underscore = true; // trim leading
+    for c in sanitized.chars() {
+        if c == '_' {
+            if !last_was_underscore {
+                result.push('_');
+            }
+            last_was_underscore = true;
+        } else {
+            result.push(c);
+            last_was_underscore = false;
+        }
+    }
+    // Trim trailing underscore
+    while result.ends_with('_') {
+        result.pop();
+    }
+    if result.is_empty() {
+        "unnamed".to_string()
+    } else {
+        result
+    }
+}
+
+/// Extract unique non-null string values from record batches for a given column.
+///
+/// Stops after [`MAX_DICTIONARY_ENTRIES`] unique values to bound memory usage.
+fn extract_unique_strings_from_batches(batches: &[RecordBatch], col_name: &str) -> Vec<String> {
+    let mut seen = HashSet::new();
+    let mut values = Vec::new();
+
+    'outer: for batch in batches {
+        let Some(idx) = batch.schema().index_of(col_name).ok() else {
+            continue;
+        };
+        let col = batch.column(idx);
+
+        match col.data_type() {
+            DataType::Utf8 => {
+                let arr = col.as_any().downcast_ref::<StringArray>().unwrap();
+                for i in 0..arr.len() {
+                    if values.len() >= MAX_DICTIONARY_ENTRIES {
+                        break 'outer;
+                    }
+                    if !arr.is_null(i) {
+                        let val = arr.value(i).trim();
+                        if !val.is_empty() && seen.insert(val.to_string()) {
+                            values.push(val.to_string());
+                        }
+                    }
+                }
+            }
+            DataType::LargeUtf8 => {
+                let arr = col.as_any().downcast_ref::<LargeStringArray>().unwrap();
+                for i in 0..arr.len() {
+                    if values.len() >= MAX_DICTIONARY_ENTRIES {
+                        break 'outer;
+                    }
+                    if !arr.is_null(i) {
+                        let val = arr.value(i).trim();
+                        if !val.is_empty() && seen.insert(val.to_string()) {
+                            values.push(val.to_string());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    values
+}
+
+/// Detect the best expansion strategy based on dictionary value structure.
+///
+/// Uses heuristics:
+/// - If most values are multi-word with consistent token count AND tokens reuse
+///   across entries at each position → "combinatorial"
+/// - Otherwise → "sample"
+fn detect_expansion_strategy(values: &[String]) -> String {
+    if values.is_empty() || values.len() < 5 {
+        return "sample".to_string();
+    }
+
+    // Count tokens per value
+    let token_counts: Vec<usize> = values.iter().map(|v| v.split_whitespace().count()).collect();
+
+    // Check if values are multi-word with consistent structure
+    let multi_word = token_counts.iter().filter(|&&c| c > 1).count();
+    if multi_word as f64 / values.len() as f64 <= 0.8 {
+        return "sample".to_string();
+    }
+
+    // Check consistent token count
+    let mode_count = most_common_count(&token_counts);
+    let mode_matches = token_counts.iter().filter(|&&c| c == mode_count).count();
+    if mode_matches as f64 / values.len() as f64 <= 0.6 {
+        return "sample".to_string();
+    }
+
+    // Additional check: verify token reuse at positions (evidence of combinatorial structure).
+    // If tokens repeat across entries at the same position, combinatorial makes sense.
+    let conforming: Vec<Vec<&str>> = values
+        .iter()
+        .filter_map(|v| {
+            let tokens: Vec<&str> = v.split_whitespace().collect();
+            if tokens.len() == mode_count { Some(tokens) } else { None }
+        })
+        .collect();
+
+    if conforming.len() < 5 {
+        return "sample".to_string();
+    }
+
+    // Check that at least one position has token reuse (not all unique)
+    let mut has_reuse = false;
+    for pos in 0..mode_count {
+        let mut position_tokens = HashSet::new();
+        for entry in &conforming {
+            position_tokens.insert(entry[pos]);
+        }
+        // If tokens at this position are fewer than entries, there's reuse
+        if position_tokens.len() < conforming.len() {
+            has_reuse = true;
+            break;
+        }
+    }
+
+    if has_reuse { "combinatorial".to_string() } else { "sample".to_string() }
+}
+
+/// Find the most common value in a slice of counts.
+fn most_common_count(counts: &[usize]) -> usize {
+    let mut freq: HashMap<usize, usize> = HashMap::new();
+    for &c in counts {
+        *freq.entry(c).or_insert(0) += 1;
+    }
+    freq.into_iter()
+        .max_by_key(|(_, count)| *count)
+        .map(|(val, _)| val)
+        .unwrap_or(1)
 }
 
 #[cfg(test)]
