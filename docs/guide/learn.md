@@ -257,6 +257,54 @@ sigma = 1.1
 
 ---
 
+## Incremental Learning (Large Datasets)
+
+For datasets too large to fit in memory, `knit learn` supports **incremental
+mode**. Instead of loading all data at once, you process data in chunks and
+accumulate statistical state across multiple invocations.
+
+### Basic Usage
+
+```bash
+# Process first chunk — creates state file
+knit learn data/chunk1.csv --state learned.state
+
+# Process additional chunks — updates state
+knit learn data/chunk2.csv --state learned.state
+knit learn data/chunk3.csv --state learned.state
+
+# Generate schema from accumulated state
+knit learn --finalize --state learned.state -o schema.weave.toml
+```
+
+### How It Works
+
+The state file stores **sufficient statistics** (not raw data): streaming
+means/variances, percentile sketches, cardinality estimates, and value
+samples. Each chunk is processed with bounded memory and merged into the
+state.
+
+| Mode | When to Use |
+|------|-------------|
+| `--state` without `-o` | Update state only (accumulate evidence) |
+| `--state` with `-o` | Update state AND emit schema |
+| `--finalize --state` | Emit schema from existing state (no new data) |
+
+### Limitations vs Batch Mode
+
+- Relationship detection uses approximate overlap estimation (HLL sketches)
+- Distribution fitting uses a reservoir sample (10K values), not full data
+- Percentiles have ~1% relative error (t-digest approximation)
+- Type inference and null rates remain exact
+
+For datasets that fit in memory, batch mode (no `--state`) remains the
+best choice for maximum accuracy.
+
+See the [Incremental Learning Design](../design-incremental-learn.md) for
+full technical details.
+
+---
+
 ## What's Next?
 
 - **[Schema Language Tutorial](schema-language.md)** — Understand and tune
