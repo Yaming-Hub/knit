@@ -20,6 +20,8 @@
 - [10. Schema Drift & Type Evolution](#10-schema-drift--type-evolution)
 - [11. Determinism](#11-determinism)
 - [12. Ingestion Semantics](#12-ingestion-semantics)
+- [12b. Concurrency & Atomicity](#12b-concurrency--atomicity)
+- [12c. Memory Estimation](#12c-memory-estimation)
 - [13. State Versioning & Migration](#13-state-versioning--migration)
 - [14. Testing Strategy](#14-testing-strategy)
 - [15. Implementation Plan](#15-implementation-plan)
@@ -121,6 +123,7 @@ knit learn data/last_chunk.csv --state learned.state -o schema.weave.toml
 --state <PATH>       Path to state file (creates if absent, updates if exists)
 --finalize           Emit schema from state without processing new data
 --chunk-size <N>     Max rows per internal processing chunk (default: 100,000)
+--strict             Error on duplicate source paths (default: warn)
 ```
 
 ---
@@ -210,7 +213,7 @@ pub struct ColumnState {
 | Count, null count | Exact counter | Exact |
 | Min, max | Running min/max | Exact |
 | Mean, variance | Welford's online algorithm | Exact (given ordering) |
-| Percentiles (p25, p50, p75, p95, p99) | t-digest (δ=100) | ≤1% relative error |
+| Percentiles (p25, p50, p75, p95, p99) | t-digest (δ=100) | Bounded rank error (δ-dependent) |
 | Histogram | Adaptive histogram (max 200 bins) | Approximate |
 | Integer detection | Track `all_integer` flag | Exact |
 | Decimal places | Track max observed | Exact |
@@ -229,10 +232,12 @@ pub struct NumericState {
     pub all_integer: bool,
     /// Max decimal places observed.
     pub max_decimal_places: u8,
-    /// Sum (for exact mean with full precision).
-    pub sum: f64,
 }
 ```
+
+> Note: Sum is derivable as `mean * count` when needed for state merging.
+> Welford's algorithm is preferred over sum/sum_squares for numerical
+> stability with large datasets.
 
 ### String Columns
 
@@ -317,7 +322,7 @@ batch mode:
 |---------|-----------|-----------------|----------|
 | **Type inference** | Full data | Reservoir sample (500 values) | ≈ Exact (high-cardinality types converge quickly) |
 | **Distribution fitting (KS/AIC)** | Full data | Reservoir sample (10,000 values) | Approximate (bounded error with 10K samples) |
-| **Percentiles** | Exact (sort-based) | T-digest (δ=100) | ≤1% relative error |
+| **Percentiles** | Exact (sort-based) | T-digest (δ=100) | Bounded rank error (tight at extremes, looser at median) |
 | **Categorical detection** | Exact distinct count | HyperLogLog + Top-K | ~0.8% cardinality error; exact for top-1000 |
 | **Temporal pattern detection** | Full delta series | Counter-based (DOW/hour) + delta stats | Frequency/seasonality preserved; complex patterns may degrade |
 | **Relationship detection** | Full value overlap | Two-stage: naming heuristic → HLL intersection | May miss weak FK relationships; false positive rate bounded |
@@ -369,8 +374,12 @@ flowchart LR
 
 **Stage 2** (only for shortlisted pairs):
 - Maintain HyperLogLog per candidate column
-- Estimate Jaccard similarity via HLL intersection
+- Estimate **coverage ratio** via HLL: `|FK ∩ PK| / |FK|` (what fraction of FK values exist in PK)
 - Track cardinality ratio evolution
+
+Note: Coverage (not Jaccard) is the correct metric for FK detection. A FK column
+with 1K values referencing a PK with 1M values has coverage ≈ 1.0 (perfect FK) but
+Jaccard ≈ 0.001 (would be incorrectly rejected).
 
 **At finalize**: Apply the same thresholds as batch mode to accumulated
 evidence.
@@ -389,8 +398,8 @@ pub struct RelationshipEvidence {
     pub from_hll: HyperLogLog,
     /// HLL sketch for PK column values.
     pub to_hll: HyperLogLog,
-    /// Estimated overlap ratio (updated each chunk).
-    pub overlap_estimate: f64,
+    /// Estimated FK coverage ratio: |FK ∩ PK| / |FK| (updated each chunk).
+    pub coverage_estimate: f64,
     /// Naming heuristic confidence.
     pub naming_score: f64,
 }
@@ -431,8 +440,16 @@ These require per-group statistics. The state tracks:
 
 To avoid O(columns²) state:
 - Only track correlations for columns within the same table
-- Limit to top 20 columns per table (by non-null count)
+- Limit to top 20 columns per table (configurable via `--max-corr-columns`)
+- Selection criteria: prefer columns with high variance (numeric) or moderate
+  cardinality (categorical, 3–100 distinct values) — these are most likely to
+  have meaningful correlations
 - Skip correlation tracking for PK/FK columns (handled by relationships)
+
+> **Rationale for default cap of 20**: With 20 columns, pairwise state is
+> 190 pairs × ~200 bytes ≈ 38 KB per table — negligible. At 50 columns it
+> grows to 1225 pairs (still manageable but diminishing returns for
+> correlation quality). The default balances memory with coverage.
 
 ---
 
@@ -503,8 +520,10 @@ different reservoir samples, but the error is bounded.
 Chunks are processed under **append-only, non-overlapping** semantics:
 
 - Each chunk's rows are counted exactly once
-- Re-processing a chunk **will** double-count (no dedup)
-- The state file records `chunks_processed` for diagnostics
+- Re-processing a chunk **will** double-count (no automatic dedup)
+- The state file records source paths of processed chunks
+- **Duplicate source warning**: If a source path matches a previously processed
+  chunk, the CLI emits a warning (and errors in `--strict` mode)
 - Users are responsible for feeding non-overlapping data
 
 ### Chunk Identity Tracking
@@ -513,7 +532,7 @@ The state file records metadata about processed chunks:
 
 ```rust
 pub struct ChunkRecord {
-    /// Source file path (for diagnostics only).
+    /// Source file path (used for duplicate detection).
     pub source: String,
     /// Number of rows in this chunk.
     pub row_count: u64,
@@ -522,8 +541,10 @@ pub struct ChunkRecord {
 }
 ```
 
-This is informational only — not used for dedup. Users can inspect
-chunk history to detect accidental reprocessing.
+Duplicate detection uses the canonical source path. When a duplicate is
+detected:
+- Default: warn and continue (allows intentional reprocessing)
+- `--strict` mode: error and abort
 
 ### Internal Chunking
 
@@ -542,6 +563,80 @@ sequenceDiagram
         Note right of State: Bounded memory
     end
 ```
+
+---
+
+## 12b. Concurrency & Atomicity
+
+### File Safety
+
+The state file is not designed for concurrent access by multiple processes.
+The following safeguards ensure data integrity:
+
+1. **Atomic writes**: State is written to a temporary file (`<path>.tmp`),
+   then atomically renamed over the target. This prevents corruption from
+   interrupted writes.
+
+2. **Advisory file lock**: Before reading or writing state, the CLI acquires
+   an advisory lock (`<path>.lock`). If the lock is held, the CLI waits
+   (with timeout) or errors.
+
+3. **Documented limitation**: Concurrent access to the same state file from
+   multiple processes is not supported. Users should serialize chunk processing
+   (e.g., sequential shell commands or a pipeline orchestrator).
+
+### Error Recovery
+
+If the process crashes mid-update:
+- The original state file remains intact (atomic rename not yet executed)
+- The `.tmp` file may exist and should be cleaned up on next run
+- No state corruption is possible
+
+---
+
+## 12c. Memory Estimation
+
+### Per-Column Memory Budget
+
+| Component | Size (approximate) |
+|-----------|-------------------|
+| NumericState (Welford + min/max) | 64 bytes |
+| T-digest (δ=100, ~200 centroids) | 3.2 KB |
+| HyperLogLog (p=14, 16K registers) | 16 KB |
+| ReservoirSample (10K strings, avg 20 chars) | 200 KB |
+| TopKTracker (1000 entries, avg 20 chars) | 40 KB |
+| StringState (length stats + pattern sample) | 15 KB |
+| TemporalState (counters + delta stats) | 1 KB |
+
+**Total per column**: ~275 KB (string) or ~4 KB (pure numeric)
+
+### Scaling Examples
+
+| Dataset | Columns | Memory (in-process) | State File Size |
+|---------|---------|--------------------|-----------------| 
+| Small (5 tables, 20 cols) | 20 | ~5 MB | ~2 MB |
+| Medium (20 tables, 100 cols) | 100 | ~27 MB | ~12 MB |
+| Wide (5 tables, 500 cols) | 500 | ~135 MB | ~60 MB |
+
+### Relationship Evidence
+
+- 500 tracked pairs × 2 HLLs × 16 KB = ~16 MB
+- Total relationship state: ~16 MB (independent of column count)
+
+### Correlation State
+
+- 20 columns/table × 190 pairs × 200 bytes × 20 tables = ~760 KB
+- Negligible relative to column state
+
+### Chunk Processing Memory
+
+During chunk processing, memory usage is:
+- Internal chunk (100K rows × avg row size) + column state updates
+- For 100K rows × 100 columns × 8 bytes avg = ~80 MB transient
+- Released after each internal chunk
+
+**Total peak memory** ≈ column state + relationship state + one chunk buffer
+≈ 50–200 MB for typical datasets (regardless of total dataset size)
 
 ---
 
@@ -637,13 +732,24 @@ Build the `LearnState` / `TableState` / `ColumnState` container:
 
 Wire incremental mode into the CLI:
 
-- `--state` flag and `--finalize` flag
+- `--state` flag, `--finalize` flag, `--strict` flag
 - Internal chunked ingestion (process N rows at a time)
 - Update-only mode (state but no schema output)
 - Finalize mode (schema from state without new data)
 - Combined mode (update + finalize in one pass)
+- **Finalize logic**: type inference from reservoir samples, distribution
+  fitting from reservoir samples (reuse existing `fit_distribution` on sample),
+  schema assembly from state-derived `ColumnAnalysis`/`TableAnalysis`
+- Atomic state file writes + advisory locking
+- Duplicate source path warning
 - Batch mode unchanged (no `--state`)
 - Integration tests
+
+> **Note:** Finalize reuses existing batch-mode analysis functions
+> (`fit_distribution`, `infer_type`, `assemble_data_model`) by constructing
+> the same `ColumnAnalysis`/`TableAnalysis` inputs from accumulated state.
+> No new fitting algorithms are needed — the state provides sufficient inputs
+> (reservoir samples for fitting, counters for profiling).
 
 **Dependencies:** PR 3
 
