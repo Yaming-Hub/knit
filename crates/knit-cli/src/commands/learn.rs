@@ -345,6 +345,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     if is_complex_type(&profile.data_type) {
         let display_values = extract_complex_display_values(batch, &profile.name);
         let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, 0.8);
+        ca.source_arrow_type = Some(profile.data_type.clone());
         if !display_values.is_empty() {
             let cat_fit = fit_categorical(&display_values);
             let mut weights: Vec<(String, f64)> = cat_fit.weights.into_iter().collect();
@@ -689,8 +690,6 @@ fn is_complex_type(dt: &DataType) -> bool {
 /// Uses Arrow's display formatter to produce human-readable text. Caps at 1000
 /// non-null values to bound memory usage for high-cardinality columns.
 fn extract_complex_display_values(batch: &RecordBatch, col_name: &str) -> Vec<String> {
-    use arrow::util::display::ArrayFormatter;
-
     let Some(idx) = batch.schema().index_of(col_name).ok() else {
         return Vec::new();
     };
@@ -698,18 +697,151 @@ fn extract_complex_display_values(batch: &RecordBatch, col_name: &str) -> Vec<St
     let mut values = Vec::new();
     let cap = 1000;
 
-    let options = arrow::util::display::FormatOptions::default();
-    if let Ok(formatter) = ArrayFormatter::try_new(col.as_ref(), &options) {
-        for i in 0..col.len() {
-            if !col.is_null(i) {
-                values.push(format!("{}", formatter.value(i)));
-                if values.len() >= cap {
-                    break;
+    // Serialize complex types as JSON for faithful round-trip reconstruction
+    for i in 0..col.len() {
+        if col.is_null(i) {
+            continue;
+        }
+        if let Some(json_str) = complex_value_to_json(col.as_ref(), i) {
+            values.push(json_str);
+        }
+        if values.len() >= cap {
+            break;
+        }
+    }
+    values
+}
+
+/// Serialize list elements to a JSON array string.
+fn list_value_to_json(value_arr: &dyn arrow::array::Array) -> String {
+    use arrow::array::{as_string_array, AsArray};
+    use arrow::datatypes::DataType as ADT;
+
+    let mut items = Vec::new();
+    match value_arr.data_type() {
+        ADT::Utf8 => {
+            let str_arr = as_string_array(value_arr);
+            for j in 0..str_arr.len() {
+                if str_arr.is_null(j) {
+                    items.push(serde_json::Value::Null);
+                } else {
+                    items.push(serde_json::Value::String(str_arr.value(j).to_string()));
+                }
+            }
+        }
+        ADT::Int32 => {
+            let int_arr = value_arr.as_primitive::<arrow::datatypes::Int32Type>();
+            for j in 0..int_arr.len() {
+                if int_arr.is_null(j) {
+                    items.push(serde_json::Value::Null);
+                } else {
+                    items.push(serde_json::Value::Number(int_arr.value(j).into()));
+                }
+            }
+        }
+        ADT::Int64 => {
+            let int_arr = value_arr.as_primitive::<arrow::datatypes::Int64Type>();
+            for j in 0..int_arr.len() {
+                if int_arr.is_null(j) {
+                    items.push(serde_json::Value::Null);
+                } else {
+                    items.push(serde_json::Value::Number(int_arr.value(j).into()));
+                }
+            }
+        }
+        _ => {
+            let options = arrow::util::display::FormatOptions::default();
+            if let Ok(formatter) =
+                arrow::util::display::ArrayFormatter::try_new(value_arr, &options)
+            {
+                for j in 0..value_arr.len() {
+                    items.push(serde_json::Value::String(
+                        format!("{}", formatter.value(j)),
+                    ));
                 }
             }
         }
     }
-    values
+    serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string())
+}
+
+/// Serialize a single complex-type value (List, Map) at index `i` to JSON string.
+fn complex_value_to_json(array: &dyn arrow::array::Array, i: usize) -> Option<String> {
+    use arrow::array::{as_string_array, AsArray};
+    use arrow::datatypes::DataType as ADT;
+
+    match array.data_type() {
+        ADT::List(_) => {
+            let list_arr = array.as_list_opt::<i32>()?;
+            let value_arr = list_arr.value(i);
+            Some(list_value_to_json(value_arr.as_ref()))
+        }
+        ADT::LargeList(_) => {
+            let list_arr = array.as_list_opt::<i64>()?;
+            let value_arr = list_arr.value(i);
+            Some(list_value_to_json(value_arr.as_ref()))
+        }
+        ADT::Map(_, _) => {
+            let map_arr = array.as_map();
+            let offsets = map_arr.offsets();
+            let start = offsets[i] as usize;
+            let end = offsets[i + 1] as usize;
+            let keys = map_arr.keys();
+            let values = map_arr.values();
+            let mut map = serde_json::Map::new();
+
+            let key_strs: Vec<String> = match keys.data_type() {
+                ADT::Utf8 => {
+                    let str_arr = as_string_array(keys.as_ref());
+                    (start..end).map(|j| str_arr.value(j).to_string()).collect()
+                }
+                _ => (start..end).map(|j| format!("key_{}", j)).collect(),
+            };
+
+            match values.data_type() {
+                ADT::Int32 => {
+                    let int_arr = values.as_primitive::<arrow::datatypes::Int32Type>();
+                    for (j, key) in (start..end).zip(key_strs) {
+                        if int_arr.is_null(j) {
+                            map.insert(key, serde_json::Value::Null);
+                        } else {
+                            map.insert(key, serde_json::Value::Number(int_arr.value(j).into()));
+                        }
+                    }
+                }
+                ADT::Int64 => {
+                    let int_arr = values.as_primitive::<arrow::datatypes::Int64Type>();
+                    for (j, key) in (start..end).zip(key_strs) {
+                        if int_arr.is_null(j) {
+                            map.insert(key, serde_json::Value::Null);
+                        } else {
+                            map.insert(key, serde_json::Value::Number(int_arr.value(j).into()));
+                        }
+                    }
+                }
+                ADT::Utf8 => {
+                    let str_arr = as_string_array(values.as_ref());
+                    for (j, key) in (start..end).zip(key_strs) {
+                        if str_arr.is_null(j) {
+                            map.insert(key, serde_json::Value::Null);
+                        } else {
+                            map.insert(key, serde_json::Value::String(str_arr.value(j).to_string()));
+                        }
+                    }
+                }
+                _ => {
+                    let options = arrow::util::display::FormatOptions::default();
+                    if let Ok(formatter) = arrow::util::display::ArrayFormatter::try_new(values.as_ref(), &options) {
+                        for (j, key) in (start..end).zip(key_strs) {
+                            map.insert(key, serde_json::Value::String(format!("{}", formatter.value(j))));
+                        }
+                    }
+                }
+            }
+            serde_json::to_string(&map).ok()
+        }
+        _ => None,
+    }
 }
 
 /// Extract distinct string representations of column values for relationship detection.
