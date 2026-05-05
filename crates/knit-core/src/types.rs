@@ -340,10 +340,28 @@ pub enum GeneratorSpec {
         #[serde(default)]
         exclude_weekends: bool,
     },
+    /// Sample from an external dictionary file (one value per line).
+    ///
+    /// When more unique values are needed than the dictionary contains,
+    /// the `expansion` strategy determines how to grow the value space.
+    Dictionary {
+        /// Path to the dictionary file (relative to schema file).
+        file: String,
+        /// Expansion strategy when dictionary is exhausted.
+        ///
+        /// - `"sample"` — sample with replacement (duplicates allowed, default)
+        /// - `"combinatorial"` — tokenize entries, recombine from positional pools
+        /// - `"suffix"` — append numeric suffixes (-001, -002, etc.)
+        #[serde(default = "default_expansion")]
+        expansion: String,
+    },
 }
 
 fn default_step() -> i64 {
     1
+}
+fn default_expansion() -> String {
+    "sample".to_string()
 }
 fn default_max_retries() -> u32 {
     1000

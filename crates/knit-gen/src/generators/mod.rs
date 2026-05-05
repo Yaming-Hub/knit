@@ -10,6 +10,7 @@ pub mod conditional;
 pub mod constant;
 pub mod correlation;
 pub mod derived;
+pub mod dictionary;
 pub mod distribution;
 pub mod faker;
 pub mod fk;
@@ -129,6 +130,14 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             field.clone(),
             branches.iter().map(|(v, p)| (v.clone(), (**p).clone())).collect(),
             (**default).clone(),
+        )),
+        GeneratorPlan::Dictionary {
+            entries,
+            expansion,
+            ..
+        } => Box::new(dictionary::DictionaryGenerator::new(
+            entries.clone(),
+            expansion.clone(),
         )),
     }
 }

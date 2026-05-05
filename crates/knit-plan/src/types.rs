@@ -289,6 +289,20 @@ pub enum GeneratorPlan {
         /// Fallback generator when no branch matches.
         default: Box<GeneratorPlan>,
     },
+    /// Dictionary-based generator — samples from an external word list.
+    ///
+    /// Entries are loaded from a text file (one value per line). The expansion
+    /// strategy controls behavior when more values are needed than the
+    /// dictionary contains.
+    Dictionary {
+        /// The loaded dictionary entries (populated by CLI after compilation).
+        entries: Vec<String>,
+        /// Expansion strategy: `"sample"`, `"combinatorial"`, or `"suffix"`.
+        expansion: String,
+        /// Original file path from the schema (used for resolution).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_file: Option<String>,
+    },
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────

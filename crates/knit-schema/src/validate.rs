@@ -765,6 +765,25 @@ fn validate_generator(
                 );
             }
         }
+        GeneratorSpec::Dictionary { file, expansion, .. } => {
+            if file.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "dictionary generator requires a non-empty 'file' path".to_string(),
+                });
+            }
+            let valid_expansions = ["sample", "combinatorial", "suffix"];
+            if !valid_expansions.contains(&expansion.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "unknown dictionary expansion '{}', expected one of: {}",
+                        expansion,
+                        valid_expansions.join(", ")
+                    ),
+                });
+            }
+        }
         // Pattern, Derived, Constant — no additional validation needed
         _ => {}
     }

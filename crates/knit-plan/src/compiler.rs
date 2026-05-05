@@ -344,6 +344,15 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     default: default_plan,
                 }
             }
+            GeneratorSpec::Dictionary { file, expansion } => {
+                // Entries are loaded by the CLI layer after compilation,
+                // which resolves the file path relative to the schema.
+                GeneratorPlan::Dictionary {
+                    entries: vec![],
+                    expansion: expansion.clone(),
+                    source_file: Some(file.clone()),
+                }
+            }
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.

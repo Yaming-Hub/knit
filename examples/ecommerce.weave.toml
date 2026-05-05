@@ -87,9 +87,9 @@ pattern = "SKU-AAA-####"
 name = "name"
 data_type = "string"
 [entities.fields.generator]
-type = "faker"
-method = "product_name"
-args = []
+type = "dictionary"
+file = "products.dict.txt"
+expansion = "combinatorial"
 
 [[entities.fields]]
 name = "price"
