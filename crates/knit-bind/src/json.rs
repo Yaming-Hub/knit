@@ -500,4 +500,17 @@ mod tests {
         // (stats.bytes_written > 0 confirms output was produced)
         assert!(stats.bytes_written > 0);
     }
+
+    #[test]
+    fn json_preserves_field_order() {
+        let buf = Cursor::new(Vec::new());
+        let mut sink = JsonSink::new(buf, JsonMode::Jsonl).unwrap();
+        sink.write_batch(&sample_batch()).unwrap();
+        let output = String::from_utf8(sink.writer.into_inner()).unwrap();
+        let first_line = output.lines().next().unwrap();
+        // Fields should appear in schema order: id, name, score, active
+        let obj: serde_json::Value = serde_json::from_str(first_line).unwrap();
+        let keys: Vec<&String> = obj.as_object().unwrap().keys().collect();
+        assert_eq!(keys, &["id", "name", "score", "active"]);
+    }
 }

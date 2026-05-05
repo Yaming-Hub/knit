@@ -7,7 +7,7 @@ description = "Output sinks for serializing Arrow RecordBatches to various forma
 [dependencies]
 arrow = { version = "54", features = ["csv", "ipc", "json"] }
 parquet = { version = "54", features = ["arrow"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
 minijinja = "2"
 thiserror = "2"
 parking_lot = "0.12"
