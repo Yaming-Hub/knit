@@ -1281,6 +1281,20 @@ fn resolve_dict_in_generator(
             ..
         } => {
             if let Some(file_path) = source_file.take() {
+                // Reject absolute paths to prevent path traversal
+                if Path::new(&file_path).is_absolute() {
+                    bail!(
+                        "dictionary file path must be relative to schema directory, got absolute path: '{}'",
+                        file_path
+                    );
+                }
+                // Reject paths that escape schema_dir via ..
+                if file_path.contains("..") {
+                    bail!(
+                        "dictionary file path must not contain '..': '{}'",
+                        file_path
+                    );
+                }
                 let full_path = schema_dir.join(&file_path);
                 let file = std::fs::File::open(&full_path).with_context(|| {
                     format!(
