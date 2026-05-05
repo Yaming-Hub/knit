@@ -10,7 +10,10 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, Float64Array, TimestampMillisecondArray};
+use arrow::array::{
+    ArrayRef, Float64Array, TimestampMicrosecondArray, TimestampMillisecondArray,
+    TimestampNanosecondArray, TimestampSecondArray,
+};
 use arrow::datatypes::DataType;
 use chrono::{Datelike, NaiveDate, TimeZone, Utc};
 use rand::RngCore;
@@ -117,11 +120,18 @@ impl FieldGenerator for RelativeGenerator {
             Some(arr) => {
                 if let Some(ts) = arr.as_any().downcast_ref::<TimestampMillisecondArray>() {
                     (0..ts.len()).map(|i| ts.value(i)).collect()
+                } else if let Some(ts) = arr.as_any().downcast_ref::<TimestampMicrosecondArray>() {
+                    (0..ts.len()).map(|i| ts.value(i) / 1_000).collect()
+                } else if let Some(ts) = arr.as_any().downcast_ref::<TimestampNanosecondArray>() {
+                    (0..ts.len()).map(|i| ts.value(i) / 1_000_000).collect()
+                } else if let Some(ts) = arr.as_any().downcast_ref::<TimestampSecondArray>() {
+                    (0..ts.len()).map(|i| ts.value(i) * 1_000).collect()
                 } else if let Some(f) = arr.as_any().downcast_ref::<Float64Array>() {
                     (0..f.len()).map(|i| f.value(i) as i64).collect()
                 } else {
                     tracing::warn!(
                         field = %self.base_field,
+                        actual_type = ?arr.data_type(),
                         "base field type unsupported, using epoch 0"
                     );
                     vec![0i64; count]
