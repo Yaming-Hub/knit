@@ -288,30 +288,45 @@ fn build_generator(
 
     // Distribution
     if let Some(fit) = &col.distribution {
-        // Use distribution generator regardless of source type.
-        // For string sources with numeric content, resolve_arrow_type will cast
-        // the numeric output to Utf8 at write time since data_type is String.
-        return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
+        // For string sources with low-cardinality numeric content, prefer categorical
+        // to preserve exact source values (e.g., "1", "2", "3" stay as-is)
+        let source_is_string = matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
+        );
+        if source_is_string && col.categorical_weights.is_some() {
+            // Fall through to categorical handling below
+        } else {
+            return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
+        }
     }
 
     // Boolean (check before categorical since bool columns store weights there)
+    // But for string-sourced booleans, prefer categorical to preserve original casing (e.g., "TRUE")
     if matches!(col.inferred_type, Some(InferredType::Boolean)) {
-        if let Some(weights) = &col.categorical_weights {
-            let true_w = weights.iter().find(|(k, _)| k == "true").map(|(_, w)| *w).unwrap_or(0.5);
-            let false_w = weights.iter().find(|(k, _)| k == "false").map(|(_, w)| *w).unwrap_or(0.5);
+        let source_is_string = matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
+        );
+        if !source_is_string {
+            if let Some(weights) = &col.categorical_weights {
+                let true_w = weights.iter().find(|(k, _)| k == "true").map(|(_, w)| *w).unwrap_or(0.5);
+                let false_w = weights.iter().find(|(k, _)| k == "false").map(|(_, w)| *w).unwrap_or(0.5);
+                return GeneratorSpec::OneOf {
+                    choices: vec![
+                        WeightedChoice { value: Value::Bool(true), weight: true_w },
+                        WeightedChoice { value: Value::Bool(false), weight: false_w },
+                    ],
+                };
+            }
             return GeneratorSpec::OneOf {
                 choices: vec![
-                    WeightedChoice { value: Value::Bool(true), weight: true_w },
-                    WeightedChoice { value: Value::Bool(false), weight: false_w },
+                    WeightedChoice { value: Value::Bool(true), weight: 0.5 },
+                    WeightedChoice { value: Value::Bool(false), weight: 0.5 },
                 ],
             };
         }
-        return GeneratorSpec::OneOf {
-            choices: vec![
-                WeightedChoice { value: Value::Bool(true), weight: 0.5 },
-                WeightedChoice { value: Value::Bool(false), weight: 0.5 },
-            ],
-        };
+        // String-sourced booleans fall through to categorical below
     }
 
     // Categorical
