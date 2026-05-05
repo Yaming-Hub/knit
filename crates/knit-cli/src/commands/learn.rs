@@ -535,6 +535,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     );
     ca.temporal_range = temporal_range;
     ca.source_arrow_type = Some(profile.data_type.clone());
+    ca.max_decimal_places = profile.numeric.as_ref().and_then(|n| n.max_decimal_places);
     ca
 }
 

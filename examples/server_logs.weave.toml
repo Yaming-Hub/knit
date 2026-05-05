@@ -117,6 +117,7 @@ choices = [
 [[entities.fields]]
 name = "response_time_ms"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "log_normal"

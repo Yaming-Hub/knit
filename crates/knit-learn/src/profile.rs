@@ -61,6 +61,8 @@ pub struct NumericProfile {
     pub kurtosis: f64,
     /// Percentiles: p1, p5, p10, p25, p50, p75, p90, p95, p99.
     pub percentiles: Percentiles,
+    /// Maximum number of decimal places observed in float values (None for integers).
+    pub max_decimal_places: Option<u8>,
 }
 
 /// Named percentiles.
@@ -333,6 +335,12 @@ fn compute_numeric(data_type: &DataType, array: &dyn Array) -> Option<NumericPro
         sorted[idx.min(sorted.len() - 1)]
     };
 
+    let max_decimal_places = if matches!(data_type, DataType::Float32 | DataType::Float64) {
+        Some(detect_decimal_places(&values))
+    } else {
+        None
+    };
+
     Some(NumericProfile {
         min: sorted[0],
         max: sorted[sorted.len() - 1],
@@ -352,7 +360,56 @@ fn compute_numeric(data_type: &DataType, array: &dyn Array) -> Option<NumericPro
             p95: percentile(95.0),
             p99: percentile(99.0),
         },
+        max_decimal_places,
     })
+}
+
+/// Detect the maximum number of decimal places used in a set of float values.
+///
+/// Samples up to 1000 values and counts significant decimal digits (ignoring
+/// trailing zeros from floating-point representation). Returns the p95 value
+/// to be robust against outliers.
+fn detect_decimal_places(values: &[f64]) -> u8 {
+    if values.is_empty() {
+        return 0;
+    }
+
+    // Sample up to 1000 values for efficiency
+    let sample: Vec<&f64> = if values.len() <= 1000 {
+        values.iter().collect()
+    } else {
+        values.iter().step_by(values.len() / 1000).take(1000).collect()
+    };
+
+    let mut places: Vec<u8> = sample
+        .iter()
+        .map(|v| count_decimal_places(**v))
+        .collect();
+    places.sort_unstable();
+
+    // Use p95 to be robust against floating-point noise
+    let idx = (places.len() as f64 * 0.95).ceil() as usize;
+    places[idx.min(places.len() - 1)].min(15)
+}
+
+/// Count the number of meaningful decimal places in a float value.
+///
+/// Uses Rust's shortest-representation formatting to avoid IEEE 754 noise.
+/// For example, `55.86` (stored as 55.85999...9) formats as "55.86" → 2 places.
+fn count_decimal_places(v: f64) -> u8 {
+    if v.fract() == 0.0 {
+        return 0;
+    }
+    // Use default Display which gives shortest round-trip representation
+    let s = format!("{}", v);
+    if let Some(dot_pos) = s.find('.') {
+        let decimals = &s[dot_pos + 1..];
+        // Trim trailing zeros (shouldn't be any with default Display, but be safe)
+        let trimmed = decimals.trim_end_matches('0');
+        (trimmed.len() as u8).min(15)
+    } else {
+        0
+    }
 }
 
 /// Compute string profile for UTF-8 columns.

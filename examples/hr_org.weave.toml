@@ -51,6 +51,7 @@ choices = [
 [[entities.fields]]
 name = "budget"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "uniform"
@@ -137,6 +138,7 @@ choices = [
 [[entities.fields]]
 name = "salary"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "log_normal"
@@ -156,6 +158,7 @@ lambda = 0.15
 [[entities.fields]]
 name = "performance_rating"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "beta"
