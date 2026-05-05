@@ -168,6 +168,9 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
         } => {
             format!("conditional({}, {} branches)", field, branches.len())
         }
+        knit_plan::GeneratorPlan::Dictionary { entries, expansion, .. } => {
+            format!("dictionary({} entries, {})", entries.len(), expansion)
+        }
     }
 }
 

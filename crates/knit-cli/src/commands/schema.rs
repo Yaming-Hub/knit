@@ -218,6 +218,9 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
         knit_core::GeneratorSpec::Unique { .. } => "unique(…)".to_string(),
         knit_core::GeneratorSpec::Relative { field, .. } => format!("relative({})", field),
         knit_core::GeneratorSpec::BusinessHours { .. } => "business_hours".to_string(),
+        knit_core::GeneratorSpec::Dictionary { file, expansion, .. } => {
+            format!("dictionary({}, {})", file, expansion)
+        }
     }
 }
 

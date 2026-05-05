@@ -70,8 +70,14 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     }
 
     // ── Compile plan ────────────────────────────────────────────────
-    let plan = knit_plan::compile(&model)
+    let mut plan = knit_plan::compile(&model)
         .map_err(|e| anyhow::anyhow!("plan compilation failed: {}", e))?;
+
+    // ── Resolve dictionary files ────────────────────────────────────
+    let schema_dir = Path::new(schema_path)
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+    resolve_dictionary_plans(&mut plan, schema_dir)?;
 
     if !cli.quiet {
         eprintln!(
@@ -858,6 +864,7 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         knit_plan::GeneratorPlan::Composite { .. } => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::Unique { inner, .. } => infer_arrow_type(inner),
         knit_plan::GeneratorPlan::Conditional { default, .. } => infer_arrow_type(default),
+        knit_plan::GeneratorPlan::Dictionary { .. } => ArrowDataType::Utf8,
     }
 }
 
@@ -1242,4 +1249,78 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
     }
 
     serde_json::to_string(&arr_to_json(arr, row)).unwrap_or_default()
+}
+
+/// Resolve dictionary file references in the compiled plan.
+///
+/// Walks all entity plans and loads dictionary files from disk, replacing
+/// the empty `entries` vec with actual file contents. File paths are
+/// resolved relative to the schema directory.
+fn resolve_dictionary_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
+    for phase in &mut plan.phases {
+        for entity_plan in &mut phase.entity_plans {
+            for field_plan in &mut entity_plan.field_plans {
+                resolve_dict_in_generator(&mut field_plan.generator_plan, schema_dir)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Recursively resolve dictionary generators (handles Unique/Conditional wrapping).
+fn resolve_dict_in_generator(
+    plan: &mut knit_plan::GeneratorPlan,
+    schema_dir: &Path,
+) -> Result<()> {
+    use std::io::BufRead;
+
+    match plan {
+        knit_plan::GeneratorPlan::Dictionary {
+            entries,
+            source_file,
+            ..
+        } => {
+            if let Some(file_path) = source_file.take() {
+                let full_path = schema_dir.join(&file_path);
+                let file = std::fs::File::open(&full_path).with_context(|| {
+                    format!(
+                        "failed to open dictionary file '{}' (resolved to '{}')",
+                        file_path,
+                        full_path.display()
+                    )
+                })?;
+                let reader = std::io::BufReader::new(file);
+                *entries = reader
+                    .lines()
+                    .filter_map(|line| {
+                        let line = line.ok()?;
+                        let trimmed = line.trim().to_string();
+                        if trimmed.is_empty() {
+                            None
+                        } else {
+                            Some(trimmed)
+                        }
+                    })
+                    .collect();
+                tracing::debug!(
+                    dict_file = %file_path,
+                    entries = entries.len(),
+                    "loaded dictionary"
+                );
+            }
+        }
+        knit_plan::GeneratorPlan::Unique { inner, .. } => {
+            resolve_dict_in_generator(inner, schema_dir)?;
+        }
+        knit_plan::GeneratorPlan::Conditional {
+            branches, default, ..
+        } => {
+            for (_, branch_plan) in branches {
+                resolve_dict_in_generator(branch_plan, schema_dir)?;
+            }
+            resolve_dict_in_generator(default, schema_dir)?;
+        }
+        _ => {}
+    }
+    Ok(())
 }
