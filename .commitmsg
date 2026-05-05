@@ -1,6 +1,0 @@
-fix: correct p95 index calculation and handle non-finite floats
-
-- Use (n-1)*0.95 formula for proper percentile indexing
-- Add explicit !is_finite() guard in count_decimal_places()
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
