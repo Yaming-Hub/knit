@@ -388,7 +388,7 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
     places.sort_unstable();
 
     // Use p95 to be robust against floating-point noise
-    let idx = (places.len() as f64 * 0.95).ceil() as usize;
+    let idx = ((places.len() - 1) as f64 * 0.95).round() as usize;
     places[idx.min(places.len() - 1)].min(15)
 }
 
@@ -397,6 +397,9 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
 /// Uses Rust's shortest-representation formatting to avoid IEEE 754 noise.
 /// For example, `55.86` (stored as 55.85999...9) formats as "55.86" → 2 places.
 fn count_decimal_places(v: f64) -> u8 {
+    if !v.is_finite() {
+        return 0;
+    }
     if v.fract() == 0.0 {
         return 0;
     }
