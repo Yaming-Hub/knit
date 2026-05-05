@@ -1,4 +1,4 @@
-//! `knit init` — scaffold a new `.weave.toml` schema file.
+//! `knit init` — scaffold a new `schema.weave.toml` schema file.
 //!
 //! Creates a minimal, well-commented starter schema that the user can
 //! populate with their own data model. The schema language is the single
@@ -12,7 +12,7 @@ use colored::Colorize;
 
 /// Run the `knit init` command.
 ///
-/// Creates a minimal `.weave.toml` starter schema at the given path.
+/// Creates a minimal `schema.weave.toml` starter schema at the given path.
 /// The generated file contains commented documentation showing available
 /// options so the user can define their own data model.
 pub fn run(output_path: &str) -> Result<()> {

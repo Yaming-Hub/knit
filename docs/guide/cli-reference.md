@@ -232,16 +232,17 @@ knit init [OPTIONS]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--output <PATH>` | `-o` | Output file path (default: `.weave.toml`) |
+| `--output <PATH>` | `-o` | Output file path (default: `schema.weave.toml`) |
 
 ### Example
 
 ```bash
 # Create a starter schema
+knit init
 knit init -o my_project.weave.toml
 ```
 
-This creates a documented `.weave.toml` with an example entity and comments
+This creates a documented `schema.weave.toml` with an example entity and comments
 explaining each generator type.
 
 ---
