@@ -458,6 +458,16 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                         is_integer_valued = matches!(inference.inferred_type, InferredType::Integer);
                         distribution = fit_distribution(&nums);
                     }
+                    // For low-cardinality numeric strings, also capture categorical weights
+                    // so the generator can prefer exact value reproduction over distribution
+                    let owned: Vec<String> = refs.iter().filter_map(|s| s.map(String::from)).collect();
+                    let distinct: HashSet<&str> = owned.iter().map(|s| s.as_str()).collect();
+                    if distinct.len() <= 50 {
+                        let cat_fit = fit_categorical(&owned);
+                        let mut weights: Vec<(String, f64)> = cat_fit.weights.into_iter().collect();
+                        weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                        categorical_weights = Some(weights);
+                    }
                     inferred_type = Some(inference.inferred_type);
                 }
                 ref other => {
@@ -475,6 +485,20 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                         }
                     }
                     inferred_type = Some(other.clone());
+                }
+            }
+
+            // Catch-all: for any string column with low cardinality (≤50 distinct values),
+            // capture categorical weights if not already set, so the generator can preserve
+            // exact source values (covers UUID, hex, name patterns, etc.)
+            if categorical_weights.is_none() {
+                let owned: Vec<String> = refs.iter().filter_map(|s| s.map(String::from)).collect();
+                let distinct: HashSet<&str> = owned.iter().map(|s| s.as_str()).collect();
+                if distinct.len() <= 50 {
+                    let cat_fit = fit_categorical(&owned);
+                    let mut weights: Vec<(String, f64)> = cat_fit.weights.into_iter().collect();
+                    weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                    categorical_weights = Some(weights);
                 }
             }
         }
