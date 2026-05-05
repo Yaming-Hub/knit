@@ -422,6 +422,7 @@ fn build_arrow_schema(ep: &knit_plan::EntityPlan) -> Schema {
 fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
     // If the declared data_type has a specific narrow type, use it
     match &fp.data_type {
+        knit_core::DataType::Bool => return ArrowDataType::Boolean,
         knit_core::DataType::Int32 => return ArrowDataType::Int32,
         knit_core::DataType::Datetime => {
             return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)

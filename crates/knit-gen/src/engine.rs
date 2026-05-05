@@ -53,6 +53,48 @@ fn apply_precision(arr: arrow::array::ArrayRef, precision: Option<u8>) -> arrow:
     }
 }
 
+/// Coerce a generated array to match the declared logical data type.
+///
+/// The Bernoulli distribution produces `Int64Array` with 0/1 values, but when
+/// the schema declares a boolean field the output should be a `BooleanArray`
+/// so that downstream sinks render `true`/`false` instead of `0`/`1`.
+///
+/// Similarly, Int32 fields that receive Int64 arrays are narrowed.
+fn coerce_to_logical_type(
+    arr: arrow::array::ArrayRef,
+    data_type: &knit_core::DataType,
+) -> arrow::array::ArrayRef {
+    match data_type {
+        knit_core::DataType::Bool => {
+            if arr.as_any().is::<arrow::array::BooleanArray>() {
+                return arr;
+            }
+            if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
+                let bools: arrow::array::BooleanArray = i64_arr
+                    .iter()
+                    .map(|v| v.map(|x| x != 0))
+                    .collect();
+                return Arc::new(bools);
+            }
+            arr
+        }
+        knit_core::DataType::Int32 => {
+            if arr.as_any().is::<arrow::array::Int32Array>() {
+                return arr;
+            }
+            if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
+                let i32s: arrow::array::Int32Array = i64_arr
+                    .iter()
+                    .map(|v| v.map(|x| x.clamp(i32::MIN as i64, i32::MAX as i64) as i32))
+                    .collect();
+                return Arc::new(i32s);
+            }
+            arr
+        }
+        _ => arr,
+    }
+}
+
 /// Top-level generation orchestrator.
 ///
 /// Holds the key-store registry shared across entities and phases. Consumes an
@@ -447,6 +489,7 @@ impl GenerationEngine {
 
             let arr = generators[i].generate(rng, count, &ctx);
             let arr = apply_precision(arr, fp.precision);
+            let arr = coerce_to_logical_type(arr, &fp.data_type);
             let arr = apply_null_mask(arr, &fp.null_plan, rng, count)?;
 
             batch_columns.insert(fp.field_name.clone(), Arc::clone(&arr));
@@ -1294,5 +1337,39 @@ mod tests {
         assert_eq!(float_arr.value(0), 3.14);
         assert!(float_arr.is_null(1));
         assert_eq!(float_arr.value(2), 2.72);
+    }
+
+    #[test]
+    fn coerce_bool_from_int64() {
+        use arrow::array::BooleanArray;
+
+        let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(vec![1, 0, 1, 0]));
+        let result = coerce_to_logical_type(arr, &knit_core::DataType::Bool);
+        let bool_arr = result.as_any().downcast_ref::<BooleanArray>().unwrap();
+        assert_eq!(bool_arr.value(0), true);
+        assert_eq!(bool_arr.value(1), false);
+        assert_eq!(bool_arr.value(2), true);
+        assert_eq!(bool_arr.value(3), false);
+    }
+
+    #[test]
+    fn coerce_bool_preserves_nulls() {
+        use arrow::array::BooleanArray;
+
+        let arr: arrow::array::ArrayRef =
+            Arc::new(Int64Array::from(vec![Some(1), None, Some(0)]));
+        let result = coerce_to_logical_type(arr, &knit_core::DataType::Bool);
+        let bool_arr = result.as_any().downcast_ref::<BooleanArray>().unwrap();
+        assert_eq!(bool_arr.value(0), true);
+        assert!(bool_arr.is_null(1));
+        assert_eq!(bool_arr.value(2), false);
+    }
+
+    #[test]
+    fn coerce_noop_for_non_bool() {
+        let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 3]));
+        let result = coerce_to_logical_type(arr.clone(), &knit_core::DataType::Int);
+        // Should pass through unchanged (still Int64)
+        assert!(result.as_any().downcast_ref::<Int64Array>().is_some());
     }
 }

@@ -55,6 +55,7 @@ choices = [
 [[entities.fields]]
 name = "latitude"
 data_type = "float"
+precision = 6
 [entities.fields.generator]
 type = "distribution"
 kind = "uniform"
@@ -65,6 +66,7 @@ max = 38.0
 [[entities.fields]]
 name = "longitude"
 data_type = "float"
+precision = 6
 [entities.fields.generator]
 type = "distribution"
 kind = "uniform"
@@ -74,7 +76,7 @@ max = -121.5
 
 [[entities.fields]]
 name = "active"
-data_type = "int"
+data_type = "bool"
 [entities.fields.generator]
 type = "distribution"
 kind = "bernoulli"
@@ -103,6 +105,7 @@ data_type = "int"
 [[entities.fields]]
 name = "value"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "normal"
@@ -126,6 +129,7 @@ choices = [
 [[entities.fields]]
 name = "quality"
 data_type = "float"
+precision = 3
 [entities.fields.generator]
 type = "distribution"
 kind = "beta"
@@ -136,6 +140,7 @@ beta = 2.0
 [[entities.fields]]
 name = "battery_pct"
 data_type = "float"
+precision = 1
 nullable = { probability = 0.05 }
 [entities.fields.generator]
 type = "distribution"
@@ -190,7 +195,7 @@ choices = [
 
 [[entities.fields]]
 name = "acknowledged"
-data_type = "int"
+data_type = "bool"
 [entities.fields.generator]
 type = "distribution"
 kind = "bernoulli"

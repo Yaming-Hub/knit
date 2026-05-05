@@ -42,6 +42,7 @@ choices = [
 [[entities.fields]]
 name = "balance"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "log_normal"
@@ -63,7 +64,7 @@ choices = [
 
 [[entities.fields]]
 name = "is_active"
-data_type = "int"
+data_type = "bool"
 [entities.fields.generator]
 type = "distribution"
 kind = "bernoulli"
@@ -73,6 +74,7 @@ p = 0.90
 [[entities.fields]]
 name = "risk_score"
 data_type = "float"
+precision = 3
 [entities.fields.generator]
 type = "distribution"
 kind = "beta"
@@ -115,6 +117,7 @@ choices = [
 [[entities.fields]]
 name = "amount"
 data_type = "float"
+precision = 2
 [entities.fields.generator]
 type = "distribution"
 kind = "log_normal"
@@ -146,7 +149,7 @@ choices = [
 
 [[entities.fields]]
 name = "is_flagged"
-data_type = "int"
+data_type = "bool"
 [entities.fields.generator]
 type = "distribution"
 kind = "bernoulli"
