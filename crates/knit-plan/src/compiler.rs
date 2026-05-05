@@ -6,7 +6,9 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use knit_core::{DataModel, DataType, Entity, Field, GeneratorSpec, NullSpec, Value};
+use knit_core::{
+    DataModel, DataType, DistributionKind, Entity, Field, GeneratorSpec, NullSpec, Value,
+};
 
 use crate::error::PlanError;
 use crate::graph;
@@ -343,7 +345,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             }
         },
         None => {
-            // No generator specified. Check if primary_key with UUID type.
+            // No generator specified — provide a sensible default based on data_type.
             if field.primary_key.unwrap_or(false)
                 && field.data_type == knit_core::DataType::Uuid
             {
@@ -351,7 +353,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             } else if field.primary_key.unwrap_or(false) {
                 GeneratorPlan::Sequence { start: 1, step: 1 }
             } else {
-                GeneratorPlan::Constant(knit_core::Value::Null)
+                default_generator_for_type(&field.data_type)
             }
         }
     }
@@ -376,6 +378,82 @@ fn compile_generator_from_spec(
         primary_key: None,
     };
     compile_generator(&dummy_field, all_fields)
+}
+
+/// Provide a sensible default generator plan when no generator is specified.
+///
+/// This produces realistic random values for each data type:
+/// - Bool → Bernoulli(0.5)
+/// - Int/Int32 → Uniform(0..1000) rounded
+/// - Float → Uniform(0..100)
+/// - String → Faker word
+/// - Uuid → UUID v4
+/// - Date → Faker date
+/// - Datetime/DatetimeUs → Faker datetime
+/// - Time/Datetimetz/Duration/Bytes/Array/Map → constant null (no default generator)
+fn default_generator_for_type(data_type: &knit_core::DataType) -> GeneratorPlan {
+    use knit_core::DataType;
+
+    match data_type {
+        DataType::Bool => {
+            let mut params = BTreeMap::new();
+            params.insert("p".to_string(), 0.5);
+            GeneratorPlan::Distribution {
+                kind: DistributionKind::Bernoulli,
+                params,
+                clamp_min: None,
+                clamp_max: None,
+                round: false,
+            }
+        }
+        DataType::Int | DataType::Int32 => {
+            let mut params = BTreeMap::new();
+            params.insert("min".to_string(), 0.0);
+            params.insert("max".to_string(), 1000.0);
+            GeneratorPlan::Distribution {
+                kind: DistributionKind::Uniform,
+                params,
+                clamp_min: None,
+                clamp_max: None,
+                round: true,
+            }
+        }
+        DataType::Float => {
+            let mut params = BTreeMap::new();
+            params.insert("min".to_string(), 0.0);
+            params.insert("max".to_string(), 100.0);
+            GeneratorPlan::Distribution {
+                kind: DistributionKind::Uniform,
+                params,
+                clamp_min: None,
+                clamp_max: None,
+                round: false,
+            }
+        }
+        DataType::String => GeneratorPlan::Faker {
+            category: "word".to_string(),
+            locale: "en_US".to_string(),
+            args: vec![],
+        },
+        DataType::Uuid => GeneratorPlan::Uuid,
+        DataType::Date => GeneratorPlan::Faker {
+            category: "date".to_string(),
+            locale: "en_US".to_string(),
+            args: vec![],
+        },
+        DataType::Datetime | DataType::DatetimeUs => GeneratorPlan::Faker {
+            category: "datetime".to_string(),
+            locale: "en_US".to_string(),
+            args: vec![],
+        },
+        // Time, Datetimetz, Duration, Bytes, Array, Map have no sensible default generator
+        DataType::Time
+        | DataType::Datetimetz
+        | DataType::Duration
+        | DataType::Bytes
+        | DataType::Array
+        | DataType::Map => GeneratorPlan::Constant(knit_core::Value::Null),
+    }
 }
 
 /// Convert `NullSpec` to `NullPlan`.
@@ -1446,5 +1524,73 @@ mod tests {
         let order_end = compute_dependency_order(&fields[0], &fields);
         let order_start = compute_dependency_order(&fields[1], &fields);
         assert!(order_end > order_start, "relative field should come after base field");
+    }
+
+    #[test]
+    fn default_generator_int_produces_distribution() {
+        let plan = default_generator_for_type(&DataType::Int);
+        match plan {
+            GeneratorPlan::Distribution { kind, round, .. } => {
+                assert!(matches!(kind, DistributionKind::Uniform));
+                assert!(round, "int default should be rounded");
+            }
+            _ => panic!("Expected Distribution for Int, got {:?}", plan),
+        }
+    }
+
+    #[test]
+    fn default_generator_bool_produces_bernoulli() {
+        let plan = default_generator_for_type(&DataType::Bool);
+        match plan {
+            GeneratorPlan::Distribution { kind, .. } => {
+                assert!(matches!(kind, DistributionKind::Bernoulli));
+            }
+            _ => panic!("Expected Distribution for Bool, got {:?}", plan),
+        }
+    }
+
+    #[test]
+    fn default_generator_string_produces_faker() {
+        let plan = default_generator_for_type(&DataType::String);
+        match plan {
+            GeneratorPlan::Faker { category, .. } => {
+                assert_eq!(category, "word");
+            }
+            _ => panic!("Expected Faker for String, got {:?}", plan),
+        }
+    }
+
+    #[test]
+    fn default_generator_datetime_produces_faker() {
+        let plan = default_generator_for_type(&DataType::Datetime);
+        match plan {
+            GeneratorPlan::Faker { category, .. } => {
+                assert_eq!(category, "datetime");
+            }
+            _ => panic!("Expected Faker for Datetime, got {:?}", plan),
+        }
+    }
+
+    #[test]
+    fn default_generator_uuid_produces_uuid() {
+        let plan = default_generator_for_type(&DataType::Uuid);
+        assert!(matches!(plan, GeneratorPlan::Uuid));
+    }
+
+    #[test]
+    fn default_generator_date_produces_faker_date() {
+        let plan = default_generator_for_type(&DataType::Date);
+        match plan {
+            GeneratorPlan::Faker { category, .. } => {
+                assert_eq!(category, "date");
+            }
+            _ => panic!("Expected Faker for Date, got {:?}", plan),
+        }
+    }
+
+    #[test]
+    fn default_generator_time_produces_null() {
+        let plan = default_generator_for_type(&DataType::Time);
+        assert!(matches!(plan, GeneratorPlan::Constant(Value::Null)));
     }
 }
