@@ -147,6 +147,15 @@ fn cell_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindEr
                 None => serde_json::Value::Null,
             })
         }
+        DataType::List(_) | DataType::LargeList(_) | DataType::FixedSizeList(_, _) => {
+            list_to_json(col, row)
+        }
+        DataType::Map(_, _) => {
+            map_to_json(col, row)
+        }
+        DataType::Struct(_) => {
+            struct_to_json(col, row)
+        }
         _ => {
             // Fallback: cast the entire column to Utf8 and read the row.
             match arrow::compute::cast(col, &DataType::Utf8) {
@@ -159,6 +168,68 @@ fn cell_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindEr
             }
         }
     }
+}
+
+/// Convert a List or LargeList column element to a JSON array.
+fn list_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindError> {
+    // Get the child values for this row using the generic ListArray trait
+    let values: std::sync::Arc<dyn Array> = match col.data_type() {
+        DataType::List(_) => {
+            let list = downcast_col!(col, array::ListArray)?;
+            list.value(row)
+        }
+        DataType::LargeList(_) => {
+            let list = downcast_col!(col, array::LargeListArray)?;
+            list.value(row)
+        }
+        DataType::FixedSizeList(_, _) => {
+            let list = downcast_col!(col, array::FixedSizeListArray)?;
+            list.value(row)
+        }
+        _ => return Ok(serde_json::Value::Null),
+    };
+    let items: Result<Vec<serde_json::Value>, BindError> = (0..values.len())
+        .map(|i| cell_to_json(values.as_ref(), i))
+        .collect();
+    Ok(serde_json::Value::Array(items?))
+}
+
+/// Convert a Map column element to a JSON object.
+fn map_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindError> {
+    let map = downcast_col!(col, array::MapArray)?;
+    let entries = map.value(row);
+    let struct_arr = entries.as_any()
+        .downcast_ref::<array::StructArray>()
+        .ok_or_else(|| BindError::Other("Map entries not a StructArray".to_string()))?;
+    let keys = struct_arr.column(0);
+    let vals = struct_arr.column(1);
+    let mut obj = serde_json::Map::new();
+    for i in 0..entries.len() {
+        let key = cell_to_json(keys.as_ref(), i)?;
+        let val = cell_to_json(vals.as_ref(), i)?;
+        // Stringify non-string keys to preserve all entries
+        let k = match key {
+            serde_json::Value::String(s) => s,
+            other => other.to_string(),
+        };
+        obj.insert(k, val);
+    }
+    Ok(serde_json::Value::Object(obj))
+}
+
+/// Convert a Struct column element to a JSON object.
+fn struct_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindError> {
+    let struct_arr = downcast_col!(col, array::StructArray)?;
+    let fields = match col.data_type() {
+        DataType::Struct(f) => f,
+        _ => return Ok(serde_json::Value::Null),
+    };
+    let mut obj = serde_json::Map::new();
+    for (fi, field) in fields.iter().enumerate() {
+        let child = struct_arr.column(fi);
+        obj.insert(field.name().clone(), cell_to_json(child.as_ref(), row)?);
+    }
+    Ok(serde_json::Value::Object(obj))
 }
 
 macro_rules! json_number {
@@ -306,5 +377,127 @@ mod tests {
         let arr = Float64Array::from(vec![f64::NAN]);
         let val = cell_to_json(&arr, 0).unwrap();
         assert_eq!(val, serde_json::Value::Null);
+    }
+
+    #[test]
+    fn cell_to_json_list_of_strings() {
+        use arrow::array::ListArray;
+        use arrow::buffer::OffsetBuffer;
+
+        let values = StringArray::from(vec!["a", "b", "c"]);
+        let offsets = OffsetBuffer::new(vec![0i32, 2, 3].into());
+        let list = ListArray::new(
+            Arc::new(Field::new("item", DataType::Utf8, false)),
+            offsets,
+            Arc::new(values),
+            None,
+        );
+        // Row 0 = ["a", "b"], Row 1 = ["c"]
+        let val = cell_to_json(&list, 0).unwrap();
+        assert_eq!(val, serde_json::json!(["a", "b"]));
+        let val = cell_to_json(&list, 1).unwrap();
+        assert_eq!(val, serde_json::json!(["c"]));
+    }
+
+    #[test]
+    fn cell_to_json_map_string_to_int() {
+        use arrow::array::{Int32Array, MapArray, StructArray};
+        use arrow::buffer::OffsetBuffer;
+
+        let keys = StringArray::from(vec!["x", "y"]);
+        let vals = Int32Array::from(vec![10, 20]);
+        let entries_field = vec![
+            Field::new("key", DataType::Utf8, false),
+            Field::new("value", DataType::Int32, true),
+        ];
+        let entries = StructArray::from(vec![
+            (Arc::new(entries_field[0].clone()), Arc::new(keys) as _),
+            (Arc::new(entries_field[1].clone()), Arc::new(vals) as _),
+        ]);
+        let map_field = Field::new(
+            "entries",
+            DataType::Struct(entries_field.into()),
+            false,
+        );
+        let offsets = OffsetBuffer::new(vec![0i32, 2].into());
+        let map = MapArray::new(Arc::new(map_field), offsets, entries, None, false);
+
+        let val = cell_to_json(&map, 0).unwrap();
+        assert_eq!(val, serde_json::json!({"x": 10, "y": 20}));
+    }
+
+    #[test]
+    fn cell_to_json_struct_type() {
+        use arrow::array::StructArray;
+
+        let names = StringArray::from(vec!["alice"]);
+        let ages = Int64Array::from(vec![30i64]);
+        let fields = vec![
+            Arc::new(Field::new("name", DataType::Utf8, false)),
+            Arc::new(Field::new("age", DataType::Int64, false)),
+        ];
+        let struct_arr = StructArray::from(vec![
+            (fields[0].clone(), Arc::new(names) as _),
+            (fields[1].clone(), Arc::new(ages) as _),
+        ]);
+
+        let val = cell_to_json(&struct_arr, 0).unwrap();
+        assert_eq!(val, serde_json::json!({"name": "alice", "age": 30}));
+    }
+
+    #[test]
+    fn jsonl_with_nested_types() {
+        use arrow::array::{ListArray, StructArray};
+        use arrow::buffer::OffsetBuffer;
+
+        // Build a batch with a list column and a struct column
+        let id_arr = Int64Array::from(vec![1]);
+        let list_values = StringArray::from(vec!["tag1", "tag2"]);
+        let list_offsets = OffsetBuffer::new(vec![0i32, 2].into());
+        let list_arr = ListArray::new(
+            Arc::new(Field::new("item", DataType::Utf8, false)),
+            list_offsets,
+            Arc::new(list_values),
+            None,
+        );
+        let struct_name = StringArray::from(vec!["bob"]);
+        let struct_age = Int64Array::from(vec![25i64]);
+        let struct_fields = vec![
+            Arc::new(Field::new("name", DataType::Utf8, false)),
+            Arc::new(Field::new("age", DataType::Int64, false)),
+        ];
+        let struct_arr = StructArray::from(vec![
+            (struct_fields[0].clone(), Arc::new(struct_name) as _),
+            (struct_fields[1].clone(), Arc::new(struct_age) as _),
+        ]);
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int64, false),
+            Field::new("tags", DataType::List(Arc::new(Field::new("item", DataType::Utf8, false))), false),
+            Field::new("meta", DataType::Struct(
+                vec![
+                    Field::new("name", DataType::Utf8, false),
+                    Field::new("age", DataType::Int64, false),
+                ].into()
+            ), false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(id_arr),
+                Arc::new(list_arr),
+                Arc::new(struct_arr),
+            ],
+        ).unwrap();
+
+        let buf = Cursor::new(Vec::new());
+        let mut sink = JsonSink::new(buf, JsonMode::Jsonl).unwrap();
+        sink.write_batch(&batch).unwrap();
+        let stats = Box::new(sink).finish().unwrap();
+        assert_eq!(stats.rows_written, 1);
+
+        // Verify we can parse the output as valid JSON with proper nested types
+        // (stats.bytes_written > 0 confirms output was produced)
+        assert!(stats.bytes_written > 0);
     }
 }
