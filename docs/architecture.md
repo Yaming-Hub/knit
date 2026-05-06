@@ -49,7 +49,7 @@ Weave serves as:
 | Capability | Purpose |
 |-----------|---------|
 | Entities & fields | Define tables and columns with types |
-| Generators | 14 generator types for value production |
+| Generators | 15 generator types for value production |
 | Distributions | 17+ statistical distributions with clamping |
 | Temporal types | `date`, `time`, `datetime`, `datetimetz`, `duration` with timezone support |
 | Relationships | Foreign keys with cardinality distributions and graph topologies |
@@ -58,6 +58,8 @@ Weave serves as:
 | Noise profiles | Invariant-aware perturbation specifications |
 | Composition | `extends`, `includes`, `mixins`, `params` for reuse and AI-driven modification |
 | Custom types | Reusable domain type bundles |
+| **Personas** | Actor behavioral profiles for human-like data generation |
+| **Actor relationships** | Graph-based modeling of inter-person connections |
 
 ---
 

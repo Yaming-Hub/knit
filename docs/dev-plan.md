@@ -556,6 +556,122 @@ SchemaParser
   - `server_logs.weave.toml` — requests, errors (event stream, business hours)
   - `financial.weave.toml` — accounts, transactions, holdings (correlations, compliance)
   - `hr_org.weave.toml` — employees, departments (self-referential hierarchy)
+
+---
+
+## Phase 7 — Human Behavioral Modeling
+
+**Design document:** [`docs/design-human-behavior.md`](design-human-behavior.md)
+
+This phase adds the ability to learn and generate human-like behavioral patterns:
+actor identification, persona profiling, relationship graph modeling, and
+persona-driven data generation.
+
+### PR 19: Core Types for Personas and Actor Relationships
+
+**Branch:** `feat/persona-core-types`
+**Est. lines:** ~800
+**Depends on:** PR 3
+
+**Scope:**
+- Add `Persona` struct to `knit-core`: name, weight, traits map
+- Add `ActorRelationship` struct: name, from/to entity, graph type, params
+- Add `GraphType` enum: ScaleFree, SmallWorld, Hierarchical, ErdosRenyi, Custom
+- Extend `DataModel` with `personas: Vec<Persona>`, `actor_relationships: Vec<ActorRelationship>`
+- Extend `Entity` with optional `actor: bool`, `persona_distribution: Option<String>`
+- Extend `Field` with optional `actor_column: Option<bool>`
+- New generator variants: `ActorRef`, `ActorTemporal`, `RelationshipRef`, `PersonaField`
+- Schema parsing and serialization for new sections
+- Validation: persona weights sum to 1.0, actor references exist, graph params valid
+
+### PR 20: Actor Identification in knit-learn
+
+**Branch:** `feat/actor-identification`
+**Est. lines:** ~1200
+**Depends on:** PR 19
+
+**Scope:**
+- Name-heuristic scorer (pattern matching for user/person/employee/customer etc.)
+- Statistical actor detection: repeat rate, temporal span, burstiness, entropy
+- Composite scoring with configurable threshold
+- Actor identity resolution: cross-entity unification via FK linkage
+- Multi-actor entity support (sender_id + receiver_id both detected)
+- CLI: `--actors` flag enables actor detection, `--actor-column` explicit override
+- Unit tests with planted actor/non-actor columns
+
+### PR 21: Behavioral Profiling and Persona Clustering
+
+**Branch:** `feat/persona-profiling`
+**Est. lines:** ~1500
+**Depends on:** PR 20
+
+**Scope:**
+- Streaming per-actor accumulators (hash-grouped, bounded memory)
+- Per-actor feature extraction: temporal patterns, field preferences
+- Feature normalization and vector construction
+- K-means clustering with automatic K selection (silhouette score)
+- Persona generation from cluster centroids
+- Trait variance estimation within personas
+- Integration with incremental learning state (actor profiles accumulate)
+- Unit tests with synthetic actors having known behavioral clusters
+
+### PR 22: Relationship Graph Discovery
+
+**Branch:** `feat/relationship-discovery`
+**Est. lines:** ~1200
+**Depends on:** PR 20
+
+**Scope:**
+- Actor-to-actor graph construction from multi-actor entities
+- Edge metrics: frequency, reciprocity, regularity, exclusivity
+- Relationship classification: hierarchical, peer, broadcast, hub
+- Graph-level metrics: degree distribution, clustering coefficient, community detection
+- Auto-selection of graph model (scale-free vs small-world vs hierarchical)
+- Schema emission of `[[actor_relationships]]` section
+- Unit tests with planted graph structures
+
+### PR 23: Profile-Driven Generation
+
+**Branch:** `feat/persona-generation`
+**Est. lines:** ~1500
+**Depends on:** PR 19, PR 21
+
+**Scope:**
+- Plan compilation: persona-aware entity planning
+- Actor pool generation with persona assignment
+- `ActorRef` generator: select actors weighted by activity rate
+- `ActorTemporal` generator: timestamp generation following persona patterns
+- `PersonaField` generator: field values from actor's personal traits
+- Activity count determination (per-actor rates, separate from static `count`)
+- Temporal consistency enforcement (realistic inter-event gaps)
+- Integration tests: generated data has persona-consistent patterns
+
+### PR 24: Relationship Graph Generation
+
+**Branch:** `feat/graph-generation`
+**Est. lines:** ~1200
+**Depends on:** PR 22, PR 23
+
+**Scope:**
+- Graph generation algorithms: Barabási–Albert, Watts–Strogatz, hierarchical tree
+- `RelationshipRef` generator: target selection from pre-built graph topology
+- Community-aware edge weighting
+- Reciprocity enforcement
+- Interaction pattern reproduction (threads, response times)
+- Integration tests: generated graph metrics match specification
+
+### PR 25: Human Behavioral Examples and Round-Trip Tests
+
+**Branch:** `feat/human-behavior-examples`
+**Est. lines:** ~1000
+**Depends on:** PR 23, PR 24
+
+**Scope:**
+- Example schema: `examples/email-traffic.weave.toml`
+- Example schema: `examples/hr-org.weave.toml`
+- Round-trip test: learn personas → generate → re-learn → compare
+- Scalability test: 100K actors, 10M records
+- Documentation updates: README, CLI help text
 - **End-to-end integration tests:**
   - `knit validate` on all example schemas → pass
   - `knit generate` on each example → valid output files
@@ -650,7 +766,15 @@ Apply the documentation convention from `agents.md` to all existing code:
 | 15 | knit-learn | Fitting + relationships + correlations | ~1800 | PR 14 |
 | 16 | — | Integration tests + example schemas | ~1500 | PR 13, 15 |
 | 17 | — | Extensions + docs + polish | ~1200 | PR 16 |
-| | | **Total** | **~25,200** | |
+| 18 | — | Retroactive Rustdoc | ~800 | PR 4 |
+| 19 | knit-core | Persona + actor relationship types | ~800 | PR 3 |
+| 20 | knit-learn | Actor identification + resolution | ~1200 | PR 19 |
+| 21 | knit-learn | Behavioral profiling + persona clustering | ~1500 | PR 20 |
+| 22 | knit-learn | Relationship graph discovery | ~1200 | PR 20 |
+| 23 | knit-gen | Profile-driven generation | ~1500 | PR 19, 21 |
+| 24 | knit-gen | Relationship graph generation | ~1200 | PR 22, 23 |
+| 25 | — | Human behavior examples + round-trip tests | ~1000 | PR 23, 24 |
+| | | **Total** | **~33,600** | |
 
 ### Critical Path
 
@@ -663,10 +787,13 @@ The critical path runs through the forward pipeline: core → schema → plan �
 
 `knit-learn` (PR 14–15) and `knit-noise` (PR 11) can be developed in parallel with later forward pipeline PRs once their dependencies are met.
 
+Phase 7 (Human Behavioral Modeling, PR 19–25) depends on PR 3 (schema validation) and can proceed independently of the forward pipeline once core types are in place.
+
 ### Parallelizable Work
 
 | After PR | Can start in parallel |
 |----------|----------------------|
-| PR 3 | PR 4 (plan) **and** PR 14 (learn ingestion) |
+| PR 3 | PR 4 (plan) **and** PR 14 (learn ingestion) **and** PR 19 (persona types) |
 | PR 8 | PR 9 (sinks) **and** PR 11 (noise) |
 | PR 14 | PR 15 (learn fitting) independently of PR 9–13 |
+| PR 20 | PR 21 (profiling) **and** PR 22 (graph discovery) in parallel |
