@@ -1,5 +1,7 @@
 //! `knit validate` — parse a schema file and report errors.
 
+use std::path::Path;
+
 use anyhow::{bail, Result};
 use colored::Colorize;
 
@@ -36,26 +38,36 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     // Phase 2: semantic validation
     let errors = validate_model(&model);
 
+    // Phase 3: file-system validation (dictionary files, etc.)
+    let schema_dir = Path::new(schema_path)
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+    let fs_warnings = validate_dictionary_files(&model, schema_dir);
+
     if cli.json {
-        let error_objs: Vec<_> = errors
+        let mut error_objs: Vec<_> = errors
             .iter()
             .map(|e| serde_json::json!({ "kind": "validation", "message": e.to_string() }))
             .collect();
+        for w in &fs_warnings {
+            error_objs.push(serde_json::json!({ "kind": "file", "message": w }));
+        }
         let obj = serde_json::json!({
-            "valid": errors.is_empty(),
+            "valid": errors.is_empty() && fs_warnings.is_empty(),
             "schema": model.name,
             "entity_count": model.entities.len(),
             "errors": error_objs,
         });
         println!("{}", serde_json::to_string_pretty(&obj)?);
-        if !errors.is_empty() {
-            bail!("validation failed with {} error(s)", errors.len());
+        if !errors.is_empty() || !fs_warnings.is_empty() {
+            bail!("validation failed with {} error(s)", errors.len() + fs_warnings.len());
         }
         return Ok(());
     }
 
     // Human-readable output
-    if errors.is_empty() {
+    let total_errors = errors.len() + fs_warnings.len();
+    if total_errors == 0 {
         println!(
             "{} schema {} is valid ({} entities)",
             "✓".green().bold(),
@@ -68,13 +80,117 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
         eprintln!(
             "{} {} error(s) in {}",
             "✗".red().bold(),
-            errors.len(),
+            total_errors,
             schema_path.cyan()
         );
         for (i, err) in errors.iter().enumerate() {
             eprintln!("  {} {}", format!("{}.", i + 1).dimmed(), err);
         }
-        bail!("validation failed with {} error(s)", errors.len());
+        for (i, warn) in fs_warnings.iter().enumerate() {
+            eprintln!(
+                "  {} {}",
+                format!("{}.", errors.len() + i + 1).dimmed(),
+                warn
+            );
+        }
+        bail!("validation failed with {} error(s)", total_errors);
+    }
+}
+
+/// Check that dictionary files referenced in generators exist on disk.
+fn validate_dictionary_files(model: &knit_core::DataModel, schema_dir: &Path) -> Vec<String> {
+    let mut warnings = Vec::new();
+    for entity in &model.entities {
+        for field in &entity.fields {
+            if let Some(gen) = &field.generator {
+                collect_dictionary_file_errors(
+                    gen,
+                    schema_dir,
+                    &format!("entities.{}.fields.{}", entity.name, field.name),
+                    &mut warnings,
+                );
+            }
+        }
+    }
+    warnings
+}
+
+/// Recursively walk generator specs to find Dictionary generators and check files.
+fn collect_dictionary_file_errors(
+    gen: &knit_core::GeneratorSpec,
+    schema_dir: &Path,
+    path: &str,
+    errors: &mut Vec<String>,
+) {
+    match gen {
+        knit_core::GeneratorSpec::Dictionary { file, .. } => {
+            if file.is_empty() {
+                return; // Already caught by semantic validation
+            }
+            // Same rules as generate.rs: reject absolute paths and path traversal
+            if Path::new(file).is_absolute() {
+                errors.push(format!(
+                    "{}: dictionary file path must be relative to schema directory, got absolute path: '{}'",
+                    path, file
+                ));
+                return;
+            }
+            if file.contains("..") {
+                errors.push(format!(
+                    "{}: dictionary file path must not contain '..': '{}'",
+                    path, file
+                ));
+                return;
+            }
+            let dict_path = schema_dir.join(file);
+            if !dict_path.exists() {
+                errors.push(format!(
+                    "{}: dictionary file '{}' not found (resolved to '{}')",
+                    path, file, dict_path.display()
+                ));
+            } else {
+                // Check that file has at least one non-empty line (matching generate.rs parsing)
+                if let Ok(content) = std::fs::read_to_string(&dict_path) {
+                    let usable_entries = content
+                        .lines()
+                        .filter(|line| !line.trim().is_empty())
+                        .count();
+                    if usable_entries == 0 {
+                        errors.push(format!(
+                            "{}: dictionary file '{}' contains no usable entries (all lines empty/whitespace)",
+                            path, file
+                        ));
+                    }
+                }
+            }
+        }
+        knit_core::GeneratorSpec::Unique { inner, .. } => {
+            collect_dictionary_file_errors(inner, schema_dir, path, errors);
+        }
+        knit_core::GeneratorSpec::Conditional { branches, default, .. } => {
+            for (i, branch) in branches.iter().enumerate() {
+                collect_dictionary_file_errors(
+                    &branch.generator,
+                    schema_dir,
+                    &format!("{}.branches[{}]", path, i),
+                    errors,
+                );
+            }
+            if let Some(def) = default {
+                collect_dictionary_file_errors(def, schema_dir, &format!("{}.default", path), errors);
+            }
+        }
+        knit_core::GeneratorSpec::Composite { generators, .. } => {
+            for (key, sub_gen) in generators {
+                collect_dictionary_file_errors(
+                    sub_gen,
+                    schema_dir,
+                    &format!("{}.generators.{}", path, key),
+                    errors,
+                );
+            }
+        }
+        _ => {}
     }
 }
 

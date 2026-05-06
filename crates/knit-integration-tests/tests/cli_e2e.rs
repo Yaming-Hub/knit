@@ -81,7 +81,287 @@ fn validate_invalid_schema() {
         .failure();
 }
 
-// ── Plan ────────────────────────────────────────────────────────────
+#[test]
+fn validate_missing_dictionary_file() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("dict_schema.weave.toml");
+    fs::write(
+        &schema,
+        r#"schema_version = "1.0"
+
+[model]
+name = "dict_test"
+seed = 42
+
+[[entities]]
+name = "items"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "missing.dict.txt"
+expansion = "sample"
+"#,
+    )
+    .unwrap();
+
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("dictionary file"))
+        .stderr(predicate::str::contains("not found"));
+}
+
+#[test]
+fn validate_existing_dictionary_file_passes() {
+    let dir = TempDir::new().unwrap();
+    let dict_file = dir.path().join("words.dict.txt");
+    fs::write(&dict_file, "apple\nbanana\ncherry\n").unwrap();
+
+    let schema = dir.path().join("dict_schema.weave.toml");
+    fs::write(
+        &schema,
+        r#"schema_version = "1.0"
+
+[model]
+name = "dict_test"
+seed = 42
+
+[[entities]]
+name = "items"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "fruit"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "words.dict.txt"
+expansion = "sample"
+"#,
+    )
+    .unwrap();
+
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("valid"));
+}
+
+#[test]
+fn validate_dictionary_absolute_path_rejected() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("abs.weave.toml");
+    // Use a platform-appropriate absolute path
+    let abs_path = if cfg!(windows) {
+        "C:\\\\Windows\\\\System32\\\\drivers\\\\etc\\\\hosts"
+    } else {
+        "/etc/passwd"
+    };
+    fs::write(
+        &schema,
+        format!(
+            r#"schema_version = "1.0"
+
+[model]
+name = "abs_test"
+seed = 42
+
+[[entities]]
+name = "items"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "{}"
+expansion = "sample"
+"#,
+            abs_path
+        ),
+    )
+    .unwrap();
+
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("must be relative"));
+}
+
+#[test]
+fn validate_dictionary_path_traversal_rejected() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("traversal.weave.toml");
+    fs::write(
+        &schema,
+        r#"schema_version = "1.0"
+
+[model]
+name = "traversal_test"
+seed = 42
+
+[[entities]]
+name = "items"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "../../../etc/shadow"
+expansion = "sample"
+"#,
+    )
+    .unwrap();
+
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("must not contain '..'"));
+}
+
+#[test]
+fn validate_dictionary_empty_content_rejected() {
+    let dir = TempDir::new().unwrap();
+    let dict_file = dir.path().join("empty.dict.txt");
+    fs::write(&dict_file, "   \n  \n\n").unwrap();
+
+    let schema = dir.path().join("empty_dict.weave.toml");
+    fs::write(
+        &schema,
+        r#"schema_version = "1.0"
+
+[model]
+name = "empty_test"
+seed = 42
+
+[[entities]]
+name = "items"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "empty.dict.txt"
+expansion = "sample"
+"#,
+    )
+    .unwrap();
+
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("no usable entries"));
+}
+
+#[test]
+fn validate_dictionary_json_mode_reports_file_errors() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("dict_json.weave.toml");
+    fs::write(
+        &schema,
+        r#"schema_version = "1.0"
+
+[model]
+name = "json_test"
+seed = 42
+
+[[entities]]
+name = "items"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "missing.dict.txt"
+expansion = "sample"
+"#,
+    )
+    .unwrap();
+
+    let output = knit()
+        .args(["validate", schema.to_str().unwrap(), "--json"])
+        .assert()
+        .failure()
+        .get_output()
+        .stdout
+        .clone();
+    let parsed: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(parsed["valid"], false);
+    let errors = parsed["errors"].as_array().unwrap();
+    assert!(!errors.is_empty());
+    assert_eq!(errors[0]["kind"], "file");
+    assert!(errors[0]["message"].as_str().unwrap().contains("not found"));
+}
 
 #[test]
 fn plan_shows_entities() {
