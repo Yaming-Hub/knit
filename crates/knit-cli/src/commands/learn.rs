@@ -428,7 +428,21 @@ fn emit_schema_from_state(
         .and_then(|s| s.to_str())
         .unwrap_or("learned")
         .to_string();
-    let data_model = assemble_data_model(&model_name, &table_analyses);
+    let mut data_model = assemble_data_model(&model_name, &table_analyses);
+
+    // Extract dictionaries from reservoir samples for high-cardinality string columns
+    let output_dir = Path::new(output)
+        .parent()
+        .unwrap_or(Path::new("."));
+    let dict_count = extract_dictionaries_from_state(&mut data_model, state, output_dir)?;
+
+    if !cli.quiet && dict_count > 0 {
+        eprintln!(
+            "  {} Extracted {} dictionary file(s) from reservoir samples",
+            "📖".dimmed(),
+            dict_count,
+        );
+    }
 
     // Serialize to TOML
     let raw = RawOutputSchema {
@@ -1331,6 +1345,113 @@ fn extract_dictionaries(
                     field.name,
                 );
             }
+        }
+    }
+
+    Ok(dict_count)
+}
+
+/// Extract dictionaries from state reservoir samples for incremental finalize.
+///
+/// Similar to [`extract_dictionaries`] but uses the reservoir samples stored in
+/// [`LearnState`] instead of raw data batches. This enables dictionary extraction
+/// during incremental finalize when source data is no longer available.
+fn extract_dictionaries_from_state(
+    model: &mut knit_core::DataModel,
+    state: &knit_learn::streaming::LearnState,
+    output_dir: &Path,
+) -> Result<usize> {
+    use std::io::Write;
+
+    let mut dict_count = 0;
+
+    for entity in &mut model.entities {
+        // Find the matching table state
+        let table_state = state.tables.get(&entity.name);
+        let Some(ts) = table_state else {
+            continue;
+        };
+
+        for field in &mut entity.fields {
+            // Check for extractable faker generators (same criteria as batch mode)
+            let is_extractable_faker = matches!(
+                &field.generator,
+                Some(knit_core::GeneratorSpec::Faker { method, .. })
+                    if method == "word" || method == "name" || method == "product_name"
+            );
+            if !is_extractable_faker {
+                continue;
+            }
+
+            // Find the column state to access its reservoir sample
+            let col_state = ts.columns.iter().find(|c| c.name == field.name);
+            let Some(cs) = col_state else {
+                continue;
+            };
+
+            // Get unique values from reservoir sample (normalized: trimmed, non-empty)
+            let reservoir_items = cs.reservoir.items();
+            if reservoir_items.is_empty() {
+                continue;
+            }
+
+            // Use HLL cardinality estimate to determine if this column is a dictionary
+            // candidate. This is more reliable than counting reservoir uniques alone,
+            // since the reservoir may under-represent tail values for large datasets.
+            let estimated_cardinality = cs.estimated_cardinality() as usize;
+            if estimated_cardinality <= 50 {
+                continue;
+            }
+
+            // Normalize: trim whitespace and skip empty strings (matches batch behavior)
+            let mut unique_values: Vec<&str> = reservoir_items
+                .iter()
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .collect::<std::collections::HashSet<&str>>()
+                .into_iter()
+                .collect();
+            unique_values.sort_unstable();
+
+            if unique_values.is_empty() {
+                continue;
+            }
+
+            // Filter out values containing line breaks
+            let clean_values: Vec<&str> = unique_values
+                .into_iter()
+                .filter(|v| !v.contains('\n') && !v.contains('\r'))
+                .collect();
+
+            if clean_values.is_empty() {
+                continue;
+            }
+
+            // Write dictionary file
+            let dict_filename = format!(
+                "{}_{}.dict.txt",
+                sanitize_filename_component(&entity.name),
+                sanitize_filename_component(&field.name)
+            );
+            let dict_path = output_dir.join(&dict_filename);
+            let mut file = std::fs::File::create(&dict_path)
+                .with_context(|| format!("failed to create dictionary file '{}'", dict_path.display()))?;
+
+            for val in &clean_values {
+                writeln!(file, "{}", val)?;
+            }
+
+            // Determine expansion strategy
+            let owned_clean: Vec<String> = clean_values.iter().map(|s| s.to_string()).collect();
+            let expansion = detect_expansion_strategy(&owned_clean);
+
+            // Replace generator with dictionary reference
+            field.generator = Some(knit_core::GeneratorSpec::Dictionary {
+                file: dict_filename,
+                expansion,
+            });
+
+            dict_count += 1;
         }
     }
 

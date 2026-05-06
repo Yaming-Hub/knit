@@ -1465,16 +1465,16 @@ fn learn_dictionary_threshold_boundary() {
 #[test]
 fn learn_incremental_generates_valid_schema() {
     // Test that incremental learn (ingest + finalize) produces a schema
-    // that can be used to generate data successfully.
-    // Note: incremental finalize does NOT currently run dictionary extraction;
-    // this test validates the basic incremental→generate pipeline.
+    // with dictionary extraction from reservoir samples.
     let source_dir = TempDir::new().unwrap();
-    let csv_path = source_dir.path().join("companies.csv");
+    let csv_path = source_dir.path().join("widgets.csv");
 
-    let mut csv_content = String::from("id,company_name,revenue\n");
+    // Use a column name that doesn't match any faker heuristic → falls back to "word"
+    // which is extractable. Use 150 unique values to exceed the >50 threshold.
+    let mut csv_content = String::from("id,sku_code,revenue\n");
     for i in 1..=150 {
         csv_content.push_str(&format!(
-            "{},Company-{}-Corp,{:.2}\n",
+            "{},SKU-{}-PART,{:.2}\n",
             i,
             i,
             1000.0 + (i as f64) * 100.0
@@ -1501,7 +1501,7 @@ fn learn_incremental_generates_valid_schema() {
 
     assert!(state_file.exists(), "state file should be created");
 
-    // Step 2: Finalize to produce schema
+    // Step 2: Finalize to produce schema (should extract dictionary from reservoir)
     knit()
         .args([
             "learn",
@@ -1517,7 +1517,29 @@ fn learn_incremental_generates_valid_schema() {
 
     assert!(output_schema.exists(), "schema should be produced");
 
-    // Generate from the schema (validates it's functional)
+    // Verify dictionary was extracted during finalize
+    let schema_text = fs::read_to_string(&output_schema).unwrap();
+    assert!(
+        schema_text.contains(r#"type = "dictionary""#),
+        "incremental finalize should extract dictionary for high-cardinality column.\nSchema:\n{}",
+        schema_text
+    );
+
+    let dict_path = source_dir.path().join("widgets_sku_code.dict.txt");
+    assert!(
+        dict_path.exists(),
+        "dictionary file should be created during incremental finalize"
+    );
+
+    let dict_content = fs::read_to_string(&dict_path).unwrap();
+    let dict_lines: Vec<&str> = dict_content.lines().collect();
+    assert!(
+        dict_lines.len() >= 150,
+        "dictionary should have ≥150 entries, got {}",
+        dict_lines.len()
+    );
+
+    // Generate from the schema (validates dictionary resolution works)
     let gen_dir = TempDir::new().unwrap();
     knit()
         .args([
@@ -1532,13 +1554,25 @@ fn learn_incremental_generates_valid_schema() {
         .assert()
         .success();
 
-    let gen_csv_path = gen_dir.path().join("companies.csv");
+    let gen_csv_path = gen_dir.path().join("widgets.csv");
     assert!(
         gen_csv_path.exists(),
-        "incremental learn → generate should produce companies.csv"
+        "incremental learn → generate should produce widgets.csv"
     );
 
     let gen_csv = fs::read_to_string(&gen_csv_path).unwrap();
-    let row_count = gen_csv.lines().count() - 1; // subtract header
+    let row_count = gen_csv.lines().count() - 1;
     assert!(row_count > 0, "should have generated rows");
+
+    // Verify generated values come from dictionary
+    let dict_set: std::collections::HashSet<&str> = dict_lines.iter().copied().collect();
+    let header = gen_csv.lines().next().unwrap();
+    let col_idx = header.split(',')
+        .position(|h| h == "sku_code")
+        .expect("should have sku_code column");
+    let has_dict_value = gen_csv.lines().skip(1).any(|line| {
+        let fields: Vec<&str> = line.split(',').collect();
+        fields.len() > col_idx && dict_set.contains(fields[col_idx])
+    });
+    assert!(has_dict_value, "generated data should use dictionary values");
 }
