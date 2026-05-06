@@ -96,6 +96,15 @@ impl LearnState {
             });
         }
 
+        // Warn if algorithm parameters may have changed
+        if state.algorithm_version != ALGORITHM_VERSION {
+            eprintln!(
+                "Warning: state file uses algorithm version {}, current is {}. \
+                 Merge results may be inconsistent.",
+                state.algorithm_version, ALGORITHM_VERSION
+            );
+        }
+
         Ok(Some(state))
     }
 
@@ -104,18 +113,30 @@ impl LearnState {
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| StateError::Serialize(format!("failed to serialize state: {e}")))?;
 
-        // Atomic write: write to temp file, then rename
+        // Atomic write: write to temp file, fsync, then rename
         let tmp_path = path.with_extension("state.tmp");
         let mut file = std::fs::File::create(&tmp_path)
             .map_err(|e| StateError::Io(format!("failed to create temp file: {e}")))?;
-        file.write_all(json.as_bytes())
-            .map_err(|e| StateError::Io(format!("failed to write state: {e}")))?;
-        file.flush()
-            .map_err(|e| StateError::Io(format!("failed to flush state: {e}")))?;
+
+        let write_result = (|| -> Result<(), StateError> {
+            file.write_all(json.as_bytes())
+                .map_err(|e| StateError::Io(format!("failed to write state: {e}")))?;
+            file.sync_all()
+                .map_err(|e| StateError::Io(format!("failed to sync state: {e}")))?;
+            Ok(())
+        })();
+
+        if let Err(e) = write_result {
+            drop(file);
+            let _ = std::fs::remove_file(&tmp_path);
+            return Err(e);
+        }
         drop(file);
 
-        std::fs::rename(&tmp_path, path)
-            .map_err(|e| StateError::Io(format!("failed to rename state file: {e}")))?;
+        std::fs::rename(&tmp_path, path).map_err(|e| {
+            let _ = std::fs::remove_file(&tmp_path);
+            StateError::Io(format!("failed to rename state file: {e}"))
+        })?;
 
         Ok(())
     }
@@ -325,8 +346,11 @@ impl ColumnState {
         let widened = self.data_type.widen(new_type);
         if widened != self.data_type {
             self.data_type = widened;
-            // If widened to float from integer, ensure numeric state exists
-            if widened == ColumnDataType::Float && self.numeric.is_none() {
+            if matches!(widened, ColumnDataType::String | ColumnDataType::Other) {
+                // No longer numeric — drop stale numeric state
+                self.numeric = None;
+            } else if widened == ColumnDataType::Float && self.numeric.is_none() {
+                // Widened to float from integer — ensure numeric state exists
                 self.numeric = Some(NumericState::new());
             }
         }
@@ -359,15 +383,25 @@ impl ColumnState {
         self.null_count = self.null_count.saturating_add(other.null_count);
         self.chunks_present = self.chunks_present.saturating_add(other.chunks_present);
 
-        // Merge sub-structures
-        self.hll.merge(&other.hll);
+        // Merge sub-structures (only if precisions match to avoid panics)
+        if self.hll.precision() == other.hll.precision() {
+            self.hll.merge(&other.hll);
+        }
         self.reservoir.merge(&other.reservoir);
         self.top_k.merge(&other.top_k);
 
-        if let (Some(ref mut self_num), Some(ref other_num)) = (&mut self.numeric, &other.numeric) {
-            self_num.merge(other_num);
-        } else if self.numeric.is_none() && other.numeric.is_some() {
-            self.numeric = other.numeric.clone();
+        // Merge numeric only if both are numeric types
+        if self.numeric.is_some() || other.numeric.is_some() {
+            if matches!(
+                self.data_type,
+                ColumnDataType::Integer | ColumnDataType::Float | ColumnDataType::Temporal
+            ) {
+                match (&mut self.numeric, &other.numeric) {
+                    (Some(ref mut s), Some(ref o)) => s.merge(o),
+                    (None, Some(o)) => self.numeric = Some(o.clone()),
+                    _ => {}
+                }
+            }
         }
     }
 }
