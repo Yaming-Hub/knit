@@ -8,6 +8,7 @@
 //! - `init` — interactive project setup wizard
 //! - `learn` — infer schema from data
 //! - `inspect` — inspect incremental learning state files
+//! - `generators` — list available generator types
 //! - `completions` — generate shell completion scripts
 
 mod commands;
@@ -19,7 +20,7 @@ use clap_complete::Shell;
 use colored::Colorize;
 use tracing_subscriber::EnvFilter;
 
-use commands::{generate, init, inspect, learn, plan, schema, validate};
+use commands::{generate, generators, init, inspect, learn, plan, schema, validate};
 use config::resolve_config;
 
 /// Knit — deterministic synthetic data generation.
@@ -185,6 +186,8 @@ enum Command {
         #[arg(value_enum)]
         shell: Shell,
     },
+    /// List available generator types with descriptions and examples.
+    Generators,
 }
 
 /// Schema subcommands.
@@ -293,6 +296,7 @@ fn main() -> anyhow::Result<()> {
             );
             Ok(())
         }
+        Command::Generators => generators::run(cli.json),
     }
     .inspect_err(|e| {
         if let Some(hint) = suggestions::suggest_fix(&e.to_string()) {

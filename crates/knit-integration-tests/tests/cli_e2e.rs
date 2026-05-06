@@ -49,6 +49,43 @@ fn help_flag() {
         .stdout(predicate::str::contains("learn"));
 }
 
+// ── Generators ──────────────────────────────────────────────────────
+
+#[test]
+fn generators_lists_all_types() {
+    knit()
+        .arg("generators")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("distribution"))
+        .stdout(predicate::str::contains("faker"))
+        .stdout(predicate::str::contains("sequence"))
+        .stdout(predicate::str::contains("dictionary"))
+        .stdout(predicate::str::contains("business_hours"));
+}
+
+#[test]
+fn generators_json_output() {
+    let output = knit()
+        .args(["--json", "generators"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let generators = json["generators"].as_array().unwrap();
+    assert!(generators.len() >= 15, "expected at least 15 generators");
+    let distributions = json["distributions"].as_array().unwrap();
+    assert!(distributions.len() >= 10, "expected at least 10 distributions");
+    // Check structure of first generator
+    let first = &generators[0];
+    assert!(first["name"].is_string());
+    assert!(first["description"].is_string());
+    assert!(first["parameters"].is_string());
+    assert!(first["example"].is_string());
+}
+
 // ── Validate ────────────────────────────────────────────────────────
 
 #[test]
