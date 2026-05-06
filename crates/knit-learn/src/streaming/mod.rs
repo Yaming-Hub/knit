@@ -11,13 +11,16 @@
 //! - [`ReservoirSample`] — Deterministic uniform random sampling (Algorithm R)
 //! - [`TopKTracker`] — Approximate frequent-item tracking (Space-Saving)
 //! - [`HyperLogLog`] — Probabilistic cardinality estimation
+//! - [`LearnState`] — Top-level persistent state container
 
 mod hll;
 mod numeric;
 mod reservoir;
+pub mod state;
 mod topk;
 
 pub use hll::HyperLogLog;
 pub use numeric::NumericState;
 pub use reservoir::ReservoirSample;
+pub use state::{ChunkRecord, ColumnDataType, ColumnState, LearnState, StateError, TableState};
 pub use topk::TopKTracker;
