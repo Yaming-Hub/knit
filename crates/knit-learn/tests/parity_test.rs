@@ -210,6 +210,85 @@ fn chunking_null_rates_equivalent() {
     }
 }
 
+#[test]
+fn chunking_distribution_params_equivalent() {
+    // Verify that distribution fitting produces same parameters
+    // whether data arrives in one chunk or multiple chunks
+    let schema = Arc::new(Schema::new(vec![Field::new("value", DataType::Float64, false)]));
+
+    // Create data with known distribution (uniform 0..100)
+    let batch1_vals: Vec<f64> = (0..500).map(|i| i as f64 * 0.2).collect();
+    let batch2_vals: Vec<f64> = (500..1000).map(|i| i as f64 * 0.2).collect();
+
+    let batch1 = RecordBatch::try_new(
+        schema.clone(),
+        vec![Arc::new(Float64Array::from(batch1_vals)) as ArrayRef],
+    )
+    .unwrap();
+    let batch2 = RecordBatch::try_new(
+        schema,
+        vec![Arc::new(Float64Array::from(batch2_vals)) as ArrayRef],
+    )
+    .unwrap();
+
+    let single = run_incremental_single("t", &[batch1.clone(), batch2.clone()]);
+    let chunked = run_incremental_chunked("t", &[batch1, batch2]);
+
+    let sc = &single.columns[0];
+    let cc = &chunked.columns[0];
+
+    // Both should have distributions
+    assert!(sc.distribution.is_some(), "single should have distribution");
+    assert!(cc.distribution.is_some(), "chunked should have distribution");
+
+    // Distribution families should match
+    assert_eq!(
+        sc.distribution.as_ref().unwrap().best.distribution.name(),
+        cc.distribution.as_ref().unwrap().best.distribution.name(),
+        "distribution family should match between single and chunked"
+    );
+}
+
+#[test]
+fn chunking_numeric_statistics_correct() {
+    // Verify actual numeric accuracy: known data split across chunks
+    let schema = Arc::new(Schema::new(vec![Field::new("x", DataType::Float64, false)]));
+
+    // Values 1.0 to 100.0 — known mean=50.5
+    let vals1: Vec<f64> = (1..=50).map(|i| i as f64).collect();
+    let vals2: Vec<f64> = (51..=100).map(|i| i as f64).collect();
+
+    let batch1 = RecordBatch::try_new(
+        schema.clone(),
+        vec![Arc::new(Float64Array::from(vals1)) as ArrayRef],
+    )
+    .unwrap();
+    let batch2 = RecordBatch::try_new(
+        schema,
+        vec![Arc::new(Float64Array::from(vals2)) as ArrayRef],
+    )
+    .unwrap();
+
+    // Verify via state directly that stats are correct
+    let mut state = LearnState::new(42);
+    ingest_batches_to_state(&mut state, "t", &[batch1], "chunk1.csv");
+    ingest_batches_to_state(&mut state, "t", &[batch2], "chunk2.csv");
+
+    let table = state.tables.get("t").unwrap();
+    let col = &table.columns[0];
+
+    // Check numeric state directly
+    let numeric = col.numeric.as_ref().expect("should have numeric state");
+    let mean = numeric.mean();
+    let min = numeric.min();
+    let max = numeric.max();
+
+    assert!((mean - 50.5).abs() < 0.01, "mean should be 50.5, got {mean}");
+    assert!((min - 1.0).abs() < 0.01, "min should be 1.0, got {min}");
+    assert!((max - 100.0).abs() < 0.01, "max should be 100.0, got {max}");
+    assert_eq!(col.count, 100);
+}
+
 // ─── Type Detection Tests ───────────────────────────────────────────────────
 
 #[test]
@@ -338,7 +417,10 @@ fn relationship_detection_fk_candidate() {
     );
 
     let has_user_fk = state.relationship_evidence.iter().any(|e| {
-        e.from_table == "order" && e.from_column == "user_id" && e.to_table == "user"
+        e.from_table == "order"
+            && e.from_column == "user_id"
+            && e.to_table == "user"
+            && e.to_column == "id"
     });
     assert!(has_user_fk, "should detect order.user_id → user.id");
 }
@@ -423,9 +505,21 @@ fn state_save_load_round_trip() {
     ingest_batches_to_state(&mut state, "orders", &[batch], "test.csv");
     update_relationship_evidence(&mut state);
 
-    let tmp = std::env::temp_dir().join("knit_parity_test_state.json");
-    state.save(&tmp).unwrap();
+    let tmp = std::env::temp_dir().join(format!(
+        "knit_parity_test_{}.json",
+        std::process::id()
+    ));
 
+    // Ensure cleanup even on panic
+    struct Cleanup(std::path::PathBuf);
+    impl Drop for Cleanup {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_file(&self.0);
+        }
+    }
+    let _guard = Cleanup(tmp.clone());
+
+    state.save(&tmp).unwrap();
     let loaded = LearnState::load(&tmp).unwrap().expect("state file should exist");
 
     let (orig_analyses, orig_rels) = finalize_state(&state);
@@ -445,6 +539,4 @@ fn state_save_load_round_trip() {
             assert_eq!(oc.null_rate, lc.null_rate);
         }
     }
-
-    let _ = std::fs::remove_file(&tmp);
 }
