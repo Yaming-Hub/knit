@@ -108,11 +108,59 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli
     }
 
     // 1. Ingest
-    let tables = ingest_source(source_path, sample)
-        .with_context(|| format!("failed to ingest data from {source}"))?;
+    let ingest_start = std::time::Instant::now();
+    let source_label = source_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or(source)
+        .to_string();
+    let ingest_pb = if !cli.quiet {
+        let style = ProgressStyle::with_template(
+            "{prefix:>16.cyan} {spinner:.green} {msg} ({elapsed})",
+        )
+        .expect("hardcoded spinner template");
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(style);
+        pb.set_prefix("ingesting");
+        pb.set_message(source_label);
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+        Some(pb)
+    } else {
+        None
+    };
+
+    let tables = match ingest_source(source_path, sample) {
+        Ok(t) => {
+            if let Some(pb) = ingest_pb {
+                pb.finish_and_clear();
+            }
+            t
+        }
+        Err(e) => {
+            if let Some(pb) = ingest_pb {
+                pb.abandon_with_message("failed");
+            }
+            return Err(e).with_context(|| format!("failed to ingest data from {source}"));
+        }
+    };
 
     if tables.is_empty() {
         anyhow::bail!("no supported data files found in {source}");
+    }
+
+    let total_rows: u64 = tables.iter()
+        .map(|t| t.batches.iter().map(|b| b.num_rows() as u64).sum::<u64>())
+        .sum();
+    let elapsed = ingest_start.elapsed();
+
+    if !cli.quiet {
+        eprintln!(
+            "  {} loaded {} table(s), {} row(s) in {:.1}s",
+            "→".dimmed(),
+            tables.len(),
+            format_count(total_rows),
+            elapsed.as_secs_f64(),
+        );
     }
 
     info!(tables = tables.len(), "ingestion complete");
@@ -324,14 +372,79 @@ fn run_incremental(
             );
         }
 
-        let tables = ingest_source(source_path, sample)
-            .with_context(|| format!("failed to ingest data from {source}"))?;
+        let ingest_start = std::time::Instant::now();
+        let source_label = source_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(source)
+            .to_string();
+        let ingest_pb = if !cli.quiet {
+            let style = ProgressStyle::with_template(
+                "{prefix:>16.cyan} {spinner:.green} {msg} ({elapsed})",
+            )
+            .expect("hardcoded spinner template");
+            let pb = ProgressBar::new_spinner();
+            pb.set_style(style);
+            pb.set_prefix("ingesting");
+            pb.set_message(source_label);
+            pb.enable_steady_tick(std::time::Duration::from_millis(100));
+            Some(pb)
+        } else {
+            None
+        };
+
+        let tables = match ingest_source(source_path, sample) {
+            Ok(t) => {
+                if let Some(pb) = ingest_pb {
+                    pb.finish_and_clear();
+                }
+                t
+            }
+            Err(e) => {
+                if let Some(pb) = ingest_pb {
+                    pb.abandon_with_message("failed");
+                }
+                return Err(e).with_context(|| format!("failed to ingest data from {source}"));
+            }
+        };
 
         if tables.is_empty() {
             anyhow::bail!("no supported data files found in {source}");
         }
 
+        let total_rows: u64 = tables.iter()
+            .map(|t| t.batches.iter().map(|b| b.num_rows() as u64).sum::<u64>())
+            .sum();
+        let elapsed = ingest_start.elapsed();
+
+        if !cli.quiet {
+            eprintln!(
+                "  {} loaded {} table(s), {} row(s) in {:.1}s",
+                "→".dimmed(),
+                tables.len(),
+                format_count(total_rows),
+                elapsed.as_secs_f64(),
+            );
+        }
+
+        let state_pb = if !cli.quiet && tables.len() > 1 {
+            let style = ProgressStyle::with_template(
+                "{prefix:>16.cyan} [{bar:30.green/dim}] {pos}/{len} tables — {msg}",
+            )
+            .expect("hardcoded progress bar template")
+            .progress_chars("━╸─");
+            let pb = ProgressBar::new(tables.len() as u64);
+            pb.set_style(style);
+            pb.set_prefix("processing");
+            Some(pb)
+        } else {
+            None
+        };
+
         for table in &tables {
+            if let Some(ref pb) = state_pb {
+                pb.set_message(table.entity.clone());
+            }
             let source_id = format!("{}:{}", source, table.entity);
             let is_dup = ingest_batches_to_state(
                 &mut state,
@@ -344,9 +457,19 @@ fn run_incremental(
                 if strict {
                     anyhow::bail!("{msg}");
                 } else if !cli.quiet {
-                    eprintln!("  {} {}", "⚠".yellow(), msg);
+                    if let Some(ref pb) = state_pb {
+                        pb.suspend(|| eprintln!("  {} {}", "⚠".yellow(), msg));
+                    } else {
+                        eprintln!("  {} {}", "⚠".yellow(), msg);
+                    }
                 }
             }
+            if let Some(ref pb) = state_pb {
+                pb.inc(1);
+            }
+        }
+        if let Some(pb) = state_pb {
+            pb.finish_and_clear();
         }
 
         // Update relationship evidence after ingesting all tables from this source
@@ -1884,5 +2007,16 @@ mod tests {
         ];
         let best = pick_best_pk(&columns, "users");
         assert_eq!(best, 0, "should prefer plain 'id' column");
+    }
+}
+
+/// Format a count in human-readable form (e.g., 1.2M, 3.5K).
+fn format_count(n: u64) -> String {
+    if n >= 1_000_000 {
+        format!("{:.1}M", n as f64 / 1_000_000.0)
+    } else if n >= 1_000 {
+        format!("{:.1}K", n as f64 / 1_000.0)
+    } else {
+        n.to_string()
     }
 }
