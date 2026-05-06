@@ -74,6 +74,7 @@ fn validate_fields(
                 &format!("entities.{}.fields.{}.generator", entity.name, field.name),
                 gen,
                 &field.name,
+                &field.data_type,
                 entity,
                 entity_names,
                 false,
@@ -588,15 +589,147 @@ const KNOWN_FAKER_METHODS: &[&str] = &[
     "timestamp",
 ];
 
+/// Check whether a generator type is compatible with the declared field data type.
+/// Returns `Some(error_message)` if incompatible, `None` if OK.
+///
+/// Rules:
+/// - `distribution` → numeric types (int, int32, float) or temporal (date, time, datetime, datetime_us, datetimetz, duration)
+/// - `faker` → string
+/// - `uuid` → uuid or string
+/// - `sequence` → int, int32, or string
+/// - `business_hours` → datetime, datetime_us, datetimetz, or time
+/// - `relative` → numeric or temporal (same family as the field it references)
+/// - `dictionary` → string
+/// - `pattern` → string
+///
+/// Generators that produce arbitrary types (constant, derived, oneOf, lookup,
+/// composite, conditional, unique) are not checked here.
+fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Option<String> {
+    match gen {
+        GeneratorSpec::Distribution { .. } => {
+            let compatible = matches!(
+                data_type,
+                DataType::Bool
+                    | DataType::Int
+                    | DataType::Int32
+                    | DataType::Float
+                    | DataType::Date
+                    | DataType::Time
+                    | DataType::Datetime
+                    | DataType::DatetimeUs
+                    | DataType::Datetimetz
+                    | DataType::Duration
+            );
+            if !compatible {
+                Some(format!(
+                    "distribution generator is not compatible with data_type '{}'; \
+                     expected a numeric type (int, int32, float), bool, or temporal type",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::Faker { .. } => {
+            if *data_type != DataType::String {
+                Some(format!(
+                    "faker generator produces strings but field has data_type '{}'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::UuidGen { .. } => {
+            let compatible = matches!(data_type, DataType::Uuid | DataType::String);
+            if !compatible {
+                Some(format!(
+                    "uuid generator is not compatible with data_type '{}'; expected 'uuid' or 'string'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::Sequence { .. } => {
+            let compatible = matches!(data_type, DataType::Int | DataType::Int32 | DataType::String);
+            if !compatible {
+                Some(format!(
+                    "sequence generator is not compatible with data_type '{}'; expected 'int', 'int32', or 'string'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::BusinessHours { .. } => {
+            let compatible = matches!(
+                data_type,
+                DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz | DataType::Time
+            );
+            if !compatible {
+                Some(format!(
+                    "business_hours generator is not compatible with data_type '{}'; \
+                     expected 'datetime', 'datetime_us', 'datetimetz', or 'time'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::Dictionary { .. } => {
+            if *data_type != DataType::String {
+                Some(format!(
+                    "dictionary generator produces strings but field has data_type '{}'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::Pattern { .. } => {
+            if *data_type != DataType::String {
+                Some(format!(
+                    "pattern generator produces strings but field has data_type '{}'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::Composite { .. } => {
+            if *data_type != DataType::String {
+                Some(format!(
+                    "composite generator produces strings but field has data_type '{}'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        // Generators with flexible output types — no static type check
+        _ => None,
+    }
+}
+
 fn validate_generator(
     path: &str,
     gen: &GeneratorSpec,
     field_name: &str,
+    data_type: &DataType,
     entity: &Entity,
     entity_names: &HashSet<&str>,
     nested: bool,
     errors: &mut Vec<SchemaError>,
 ) {
+    // Check generator ↔ field type compatibility
+    if let Some(msg) = check_generator_type_compat(gen, data_type) {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: msg,
+        });
+    }
+
     match gen {
         GeneratorSpec::Distribution { spec } => {
             validate_distribution(path, spec, errors);
@@ -712,6 +845,7 @@ fn validate_generator(
                     &format!("{}.branches[{}]", path, i),
                     &branch.generator,
                     field_name,
+                    data_type,
                     entity,
                     entity_names,
                     true,
@@ -723,6 +857,7 @@ fn validate_generator(
                     &format!("{}.default", path),
                     def,
                     field_name,
+                    data_type,
                     entity,
                     entity_names,
                     true,
@@ -750,14 +885,17 @@ fn validate_generator(
             }
         }
         GeneratorSpec::Unique { inner, .. } => {
-            validate_generator(path, inner, field_name, entity, entity_names, true, errors);
+            validate_generator(path, inner, field_name, data_type, entity, entity_names, true, errors);
         }
         GeneratorSpec::Composite { generators, .. } => {
+            // Composite always produces a string by concatenating sub-generator outputs,
+            // so sub-generators are validated against String (not the parent field type).
             for (key, sub_gen) in generators {
                 validate_generator(
                     &format!("{}.generators.{}", path, key),
                     sub_gen,
                     field_name,
+                    &DataType::String,
                     entity,
                     entity_names,
                     true,
@@ -1775,7 +1913,7 @@ mod tests {
         model.entities[0].fields.push(Field {
             name: "ts".to_string(),
             description: None,
-            data_type: DataType::String,
+            data_type: DataType::Datetime,
             generator: Some(GeneratorSpec::BusinessHours {
                 start_hour: 20,
                 end_hour: 24,
@@ -1963,6 +2101,125 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("every_n must be > 0"))
+        }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_distribution_on_string_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: knit_core::DistributionSpec {
+                    kind: knit_core::DistributionKind::Uniform,
+                    params: std::collections::BTreeMap::new(),
+                    round: false,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("distribution generator is not compatible"))
+        }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_faker_on_int_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Faker {
+                method: "name".to_string(),
+                args: vec![],
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("faker generator produces strings"))
+        }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_uuid_on_float_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::UuidGen { version: 4 }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("uuid generator is not compatible"))
+        }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_sequence_on_string_accepted() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Sequence { start: 1, step: 1, prefix: None }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+        });
+        let errors = validate(&model);
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence generator is not compatible"))
+        }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_sequence_on_bool_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::Bool,
+            generator: Some(GeneratorSpec::Sequence { start: 1, step: 1, prefix: None }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence generator is not compatible"))
+        }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_pattern_on_int_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "val".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Pattern {
+                pattern: "###-###".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("pattern generator produces strings"))
         }));
     }
 }
