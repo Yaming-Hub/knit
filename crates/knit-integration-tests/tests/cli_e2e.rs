@@ -772,6 +772,114 @@ fn generate_json_progress_events() {
     assert!(has_complete, "expected a complete event in JSON output");
 }
 
+#[test]
+fn generate_entity_filter_single() {
+    // --entity users should only produce users.csv
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            "examples/ecommerce.weave.toml",
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--entity",
+            "users",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let files: Vec<String> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .collect();
+    assert_eq!(files, vec!["users.csv"], "only users.csv should be generated");
+}
+
+#[test]
+fn generate_entity_filter_multiple() {
+    // --entity users --entity products should produce both
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            "examples/ecommerce.weave.toml",
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--entity",
+            "users",
+            "--entity",
+            "products",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let mut files: Vec<String> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .collect();
+    files.sort();
+    assert_eq!(files, vec!["products.csv", "users.csv"]);
+}
+
+#[test]
+fn generate_entity_filter_unknown_entity_fails() {
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            "examples/ecommerce.weave.toml",
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--entity",
+            "nonexistent",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("unknown entity 'nonexistent'"))
+        .stderr(predicate::str::contains("available:"));
+}
+
+#[test]
+fn generate_entity_filter_fk_integrity() {
+    // Generating orders (which has FK to users) should still work because
+    // the engine generates users data for key stores even if not outputting it
+    let dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            "examples/ecommerce.weave.toml",
+            "-o",
+            dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--entity",
+            "orders",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let files: Vec<String> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .collect();
+    assert_eq!(files, vec!["orders.csv"], "only orders.csv should be generated");
+
+    // Verify the orders file has data (FK columns should be populated)
+    let content = fs::read_to_string(dir.path().join("orders.csv")).unwrap();
+    let row_count = content.lines().count() - 1; // minus header
+    assert!(row_count > 0, "orders should have rows with FK values populated");
+}
+
 // ── Init ────────────────────────────────────────────────────────────
 
 #[test]

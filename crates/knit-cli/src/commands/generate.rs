@@ -29,7 +29,7 @@ use super::{load_schema, validate_model};
 ///
 /// Loads the schema, validates, compiles a plan, generates data in batches,
 /// and writes output files to the specified directory.
-pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
+pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
     let start = Instant::now();
 
     // ── Parse & validate ────────────────────────────────────────────
@@ -60,13 +60,42 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
         bail!("schema has {} validation error(s)", errors.len());
     }
 
+    // Validate --entity filter references existing entities
+    let entity_names: std::collections::HashSet<&str> =
+        model.entities.iter().map(|e| e.name.as_str()).collect();
+    for name in entity_filter {
+        if !entity_names.contains(name.as_str()) {
+            bail!(
+                "unknown entity '{}' in --entity filter; available: {}",
+                name,
+                model.entities.iter().map(|e| e.name.as_str()).collect::<Vec<_>>().join(", ")
+            );
+        }
+    }
+    // Build the output filter set (empty = all entities)
+    let output_entities: std::collections::HashSet<&str> = if entity_filter.is_empty() {
+        std::collections::HashSet::new()
+    } else {
+        entity_filter.iter().map(|s| s.as_str()).collect()
+    };
+
     if !cli.quiet {
-        eprintln!(
-            "{} schema {} ({} entities)",
-            "✓".green().bold(),
-            schema_path.cyan(),
-            model.entities.len()
-        );
+        if entity_filter.is_empty() {
+            eprintln!(
+                "{} schema {} ({} entities)",
+                "✓".green().bold(),
+                schema_path.cyan(),
+                model.entities.len()
+            );
+        } else {
+            eprintln!(
+                "{} schema {} (generating {} of {} entities)",
+                "✓".green().bold(),
+                schema_path.cyan(),
+                entity_filter.len(),
+                model.entities.len()
+            );
+        }
     }
 
     // ── Compile plan ────────────────────────────────────────────────
@@ -120,12 +149,14 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
         .phases
         .iter()
         .flat_map(|p| &p.entity_plans)
+        .filter(|ep| output_entities.is_empty() || output_entities.contains(ep.entity_name.as_str()))
         .map(|ep| ep.estimated_row_count)
         .sum();
     let entity_count = plan
         .phases
         .iter()
         .flat_map(|p| &p.entity_plans)
+        .filter(|ep| output_entities.is_empty() || output_entities.contains(ep.entity_name.as_str()))
         .count();
 
     if cli.json {
@@ -139,7 +170,7 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
 
     // ── Set up progress bars ────────────────────────────────────────
     let multi = MultiProgress::new();
-    let entity_bars = create_progress_bars(&plan, &multi, cli.quiet);
+    let entity_bars = create_progress_bars(&plan, &multi, cli.quiet, &output_entities);
 
     // ── Generate ────────────────────────────────────────────────────
     let batch_size = if cli.batch_size > 0 {
@@ -208,7 +239,13 @@ pub fn run(schema_path: &str, output_dir: &str, cli: &Cli) -> Result<()> {
     let mut batch_counters: HashMap<String, u64> = HashMap::new();
     engine
         .execute(&plan, |entity_name, batch: RecordBatch| {
-            // Track pre-noise row count for progress reporting
+            // Skip output for entities not in the filter (but still generate
+            // for FK key-store population)
+            if !output_entities.is_empty() && !output_entities.contains(entity_name) {
+                return Ok(());
+            }
+
+            // Track row count only for output entities
             let row_count = batch.num_rows() as u64;
             total_rows += row_count;
 
@@ -890,6 +927,7 @@ fn create_progress_bars(
     plan: &ExecutionPlan,
     multi: &MultiProgress,
     quiet: bool,
+    output_entities: &std::collections::HashSet<&str>,
 ) -> HashMap<String, ProgressBar> {
     let mut bars = HashMap::new();
     if quiet {
@@ -904,6 +942,12 @@ fn create_progress_bars(
 
     for phase in &plan.phases {
         for ep in &phase.entity_plans {
+            // Only show progress bars for entities that will be output
+            if !output_entities.is_empty()
+                && !output_entities.contains(ep.entity_name.as_str())
+            {
+                continue;
+            }
             let pb = multi.add(ProgressBar::new(ep.estimated_row_count));
             pb.set_style(style.clone());
             pb.set_prefix(ep.entity_name.clone());

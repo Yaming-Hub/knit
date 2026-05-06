@@ -135,6 +135,10 @@ enum Command {
         /// Output directory for generated files.
         #[arg(short, long, default_value = "output")]
         output: String,
+        /// Generate only specific entities (repeatable). Dependencies are still
+        /// resolved but only selected entities produce output files.
+        #[arg(long = "entity")]
+        entities: Vec<String>,
     },
     /// Schema manipulation operations.
     Schema {
@@ -264,8 +268,8 @@ fn main() -> anyhow::Result<()> {
     match &cli.command {
         Command::Validate { schema } => validate::run(schema, &cli),
         Command::Plan { schema } => plan::run(schema, &cli),
-        Command::Generate { schema, output } => {
-            generate::run(schema, output, &cli)
+        Command::Generate { schema, output, entities } => {
+            generate::run(schema, output, entities, &cli)
         }
         Command::Schema { action } => match action {
             SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
