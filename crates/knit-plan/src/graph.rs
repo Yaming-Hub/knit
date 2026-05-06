@@ -58,6 +58,22 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
         graph.add_edge(nodes[*from_idx], nodes[*to_idx], ());
     }
 
+    // Build edges from ActorRef generators: if entity A has a field with
+    // generator = { type = "actor_ref", entity = "B" }, then A depends on B.
+    for entity in &model.entities {
+        let from_idx = entity_index[entity.name.as_str()];
+        for field in &entity.fields {
+            if let Some(knit_core::GeneratorSpec::ActorRef { entity: ref target }) = field.generator
+            {
+                if let Some(&to_idx) = entity_index.get(target.as_str()) {
+                    if from_idx != to_idx {
+                        graph.add_edge(nodes[from_idx], nodes[to_idx], ());
+                    }
+                }
+            }
+        }
+    }
+
     // Find SCCs using Tarjan's algorithm.
     let sccs = tarjan_scc(&graph);
 
@@ -511,6 +527,96 @@ mod tests {
         let counts = resolve_row_counts(&model);
         // Normal distribution resolves to mean
         assert_eq!(counts["d"], 500);
+    }
+
+    #[test]
+    fn actor_ref_creates_dependency_edge() {
+        use knit_core::{Field, DataType, NullSpec, GeneratorSpec};
+        // "events" has actor_ref pointing to "users" → events depends on users
+        let users = Entity {
+            name: "users".to_string(),
+            description: None,
+            count: CountSpec::Fixed(100),
+            fields: vec![Field {
+                name: "id".to_string(),
+                description: None,
+                data_type: DataType::Int,
+                generator: Some(GeneratorSpec::Sequence {
+                    start: 1,
+                    step: 1,
+                    prefix: None,
+                }),
+                nullable: NullSpec::Never,
+                primary_key: Some(true),
+                precision: None,
+                actor_column: false,
+            }],
+            constraints: vec![],
+            topology: None,
+            actor: true,
+            persona_distribution: None,
+        };
+        let events = Entity {
+            name: "events".to_string(),
+            description: None,
+            count: CountSpec::Fixed(1000),
+            fields: vec![Field {
+                name: "user_id".to_string(),
+                description: None,
+                data_type: DataType::Int,
+                generator: Some(GeneratorSpec::ActorRef {
+                    entity: "users".to_string(),
+                }),
+                nullable: NullSpec::Never,
+                primary_key: None,
+                precision: None,
+                actor_column: true,
+            }],
+            constraints: vec![],
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+        };
+        // No explicit relationship — only ActorRef generator
+        let model = model_with(vec![users, events], vec![]);
+        let result = assign_phases(&model).unwrap();
+        // Users must be in an earlier phase than events
+        assert!(result.phases.len() >= 2);
+        let users_phase = result.phases.iter().position(|p| p.contains(&"users".to_string())).unwrap();
+        let events_phase = result.phases.iter().position(|p| p.contains(&"events".to_string())).unwrap();
+        assert!(users_phase < events_phase, "users (phase {}) must come before events (phase {})", users_phase, events_phase);
+    }
+
+    #[test]
+    fn actor_ref_self_referential_no_edge() {
+        use knit_core::{Field, DataType, NullSpec, GeneratorSpec};
+        // Self-referential actor_ref (same entity) should not create an edge
+        let users = Entity {
+            name: "users".to_string(),
+            description: None,
+            count: CountSpec::Fixed(100),
+            fields: vec![Field {
+                name: "manager_id".to_string(),
+                description: None,
+                data_type: DataType::Int,
+                generator: Some(GeneratorSpec::ActorRef {
+                    entity: "users".to_string(),
+                }),
+                nullable: NullSpec::Never,
+                primary_key: None,
+                precision: None,
+                actor_column: false,
+            }],
+            constraints: vec![],
+            topology: None,
+            actor: true,
+            persona_distribution: None,
+        };
+        let model = model_with(vec![users], vec![]);
+        let result = assign_phases(&model).unwrap();
+        // Should still be single phase (no dependency)
+        assert_eq!(result.phases.len(), 1);
+        assert_eq!(result.phases[0], vec!["users"]);
     }
 }
 
