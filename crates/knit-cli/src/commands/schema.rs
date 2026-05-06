@@ -126,16 +126,37 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     if !model.noise_profiles.is_empty() {
         doc.push_str(&format!("| Noise profiles | {} |\n", model.noise_profiles.len()));
     }
+    let actor_count = model.entities.iter().filter(|e| e.actor).count();
+    if actor_count > 0 {
+        doc.push_str(&format!("| Actor entities | {} |\n", actor_count));
+    }
+    if !model.personas.is_empty() {
+        doc.push_str(&format!("| Personas | {} |\n", model.personas.len()));
+    }
+    if !model.actor_relationships.is_empty() {
+        doc.push_str(&format!(
+            "| Actor relationships | {} |\n",
+            model.actor_relationships.len()
+        ));
+    }
     doc.push('\n');
 
     // Entities
     doc.push_str("## Entities\n\n");
     for entity in &model.entities {
-        doc.push_str(&format!("### {}\n\n", md_escape(&entity.name)));
+        let actor_badge = if entity.actor { " 🎭" } else { "" };
+        doc.push_str(&format!("### {}{}\n\n", md_escape(&entity.name), actor_badge));
         if let Some(desc) = &entity.description {
             doc.push_str(&format!("{}\n\n", desc));
         }
         doc.push_str(&format!("**Rows:** {}\n\n", format_count_spec(&entity.count)));
+        if entity.actor {
+            if let Some(pd) = &entity.persona_distribution {
+                doc.push_str(&format!("**Persona distribution:** {}\n\n", md_escape(pd)));
+            } else {
+                doc.push_str("**Actor entity** (no persona distribution specified)\n\n");
+            }
+        }
 
         if !entity.fields.is_empty() {
             doc.push_str("| Field | Type | Nullable | Generator |\n");
@@ -177,6 +198,70 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
                 md_escape(&rel.to),
                 rel.kind,
                 md_escape(fk)
+            ));
+        }
+        doc.push('\n');
+    }
+
+    // Personas
+    if !model.personas.is_empty() {
+        doc.push_str("## Personas\n\n");
+        doc.push_str("| Name | Weight | Traits |\n|---|---|---|\n");
+        for persona in &model.personas {
+            let traits_str = if persona.traits.is_empty() {
+                "—".to_string()
+            } else {
+                persona
+                    .traits
+                    .keys()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            let pct = persona.weight * 100.0;
+            let pct_str = if (pct - pct.round()).abs() < 0.01 {
+                format!("{:.0}%", pct)
+            } else {
+                format!("{:.1}%", pct)
+            };
+            doc.push_str(&format!(
+                "| {} | {} | {} |\n",
+                md_escape(&persona.name),
+                pct_str,
+                md_escape(&traits_str)
+            ));
+        }
+        doc.push('\n');
+    }
+
+    // Actor Relationships
+    if !model.actor_relationships.is_empty() {
+        doc.push_str("## Actor Relationships\n\n");
+        doc.push_str("| Name | From | To | Graph Type | Parameters |\n|---|---|---|---|---|\n");
+        for ar in &model.actor_relationships {
+            let mut parts: Vec<String> = ar
+                .params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v))
+                .collect();
+            if let Some(ref cc) = ar.community_count {
+                parts.push(format!("community_count={}", format_count_spec(cc)));
+            }
+            if let Some(hd) = ar.hierarchy_depth {
+                parts.push(format!("hierarchy_depth={}", hd));
+            }
+            let params_str = if parts.is_empty() {
+                "—".to_string()
+            } else {
+                parts.join(", ")
+            };
+            doc.push_str(&format!(
+                "| {} | {} | {} | {} | {} |\n",
+                md_escape(&ar.name),
+                md_escape(&ar.from_entity),
+                md_escape(&ar.to_entity),
+                ar.graph_type,
+                md_escape(&params_str)
             ));
         }
         doc.push('\n');
@@ -815,5 +900,85 @@ mod tests {
             DiffEntry::FieldChanged { entity, field, detail }
                 if entity == "events" && field == "user_id" && detail.contains("actor_column")
         )));
+    }
+
+    #[test]
+    fn doc_shows_actor_entity_badge() {
+        let mut entity = make_entity("users", vec![make_field("id", DataType::Int)]);
+        entity.actor = true;
+        entity.persona_distribution = Some("power_mix".to_string());
+        let model = make_model("test", vec![entity]);
+        let doc = generate_schema_doc(&model);
+        assert!(doc.contains("### users 🎭"), "should have actor badge");
+        assert!(doc.contains("Actor entities | 1"), "overview should count actors");
+        assert!(doc.contains("**Persona distribution:** power_mix"));
+    }
+
+    #[test]
+    fn doc_shows_personas_section() {
+        use knit_core::Persona;
+        let mut model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        let mut traits = std::collections::BTreeMap::new();
+        traits.insert("activity_rate".to_string(), knit_core::Value::Float(0.8));
+        traits.insert("peak_hours".to_string(), knit_core::Value::String("morning".to_string()));
+        model.personas.push(Persona {
+            name: "power_user".to_string(),
+            weight: 0.3,
+            traits,
+        });
+        model.personas.push(Persona {
+            name: "casual".to_string(),
+            weight: 0.7,
+            traits: std::collections::BTreeMap::new(),
+        });
+        let doc = generate_schema_doc(&model);
+        assert!(doc.contains("## Personas"), "should have personas section");
+        assert!(doc.contains("| Personas | 2 |"), "overview should count personas");
+        assert!(doc.contains("| power_user | 30% | activity_rate, peak_hours |"));
+        assert!(doc.contains("| casual | 70% | — |"));
+    }
+
+    #[test]
+    fn doc_shows_actor_relationships_section() {
+        use knit_core::ActorRelationship;
+        let mut entity = make_entity("users", vec![make_field("id", DataType::Int)]);
+        entity.actor = true;
+        let mut model = make_model("test", vec![entity]);
+        let mut params = std::collections::BTreeMap::new();
+        params.insert("avg_degree".to_string(), 5.0);
+        model.actor_relationships.push(ActorRelationship {
+            name: "email_network".to_string(),
+            from_entity: "users".to_string(),
+            to_entity: "users".to_string(),
+            graph_type: Default::default(),
+            params,
+            community_count: Some(knit_core::CountSpec::Fixed(4)),
+            hierarchy_depth: Some(3),
+        });
+        let doc = generate_schema_doc(&model);
+        assert!(doc.contains("## Actor Relationships"));
+        assert!(doc.contains("| Actor relationships | 1 |"));
+        assert!(doc.contains("| email_network |"));
+        assert!(doc.contains("scale_free"), "should use Display, not Debug");
+        assert!(doc.contains("avg_degree=5"));
+        assert!(doc.contains("community_count=4"));
+        assert!(doc.contains("hierarchy_depth=3"));
+    }
+
+    #[test]
+    fn doc_omits_behavioral_sections_when_empty() {
+        let model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        let doc = generate_schema_doc(&model);
+        assert!(!doc.contains("## Personas"));
+        assert!(!doc.contains("## Actor Relationships"));
+        assert!(!doc.contains("Actor entities"));
+        assert!(!doc.contains("| Personas |"));
+        assert!(!doc.contains("| Actor relationships |"));
     }
 }
