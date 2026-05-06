@@ -21,6 +21,8 @@ pub fn validate(model: &DataModel) -> Vec<SchemaError> {
     validate_relationships(model, &mut errors);
     validate_noise_profiles(model, &mut errors);
     validate_correlations(model, &mut errors);
+    validate_personas(model, &mut errors);
+    validate_actor_relationships(model, &mut errors);
     errors
 }
 
@@ -1230,6 +1232,141 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
                         });
                     }
                 }
+            }
+        }
+    }
+}
+
+fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
+    let mut seen = HashSet::new();
+    for (i, persona) in model.personas.iter().enumerate() {
+        let path = format!("personas[{}]", i);
+
+        // Duplicate name check
+        if !seen.insert(&persona.name) {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!("duplicate persona name '{}'", persona.name),
+            });
+        }
+
+        // Name must be non-empty
+        if persona.name.is_empty() {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: "persona name must not be empty".to_string(),
+            });
+        }
+
+        // Weight must be positive
+        if persona.weight <= 0.0 {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "persona '{}' has weight {} which must be > 0",
+                    persona.name, persona.weight
+                ),
+            });
+        }
+
+        // Weight must be finite
+        if !persona.weight.is_finite() {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "persona '{}' has non-finite weight",
+                    persona.name
+                ),
+            });
+        }
+
+        // Traits should not be empty
+        if persona.traits.is_empty() {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "persona '{}' has empty traits; at least one trait is required",
+                    persona.name
+                ),
+            });
+        }
+    }
+}
+
+fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
+    let names = entity_names(model);
+    let mut seen = HashSet::new();
+    for (i, ar) in model.actor_relationships.iter().enumerate() {
+        let path = format!("actor_relationships[{}]", i);
+
+        // Duplicate name check
+        if !seen.insert(&ar.name) {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!("duplicate actor_relationship name '{}'", ar.name),
+            });
+        }
+
+        // Name must be non-empty
+        if ar.name.is_empty() {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: "actor_relationship name must not be empty".to_string(),
+            });
+        }
+
+        // from_entity must exist and be an actor
+        if !names.contains(ar.from_entity.as_str()) {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "from_entity '{}' references unknown entity",
+                    ar.from_entity
+                ),
+            });
+        } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.from_entity) {
+            if !entity.actor {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "from_entity '{}' is not marked as actor = true",
+                        ar.from_entity
+                    ),
+                });
+            }
+        }
+
+        // to_entity must exist and be an actor
+        if !names.contains(ar.to_entity.as_str()) {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "to_entity '{}' references unknown entity",
+                    ar.to_entity
+                ),
+            });
+        } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.to_entity) {
+            if !entity.actor {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "to_entity '{}' is not marked as actor = true",
+                        ar.to_entity
+                    ),
+                });
+            }
+        }
+
+        // avg_degree param (if present) must be positive and finite
+        if let Some(&avg_degree) = ar.params.get("avg_degree") {
+            if !avg_degree.is_finite() || avg_degree <= 0.0 {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "actor_relationship '{}' has avg_degree {} which must be a finite value > 0",
+                        ar.name, avg_degree
+                    ),
+                });
             }
         }
     }
@@ -2507,6 +2644,261 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("actor_temporal generator produces temporal values"))
+        }));
+    }
+
+    // ── Persona validation tests ──
+
+    #[test]
+    fn test_persona_duplicate_name_rejected() {
+        let mut model = minimal_model();
+        model.personas.push(Persona {
+            name: "early_bird".to_string(),
+            weight: 0.5,
+            traits: BTreeMap::from([("hour".to_string(), Value::Int(7))]),
+        });
+        model.personas.push(Persona {
+            name: "early_bird".to_string(),
+            weight: 0.3,
+            traits: BTreeMap::from([("hour".to_string(), Value::Int(6))]),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate persona name"))
+        }));
+    }
+
+    #[test]
+    fn test_persona_zero_weight_rejected() {
+        let mut model = minimal_model();
+        model.personas.push(Persona {
+            name: "test".to_string(),
+            weight: 0.0,
+            traits: BTreeMap::from([("x".to_string(), Value::Int(1))]),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("weight") && message.contains("must be > 0"))
+        }));
+    }
+
+    #[test]
+    fn test_persona_empty_traits_rejected() {
+        let mut model = minimal_model();
+        model.personas.push(Persona {
+            name: "empty".to_string(),
+            weight: 0.5,
+            traits: BTreeMap::new(),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("empty traits"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_relationship_unknown_entity_rejected() {
+        let mut model = minimal_model();
+        model.actor_relationships.push(ActorRelationship {
+            name: "reports_to".to_string(),
+            from_entity: "employees".to_string(),
+            to_entity: "managers".to_string(),
+            graph_type: GraphType::Hierarchical,
+            params: BTreeMap::from([("avg_degree".into(), 1.0)]),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("from_entity") && message.contains("unknown entity"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_relationship_non_actor_entity_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "users".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            actor: false,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "friends".to_string(),
+            from_entity: "users".to_string(),
+            to_entity: "users".to_string(),
+            graph_type: GraphType::SmallWorld,
+            params: BTreeMap::from([("avg_degree".into(), 5.0)]),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("not marked as actor"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_relationship_zero_connections_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "people".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            actor: true,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "knows".to_string(),
+            from_entity: "people".to_string(),
+            to_entity: "people".to_string(),
+            graph_type: GraphType::ErdosRenyi,
+            params: BTreeMap::from([("avg_degree".into(), 0.0)]),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("avg_degree") && message.contains("must be a finite value > 0"))
+        }));
+    }
+
+    #[test]
+    fn test_valid_personas_and_actor_relationships_accepted() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "people".to_string(),
+            description: None,
+            count: CountSpec::Fixed(50),
+            fields: vec![],
+            actor: true,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.personas.push(Persona {
+            name: "early_bird".to_string(),
+            weight: 0.6,
+            traits: BTreeMap::from([("start_hour".to_string(), Value::Int(7))]),
+        });
+        model.personas.push(Persona {
+            name: "night_owl".to_string(),
+            weight: 0.4,
+            traits: BTreeMap::from([("start_hour".to_string(), Value::Int(22))]),
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "friends".to_string(),
+            from_entity: "people".to_string(),
+            to_entity: "people".to_string(),
+            graph_type: GraphType::SmallWorld,
+            params: BTreeMap::from([("avg_degree".into(), 5.0)]),
+            community_count: Some(CountSpec::Fixed(3)),
+            hierarchy_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("persona") || message.contains("actor_relationship"))
+        }));
+    }
+
+    #[test]
+    fn test_persona_empty_name_rejected() {
+        let mut model = minimal_model();
+        model.personas.push(Persona {
+            name: "".to_string(),
+            weight: 0.5,
+            traits: BTreeMap::from([("x".to_string(), Value::Int(1))]),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("name must not be empty"))
+        }));
+    }
+
+    #[test]
+    fn test_persona_infinite_weight_rejected() {
+        let mut model = minimal_model();
+        model.personas.push(Persona {
+            name: "inf_persona".to_string(),
+            weight: f64::INFINITY,
+            traits: BTreeMap::from([("x".to_string(), Value::Int(1))]),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("non-finite weight"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_relationship_duplicate_name_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "people".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            actor: true,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "friends".to_string(),
+            from_entity: "people".to_string(),
+            to_entity: "people".to_string(),
+            graph_type: GraphType::SmallWorld,
+            params: BTreeMap::from([("avg_degree".into(), 5.0)]),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "friends".to_string(),
+            from_entity: "people".to_string(),
+            to_entity: "people".to_string(),
+            graph_type: GraphType::ErdosRenyi,
+            params: BTreeMap::new(),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate actor_relationship name"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_relationship_nan_avg_degree_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "people".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            actor: true,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "knows".to_string(),
+            from_entity: "people".to_string(),
+            to_entity: "people".to_string(),
+            graph_type: GraphType::ErdosRenyi,
+            params: BTreeMap::from([("avg_degree".into(), f64::NAN)]),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("avg_degree") && message.contains("finite"))
         }));
     }
 }
