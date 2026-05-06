@@ -163,9 +163,11 @@ fn is_likely_pk_column(col: &ColumnState, table_row_count: u64) -> bool {
     let cardinality = col.hll.cardinality();
     let uniqueness_ratio = cardinality / col.count as f64;
     // High uniqueness + low null rate + name heuristic
-    let has_pk_name = col.name.to_lowercase().ends_with("id")
-        || col.name.to_lowercase().ends_with("_id")
-        || col.name.to_lowercase() == "id";
+    let lower = col.name.to_lowercase();
+    let has_pk_name = lower == "id"
+        || lower.ends_with("_id")
+        || col.name.ends_with("Id")  // camelCase: userId, orderId
+        || col.name.ends_with("ID"); // ALL_CAPS: userID
     uniqueness_ratio > 0.95 && col.null_rate() < 0.01 && has_pk_name
 }
 
