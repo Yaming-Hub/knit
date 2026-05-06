@@ -63,6 +63,7 @@ pub fn run(
     state_path: Option<&str>,
     finalize: bool,
     strict: bool,
+    entities: &[String],
     cli: &crate::Cli,
 ) -> Result<()> {
     // Validate argument combinations
@@ -77,18 +78,21 @@ pub fn run(
         anyhow::bail!("--sample must be at least 1");
     }
 
+    // Build entity filter set (empty = all)
+    let entity_filter: HashSet<String> = entities.iter().cloned().collect();
+
     // Route: incremental mode if --state is provided
     if let Some(state_file) = state_path {
-        return run_incremental(source, output, sample, state_file, finalize, strict, cli);
+        return run_incremental(source, output, sample, state_file, finalize, strict, &entity_filter, cli);
     }
 
     // Batch mode (original behavior)
     let source = source.unwrap();
-    run_batch(source, output, sample, cli)
+    run_batch(source, output, sample, &entity_filter, cli)
 }
 
 /// Batch mode: load all data, profile, fit, emit schema (original behavior).
-fn run_batch(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) -> Result<()> {
+fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &HashSet<String>, cli: &crate::Cli) -> Result<()> {
     let source_path = Path::new(source);
     anyhow::ensure!(
         source_path.exists(),
@@ -147,6 +151,33 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli
     if tables.is_empty() {
         anyhow::bail!("no supported data files found in {source}");
     }
+
+    // Apply entity filter if specified
+    let tables: Vec<_> = if entity_filter.is_empty() {
+        tables
+    } else {
+        // Validate that all requested entity names exist in the ingested tables
+        let available: HashSet<&str> = tables.iter().map(|t| t.entity.as_str()).collect();
+        let mut unknown: Vec<&str> = entity_filter
+            .iter()
+            .filter(|name| !available.contains(name.as_str()))
+            .map(|s| s.as_str())
+            .collect();
+        if !unknown.is_empty() {
+            unknown.sort();
+            let mut avail_sorted: Vec<&str> = available.into_iter().collect();
+            avail_sorted.sort();
+            anyhow::bail!(
+                "unknown --entity name(s): {}; available: {}",
+                unknown.join(", "),
+                avail_sorted.join(", ")
+            );
+        }
+        tables
+            .into_iter()
+            .filter(|t| entity_filter.contains(&t.entity))
+            .collect()
+    };
 
     let total_rows: u64 = tables.iter()
         .map(|t| t.batches.iter().map(|b| b.num_rows() as u64).sum::<u64>())
@@ -336,6 +367,7 @@ fn run_incremental(
     state_file: &str,
     finalize: bool,
     strict: bool,
+    entity_filter: &HashSet<String>,
     cli: &crate::Cli,
 ) -> Result<()> {
     use knit_learn::incremental::ingest_batches_to_state;
@@ -411,6 +443,33 @@ fn run_incremental(
         if tables.is_empty() {
             anyhow::bail!("no supported data files found in {source}");
         }
+
+        // Apply entity filter if specified
+        let tables: Vec<_> = if entity_filter.is_empty() {
+            tables
+        } else {
+            // Validate that all requested entity names exist in the ingested tables
+            let available: HashSet<&str> = tables.iter().map(|t| t.entity.as_str()).collect();
+            let mut unknown: Vec<&str> = entity_filter
+                .iter()
+                .filter(|name| !available.contains(name.as_str()))
+                .map(|s| s.as_str())
+                .collect();
+            if !unknown.is_empty() {
+                unknown.sort();
+                let mut avail_sorted: Vec<&str> = available.into_iter().collect();
+                avail_sorted.sort();
+                anyhow::bail!(
+                    "unknown --entity name(s): {}; available: {}",
+                    unknown.join(", "),
+                    avail_sorted.join(", ")
+                );
+            }
+            tables
+                .into_iter()
+                .filter(|t| entity_filter.contains(&t.entity))
+                .collect()
+        };
 
         let total_rows: u64 = tables.iter()
             .map(|t| t.batches.iter().map(|b| b.num_rows() as u64).sum::<u64>())
@@ -497,7 +556,7 @@ fn run_incremental(
         // Since output has a default, we always emit when finalize is set
         // or when source is provided with --state (update + finalize in one pass)
         if finalize {
-            emit_schema_from_state(&state, output, cli)?;
+            emit_schema_from_state(&state, output, entity_filter, cli)?;
         }
     }
 
@@ -508,6 +567,7 @@ fn run_incremental(
 fn emit_schema_from_state(
     state: &knit_learn::streaming::LearnState,
     output: &str,
+    entity_filter: &HashSet<String>,
     cli: &crate::Cli,
 ) -> Result<()> {
     use knit_learn::incremental::finalize_state;
@@ -522,6 +582,11 @@ fn emit_schema_from_state(
     }
 
     let (mut table_analyses, finalized_rels) = finalize_state(state);
+
+    // Apply entity filter to finalized tables
+    if !entity_filter.is_empty() {
+        table_analyses.retain(|t| entity_filter.contains(&t.name));
+    }
 
     // Attach incrementally-detected relationships to their source TableAnalysis
     // so assemble_data_model can use them for generator/type decisions.
@@ -1776,6 +1841,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -1819,6 +1885,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -1835,7 +1902,7 @@ mod tests {
 
     #[test]
     fn learn_nonexistent_path_errors() {
-        let result = run(Some("nonexistent_path_12345.csv"), "out.toml", None, None, false, false, &quiet_cli());
+        let result = run(Some("nonexistent_path_12345.csv"), "out.toml", None, None, false, false, &[], &quiet_cli());
         assert!(result.is_err());
     }
 
@@ -1858,6 +1925,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
