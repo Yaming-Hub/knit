@@ -28,6 +28,10 @@ injection — all from a single CLI command.
   variation).
 - **Reverse engineering** — Ingest existing data, profile distributions, and fit
   schemas automatically (`knit learn`).
+- **Incremental learning** — Process datasets larger than memory in bounded
+  chunks with streaming statistics and persistent state files.
+- **Dictionary extraction** — Automatically extracts domain-specific vocabularies
+  from eligible high-cardinality string columns for realistic text generation.
 - **Foreign-key integrity** — Automatic topological ordering and key stores
   ensure referential integrity across entities.
 - **Plugin architecture** — Register custom generators at runtime via the
@@ -169,6 +173,41 @@ knit learn ./big-data/ -o inferred.weave.toml --sample 10000
 knit generate inferred.weave.toml -o ./synthetic-data --format parquet
 ```
 
+### Incremental Learning
+
+For datasets too large to fit in memory, use incremental mode to process data
+in chunks. Each invocation updates a persistent state file:
+
+```bash
+# Process data in batches — each call updates the state file
+knit learn ./chunk1/ --state learn.state
+knit learn ./chunk2/ --state learn.state
+knit learn ./chunk3/ --state learn.state
+
+# Finalize: emit schema from accumulated statistics
+knit learn --state learn.state --finalize -o schema.weave.toml
+```
+
+Incremental mode uses streaming algorithms (Welford for mean/variance,
+HyperLogLog for cardinality, reservoir sampling for distribution fitting) so
+memory usage stays bounded regardless of dataset size.
+
+### Dictionary Extraction
+
+When learning from data, Knit automatically extracts domain-specific
+dictionaries for eligible high-cardinality string columns (e.g., product names,
+person names) that don't match a standard faker pattern:
+
+```bash
+knit learn ./products/ -o schema.weave.toml
+# Creates: schema.weave.toml + products_name.dict.txt (alongside the schema)
+```
+
+The learned schema references the dictionary file, and generation draws values
+from it — producing output that matches the domain vocabulary of the original
+data. Dictionary extraction works in both batch and incremental modes.
+Extracted dictionaries are capped at ~10,000 entries for large vocabularies.
+
 ### Parameterized Schemas
 
 Derived expressions can reference `--param` values using `${param.key}` syntax:
@@ -216,6 +255,12 @@ Global options:
   -q, --quiet           Suppress non-error output
   -v, --verbose         Debug logging
   --version             Show version
+
+Learn-specific options:
+  --sample <N>          Limit rows per table (faster profiling on large data)
+  --state <PATH>        Incremental mode: persist statistics to a state file
+  --finalize            Emit schema from state without processing new data
+  --strict              Error on reprocessing same source into same state (default: warn)
 ```
 
 ## Contributing
