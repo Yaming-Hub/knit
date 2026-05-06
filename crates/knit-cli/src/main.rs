@@ -171,6 +171,9 @@ enum Command {
         /// Error on duplicate source paths (default: warn).
         #[arg(long)]
         strict: bool,
+        /// Learn only specific entities/tables (repeatable). Others are skipped.
+        #[arg(long = "entity")]
+        entities: Vec<String>,
     },
     /// Inspect an incremental learning state file.
     Inspect {
@@ -281,8 +284,8 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
         },
         Command::Init { output } => init::run(output),
-        Command::Learn { source, output, sample, state, finalize, strict } => {
-            learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, &cli)
+        Command::Learn { source, output, sample, state, finalize, strict, entities } => {
+            learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, entities, &cli)
         }
         Command::Inspect { state, columns } => {
             inspect::run(state, *columns, &cli)

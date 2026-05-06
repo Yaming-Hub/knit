@@ -1660,6 +1660,136 @@ fn learn_sample_limits_rows() {
 }
 
 #[test]
+fn learn_entity_filter_includes_only_matching() {
+    let tmp = TempDir::new().unwrap();
+
+    // Create two CSV files (two entities)
+    let users_path = tmp.path().join("users.csv");
+    fs::write(&users_path, "id,name\n1,Alice\n2,Bob\n3,Carol\n").unwrap();
+    let orders_path = tmp.path().join("orders.csv");
+    fs::write(&orders_path, "id,amount\n1,10.5\n2,20.0\n3,5.75\n").unwrap();
+
+    let learned = tmp.path().join("learned.weave.toml");
+
+    // Learn only the "users" entity
+    knit()
+        .args([
+            "learn",
+            tmp.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--entity",
+            "users",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&learned).unwrap();
+    assert!(content.contains(r#"name = "users""#), "should contain users entity");
+    assert!(!content.contains(r#"name = "orders""#), "should NOT contain orders entity");
+}
+
+#[test]
+fn learn_entity_filter_multiple_entities() {
+    let tmp = TempDir::new().unwrap();
+
+    fs::write(tmp.path().join("alpha.csv"), "id,x\n1,a\n2,b\n").unwrap();
+    fs::write(tmp.path().join("beta.csv"), "id,y\n1,c\n2,d\n").unwrap();
+    fs::write(tmp.path().join("gamma.csv"), "id,z\n1,e\n2,f\n").unwrap();
+
+    let learned = tmp.path().join("learned.weave.toml");
+
+    // Learn only alpha and gamma
+    knit()
+        .args([
+            "learn",
+            tmp.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--entity",
+            "alpha",
+            "--entity",
+            "gamma",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&learned).unwrap();
+    assert!(content.contains(r#"name = "alpha""#));
+    assert!(content.contains(r#"name = "gamma""#));
+    assert!(!content.contains(r#"name = "beta""#));
+}
+
+#[test]
+fn learn_entity_filter_no_match_fails() {
+    let tmp = TempDir::new().unwrap();
+    fs::write(tmp.path().join("data.csv"), "id,value\n1,10\n2,20\n").unwrap();
+
+    let learned = tmp.path().join("learned.weave.toml");
+
+    knit()
+        .args([
+            "learn",
+            tmp.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--entity",
+            "nonexistent",
+            "--quiet",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("unknown --entity name(s): nonexistent"));
+}
+
+#[test]
+fn learn_entity_filter_incremental_mode() {
+    let tmp = TempDir::new().unwrap();
+
+    fs::write(tmp.path().join("users.csv"), "id,name\n1,Alice\n2,Bob\n").unwrap();
+    fs::write(tmp.path().join("orders.csv"), "id,amount\n1,99.9\n2,50.0\n").unwrap();
+
+    let state_file = tmp.path().join("state.bin");
+    let learned = tmp.path().join("learned.weave.toml");
+
+    // Learn incrementally with entity filter (ingest only)
+    knit()
+        .args([
+            "learn",
+            tmp.path().to_str().unwrap(),
+            "-o",
+            learned.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--entity",
+            "orders",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Finalize to emit schema
+    knit()
+        .args([
+            "learn",
+            "-o",
+            learned.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--finalize",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&learned).unwrap();
+    assert!(content.contains(r#"name = "orders""#), "should contain orders entity");
+    assert!(!content.contains(r#"name = "users""#), "should NOT contain users entity");
+}
+
+#[test]
 fn generate_param_substitution_in_derived() {
     let tmp = TempDir::new().unwrap();
     let schema_path = tmp.path().join("param_test.weave.toml");
