@@ -12,15 +12,22 @@
 //! - [`TopKTracker`] — Approximate frequent-item tracking (Space-Saving)
 //! - [`HyperLogLog`] — Probabilistic cardinality estimation
 //! - [`LearnState`] — Top-level persistent state container
+//! - [`RelationshipEvidence`] — HLL-based FK relationship detection
+//! - [`PairwiseCorrelation`] — Streaming Pearson correlation
 
 mod hll;
 mod numeric;
+pub mod relationships;
 mod reservoir;
 pub mod state;
 mod topk;
 
 pub use hll::HyperLogLog;
 pub use numeric::NumericState;
+pub use relationships::{
+    detect_candidates, finalize_relationships, FinalizedRelationship, IncrementalRelColumn,
+    PairwiseCorrelation, RelKind, RelationshipEvidence,
+};
 pub use reservoir::ReservoirSample;
 pub use state::{ChunkRecord, ColumnDataType, ColumnState, LearnState, StateError, TableState};
 pub use topk::TopKTracker;

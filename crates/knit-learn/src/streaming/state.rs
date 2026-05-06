@@ -59,6 +59,12 @@ pub struct LearnState {
     pub chunks: Vec<ChunkRecord>,
     /// Total rows processed across all chunks and tables.
     pub total_rows: u64,
+    /// Relationship evidence (FK candidates with HLL sketches).
+    #[serde(default)]
+    pub relationship_evidence: Vec<super::relationships::RelationshipEvidence>,
+    /// Pairwise numeric correlations (running Pearson).
+    #[serde(default)]
+    pub correlations: Vec<super::relationships::PairwiseCorrelation>,
 }
 
 impl LearnState {
@@ -71,6 +77,8 @@ impl LearnState {
             tables: BTreeMap::new(),
             chunks: Vec::new(),
             total_rows: 0,
+            relationship_evidence: Vec::new(),
+            correlations: Vec::new(),
         }
     }
 
