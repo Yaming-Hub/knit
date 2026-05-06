@@ -1,6 +1,7 @@
 //! Subcommand implementations for the knit CLI.
 
 pub mod generate;
+pub mod generators;
 pub mod init;
 pub mod inspect;
 pub mod learn;
