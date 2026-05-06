@@ -353,6 +353,28 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     source_file: Some(file.clone()),
                 }
             }
+            // Behavioral modeling generators — placeholder plans until
+            // the generation engine implements persona/graph-based generation.
+            GeneratorSpec::ActorRef { entity } => {
+                GeneratorPlan::ForeignKey {
+                    target_entity: entity.clone(),
+                    target_field: "id".to_string(),
+                    key_store_kind: KeyStoreKind::InMemoryVec,
+                }
+            }
+            GeneratorSpec::ActorTemporal { .. } => {
+                GeneratorPlan::Temporal {
+                    kind: TemporalKind::BusinessHours,
+                    params: BTreeMap::new(),
+                    base_field: None,
+                }
+            }
+            GeneratorSpec::RelationshipRef { relationship } => {
+                GeneratorPlan::Constant(Value::String(format!("{{relationship:{}}}", relationship)))
+            }
+            GeneratorSpec::PersonaField { trait_name } => {
+                GeneratorPlan::Constant(Value::String(format!("{{persona:{}}}", trait_name)))
+            }
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.
@@ -387,6 +409,7 @@ fn compile_generator_from_spec(
         nullable: NullSpec::Never,
         primary_key: None,
         precision: None,
+        actor_column: false,
     };
     compile_generator(&dummy_field, all_fields)
 }
@@ -583,6 +606,7 @@ fn compute_generator_spec_deps(spec: &GeneratorSpec, all_fields: &[Field]) -> u3
         generator: Some(spec.clone()),
         primary_key: None,
         precision: None,
+        actor_column: false,
     };
     compute_dependency_order(&tmp, all_fields)
 }
@@ -660,6 +684,7 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
             precision: None,
+        actor_column: false,
         },
                 Field {
                     name: "name".to_string(),
@@ -672,10 +697,13 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: None,
             precision: None,
+        actor_column: false,
         },
             ],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         }
     }
 
@@ -692,6 +720,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }
     }
 
@@ -795,6 +825,7 @@ mod tests {
             nullable: NullSpec::Probability(0.1),
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model(
@@ -835,6 +866,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let mut entity_b = simple_entity("b", 1000);
@@ -846,6 +878,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model(
@@ -970,6 +1003,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1006,6 +1040,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("autoround", vec![entity], vec![]);
@@ -1043,6 +1078,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("noround", vec![entity], vec![]);
@@ -1100,6 +1136,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1131,6 +1168,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1153,6 +1191,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1187,6 +1226,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         entity.fields.push(Field {
             name: "tax".to_string(),
@@ -1198,6 +1238,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1231,6 +1272,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         entity.fields.push(Field {
             name: "label".to_string(),
@@ -1242,6 +1284,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model("params", vec![entity], vec![]);
@@ -1327,6 +1370,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
 
         let model = simple_model(
@@ -1388,9 +1432,12 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: None,
             precision: None,
+        actor_column: false,
         }],
                 constraints: vec![],
                 topology: None,
+            actor: false,
+            persona_distribution: None,
             }],
             vec![],
         );
@@ -1418,6 +1465,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
             Field {
                 name: "price".to_string(),
@@ -1427,6 +1475,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
         ];
         // "price * 2" should match only "price", not "p"
@@ -1537,6 +1586,7 @@ mod tests {
                 }),
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
             Field {
                 name: "start_date".to_string(),
@@ -1552,6 +1602,7 @@ mod tests {
                 }),
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
         ];
         let order_end = compute_dependency_order(&fields[0], &fields);

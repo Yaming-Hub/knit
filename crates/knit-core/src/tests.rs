@@ -436,16 +436,21 @@ fn minimal_data_model_roundtrip() {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
-            precision: None,
-        }],
+                precision: None,
+                actor_column: false,
+            }],
             constraints: vec![],
             topology: None,
+            actor: false,
+            persona_distribution: None,
         }],
         relationships: vec![],
         noise_profiles: vec![],
         correlations: vec![],
         params: BTreeMap::new(),
         schema_version: "1.0".into(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
     };
 
     let json = serde_json::to_string_pretty(&model).unwrap();
