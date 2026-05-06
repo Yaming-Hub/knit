@@ -361,7 +361,7 @@ impl ColumnState {
             self.all_integer = false;
             // Count decimal places from string representation
             if let Some(dot_pos) = str_repr.find('.') {
-                let decimals = str_repr[dot_pos + 1..].trim_end_matches('0').len() as u8;
+                let decimals = str_repr[dot_pos + 1..].trim_end_matches('0').len().min(255) as u8;
                 self.max_decimal_places = self.max_decimal_places.max(decimals);
             }
         }

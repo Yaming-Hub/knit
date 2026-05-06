@@ -299,7 +299,7 @@ fn run_incremental(
     let mut state = if state_path.exists() {
         LearnState::load(state_path)
             .map_err(|e| anyhow::anyhow!("failed to load state: {e}"))?
-            .unwrap_or_else(|| LearnState::new(42))
+            .expect("load() should return Some when file exists")
     } else {
         if finalize {
             anyhow::bail!("state file does not exist: {state_file}");

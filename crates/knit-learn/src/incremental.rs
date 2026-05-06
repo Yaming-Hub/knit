@@ -82,6 +82,9 @@ pub fn ingest_batches_to_state(
         col.widen_type(col_type);
     }
 
+    // Track which columns were touched for chunk presence marking
+    let mut seen_columns: std::collections::HashSet<String> = std::collections::HashSet::new();
+
     // Process each batch
     let mut total_rows: u64 = 0;
     for batch in batches {
@@ -93,12 +96,13 @@ pub fn ingest_batches_to_state(
             let col = table
                 .get_or_create_column(field.name(), arrow_to_column_type(field.data_type()));
             update_column_from_array(col, array, field.data_type());
+            seen_columns.insert(field.name().to_string());
         }
     }
 
-    // Mark chunk presence for all columns that appeared
-    for field in schema.fields() {
-        if let Some(col) = table.columns.iter_mut().find(|c| c.name == field.name().as_str()) {
+    // Mark chunk presence for all columns that were processed
+    for col in &mut table.columns {
+        if seen_columns.contains(&col.name) {
             col.mark_chunk_present();
         }
     }
