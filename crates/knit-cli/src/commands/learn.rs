@@ -53,17 +53,48 @@ struct RawOutputModel {
 /// `source` is a path to a single data file or a directory of files.
 /// `output` is the path where the generated schema will be written.
 /// `sample` limits each entity to at most N rows for faster profiling.
-pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) -> Result<()> {
+/// `state_path` enables incremental mode when provided.
+/// `finalize` emits schema from existing state without processing new data.
+/// `strict` errors on duplicate source paths (default: warn).
+pub fn run(
+    source: Option<&str>,
+    output: &str,
+    sample: Option<usize>,
+    state_path: Option<&str>,
+    finalize: bool,
+    strict: bool,
+    cli: &crate::Cli,
+) -> Result<()> {
+    // Validate argument combinations
+    if finalize && state_path.is_none() {
+        anyhow::bail!("--finalize requires --state");
+    }
+    if source.is_none() && !finalize {
+        anyhow::bail!("source path is required unless --finalize is specified");
+    }
+
+    if let Some(0) = sample {
+        anyhow::bail!("--sample must be at least 1");
+    }
+
+    // Route: incremental mode if --state is provided
+    if let Some(state_file) = state_path {
+        return run_incremental(source, output, sample, state_file, finalize, strict, cli);
+    }
+
+    // Batch mode (original behavior)
+    let source = source.unwrap();
+    run_batch(source, output, sample, cli)
+}
+
+/// Batch mode: load all data, profile, fit, emit schema (original behavior).
+fn run_batch(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) -> Result<()> {
     let source_path = Path::new(source);
     anyhow::ensure!(
         source_path.exists(),
         "source path does not exist: {}",
         source
     );
-
-    if let Some(0) = sample {
-        anyhow::bail!("--sample must be at least 1");
-    }
 
     if !cli.quiet {
         eprintln!(
@@ -243,6 +274,162 @@ pub fn run(source: &str, output: &str, sample: Option<usize>, cli: &crate::Cli) 
             total_rels,
             total_corrs,
             dict_count,
+        );
+    }
+
+    Ok(())
+}
+
+/// Incremental mode: load/create state, ingest data, optionally finalize.
+fn run_incremental(
+    source: Option<&str>,
+    output: &str,
+    sample: Option<usize>,
+    state_file: &str,
+    finalize: bool,
+    strict: bool,
+    cli: &crate::Cli,
+) -> Result<()> {
+    use knit_learn::incremental::ingest_batches_to_state;
+    use knit_learn::streaming::LearnState;
+
+    let state_path = Path::new(state_file);
+
+    // Load or create state
+    let mut state = if state_path.exists() {
+        LearnState::load(state_path)
+            .map_err(|e| anyhow::anyhow!("failed to load state: {e}"))?
+            .unwrap_or_else(|| LearnState::new(42))
+    } else {
+        if finalize {
+            anyhow::bail!("state file does not exist: {state_file}");
+        }
+        LearnState::new(42)
+    };
+
+    // Ingest new data if source is provided
+    if let Some(source) = source {
+        let source_path = Path::new(source);
+        anyhow::ensure!(
+            source_path.exists(),
+            "source path does not exist: {}",
+            source
+        );
+
+        if !cli.quiet {
+            eprintln!(
+                "{} Ingesting {} (incremental)",
+                "learn:".green().bold(),
+                source.cyan()
+            );
+        }
+
+        let tables = ingest_source(source_path, sample)
+            .with_context(|| format!("failed to ingest data from {source}"))?;
+
+        if tables.is_empty() {
+            anyhow::bail!("no supported data files found in {source}");
+        }
+
+        for table in &tables {
+            let source_id = format!("{}:{}", source, table.entity);
+            let is_dup = ingest_batches_to_state(
+                &mut state,
+                &table.entity,
+                &table.batches,
+                &source_id,
+            );
+            if is_dup {
+                let msg = format!("duplicate source: {source_id}");
+                if strict {
+                    anyhow::bail!("{msg}");
+                } else if !cli.quiet {
+                    eprintln!("  {} {}", "⚠".yellow(), msg);
+                }
+            }
+        }
+
+        // Save updated state
+        state
+            .save(state_path)
+            .map_err(|e| anyhow::anyhow!("failed to save state: {e}"))?;
+
+        if !cli.quiet {
+            eprintln!(
+                "  {} State saved to {} ({} table(s), {} chunk(s))",
+                "→".dimmed(),
+                state_file.cyan(),
+                state.tables.len(),
+                state.chunks.len(),
+            );
+        }
+    }
+
+    // Finalize if --finalize flag is set
+    if finalize || source.is_some() {
+        // Only emit schema if -o was explicitly provided or --finalize
+        // Since output has a default, we always emit when finalize is set
+        // or when source is provided with --state (update + finalize in one pass)
+        if finalize {
+            emit_schema_from_state(&state, output, cli)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Emit a schema from the accumulated state.
+fn emit_schema_from_state(
+    state: &knit_learn::streaming::LearnState,
+    output: &str,
+    cli: &crate::Cli,
+) -> Result<()> {
+    use knit_learn::incremental::finalize_state;
+    use knit_learn::schema_assembly::assemble_data_model;
+
+    if !cli.quiet {
+        eprintln!(
+            "  {} Finalizing schema from state ({} table(s))",
+            "→".dimmed(),
+            state.tables.len(),
+        );
+    }
+
+    let table_analyses = finalize_state(state);
+    let model_name = Path::new(output)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("learned")
+        .to_string();
+    let data_model = assemble_data_model(&model_name, &table_analyses);
+
+    // Serialize to TOML
+    let raw = RawOutputSchema {
+        schema_version: data_model.schema_version.clone(),
+        model: RawOutputModel {
+            name: data_model.name.clone(),
+            description: data_model.description.clone(),
+        },
+        entities: data_model.entities.clone(),
+        relationships: data_model.relationships.clone(),
+        correlations: data_model.correlations.clone(),
+    };
+    let schema_text = toml::to_string_pretty(&raw)
+        .context("failed to serialize schema to TOML")?;
+
+    let header = "# Auto-generated Weave schema\n# Generated by knit learn (incremental)\n\n";
+    let full_output = format!("{header}{schema_text}");
+
+    std::fs::write(output, &full_output)
+        .with_context(|| format!("failed to write output to {output}"))?;
+
+    if !cli.quiet {
+        eprintln!(
+            "\n{} Wrote {} — {} table(s), {} column(s)",
+            "✓".green().bold(),
+            output.cyan(),
+            table_analyses.len(),
+            table_analyses.iter().map(|t| t.columns.len()).sum::<usize>(),
         );
     }
 
@@ -1312,9 +1499,12 @@ mod tests {
 
         let output_path = dir.path().join("learned.weave.toml");
         let result = run(
-            csv_path.to_str().unwrap(),
+            Some(csv_path.to_str().unwrap()),
             output_path.to_str().unwrap(),
             None,
+            None,
+            false,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -1352,9 +1542,12 @@ mod tests {
 
         let output_path = dir.path().join("schema.weave.toml");
         let result = run(
-            dir.path().to_str().unwrap(),
+            Some(dir.path().to_str().unwrap()),
             output_path.to_str().unwrap(),
             None,
+            None,
+            false,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -1371,7 +1564,7 @@ mod tests {
 
     #[test]
     fn learn_nonexistent_path_errors() {
-        let result = run("nonexistent_path_12345.csv", "out.toml", None, &quiet_cli());
+        let result = run(Some("nonexistent_path_12345.csv"), "out.toml", None, None, false, false, &quiet_cli());
         assert!(result.is_err());
     }
 
@@ -1388,9 +1581,12 @@ mod tests {
 
         let output_path = dir.path().join("schema.weave.toml");
         let result = run(
-            dir.path().to_str().unwrap(),
+            Some(dir.path().to_str().unwrap()),
             output_path.to_str().unwrap(),
             None,
+            None,
+            false,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");

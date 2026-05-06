@@ -22,6 +22,7 @@
 pub mod correlation;
 pub mod error;
 pub mod fitting;
+pub mod incremental;
 pub mod ingest;
 pub mod profile;
 pub mod relationships;

@@ -149,13 +149,22 @@ enum Command {
     /// Infer a Weave schema from existing data files or directories.
     Learn {
         /// Path to data file or directory to learn from.
-        source: String,
+        source: Option<String>,
         /// Output schema file path.
         #[arg(short, long, default_value = "learned.weave.toml")]
         output: String,
         /// Maximum rows to read per entity (for faster profiling of large files).
         #[arg(long)]
         sample: Option<usize>,
+        /// State file for incremental learning (creates if absent, updates if exists).
+        #[arg(long)]
+        state: Option<String>,
+        /// Emit schema from existing state without processing new data.
+        #[arg(long)]
+        finalize: bool,
+        /// Error on duplicate source paths (default: warn).
+        #[arg(long)]
+        strict: bool,
     },
     /// Generate shell completion scripts.
     Completions {
@@ -256,7 +265,9 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
         },
         Command::Init { output } => init::run(output),
-        Command::Learn { source, output, sample } => learn::run(source, output, *sample, &cli),
+        Command::Learn { source, output, sample, state, finalize, strict } => {
+            learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, &cli)
+        }
         Command::Completions { shell } => {
             clap_complete::generate(
                 *shell,

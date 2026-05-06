@@ -215,7 +215,7 @@ impl TableState {
                 &mut self.columns[idx]
             }
             None => {
-                let col_seed = self.seed.wrapping_add(self.columns.len() as u64 * 0x9e3779b97f4a7c15);
+                let col_seed = self.seed.wrapping_add((self.columns.len() as u64).wrapping_mul(0x9e3779b97f4a7c15));
                 self.columns.push(ColumnState::new(name.to_string(), data_type, col_seed));
                 self.columns.last_mut().unwrap()
             }
@@ -271,6 +271,16 @@ pub struct ColumnState {
     pub name: String,
     /// Observed data type (may widen over time).
     pub data_type: ColumnDataType,
+    /// Original Arrow type string (e.g., "Int64", "Timestamp(Nanosecond, None)").
+    /// Preserved from the first observation for finalize fidelity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arrow_type_hint: Option<String>,
+    /// Maximum decimal places observed (for numeric columns).
+    #[serde(default)]
+    pub max_decimal_places: u8,
+    /// Whether all observed numeric values are integers (no fractional part).
+    #[serde(default = "default_true")]
+    pub all_integer: bool,
     /// Numeric statistics (for integer/float columns).
     pub numeric: Option<NumericState>,
     /// HyperLogLog for cardinality estimation.
@@ -287,6 +297,10 @@ pub struct ColumnState {
     pub chunks_present: u64,
 }
 
+fn default_true() -> bool {
+    true
+}
+
 impl ColumnState {
     /// Create a new empty column state.
     pub fn new(name: String, data_type: ColumnDataType, seed: u64) -> Self {
@@ -300,6 +314,9 @@ impl ColumnState {
         Self {
             name,
             data_type,
+            arrow_type_hint: None,
+            max_decimal_places: 0,
+            all_integer: true,
             numeric,
             hll: HyperLogLog::new(DEFAULT_HLL_PRECISION),
             reservoir: ReservoirSample::new(DEFAULT_RESERVOIR_CAPACITY, seed),
@@ -307,6 +324,13 @@ impl ColumnState {
             count: 0,
             null_count: 0,
             chunks_present: 0,
+        }
+    }
+
+    /// Set the Arrow type hint (preserved from first observation).
+    pub fn set_arrow_type_hint(&mut self, hint: &str) {
+        if self.arrow_type_hint.is_none() {
+            self.arrow_type_hint = Some(hint.to_string());
         }
     }
 
@@ -328,8 +352,18 @@ impl ColumnState {
         self.count += 1;
         self.hll.add(str_repr);
         self.reservoir.add(str_repr.to_string());
+        self.top_k.add(str_repr);
         if let Some(ref mut numeric) = self.numeric {
             numeric.update(value);
+        }
+        // Track integer-ness and decimal precision
+        if value.fract() != 0.0 {
+            self.all_integer = false;
+            // Count decimal places from string representation
+            if let Some(dot_pos) = str_repr.find('.') {
+                let decimals = str_repr[dot_pos + 1..].trim_end_matches('0').len() as u8;
+                self.max_decimal_places = self.max_decimal_places.max(decimals);
+            }
         }
     }
 
