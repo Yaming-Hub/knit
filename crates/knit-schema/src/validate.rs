@@ -812,18 +812,66 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 message: format!("'to' references unknown entity '{}'", rel.to),
             });
         }
-        if let Some(fk) = &rel.foreign_key {
-            let fields = entity_field_names(model, &rel.from);
-            if !fields.contains(fk.as_str()) {
+        // Compute effective FK field name (explicit or implicit default: <to>_id)
+        let effective_fk: String = rel
+            .foreign_key
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+
+        // Validate FK field exists in the "from" entity
+        let fields = entity_field_names(model, &rel.from);
+        if !fields.contains(effective_fk.as_str()) {
+            // Only report if the FK was explicitly specified — implicit FKs
+            // might simply not exist yet (the planner handles that separately)
+            if rel.foreign_key.is_some() {
                 errors.push(SchemaError::Validation {
                     path: path.clone(),
                     message: format!(
                         "foreign_key '{}' not found in entity '{}'",
-                        fk, rel.from
+                        effective_fk, rel.from
                     ),
                 });
             }
         }
+
+        // Validate the "to" entity has a primary key for FK resolution
+        if let Some(to_entity) = model.entities.iter().find(|e| e.name == rel.to) {
+            let pk_field = to_entity
+                .fields
+                .iter()
+                .find(|f| f.primary_key == Some(true));
+            if pk_field.is_none() {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "entity '{}' referenced as relationship target has no primary key",
+                        rel.to
+                    ),
+                });
+            }
+
+            // Validate FK field type matches target PK type
+            if let Some(pk) = pk_field {
+                if let Some(from_entity) =
+                    model.entities.iter().find(|e| e.name == rel.from)
+                {
+                    if let Some(fk_field) =
+                        from_entity.fields.iter().find(|f| f.name == effective_fk)
+                    {
+                        if fk_field.data_type != pk.data_type {
+                            errors.push(SchemaError::Validation {
+                                path: path.clone(),
+                                message: format!(
+                                    "foreign_key '{}' type ({:?}) does not match target entity '{}' primary key type ({:?})",
+                                    effective_fk, fk_field.data_type, rel.to, pk.data_type
+                                ),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
         if let Some(ref count) = rel.cardinality {
             validate_count_spec(
                 &format!("{}.cardinality", path),
@@ -1074,6 +1122,172 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("foreign_key 'user_id'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relationship_target_no_pk() {
+        let mut model = minimal_model();
+        // Add entity with no primary key
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            description: None,
+            count: CountSpec::Fixed(200),
+            fields: vec![Field {
+                name: "amount".to_string(),
+                description: None,
+                data_type: DataType::Float,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: None,
+                precision: None,
+            }],
+            constraints: vec![],
+            topology: None,
+        });
+        model.relationships.push(Relationship {
+            name: "user_order".to_string(),
+            from: "user".to_string(),
+            to: "order".to_string(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("id".to_string()),
+            cardinality: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("has no primary key"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relationship_fk_type_mismatch() {
+        let mut model = minimal_model();
+        // "user" entity has PK "id" with DataType::Uuid
+        // Add "order" entity with FK field as Int (mismatches Uuid)
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            description: None,
+            count: CountSpec::Fixed(200),
+            fields: vec![
+                Field {
+                    name: "id".to_string(),
+                    description: None,
+                    data_type: DataType::Int,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: Some(true),
+                    precision: None,
+                },
+                Field {
+                    name: "user_id".to_string(),
+                    description: None,
+                    data_type: DataType::Int, // Mismatch: user.id is Uuid
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: None,
+                    precision: None,
+                },
+            ],
+            constraints: vec![],
+            topology: None,
+        });
+        model.relationships.push(Relationship {
+            name: "order_user".to_string(),
+            from: "order".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("user_id".to_string()),
+            cardinality: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("does not match target entity"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relationship_fk_type_match_ok() {
+        let mut model = minimal_model();
+        // "user" entity has PK "id" with DataType::Uuid
+        // Add "order" entity with FK field also Uuid — should pass
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            description: None,
+            count: CountSpec::Fixed(200),
+            fields: vec![
+                Field {
+                    name: "id".to_string(),
+                    description: None,
+                    data_type: DataType::Uuid,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: Some(true),
+                    precision: None,
+                },
+                Field {
+                    name: "user_id".to_string(),
+                    description: None,
+                    data_type: DataType::Uuid, // Matches user.id Uuid
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: None,
+                    precision: None,
+                },
+            ],
+            constraints: vec![],
+            topology: None,
+        });
+        model.relationships.push(Relationship {
+            name: "order_user".to_string(),
+            from: "order".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("user_id".to_string()),
+            cardinality: None,
+        });
+        let errors = validate(&model);
+        // Should produce no relationship-related errors
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("does not match target entity") || message.contains("has no primary key"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relationship_implicit_fk_target_no_pk() {
+        let mut model = minimal_model();
+        // Add entity with no primary key
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            description: None,
+            count: CountSpec::Fixed(200),
+            fields: vec![Field {
+                name: "amount".to_string(),
+                description: None,
+                data_type: DataType::Float,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: None,
+                precision: None,
+            }],
+            constraints: vec![],
+            topology: None,
+        });
+        // Relationship without explicit foreign_key — implicit FK is "order_id"
+        model.relationships.push(Relationship {
+            name: "user_order".to_string(),
+            from: "user".to_string(),
+            to: "order".to_string(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: None,
+            cardinality: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("has no primary key"))
         }));
     }
 
