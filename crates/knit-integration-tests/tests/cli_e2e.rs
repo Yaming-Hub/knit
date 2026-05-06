@@ -381,6 +381,95 @@ fn plan_json_mode() {
         .stdout(predicate::str::contains("{"));
 }
 
+#[test]
+fn validate_fk_target_no_pk() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("test.weave.toml");
+    fs::write(
+        &schema,
+        r#"
+name = "test"
+seed = 42
+
+[[entities]]
+name = "user"
+count = 10
+[[entities.fields]]
+name = "id"
+data_type = "uuid"
+primary_key = true
+[[entities.fields]]
+name = "email"
+data_type = "string"
+
+[[entities]]
+name = "order"
+count = 20
+[[entities.fields]]
+name = "amount"
+data_type = "float"
+
+[[relationships]]
+name = "user_order"
+from = "user"
+to = "order"
+kind = "one_to_many"
+foreign_key = "id"
+"#,
+    )
+    .unwrap();
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("has no primary key"));
+}
+
+#[test]
+fn validate_fk_type_mismatch() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("test.weave.toml");
+    fs::write(
+        &schema,
+        r#"
+name = "test"
+seed = 42
+
+[[entities]]
+name = "user"
+count = 10
+[[entities.fields]]
+name = "id"
+data_type = "uuid"
+primary_key = true
+
+[[entities]]
+name = "order"
+count = 20
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+
+[[relationships]]
+name = "order_user"
+from = "order"
+to = "user"
+kind = "many_to_one"
+foreign_key = "user_id"
+"#,
+    )
+    .unwrap();
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("does not match target entity"));
+}
+
 // ── Generate ────────────────────────────────────────────────────────
 
 /// Schema used for generate tests — minimal, fast, and stable.
