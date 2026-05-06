@@ -1109,6 +1109,60 @@ fn init_scaffold_references_only_valid_generator_types() {
     }
 }
 
+// ── Init templates ──────────────────────────────────────────────────
+
+#[test]
+fn init_template_from_file_path() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("out.weave.toml");
+
+    // Use one of the example files as a template (file path)
+    let example_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/ecommerce.weave.toml");
+
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", example_path.to_str().unwrap()])
+        .assert()
+        .success();
+
+    assert!(schema.exists());
+    // Sidecar dictionary file should also be copied from examples/
+    assert!(dir.path().join("products.dict.txt").exists());
+    // Template schema must pass validation (sidecar is present)
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn init_template_from_directory() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("schema.weave.toml");
+
+    // Use the examples/ directory as a template directory
+    let examples_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples");
+
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", examples_dir.to_str().unwrap()])
+        .assert()
+        .success();
+
+    assert!(schema.exists());
+}
+
+#[test]
+fn init_template_nonexistent_path_fails() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("bad.weave.toml");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", "/nonexistent/path.weave.toml"])
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("does not exist"));
+}
+
 // ── Schema subcommands ──────────────────────────────────────────────
 
 #[test]
