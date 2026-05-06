@@ -1109,6 +1109,51 @@ fn init_scaffold_references_only_valid_generator_types() {
     }
 }
 
+// ── Init templates ──────────────────────────────────────────────────
+
+#[test]
+fn init_template_ecommerce_creates_valid_schema() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("ecom.weave.toml");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", "ecommerce"])
+        .assert()
+        .success();
+
+    assert!(schema.exists());
+    // Sidecar dictionary file should also be written
+    assert!(dir.path().join("products.dict.txt").exists());
+    // Template schema must now pass validation (sidecar is present)
+    knit()
+        .args(["validate", schema.to_str().unwrap()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn init_template_unknown_fails() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("bad.weave.toml");
+    knit()
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", "nonexistent"])
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("unknown template 'nonexistent'"));
+}
+
+#[test]
+fn init_list_templates() {
+    knit()
+        .args(["init", "--list-templates"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("ecommerce"))
+        .stdout(predicates::str::contains("financial"))
+        .stdout(predicates::str::contains("hr"))
+        .stdout(predicates::str::contains("iot"))
+        .stdout(predicates::str::contains("logs"));
+}
+
 // ── Schema subcommands ──────────────────────────────────────────────
 
 #[test]
