@@ -240,6 +240,7 @@ Commands:
   schema     Schema manipulation (expand, normalize, diff)
   init       Create a starter schema
   learn      Infer schema from data
+  inspect    Inspect incremental learning state file
 
 Global options:
   --seed <N>            Override schema seed
