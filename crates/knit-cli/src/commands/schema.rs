@@ -221,6 +221,16 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
         knit_core::GeneratorSpec::Dictionary { file, expansion, .. } => {
             format!("dictionary({}, {})", file, expansion)
         }
+        knit_core::GeneratorSpec::ActorRef { entity } => format!("actor_ref({})", entity),
+        knit_core::GeneratorSpec::ActorTemporal { trait_name } => {
+            format!("actor_temporal({})", trait_name)
+        }
+        knit_core::GeneratorSpec::RelationshipRef { relationship } => {
+            format!("relationship_ref({})", relationship)
+        }
+        knit_core::GeneratorSpec::PersonaField { trait_name } => {
+            format!("persona_field({})", trait_name)
+        }
     }
 }
 
@@ -471,6 +481,12 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
         if let Some(desc) = &entity.description {
             out.push_str(&format!("description = \"{}\"\n", desc));
         }
+        if entity.actor {
+            out.push_str("actor = true\n");
+        }
+        if let Some(pd) = &entity.persona_distribution {
+            out.push_str(&format!("persona_distribution = \"{}\"\n", pd));
+        }
         // Count
         match &entity.count {
             knit_core::CountSpec::Fixed(n) => {
@@ -500,6 +516,9 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
             if let Some(prec) = field.precision {
                 out.push_str(&format!("precision = {}\n", prec));
             }
+            if field.actor_column {
+                out.push_str("actor_column = true\n");
+            }
             // Serialize generator if present
             if let Some(gen) = &field.generator {
                 let gen_val = toml::Value::try_from(gen);
@@ -518,6 +537,24 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
         let rel_val = toml::Value::try_from(rel.clone());
         if let Ok(val) = rel_val {
             out.push_str("\n[[relationships]]\n");
+            out.push_str(&toml::to_string_pretty(&val)?);
+        }
+    }
+
+    // [[personas]]
+    for persona in &model.personas {
+        let val = toml::Value::try_from(persona.clone());
+        if let Ok(val) = val {
+            out.push_str("\n[[personas]]\n");
+            out.push_str(&toml::to_string_pretty(&val)?);
+        }
+    }
+
+    // [[actor_relationships]]
+    for ar in &model.actor_relationships {
+        let val = toml::Value::try_from(ar.clone());
+        if let Ok(val) = val {
+            out.push_str("\n[[actor_relationships]]\n");
             out.push_str(&toml::to_string_pretty(&val)?);
         }
     }
@@ -543,6 +580,8 @@ mod tests {
             correlations: vec![],
             params: std::collections::BTreeMap::new(),
             schema_version: "1.0".to_string(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 
@@ -554,6 +593,8 @@ mod tests {
             fields,
             constraints: vec![],
             topology: None,
+            actor: false,
+            persona_distribution: None,
         }
     }
 
@@ -566,6 +607,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+            actor_column: false,
         }
     }
 

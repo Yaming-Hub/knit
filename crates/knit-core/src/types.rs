@@ -90,6 +90,12 @@ pub struct DataModel {
     /// Schema format version (currently `"1.0"`).
     #[serde(default = "default_schema_version")]
     pub schema_version: String,
+    /// Persona definitions for human behavioral modeling.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub personas: Vec<Persona>,
+    /// Actor-to-actor relationship graph specifications.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_relationships: Vec<ActorRelationship>,
 }
 
 // ── Entity & Field ───────────────────────────────────────────────────
@@ -117,6 +123,12 @@ pub struct Entity {
     /// Optional graph/tree topology for hierarchical entities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub topology: Option<TopologySpec>,
+    /// Whether this entity represents an actor (human/person) population.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub actor: bool,
+    /// Name of the personas section to use for actor persona assignment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub persona_distribution: Option<String>,
 }
 
 /// A single field (column) within an [`Entity`].
@@ -148,6 +160,10 @@ pub struct Field {
     /// When set, generated float values are rounded to this many decimal places.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub precision: Option<u8>,
+    /// Whether this field references an actor (human) entity.
+    /// Used by behavioral modeling to identify actor columns in non-actor entities.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub actor_column: bool,
 }
 
 fn default_data_type() -> DataType {
@@ -354,6 +370,32 @@ pub enum GeneratorSpec {
         /// - `"suffix"` — append numeric suffixes (-001, -002, etc.)
         #[serde(default = "default_expansion")]
         expansion: String,
+    },
+    /// Reference an actor entity, selecting actors weighted by persona activity rate.
+    /// Used in behavioral entities to assign records to actors.
+    ActorRef {
+        /// Name of the actor entity to reference.
+        entity: String,
+    },
+    /// Generate timestamps following the assigned actor's temporal traits.
+    /// Produces timestamps biased toward the actor's peak activity hours/days.
+    ActorTemporal {
+        /// Name of the persona trait to use for temporal distribution (e.g. `"peak_hours"`).
+        #[serde(rename = "trait")]
+        trait_name: String,
+    },
+    /// Select target actor based on relationship graph topology.
+    /// Used for fields like `receiver_id` where the target depends on the source actor's graph neighbors.
+    RelationshipRef {
+        /// Name of the actor_relationship to use for edge selection.
+        relationship: String,
+    },
+    /// Generate a field value based on the current actor's persona traits.
+    /// The trait value determines the distribution from which to sample.
+    PersonaField {
+        /// Name of the persona trait that governs this field's generation.
+        #[serde(rename = "trait")]
+        trait_name: String,
     },
 }
 
@@ -804,6 +846,110 @@ pub struct DateRange {
     pub end: String,
 }
 
+// ── Persona ──────────────────────────────────────────────────────────
+
+/// A behavioral persona (archetype) for human behavioral modeling.
+///
+/// Personas represent clusters of actors with similar behavioral traits.
+/// During generation, each synthetic actor is assigned a persona, and their
+/// behavior is sampled from the persona's trait distributions.
+///
+/// ```toml
+/// [[personas]]
+/// name = "power_user"
+/// weight = 0.15
+/// traits.peak_hours = [9, 10, 11, 14, 15, 16]
+/// traits.active_days = "weekday_heavy"
+/// traits.activity_rate = { kind = "normal", params = { mean = 25.0, std_dev = 8.0 } }
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Persona {
+    /// Unique persona name (e.g. `"power_user"`, `"casual_browser"`).
+    pub name: String,
+    /// Fraction of the actor population assigned this persona (0.0–1.0).
+    /// Weights across all personas in a group should sum to 1.0.
+    pub weight: f64,
+    /// Behavioral trait specifications. Keys are trait names (e.g.
+    /// `"peak_hours"`, `"activity_rate"`), values are trait definitions
+    /// (arrays, distributions, or scalar values).
+    #[serde(default)]
+    pub traits: BTreeMap<String, Value>,
+}
+
+// ── ActorRelationship ────────────────────────────────────────────────
+
+/// Specifies the topology of actor-to-actor relationships.
+///
+/// Used for behavioral modeling: defines how actors are connected (e.g.
+/// manager→report, sender→receiver) and the statistical properties of
+/// the resulting social graph.
+///
+/// ```toml
+/// [[actor_relationships]]
+/// name = "email_network"
+/// from_entity = "users"
+/// to_entity = "users"
+/// graph_type = "scale_free"
+/// params.avg_degree = 8.0
+/// params.reciprocity = 0.4
+/// params.clustering = 0.3
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ActorRelationship {
+    /// Unique relationship name (e.g. `"email_network"`, `"reports_to"`).
+    pub name: String,
+    /// Source actor entity name.
+    pub from_entity: String,
+    /// Target actor entity name (may be same as `from_entity` for self-referential graphs).
+    pub to_entity: String,
+    /// Graph generation model.
+    #[serde(default)]
+    pub graph_type: GraphType,
+    /// Model-specific parameters (e.g. `avg_degree`, `reciprocity`, `clustering`).
+    #[serde(default)]
+    pub params: BTreeMap<String, f64>,
+    /// Number of communities/sub-groups to generate within the graph.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub community_count: Option<CountSpec>,
+    /// Maximum hierarchy depth for hierarchical graph types.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hierarchy_depth: Option<u32>,
+}
+
+/// Graph generation model for actor relationship networks.
+///
+/// Each model produces graphs with different structural properties
+/// (degree distributions, clustering, hierarchy).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum GraphType {
+    /// Barabási–Albert preferential attachment (power-law degree distribution).
+    /// Produces hub-and-spoke networks typical of social media.
+    #[default]
+    ScaleFree,
+    /// Watts–Strogatz small-world model (high clustering, short path lengths).
+    /// Produces networks typical of real-world social connections.
+    SmallWorld,
+    /// Tree-like structure with lateral connections (org charts, management hierarchies).
+    Hierarchical,
+    /// Erdős–Rényi random graph (baseline; each edge exists with equal probability).
+    ErdosRenyi,
+    /// User-defined degree sequence for custom graph structures.
+    Custom,
+}
+
+impl std::fmt::Display for GraphType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GraphType::ScaleFree => write!(f, "scale_free"),
+            GraphType::SmallWorld => write!(f, "small_world"),
+            GraphType::Hierarchical => write!(f, "hierarchical"),
+            GraphType::ErdosRenyi => write!(f, "erdos_renyi"),
+            GraphType::Custom => write!(f, "custom"),
+        }
+    }
+}
+
 // ── Tests ────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -1009,8 +1155,9 @@ mod tests {
                         }),
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
-            precision: None,
-        },
+                        precision: None,
+                        actor_column: false,
+                    },
                     Field {
                         name: "email".into(),
                         description: Some("User email".into()),
@@ -1021,13 +1168,16 @@ mod tests {
                         }),
                         nullable: NullSpec::Probability(0.01),
                         primary_key: None,
-            precision: None,
-        },
+                        precision: None,
+                        actor_column: false,
+                    },
                 ],
                 constraints: vec![Constraint::Unique {
                     fields: vec!["email".into()],
                 }],
                 topology: None,
+                actor: false,
+                persona_distribution: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -1042,6 +1192,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".into(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         };
 
         let toml_str = toml::to_string_pretty(&model).unwrap();
@@ -1066,5 +1218,168 @@ mod tests {
             let back: RelationshipKind = serde_json::from_str(&json).unwrap();
             assert_eq!(back, kind);
         }
+    }
+
+    #[test]
+    fn test_persona_serde() {
+        let persona = Persona {
+            name: "power_user".into(),
+            weight: 0.15,
+            traits: BTreeMap::from([
+                ("peak_hours".into(), Value::Array(vec![Value::Int(9), Value::Int(10)])),
+                ("active_days".into(), Value::String("weekday_heavy".into())),
+            ]),
+        };
+        let json = serde_json::to_string(&persona).unwrap();
+        let back: Persona = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.name, "power_user");
+        assert_eq!(back.weight, 0.15);
+        assert_eq!(back.traits.len(), 2);
+    }
+
+    #[test]
+    fn test_graph_type_serde() {
+        let cases = vec![
+            (GraphType::ScaleFree, "\"scale_free\""),
+            (GraphType::SmallWorld, "\"small_world\""),
+            (GraphType::Hierarchical, "\"hierarchical\""),
+            (GraphType::ErdosRenyi, "\"erdos_renyi\""),
+            (GraphType::Custom, "\"custom\""),
+        ];
+        for (gt, expected) in cases {
+            let json = serde_json::to_string(&gt).unwrap();
+            assert_eq!(json, expected, "serialize {:?}", gt);
+            let back: GraphType = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, gt, "roundtrip {:?}", gt);
+        }
+    }
+
+    #[test]
+    fn test_graph_type_display() {
+        assert_eq!(GraphType::ScaleFree.to_string(), "scale_free");
+        assert_eq!(GraphType::SmallWorld.to_string(), "small_world");
+        assert_eq!(GraphType::Hierarchical.to_string(), "hierarchical");
+        assert_eq!(GraphType::ErdosRenyi.to_string(), "erdos_renyi");
+        assert_eq!(GraphType::Custom.to_string(), "custom");
+    }
+
+    #[test]
+    fn test_actor_relationship_serde() {
+        let ar = ActorRelationship {
+            name: "email_network".into(),
+            from_entity: "users".into(),
+            to_entity: "users".into(),
+            graph_type: GraphType::ScaleFree,
+            params: BTreeMap::from([
+                ("avg_degree".into(), 8.0),
+                ("reciprocity".into(), 0.4),
+            ]),
+            community_count: Some(CountSpec::Fixed(5)),
+            hierarchy_depth: Some(3),
+        };
+        let json = serde_json::to_string(&ar).unwrap();
+        let back: ActorRelationship = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.name, "email_network");
+        assert_eq!(back.graph_type, GraphType::ScaleFree);
+        assert_eq!(back.params["avg_degree"], 8.0);
+        assert_eq!(back.community_count, Some(CountSpec::Fixed(5)));
+        assert_eq!(back.hierarchy_depth, Some(3));
+    }
+
+    #[test]
+    fn test_actor_generators_serde() {
+        let specs = vec![
+            (
+                GeneratorSpec::ActorRef { entity: "users".into() },
+                r#"{"type":"actor_ref","entity":"users"}"#,
+            ),
+            (
+                GeneratorSpec::ActorTemporal { trait_name: "peak_hours".into() },
+                r#"{"type":"actor_temporal","trait":"peak_hours"}"#,
+            ),
+            (
+                GeneratorSpec::RelationshipRef { relationship: "email_net".into() },
+                r#"{"type":"relationship_ref","relationship":"email_net"}"#,
+            ),
+            (
+                GeneratorSpec::PersonaField { trait_name: "activity_rate".into() },
+                r#"{"type":"persona_field","trait":"activity_rate"}"#,
+            ),
+        ];
+        for (spec, expected) in specs {
+            let json = serde_json::to_string(&spec).unwrap();
+            assert_eq!(json, expected);
+            let back: GeneratorSpec = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, spec);
+        }
+    }
+
+    #[test]
+    fn test_entity_actor_fields() {
+        let entity = Entity {
+            name: "users".into(),
+            description: None,
+            count: CountSpec::Fixed(1000),
+            fields: vec![],
+            constraints: vec![],
+            topology: None,
+            actor: true,
+            persona_distribution: Some("personas".into()),
+        };
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(json.contains("\"actor\":true"));
+        assert!(json.contains("\"persona_distribution\":\"personas\""));
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert!(back.actor);
+        assert_eq!(back.persona_distribution, Some("personas".into()));
+    }
+
+    #[test]
+    fn test_field_actor_column() {
+        let field = Field {
+            name: "sender_id".into(),
+            description: None,
+            data_type: DataType::Uuid,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: true,
+        };
+        let json = serde_json::to_string(&field).unwrap();
+        assert!(json.contains("\"actor_column\":true"));
+        let back: Field = serde_json::from_str(&json).unwrap();
+        assert!(back.actor_column);
+    }
+
+    #[test]
+    fn test_persona_toml_roundtrip() {
+        let toml_str = r#"
+[[personas]]
+name = "early_bird"
+weight = 0.3
+
+[personas.traits]
+peak_hours = [6, 7, 8, 9]
+active_days = "weekday_heavy"
+
+[[personas]]
+name = "night_owl"
+weight = 0.7
+
+[personas.traits]
+peak_hours = [20, 21, 22, 23]
+active_days = "uniform"
+"#;
+        #[derive(Deserialize)]
+        struct Wrapper {
+            personas: Vec<Persona>,
+        }
+        let w: Wrapper = toml::from_str(toml_str).unwrap();
+        assert_eq!(w.personas.len(), 2);
+        assert_eq!(w.personas[0].name, "early_bird");
+        assert_eq!(w.personas[0].weight, 0.3);
+        assert_eq!(w.personas[1].name, "night_owl");
+        assert_eq!(w.personas[1].weight, 0.7);
     }
 }

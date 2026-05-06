@@ -78,6 +78,24 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
         }
     }
 
+    // Merge personas by name
+    for child_persona in &child.personas {
+        if let Some(parent_persona) = result.personas.iter_mut().find(|p| p.name == child_persona.name) {
+            *parent_persona = child_persona.clone();
+        } else {
+            result.personas.push(child_persona.clone());
+        }
+    }
+
+    // Merge actor_relationships by name
+    for child_ar in &child.actor_relationships {
+        if let Some(parent_ar) = result.actor_relationships.iter_mut().find(|a| a.name == child_ar.name) {
+            *parent_ar = child_ar.clone();
+        } else {
+            result.actor_relationships.push(child_ar.clone());
+        }
+    }
+
     result
 }
 
@@ -93,6 +111,12 @@ fn merge_entity(parent: &mut Entity, child: &Entity) {
     }
     if !child.constraints.is_empty() {
         parent.constraints = child.constraints.clone();
+    }
+    if child.actor {
+        parent.actor = true;
+    }
+    if child.persona_distribution.is_some() {
+        parent.persona_distribution = child.persona_distribution.clone();
     }
 
     // Merge fields by name
@@ -165,6 +189,7 @@ mod tests {
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
             precision: None,
+        actor_column: false,
         },
                     Field {
                         name: "email".to_string(),
@@ -174,10 +199,13 @@ mod tests {
                         nullable: NullSpec::Never,
                         primary_key: None,
             precision: None,
+        actor_column: false,
         },
                 ],
                 constraints: vec![],
                 topology: None,
+            actor: false,
+            persona_distribution: None,
             }],
             relationships: vec![Relationship {
                 name: "user_order".to_string(),
@@ -191,6 +219,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }
     }
 
@@ -207,6 +237,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }
     }
 
@@ -232,6 +264,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 2);
@@ -249,6 +283,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 1);
@@ -271,9 +307,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         }],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities[0].fields.len(), 3);
@@ -296,9 +335,12 @@ mod tests {
                 nullable: NullSpec::Always,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         }],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         let merged = merge_models(&parent, &child);
         let email = merged.entities[0]
@@ -359,6 +401,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         let merged = merge_models(&parent, &child);
         // Parent constraints & topology preserved since child has empty/None

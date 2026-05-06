@@ -227,6 +227,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         }
     }
 
@@ -255,6 +257,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }
     }
 
@@ -472,6 +476,8 @@ mod tests {
                 fields: vec![],
                 constraints: vec![],
                 topology: None,
+            actor: false,
+            persona_distribution: None,
             }],
             vec![],
         );
@@ -497,6 +503,8 @@ mod tests {
                 fields: vec![],
                 constraints: vec![],
                 topology: None,
+            actor: false,
+            persona_distribution: None,
             }],
             vec![],
         );

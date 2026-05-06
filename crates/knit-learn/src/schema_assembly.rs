@@ -161,6 +161,8 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         correlations,
         params: BTreeMap::new(),
         schema_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
     }
 }
 
@@ -200,6 +202,7 @@ fn build_entity(
             nullable,
             primary_key: if col.is_primary_key { Some(true) } else { None },
             precision,
+            actor_column: false,
         });
     }
 
@@ -254,6 +257,8 @@ fn build_entity(
         fields,
         constraints: Vec::new(),
         topology: None,
+    actor: false,
+    persona_distribution: None,
     };
 
     (entity, rels, corrs)
@@ -1577,6 +1582,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
             Field {
                 name: "EndDate".into(),
@@ -1589,6 +1595,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -1608,6 +1615,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
             Field {
                 name: "end_balance".into(),
@@ -1617,6 +1625,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -1669,6 +1678,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
             Field {
                 name: "EndDate".into(),
@@ -1681,6 +1691,7 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
             precision: None,
+        actor_column: false,
         },
         ];
         rewrite_temporal_pairs(&mut fields, &cols);

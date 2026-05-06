@@ -8,7 +8,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 
 use knit_core::{
-    Correlation, DataModel, Entity, NoiseProfile, Relationship, Value,
+    ActorRelationship, Correlation, DataModel, Entity, NoiseProfile, Persona, Relationship, Value,
 };
 
 use crate::error::SchemaError;
@@ -31,6 +31,10 @@ struct RawSchema {
     noise: Vec<NoiseProfile>,
     #[serde(default)]
     correlations: Vec<Correlation>,
+    #[serde(default)]
+    personas: Vec<Persona>,
+    #[serde(default)]
+    actor_relationships: Vec<ActorRelationship>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -58,6 +62,8 @@ impl RawSchema {
             correlations: self.correlations,
             params: self.model.params,
             schema_version: self.schema_version.unwrap_or_else(|| "1.0".to_string()),
+            personas: self.personas,
+            actor_relationships: self.actor_relationships,
         };
         Ok(model)
     }

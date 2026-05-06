@@ -922,6 +922,41 @@ fn validate_generator(
                 });
             }
         }
+        GeneratorSpec::ActorRef { entity: ref actor_entity } => {
+            if !entity_names.contains(actor_entity.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "actor_ref references unknown entity '{}'",
+                        actor_entity
+                    ),
+                });
+            }
+        }
+        GeneratorSpec::RelationshipRef { relationship } => {
+            if relationship.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "relationship_ref requires a non-empty 'relationship' name".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::ActorTemporal { trait_name } => {
+            if trait_name.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "actor_temporal requires a non-empty 'trait' name".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::PersonaField { trait_name } => {
+            if trait_name.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "persona_field requires a non-empty 'trait' name".to_string(),
+                });
+            }
+        }
         // Pattern, Derived, Constant — no additional validation needed
         _ => {}
     }
@@ -1146,6 +1181,7 @@ mod tests {
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
             precision: None,
+        actor_column: false,
         },
                     Field {
                         name: "email".to_string(),
@@ -1155,16 +1191,21 @@ mod tests {
                         nullable: NullSpec::Never,
                         primary_key: None,
             precision: None,
+        actor_column: false,
         },
                 ],
                 constraints: vec![],
                 topology: None,
+            actor: false,
+            persona_distribution: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }
     }
 
@@ -1196,6 +1237,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1245,9 +1287,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
             precision: None,
+        actor_column: false,
         }],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -1279,9 +1324,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
                 precision: None,
+            actor_column: false,
             }],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -1316,6 +1364,7 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
                     precision: None,
+                actor_column: false,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -1325,10 +1374,13 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: None,
                     precision: None,
+                actor_column: false,
                 },
             ],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -1363,6 +1415,7 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
                     precision: None,
+                actor_column: false,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -1372,10 +1425,13 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: None,
                     precision: None,
+                actor_column: false,
                 },
             ],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -1409,9 +1465,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
                 precision: None,
+            actor_column: false,
             }],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         // Relationship without explicit foreign_key — implicit FK is "order_id"
         model.relationships.push(Relationship {
@@ -1508,6 +1567,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         let rel = Relationship {
             name: "user_order".to_string(),
@@ -1564,6 +1625,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1590,6 +1652,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -1620,6 +1683,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1650,6 +1714,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1676,6 +1741,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1702,6 +1768,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -1732,6 +1799,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1796,6 +1864,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1814,6 +1883,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1835,6 +1905,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1856,6 +1927,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -1878,6 +1950,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1900,6 +1973,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1922,6 +1996,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -1947,6 +2022,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1974,6 +2050,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1995,6 +2072,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2019,6 +2097,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2045,9 +2124,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
             precision: None,
+        actor_column: false,
         }],
             constraints: vec![],
             topology: None,
+        actor: false,
+        persona_distribution: None,
         });
         model.entities[0].fields.push(Field {
             name: "ref_col".to_string(),
@@ -2063,6 +2145,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2121,6 +2204,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2142,6 +2226,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2160,6 +2245,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2178,6 +2264,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
@@ -2196,6 +2283,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2216,6 +2304,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
+        actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
