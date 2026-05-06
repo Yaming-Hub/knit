@@ -349,6 +349,9 @@ fn run_incremental(
             }
         }
 
+        // Update relationship evidence after ingesting all tables from this source
+        knit_learn::incremental::update_relationship_evidence(&mut state);
+
         // Save updated state
         state
             .save(state_path)
@@ -395,7 +398,31 @@ fn emit_schema_from_state(
         );
     }
 
-    let table_analyses = finalize_state(state);
+    let (mut table_analyses, finalized_rels) = finalize_state(state);
+
+    // Attach incrementally-detected relationships to their source TableAnalysis
+    // so assemble_data_model can use them for generator/type decisions.
+    for rel in &finalized_rels {
+        use knit_learn::relationships::{RelationshipCandidate, RelationshipKind};
+        let kind = match rel.kind {
+            knit_learn::streaming::RelKind::OneToOne => RelationshipKind::OneToOne,
+            knit_learn::streaming::RelKind::OneToMany => RelationshipKind::OneToMany,
+        };
+        let candidate = RelationshipCandidate {
+            from_table: rel.from_table.clone(),
+            from_column: rel.from_column.clone(),
+            to_table: rel.to_table.clone(),
+            to_column: rel.to_column.clone(),
+            kind,
+            confidence: rel.confidence,
+            is_self_ref: rel.is_self_ref,
+        };
+        // Attach to the source (from) table
+        if let Some(ta) = table_analyses.iter_mut().find(|t| t.name == rel.from_table) {
+            ta.relationships.push(candidate);
+        }
+    }
+
     let model_name = Path::new(output)
         .file_stem()
         .and_then(|s| s.to_str())

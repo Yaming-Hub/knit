@@ -114,6 +114,63 @@ pub fn ingest_batches_to_state(
     is_duplicate
 }
 
+/// Update relationship evidence in the state after ingestion.
+///
+/// This performs Stage 1 (candidate detection) and Stage 2 (HLL evidence update)
+/// for cross-table relationship tracking. Call after all tables from a source
+/// have been ingested.
+pub fn update_relationship_evidence(state: &mut LearnState) {
+    use crate::streaming::relationships::{detect_candidates, IncrementalRelColumn};
+
+    // Build column metadata for candidate detection
+    let mut all_columns: Vec<IncrementalRelColumn> = Vec::new();
+    for (table_name, table_state) in &state.tables {
+        for col in &table_state.columns {
+            let is_likely_pk = is_likely_pk_column(col, table_state.row_count);
+            all_columns.push(IncrementalRelColumn {
+                name: col.name.clone(),
+                is_likely_pk,
+                table_name: table_name.clone(),
+            });
+        }
+    }
+
+    // Stage 1: Detect new candidates
+    let new_candidates = detect_candidates(&all_columns, &state.relationship_evidence);
+    state.relationship_evidence.extend(new_candidates);
+
+    // Stage 2: Update HLL sketches by merging column HLLs directly
+    for ev in &mut state.relationship_evidence {
+        if let Some(table) = state.tables.get(&ev.from_table) {
+            if let Some(col) = table.columns.iter().find(|c| c.name == ev.from_column) {
+                ev.from_hll.merge(&col.hll);
+            }
+        }
+        if let Some(table) = state.tables.get(&ev.to_table) {
+            if let Some(col) = table.columns.iter().find(|c| c.name == ev.to_column) {
+                ev.to_hll.merge(&col.hll);
+            }
+        }
+        ev.chunks_observed += 1;
+    }
+}
+
+/// Check if a column is likely a primary key based on its statistics.
+fn is_likely_pk_column(col: &ColumnState, table_row_count: u64) -> bool {
+    if table_row_count == 0 || col.count == 0 {
+        return false;
+    }
+    let cardinality = col.hll.cardinality();
+    let uniqueness_ratio = cardinality / col.count as f64;
+    // High uniqueness + low null rate + name heuristic
+    let lower = col.name.to_lowercase();
+    let has_pk_name = lower == "id"
+        || lower.ends_with("_id")
+        || col.name.ends_with("Id")  // camelCase: userId, orderId
+        || col.name.ends_with("ID"); // ALL_CAPS: userID
+    uniqueness_ratio > 0.95 && col.null_rate() < 0.01 && has_pk_name
+}
+
 /// Update a ColumnState from an Arrow array.
 fn update_column_from_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType) {
     let len = array.len();
@@ -333,7 +390,11 @@ fn update_temporal_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType
 /// it uses reservoir samples for distribution fitting and top-K for categorical
 /// detection, producing the same `TableAnalysis` structures that
 /// `assemble_data_model()` expects.
-pub fn finalize_state(state: &LearnState) -> Vec<TableAnalysis> {
+///
+/// Also returns finalized relationships derived from HLL evidence.
+pub fn finalize_state(
+    state: &LearnState,
+) -> (Vec<TableAnalysis>, Vec<crate::streaming::FinalizedRelationship>) {
     let mut analyses = Vec::new();
 
     for (entity_name, table_state) in &state.tables {
@@ -346,7 +407,10 @@ pub fn finalize_state(state: &LearnState) -> Vec<TableAnalysis> {
         analyses.push(analysis);
     }
 
-    analyses
+    let relationships =
+        crate::streaming::relationships::finalize_relationships(&state.relationship_evidence);
+
+    (analyses, relationships)
 }
 
 /// Finalize all columns of a single table.
@@ -649,7 +713,7 @@ mod tests {
         let batch = make_test_batch();
         ingest_batches_to_state(&mut state, "users", &[batch], "test.csv");
 
-        let analyses = finalize_state(&state);
+        let (analyses, _rels) = finalize_state(&state);
         assert_eq!(analyses.len(), 1);
         assert_eq!(analyses[0].name, "users");
         assert_eq!(analyses[0].columns.len(), 3);
@@ -669,7 +733,7 @@ mod tests {
         let mut state = LearnState::new(42);
         ingest_batches_to_state(&mut state, "orders", &[batch], "orders.csv");
 
-        let analyses = finalize_state(&state);
+        let (analyses, _rels) = finalize_state(&state);
         let col = &analyses[0].columns[0];
         assert_eq!(col.inferred_type, Some(InferredType::Categorical));
         assert!(col.categorical_weights.is_some());
