@@ -151,13 +151,11 @@ enum Command {
         /// Output file path.
         #[arg(short, long, default_value = "schema.weave.toml")]
         output: String,
-        /// Use a domain template instead of the minimal scaffold.
-        /// Available: ecommerce, financial, hr, iot, logs
+        /// Path to a template file or directory to copy from.
+        /// If a file, copies it as the schema (plus sibling dictionaries).
+        /// If a directory, copies all files from it.
         #[arg(long)]
         template: Option<String>,
-        /// List available templates and exit.
-        #[arg(long)]
-        list_templates: bool,
     },
     /// Infer a Weave schema from existing data files or directories.
     Learn {
@@ -290,7 +288,7 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Diff { a, b } => schema::run_diff(a, b),
             SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
         },
-        Command::Init { output, template, list_templates } => init::run(output, template.as_deref(), *list_templates),
+        Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn { source, output, sample, state, finalize, strict, entities } => {
             learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, entities, &cli)
         }

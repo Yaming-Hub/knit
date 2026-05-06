@@ -1112,18 +1112,23 @@ fn init_scaffold_references_only_valid_generator_types() {
 // ── Init templates ──────────────────────────────────────────────────
 
 #[test]
-fn init_template_ecommerce_creates_valid_schema() {
+fn init_template_from_file_path() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("ecom.weave.toml");
+    let schema = dir.path().join("out.weave.toml");
+
+    // Use one of the example files as a template (file path)
+    let example_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/ecommerce.weave.toml");
+
     knit()
-        .args(["init", "-o", schema.to_str().unwrap(), "--template", "ecommerce"])
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", example_path.to_str().unwrap()])
         .assert()
         .success();
 
     assert!(schema.exists());
-    // Sidecar dictionary file should also be written
+    // Sidecar dictionary file should also be copied from examples/
     assert!(dir.path().join("products.dict.txt").exists());
-    // Template schema must now pass validation (sidecar is present)
+    // Template schema must pass validation (sidecar is present)
     knit()
         .args(["validate", schema.to_str().unwrap()])
         .assert()
@@ -1131,27 +1136,31 @@ fn init_template_ecommerce_creates_valid_schema() {
 }
 
 #[test]
-fn init_template_unknown_fails() {
+fn init_template_from_directory() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("bad.weave.toml");
+    let schema = dir.path().join("schema.weave.toml");
+
+    // Use the examples/ directory as a template directory
+    let examples_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples");
+
     knit()
-        .args(["init", "-o", schema.to_str().unwrap(), "--template", "nonexistent"])
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", examples_dir.to_str().unwrap()])
         .assert()
-        .failure()
-        .stderr(predicates::str::contains("unknown template 'nonexistent'"));
+        .success();
+
+    assert!(schema.exists());
 }
 
 #[test]
-fn init_list_templates() {
+fn init_template_nonexistent_path_fails() {
+    let dir = TempDir::new().unwrap();
+    let schema = dir.path().join("bad.weave.toml");
     knit()
-        .args(["init", "--list-templates"])
+        .args(["init", "-o", schema.to_str().unwrap(), "--template", "/nonexistent/path.weave.toml"])
         .assert()
-        .success()
-        .stdout(predicates::str::contains("ecommerce"))
-        .stdout(predicates::str::contains("financial"))
-        .stdout(predicates::str::contains("hr"))
-        .stdout(predicates::str::contains("iot"))
-        .stdout(predicates::str::contains("logs"));
+        .failure()
+        .stderr(predicates::str::contains("does not exist"));
 }
 
 // ── Schema subcommands ──────────────────────────────────────────────

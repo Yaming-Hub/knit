@@ -1,93 +1,21 @@
 //! `knit init` — scaffold a new `schema.weave.toml` schema file.
 //!
 //! Creates a minimal, well-commented starter schema that the user can
-//! populate with their own data model. Optionally uses a domain template
-//! (ecommerce, financial, hr, iot, logs) to provide a full working example.
+//! populate with their own data model. Optionally copies from a template
+//! path (file or directory) provided by the user.
 
 use std::fs;
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use colored::Colorize;
-
-/// A template definition with its schema content and optional sidecar files.
-struct Template {
-    name: &'static str,
-    description: &'static str,
-    schema: &'static str,
-    /// Sidecar files to write alongside the schema (relative path, content).
-    sidecars: &'static [(&'static str, &'static str)],
-}
-
-/// Available templates.
-const TEMPLATES: &[Template] = &[
-    Template {
-        name: "ecommerce",
-        description: "E-commerce platform (users, products, orders, reviews)",
-        schema: include_str!("../../../../examples/ecommerce.weave.toml"),
-        sidecars: &[("products.dict.txt", include_str!("../../../../examples/products.dict.txt"))],
-    },
-    Template {
-        name: "financial",
-        description: "Financial transactions (accounts, transfers, audit)",
-        schema: include_str!("../../../../examples/financial.weave.toml"),
-        sidecars: &[],
-    },
-    Template {
-        name: "hr",
-        description: "HR organization (departments, employees, payroll)",
-        schema: include_str!("../../../../examples/hr_org.weave.toml"),
-        sidecars: &[],
-    },
-    Template {
-        name: "iot",
-        description: "IoT sensor readings (devices, measurements, alerts)",
-        schema: include_str!("../../../../examples/iot_sensors.weave.toml"),
-        sidecars: &[],
-    },
-    Template {
-        name: "logs",
-        description: "Server access logs (servers, endpoints, requests)",
-        schema: include_str!("../../../../examples/server_logs.weave.toml"),
-        sidecars: &[],
-    },
-];
 
 /// Run the `knit init` command.
 ///
-/// Creates a starter schema at the given path. If `--template` is provided,
-/// uses a domain-specific template; otherwise generates a minimal scaffold.
-pub fn run(output_path: &str, template: Option<&str>, list_templates: bool) -> Result<()> {
-    if list_templates {
-        println!("{}", "Available templates:".bold());
-        println!();
-        for t in TEMPLATES {
-            println!("  {:12} {}", t.name.cyan(), t.description);
-        }
-        println!();
-        println!("Usage: {} {}", "knit init --template".yellow(), "<name>".yellow());
-        return Ok(());
-    }
-
-    // Resolve template content before touching the filesystem
-    let (schema, sidecars, template_name) = match template {
-        Some(name) => {
-            let entry = TEMPLATES.iter().find(|t| t.name == name);
-            match entry {
-                Some(t) => (t.schema.to_string(), t.sidecars, Some(name)),
-                None => {
-                    let available: Vec<&str> = TEMPLATES.iter().map(|t| t.name).collect();
-                    bail!(
-                        "unknown template '{}'; available: {}",
-                        name,
-                        available.join(", ")
-                    );
-                }
-            }
-        }
-        None => (generate_scaffold(), &[] as &[(&str, &str)], None),
-    };
-
+/// If `--template` is a file path, copies it (and sibling files like
+/// dictionaries) to the output location. If no template, generates a
+/// minimal scaffold schema.
+pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
     let dest = Path::new(output_path);
 
     if dest.exists() {
@@ -97,6 +25,18 @@ pub fn run(output_path: &str, template: Option<&str>, list_templates: bool) -> R
         );
     }
 
+    // Resolve template before touching filesystem
+    let template_source = match template {
+        Some(path) => {
+            let src = Path::new(path);
+            if !src.exists() {
+                bail!("template path does not exist: {}", path);
+            }
+            Some(src.to_path_buf())
+        }
+        None => None,
+    };
+
     // Create parent directories if needed
     if let Some(parent) = dest.parent() {
         if !parent.as_os_str().is_empty() {
@@ -104,27 +44,90 @@ pub fn run(output_path: &str, template: Option<&str>, list_templates: bool) -> R
         }
     }
 
-    fs::write(dest, &schema)?;
+    let mut sidecar_count = 0;
 
-    // Write sidecar files alongside the schema
-    let schema_dir = dest.parent().unwrap_or(Path::new("."));
-    for (sidecar_path, content) in sidecars {
-        let sidecar_dest = schema_dir.join(sidecar_path);
-        fs::write(&sidecar_dest, content)?;
+    match template_source {
+        Some(src) if src.is_dir() => {
+            // Template is a directory — copy all files from it
+            let dest_dir = dest.parent().unwrap_or(Path::new("."));
+            let mut found_schema = false;
+            for entry in fs::read_dir(&src)
+                .with_context(|| format!("failed to read template directory: {}", src.display()))?
+            {
+                let entry = entry?;
+                let file_name = entry.file_name();
+                let file_name_str = file_name.to_string_lossy();
+
+                if entry.file_type()?.is_file() {
+                    let dest_file = if file_name_str.ends_with(".weave.toml") && !found_schema {
+                        // First .weave.toml becomes the output schema
+                        found_schema = true;
+                        dest.to_path_buf()
+                    } else {
+                        sidecar_count += 1;
+                        dest_dir.join(&file_name)
+                    };
+                    fs::copy(entry.path(), &dest_file).with_context(|| {
+                        format!("failed to copy {}", entry.path().display())
+                    })?;
+                }
+            }
+            if !found_schema {
+                bail!(
+                    "template directory '{}' contains no .weave.toml schema file",
+                    src.display()
+                );
+            }
+        }
+        Some(src) => {
+            // Template is a single file — copy it as the schema
+            fs::copy(&src, dest).with_context(|| {
+                format!("failed to copy template from {}", src.display())
+            })?;
+
+            // Also copy sibling files (dictionaries, etc.) from same directory
+            if let Some(src_dir) = src.parent() {
+                let src_name = src.file_name().unwrap();
+                let dest_dir = dest.parent().unwrap_or(Path::new("."));
+                for entry in fs::read_dir(src_dir).into_iter().flatten() {
+                    if let Ok(entry) = entry {
+                        let name = entry.file_name();
+                        if name == src_name {
+                            continue; // skip the schema itself
+                        }
+                        if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
+                            let ext = Path::new(&name)
+                                .extension()
+                                .and_then(|e| e.to_str())
+                                .unwrap_or("");
+                            // Copy known sidecar extensions
+                            if matches!(ext, "txt" | "csv" | "json" | "dict") {
+                                let dest_file = dest_dir.join(&name);
+                                fs::copy(entry.path(), &dest_file).ok();
+                                sidecar_count += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        None => {
+            // No template — generate scaffold
+            let schema = generate_scaffold();
+            fs::write(dest, &schema)?;
+        }
     }
 
     println!(
         "{} Created {}{}",
         "✓".green().bold(),
         output_path.cyan(),
-        template_name
-            .map(|t| format!(" (from '{}' template)", t))
+        template
+            .map(|t| format!(" (from template: {})", t))
             .unwrap_or_default()
     );
-    if !sidecars.is_empty() {
-        for (sidecar_path, _) in sidecars {
-            println!("  {} {}", "+".green(), sidecar_path);
-        }
+    if sidecar_count > 0 {
+        println!("  {} copied {} sidecar file(s)", "+".green(), sidecar_count);
     }
     println!();
     println!(
@@ -257,36 +260,60 @@ mod tests {
     }
 
     #[test]
-    fn run_creates_file() {
+    fn run_creates_scaffold() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("test.weave.toml");
         let path_str = path.to_str().unwrap();
-        run(path_str, None, false).unwrap();
+        run(path_str, None).unwrap();
         assert!(path.exists());
         let content = fs::read_to_string(&path).unwrap();
         assert!(content.contains("schema_version"));
     }
 
     #[test]
-    fn run_with_template() {
+    fn run_with_file_template() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("ecom.weave.toml");
-        let path_str = path.to_str().unwrap();
-        run(path_str, Some("ecommerce"), false).unwrap();
-        assert!(path.exists());
-        let content = fs::read_to_string(&path).unwrap();
-        assert!(content.contains("ecommerce"));
+        // Create a fake template file
+        let template_dir = tempfile::tempdir().unwrap();
+        let template_file = template_dir.path().join("my.weave.toml");
+        fs::write(&template_file, "schema_version = \"1.0\"\n[model]\nname = \"test\"").unwrap();
+
+        let dest = dir.path().join("output.weave.toml");
+        run(dest.to_str().unwrap(), Some(template_file.to_str().unwrap())).unwrap();
+        assert!(dest.exists());
+        let content = fs::read_to_string(&dest).unwrap();
+        assert!(content.contains("name = \"test\""));
     }
 
     #[test]
-    fn run_unknown_template_fails() {
+    fn run_with_directory_template() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("test.weave.toml");
-        let result = run(path.to_str().unwrap(), Some("nonexistent"), false);
+        // Create a template directory with schema + sidecar
+        let template_dir = tempfile::tempdir().unwrap();
+        fs::write(
+            template_dir.path().join("schema.weave.toml"),
+            "schema_version = \"1.0\"\n[model]\nname = \"from_dir\"",
+        )
+        .unwrap();
+        fs::write(template_dir.path().join("words.dict.txt"), "hello\nworld").unwrap();
+
+        let dest = dir.path().join("out.weave.toml");
+        run(dest.to_str().unwrap(), Some(template_dir.path().to_str().unwrap())).unwrap();
+        assert!(dest.exists());
+        let content = fs::read_to_string(&dest).unwrap();
+        assert!(content.contains("from_dir"));
+        // Sidecar should be copied alongside
+        assert!(dir.path().join("words.dict.txt").exists());
+    }
+
+    #[test]
+    fn run_template_path_not_found() {
+        let dir = tempfile::tempdir().unwrap();
+        let dest = dir.path().join("out.weave.toml");
+        let result = run(dest.to_str().unwrap(), Some("/nonexistent/path.weave.toml"));
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("unknown template 'nonexistent'"));
-        assert!(err.contains("ecommerce"));
+        assert!(err.contains("does not exist"));
     }
 
     #[test]
@@ -294,30 +321,39 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("existing.toml");
         fs::write(&path, "exists").unwrap();
-        let result = run(path.to_str().unwrap(), None, false);
+        let result = run(path.to_str().unwrap(), None);
         assert!(result.is_err());
     }
 
     #[test]
-    fn list_templates_succeeds() {
-        let result = run("ignored.toml", None, true);
-        assert!(result.is_ok());
+    fn run_file_template_copies_sidecars() {
+        let template_dir = tempfile::tempdir().unwrap();
+        let template_file = template_dir.path().join("app.weave.toml");
+        fs::write(&template_file, "schema_version = \"1.0\"").unwrap();
+        fs::write(template_dir.path().join("names.dict.txt"), "alice\nbob").unwrap();
+        fs::write(template_dir.path().join("data.csv"), "a,b\n1,2").unwrap();
+        // Non-sidecar files should NOT be copied
+        fs::write(template_dir.path().join("readme.md"), "# docs").unwrap();
+
+        let dest_dir = tempfile::tempdir().unwrap();
+        let dest = dest_dir.path().join("schema.weave.toml");
+        run(dest.to_str().unwrap(), Some(template_file.to_str().unwrap())).unwrap();
+
+        assert!(dest_dir.path().join("names.dict.txt").exists());
+        assert!(dest_dir.path().join("data.csv").exists());
+        assert!(!dest_dir.path().join("readme.md").exists());
     }
 
     #[test]
-    fn all_templates_are_valid_toml() {
-        for t in TEMPLATES {
-            let _: toml::Value =
-                toml::from_str(t.schema).unwrap_or_else(|e| panic!("template '{}' invalid: {}", t.name, e));
-        }
-    }
+    fn run_dir_template_no_schema_fails() {
+        let template_dir = tempfile::tempdir().unwrap();
+        fs::write(template_dir.path().join("words.dict.txt"), "hello").unwrap();
 
-    #[test]
-    fn ecommerce_template_includes_sidecar() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("ecom.weave.toml");
-        run(path.to_str().unwrap(), Some("ecommerce"), false).unwrap();
-        // Sidecar file should be written alongside schema
-        assert!(dir.path().join("products.dict.txt").exists());
+        let dest_dir = tempfile::tempdir().unwrap();
+        let dest = dest_dir.path().join("out.weave.toml");
+        let result = run(dest.to_str().unwrap(), Some(template_dir.path().to_str().unwrap()));
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("no .weave.toml"));
     }
 }
