@@ -101,6 +101,31 @@ const GENERATORS: &[GeneratorInfo] = &[
         parameters: "file, expansion (\"sample\"|\"combinatorial\"|\"suffix\", default: \"sample\")",
         example: r##"type = "dictionary", file = "dictionaries/cities.txt""##,
     },
+    // Behavioral modeling generators (preview — schema support only, generation engine pending)
+    GeneratorInfo {
+        name: "actor_ref",
+        description: "Reference to an actor entity for behavioral identity (preview)",
+        parameters: "entity (name of the actor entity)",
+        example: r##"type = "actor_ref", entity = "users""##,
+    },
+    GeneratorInfo {
+        name: "actor_temporal",
+        description: "Generate temporal values influenced by actor persona traits (preview)",
+        parameters: "trait (persona trait name that controls temporal behavior)",
+        example: r##"type = "actor_temporal", trait = "activity_hours""##,
+    },
+    GeneratorInfo {
+        name: "relationship_ref",
+        description: "Generate values based on actor-to-actor relationships (preview)",
+        parameters: "relationship (name of an actor_relationship)",
+        example: r##"type = "relationship_ref", relationship = "reports_to""##,
+    },
+    GeneratorInfo {
+        name: "persona_field",
+        description: "Generate values derived from the actor's persona trait (preview)",
+        parameters: "trait (persona trait name to read the value from)",
+        example: r##"type = "persona_field", trait = "department""##,
+    },
 ];
 
 const DISTRIBUTIONS: &[(&str, &str)] = &[

@@ -47,7 +47,7 @@ fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 message: format!("duplicate entity name '{}'", entity.name),
             });
         }
-        validate_fields(entity, &names, errors);
+        validate_fields(entity, &names, model, errors);
         validate_entity_count(entity, errors);
     }
 }
@@ -55,6 +55,7 @@ fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
 fn validate_fields(
     entity: &Entity,
     entity_names: &HashSet<&str>,
+    model: &DataModel,
     errors: &mut Vec<SchemaError>,
 ) {
     let mut seen = HashSet::new();
@@ -77,6 +78,7 @@ fn validate_fields(
                 &field.data_type,
                 entity,
                 entity_names,
+                model,
                 false,
                 errors,
             );
@@ -707,6 +709,63 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
                 None
             }
         }
+        GeneratorSpec::ActorRef { .. } => {
+            // ActorRef produces a foreign key; compatible with int, int32, string, uuid
+            let compatible = matches!(
+                data_type,
+                DataType::Int | DataType::Int32 | DataType::String | DataType::Uuid
+            );
+            if !compatible {
+                Some(format!(
+                    "actor_ref generator produces key values but field has data_type '{}'; \
+                     expected 'int', 'int32', 'string', or 'uuid'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::ActorTemporal { .. } => {
+            // ActorTemporal produces temporal values
+            let compatible = matches!(
+                data_type,
+                DataType::Datetime
+                    | DataType::DatetimeUs
+                    | DataType::Datetimetz
+                    | DataType::Date
+                    | DataType::Time
+                    | DataType::Duration
+            );
+            if !compatible {
+                Some(format!(
+                    "actor_temporal generator produces temporal values but field has data_type '{}'; \
+                     expected a temporal type (datetime, date, time, duration)",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::RelationshipRef { .. } => {
+            // RelationshipRef produces a key from a related actor; same types as ActorRef
+            let compatible = matches!(
+                data_type,
+                DataType::Int | DataType::Int32 | DataType::String | DataType::Uuid
+            );
+            if !compatible {
+                Some(format!(
+                    "relationship_ref generator produces key values but field has data_type '{}'; \
+                     expected 'int', 'int32', 'string', or 'uuid'",
+                    data_type
+                ))
+            } else {
+                None
+            }
+        }
+        GeneratorSpec::PersonaField { .. } => {
+            // PersonaField can produce any type depending on the trait — skip static check
+            None
+        }
         // Generators with flexible output types — no static type check
         _ => None,
     }
@@ -719,6 +778,7 @@ fn validate_generator(
     data_type: &DataType,
     entity: &Entity,
     entity_names: &HashSet<&str>,
+    model: &DataModel,
     nested: bool,
     errors: &mut Vec<SchemaError>,
 ) {
@@ -848,6 +908,7 @@ fn validate_generator(
                     data_type,
                     entity,
                     entity_names,
+                    model,
                     true,
                     errors,
                 );
@@ -860,6 +921,7 @@ fn validate_generator(
                     data_type,
                     entity,
                     entity_names,
+                    model,
                     true,
                     errors,
                 );
@@ -885,7 +947,7 @@ fn validate_generator(
             }
         }
         GeneratorSpec::Unique { inner, .. } => {
-            validate_generator(path, inner, field_name, data_type, entity, entity_names, true, errors);
+            validate_generator(path, inner, field_name, data_type, entity, entity_names, model, true, errors);
         }
         GeneratorSpec::Composite { generators, .. } => {
             // Composite always produces a string by concatenating sub-generator outputs,
@@ -898,6 +960,7 @@ fn validate_generator(
                     &DataType::String,
                     entity,
                     entity_names,
+                    model,
                     true,
                     errors,
                 );
@@ -931,6 +994,16 @@ fn validate_generator(
                         actor_entity
                     ),
                 });
+            } else if let Some(target) = model.entities.iter().find(|e| e.name == *actor_entity) {
+                if !target.actor {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "actor_ref references entity '{}' which is not marked as actor = true",
+                            actor_entity
+                        ),
+                    });
+                }
             }
         }
         GeneratorSpec::RelationshipRef { relationship } => {
@@ -938,6 +1011,14 @@ fn validate_generator(
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: "relationship_ref requires a non-empty 'relationship' name".to_string(),
+                });
+            } else if !model.actor_relationships.iter().any(|ar| ar.name == *relationship) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "relationship_ref references unknown actor_relationship '{}'",
+                        relationship
+                    ),
                 });
             }
         }
@@ -2309,6 +2390,123 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("pattern generator produces strings"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_ref_on_non_actor_entity_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "users".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![Field {
+                name: "id".to_string(),
+                description: None,
+                data_type: DataType::Int,
+                generator: Some(GeneratorSpec::Sequence {
+                    start: 1,
+                    step: 1,
+                    prefix: None,
+                }),
+                nullable: NullSpec::Never,
+                primary_key: Some(true),
+                precision: None,
+                actor_column: false,
+            }],
+            actor: false,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.entities[0].fields.push(Field {
+            name: "user_id".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::ActorRef {
+                entity: "users".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("not marked as actor"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_ref_type_compat_on_bool_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "users".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            actor: true,
+            persona_distribution: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.entities[0].fields.push(Field {
+            name: "user_id".to_string(),
+            description: None,
+            data_type: DataType::Bool,
+            generator: Some(GeneratorSpec::ActorRef {
+                entity: "users".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("actor_ref generator produces key values"))
+        }));
+    }
+
+    #[test]
+    fn test_relationship_ref_unknown_relationship_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "manager_id".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::RelationshipRef {
+                relationship: "reports_to".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown actor_relationship"))
+        }));
+    }
+
+    #[test]
+    fn test_actor_temporal_on_string_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "login_time".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("actor_temporal generator produces temporal values"))
         }));
     }
 }
