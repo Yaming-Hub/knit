@@ -1576,3 +1576,73 @@ fn learn_incremental_generates_valid_schema() {
     });
     assert!(has_dict_value, "generated data should use dictionary values");
 }
+
+#[test]
+fn inspect_state_file() {
+    // Create a state file via incremental learn, then inspect it.
+    let dir = TempDir::new().unwrap();
+    let csv_path = dir.path().join("orders.csv");
+    fs::write(
+        &csv_path,
+        "order_id,customer,amount\n1,Alice,100.50\n2,Bob,200.75\n3,Alice,50.00\n4,Carol,300.25\n",
+    )
+    .unwrap();
+
+    let state_file = dir.path().join("test.state");
+
+    // Ingest
+    knit()
+        .args([
+            "learn",
+            dir.path().to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Inspect (human output)
+    knit()
+        .args(["inspect", state_file.to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("State Summary"))
+        .stdout(predicate::str::contains("orders"))
+        .stdout(predicate::str::contains("4 rows"))
+        .stdout(predicate::str::contains("3 columns"))
+        .stdout(predicate::str::contains("1 chunk(s) processed"));
+
+    // Inspect with --columns
+    knit()
+        .args(["inspect", state_file.to_str().unwrap(), "--columns"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("order_id"))
+        .stdout(predicate::str::contains("customer"))
+        .stdout(predicate::str::contains("amount"))
+        .stdout(predicate::str::contains("distinct"));
+
+    // Inspect with --json
+    let json_output = knit()
+        .args(["inspect", state_file.to_str().unwrap(), "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let parsed: serde_json::Value = serde_json::from_slice(&json_output).unwrap();
+    assert_eq!(parsed["total_rows"], 4);
+    assert_eq!(parsed["tables"][0]["name"], "orders");
+    assert_eq!(parsed["tables"][0]["columns"], 3);
+    assert_eq!(parsed["chunks_processed"], 1);
+    assert_eq!(parsed["recent_chunks"].as_array().unwrap().len(), 1);
+    assert_eq!(parsed["recent_chunks"][0]["row_count"], 4);
+
+    // Inspect nonexistent file
+    knit()
+        .args(["inspect", "nonexistent.state"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("not found"));
+}

@@ -7,6 +7,7 @@
 //! - `schema expand|normalize|diff` — schema manipulation
 //! - `init` — interactive project setup wizard
 //! - `learn` — infer schema from data
+//! - `inspect` — inspect incremental learning state files
 //! - `completions` — generate shell completion scripts
 
 mod commands;
@@ -18,7 +19,7 @@ use clap_complete::Shell;
 use colored::Colorize;
 use tracing_subscriber::EnvFilter;
 
-use commands::{generate, init, learn, plan, schema, validate};
+use commands::{generate, init, inspect, learn, plan, schema, validate};
 use config::resolve_config;
 
 /// Knit — deterministic synthetic data generation.
@@ -166,6 +167,14 @@ enum Command {
         #[arg(long)]
         strict: bool,
     },
+    /// Inspect an incremental learning state file.
+    Inspect {
+        /// Path to the state file to inspect.
+        state: String,
+        /// Show per-column details (cardinality, nulls, top values).
+        #[arg(long)]
+        columns: bool,
+    },
     /// Generate shell completion scripts.
     Completions {
         /// Shell to generate completions for.
@@ -267,6 +276,9 @@ fn main() -> anyhow::Result<()> {
         Command::Init { output } => init::run(output),
         Command::Learn { source, output, sample, state, finalize, strict } => {
             learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, &cli)
+        }
+        Command::Inspect { state, columns } => {
+            inspect::run(state, *columns, &cli)
         }
         Command::Completions { shell } => {
             clap_complete::generate(
