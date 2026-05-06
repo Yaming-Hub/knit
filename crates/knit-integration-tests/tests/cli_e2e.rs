@@ -1264,3 +1264,281 @@ depends_on = ["id"]
         "unresolved param should stay as literal placeholder, got:\n{content}"
     );
 }
+
+// ── Learn + Dictionary Extraction Round-Trip ────────────────────────
+
+#[test]
+fn learn_dictionary_extraction_round_trip() {
+    // Create CSV source data with a high-cardinality string column (>50 unique values)
+    // to trigger dictionary extraction during learn.
+    let source_dir = TempDir::new().unwrap();
+    let csv_path = source_dir.path().join("products.csv");
+
+    let mut csv_content = String::from("id,product_name,price,category\n");
+    for i in 1..=200 {
+        // 200 unique product names → triggers dictionary extraction (threshold >50)
+        csv_content.push_str(&format!(
+            "{},Product-{}-Widget,{:.2},{}\n",
+            i,
+            i,
+            10.0 + (i as f64) * 0.5,
+            ["Electronics", "Clothing", "Food", "Books"][(i - 1) % 4]
+        ));
+    }
+    fs::write(&csv_path, &csv_content).unwrap();
+
+    // Learn from the CSV (should extract dictionary for product_name)
+    let learned_schema = source_dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            source_dir.path().to_str().unwrap(),
+            "-o",
+            learned_schema.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(learned_schema.exists(), "learned schema should be created");
+
+    // Verify the specific dictionary file was created
+    let expected_dict = source_dir.path().join("products_product_name.dict.txt");
+    assert!(
+        expected_dict.exists(),
+        "expected dictionary file 'products_product_name.dict.txt' to be created"
+    );
+
+    // Verify dictionary file has correct content
+    let dict_content = fs::read_to_string(&expected_dict).unwrap();
+    let dict_lines: Vec<&str> = dict_content.lines().collect();
+    assert!(
+        dict_lines.len() >= 200,
+        "dictionary should have ≥200 entries (one per unique value), got {}",
+        dict_lines.len()
+    );
+    assert!(
+        dict_lines.iter().all(|l| l.contains("Widget")),
+        "all dictionary entries should contain 'Widget' from source data"
+    );
+
+    // Verify the learned schema references the dictionary generator
+    let schema_text = fs::read_to_string(&learned_schema).unwrap();
+    assert!(
+        schema_text.contains(r#"type = "dictionary""#),
+        "learned schema should use type = \"dictionary\" generator"
+    );
+    assert!(
+        schema_text.contains("products_product_name.dict.txt"),
+        "learned schema should reference the specific dictionary file"
+    );
+
+    // Generate from the learned schema (verifies dictionary resolution works)
+    let gen_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            learned_schema.to_str().unwrap(),
+            "-o",
+            gen_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Verify generation produced data
+    let gen_csv_path = gen_dir.path().join("products.csv");
+    assert!(
+        gen_csv_path.exists(),
+        "generation should produce products.csv"
+    );
+
+    // Parse generated CSV and verify product_name column uses dictionary values
+    let gen_csv = fs::read_to_string(&gen_csv_path).unwrap();
+    let gen_lines: Vec<&str> = gen_csv.lines().collect();
+    assert!(gen_lines.len() > 1, "generated CSV should have header + data rows");
+
+    // Find product_name column index
+    let header = gen_lines[0];
+    let col_idx = header.split(',')
+        .position(|h| h == "product_name")
+        .expect("generated CSV should have product_name column");
+
+    // Verify generated product_name values come from dictionary
+    let dict_set: std::collections::HashSet<&str> = dict_lines.iter().copied().collect();
+    let mut found_dict_value = false;
+    for line in &gen_lines[1..] {
+        let fields: Vec<&str> = line.split(',').collect();
+        if fields.len() > col_idx && !fields[col_idx].is_empty() {
+            assert!(
+                dict_set.contains(fields[col_idx]),
+                "generated value '{}' should be from the dictionary",
+                fields[col_idx]
+            );
+            found_dict_value = true;
+        }
+    }
+    assert!(found_dict_value, "at least some generated rows should have dictionary values");
+}
+
+#[test]
+fn learn_dictionary_threshold_boundary() {
+    // With exactly 50 unique values, no dictionary should be extracted
+    // (threshold is >50). With 51, it should trigger extraction.
+
+    // 50 unique values → no dictionary
+    let dir_50 = TempDir::new().unwrap();
+    let csv_50 = dir_50.path().join("items.csv");
+    let mut content = String::from("id,name\n");
+    for i in 1..=50 {
+        content.push_str(&format!("{},Item-{}-Thing\n", i, i));
+    }
+    fs::write(&csv_50, &content).unwrap();
+
+    let schema_50 = dir_50.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            dir_50.path().to_str().unwrap(),
+            "-o",
+            schema_50.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Should NOT have a dictionary file
+    let dict_files_50: Vec<_> = fs::read_dir(dir_50.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.path()
+                .to_str()
+                .unwrap_or("")
+                .contains(".dict.txt")
+        })
+        .collect();
+    assert!(
+        dict_files_50.is_empty(),
+        "50 unique values should NOT trigger dictionary extraction (threshold >50)"
+    );
+
+    // 51 unique values → should extract dictionary
+    let dir_51 = TempDir::new().unwrap();
+    let csv_51 = dir_51.path().join("items.csv");
+    let mut content = String::from("id,name\n");
+    for i in 1..=51 {
+        content.push_str(&format!("{},Item-{}-Thing\n", i, i));
+    }
+    fs::write(&csv_51, &content).unwrap();
+
+    let schema_51 = dir_51.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            dir_51.path().to_str().unwrap(),
+            "-o",
+            schema_51.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let dict_files_51: Vec<_> = fs::read_dir(dir_51.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.path()
+                .to_str()
+                .unwrap_or("")
+                .contains(".dict.txt")
+        })
+        .collect();
+    assert!(
+        !dict_files_51.is_empty(),
+        "51 unique values SHOULD trigger dictionary extraction"
+    );
+}
+
+#[test]
+fn learn_incremental_generates_valid_schema() {
+    // Test that incremental learn (ingest + finalize) produces a schema
+    // that can be used to generate data successfully.
+    // Note: incremental finalize does NOT currently run dictionary extraction;
+    // this test validates the basic incremental→generate pipeline.
+    let source_dir = TempDir::new().unwrap();
+    let csv_path = source_dir.path().join("companies.csv");
+
+    let mut csv_content = String::from("id,company_name,revenue\n");
+    for i in 1..=150 {
+        csv_content.push_str(&format!(
+            "{},Company-{}-Corp,{:.2}\n",
+            i,
+            i,
+            1000.0 + (i as f64) * 100.0
+        ));
+    }
+    fs::write(&csv_path, &csv_content).unwrap();
+
+    let state_file = source_dir.path().join("learn.state");
+    let output_schema = source_dir.path().join("incremental.weave.toml");
+
+    // Step 1: Ingest data into state
+    knit()
+        .args([
+            "learn",
+            source_dir.path().to_str().unwrap(),
+            "-o",
+            output_schema.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(state_file.exists(), "state file should be created");
+
+    // Step 2: Finalize to produce schema
+    knit()
+        .args([
+            "learn",
+            "-o",
+            output_schema.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--finalize",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(output_schema.exists(), "schema should be produced");
+
+    // Generate from the schema (validates it's functional)
+    let gen_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            output_schema.to_str().unwrap(),
+            "-o",
+            gen_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let gen_csv_path = gen_dir.path().join("companies.csv");
+    assert!(
+        gen_csv_path.exists(),
+        "incremental learn → generate should produce companies.csv"
+    );
+
+    let gen_csv = fs::read_to_string(&gen_csv_path).unwrap();
+    let row_count = gen_csv.lines().count() - 1; // subtract header
+    assert!(row_count > 0, "should have generated rows");
+}
