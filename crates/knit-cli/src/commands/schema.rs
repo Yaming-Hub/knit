@@ -336,6 +336,24 @@ fn diff_entity(diffs: &mut Vec<DiffEntry>, a: &Entity, b: &Entity) {
         });
     }
 
+    // Actor flag diff
+    if a.actor != b.actor {
+        diffs.push(DiffEntry::FieldChanged {
+            entity: entity.clone(),
+            field: "actor".to_string(),
+            detail: format!("{} → {}", a.actor, b.actor),
+        });
+    }
+
+    // Persona distribution diff
+    if a.persona_distribution != b.persona_distribution {
+        diffs.push(DiffEntry::FieldChanged {
+            entity: entity.clone(),
+            field: "persona_distribution".to_string(),
+            detail: format!("{:?} → {:?}", a.persona_distribution, b.persona_distribution),
+        });
+    }
+
     let fields_a: BTreeSet<&str> = a.fields.iter().map(|f| f.name.as_str()).collect();
     let fields_b: BTreeSet<&str> = b.fields.iter().map(|f| f.name.as_str()).collect();
 
@@ -375,6 +393,13 @@ fn diff_field(diffs: &mut Vec<DiffEntry>, entity: &str, a: &Field, b: &Field) {
             entity: entity.to_string(),
             field: a.name.clone(),
             detail: format!("nullable: {:?} → {:?}", a.nullable, b.nullable),
+        });
+    }
+    if a.actor_column != b.actor_column {
+        diffs.push(DiffEntry::FieldChanged {
+            entity: entity.to_string(),
+            field: a.name.clone(),
+            detail: format!("actor_column: {} → {}", a.actor_column, b.actor_column),
         });
     }
     let gen_a = format!("{:?}", a.generator);
@@ -752,5 +777,43 @@ mod tests {
         assert!(doc.contains("## Relationships"));
         assert!(doc.contains("| orders_users |"));
         assert!(doc.contains("| user_id |") || doc.contains("user_id"));
+    }
+
+    #[test]
+    fn diff_entity_actor_flag_changed() {
+        let mut a_entity = make_entity("users", vec![make_field("id", DataType::Int)]);
+        a_entity.actor = false;
+        let mut b_entity = make_entity("users", vec![make_field("id", DataType::Int)]);
+        b_entity.actor = true;
+        let a = make_model("test", vec![a_entity]);
+        let b = make_model("test", vec![b_entity]);
+        let diffs = compute_diff(&a, &b);
+        assert!(diffs.iter().any(|d| matches!(
+            d,
+            DiffEntry::FieldChanged { entity, field, detail }
+                if entity == "users" && field == "actor" && detail.contains("true")
+        )));
+    }
+
+    #[test]
+    fn diff_field_actor_column_changed() {
+        let mut a_field = make_field("user_id", DataType::Int);
+        a_field.actor_column = false;
+        let mut b_field = make_field("user_id", DataType::Int);
+        b_field.actor_column = true;
+        let a = make_model("test", vec![make_entity("events", vec![
+            make_field("id", DataType::Int),
+            a_field,
+        ])]);
+        let b = make_model("test", vec![make_entity("events", vec![
+            make_field("id", DataType::Int),
+            b_field,
+        ])]);
+        let diffs = compute_diff(&a, &b);
+        assert!(diffs.iter().any(|d| matches!(
+            d,
+            DiffEntry::FieldChanged { entity, field, detail }
+                if entity == "events" && field == "user_id" && detail.contains("actor_column")
+        )));
     }
 }
