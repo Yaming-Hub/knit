@@ -470,4 +470,10 @@ pub struct PlanMetadata {
     pub has_cycles: bool,
     /// Number of foreign key references that require backpatching.
     pub deferred_ref_count: usize,
+    /// Number of entities marked as actors (`actor = true`).
+    pub actor_entity_count: usize,
+    /// Number of persona definitions in the model.
+    pub persona_count: usize,
+    /// Number of actor relationship definitions in the model.
+    pub actor_relationship_count: usize,
 }

@@ -46,15 +46,13 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     Ok(())
 }
 
-/// Behavioral modeling summary for plan display.
+/// Set of actor entity names for badge display in plan output.
 pub(crate) struct BehavioralSummary {
     pub actor_entities: HashSet<String>,
-    pub persona_count: usize,
-    pub actor_relationship_count: usize,
 }
 
 impl BehavioralSummary {
-    /// Build a summary from a data model.
+    /// Build from a data model.
     pub fn from_model(model: &knit_core::DataModel) -> Self {
         Self {
             actor_entities: model
@@ -63,15 +61,7 @@ impl BehavioralSummary {
                 .filter(|e| e.actor)
                 .map(|e| e.name.clone())
                 .collect(),
-            persona_count: model.personas.len(),
-            actor_relationship_count: model.actor_relationships.len(),
         }
-    }
-
-    fn has_any(&self) -> bool {
-        !self.actor_entities.is_empty()
-            || self.persona_count > 0
-            || self.actor_relationship_count > 0
     }
 }
 
@@ -106,13 +96,16 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan, behavioral: &Behaviora
         "global seed:".dimmed(),
         plan.rng_tree.global_seed,
     );
-    if behavioral.has_any() {
+    let has_behavioral = meta.actor_entity_count > 0
+        || meta.persona_count > 0
+        || meta.actor_relationship_count > 0;
+    if has_behavioral {
         println!(
             "  {} {} actor(s), {} persona(s), {} actor relationship(s)",
             "behavioral:".dimmed(),
-            behavioral.actor_entities.len(),
-            behavioral.persona_count,
-            behavioral.actor_relationship_count,
+            meta.actor_entity_count,
+            meta.persona_count,
+            meta.actor_relationship_count,
         );
     }
     println!();

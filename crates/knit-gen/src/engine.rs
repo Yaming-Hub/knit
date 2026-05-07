@@ -764,6 +764,9 @@ mod tests {
                 estimated_total_bytes: 4800,
                 has_cycles: false,
                 deferred_ref_count: 0,
+                actor_entity_count: 0,
+                persona_count: 0,
+                actor_relationship_count: 0,
             },
         }
     }
@@ -940,6 +943,9 @@ mod tests {
                 estimated_total_bytes: 400,
                 has_cycles: true,
                 deferred_ref_count: 1,
+                actor_entity_count: 0,
+                persona_count: 0,
+                actor_relationship_count: 0,
             },
         };
 
@@ -1064,6 +1070,9 @@ mod tests {
                 estimated_total_bytes: 8000,
                 has_cycles: false,
                 deferred_ref_count: 0,
+                actor_entity_count: 0,
+                persona_count: 0,
+                actor_relationship_count: 0,
             },
         };
 
@@ -1143,6 +1152,9 @@ mod tests {
                 estimated_total_bytes: 200,
                 has_cycles: false,
                 deferred_ref_count: 0,
+                actor_entity_count: 0,
+                persona_count: 0,
+                actor_relationship_count: 0,
             },
         };
 
@@ -1258,6 +1270,9 @@ mod tests {
                 estimated_total_bytes: 8000,
                 has_cycles: false,
                 deferred_ref_count: 0,
+                actor_entity_count: 0,
+                persona_count: 0,
+                actor_relationship_count: 0,
             },
         };
 
