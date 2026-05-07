@@ -3,9 +3,11 @@ schema_version = "1.0"
 [model]
 name = "social_platform"
 description = """
-Social platform demonstrating behavioral modeling: persona definitions with
-activity-weighted FK generation, actor relationship graphs, and graph
-topologies. Actor columns sample users proportional to persona activity_rate.
+Social platform demonstrating full behavioral modeling: persona definitions with
+peak_hours temporal bias, activity-weighted FK generation, actor relationship
+graphs, graph topologies, actor_temporal timestamps biased toward persona peak
+hours, and inter-event gap enforcement. Activity timestamps are constrained to
+be after each actor's signup_date.
 """
 seed = 20240601
 # Time horizon: ~1 month snapshot of a medium-activity community.
@@ -13,7 +15,8 @@ seed = 20240601
 # ── Personas ─────────────────────────────────────────────────────────
 # Define behavioral profiles that drive how actors interact.
 # Trait units: activity_rate = actions/month, post_frequency = posts/month,
-# session_length = minutes, reply_ratio = fraction of reads that get a reply.
+# session_length = minutes, reply_ratio = fraction of reads that get a reply,
+# peak_hours = preferred activity hour (0–23, used by actor_temporal).
 
 [[personas]]
 name = "power_user"
@@ -23,6 +26,7 @@ activity_rate = 80.0
 session_length = 45.0
 post_frequency = 12.0
 reply_ratio = 0.7
+peak_hours = 14.0
 
 [[personas]]
 name = "regular_user"
@@ -32,6 +36,7 @@ activity_rate = 20.0
 session_length = 15.0
 post_frequency = 3.0
 reply_ratio = 0.4
+peak_hours = 20.0
 
 [[personas]]
 name = "lurker"
@@ -41,6 +46,7 @@ activity_rate = 3.0
 session_length = 5.0
 post_frequency = 0.2
 reply_ratio = 0.1
+peak_hours = 22.0
 
 # ── Actor Relationships ──────────────────────────────────────────────
 # Defines the social graph topology between actors.
@@ -145,6 +151,9 @@ args = ["2"]
 [[entities.fields]]
 name = "created_at"
 data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
 
 [[entities.fields]]
 name = "likes_count"
@@ -190,6 +199,9 @@ args = []
 [[entities.fields]]
 name = "created_at"
 data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
 
 # Direct messages — driven by the "messages" relationship graph
 [[entities]]
@@ -230,6 +242,9 @@ args = []
 [[entities.fields]]
 name = "sent_at"
 data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
 
 [[entities.fields]]
 name = "read"
