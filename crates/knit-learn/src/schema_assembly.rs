@@ -321,13 +321,27 @@ fn score_actor_column(name: &str) -> f64 {
         }
     }
 
-    // Pattern: *_by (created_by, assigned_by, approved_by)
+    // Pattern: *_by — restricted to known verb stems to avoid false positives
+    // (e.g. group_by, sort_by, order_by should NOT match)
     if lower.ends_with("_by") {
-        return 0.85;
+        let action_verbs = [
+            "created", "updated", "modified", "assigned", "approved", "rejected",
+            "reviewed", "submitted", "completed", "closed", "opened", "resolved",
+            "owned", "managed", "handled", "processed", "requested", "reported",
+            "sent", "received", "initiated", "authorized", "verified",
+        ];
+        let stem = &lower[..lower.len() - 3];
+        if action_verbs.iter().any(|v| stem == *v) {
+            return 0.85;
+        }
     }
 
-    // Pattern: standalone actor names in messaging context
-    let standalone_actors = ["sender", "receiver", "recipient", "assignee"];
+    // Pattern: standalone actor names in messaging/role context
+    let standalone_actors = [
+        "sender", "receiver", "recipient", "assignee",
+        "owner", "author", "reviewer", "manager", "creator",
+        "requester", "approver",
+    ];
     if standalone_actors.contains(&lower.as_str()) {
         return 0.80;
     }
@@ -374,16 +388,22 @@ fn detect_actor_columns(columns: &[ColumnAnalysis]) -> Vec<(String, f64)> {
 fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[Field]) -> bool {
     let lower_name = table_name.to_lowercase();
 
-    // Check if the table name itself suggests actors
-    let actor_table_names = [
-        "users", "user", "employees", "employee", "customers", "customer",
-        "members", "member", "agents", "agent", "persons", "person",
-        "people", "authors", "author", "owners", "owner", "students",
-        "student", "teachers", "teacher", "drivers", "driver",
-        "passengers", "passenger", "patients", "patient",
+    // Check if the table name contains an actor keyword (handles prefixed
+    // tables like app_users, dim_customer, hr_employees, user_accounts)
+    let actor_keywords = [
+        "user", "employee", "customer", "member", "agent", "person",
+        "people", "author", "owner", "student", "teacher", "driver",
+        "passenger", "patient",
     ];
-    if actor_table_names.contains(&lower_name.as_str()) {
-        return true;
+    // Split on common delimiters and check tokens
+    let tokens: Vec<&str> = lower_name.split(|c: char| c == '_' || c == '-' || c == '.')
+        .collect();
+    for keyword in &actor_keywords {
+        // Check singular or plural form in any token
+        let plural = format!("{}s", keyword);
+        if tokens.iter().any(|t| *t == *keyword || *t == plural) {
+            return true;
+        }
     }
 
     // Check if a PK column is actor-like (e.g., user_id as PK)
@@ -1967,5 +1987,41 @@ mod tests {
         let table = TableAnalysis::new("orders".into(), columns, 100);
         let (entity, _, _) = build_entity(&table);
         assert!(!entity.actor, "orders entity should not be marked as actor");
+    }
+
+    #[test]
+    fn score_actor_column_by_rejects_false_positives() {
+        // group_by, sort_by, order_by should NOT match
+        assert_eq!(score_actor_column("group_by"), 0.0);
+        assert_eq!(score_actor_column("sort_by"), 0.0);
+        assert_eq!(score_actor_column("order_by"), 0.0);
+        // But created_by, approved_by should match
+        assert!(score_actor_column("created_by") > 0.8);
+        assert!(score_actor_column("approved_by") > 0.8);
+    }
+
+    #[test]
+    fn score_actor_column_standalone_roles() {
+        // Roles from ACTOR_PREFIXES that are also standalone names
+        assert!(score_actor_column("owner") > 0.7);
+        assert!(score_actor_column("author") > 0.7);
+        assert!(score_actor_column("reviewer") > 0.7);
+        assert!(score_actor_column("manager") > 0.7);
+        assert!(score_actor_column("creator") > 0.7);
+        // from/to should not match (excluded for false positive risk)
+        assert_eq!(score_actor_column("from"), 0.0);
+        assert_eq!(score_actor_column("to"), 0.0);
+    }
+
+    #[test]
+    fn is_actor_entity_prefixed_table_names() {
+        // Tables like app_users, dim_customer, hr_employees should match
+        assert!(is_actor_entity("app_users", &[], &[]));
+        assert!(is_actor_entity("dim_customer", &[], &[]));
+        assert!(is_actor_entity("hr_employees", &[], &[]));
+        assert!(is_actor_entity("user_accounts", &[], &[]));
+        // But not unrelated tables
+        assert!(!is_actor_entity("app_orders", &[], &[]));
+        assert!(!is_actor_entity("dim_product", &[], &[]));
     }
 }
