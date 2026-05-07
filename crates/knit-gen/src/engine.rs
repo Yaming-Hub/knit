@@ -755,6 +755,7 @@ mod tests {
                 entity_nodes,
             },
             index_strategy: IndexStrategy { per_entity },
+            actor_pool: knit_plan::ActorPoolPlan::default(),
             metadata: PlanMetadata {
                 schema_name: "test".into(),
                 total_entities: 2,
@@ -934,6 +935,7 @@ mod tests {
                 entity_nodes,
             },
             index_strategy: IndexStrategy { per_entity },
+            actor_pool: knit_plan::ActorPoolPlan::default(),
             metadata: PlanMetadata {
                 schema_name: "self_ref_test".into(),
                 total_entities: 1,
@@ -1061,6 +1063,7 @@ mod tests {
             index_strategy: IndexStrategy {
                 per_entity: BTreeMap::new(),
             },
+            actor_pool: knit_plan::ActorPoolPlan::default(),
             metadata: PlanMetadata {
                 schema_name: "parallel_test".into(),
                 total_entities: 1,
@@ -1143,6 +1146,7 @@ mod tests {
             index_strategy: IndexStrategy {
                 per_entity: BTreeMap::new(),
             },
+            actor_pool: knit_plan::ActorPoolPlan::default(),
             metadata: PlanMetadata {
                 schema_name: "batch_size_test".into(),
                 total_entities: 1,
@@ -1261,6 +1265,7 @@ mod tests {
             index_strategy: IndexStrategy {
                 per_entity: BTreeMap::new(),
             },
+            actor_pool: knit_plan::ActorPoolPlan::default(),
             metadata: PlanMetadata {
                 schema_name: "null_test".into(),
                 total_entities: 1,
