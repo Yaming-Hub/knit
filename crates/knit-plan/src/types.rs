@@ -378,6 +378,9 @@ pub enum GeneratorPlan {
         /// Optional: datetime field in the actor entity whose value serves as
         /// the lower bound for generated timestamps (e.g. `"signup_date"`).
         temporal_start_field: Option<String>,
+        /// Minimum milliseconds between consecutive events from the same actor.
+        /// Defaults to 60_000 (1 minute) when `None`.
+        min_event_gap_ms: Option<i64>,
     },
 }
 
