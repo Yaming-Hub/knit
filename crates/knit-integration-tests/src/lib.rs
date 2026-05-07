@@ -59,6 +59,13 @@ pub fn generate_from_toml(toml_input: &str) -> HashMap<String, Vec<RecordBatch>>
 
     let mut batches: HashMap<String, Vec<RecordBatch>> = HashMap::new();
     let mut engine = GenerationEngine::new();
+
+    // Build actor pool if the plan has actor pools defined
+    if !plan.actor_pool.pools.is_empty() {
+        let actor_pool = knit_gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
+        engine = engine.with_actor_pool(std::sync::Arc::new(actor_pool));
+    }
+
     engine
         .execute(&plan, |entity, batch| {
             batches.entry(entity.to_string()).or_default().push(batch);
@@ -79,6 +86,13 @@ pub fn generate_from_file(path: &Path) -> HashMap<String, Vec<RecordBatch>> {
 
     let mut batches: HashMap<String, Vec<RecordBatch>> = HashMap::new();
     let mut engine = GenerationEngine::new();
+
+    // Build actor pool if the plan has actor pools defined
+    if !plan.actor_pool.pools.is_empty() {
+        let actor_pool = knit_gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
+        engine = engine.with_actor_pool(std::sync::Arc::new(actor_pool));
+    }
+
     engine
         .execute(&plan, |entity, batch| {
             batches.entry(entity.to_string()).or_default().push(batch);

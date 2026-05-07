@@ -3,9 +3,9 @@ schema_version = "1.0"
 [model]
 name = "social_platform"
 description = """
-Social platform demonstrating behavioral schema metadata: persona definitions,
-actor relationships, and graph topologies. Persona-driven FK generation is
-planned but not yet wired — currently FK sampling is uniform.
+Social platform demonstrating behavioral modeling: persona definitions with
+activity-weighted FK generation, actor relationship graphs, and graph
+topologies. Actor columns sample users proportional to persona activity_rate.
 """
 seed = 20240601
 # Time horizon: ~1 month snapshot of a medium-activity community.
