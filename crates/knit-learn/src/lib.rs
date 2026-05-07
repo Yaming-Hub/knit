@@ -19,6 +19,7 @@
 
 #![warn(missing_docs)]
 
+pub mod behavioral;
 pub mod correlation;
 pub mod error;
 pub mod fitting;
