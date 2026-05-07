@@ -755,8 +755,38 @@ impl GenerationEngine {
         trait_name: &str,
         actor_entity: &str,
         actor_field: &str,
-        _plan: &ExecutionPlan,
+        plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
+        let null_fallback = || -> Box<dyn FieldGenerator> {
+            Box::new(crate::generators::constant::ConstantGenerator::new(
+                knit_core::Value::Null,
+            ))
+        };
+
+        // Safety: actor entity must be single-partition (PK insertion order = actor index)
+        let actor_partitions = Self::count_entity_partitions(plan, actor_entity);
+        if actor_partitions > 1 {
+            tracing::warn!(
+                entity = %ep.entity_name,
+                field = %fp.field_name,
+                actor = actor_entity,
+                partitions = actor_partitions,
+                "actor entity has multiple partitions — PersonaField falling back to null"
+            );
+            return null_fallback();
+        }
+
+        // Safety: only Int64 actor PKs supported (string/UUID key stores have no reverse map)
+        if self.string_key_stores.contains_key(actor_entity) && !self.key_stores.contains_key(actor_entity) {
+            tracing::warn!(
+                entity = %ep.entity_name,
+                field = %fp.field_name,
+                actor = actor_entity,
+                "actor entity uses string/UUID keys — PersonaField falling back to null"
+            );
+            return null_fallback();
+        }
+
         let pool = match &self.actor_pool {
             Some(p) => Arc::clone(p),
             None => {
@@ -765,9 +795,7 @@ impl GenerationEngine {
                     field = %fp.field_name,
                     "no actor pool — PersonaField falling back to null"
                 );
-                return Box::new(crate::generators::constant::ConstantGenerator::new(
-                    knit_core::Value::Null,
-                ));
+                return null_fallback();
             }
         };
 
@@ -780,9 +808,7 @@ impl GenerationEngine {
                     actor = actor_entity,
                     "PK reverse map not found for actor entity — PersonaField falling back to null"
                 );
-                return Box::new(crate::generators::constant::ConstantGenerator::new(
-                    knit_core::Value::Null,
-                ));
+                return null_fallback();
             }
         };
 
@@ -815,8 +841,38 @@ impl GenerationEngine {
         trait_name: &str,
         actor_entity: &str,
         actor_field: &str,
-        _plan: &ExecutionPlan,
+        plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
+        let bh_fallback = || -> Box<dyn FieldGenerator> {
+            Box::new(crate::generators::temporal::BusinessHoursGenerator::new(
+                &std::collections::BTreeMap::new(),
+            ))
+        };
+
+        // Safety: actor entity must be single-partition
+        let actor_partitions = Self::count_entity_partitions(plan, actor_entity);
+        if actor_partitions > 1 {
+            tracing::warn!(
+                entity = %ep.entity_name,
+                field = %fp.field_name,
+                actor = actor_entity,
+                partitions = actor_partitions,
+                "actor entity has multiple partitions — ActorTemporal falling back to business hours"
+            );
+            return bh_fallback();
+        }
+
+        // Safety: only Int64 actor PKs supported
+        if self.string_key_stores.contains_key(actor_entity) && !self.key_stores.contains_key(actor_entity) {
+            tracing::warn!(
+                entity = %ep.entity_name,
+                field = %fp.field_name,
+                actor = actor_entity,
+                "actor entity uses string/UUID keys — ActorTemporal falling back to business hours"
+            );
+            return bh_fallback();
+        }
+
         let pool = match &self.actor_pool {
             Some(p) => Arc::clone(p),
             None => {
@@ -825,9 +881,7 @@ impl GenerationEngine {
                     field = %fp.field_name,
                     "no actor pool — ActorTemporal falling back to business hours"
                 );
-                return Box::new(crate::generators::temporal::BusinessHoursGenerator::new(
-                    &std::collections::BTreeMap::new(),
-                ));
+                return bh_fallback();
             }
         };
 
@@ -840,9 +894,7 @@ impl GenerationEngine {
                     actor = actor_entity,
                     "PK reverse map not found for actor entity — ActorTemporal falling back to business hours"
                 );
-                return Box::new(crate::generators::temporal::BusinessHoursGenerator::new(
-                    &std::collections::BTreeMap::new(),
-                ));
+                return bh_fallback();
             }
         };
 

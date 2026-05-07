@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use arrow::array::{Array, ArrayRef, Float64Array, Int64Array, StringArray};
+use arrow::array::{Array, ArrayRef, BooleanArray, Float64Array, Int32Array, Int64Array, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
@@ -114,6 +114,29 @@ impl FieldGenerator for PersonaFieldGenerator {
                     })
                     .collect();
                 Arc::new(Int64Array::from(values)) as ArrayRef
+            }
+            DataType::Int32 => {
+                let values: Vec<Option<i32>> = trait_values
+                    .iter()
+                    .map(|v| match v {
+                        Some(knit_core::Value::Int(i)) => Some(*i as i32),
+                        Some(knit_core::Value::Float(f)) => Some(*f as i32),
+                        _ => None,
+                    })
+                    .collect();
+                Arc::new(Int32Array::from(values)) as ArrayRef
+            }
+            DataType::Boolean => {
+                let values: Vec<Option<bool>> = trait_values
+                    .iter()
+                    .map(|v| match v {
+                        Some(knit_core::Value::Bool(b)) => Some(*b),
+                        Some(knit_core::Value::Int(i)) => Some(*i != 0),
+                        Some(knit_core::Value::Float(f)) => Some(*f != 0.0),
+                        _ => None,
+                    })
+                    .collect();
+                Arc::new(BooleanArray::from(values)) as ArrayRef
             }
             _ => {
                 // Default: stringify all values as Utf8
