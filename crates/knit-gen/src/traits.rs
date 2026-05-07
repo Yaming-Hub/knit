@@ -78,6 +78,17 @@ pub trait KeyStore: Send + Sync {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    /// Get a key by its insertion index (0-based).
+    ///
+    /// Returns `None` if the index is out of bounds. Used by actor-aware FK
+    /// generation to map a weighted actor index to the actual PK value.
+    ///
+    /// Default implementation falls back to `sample` (ignoring the index),
+    /// which is only correct for full in-memory stores that preserve insertion order.
+    fn get_by_index(&self, _index: usize) -> Option<i64> {
+        None
+    }
 }
 
 /// Thread-safe key store for string/UUID foreign-key resolution.

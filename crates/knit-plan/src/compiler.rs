@@ -309,6 +309,7 @@ fn compile_field_plans(
             null_plan,
             dependency_order,
             precision: field.precision,
+            actor_column: field.actor_column,
         });
     }
 

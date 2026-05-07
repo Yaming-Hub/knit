@@ -76,6 +76,11 @@ impl KeyStore for InMemoryKeyStore {
     fn len(&self) -> usize {
         self.keys.read().expect("keystore lock poisoned").len()
     }
+
+    fn get_by_index(&self, index: usize) -> Option<i64> {
+        let keys = self.keys.read().expect("keystore lock poisoned");
+        keys.get(index).copied()
+    }
 }
 
 #[cfg(test)]
