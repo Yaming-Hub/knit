@@ -19,6 +19,7 @@
 pub mod actor_pool;
 pub mod batch;
 pub mod context;
+pub mod graph;
 pub mod engine;
 pub mod error;
 pub mod generators;
@@ -31,6 +32,7 @@ pub mod traits;
 
 pub use actor_pool::ActorPool;
 pub use batch::assemble_batch;
+pub use graph::{generate_graph, GeneratedGraph, Edge};
 pub use context::GenContext;
 pub use engine::GenerationEngine;
 pub use error::GenError;
