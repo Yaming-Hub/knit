@@ -2,11 +2,18 @@ schema_version = "1.0"
 
 [model]
 name = "social_platform"
-description = "Social platform with behavioral personas and actor relationships"
+description = """
+Social platform demonstrating behavioral schema metadata: persona definitions,
+actor relationships, and graph topologies. Persona-driven FK generation is
+planned but not yet wired — currently FK sampling is uniform.
+"""
 seed = 20240601
+# Time horizon: ~1 month snapshot of a medium-activity community.
 
 # ── Personas ─────────────────────────────────────────────────────────
 # Define behavioral profiles that drive how actors interact.
+# Trait units: activity_rate = actions/month, post_frequency = posts/month,
+# session_length = minutes, reply_ratio = fraction of reads that get a reply.
 
 [[personas]]
 name = "power_user"
@@ -78,6 +85,7 @@ step = 1
 [[entities.fields]]
 name = "username"
 data_type = "string"
+unique = true
 [entities.fields.generator]
 type = "faker"
 method = "username"
@@ -86,6 +94,7 @@ args = []
 [[entities.fields]]
 name = "email"
 data_type = "string"
+unique = true
 [entities.fields.generator]
 type = "pattern"
 pattern = "user####@socialapp.io"
@@ -202,6 +211,7 @@ actor_column = true
 [[entities.fields]]
 name = "receiver_id"
 data_type = "int"
+actor_column = true
 
 [[entities.fields]]
 name = "message"
