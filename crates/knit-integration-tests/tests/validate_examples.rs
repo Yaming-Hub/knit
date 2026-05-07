@@ -151,8 +151,8 @@ fn all_schemas_have_relationships() {
         }
         let model = parse_toml_file(path).unwrap();
         assert!(
-            !model.relationships.is_empty(),
-            "{stem}: expected at least one relationship"
+            !model.relationships.is_empty() || !model.actor_relationships.is_empty(),
+            "{stem}: expected at least one relationship or actor_relationship"
         );
     }
 }
