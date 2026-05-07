@@ -223,6 +223,12 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
         knit_plan::GeneratorPlan::GraphTarget { graph_name, source_field, target_entity, .. } => {
             format!("graph_fk({}→{}, src={})", graph_name, target_entity, source_field)
         }
+        knit_plan::GeneratorPlan::PersonaField { trait_name, actor_entity, .. } => {
+            format!("persona({}.{})", actor_entity, trait_name)
+        }
+        knit_plan::GeneratorPlan::ActorTemporal { trait_name, actor_entity, .. } => {
+            format!("actor_temporal({}.{})", actor_entity, trait_name)
+        }
     }
 }
 

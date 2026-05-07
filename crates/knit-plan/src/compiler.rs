@@ -313,6 +313,7 @@ fn compile_field_plans(
         };
 
         // Resolve GraphTarget's from/to entities from actor_relationships
+        // and PersonaField/ActorTemporal actor_entity from FK map
         let generator_plan = match generator_plan {
             GeneratorPlan::GraphTarget { graph_name, source_field, key_store_kind, .. } => {
                 let ar = actor_relationships.iter().find(|ar| ar.name == graph_name);
@@ -325,6 +326,18 @@ fn compile_field_plans(
                     target_entity,
                     key_store_kind,
                 }
+            }
+            GeneratorPlan::PersonaField { trait_name, actor_field, .. } => {
+                let actor_entity = fk_map.get(actor_field.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
+                GeneratorPlan::PersonaField { trait_name, actor_entity, actor_field }
+            }
+            GeneratorPlan::ActorTemporal { trait_name, actor_field, .. } => {
+                let actor_entity = fk_map.get(actor_field.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
+                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field }
             }
             other => other,
         };
@@ -505,11 +518,17 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     key_store_kind: KeyStoreKind::InMemoryVec,
                 }
             }
-            GeneratorSpec::ActorTemporal { .. } => {
-                GeneratorPlan::Temporal {
-                    kind: TemporalKind::BusinessHours,
-                    params: BTreeMap::new(),
-                    base_field: None,
+            GeneratorSpec::ActorTemporal { trait_name } => {
+                // Auto-detect the actor FK field from actor_column fields.
+                let actor_field = all_fields
+                    .iter()
+                    .find(|f| f.actor_column && f.name != field.name)
+                    .map(|f| f.name.clone())
+                    .unwrap_or_default();
+                GeneratorPlan::ActorTemporal {
+                    trait_name: trait_name.clone(),
+                    actor_entity: String::new(), // resolved in compile_field_plans
+                    actor_field,
                 }
             }
             GeneratorSpec::RelationshipRef { relationship, source_field } => {
@@ -534,7 +553,17 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 }
             }
             GeneratorSpec::PersonaField { trait_name } => {
-                GeneratorPlan::Constant(Value::String(format!("{{persona:{}}}", trait_name)))
+                // Auto-detect the actor FK field from actor_column fields.
+                let actor_field = all_fields
+                    .iter()
+                    .find(|f| f.actor_column && f.name != field.name)
+                    .map(|f| f.name.clone())
+                    .unwrap_or_default();
+                GeneratorPlan::PersonaField {
+                    trait_name: trait_name.clone(),
+                    actor_entity: String::new(), // resolved in compile_field_plans
+                    actor_field,
+                }
             }
         },
         None => {
@@ -734,6 +763,17 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                     .unwrap_or(0);
                 max_actor_order + 1
             }
+        }
+        // ActorTemporal/PersonaField depend on the actor FK field
+        Some(GeneratorSpec::ActorTemporal { .. }) | Some(GeneratorSpec::PersonaField { .. }) => {
+            // Depends on any actor_column field in the entity
+            let max_actor_order = all_fields
+                .iter()
+                .filter(|f| f.actor_column && f.name != field.name)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .max()
+                .unwrap_or(0);
+            max_actor_order + 1
         }
         _ => 0,
     }

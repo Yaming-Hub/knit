@@ -346,6 +346,32 @@ pub enum GeneratorPlan {
         /// Key store strategy for the target entity.
         key_store_kind: KeyStoreKind,
     },
+    /// Persona-driven field — outputs the current actor's persona trait value.
+    ///
+    /// At runtime, reads the actor FK column from `batch_columns`, maps each PK
+    /// value to an actor index via the reverse map, and returns the trait value
+    /// from the actor pool. Output type matches the field's declared data type.
+    PersonaField {
+        /// Name of the persona trait to look up (e.g. `"activity_rate"`).
+        trait_name: String,
+        /// Actor entity name to look up traits from.
+        actor_entity: String,
+        /// FK field in this entity that references the actor entity.
+        actor_field: String,
+    },
+    /// Actor-temporal generator — timestamps biased toward actor's preferred hours.
+    ///
+    /// Reads the actor FK column, looks up the actor's temporal trait (expected
+    /// to be a float representing preferred hour 0–23), and generates timestamps
+    /// with a wrapped-normal distribution centered on that hour.
+    ActorTemporal {
+        /// Name of the persona trait for temporal bias (e.g. `"peak_hours"`).
+        trait_name: String,
+        /// Actor entity name to look up traits from.
+        actor_entity: String,
+        /// FK field in this entity that references the actor entity.
+        actor_field: String,
+    },
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────

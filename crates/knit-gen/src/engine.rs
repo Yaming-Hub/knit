@@ -24,9 +24,11 @@ use crate::batch::assemble_batch;
 use crate::context::GenContext;
 use crate::error::GenError;
 use crate::generators::actor_fk::ActorForeignKeyGenerator;
+use crate::generators::actor_temporal::ActorTemporalGenerator;
 use crate::generators::create_generator;
 use crate::generators::fk::ForeignKeyGenerator;
 use crate::generators::graph_fk::GraphTargetFkGenerator;
+use crate::generators::persona_field::PersonaFieldGenerator;
 use crate::generators::string_fk::StringForeignKeyGenerator;
 use crate::keystore::InMemoryKeyStore;
 use crate::null_mask::apply_null_mask;
@@ -36,6 +38,28 @@ use crate::traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 /// Default number of rows per Arrow batch.
 const DEFAULT_BATCH_SIZE: usize = 8192;
+
+/// Convert a knit DataType to an Arrow DataType for output type declaration.
+fn knit_data_type_to_arrow(dt: &knit_core::DataType) -> arrow::datatypes::DataType {
+    match dt {
+        knit_core::DataType::Bool => arrow::datatypes::DataType::Boolean,
+        knit_core::DataType::Int => arrow::datatypes::DataType::Int64,
+        knit_core::DataType::Int32 => arrow::datatypes::DataType::Int32,
+        knit_core::DataType::Float => arrow::datatypes::DataType::Float64,
+        knit_core::DataType::String | knit_core::DataType::Uuid => {
+            arrow::datatypes::DataType::Utf8
+        }
+        knit_core::DataType::Date => arrow::datatypes::DataType::Date32,
+        knit_core::DataType::Datetime
+        | knit_core::DataType::DatetimeUs
+        | knit_core::DataType::Datetimetz
+        | knit_core::DataType::Time
+        | knit_core::DataType::Duration => {
+            arrow::datatypes::DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
+        }
+        _ => arrow::datatypes::DataType::Utf8,
+    }
+}
 
 /// Round float values in an Arrow array to the specified number of decimal places.
 ///
@@ -589,6 +613,24 @@ impl GenerationEngine {
                         )) as Box<dyn FieldGenerator>
                     }
                 }
+                GeneratorPlan::PersonaField {
+                    trait_name,
+                    actor_entity,
+                    actor_field,
+                } => {
+                    self.build_persona_field_generator(
+                        ep, fp, trait_name, actor_entity, actor_field, plan,
+                    )
+                }
+                GeneratorPlan::ActorTemporal {
+                    trait_name,
+                    actor_entity,
+                    actor_field,
+                } => {
+                    self.build_actor_temporal_generator(
+                        ep, fp, trait_name, actor_entity, actor_field, plan,
+                    )
+                }
                 other => create_generator(other),
             })
             .collect()
@@ -702,6 +744,123 @@ impl GenerationEngine {
             }
         }
         1 // Default: assume single partition if not found
+    }
+
+    /// Build a PersonaFieldGenerator for a field with PersonaField plan.
+    /// Falls back to a null-constant generator if prerequisites aren't met.
+    fn build_persona_field_generator(
+        &self,
+        ep: &EntityPlan,
+        fp: &knit_plan::FieldPlan,
+        trait_name: &str,
+        actor_entity: &str,
+        actor_field: &str,
+        _plan: &ExecutionPlan,
+    ) -> Box<dyn FieldGenerator> {
+        let pool = match &self.actor_pool {
+            Some(p) => Arc::clone(p),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    "no actor pool — PersonaField falling back to null"
+                );
+                return Box::new(crate::generators::constant::ConstantGenerator::new(
+                    knit_core::Value::Null,
+                ));
+            }
+        };
+
+        let pk_reverse = match self.pk_reverse_maps.get(actor_entity) {
+            Some(m) => Arc::clone(m),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    actor = actor_entity,
+                    "PK reverse map not found for actor entity — PersonaField falling back to null"
+                );
+                return Box::new(crate::generators::constant::ConstantGenerator::new(
+                    knit_core::Value::Null,
+                ));
+            }
+        };
+
+        let output_type = knit_data_type_to_arrow(&fp.data_type);
+
+        tracing::debug!(
+            entity = %ep.entity_name,
+            field = %fp.field_name,
+            trait_name = trait_name,
+            actor = actor_entity,
+            "using persona field generator"
+        );
+
+        Box::new(PersonaFieldGenerator::new(
+            pool,
+            pk_reverse,
+            trait_name.to_string(),
+            actor_entity.to_string(),
+            actor_field.to_string(),
+            output_type,
+        ))
+    }
+
+    /// Build an ActorTemporalGenerator for a field with ActorTemporal plan.
+    /// Falls back to a BusinessHoursGenerator if prerequisites aren't met.
+    fn build_actor_temporal_generator(
+        &self,
+        ep: &EntityPlan,
+        fp: &knit_plan::FieldPlan,
+        trait_name: &str,
+        actor_entity: &str,
+        actor_field: &str,
+        _plan: &ExecutionPlan,
+    ) -> Box<dyn FieldGenerator> {
+        let pool = match &self.actor_pool {
+            Some(p) => Arc::clone(p),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    "no actor pool — ActorTemporal falling back to business hours"
+                );
+                return Box::new(crate::generators::temporal::BusinessHoursGenerator::new(
+                    &std::collections::BTreeMap::new(),
+                ));
+            }
+        };
+
+        let pk_reverse = match self.pk_reverse_maps.get(actor_entity) {
+            Some(m) => Arc::clone(m),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    actor = actor_entity,
+                    "PK reverse map not found for actor entity — ActorTemporal falling back to business hours"
+                );
+                return Box::new(crate::generators::temporal::BusinessHoursGenerator::new(
+                    &std::collections::BTreeMap::new(),
+                ));
+            }
+        };
+
+        tracing::debug!(
+            entity = %ep.entity_name,
+            field = %fp.field_name,
+            trait_name = trait_name,
+            actor = actor_entity,
+            "using actor-temporal generator"
+        );
+
+        Box::new(ActorTemporalGenerator::new(
+            pool,
+            pk_reverse,
+            trait_name.to_string(),
+            actor_entity.to_string(),
+            actor_field.to_string(),
+        ))
     }
 
     /// Find the index of the primary-key field.
