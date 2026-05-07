@@ -41,7 +41,7 @@ impl TemporalStore {
     /// belonging to `entity_name`. Values are stored in insertion order (matching
     /// the key store's actor index ordering).
     ///
-    /// The column must be a Timestamp(Millisecond, _) type.
+    /// The column must be a Timestamp type (any resolution) or Date32/Int64.
     pub fn capture_from_batches(
         &mut self,
         entity_name: &str,
@@ -57,7 +57,11 @@ impl TemporalStore {
             }
             let col_idx = match batch.schema().index_of(datetime_field) {
                 Ok(idx) => idx,
-                Err(_) => continue,
+                Err(_) => {
+                    // Column missing in this batch — pad with None to maintain alignment
+                    values.extend(std::iter::repeat_n(None, batch.num_rows()));
+                    continue;
+                }
             };
             let col = batch.column(col_idx);
 
@@ -71,6 +75,51 @@ impl TemporalStore {
                         values.push(None);
                     } else {
                         values.push(Some(ts_arr.value(i)));
+                    }
+                }
+                continue;
+            }
+
+            // Handle Timestamp(Microsecond, _) columns
+            if let Some(ts_arr) = col
+                .as_any()
+                .downcast_ref::<arrow::array::TimestampMicrosecondArray>()
+            {
+                for i in 0..ts_arr.len() {
+                    if ts_arr.is_null(i) {
+                        values.push(None);
+                    } else {
+                        values.push(Some(ts_arr.value(i).div_euclid(1000)));
+                    }
+                }
+                continue;
+            }
+
+            // Handle Timestamp(Nanosecond, _) columns
+            if let Some(ts_arr) = col
+                .as_any()
+                .downcast_ref::<arrow::array::TimestampNanosecondArray>()
+            {
+                for i in 0..ts_arr.len() {
+                    if ts_arr.is_null(i) {
+                        values.push(None);
+                    } else {
+                        values.push(Some(ts_arr.value(i).div_euclid(1_000_000)));
+                    }
+                }
+                continue;
+            }
+
+            // Handle Timestamp(Second, _) columns
+            if let Some(ts_arr) = col
+                .as_any()
+                .downcast_ref::<arrow::array::TimestampSecondArray>()
+            {
+                for i in 0..ts_arr.len() {
+                    if ts_arr.is_null(i) {
+                        values.push(None);
+                    } else {
+                        values.push(Some(ts_arr.value(i) * 1000));
                     }
                 }
                 continue;
