@@ -126,7 +126,10 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     // 7. Build RNG tree.
     let rng_tree = rng_tree::build_rng_tree(model.seed, &rng_entities);
 
-    // 8. Build metadata.
+    // 8. Build actor pool plan.
+    let actor_pool = compile_actor_pool(model, &row_counts);
+
+    // 9. Build metadata.
     let deferred_ref_count = assignment.deferred_refs.len();
     let metadata = PlanMetadata {
         schema_name: model.name.clone(),
@@ -146,8 +149,114 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
         phases,
         rng_tree,
         index_strategy,
+        actor_pool,
         metadata,
     })
+}
+
+/// Compile the actor pool plan from personas and actor relationships.
+fn compile_actor_pool(model: &DataModel, row_counts: &BTreeMap<String, u64>) -> ActorPoolPlan {
+    let mut pools = Vec::new();
+    let mut graph_plans = Vec::new();
+
+    // Build persona lookup: group personas by the entity they belong to.
+    // Since persona_distribution on an entity references "personas" globally,
+    // we match personas to entities by name prefix (entity_personaName pattern
+    // from schema emission) or assign all personas to actor entities.
+    for entity in &model.entities {
+        if !entity.actor {
+            continue;
+        }
+        if entity.persona_distribution.is_none() && model.personas.is_empty() {
+            continue;
+        }
+
+        let actor_count = row_counts
+            .get(&entity.name)
+            .copied()
+            .unwrap_or(resolve_count_estimate(&entity.count));
+
+        // Find personas belonging to this entity.
+        // Convention: personas are prefixed with "{entity_name}_" from learn,
+        // or all personas apply to the entity if not prefixed.
+        let entity_prefix = format!("{}_", entity.name);
+        let mut persona_weights: Vec<PersonaWeight> = model
+            .personas
+            .iter()
+            .filter(|p| p.name.starts_with(&entity_prefix) || !has_entity_prefix(&p.name, &model.entities))
+            .map(|p| PersonaWeight {
+                name: p.name.clone(),
+                weight: p.weight,
+                traits: p.traits.clone(),
+            })
+            .collect();
+
+        // Normalize weights if they don't sum to 1.0
+        let total_weight: f64 = persona_weights.iter().map(|pw| pw.weight).sum();
+        if total_weight <= 0.0 {
+            // All-zero or negative weights — skip this entity
+            continue;
+        }
+        if (total_weight - 1.0).abs() > 1e-6 {
+            for pw in &mut persona_weights {
+                pw.weight /= total_weight;
+            }
+        }
+
+        if !persona_weights.is_empty() {
+            pools.push(ActorEntityPool {
+                entity_name: entity.name.clone(),
+                actor_count,
+                persona_weights,
+            });
+        }
+    }
+
+    // Compile graph plans from actor relationships
+    for rel in &model.actor_relationships {
+        let community_count = rel.community_count.as_ref().map(|cs| resolve_count_estimate(cs));
+
+        graph_plans.push(GraphPlan {
+            name: rel.name.clone(),
+            from_entity: rel.from_entity.clone(),
+            to_entity: rel.to_entity.clone(),
+            graph_type: rel.graph_type.clone(),
+            params: rel.params.clone(),
+            community_count,
+            hierarchy_depth: rel.hierarchy_depth,
+        });
+    }
+
+    ActorPoolPlan { pools, graph_plans }
+}
+
+/// Check if a persona name is prefixed with any entity name.
+fn has_entity_prefix(persona_name: &str, entities: &[Entity]) -> bool {
+    entities.iter().any(|e| {
+        let prefix = format!("{}_", e.name);
+        persona_name.starts_with(&prefix)
+    })
+}
+
+/// Resolve a CountSpec to a deterministic estimate (midpoint for ranges,
+/// mean for distributions).
+fn resolve_count_estimate(count: &knit_core::CountSpec) -> u64 {
+    match count {
+        knit_core::CountSpec::Fixed(n) => *n,
+        knit_core::CountSpec::Range { min, max } => (min + max) / 2,
+        knit_core::CountSpec::Distribution(spec) => {
+            // Try common distribution parameters for mean estimate
+            if let Some(&mean) = spec.params.get("mean").or_else(|| spec.params.get("mu")) {
+                mean.max(1.0) as u64
+            } else if let Some(&lambda) = spec.params.get("lambda") {
+                lambda.max(1.0) as u64
+            } else if let (Some(&min), Some(&max)) = (spec.params.get("min"), spec.params.get("max")) {
+                ((min + max) / 2.0).max(1.0) as u64
+            } else {
+                1000
+            }
+        }
+    }
 }
 
 /// Compile field plans for an entity.
@@ -1718,5 +1827,96 @@ mod tests {
     fn default_generator_time_produces_null() {
         let plan = default_generator_for_type(&DataType::Time);
         assert!(matches!(plan, GeneratorPlan::Constant(Value::Null)));
+    }
+
+    // ── Actor pool compilation tests ─────────────────────────────────
+
+    #[test]
+    fn actor_pool_populated_from_personas() {
+        let mut entity = simple_entity("users", 100);
+        entity.actor = true;
+        entity.persona_distribution = Some("personas".into());
+        let mut model = simple_model("test", vec![entity], vec![]);
+        model.personas.push(Persona {
+            name: "users_power_user".to_string(),
+            weight: 0.3,
+            traits: BTreeMap::from([("activity_rate".to_string(), Value::Float(25.0))]),
+        });
+        model.personas.push(Persona {
+            name: "users_casual".to_string(),
+            weight: 0.7,
+            traits: BTreeMap::new(),
+        });
+
+        let plan = compile(&model).unwrap();
+
+        assert_eq!(plan.actor_pool.pools.len(), 1);
+        let pool = &plan.actor_pool.pools[0];
+        assert_eq!(pool.entity_name, "users");
+        assert_eq!(pool.actor_count, 100);
+        assert_eq!(pool.persona_weights.len(), 2);
+        assert_eq!(pool.persona_weights[0].name, "users_power_user");
+        assert_eq!(pool.persona_weights[0].weight, 0.3);
+        assert_eq!(pool.persona_weights[1].name, "users_casual");
+        assert_eq!(pool.persona_weights[1].weight, 0.7);
+    }
+
+    #[test]
+    fn actor_pool_graph_plans_from_relationships() {
+        let mut entity = simple_entity("users", 50);
+        entity.actor = true;
+        let mut model = simple_model("test", vec![entity], vec![]);
+        model.actor_relationships.push(ActorRelationship {
+            name: "email_network".to_string(),
+            from_entity: "users".to_string(),
+            to_entity: "users".to_string(),
+            graph_type: GraphType::SmallWorld,
+            params: BTreeMap::from([("avg_degree".to_string(), 8.0)]),
+            community_count: Some(CountSpec::Fixed(3)),
+            hierarchy_depth: None,
+        });
+
+        let plan = compile(&model).unwrap();
+
+        assert_eq!(plan.actor_pool.graph_plans.len(), 1);
+        let gp = &plan.actor_pool.graph_plans[0];
+        assert_eq!(gp.name, "email_network");
+        assert_eq!(gp.graph_type, GraphType::SmallWorld);
+        assert_eq!(gp.params.get("avg_degree"), Some(&8.0));
+        assert_eq!(gp.community_count, Some(3));
+    }
+
+    #[test]
+    fn actor_pool_empty_when_no_actors() {
+        let model = simple_model("test", vec![simple_entity("items", 100)], vec![]);
+        let plan = compile(&model).unwrap();
+        assert!(plan.actor_pool.pools.is_empty());
+        assert!(plan.actor_pool.graph_plans.is_empty());
+    }
+
+    #[test]
+    fn actor_pool_normalizes_weights() {
+        let mut entity = simple_entity("users", 200);
+        entity.actor = true;
+        entity.persona_distribution = Some("personas".into());
+        let mut model = simple_model("test", vec![entity], vec![]);
+        // Weights don't sum to 1.0 — should be normalized
+        model.personas.push(Persona {
+            name: "users_a".to_string(),
+            weight: 2.0,
+            traits: BTreeMap::new(),
+        });
+        model.personas.push(Persona {
+            name: "users_b".to_string(),
+            weight: 3.0,
+            traits: BTreeMap::new(),
+        });
+
+        let plan = compile(&model).unwrap();
+        let pool = &plan.actor_pool.pools[0];
+        let total: f64 = pool.persona_weights.iter().map(|pw| pw.weight).sum();
+        assert!((total - 1.0).abs() < 1e-10);
+        assert!((pool.persona_weights[0].weight - 0.4).abs() < 1e-10);
+        assert!((pool.persona_weights[1].weight - 0.6).abs() < 1e-10);
     }
 }

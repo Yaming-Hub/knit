@@ -31,6 +31,11 @@ pub struct ExecutionPlan {
     pub rng_tree: RngTree,
     /// Per-entity key store sizing decisions (in-memory vs mmap vs sampled).
     pub index_strategy: IndexStrategy,
+    /// Actor pool plan: persona assignments and relationship graphs.
+    /// Generated before entity phases; the engine uses this to drive
+    /// persona-aware generation for behavioral entities.
+    #[serde(default)]
+    pub actor_pool: ActorPoolPlan,
     /// Informational metadata for inspection and debugging.
     pub metadata: PlanMetadata,
 }
@@ -75,6 +80,23 @@ impl fmt::Display for ExecutionPlan {
                     f,
                     "    [deferred] {}.{} -> {}.{}",
                     dr.from_entity, dr.from_field, dr.to_entity, dr.to_field,
+                )?;
+            }
+        }
+        if !self.actor_pool.pools.is_empty() {
+            writeln!(
+                f,
+                "  Actor pool: {} entities, {} graph plans",
+                self.actor_pool.pools.len(),
+                self.actor_pool.graph_plans.len(),
+            )?;
+            for pool in &self.actor_pool.pools {
+                writeln!(
+                    f,
+                    "    {} ({} actors, {} personas)",
+                    pool.entity_name,
+                    pool.actor_count,
+                    pool.persona_weights.len(),
                 )?;
             }
         }
@@ -476,4 +498,63 @@ pub struct PlanMetadata {
     pub persona_count: usize,
     /// Number of actor relationship definitions in the model.
     pub actor_relationship_count: usize,
+}
+
+// ── Actor Pool Plan ─────────────────────────────────────────────────
+
+/// Plan for generating the actor pool before behavioral entity generation.
+///
+/// The actor pool assigns each actor a persona and pre-samples individual
+/// trait parameters from the persona's distribution. This allows downstream
+/// behavioral generators to look up per-actor traits at generation time.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ActorPoolPlan {
+    /// Per-entity actor pool specifications (one per actor entity).
+    pub pools: Vec<ActorEntityPool>,
+    /// Graph plans for actor-to-actor relationships.
+    pub graph_plans: Vec<GraphPlan>,
+}
+
+/// Actor pool specification for a single actor entity.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActorEntityPool {
+    /// The actor entity name (e.g. "users").
+    pub entity_name: String,
+    /// Number of actors to generate in the pool.
+    pub actor_count: u64,
+    /// Persona assignments: persona name → weight (fraction of actors).
+    pub persona_weights: Vec<PersonaWeight>,
+}
+
+/// A single persona assignment entry with traits.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersonaWeight {
+    /// Persona name.
+    pub name: String,
+    /// Fraction of actors assigned this persona (0.0–1.0).
+    pub weight: f64,
+    /// Trait definitions for this persona. Keys are trait names,
+    /// values are the specification (scalar, distribution, or array).
+    pub traits: BTreeMap<String, Value>,
+}
+
+/// Plan for generating an actor-to-actor relationship graph.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphPlan {
+    /// Relationship name.
+    pub name: String,
+    /// Source actor entity.
+    pub from_entity: String,
+    /// Target actor entity.
+    pub to_entity: String,
+    /// Graph generation algorithm.
+    pub graph_type: knit_core::GraphType,
+    /// Algorithm parameters (avg_degree, reciprocity, clustering, etc.).
+    pub params: BTreeMap<String, f64>,
+    /// Number of communities to generate (if applicable).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub community_count: Option<u64>,
+    /// Maximum hierarchy depth (for hierarchical graphs).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hierarchy_depth: Option<u32>,
 }
