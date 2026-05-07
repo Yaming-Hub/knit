@@ -16,6 +16,7 @@
 
 #![warn(missing_docs)]
 
+pub mod actor_pool;
 pub mod batch;
 pub mod context;
 pub mod engine;
@@ -28,6 +29,7 @@ pub mod sampled_key_store;
 pub mod string_keystore;
 pub mod traits;
 
+pub use actor_pool::ActorPool;
 pub use batch::assemble_batch;
 pub use context::GenContext;
 pub use engine::GenerationEngine;
