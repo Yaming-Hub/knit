@@ -619,6 +619,19 @@ impl GenerationEngine {
             return None;
         }
 
+        // Safety check: target entity must also be single-partition
+        let target_partitions = Self::count_entity_partitions(plan, target_entity);
+        if target_partitions > 1 {
+            tracing::warn!(
+                entity = %ep.entity_name,
+                field = %fp.field_name,
+                target = target_entity,
+                partitions = target_partitions,
+                "graph target entity has multiple partitions — falling back to uniform FK"
+            );
+            return None;
+        }
+
         // Need adjacency list for the graph
         let adjacency = match self.graph_adjacency.get(graph_name) {
             Some(adj) => Arc::clone(adj),

@@ -275,23 +275,35 @@ fn compile_field_plans(
     let mut plans: Vec<FieldPlan> = Vec::new();
 
     for field in &entity.fields {
+        // Check if field has an explicit RelationshipRef generator — if so, it takes
+        // precedence over the inferred FK path (graph-aware sampling vs uniform FK).
+        let has_relationship_ref = matches!(
+            &field.generator,
+            Some(GeneratorSpec::RelationshipRef { .. })
+        );
+
         // Check if this field is a foreign key.
-        // Use FK generator for Int/Int32/Uuid/String typed fields.
-        let generator_plan = if let Some(&target_entity) = fk_map.get(field.name.as_str()) {
-            let is_fk_compatible = matches!(
-                field.data_type,
-                knit_core::DataType::Int
-                    | knit_core::DataType::Int32
-                    | knit_core::DataType::Uuid
-                    | knit_core::DataType::String
-            );
-            if is_fk_compatible {
-                let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
-                let key_store_kind = select_key_store_kind(target_rows);
-                GeneratorPlan::ForeignKey {
-                    target_entity: target_entity.to_string(),
-                    target_field: "id".to_string(),
-                    key_store_kind,
+        // Use FK generator for Int/Int32/Uuid/String typed fields,
+        // unless the field explicitly uses relationship_ref.
+        let generator_plan = if !has_relationship_ref {
+            if let Some(&target_entity) = fk_map.get(field.name.as_str()) {
+                let is_fk_compatible = matches!(
+                    field.data_type,
+                    knit_core::DataType::Int
+                        | knit_core::DataType::Int32
+                        | knit_core::DataType::Uuid
+                        | knit_core::DataType::String
+                );
+                if is_fk_compatible {
+                    let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
+                    let key_store_kind = select_key_store_kind(target_rows);
+                    GeneratorPlan::ForeignKey {
+                        target_entity: target_entity.to_string(),
+                        target_field: "id".to_string(),
+                        key_store_kind,
+                    }
+                } else {
+                    compile_generator(field, &entity.fields)
                 }
             } else {
                 compile_generator(field, &entity.fields)
