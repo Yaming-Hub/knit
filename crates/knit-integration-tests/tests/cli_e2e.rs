@@ -2344,3 +2344,184 @@ fn inspect_state_file() {
         .failure()
         .stderr(predicate::str::contains("not found"));
 }
+
+#[test]
+fn learn_actors_round_trip() {
+    // Full behavioral round-trip: create CSV with actor patterns -> learn --actors
+    // -> verify schema has actor columns -> generate from schema
+    let dir = TempDir::new().unwrap();
+
+    let csv_path = dir.path().join("messages.csv");
+    let mut csv_content = String::from("message_id,sender_id,recipient_id,body,priority\n");
+    for i in 1..=200 {
+        let sender = (i % 10) + 1;
+        let recipient = ((i + 5) % 10) + 1;
+        let body = format!("Message body {i}");
+        let priority = match i % 4 {
+            0 => "high",
+            1 => "medium",
+            2 => "low",
+            _ => "medium",
+        };
+        csv_content.push_str(&format!("{i},{sender},{recipient},{body},{priority}\n"));
+    }
+    fs::write(&csv_path, &csv_content).unwrap();
+
+    let schema_path = dir.path().join("learned.weave.toml");
+    knit()
+        .args([
+            "learn",
+            csv_path.to_str().unwrap(),
+            "-o",
+            schema_path.to_str().unwrap(),
+            "--actors",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    assert!(schema_path.exists(), "schema should be produced");
+
+    let schema_text = fs::read_to_string(&schema_path).unwrap();
+    assert!(
+        schema_text.contains("actor_column = true"),
+        "schema should mark actor columns.\nSchema:\n{schema_text}"
+    );
+    // Verify the correct columns are marked as actors (sender_id and/or recipient_id)
+    for actor_field in &["sender_id", "recipient_id"] {
+        let field_block = format!("name = \"{actor_field}\"");
+        let pos = schema_text.find(&field_block);
+        assert!(pos.is_some(), "schema should contain field {actor_field}.\nSchema:\n{schema_text}");
+        // Check that actor_column = true appears in the same field block (within next ~200 chars)
+        let after = &schema_text[pos.unwrap()..];
+        let block_end = after.find("\n[[").unwrap_or(after.len());
+        let block = &after[..block_end];
+        assert!(
+            block.contains("actor_column = true"),
+            "field {actor_field} should have actor_column = true.\nBlock:\n{block}"
+        );
+    }
+}
+
+#[test]
+fn learn_actor_column_explicit_round_trip(){
+    let dir = TempDir::new().unwrap();
+
+    let csv_path = dir.path().join("events.csv");
+    let mut csv_content = String::from("event_id,user_id,action,value\n");
+    for i in 1..=100 {
+        let user = (i % 8) + 1;
+        let action = if i % 3 == 0 { "purchase" } else if i % 2 == 0 { "click" } else { "view" };
+        csv_content.push_str(&format!("{i},{user},{action},{}\n", i * 10));
+    }
+    fs::write(&csv_path, &csv_content).unwrap();
+
+    let schema_path = dir.path().join("schema.weave.toml");
+    knit()
+        .args([
+            "learn",
+            csv_path.to_str().unwrap(),
+            "-o",
+            schema_path.to_str().unwrap(),
+            "--actor-column",
+            "user_id",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let schema_text = fs::read_to_string(&schema_path).unwrap();
+    // Verify user_id specifically is marked as actor
+    let field_block = "name = \"user_id\"";
+    let pos = schema_text.find(field_block);
+    assert!(pos.is_some(), "schema should contain field user_id.\nSchema:\n{schema_text}");
+    let after = &schema_text[pos.unwrap()..];
+    let block_end = after.find("\n[[").unwrap_or(after.len());
+    let block = &after[..block_end];
+    assert!(
+        block.contains("actor_column = true"),
+        "user_id field should have actor_column = true.\nBlock:\n{block}"
+    );
+
+    let gen_dir = TempDir::new().unwrap();
+    knit()
+        .args([
+            "generate",
+            schema_path.to_str().unwrap(),
+            "-o",
+            gen_dir.path().to_str().unwrap(),
+            "--format",
+            "csv",
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let gen_csv = gen_dir.path().join("events.csv");
+    assert!(gen_csv.exists(), "should generate events.csv");
+    let content = fs::read_to_string(&gen_csv).unwrap();
+    let rows = content.lines().count() - 1;
+    assert!(rows > 0, "should have generated rows, got {rows}");
+}
+
+#[test]
+fn learn_actors_unknown_column_fails() {
+    let dir = TempDir::new().unwrap();
+    let csv_path = dir.path().join("data.csv");
+    fs::write(&csv_path, "id,name\n1,Alice\n2,Bob\n").unwrap();
+
+    knit()
+        .args([
+            "learn",
+            csv_path.to_str().unwrap(),
+            "-o",
+            dir.path().join("out.toml").to_str().unwrap(),
+            "--actor-column",
+            "nonexistent_column",
+            "--quiet",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("unknown --actor-column"));
+}
+
+#[test]
+fn learn_actors_json_summary() {
+    let dir = TempDir::new().unwrap();
+    let csv_path = dir.path().join("messages.csv");
+    let mut csv_content = String::from("message_id,sender_id,recipient_id,body\n");
+    for i in 1..=50 {
+        let sender = (i % 6) + 1;
+        let recipient = ((i + 3) % 6) + 1;
+        csv_content.push_str(&format!("{i},{sender},{recipient},msg{i}\n"));
+    }
+    fs::write(&csv_path, &csv_content).unwrap();
+
+    let schema_path = dir.path().join("schema.weave.toml");
+    let output = knit()
+        .args([
+            "--json",
+            "learn",
+            csv_path.to_str().unwrap(),
+            "-o",
+            schema_path.to_str().unwrap(),
+            "--actors",
+        ])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(stdout.trim())
+        .unwrap_or_else(|e| panic!("JSON output should be valid: {e}\n{stdout}"));
+
+    assert_eq!(json["event"], "complete");
+    assert!(
+        json.get("actors").is_some(),
+        "JSON summary should include actors count: {json}"
+    );
+    let actors_count = json["actors"].as_u64().unwrap_or(0);
+    assert!(
+        actors_count > 0,
+        "actors count should be positive when --actors is used: {json}"
+    );
+}
