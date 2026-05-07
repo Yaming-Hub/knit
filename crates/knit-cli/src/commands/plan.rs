@@ -1,5 +1,6 @@
 //! `knit plan` — display the execution plan without generating data.
 
+use std::collections::HashSet;
 use anyhow::{bail, Result};
 use colored::Colorize;
 
@@ -40,12 +41,42 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     }
 
     // Human-readable plan display
-    print_plan(&plan);
+    let behavioral = BehavioralSummary::from_model(&model);
+    print_plan(&plan, &behavioral);
     Ok(())
 }
 
+/// Behavioral modeling summary for plan display.
+pub(crate) struct BehavioralSummary {
+    pub actor_entities: HashSet<String>,
+    pub persona_count: usize,
+    pub actor_relationship_count: usize,
+}
+
+impl BehavioralSummary {
+    /// Build a summary from a data model.
+    pub fn from_model(model: &knit_core::DataModel) -> Self {
+        Self {
+            actor_entities: model
+                .entities
+                .iter()
+                .filter(|e| e.actor)
+                .map(|e| e.name.clone())
+                .collect(),
+            persona_count: model.personas.len(),
+            actor_relationship_count: model.actor_relationships.len(),
+        }
+    }
+
+    fn has_any(&self) -> bool {
+        !self.actor_entities.is_empty()
+            || self.persona_count > 0
+            || self.actor_relationship_count > 0
+    }
+}
+
 /// Print a formatted execution plan to stdout.
-pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan) {
+pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan, behavioral: &BehavioralSummary) {
     let meta = &plan.metadata;
 
     println!("{}", "═══ Execution Plan ═══".bold());
@@ -75,16 +106,31 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan) {
         "global seed:".dimmed(),
         plan.rng_tree.global_seed,
     );
+    if behavioral.has_any() {
+        println!(
+            "  {} {} actor(s), {} persona(s), {} actor relationship(s)",
+            "behavioral:".dimmed(),
+            behavioral.actor_entities.len(),
+            behavioral.persona_count,
+            behavioral.actor_relationship_count,
+        );
+    }
     println!();
 
     // Phase breakdown
     for (i, phase) in plan.phases.iter().enumerate() {
         println!("{}", format!("── Phase {} ──", i).bold());
         for ep in &phase.entity_plans {
+            let badge = if behavioral.actor_entities.contains(&ep.entity_name) {
+                " 🎭"
+            } else {
+                ""
+            };
             println!(
-                "  {} {} ({} rows, {} partitions, {} fields, ~{})",
+                "  {} {}{} ({} rows, {} partitions, {} fields, ~{})",
                 "▸".green(),
                 ep.entity_name.yellow(),
+                badge,
                 format_count(ep.estimated_row_count),
                 ep.partitions.len(),
                 ep.field_plans.len(),

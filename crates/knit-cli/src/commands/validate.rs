@@ -201,10 +201,12 @@ fn print_schema_summary(model: &knit_core::DataModel) {
         println!("  {} {}", "desc:".dimmed(), desc);
     }
     for entity in &model.entities {
+        let badge = if entity.actor { " 🎭" } else { "" };
         println!(
-            "  {} {} ({} fields)",
+            "  {} {}{} ({} fields)",
             "entity:".dimmed(),
             entity.name.yellow(),
+            badge,
             entity.fields.len()
         );
     }
@@ -220,6 +222,20 @@ fn print_schema_summary(model: &knit_core::DataModel) {
             "  {} {}",
             "noise profiles:".dimmed(),
             model.noise_profiles.len()
+        );
+    }
+    if !model.personas.is_empty() {
+        println!(
+            "  {} {}",
+            "personas:".dimmed(),
+            model.personas.len()
+        );
+    }
+    if !model.actor_relationships.is_empty() {
+        println!(
+            "  {} {}",
+            "actor relationships:".dimmed(),
+            model.actor_relationships.len()
         );
     }
 }
