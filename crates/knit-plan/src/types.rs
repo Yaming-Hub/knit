@@ -179,6 +179,10 @@ pub struct FieldPlan {
     /// is rounded to this precision after generation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub precision: Option<u8>,
+    /// Whether this field references an actor entity and should use
+    /// persona-weighted sampling instead of uniform FK generation.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub actor_column: bool,
 }
 
 fn default_data_type() -> knit_core::DataType {

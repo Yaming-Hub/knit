@@ -19,9 +19,11 @@ use knit_plan::{
     PartitionRange,
 };
 
+use crate::actor_pool::ActorPool;
 use crate::batch::assemble_batch;
 use crate::context::GenContext;
 use crate::error::GenError;
+use crate::generators::actor_fk::ActorForeignKeyGenerator;
 use crate::generators::create_generator;
 use crate::generators::fk::ForeignKeyGenerator;
 use crate::generators::string_fk::StringForeignKeyGenerator;
@@ -123,6 +125,8 @@ pub struct GenerationEngine {
     batch_size: usize,
     /// User-supplied parameters passed to generators via GenContext.
     params: HashMap<String, String>,
+    /// Optional actor pool for persona-weighted FK generation.
+    actor_pool: Option<Arc<ActorPool>>,
 }
 
 impl GenerationEngine {
@@ -133,6 +137,7 @@ impl GenerationEngine {
             string_key_stores: HashMap::new(),
             batch_size: DEFAULT_BATCH_SIZE,
             params: HashMap::new(),
+            actor_pool: None,
         }
     }
 
@@ -143,12 +148,22 @@ impl GenerationEngine {
             string_key_stores: HashMap::new(),
             batch_size: batch_size.max(1),
             params: HashMap::new(),
+            actor_pool: None,
         }
     }
 
     /// Set user-supplied parameters that will be available to generators.
     pub fn with_params(mut self, params: HashMap<String, String>) -> Self {
         self.params = params;
+        self
+    }
+
+    /// Set the actor pool for persona-weighted FK generation.
+    ///
+    /// When set, FK fields marked `actor_column = true` targeting an entity
+    /// in this pool will use activity-weighted sampling instead of uniform.
+    pub fn with_actor_pool(mut self, pool: Arc<ActorPool>) -> Self {
+        self.actor_pool = Some(pool);
         self
     }
 
@@ -405,14 +420,14 @@ impl GenerationEngine {
     fn build_field_generators(
         &self,
         ep: &EntityPlan,
-        _plan: &ExecutionPlan,
+        plan: &ExecutionPlan,
     ) -> Vec<Box<dyn FieldGenerator>> {
         ep.field_plans
             .iter()
             .map(|fp| match &fp.generator_plan {
                 GeneratorPlan::ForeignKey {
                     target_entity,
-                    key_store_kind: _,
+                    key_store_kind,
                     ..
                 } => {
                     // Try string key store first (UUID/String FKs), then int key store.
@@ -427,6 +442,48 @@ impl GenerationEngine {
                         Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
                             as Box<dyn FieldGenerator>
                     } else if let Some(ks) = self.key_stores.get(target_entity) {
+                        // Use actor-aware FK if conditions are met:
+                        // 1. Field is actor_column
+                        // 2. Actor pool exists for the target entity
+                        // 3. Target uses InMemoryVec (not sampled subset)
+                        // 4. Target has single partition (insertion order is deterministic)
+                        if fp.actor_column {
+                            if let Some(ref pool) = self.actor_pool {
+                                if pool.has_entity(target_entity) {
+                                    let target_partitions = Self::count_entity_partitions(plan, target_entity);
+                                    let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
+
+                                    if target_partitions > 1 {
+                                        tracing::warn!(
+                                            entity = %ep.entity_name,
+                                            field = %fp.field_name,
+                                            target = %target_entity,
+                                            partitions = target_partitions,
+                                            "actor entity has multiple partitions — falling back to uniform FK"
+                                        );
+                                    } else if is_sampled {
+                                        tracing::warn!(
+                                            entity = %ep.entity_name,
+                                            field = %fp.field_name,
+                                            target = %target_entity,
+                                            "actor entity uses sampled key store — falling back to uniform FK"
+                                        );
+                                    } else {
+                                        tracing::debug!(
+                                            entity = %ep.entity_name,
+                                            field = %fp.field_name,
+                                            target = %target_entity,
+                                            "using actor-aware FK generator (persona-weighted)"
+                                        );
+                                        return Box::new(ActorForeignKeyGenerator::new(
+                                            Arc::clone(pool),
+                                            target_entity.clone(),
+                                            Arc::clone(ks),
+                                        )) as Box<dyn FieldGenerator>;
+                                    }
+                                }
+                            }
+                        }
                         Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
                     } else {
                         tracing::warn!(
@@ -443,6 +500,18 @@ impl GenerationEngine {
                 other => create_generator(other),
             })
             .collect()
+    }
+
+    /// Count the number of partitions for an entity in the plan.
+    fn count_entity_partitions(plan: &ExecutionPlan, entity_name: &str) -> usize {
+        for phase in &plan.phases {
+            for ep in &phase.entity_plans {
+                if ep.entity_name == entity_name {
+                    return ep.partitions.len();
+                }
+            }
+        }
+        1 // Default: assume single partition if not found
     }
 
     /// Find the index of the primary-key field.
@@ -695,6 +764,7 @@ mod tests {
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
             precision: None,
+            actor_column: false,
         },
                             FieldPlan {
                                 field_name: "value".into(),
@@ -703,6 +773,7 @@ mod tests {
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
             precision: None,
+            actor_column: false,
         },
                         ],
                         estimated_row_count: 100,
@@ -729,6 +800,7 @@ mod tests {
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
             precision: None,
+            actor_column: false,
         },
                             FieldPlan {
                                 field_name: "parent_id".into(),
@@ -741,6 +813,7 @@ mod tests {
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
             precision: None,
+            actor_column: false,
         },
                         ],
                         estimated_row_count: 500,
@@ -902,6 +975,7 @@ mod tests {
                             null_plan: NullPlan::Never,
                             dependency_order: 0,
             precision: None,
+            actor_column: false,
         },
                         FieldPlan {
                             field_name: "manager_id".into(),
@@ -914,6 +988,7 @@ mod tests {
                             null_plan: NullPlan::Never,
                             dependency_order: 1,
             precision: None,
+            actor_column: false,
         },
                     ],
                     estimated_row_count: 50,
@@ -1049,6 +1124,7 @@ mod tests {
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
             precision: None,
+            actor_column: false,
         }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
@@ -1132,6 +1208,7 @@ mod tests {
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
             precision: None,
+            actor_column: false,
         }],
                     estimated_row_count: 25,
                     estimated_byte_size: 200,
@@ -1251,6 +1328,7 @@ mod tests {
                         null_plan: NullPlan::Probability(0.5),
                         dependency_order: 0,
             precision: None,
+            actor_column: false,
         }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,

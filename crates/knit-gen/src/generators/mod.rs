@@ -5,6 +5,7 @@
 //! appropriate concrete type, serving as the single construction point used by
 //! the batch-generation loop.
 
+pub mod actor_fk;
 pub mod composite;
 pub mod conditional;
 pub mod constant;

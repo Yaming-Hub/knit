@@ -262,10 +262,11 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
             );
         }
 
-        // Materialize to validate behavioral pipeline end-to-end.
-        // Future PR will pass these to InteractionGenerator for behavioral records.
-        let _actor_pool = actor_pool;
+        // Materialize graphs for future InteractionGenerator use.
         let _graphs = graphs;
+
+        // Pass actor pool to engine for persona-weighted FK generation.
+        engine = engine.with_actor_pool(Arc::new(actor_pool));
     }
 
     // Track per-entity row counts for JSON progress events

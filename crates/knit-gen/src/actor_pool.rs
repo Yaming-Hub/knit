@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use knit_core::Value;
 use knit_plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
-use rand::Rng;
+use rand::{Rng, RngCore};
 use rand_chacha::ChaCha8Rng;
 use rand::SeedableRng;
 
@@ -81,7 +81,7 @@ impl ActorPool {
     /// Sample an actor index from the pool, weighted by activity rate.
     ///
     /// Returns a deterministic actor index based on the provided RNG.
-    pub fn sample_actor(&self, entity: &str, rng: &mut impl Rng) -> Option<usize> {
+    pub fn sample_actor(&self, entity: &str, rng: &mut dyn RngCore) -> Option<usize> {
         let pool = self.pools.get(entity)?;
         if pool.actor_count == 0 {
             return None;
@@ -89,11 +89,11 @@ impl ActorPool {
 
         if pool.cumulative_weights.is_empty() {
             // Uniform sampling
-            Some(rng.gen_range(0..pool.actor_count as usize))
+            Some(gen_range_usize(rng, pool.actor_count as usize))
         } else {
             // Weighted sampling via cumulative distribution
             let total = *pool.cumulative_weights.last().unwrap_or(&1.0);
-            let sample: f64 = rng.gen::<f64>() * total;
+            let sample: f64 = gen_f64(rng) * total;
             let idx = pool
                 .cumulative_weights
                 .partition_point(|&w| w <= sample)
@@ -119,6 +119,26 @@ impl ActorPool {
         let mut names: Vec<&str> = self.pools.keys().map(|s| s.as_str()).collect();
         names.sort_unstable();
         names
+    }
+}
+
+/// Generate a uniform f64 in [0, 1) from a dyn RngCore.
+fn gen_f64(rng: &mut dyn RngCore) -> f64 {
+    // Same algorithm as rand's Standard distribution for f64
+    let bits = rng.next_u64();
+    (bits >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
+}
+
+/// Generate a uniform usize in [0, n) using rejection sampling.
+fn gen_range_usize(rng: &mut dyn RngCore, n: usize) -> usize {
+    debug_assert!(n > 0);
+    let n = n as u64;
+    let threshold = u64::MAX - (u64::MAX % n);
+    loop {
+        let r = rng.next_u64();
+        if r < threshold {
+            return (r % n) as usize;
+        }
     }
 }
 
