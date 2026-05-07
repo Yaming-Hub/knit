@@ -143,9 +143,18 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         correlations.extend(corrs);
     }
 
+    let actor_count = entities.iter().filter(|e| e.actor).count();
+    let actor_col_count: usize = entities
+        .iter()
+        .flat_map(|e| e.fields.iter())
+        .filter(|f| f.actor_column)
+        .count();
+
     info!(
         entities = entities.len(),
         relationships = relationships.len(),
+        actor_entities = actor_count,
+        actor_columns = actor_col_count,
         "data model assembled"
     );
 
@@ -250,6 +259,22 @@ fn build_entity(
         })
         .collect();
 
+    // Detect actor columns by name heuristics and mark them
+    let actor_scores = detect_actor_columns(&table.columns);
+
+    // An entity is an actor if it has a PK that looks actor-like (person table)
+    let is_actor = is_actor_entity(&table.name, &actor_scores, &fields);
+
+    // Mark actor columns, but skip PKs on actor entities (PK is identity, not reference)
+    for (col_name, _score) in &actor_scores {
+        if let Some(field) = fields.iter_mut().find(|f| &f.name == col_name) {
+            let is_pk_on_actor = is_actor && field.primary_key == Some(true);
+            if !is_pk_on_actor {
+                field.actor_column = true;
+            }
+        }
+    }
+
     let entity = Entity {
         name: table.name.clone(),
         description: None,
@@ -257,11 +282,122 @@ fn build_entity(
         fields,
         constraints: Vec::new(),
         topology: None,
-    actor: false,
-    persona_distribution: None,
+        actor: is_actor,
+        persona_distribution: None,
     };
 
     (entity, rels, corrs)
+}
+
+// ── Actor column detection ──────────────────────────────────────────
+
+/// Actor-related name prefixes that suggest a human/person column.
+const ACTOR_PREFIXES: &[&str] = &[
+    "user", "person", "employee", "customer", "member", "agent",
+    "author", "owner", "sender", "receiver", "recipient", "creator",
+    "assignee", "requester", "approver", "reviewer", "manager",
+    "patient", "student", "teacher", "driver", "passenger",
+];
+
+/// Score a column name for actor likelihood using name-based heuristics.
+///
+/// Returns a score in 0.0–1.0. Based on the patterns from the design doc:
+/// - `*_id` with actor prefix → 0.95
+/// - `*_by` suffix → 0.85
+/// - `sender`, `receiver`, `from`, `to` standalone → 0.80
+/// - `*_name` with actor prefix → 0.70
+fn score_actor_column(name: &str) -> f64 {
+    let lower = name.to_lowercase();
+
+    // Pattern: {actor_prefix}_id or {actor_prefix}id
+    if lower.ends_with("_id") || lower.ends_with("id") {
+        let stem = if lower.ends_with("_id") {
+            &lower[..lower.len() - 3]
+        } else {
+            &lower[..lower.len() - 2]
+        };
+        if ACTOR_PREFIXES.iter().any(|p| stem == *p || stem.ends_with(&format!("_{}", p))) {
+            return 0.95;
+        }
+    }
+
+    // Pattern: *_by (created_by, assigned_by, approved_by)
+    if lower.ends_with("_by") {
+        return 0.85;
+    }
+
+    // Pattern: standalone actor names in messaging context
+    let standalone_actors = ["sender", "receiver", "recipient", "assignee"];
+    if standalone_actors.contains(&lower.as_str()) {
+        return 0.80;
+    }
+
+    // Pattern: {actor_prefix}_name
+    if lower.ends_with("_name") {
+        let stem = &lower[..lower.len() - 5];
+        if ACTOR_PREFIXES.iter().any(|p| stem == *p) {
+            return 0.70;
+        }
+    }
+
+    // Pattern: {actor_prefix}_email or {actor_prefix}_code
+    if lower.ends_with("_email") || lower.ends_with("_code") {
+        let suffix_len = if lower.ends_with("_email") { 6 } else { 5 };
+        let stem = &lower[..lower.len() - suffix_len];
+        if ACTOR_PREFIXES.iter().any(|p| stem == *p) {
+            return 0.70;
+        }
+    }
+
+    0.0
+}
+
+/// Detect actor columns in a table, returning columns with scores above threshold.
+///
+/// Only returns columns scoring ≥ 0.6 (the design doc threshold).
+fn detect_actor_columns(columns: &[ColumnAnalysis]) -> Vec<(String, f64)> {
+    let mut results = Vec::new();
+    for col in columns {
+        let score = score_actor_column(&col.name);
+        if score >= 0.6 {
+            debug!(column = %col.name, score, "detected actor column");
+            results.push((col.name.clone(), score));
+        }
+    }
+    results
+}
+
+/// Determine if an entity itself represents actors (a "person table").
+///
+/// An entity is considered an actor if its table name matches actor patterns
+/// OR if it has a primary key column that is actor-like.
+fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[Field]) -> bool {
+    let lower_name = table_name.to_lowercase();
+
+    // Check if the table name itself suggests actors
+    let actor_table_names = [
+        "users", "user", "employees", "employee", "customers", "customer",
+        "members", "member", "agents", "agent", "persons", "person",
+        "people", "authors", "author", "owners", "owner", "students",
+        "student", "teachers", "teacher", "drivers", "driver",
+        "passengers", "passenger", "patients", "patient",
+    ];
+    if actor_table_names.contains(&lower_name.as_str()) {
+        return true;
+    }
+
+    // Check if a PK column is actor-like (e.g., user_id as PK)
+    for (col_name, score) in actor_scores {
+        if *score >= 0.9 {
+            if let Some(field) = fields.iter().find(|f| &f.name == col_name) {
+                if field.primary_key == Some(true) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    false
 }
 
 /// Build a [`GeneratorSpec`] for a column based on inferred properties.
@@ -1709,5 +1845,127 @@ mod tests {
             }
             other => panic!("expected Relative generator, got {other:?}"),
         }
+    }
+
+    // ── Actor detection tests ───────────────────────────────────────
+
+    #[test]
+    fn score_actor_column_user_id() {
+        assert_eq!(score_actor_column("user_id"), 0.95);
+        assert_eq!(score_actor_column("customer_id"), 0.95);
+        assert_eq!(score_actor_column("employee_id"), 0.95);
+        assert_eq!(score_actor_column("User_ID"), 0.95);
+    }
+
+    #[test]
+    fn score_actor_column_by_suffix() {
+        assert_eq!(score_actor_column("created_by"), 0.85);
+        assert_eq!(score_actor_column("assigned_by"), 0.85);
+        assert_eq!(score_actor_column("approved_by"), 0.85);
+    }
+
+    #[test]
+    fn score_actor_column_standalone() {
+        assert_eq!(score_actor_column("sender"), 0.80);
+        assert_eq!(score_actor_column("receiver"), 0.80);
+        assert_eq!(score_actor_column("recipient"), 0.80);
+    }
+
+    #[test]
+    fn score_actor_column_name_pattern() {
+        assert_eq!(score_actor_column("user_name"), 0.70);
+        assert_eq!(score_actor_column("author_name"), 0.70);
+        assert_eq!(score_actor_column("user_email"), 0.70);
+    }
+
+    #[test]
+    fn score_actor_column_non_actor() {
+        assert_eq!(score_actor_column("order_id"), 0.0);
+        assert_eq!(score_actor_column("amount"), 0.0);
+        assert_eq!(score_actor_column("description"), 0.0);
+        assert_eq!(score_actor_column("transaction_id"), 0.0);
+    }
+
+    #[test]
+    fn detect_actor_columns_filters_by_threshold() {
+        let columns = vec![
+            ColumnAnalysis::new("user_id".into(), 0.0, 1.0),
+            ColumnAnalysis::new("order_id".into(), 0.0, 1.0),
+            ColumnAnalysis::new("created_by".into(), 0.0, 1.0),
+            ColumnAnalysis::new("amount".into(), 0.0, 1.0),
+        ];
+        let results = detect_actor_columns(&columns);
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].0, "user_id");
+        assert_eq!(results[1].0, "created_by");
+    }
+
+    #[test]
+    fn is_actor_entity_by_table_name() {
+        assert!(is_actor_entity("users", &[], &[]));
+        assert!(is_actor_entity("employees", &[], &[]));
+        assert!(is_actor_entity("customers", &[], &[]));
+        assert!(!is_actor_entity("orders", &[], &[]));
+        assert!(!is_actor_entity("transactions", &[], &[]));
+    }
+
+    #[test]
+    fn is_actor_entity_by_pk_column() {
+        let fields = vec![Field {
+            name: "user_id".into(),
+            description: None,
+            data_type: knit_core::DataType::Int,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: Some(true),
+            precision: None,
+            actor_column: false,
+        }];
+        let scores = vec![("user_id".to_string(), 0.95)];
+        assert!(is_actor_entity("some_table", &scores, &fields));
+    }
+
+    #[test]
+    fn build_entity_marks_actor_columns() {
+        let columns = vec![
+            {
+                let mut col = ColumnAnalysis::new("sender_id".into(), 0.0, 1.0);
+                col.is_primary_key = false;
+                col
+            },
+            ColumnAnalysis::new("subject".into(), 0.0, 1.0),
+        ];
+        let table = TableAnalysis::new("emails".into(), columns, 100);
+        let (entity, _, _) = build_entity(&table);
+        let sender = entity.fields.iter().find(|f| f.name == "sender_id").unwrap();
+        assert!(sender.actor_column, "sender_id should be marked as actor_column");
+        let subject = entity.fields.iter().find(|f| f.name == "subject").unwrap();
+        assert!(!subject.actor_column, "subject should not be actor_column");
+    }
+
+    #[test]
+    fn build_entity_marks_actor_entity() {
+        let columns = vec![{
+            let mut col = ColumnAnalysis::new("user_id".into(), 0.0, 1.0);
+            col.is_primary_key = true;
+            col
+        }];
+        let table = TableAnalysis::new("users".into(), columns, 100);
+        let (entity, _, _) = build_entity(&table);
+        assert!(entity.actor, "users entity should be marked as actor");
+        let pk = entity.fields.iter().find(|f| f.name == "user_id").unwrap();
+        assert!(!pk.actor_column, "PK on actor entity should not be marked actor_column");
+    }
+
+    #[test]
+    fn build_entity_non_actor_table() {
+        let columns = vec![{
+            let mut col = ColumnAnalysis::new("order_id".into(), 0.0, 1.0);
+            col.is_primary_key = true;
+            col
+        }];
+        let table = TableAnalysis::new("orders".into(), columns, 100);
+        let (entity, _, _) = build_entity(&table);
+        assert!(!entity.actor, "orders entity should not be marked as actor");
     }
 }
