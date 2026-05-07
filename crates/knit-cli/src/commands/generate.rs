@@ -122,7 +122,8 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
         if cli.json {
             println!("{}", serde_json::to_string_pretty(&plan)?);
         } else {
-            super::plan::print_plan(&plan);
+            let behavioral = super::plan::BehavioralSummary::from_model(&model);
+            super::plan::print_plan(&plan, &behavioral);
         }
         return Ok(());
     }
