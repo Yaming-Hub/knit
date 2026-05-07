@@ -51,10 +51,10 @@ const FIELD_TOPK_CAPACITY: usize = 50;
 pub struct ActorAccumulator {
     /// Total number of records observed for this actor.
     pub activity_count: u64,
-    /// Earliest timestamp seen (epoch seconds), or `f64::INFINITY` if none.
-    pub first_seen: f64,
-    /// Latest timestamp seen (epoch seconds), or `f64::NEG_INFINITY` if none.
-    pub last_seen: f64,
+    /// Earliest timestamp seen (epoch seconds), or `None` if no timestamps observed.
+    pub first_seen: Option<f64>,
+    /// Latest timestamp seen (epoch seconds), or `None` if no timestamps observed.
+    pub last_seen: Option<f64>,
     /// Hour-of-day activity histogram (24 slots, UTC).
     pub hourly_counts: [u64; 24],
     /// Day-of-week activity histogram (7 slots, Mon=0..Sun=6).
@@ -123,8 +123,8 @@ impl ActorAccumulator {
     pub fn new() -> Self {
         Self {
             activity_count: 0,
-            first_seen: f64::INFINITY,
-            last_seen: f64::NEG_INFINITY,
+            first_seen: None,
+            last_seen: None,
             hourly_counts: [0; 24],
             daily_counts: [0; 7],
             fields: BTreeMap::new(),
@@ -136,12 +136,14 @@ impl ActorAccumulator {
         if !epoch_secs.is_finite() {
             return;
         }
-        if epoch_secs < self.first_seen {
-            self.first_seen = epoch_secs;
-        }
-        if epoch_secs > self.last_seen {
-            self.last_seen = epoch_secs;
-        }
+        self.first_seen = Some(match self.first_seen {
+            Some(prev) if prev < epoch_secs => prev,
+            _ => epoch_secs,
+        });
+        self.last_seen = Some(match self.last_seen {
+            Some(prev) if prev > epoch_secs => prev,
+            _ => epoch_secs,
+        });
 
         // Decompose into hour-of-day and day-of-week (UTC)
         let secs = epoch_secs as i64;
@@ -178,10 +180,9 @@ impl ActorAccumulator {
 
     /// Finalize this accumulator into a profile.
     pub fn finalize(&self, actor_id: String) -> ActorProfile {
-        let active_span_days = if self.last_seen > self.first_seen {
-            (self.last_seen - self.first_seen) / 86400.0
-        } else {
-            0.0
+        let active_span_days = match (self.first_seen, self.last_seen) {
+            (Some(first), Some(last)) if last > first => (last - first) / 86400.0,
+            _ => 0.0,
         };
 
         let active_hours = normalize_histogram_24(&self.hourly_counts);
@@ -401,8 +402,40 @@ fn extract_string_values(array: &dyn Array) -> Option<StringArray> {
             let result: StringArray = strings.iter().map(|s| s.as_deref()).collect();
             Some(result)
         }
+        DataType::Dictionary(_, value_type) if is_string_dict(value_type) => {
+            // Dictionary-encoded strings (common in Parquet)
+            let strings: Vec<Option<String>> = (0..array.len())
+                .map(|i| {
+                    if array.is_null(i) {
+                        None
+                    } else {
+                    if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>() {
+                            let values = dict.values().as_any().downcast_ref::<StringArray>()?;
+                            let key = dict.keys().value(i) as usize;
+                            Some(values.value(key).to_string())
+                        } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int8Type>>() {
+                            let values = dict.values().as_any().downcast_ref::<StringArray>()?;
+                            let key = dict.keys().value(i) as usize;
+                            Some(values.value(key).to_string())
+                        } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int16Type>>() {
+                            let values = dict.values().as_any().downcast_ref::<StringArray>()?;
+                            let key = dict.keys().value(i) as usize;
+                            Some(values.value(key).to_string())
+                        } else {
+                            None
+                        }
+                    }
+                })
+                .collect();
+            let result: StringArray = strings.iter().map(|s| s.as_deref()).collect();
+            Some(result)
+        }
         _ => None,
     }
+}
+
+fn is_string_dict(value_type: &DataType) -> bool {
+    matches!(value_type, DataType::Utf8 | DataType::LargeUtf8)
 }
 
 fn format_int_value(array: &dyn Array, idx: usize) -> String {
@@ -498,6 +531,15 @@ fn observe_field_value(
         DataType::Float64 => {
             if let Some(arr) = array.as_any().downcast_ref::<Float64Array>() {
                 acc.observe_numeric(field_name, arr.value(row));
+            }
+        }
+        DataType::Dictionary(_, value_type) if is_string_dict(value_type) => {
+            // Dictionary-encoded categorical strings
+            if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>() {
+                if let Some(values) = dict.values().as_any().downcast_ref::<StringArray>() {
+                    let key = dict.keys().value(row) as usize;
+                    acc.observe_categorical(field_name, values.value(key));
+                }
             }
         }
         _ => {} // skip unsupported types
@@ -793,5 +835,56 @@ mod tests {
         let alice = profiles.iter().find(|p| p.actor_id == "alice").unwrap();
         assert_eq!(alice.activity_count, 2);
         assert!(alice.active_span_days > 0.0);
+    }
+
+    #[test]
+    fn accumulator_serialization_roundtrip() {
+        // Verify JSON serialization works (no non-finite float issues)
+        let mut acc = ActorAccumulator::new();
+        acc.activity_count = 5;
+        // No timestamps observed — first_seen/last_seen are None
+        acc.observe_categorical("status", "active");
+
+        let json = serde_json::to_string(&acc).unwrap();
+        let restored: ActorAccumulator = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.activity_count, 5);
+        assert!(restored.first_seen.is_none());
+        assert!(restored.last_seen.is_none());
+
+        // With timestamps
+        acc.observe_timestamp(MON_MIDNIGHT as f64);
+        let json2 = serde_json::to_string(&acc).unwrap();
+        let restored2: ActorAccumulator = serde_json::from_str(&json2).unwrap();
+        assert_eq!(restored2.first_seen, Some(MON_MIDNIGHT as f64));
+    }
+
+    #[test]
+    fn profiler_dictionary_encoded_actor_column() {
+        use arrow::array::DictionaryArray;
+        use arrow::datatypes::Int32Type;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new(
+                "user_id",
+                DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8)),
+                false,
+            ),
+            Field::new("value", DataType::Float64, false),
+        ]));
+
+        // Create dictionary array: keys [0, 1, 0] → values ["alice", "bob"]
+        let keys = Int32Array::from(vec![0, 1, 0]);
+        let values = StringArray::from(vec!["alice", "bob"]);
+        let dict = DictionaryArray::<Int32Type>::try_new(keys, Arc::new(values)).unwrap();
+        let val_arr = Arc::new(Float64Array::from(vec![10.0, 20.0, 30.0]));
+        let batch = RecordBatch::try_new(schema, vec![Arc::new(dict), val_arr]).unwrap();
+
+        let mut profiler = ActorProfiler::new("user_id".into(), None);
+        profiler.observe_batch(&batch, &["value"]);
+
+        assert_eq!(profiler.actor_count(), 2);
+        let profiles = profiler.finalize();
+        let alice = profiles.iter().find(|p| p.actor_id == "alice").unwrap();
+        assert_eq!(alice.activity_count, 2);
     }
 }
