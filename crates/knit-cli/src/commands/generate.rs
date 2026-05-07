@@ -950,6 +950,10 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         knit_plan::GeneratorPlan::Conditional { default, .. } => infer_arrow_type(default),
         knit_plan::GeneratorPlan::Dictionary { .. } => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::GraphTarget { .. } => ArrowDataType::Int64,
+        knit_plan::GeneratorPlan::PersonaField { .. } => ArrowDataType::Float64,
+        knit_plan::GeneratorPlan::ActorTemporal { .. } => {
+            ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
+        }
     }
 }
 

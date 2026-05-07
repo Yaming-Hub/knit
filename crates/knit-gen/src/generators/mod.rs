@@ -6,6 +6,7 @@
 //! the batch-generation loop.
 
 pub mod actor_fk;
+pub mod actor_temporal;
 pub mod composite;
 pub mod conditional;
 pub mod constant;
@@ -18,6 +19,7 @@ pub mod fk;
 pub mod graph_fk;
 pub mod one_of;
 pub mod pattern;
+pub mod persona_field;
 pub mod sequence;
 pub mod string_fk;
 pub mod temporal;
@@ -145,6 +147,16 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         // key stores). If nested, fall back to null.
         GeneratorPlan::GraphTarget { .. } => {
             tracing::warn!("GraphTarget inside nested generator: no graph/key-store available, emitting nulls");
+            Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+        }
+        // PersonaField/ActorTemporal are created by the engine (which has the
+        // actor pool + PK reverse maps). If nested, fall back to null.
+        GeneratorPlan::PersonaField { .. } => {
+            tracing::warn!("PersonaField inside nested generator: no actor pool available, emitting nulls");
+            Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+        }
+        GeneratorPlan::ActorTemporal { .. } => {
+            tracing::warn!("ActorTemporal inside nested generator: no actor pool available, emitting nulls");
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
     }
