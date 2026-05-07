@@ -4,6 +4,9 @@
 //! the temporal trait (expected to be a float 0–23 representing preferred hour),
 //! and generates a timestamp with a wrapped-normal distribution centered on that
 //! hour.
+//!
+//! When burst mode is enabled, events cluster into sessions with short intra-burst
+//! gaps separated by longer idle periods, creating realistic online/offline patterns.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -11,7 +14,7 @@ use std::sync::Arc;
 use arrow::array::{Array, ArrayRef, Int64Array, TimestampMillisecondArray};
 use arrow::datatypes::{DataType, TimeUnit};
 use rand::RngCore;
-use rand_distr::{Distribution, Normal};
+use rand_distr::{Distribution, Exp, Normal, Poisson};
 
 use crate::actor_pool::ActorPool;
 use crate::context::GenContext;
@@ -47,6 +50,9 @@ pub struct CausalTimes {
 ///
 /// When `causal_times` is set, generated timestamps are also constrained to be
 /// **after** the referenced entity's timestamp (cross-entity causal ordering).
+///
+/// When `burst` is set, events are clustered into sessions: short gaps within
+/// a burst, longer idle periods between bursts.
 pub struct ActorTemporalGenerator {
     /// Actor pool to look up traits.
     actor_pool: Arc<ActorPool>,
@@ -64,6 +70,8 @@ pub struct ActorTemporalGenerator {
     /// Cross-entity causal ordering constraint.
     /// When set, generated timestamps are >= the referenced entity's timestamp.
     causal_times: Option<Arc<CausalTimes>>,
+    /// Burst/session configuration.
+    burst: Option<knit_plan::BurstPlan>,
 }
 
 impl ActorTemporalGenerator {
@@ -74,6 +82,8 @@ impl ActorTemporalGenerator {
     ///
     /// `causal_times`: optional cross-entity constraint (PK→timestamp map + FK field name).
     /// When provided, timestamps will be >= the referenced entity's timestamp.
+    ///
+    /// `burst`: optional burst/session configuration for clustered event generation.
     pub fn new(
         actor_pool: Arc<ActorPool>,
         pk_reverse_map: Arc<HashMap<i64, usize>>,
@@ -82,6 +92,7 @@ impl ActorTemporalGenerator {
         actor_field: String,
         creation_times: Option<Arc<Vec<Option<i64>>>>,
         causal_times: Option<Arc<CausalTimes>>,
+        burst: Option<knit_plan::BurstPlan>,
     ) -> Self {
         Self {
             actor_pool,
@@ -91,6 +102,7 @@ impl ActorTemporalGenerator {
             actor_field,
             creation_times,
             causal_times,
+            burst,
         }
     }
 }
@@ -141,75 +153,57 @@ impl FieldGenerator for ActorTemporalGenerator {
             vec![None; count]
         };
 
+        let values = if self.burst.is_some() {
+            self.generate_burst(rng, count, &actor_pks, &causal_fk_pks)
+        } else {
+            self.generate_uniform(rng, count, &actor_pks, &causal_fk_pks)
+        };
+
+        Arc::new(TimestampMillisecondArray::from(values)) as ArrayRef
+    }
+
+    fn output_type(&self) -> DataType {
+        DataType::Timestamp(TimeUnit::Millisecond, None)
+    }
+}
+
+impl ActorTemporalGenerator {
+    /// Original uniform timestamp generation (non-burst mode).
+    fn generate_uniform(
+        &self,
+        rng: &mut dyn RngCore,
+        _count: usize,
+        actor_pks: &[Option<i64>],
+        causal_fk_pks: &[Option<i64>],
+    ) -> Vec<Option<i64>> {
         let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
 
-        let values: Vec<Option<i64>> = actor_pks
+        actor_pks
             .iter()
             .enumerate()
             .map(|(row_idx, pk_opt)| {
                 let actor_idx = pk_opt.and_then(|pk| self.pk_reverse_map.get(&pk).copied());
 
-                let peak_hour = actor_idx
-                    .and_then(|idx| {
-                        self.actor_pool
-                            .get_trait(&self.actor_entity, idx, &self.trait_name)
-                    })
-                    .and_then(|v| match v {
-                        knit_core::Value::Float(f) => Some(*f),
-                        knit_core::Value::Int(i) => Some(*i as f64),
-                        _ => None,
-                    });
+                let peak = self.resolve_peak_hour(actor_idx);
+                let lower_bound = self.compute_lower_bound(actor_idx, row_idx, causal_fk_pks);
 
-                let peak = peak_hour.unwrap_or(12.0);
-
-                // Determine lower bound: actor's creation time or DEFAULT_START.
-                let actor_lower = actor_idx
-                    .and_then(|idx| {
-                        self.creation_times
-                            .as_ref()
-                            .and_then(|ct| ct.get(idx).copied().flatten())
-                    })
-                    .unwrap_or(DEFAULT_START_MS);
-
-                // Determine causal lower bound from referenced entity.
-                let causal_lower = self.causal_times.as_ref().and_then(|ct| {
-                    let fk_pk = causal_fk_pks[row_idx]?;
-                    ct.pk_to_timestamp.get(&fk_pk).copied()
-                });
-
-                // Effective lower bound is the maximum of all constraints.
-                let lower_bound = match causal_lower {
-                    Some(cl) => actor_lower.max(cl),
-                    None => actor_lower,
-                };
-
-                // Normalize lower_bound to the start of its day so that
-                // day_offset + time_ms compose correctly regardless of when
-                // the actor was created during the day.
                 let day_start = (lower_bound / (24 * 3_600_000)) * (24 * 3_600_000);
                 let upper_bound = lower_bound.max(DEFAULT_START_MS) + DEFAULT_SPAN_MS;
                 let span = upper_bound - day_start;
 
-                // Generate a random day offset within the available span
                 let day_offset_ms = gen_range_i64(rng, span.max(1));
 
-                // Generate hour biased toward peak using wrapped normal
                 let normal = Normal::new(peak, PEAK_HOUR_STD_DEV).unwrap_or(normal_12);
                 let raw_hour: f64 = normal.sample(rng);
-                // Wrap to [0, 24)
                 let hour = ((raw_hour % 24.0) + 24.0) % 24.0;
 
                 let hour_int = hour as i64;
                 let minute = ((hour - hour.floor()) * 60.0) as i64;
 
-                // Combine: day start + day offset (day portion only) + biased hour
                 let day_ms = (day_offset_ms / (24 * 3_600_000)) * (24 * 3_600_000);
                 let time_ms = hour_int * 3_600_000 + minute * 60_000;
 
                 let timestamp = day_start + day_ms + time_ms;
-
-                // Hard constraint: timestamp must be >= lower_bound (the actual
-                // creation time, not the normalized day start).
                 let timestamp = if timestamp < lower_bound {
                     timestamp + 24 * 3_600_000
                 } else {
@@ -218,13 +212,164 @@ impl FieldGenerator for ActorTemporalGenerator {
 
                 Some(timestamp)
             })
-            .collect();
-
-        Arc::new(TimestampMillisecondArray::from(values)) as ArrayRef
+            .collect()
     }
 
-    fn output_type(&self) -> DataType {
-        DataType::Timestamp(TimeUnit::Millisecond, None)
+    /// Burst/session timestamp generation.
+    ///
+    /// Groups rows by actor, generates burst sequences for each actor's rows,
+    /// then maps timestamps back to original row positions.
+    fn generate_burst(
+        &self,
+        rng: &mut dyn RngCore,
+        count: usize,
+        actor_pks: &[Option<i64>],
+        causal_fk_pks: &[Option<i64>],
+    ) -> Vec<Option<i64>> {
+        let burst_cfg = self.burst.as_ref().unwrap();
+
+        // Group row indices by actor PK (preserving encounter order per actor).
+        // Use BTreeMap for deterministic iteration order.
+        let mut actor_rows: std::collections::BTreeMap<i64, Vec<usize>> = std::collections::BTreeMap::new();
+        let mut no_actor_rows: Vec<usize> = Vec::new();
+        for (idx, pk_opt) in actor_pks.iter().enumerate() {
+            match pk_opt {
+                Some(pk) => actor_rows.entry(*pk).or_default().push(idx),
+                None => no_actor_rows.push(idx),
+            }
+        }
+
+        let mut results = vec![None; count];
+        let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
+
+        // For each actor, generate a sequence of burst timestamps.
+        for (actor_pk, row_indices) in &actor_rows {
+            let actor_idx = self.pk_reverse_map.get(actor_pk).copied();
+            let peak = self.resolve_peak_hour(actor_idx);
+            let normal = Normal::new(peak, PEAK_HOUR_STD_DEV).unwrap_or(normal_12);
+
+            // Start from the actor's lower bound.
+            let base_lower = self.compute_actor_lower_bound(actor_idx);
+
+            // Generate burst event count distribution (Poisson, min 1)
+            let poisson = Poisson::new(burst_cfg.avg_events.max(1.0)).unwrap_or(Poisson::new(3.0).unwrap());
+            // Exponential for inter-burst idle and intra-burst gap
+            let gap_exp = Exp::new(1.0 / (burst_cfg.avg_gap_ms as f64).max(1.0)).unwrap_or(Exp::new(1.0 / 180_000.0).unwrap());
+            let idle_exp = Exp::new(1.0 / (burst_cfg.avg_idle_ms as f64).max(1.0)).unwrap_or(Exp::new(1.0 / 28_800_000.0).unwrap());
+
+            let mut cursor = base_lower;
+            let mut events_remaining_in_burst: u32 = 0;
+
+            for &row_idx in row_indices {
+                // Check if we need a causal lower bound for this specific row
+                let causal_lower = self.causal_times.as_ref().and_then(|ct| {
+                    let fk_pk = causal_fk_pks[row_idx]?;
+                    ct.pk_to_timestamp.get(&fk_pk).copied()
+                });
+                if let Some(cl) = causal_lower {
+                    cursor = cursor.max(cl);
+                }
+
+                if events_remaining_in_burst == 0 {
+                    // Start a new burst: add idle time, then pick a new session
+                    let idle_ms = idle_exp.sample(rng) as i64;
+                    cursor += idle_ms;
+
+                    // Bias the burst start time toward peak hours
+                    let raw_hour: f64 = normal.sample(rng);
+                    let hour = ((raw_hour % 24.0) + 24.0) % 24.0;
+                    // Snap cursor to the biased hour on the current day
+                    let day_start = (cursor / (24 * 3_600_000)) * (24 * 3_600_000);
+                    let hour_ms = (hour as i64) * 3_600_000
+                        + (((hour - hour.floor()) * 60.0) as i64) * 60_000;
+                    let biased_time = day_start + hour_ms;
+                    // Only adjust forward (never go backward)
+                    if biased_time >= cursor {
+                        cursor = biased_time;
+                    }
+
+                    // Determine burst size
+                    events_remaining_in_burst = (poisson.sample(rng) as u32).max(1);
+                } else {
+                    // Within a burst: add small gap
+                    let gap_ms = gap_exp.sample(rng) as i64;
+                    cursor += gap_ms.max(1000); // at least 1 second
+                }
+
+                results[row_idx] = Some(cursor);
+                events_remaining_in_burst -= 1;
+            }
+        }
+
+        // Handle rows with no actor (fallback: uniform with lower bound respect)
+        let normal_fallback = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
+        for row_idx in no_actor_rows {
+            let lower_bound = self.compute_lower_bound(None, row_idx, causal_fk_pks);
+            let day_start = (lower_bound / (24 * 3_600_000)) * (24 * 3_600_000);
+            let upper_bound = lower_bound.max(DEFAULT_START_MS) + DEFAULT_SPAN_MS;
+            let span = upper_bound - day_start;
+            let day_offset_ms = gen_range_i64(rng, span.max(1));
+            let raw_hour: f64 = normal_fallback.sample(rng);
+            let hour = ((raw_hour % 24.0) + 24.0) % 24.0;
+            let hour_int = hour as i64;
+            let minute = ((hour - hour.floor()) * 60.0) as i64;
+            let day_ms = (day_offset_ms / (24 * 3_600_000)) * (24 * 3_600_000);
+            let time_ms = hour_int * 3_600_000 + minute * 60_000;
+            let timestamp = day_start + day_ms + time_ms;
+            // Ensure timestamp >= lower_bound
+            let timestamp = if timestamp < lower_bound {
+                timestamp + 24 * 3_600_000
+            } else {
+                timestamp
+            };
+            results[row_idx] = Some(timestamp);
+        }
+
+        results
+    }
+
+    /// Resolve peak hour trait for an actor.
+    fn resolve_peak_hour(&self, actor_idx: Option<usize>) -> f64 {
+        actor_idx
+            .and_then(|idx| {
+                self.actor_pool
+                    .get_trait(&self.actor_entity, idx, &self.trait_name)
+            })
+            .and_then(|v| match v {
+                knit_core::Value::Float(f) => Some(*f),
+                knit_core::Value::Int(i) => Some(*i as f64),
+                _ => None,
+            })
+            .unwrap_or(12.0)
+    }
+
+    /// Compute the actor's own lower bound (creation time or default).
+    fn compute_actor_lower_bound(&self, actor_idx: Option<usize>) -> i64 {
+        actor_idx
+            .and_then(|idx| {
+                self.creation_times
+                    .as_ref()
+                    .and_then(|ct| ct.get(idx).copied().flatten())
+            })
+            .unwrap_or(DEFAULT_START_MS)
+    }
+
+    /// Compute effective lower bound considering actor creation + causal constraints.
+    fn compute_lower_bound(
+        &self,
+        actor_idx: Option<usize>,
+        row_idx: usize,
+        causal_fk_pks: &[Option<i64>],
+    ) -> i64 {
+        let actor_lower = self.compute_actor_lower_bound(actor_idx);
+        let causal_lower = self.causal_times.as_ref().and_then(|ct| {
+            let fk_pk = causal_fk_pks[row_idx]?;
+            ct.pk_to_timestamp.get(&fk_pk).copied()
+        });
+        match causal_lower {
+            Some(cl) => actor_lower.max(cl),
+            None => actor_lower,
+        }
     }
 }
 
@@ -283,6 +428,7 @@ mod tests {
             "user_id".into(),
             None,
             None,
+            None,
         );
 
         let mut batch_columns = HashMap::new();
@@ -333,6 +479,7 @@ mod tests {
             "user_id".into(),
             None,
             None,
+            None,
         );
 
         let mut batch_columns = HashMap::new();
@@ -379,6 +526,7 @@ mod tests {
             "users".into(),
             "user_id".into(),
             Some(creation_times),
+            None,
             None,
         );
 

@@ -519,3 +519,61 @@ fn social_platform_comment_after_post() {
         "found {violations}/{total} comments created before their referenced post"
     );
 }
+
+#[test]
+fn social_platform_burst_clustering() {
+    // Verify that posts with burst mode exhibit clustering: most consecutive
+    // events from the same actor have short gaps (within burst) while some
+    // have much larger gaps (between bursts / idle periods).
+    let batches = generate_from_file(&social_platform_path());
+
+    // Collect per-actor timestamps (sorted)
+    let user_ids = collect_i64_column(&batches["posts"], "author_id");
+    let timestamps = collect_timestamp_column(&batches["posts"], "created_at");
+
+    let mut actor_times: HashMap<i64, Vec<i64>> = HashMap::new();
+    for (i, &uid) in user_ids.iter().enumerate() {
+        actor_times.entry(uid).or_default().push(timestamps[i]);
+    }
+
+    let mut intra_burst_count = 0u64;
+    let mut inter_burst_count = 0u64;
+    // Threshold: gaps < 30 minutes are likely intra-burst,
+    // gaps > 6 hours are likely inter-burst/idle.
+    let short_threshold_ms: i64 = 30 * 60_000;
+    let long_threshold_ms: i64 = 6 * 3_600_000;
+
+    for times in actor_times.values() {
+        let mut sorted = times.clone();
+        sorted.sort();
+        for pair in sorted.windows(2) {
+            let gap = pair[1] - pair[0];
+            if gap < short_threshold_ms {
+                intra_burst_count += 1;
+            } else if gap > long_threshold_ms {
+                inter_burst_count += 1;
+            }
+        }
+    }
+
+    // With burst config (avg_events=4, avg_gap=5min, avg_idle=12h), we expect
+    // a meaningful number of both short gaps and long gaps.
+    let total_gaps = intra_burst_count + inter_burst_count;
+    assert!(
+        intra_burst_count > 0,
+        "expected some intra-burst gaps (< 30 min), found 0"
+    );
+    assert!(
+        inter_burst_count > 0,
+        "expected some inter-burst gaps (> 6 hours), found 0"
+    );
+    // At least 20% of classifiable gaps should be short (intra-burst)
+    let short_ratio = intra_burst_count as f64 / total_gaps.max(1) as f64;
+    assert!(
+        short_ratio > 0.2,
+        "expected >20% intra-burst gaps, got {:.1}% ({}/{})",
+        short_ratio * 100.0,
+        intra_burst_count,
+        total_gaps
+    );
+}

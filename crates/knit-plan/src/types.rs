@@ -387,6 +387,8 @@ pub enum GeneratorPlan {
         /// Optional cross-entity causal constraint: timestamp must be >= the
         /// referenced entity's timestamp field (looked up via FK).
         temporal_after: Option<TemporalAfter>,
+        /// Optional burst/session pattern for clustered event generation.
+        burst: Option<BurstPlan>,
     },
 }
 
@@ -402,6 +404,17 @@ pub struct TemporalAfter {
     pub field: String,
     /// FK field in *this* entity that references the parent entity's PK.
     pub fk: String,
+}
+
+/// Burst/session plan: events cluster into sessions with idle gaps.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BurstPlan {
+    /// Average number of events per burst (Poisson-sampled, min 1).
+    pub avg_events: f64,
+    /// Average gap between events within a burst (milliseconds).
+    pub avg_gap_ms: i64,
+    /// Average idle time between bursts (milliseconds).
+    pub avg_idle_ms: i64,
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────

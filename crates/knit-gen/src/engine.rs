@@ -760,11 +760,13 @@ impl GenerationEngine {
                     actor_field,
                     temporal_start_field,
                     temporal_after,
+                    burst,
                     ..
                 } => {
                     self.build_actor_temporal_generator(
                         ep, fp, trait_name, actor_entity, actor_field,
-                        temporal_start_field.as_deref(), temporal_after.as_ref(), plan,
+                        temporal_start_field.as_deref(), temporal_after.as_ref(),
+                        burst.as_ref(), plan,
                     )
                 }
                 other => create_generator(other),
@@ -979,6 +981,7 @@ impl GenerationEngine {
         actor_field: &str,
         temporal_start_field: Option<&str>,
         temporal_after: Option<&knit_plan::TemporalAfter>,
+        burst: Option<&knit_plan::BurstPlan>,
         plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
         let bh_fallback = || -> Box<dyn FieldGenerator> {
@@ -1119,6 +1122,7 @@ impl GenerationEngine {
             actor_field.to_string(),
             creation_times,
             causal_times,
+            burst.cloned(),
         ))
     }
 
