@@ -10,8 +10,6 @@
 //! let edges = generate_graph(&graph_plan, &actor_pool, seed);
 //! ```
 
-use std::collections::BTreeMap;
-
 use knit_core::GraphType;
 use knit_plan::GraphPlan;
 use rand::Rng;
@@ -23,7 +21,9 @@ use crate::ActorPool;
 /// A directed edge between two actors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Edge {
+    /// Source actor index.
     pub from: usize,
+    /// Target actor index.
     pub to: usize,
 }
 
@@ -427,6 +427,7 @@ fn fnv1a_hash(bytes: &[u8]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
     use knit_plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
 
     fn make_pool(entity: &str, count: u64) -> ActorPool {
