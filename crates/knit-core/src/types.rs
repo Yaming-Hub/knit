@@ -394,6 +394,9 @@ pub enum GeneratorSpec {
         /// Optional cross-entity causal constraint: timestamp >= referenced entity's timestamp.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         temporal_after: Option<TemporalAfterSpec>,
+        /// Optional burst/session pattern: events cluster into bursts with idle gaps.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        burst: Option<BurstSpec>,
     },
     /// Select target actor based on relationship graph topology.
     /// Used for fields like `receiver_id` where the target depends on the source actor's graph neighbors.
@@ -426,6 +429,22 @@ pub struct TemporalAfterSpec {
     pub field: String,
     /// FK field in the current entity that references the parent's PK.
     pub fk: String,
+}
+
+/// Burst/session pattern specification for temporal generation.
+///
+/// When attached to an `actor_temporal` generator, events are clustered
+/// into bursts of activity separated by idle periods, creating realistic
+/// session-like behavior (e.g., a user posts 5 times in an hour then goes
+/// offline for 8 hours).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BurstSpec {
+    /// Average number of events per burst session (Poisson-sampled, min 1).
+    pub avg_events: f64,
+    /// Average gap between events within a burst (in minutes).
+    pub avg_gap_minutes: f64,
+    /// Average idle time between bursts (in hours).
+    pub avg_idle_hours: f64,
 }
 
 fn default_step() -> i64 {
@@ -1340,7 +1359,7 @@ mod tests {
                 r#"{"type":"actor_ref","entity":"users"}"#,
             ),
             (
-                GeneratorSpec::ActorTemporal { trait_name: "peak_hours".into(), temporal_after: None },
+                GeneratorSpec::ActorTemporal { trait_name: "peak_hours".into(), temporal_after: None, burst: None },
                 r#"{"type":"actor_temporal","trait":"peak_hours"}"#,
             ),
             (

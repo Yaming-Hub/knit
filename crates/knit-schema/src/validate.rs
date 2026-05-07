@@ -1141,7 +1141,7 @@ fn validate_generator(
                 }
             }
         }
-        GeneratorSpec::ActorTemporal { trait_name, temporal_after, .. } => {
+        GeneratorSpec::ActorTemporal { trait_name, temporal_after, burst, .. } => {
             if trait_name.is_empty() {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -1200,6 +1200,26 @@ fn validate_generator(
                             "temporal_after.fk '{}' not found in entity '{}'",
                             ta.fk, entity.name
                         ),
+                    });
+                }
+            }
+            if let Some(b) = burst {
+                if !b.avg_events.is_finite() || b.avg_events <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "burst.avg_events must be a finite number > 0".to_string(),
+                    });
+                }
+                if !b.avg_gap_minutes.is_finite() || b.avg_gap_minutes <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "burst.avg_gap_minutes must be a finite number > 0".to_string(),
+                    });
+                }
+                if !b.avg_idle_hours.is_finite() || b.avg_idle_hours <= 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "burst.avg_idle_hours must be a finite number > 0".to_string(),
                     });
                 }
             }
@@ -2819,6 +2839,7 @@ mod tests {
             generator: Some(GeneratorSpec::ActorTemporal {
                 trait_name: "activity_hours".to_string(),
                 temporal_after: None,
+                burst: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3107,6 +3128,7 @@ mod tests {
                     field: "created_at".to_string(),
                     fk: "parent_id".to_string(),
                 }),
+                burst: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3164,6 +3186,7 @@ mod tests {
                     field: "created_at".to_string(),
                     fk: "post_id".to_string(),
                 }),
+                burst: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3233,6 +3256,7 @@ mod tests {
                     field: "title".to_string(),
                     fk: "post_id".to_string(),
                 }),
+                burst: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3292,6 +3316,7 @@ mod tests {
                     field: "created_at".to_string(),
                     fk: "post_id".to_string(),
                 }),
+                burst: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3301,6 +3326,87 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.fk") && message.contains("not found"))
+        }));
+    }
+
+    #[test]
+    fn test_burst_zero_avg_events_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: None,
+                burst: Some(BurstSpec {
+                    avg_events: 0.0,
+                    avg_gap_minutes: 5.0,
+                    avg_idle_hours: 8.0,
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
+        }));
+    }
+
+    #[test]
+    fn test_burst_zero_gap_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: None,
+                burst: Some(BurstSpec {
+                    avg_events: 5.0,
+                    avg_gap_minutes: 0.0,
+                    avg_idle_hours: 8.0,
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_gap_minutes must be a finite number > 0"))
+        }));
+    }
+
+    #[test]
+    fn test_burst_infinity_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: None,
+                burst: Some(BurstSpec {
+                    avg_events: f64::INFINITY,
+                    avg_gap_minutes: 5.0,
+                    avg_idle_hours: 8.0,
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
         }));
     }
 }

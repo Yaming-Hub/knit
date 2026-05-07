@@ -408,7 +408,7 @@ fn compile_field_plans(
                     .unwrap_or_default();
                 GeneratorPlan::PersonaField { trait_name, actor_entity, actor_field }
             }
-            GeneratorPlan::ActorTemporal { trait_name, actor_field, temporal_after, .. } => {
+            GeneratorPlan::ActorTemporal { trait_name, actor_field, temporal_after, burst, .. } => {
                 let actor_entity = fk_map.get(actor_field.as_str())
                     .map(|s| s.to_string())
                     .unwrap_or_default();
@@ -445,7 +445,7 @@ fn compile_field_plans(
                 } else {
                     None
                 };
-                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field, min_event_gap_ms: None, temporal_after }
+                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field, min_event_gap_ms: None, temporal_after, burst }
             }
             other => other,
         };
@@ -626,7 +626,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     key_store_kind: KeyStoreKind::InMemoryVec,
                 }
             }
-            GeneratorSpec::ActorTemporal { trait_name, temporal_after } => {
+            GeneratorSpec::ActorTemporal { trait_name, temporal_after, burst } => {
                 // Auto-detect the actor FK field from actor_column fields.
                 let actor_field = all_fields
                     .iter()
@@ -640,6 +640,13 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                         fk: ta.fk.clone(),
                     }
                 });
+                let burst_plan = burst.as_ref().map(|b| {
+                    crate::types::BurstPlan {
+                        avg_events: b.avg_events,
+                        avg_gap_ms: (b.avg_gap_minutes * 60_000.0) as i64,
+                        avg_idle_ms: (b.avg_idle_hours * 3_600_000.0) as i64,
+                    }
+                });
                 GeneratorPlan::ActorTemporal {
                     trait_name: trait_name.clone(),
                     actor_entity: String::new(), // resolved in compile_field_plans
@@ -647,6 +654,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     temporal_start_field: None, // resolved in compile_field_plans
                     min_event_gap_ms: None,     // uses default
                     temporal_after: ta_plan,
+                    burst: burst_plan,
                 }
             }
             GeneratorSpec::RelationshipRef { relationship, source_field } => {
