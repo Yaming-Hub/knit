@@ -310,8 +310,12 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
         knit_core::GeneratorSpec::ActorTemporal { trait_name } => {
             format!("actor_temporal({})", trait_name)
         }
-        knit_core::GeneratorSpec::RelationshipRef { relationship } => {
-            format!("relationship_ref({})", relationship)
+        knit_core::GeneratorSpec::RelationshipRef { relationship, source_field } => {
+            if let Some(src) = source_field {
+                format!("relationship_ref({}, source={})", relationship, src)
+            } else {
+                format!("relationship_ref({})", relationship)
+            }
         }
         knit_core::GeneratorSpec::PersonaField { trait_name } => {
             format!("persona_field({})", trait_name)

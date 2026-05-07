@@ -64,6 +64,7 @@ pub fn generate_from_toml(toml_input: &str) -> HashMap<String, Vec<RecordBatch>>
     if !plan.actor_pool.pools.is_empty() {
         let actor_pool = knit_gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
         engine = engine.with_actor_pool(std::sync::Arc::new(actor_pool));
+        engine.build_graphs(&plan);
     }
 
     engine
@@ -91,6 +92,7 @@ pub fn generate_from_file(path: &Path) -> HashMap<String, Vec<RecordBatch>> {
     if !plan.actor_pool.pools.is_empty() {
         let actor_pool = knit_gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
         engine = engine.with_actor_pool(std::sync::Arc::new(actor_pool));
+        engine.build_graphs(&plan);
     }
 
     engine

@@ -220,6 +220,9 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
         knit_plan::GeneratorPlan::Dictionary { entries, expansion, .. } => {
             format!("dictionary({} entries, {})", entries.len(), expansion)
         }
+        knit_plan::GeneratorPlan::GraphTarget { graph_name, source_field, target_entity, .. } => {
+            format!("graph_fk({}→{}, src={})", graph_name, target_entity, source_field)
+        }
     }
 }
 

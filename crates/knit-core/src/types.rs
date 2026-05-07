@@ -389,6 +389,10 @@ pub enum GeneratorSpec {
     RelationshipRef {
         /// Name of the actor_relationship to use for edge selection.
         relationship: String,
+        /// Name of the source actor field in the same entity (e.g. `"sender_id"`).
+        /// If omitted, auto-detected from other actor_column FK fields in the entity.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_field: Option<String>,
     },
     /// Generate a field value based on the current actor's persona traits.
     /// The trait value determines the distribution from which to sample.
@@ -1298,7 +1302,7 @@ mod tests {
                 r#"{"type":"actor_temporal","trait":"peak_hours"}"#,
             ),
             (
-                GeneratorSpec::RelationshipRef { relationship: "email_net".into() },
+                GeneratorSpec::RelationshipRef { relationship: "email_net".into(), source_field: None },
                 r#"{"type":"relationship_ref","relationship":"email_net"}"#,
             ),
             (

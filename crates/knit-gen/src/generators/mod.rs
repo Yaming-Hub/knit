@@ -15,6 +15,7 @@ pub mod dictionary;
 pub mod distribution;
 pub mod faker;
 pub mod fk;
+pub mod graph_fk;
 pub mod one_of;
 pub mod pattern;
 pub mod sequence;
@@ -140,5 +141,11 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             entries.clone(),
             expansion.clone(),
         )),
+        // GraphTarget generators are created by the engine (which has graphs +
+        // key stores). If nested, fall back to null.
+        GeneratorPlan::GraphTarget { .. } => {
+            tracing::warn!("GraphTarget inside nested generator: no graph/key-store available, emitting nulls");
+            Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+        }
     }
 }

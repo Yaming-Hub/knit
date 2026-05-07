@@ -749,16 +749,13 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
             }
         }
         GeneratorSpec::RelationshipRef { .. } => {
-            // RelationshipRef produces a key from a related actor; same types as ActorRef
-            let compatible = matches!(
-                data_type,
-                DataType::Int | DataType::Int32 | DataType::String | DataType::Uuid
-            );
+            // RelationshipRef currently only supports Int64 PKs at runtime.
+            let compatible = matches!(data_type, DataType::Int);
             if !compatible {
                 Some(format!(
-                    "relationship_ref generator produces key values but field has data_type '{}'; \
-                     expected 'int', 'int32', 'string', or 'uuid'",
-                    data_type
+                    "relationship_ref generator requires data_type 'int' (Int64 actor PKs); \
+                     field has data_type '{}'",
+                    format!("{:?}", data_type).to_lowercase()
                 ))
             } else {
                 None
@@ -1008,7 +1005,7 @@ fn validate_generator(
                 }
             }
         }
-        GeneratorSpec::RelationshipRef { relationship } => {
+        GeneratorSpec::RelationshipRef { relationship, source_field } => {
             if relationship.is_empty() {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -1022,6 +1019,14 @@ fn validate_generator(
                         relationship
                     ),
                 });
+            }
+            if let Some(src) = source_field {
+                if src.is_empty() {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "relationship_ref source_field must not be empty when specified".to_string(),
+                    });
+                }
             }
         }
         GeneratorSpec::ActorTemporal { trait_name } => {
@@ -2614,6 +2619,7 @@ mod tests {
             data_type: DataType::Int,
             generator: Some(GeneratorSpec::RelationshipRef {
                 relationship: "reports_to".to_string(),
+                source_field: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,

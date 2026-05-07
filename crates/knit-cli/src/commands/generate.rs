@@ -267,6 +267,9 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
 
         // Pass actor pool to engine for persona-weighted FK generation.
         engine = engine.with_actor_pool(Arc::new(actor_pool));
+
+        // Build graph adjacency lists for graph-aware FK generation.
+        engine.build_graphs(&plan);
     }
 
     // Track per-entity row counts for JSON progress events
@@ -946,6 +949,7 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         knit_plan::GeneratorPlan::Unique { inner, .. } => infer_arrow_type(inner),
         knit_plan::GeneratorPlan::Conditional { default, .. } => infer_arrow_type(default),
         knit_plan::GeneratorPlan::Dictionary { .. } => ArrowDataType::Utf8,
+        knit_plan::GeneratorPlan::GraphTarget { .. } => ArrowDataType::Int64,
     }
 }
 

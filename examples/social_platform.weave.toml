@@ -211,7 +211,10 @@ actor_column = true
 [[entities.fields]]
 name = "receiver_id"
 data_type = "int"
-actor_column = true
+[entities.fields.generator]
+type = "relationship_ref"
+relationship = "messages"
+source_field = "sender_id"
 
 [[entities.fields]]
 name = "message"
