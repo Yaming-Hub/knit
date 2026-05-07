@@ -229,6 +229,9 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
         knit_plan::GeneratorPlan::ActorTemporal { trait_name, actor_entity, .. } => {
             format!("actor_temporal({}.{})", actor_entity, trait_name)
         }
+        knit_plan::GeneratorPlan::ThreadRef { reply_probability, max_depth, .. } => {
+            format!("thread_ref(p={:.0}%, depth={})", reply_probability * 100.0, max_depth)
+        }
     }
 }
 

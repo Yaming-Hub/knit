@@ -877,6 +877,19 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
             // PersonaField can produce any type depending on the trait — skip static check
             None
         }
+        GeneratorSpec::ThreadRef { .. } => {
+            // ThreadRef produces nullable Int64 (self-referencing PK)
+            let compatible = matches!(data_type, DataType::Int);
+            if !compatible {
+                Some(format!(
+                    "thread_ref generator produces Int64 (self-referential PK) but field has data_type '{}'; \
+                     expected 'int'",
+                    format!("{:?}", data_type).to_lowercase()
+                ))
+            } else {
+                None
+            }
+        }
         // Generators with flexible output types — no static type check
         _ => None,
     }
@@ -1229,6 +1242,54 @@ fn validate_generator(
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: "persona_field requires a non-empty 'trait' name".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::ThreadRef { reply_probability, max_depth, reply_window, .. } => {
+            if nested {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "thread_ref cannot be nested inside Unique, Conditional, or Composite"
+                        .to_string(),
+                });
+            }
+            if *reply_window == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "thread_ref reply_window must be at least 1".to_string(),
+                });
+            }
+            if !reply_probability.is_finite() || *reply_probability < 0.0 || *reply_probability > 1.0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "thread_ref reply_probability must be in [0.0, 1.0], got {reply_probability}"
+                    ),
+                });
+            }
+            if *max_depth == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "thread_ref max_depth must be at least 1".to_string(),
+                });
+            }
+            // Verify entity has a PK field with Int type
+            let pk_field = entity.fields.iter().find(|f| f.primary_key.unwrap_or(false));
+            if let Some(pk) = pk_field {
+                if pk.data_type != DataType::Int {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "thread_ref requires entity PK to be 'int' (Int64), but '{}' has data_type '{:?}'",
+                            pk.name,
+                            pk.data_type
+                        ),
+                    });
+                }
+            } else {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "thread_ref requires entity to have a primary_key field".to_string(),
                 });
             }
         }

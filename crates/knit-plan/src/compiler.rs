@@ -83,7 +83,18 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
 
             let row_count = row_counts.get(entity_name).copied().unwrap_or(1000);
             let entity_seed = rng_tree::derive_seed(model.seed, entity_name.as_bytes());
-            let partitions = partition::compute_partitions(row_count, entity_seed);
+            let partitions = {
+                let computed = partition::compute_partitions(row_count, entity_seed);
+                // Force single partition for entities with thread_ref (requires ordered generation)
+                let has_thread_ref = entity.fields.iter().any(|f| {
+                    matches!(&f.generator, Some(GeneratorSpec::ThreadRef { .. }))
+                });
+                if has_thread_ref && computed.len() > 1 {
+                    vec![PartitionRange { partition_id: 0, start_row: 0, end_row: row_count, seed: entity_seed }]
+                } else {
+                    computed
+                }
+            };
             let num_partitions = partitions.len() as u32;
 
             let entity_fks = fk_fields.get(entity_name).cloned().unwrap_or_default();
@@ -350,11 +361,11 @@ fn compile_field_plans(
     let mut plans: Vec<FieldPlan> = Vec::new();
 
     for field in &entity.fields {
-        // Check if field has an explicit RelationshipRef generator — if so, it takes
+        // Check if field has an explicit RelationshipRef or ThreadRef generator — if so, it takes
         // precedence over the inferred FK path (graph-aware sampling vs uniform FK).
         let has_relationship_ref = matches!(
             &field.generator,
-            Some(GeneratorSpec::RelationshipRef { .. })
+            Some(GeneratorSpec::RelationshipRef { .. }) | Some(GeneratorSpec::ThreadRef { .. })
         );
 
         // Check if this field is a foreign key.
@@ -691,6 +702,20 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     actor_field,
                 }
             }
+            GeneratorSpec::ThreadRef { reply_probability, max_depth, reply_window } => {
+                // Find the PK field in this entity for self-referential threading.
+                let pk_field = all_fields
+                    .iter()
+                    .find(|f| f.primary_key.unwrap_or(false))
+                    .map(|f| f.name.clone())
+                    .unwrap_or_else(|| "id".to_string());
+                GeneratorPlan::ThreadRef {
+                    reply_probability: *reply_probability,
+                    max_depth: *max_depth,
+                    reply_window: *reply_window,
+                    pk_field,
+                }
+            }
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.
@@ -916,6 +941,15 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .max()
                 .unwrap_or(0);
             max_actor_order + 1
+        }
+        Some(GeneratorSpec::ThreadRef { .. }) => {
+            // Depends on the PK field (must read generated PKs from batch_columns)
+            let pk_order = all_fields
+                .iter()
+                .find(|f| f.primary_key.unwrap_or(false))
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            pk_order + 1
         }
         _ => 0,
     }

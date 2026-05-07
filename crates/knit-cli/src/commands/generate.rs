@@ -954,6 +954,7 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
         knit_plan::GeneratorPlan::ActorTemporal { .. } => {
             ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         }
+        knit_plan::GeneratorPlan::ThreadRef { .. } => ArrowDataType::Int64,
     }
 }
 

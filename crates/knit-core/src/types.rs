@@ -415,6 +415,19 @@ pub enum GeneratorSpec {
         #[serde(rename = "trait")]
         trait_name: String,
     },
+    /// Generate self-referential thread/conversation structure.
+    /// Produces nullable int values: NULL = thread starter, non-null = reply to a previous PK.
+    ThreadRef {
+        /// Probability that a row is a reply (vs. starting a new thread). Range: 0.0–1.0.
+        #[serde(default = "default_reply_probability")]
+        reply_probability: f64,
+        /// Maximum thread depth (prevents infinitely deep chains). Default: 10.
+        #[serde(default = "default_max_depth")]
+        max_depth: u32,
+        /// Size of the "recent messages" window to sample replies from. Default: 100.
+        #[serde(default = "default_reply_window")]
+        reply_window: usize,
+    },
 }
 
 /// Schema-level specification for cross-entity temporal ordering.
@@ -461,6 +474,15 @@ fn default_start_hour() -> u8 {
 }
 fn default_end_hour() -> u8 {
     17
+}
+fn default_reply_probability() -> f64 {
+    0.6
+}
+fn default_max_depth() -> u32 {
+    10
+}
+fn default_reply_window() -> usize {
+    100
 }
 
 // ── DistributionSpec & Kind ──────────────────────────────────────────

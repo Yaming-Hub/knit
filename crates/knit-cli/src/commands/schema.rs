@@ -326,6 +326,9 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
         knit_core::GeneratorSpec::PersonaField { trait_name } => {
             format!("persona_field({})", trait_name)
         }
+        knit_core::GeneratorSpec::ThreadRef { reply_probability, max_depth, .. } => {
+            format!("thread_ref(p={:.0}%, depth={})", reply_probability * 100.0, max_depth)
+        }
     }
 }
 

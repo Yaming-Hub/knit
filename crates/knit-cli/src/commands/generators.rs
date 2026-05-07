@@ -126,6 +126,12 @@ const GENERATORS: &[GeneratorInfo] = &[
         parameters: "trait (persona trait name to read the value from)",
         example: r##"type = "persona_field", trait = "department""##,
     },
+    GeneratorInfo {
+        name: "thread_ref",
+        description: "Self-referential thread/conversation structure (nullable FK to own PK)",
+        parameters: "reply_probability (0.0–1.0, default 0.6), max_depth (default 10), reply_window (default 100)",
+        example: r##"type = "thread_ref", reply_probability = 0.7, max_depth = 5"##,
+    },
 ];
 
 const DISTRIBUTIONS: &[(&str, &str)] = &[
