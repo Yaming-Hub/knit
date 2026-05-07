@@ -19,6 +19,7 @@
 
 #![warn(missing_docs)]
 
+pub mod actor_graph;
 pub mod behavioral;
 pub mod clustering;
 pub mod correlation;
