@@ -29,6 +29,10 @@ const PEAK_HOUR_STD_DEV: f64 = 3.0;
 /// The generator uses a wrapped-normal distribution centered on the actor's
 /// `peak_hours` trait value to bias the hour-of-day while distributing the
 /// date uniformly across the configured time span.
+///
+/// When `creation_times` is set, generated timestamps are constrained to be
+/// **after** the actor's creation time (captured from a datetime field in the
+/// actor entity during a preceding phase).
 pub struct ActorTemporalGenerator {
     /// Actor pool to look up traits.
     actor_pool: Arc<ActorPool>,
@@ -40,16 +44,23 @@ pub struct ActorTemporalGenerator {
     actor_entity: String,
     /// FK field name in the current entity that references the actor.
     actor_field: String,
+    /// Per-actor creation timestamps (indexed by actor_index).
+    /// When set, generated timestamps are >= the actor's creation time.
+    creation_times: Option<Arc<Vec<Option<i64>>>>,
 }
 
 impl ActorTemporalGenerator {
     /// Create a new actor-temporal generator.
+    ///
+    /// `creation_times`: optional per-actor creation timestamps (ms since epoch).
+    /// When provided, all generated timestamps will be >= the actor's creation time.
     pub fn new(
         actor_pool: Arc<ActorPool>,
         pk_reverse_map: Arc<HashMap<i64, usize>>,
         trait_name: String,
         actor_entity: String,
         actor_field: String,
+        creation_times: Option<Arc<Vec<Option<i64>>>>,
     ) -> Self {
         Self {
             actor_pool,
@@ -57,6 +68,7 @@ impl ActorTemporalGenerator {
             trait_name,
             actor_entity,
             actor_field,
+            creation_times,
         }
     }
 }
@@ -89,9 +101,10 @@ impl FieldGenerator for ActorTemporalGenerator {
         let values: Vec<Option<i64>> = actor_pks
             .iter()
             .map(|pk_opt| {
-                let peak_hour = pk_opt
-                    .and_then(|pk| self.pk_reverse_map.get(&pk))
-                    .and_then(|&idx| {
+                let actor_idx = pk_opt.and_then(|pk| self.pk_reverse_map.get(&pk).copied());
+
+                let peak_hour = actor_idx
+                    .and_then(|idx| {
                         self.actor_pool
                             .get_trait(&self.actor_entity, idx, &self.trait_name)
                     })
@@ -103,8 +116,26 @@ impl FieldGenerator for ActorTemporalGenerator {
 
                 let peak = peak_hour.unwrap_or(12.0);
 
-                // Generate a random day offset within the span
-                let day_offset_ms = gen_range_i64(rng, DEFAULT_SPAN_MS);
+                // Determine lower bound: actor's creation time or DEFAULT_START.
+                let lower_bound = actor_idx
+                    .and_then(|idx| {
+                        self.creation_times
+                            .as_ref()
+                            .and_then(|ct| ct.get(idx).copied().flatten())
+                    })
+                    .unwrap_or(DEFAULT_START_MS);
+
+                // Upper bound is DEFAULT_START + SPAN or lower_bound + SPAN,
+                // whichever is later.
+                // Normalize lower_bound to the start of its day so that
+                // day_offset + time_ms compose correctly regardless of when
+                // the actor was created during the day.
+                let day_start = (lower_bound / (24 * 3_600_000)) * (24 * 3_600_000);
+                let upper_bound = lower_bound.max(DEFAULT_START_MS) + DEFAULT_SPAN_MS;
+                let span = upper_bound - day_start;
+
+                // Generate a random day offset within the available span
+                let day_offset_ms = gen_range_i64(rng, span.max(1));
 
                 // Generate hour biased toward peak using wrapped normal
                 let normal = Normal::new(peak, PEAK_HOUR_STD_DEV).unwrap_or(normal_12);
@@ -115,11 +146,21 @@ impl FieldGenerator for ActorTemporalGenerator {
                 let hour_int = hour as i64;
                 let minute = ((hour - hour.floor()) * 60.0) as i64;
 
-                // Combine: base date + day offset (day portion only) + biased hour
+                // Combine: day start + day offset (day portion only) + biased hour
                 let day_ms = (day_offset_ms / (24 * 3_600_000)) * (24 * 3_600_000);
                 let time_ms = hour_int * 3_600_000 + minute * 60_000;
 
-                Some(DEFAULT_START_MS + day_ms + time_ms)
+                let timestamp = day_start + day_ms + time_ms;
+
+                // Hard constraint: timestamp must be >= lower_bound (the actual
+                // creation time, not the normalized day start).
+                let timestamp = if timestamp < lower_bound {
+                    timestamp + 24 * 3_600_000
+                } else {
+                    timestamp
+                };
+
+                Some(timestamp)
             })
             .collect();
 
@@ -184,6 +225,7 @@ mod tests {
             "peak_hours".into(),
             "users".into(),
             "user_id".into(),
+            None,
         );
 
         let mut batch_columns = HashMap::new();
@@ -233,6 +275,7 @@ mod tests {
             "peak_hours".into(),
             "users".into(),
             "user_id".into(),
+            None,
         );
 
         let mut batch_columns = HashMap::new();
@@ -252,6 +295,76 @@ mod tests {
         // Null actor FK → falls back to peak=12.0, still produces a timestamp
         for i in 0..3 {
             assert!(!ts_arr.is_null(i));
+        }
+    }
+
+    #[test]
+    fn timestamps_after_actor_creation() {
+        let (pool, rev) = make_pool_and_reverse_map();
+
+        // Actor 0 (PK=100) created at 2024-06-15 00:00 UTC
+        // Actor 1 (PK=200) created at 2024-09-01 00:00 UTC
+        // Actor 2 (PK=300) created at 2024-03-01 00:00 UTC
+        let creation_ms_actor0: i64 = 1_718_409_600_000; // 2024-06-15
+        let creation_ms_actor1: i64 = 1_725_148_800_000; // 2024-09-01
+        let creation_ms_actor2: i64 = 1_709_251_200_000; // 2024-03-01
+
+        let creation_times = Arc::new(vec![
+            Some(creation_ms_actor0),
+            Some(creation_ms_actor1),
+            Some(creation_ms_actor2),
+        ]);
+
+        let gen = ActorTemporalGenerator::new(
+            pool,
+            rev,
+            "peak_hours".into(),
+            "users".into(),
+            "user_id".into(),
+            Some(creation_times),
+        );
+
+        // Generate 300 rows: 100 per actor
+        let mut user_ids_vec = Vec::new();
+        for _ in 0..100 { user_ids_vec.push(100i64); }
+        for _ in 0..100 { user_ids_vec.push(200i64); }
+        for _ in 0..100 { user_ids_vec.push(300i64); }
+
+        let mut batch_columns = HashMap::new();
+        let user_ids = Arc::new(Int64Array::from(user_ids_vec)) as ArrayRef;
+        batch_columns.insert("user_id".to_string(), user_ids);
+
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let result = gen.generate(&mut rng, 300, &ctx);
+
+        let ts_arr = result
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+        assert_eq!(ts_arr.len(), 300);
+
+        // Verify all timestamps are >= their actor's creation time
+        for i in 0..100 {
+            let ts = ts_arr.value(i);
+            assert!(
+                ts >= creation_ms_actor0,
+                "row {i}: timestamp {ts} < actor0 creation {creation_ms_actor0}"
+            );
+        }
+        for i in 100..200 {
+            let ts = ts_arr.value(i);
+            assert!(
+                ts >= creation_ms_actor1,
+                "row {i}: timestamp {ts} < actor1 creation {creation_ms_actor1}"
+            );
+        }
+        for i in 200..300 {
+            let ts = ts_arr.value(i);
+            assert!(
+                ts >= creation_ms_actor2,
+                "row {i}: timestamp {ts} < actor2 creation {creation_ms_actor2}"
+            );
         }
     }
 }

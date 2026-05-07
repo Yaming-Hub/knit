@@ -34,6 +34,7 @@ use crate::keystore::InMemoryKeyStore;
 use crate::null_mask::apply_null_mask;
 use crate::sampled_key_store::SampledKeyStore;
 use crate::string_keystore::InMemoryStringKeyStore;
+use crate::temporal_store::TemporalStore;
 use crate::traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 /// Default number of rows per Arrow batch.
@@ -156,6 +157,8 @@ pub struct GenerationEngine {
     graph_adjacency: HashMap<String, Arc<crate::generators::graph_fk::AdjacencyList>>,
     /// Reverse PK→index maps: entity_name → (PK → actor_index).
     pk_reverse_maps: HashMap<String, Arc<std::collections::HashMap<i64, usize>>>,
+    /// Per-actor temporal baselines for ordering constraints.
+    temporal_store: TemporalStore,
 }
 
 impl GenerationEngine {
@@ -169,6 +172,7 @@ impl GenerationEngine {
             actor_pool: None,
             graph_adjacency: HashMap::new(),
             pk_reverse_maps: HashMap::new(),
+            temporal_store: TemporalStore::new(),
         }
     }
 
@@ -182,6 +186,7 @@ impl GenerationEngine {
             actor_pool: None,
             graph_adjacency: HashMap::new(),
             pk_reverse_maps: HashMap::new(),
+            temporal_store: TemporalStore::new(),
         }
     }
 
@@ -260,6 +265,42 @@ impl GenerationEngine {
         }
     }
 
+    /// Capture temporal baseline values from actor entities after their phase
+    /// completes. Scans the plan for ActorTemporal generators with
+    /// `temporal_start_field` set, identifies the actor entity, and extracts
+    /// the datetime column from generated batches.
+    fn capture_temporal_baselines(
+        &mut self,
+        plan: &ExecutionPlan,
+        batches: &[(String, RecordBatch)],
+    ) {
+        // Collect (actor_entity, datetime_field) pairs needed by future phases.
+        let mut needed: std::collections::HashSet<(String, String)> =
+            std::collections::HashSet::new();
+
+        for phase in &plan.phases {
+            for ep in &phase.entity_plans {
+                for fp in &ep.field_plans {
+                    if let GeneratorPlan::ActorTemporal {
+                        ref actor_entity,
+                        temporal_start_field: Some(ref tsf),
+                        ..
+                    } = fp.generator_plan
+                    {
+                        needed.insert((actor_entity.clone(), tsf.clone()));
+                    }
+                }
+            }
+        }
+
+        for (entity, field) in &needed {
+            if !self.temporal_store.has(entity, field) {
+                self.temporal_store
+                    .capture_from_batches(entity, field, batches);
+            }
+        }
+    }
+
     /// Execute the full plan, calling `on_batch` for every produced
     /// [`RecordBatch`].
     ///
@@ -314,6 +355,10 @@ impl GenerationEngine {
             for ep in &phase.entity_plans {
                 self.ensure_pk_reverse_map(&ep.entity_name);
             }
+
+            // Capture temporal baselines from actor entities for ordering
+            // constraints in subsequent phases.
+            self.capture_temporal_baselines(plan, &final_batches);
 
             tracing::info!(phase = phase_idx, "phase complete");
         }
@@ -626,9 +671,11 @@ impl GenerationEngine {
                     trait_name,
                     actor_entity,
                     actor_field,
+                    temporal_start_field,
                 } => {
                     self.build_actor_temporal_generator(
-                        ep, fp, trait_name, actor_entity, actor_field, plan,
+                        ep, fp, trait_name, actor_entity, actor_field,
+                        temporal_start_field.as_deref(), plan,
                     )
                 }
                 other => create_generator(other),
@@ -841,6 +888,7 @@ impl GenerationEngine {
         trait_name: &str,
         actor_entity: &str,
         actor_field: &str,
+        temporal_start_field: Option<&str>,
         plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
         let bh_fallback = || -> Box<dyn FieldGenerator> {
@@ -898,11 +946,40 @@ impl GenerationEngine {
             }
         };
 
+        // Collect per-actor creation timestamps if temporal_start_field is set.
+        let creation_times = temporal_start_field.and_then(|tsf| {
+            // Build a Vec<Option<i64>> from the temporal store, indexed by actor_index.
+            let pk_count = pk_reverse.len();
+            let mut times = vec![None; pk_count];
+            let mut found_any = false;
+            for (&_pk, &idx) in pk_reverse.iter() {
+                if let Some(ts) = self.temporal_store.get(actor_entity, tsf, idx) {
+                    if idx < times.len() {
+                        times[idx] = Some(ts);
+                        found_any = true;
+                    }
+                }
+            }
+            if found_any {
+                Some(Arc::new(times))
+            } else {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    actor = actor_entity,
+                    temporal_field = tsf,
+                    "temporal baselines not captured — timestamps will not be constrained"
+                );
+                None
+            }
+        });
+
         tracing::debug!(
             entity = %ep.entity_name,
             field = %fp.field_name,
             trait_name = trait_name,
             actor = actor_entity,
+            temporal_start = ?temporal_start_field,
             "using actor-temporal generator"
         );
 
@@ -912,6 +989,7 @@ impl GenerationEngine {
             trait_name.to_string(),
             actor_entity.to_string(),
             actor_field.to_string(),
+            creation_times,
         ))
     }
 
