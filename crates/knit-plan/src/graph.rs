@@ -245,6 +245,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         }
     }
 
@@ -494,6 +495,7 @@ mod tests {
                 topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             }],
             vec![],
         );
@@ -521,6 +523,7 @@ mod tests {
                 topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             }],
             vec![],
         );
@@ -555,6 +558,7 @@ mod tests {
             topology: None,
             actor: true,
             persona_distribution: None,
+            activity_count: None,
         };
         let events = Entity {
             name: "events".to_string(),
@@ -576,6 +580,7 @@ mod tests {
             topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
         };
         // No explicit relationship — only ActorRef generator
         let model = model_with(vec![users, events], vec![]);
@@ -611,6 +616,7 @@ mod tests {
             topology: None,
             actor: true,
             persona_distribution: None,
+            activity_count: None,
         };
         let model = model_with(vec![users], vec![]);
         let result = assign_phases(&model).unwrap();

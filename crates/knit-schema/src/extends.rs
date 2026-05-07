@@ -118,6 +118,9 @@ fn merge_entity(parent: &mut Entity, child: &Entity) {
     if child.persona_distribution.is_some() {
         parent.persona_distribution = child.persona_distribution.clone();
     }
+    if child.activity_count.is_some() {
+        parent.activity_count = child.activity_count.clone();
+    }
 
     // Merge fields by name
     for child_field in &child.fields {
@@ -206,6 +209,7 @@ mod tests {
                 topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             }],
             relationships: vec![Relationship {
                 name: "user_order".to_string(),
@@ -266,6 +270,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 2);
@@ -285,6 +290,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 1);
@@ -313,6 +319,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities[0].fields.len(), 3);
@@ -341,6 +348,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         let merged = merge_models(&parent, &child);
         let email = merged.entities[0]
@@ -403,6 +411,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         let merged = merge_models(&parent, &child);
         // Parent constraints & topology preserved since child has empty/None

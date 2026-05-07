@@ -51,6 +51,7 @@ fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
         }
         validate_fields(entity, &names, model, errors);
         validate_entity_count(entity, errors);
+        validate_activity_count(entity, model, errors);
     }
 }
 
@@ -160,6 +161,117 @@ fn validate_entity_count(entity: &Entity, errors: &mut Vec<SchemaError>) {
         &entity.count,
         errors,
     );
+}
+
+fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<SchemaError>) {
+    let ac = match &entity.activity_count {
+        Some(ac) => ac,
+        None => return,
+    };
+
+    let path = format!("entities.{}.activity_count", entity.name);
+
+    // Cannot use activity_count on actor entities themselves (would cause
+    // stale actor-pool counts since pools are built before row overrides).
+    if entity.actor {
+        errors.push(SchemaError::Validation {
+            path: path.clone(),
+            message: "activity_count cannot be used on actor entities".to_string(),
+        });
+        return;
+    }
+
+    // actor_field must reference an existing field in this entity
+    if !entity.fields.iter().any(|f| f.name == ac.actor_field) {
+        errors.push(SchemaError::Validation {
+            path: path.clone(),
+            message: format!(
+                "actor_field '{}' not found in entity '{}'",
+                ac.actor_field, entity.name
+            ),
+        });
+    }
+
+    // trait_name must not be empty
+    if ac.trait_name.is_empty() {
+        errors.push(SchemaError::Validation {
+            path: path.clone(),
+            message: "trait name must not be empty".to_string(),
+        });
+    }
+
+    // actor_field must point to a known FK relationship
+    let target_rel = model.relationships.iter().find(|r| {
+        r.from == entity.name
+            && r.foreign_key
+                .as_deref()
+                .unwrap_or(&format!("{}_id", r.to))
+                == ac.actor_field
+    });
+
+    match target_rel {
+        None => {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "actor_field '{}' does not match any FK relationship from '{}'",
+                    ac.actor_field, entity.name
+                ),
+            });
+        }
+        Some(rel) => {
+            // Target entity must be an actor entity
+            let target_entity = model.entities.iter().find(|e| e.name == rel.to);
+            if let Some(target) = target_entity {
+                if !target.actor {
+                    errors.push(SchemaError::Validation {
+                        path: path.clone(),
+                        message: format!(
+                            "actor_field '{}' references '{}' which is not an actor entity",
+                            ac.actor_field, rel.to
+                        ),
+                    });
+                }
+            }
+
+            // Validate that trait_name exists in applicable personas.
+            // Use the same selection rule as compile_actor_pool(): personas
+            // prefixed with "{target_entity}_" OR unprefixed (global) personas.
+            if !ac.trait_name.is_empty() {
+                let entity_prefix = format!("{}_", rel.to);
+                let missing_trait: Vec<&str> = model
+                    .personas
+                    .iter()
+                    .filter(|p| {
+                        p.name.starts_with(&entity_prefix)
+                            || !model.entities.iter().any(|e| {
+                                p.name.starts_with(&format!("{}_", e.name))
+                            })
+                    })
+                    .filter(|p| {
+                        // Trait must be present and scalar (Int or Float)
+                        match p.traits.get(&ac.trait_name) {
+                            Some(Value::Float(_)) | Some(Value::Int(_)) => false,
+                            Some(_) => true, // non-scalar
+                            None => true,     // missing
+                        }
+                    })
+                    .map(|p| p.name.as_str())
+                    .collect();
+
+                if !missing_trait.is_empty() {
+                    errors.push(SchemaError::Validation {
+                        path: path.clone(),
+                        message: format!(
+                            "trait '{}' missing or non-numeric in persona(s): {}",
+                            ac.trait_name,
+                            missing_trait.join(", ")
+                        ),
+                    });
+                }
+            }
+        }
+    }
 }
 
 fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<SchemaError>) {
@@ -1421,6 +1533,7 @@ mod tests {
                 topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
@@ -1516,6 +1629,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -1553,6 +1667,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -1604,6 +1719,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -1655,6 +1771,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -1694,6 +1811,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         // Relationship without explicit foreign_key — implicit FK is "order_id"
         model.relationships.push(Relationship {
@@ -1792,6 +1910,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         let rel = Relationship {
             name: "user_order".to_string(),
@@ -2353,6 +2472,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         });
         model.entities[0].fields.push(Field {
             name: "ref_col".to_string(),
@@ -2558,6 +2678,7 @@ mod tests {
             }],
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });
@@ -2589,6 +2710,7 @@ mod tests {
             fields: vec![],
             actor: true,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });
@@ -2730,6 +2852,7 @@ mod tests {
             fields: vec![],
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });
@@ -2758,6 +2881,7 @@ mod tests {
             fields: vec![],
             actor: true,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });
@@ -2786,6 +2910,7 @@ mod tests {
             fields: vec![],
             actor: true,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });
@@ -2853,6 +2978,7 @@ mod tests {
             fields: vec![],
             actor: true,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });
@@ -2890,6 +3016,7 @@ mod tests {
             fields: vec![],
             actor: true,
             persona_distribution: None,
+            activity_count: None,
             constraints: vec![],
             topology: None,
         });

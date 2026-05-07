@@ -129,6 +129,14 @@ pub struct Entity {
     /// Name of the personas section to use for actor persona assignment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub persona_distribution: Option<String>,
+    /// Dynamic row count driven by per-actor activity rates.
+    ///
+    /// When set, the total row count for this entity is computed as the sum
+    /// of each actor's activity trait value (from the actor pool), instead of
+    /// using the static `count` field. The `count` field still serves as a
+    /// fallback estimate for planning when the actor pool is unavailable.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activity_count: Option<ActivityCount>,
 }
 
 /// A single field (column) within an [`Entity`].
@@ -624,6 +632,22 @@ impl Default for CountSpec {
     fn default() -> Self {
         CountSpec::Fixed(1000)
     }
+}
+
+/// Specification for dynamic, activity-driven row counts.
+///
+/// When an entity has this set, total rows = Σ(actor[i].trait_value) across
+/// all actors in the referenced entity's actor pool. The `actor_field`
+/// identifies the FK column pointing to the actor entity, and `trait_name`
+/// names the persona trait to sum.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ActivityCount {
+    /// FK field in this entity that references the actor entity (e.g. `"sender_id"`).
+    pub actor_field: String,
+    /// Persona trait name whose values are summed to determine total rows
+    /// (e.g. `"activity_rate"`).
+    #[serde(rename = "trait")]
+    pub trait_name: String,
 }
 
 // ── Relationship ─────────────────────────────────────────────────────
@@ -1182,6 +1206,7 @@ mod tests {
                 topology: None,
                 actor: false,
                 persona_distribution: None,
+            activity_count: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -1329,6 +1354,7 @@ mod tests {
             topology: None,
             actor: true,
             persona_distribution: Some("personas".into()),
+            activity_count: None,
         };
         let json = serde_json::to_string(&entity).unwrap();
         assert!(json.contains("\"actor\":true"));

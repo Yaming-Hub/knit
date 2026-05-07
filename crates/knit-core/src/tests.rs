@@ -443,6 +443,7 @@ fn minimal_data_model_roundtrip() {
             topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
         }],
         relationships: vec![],
         noise_profiles: vec![],
