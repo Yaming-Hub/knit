@@ -10,11 +10,13 @@ use std::fmt::Write;
 use tracing::{debug, info};
 
 use knit_core::{
-    CountSpec, DataModel, DistributionKind, DistributionSpec, Entity, Field,
-    GeneratorSpec, NullSpec, Relationship, RelationshipKind as CoreRelKind,
+    ActorRelationship, CountSpec, DataModel, DistributionKind, DistributionSpec, Entity, Field,
+    GeneratorSpec, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind,
     Value, WeightedChoice,
 };
 
+use crate::actor_graph::ActorRelationshipSpec;
+use crate::clustering::PersonaSpec;
 use crate::correlation::Correlation;
 use crate::fitting::{Distribution, FitResult};
 use crate::relationships::{RelationshipCandidate, RelationshipKind};
@@ -35,6 +37,10 @@ pub struct TableAnalysis {
     pub correlations: Vec<Correlation>,
     /// Number of rows observed in the source data.
     pub row_count: u64,
+    /// Discovered personas for this table (if it's an actor entity).
+    pub personas: Vec<PersonaSpec>,
+    /// Discovered actor-to-actor relationship specs (from actor_graph analysis).
+    pub actor_relationships: Vec<ActorRelationshipSpec>,
 }
 
 impl TableAnalysis {
@@ -46,6 +52,8 @@ impl TableAnalysis {
             relationships: Vec::new(),
             correlations: Vec::new(),
             row_count,
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 }
@@ -135,12 +143,53 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
     let mut entities = Vec::with_capacity(tables.len());
     let mut relationships = Vec::new();
     let mut correlations = Vec::new();
+    let mut personas = Vec::new();
+    let mut actor_relationships = Vec::new();
 
     for table in tables {
         let (entity, rels, corrs) = build_entity(table);
         entities.push(entity);
         relationships.extend(rels);
         correlations.extend(corrs);
+
+        // Convert discovered personas into core types (only for actor entities)
+        if !table.personas.is_empty() {
+            if let Some(entity) = entities.last() {
+                if entity.actor {
+                    let entity_name = &entity.name;
+                    for spec in &table.personas {
+                        // Namespace persona names by entity to avoid collisions
+                        // across multiple actor tables
+                        let namespaced = format!("{}_{}", entity_name, spec.name);
+                        personas.push(Persona {
+                            name: namespaced,
+                            weight: spec.weight,
+                            traits: spec.traits.clone(),
+                        });
+                    }
+                }
+            }
+
+            // Attach persona_distribution reference to actor entities.
+            if let Some(entity) = entities.last_mut() {
+                if entity.actor {
+                    entity.persona_distribution = Some("personas".into());
+                }
+            }
+        }
+
+        // Convert discovered actor relationships into core types
+        for spec in &table.actor_relationships {
+            actor_relationships.push(ActorRelationship {
+                name: spec.name.clone(),
+                from_entity: spec.from_entity.clone(),
+                to_entity: spec.to_entity.clone(),
+                graph_type: spec.graph_type.clone(),
+                params: spec.params.clone(),
+                community_count: spec.community_count.map(|c| CountSpec::Fixed(c as u64)),
+                hierarchy_depth: spec.hierarchy_depth,
+            });
+        }
     }
 
     let actor_count = entities.iter().filter(|e| e.actor).count();
@@ -155,6 +204,8 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         relationships = relationships.len(),
         actor_entities = actor_count,
         actor_columns = actor_col_count,
+        personas = personas.len(),
+        actor_relationships = actor_relationships.len(),
         "data model assembled"
     );
 
@@ -170,8 +221,8 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         correlations,
         params: BTreeMap::new(),
         schema_version: "1.0".to_string(),
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+        personas,
+        actor_relationships,
     }
 }
 
@@ -1201,6 +1252,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 5000,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1241,6 +1294,8 @@ mod tests {
             }],
             correlations: vec![],
             row_count: 1000,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1272,6 +1327,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 500,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1307,6 +1364,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 2000,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1396,6 +1455,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 50_000,
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1424,6 +1485,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1550,6 +1613,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -1577,6 +1642,8 @@ mod tests {
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
@@ -2023,5 +2090,105 @@ mod tests {
         // But not unrelated tables
         assert!(!is_actor_entity("app_orders", &[], &[]));
         assert!(!is_actor_entity("dim_product", &[], &[]));
+    }
+
+    // ── Schema emission (personas & relationships) ──────────────────
+
+    #[test]
+    fn assemble_emits_personas_for_actor_entity() {
+        let mut table = TableAnalysis::new(
+            "users".into(),
+            vec![ColumnAnalysis::new("user_id".into(), 0.0, 0.95)],
+            1000,
+        );
+        table.personas = vec![
+            PersonaSpec {
+                name: "power_user".into(),
+                weight: 0.3,
+                traits: BTreeMap::from([
+                    ("activity_rate".into(), Value::Float(50.0)),
+                ]),
+            },
+            PersonaSpec {
+                name: "casual_user".into(),
+                weight: 0.7,
+                traits: BTreeMap::from([
+                    ("activity_rate".into(), Value::Float(5.0)),
+                ]),
+            },
+        ];
+
+        let model = assemble_data_model("test", &[table]);
+
+        assert_eq!(model.personas.len(), 2);
+        assert_eq!(model.personas[0].name, "users_power_user");
+        assert_eq!(model.personas[0].weight, 0.3);
+        assert_eq!(model.personas[1].name, "users_casual_user");
+        assert_eq!(model.personas[1].weight, 0.7);
+
+        // Actor entity should have persona_distribution set
+        let entity = &model.entities[0];
+        assert!(entity.actor);
+        assert_eq!(entity.persona_distribution, Some("personas".into()));
+    }
+
+    #[test]
+    fn assemble_emits_actor_relationships() {
+        use crate::actor_graph::ActorRelationshipSpec;
+
+        let mut table = TableAnalysis::new(
+            "messages".into(),
+            vec![
+                ColumnAnalysis::new("sender_id".into(), 0.0, 0.9),
+                ColumnAnalysis::new("receiver_id".into(), 0.0, 0.9),
+            ],
+            5000,
+        );
+        table.actor_relationships = vec![ActorRelationshipSpec {
+            name: "messages_sender_id_receiver_id_network".into(),
+            from_entity: "messages".into(),
+            to_entity: "messages".into(),
+            graph_type: knit_core::GraphType::SmallWorld,
+            params: BTreeMap::from([
+                ("avg_degree".into(), 8.0),
+                ("reciprocity".into(), 0.6),
+            ]),
+            community_count: Some(3),
+            hierarchy_depth: None,
+        }];
+
+        let model = assemble_data_model("test", &[table]);
+
+        assert_eq!(model.actor_relationships.len(), 1);
+        let rel = &model.actor_relationships[0];
+        assert_eq!(rel.name, "messages_sender_id_receiver_id_network");
+        assert_eq!(rel.from_entity, "messages");
+        assert_eq!(rel.graph_type, knit_core::GraphType::SmallWorld);
+        assert_eq!(rel.params.get("avg_degree"), Some(&8.0));
+        assert_eq!(rel.community_count, Some(CountSpec::Fixed(3)));
+        assert_eq!(rel.hierarchy_depth, None);
+    }
+
+    #[test]
+    fn assemble_non_actor_table_no_persona_distribution() {
+        let mut table = TableAnalysis::new(
+            "orders".into(),
+            vec![ColumnAnalysis::new("order_id".into(), 0.0, 0.95)],
+            500,
+        );
+        // Personas on a non-actor table — should be skipped entirely
+        table.personas = vec![PersonaSpec {
+            name: "bulk_buyer".into(),
+            weight: 1.0,
+            traits: BTreeMap::new(),
+        }];
+
+        let model = assemble_data_model("test", &[table]);
+
+        // Non-actor tables don't emit personas
+        assert_eq!(model.personas.len(), 0);
+        let entity = &model.entities[0];
+        assert!(!entity.actor);
+        assert_eq!(entity.persona_distribution, None);
     }
 }
