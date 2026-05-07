@@ -108,6 +108,16 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan, behavioral: &Behaviora
             meta.actor_relationship_count,
         );
     }
+    if !plan.actor_pool.pools.is_empty() {
+        let total_actors: u64 = plan.actor_pool.pools.iter().map(|p| p.actor_count).sum();
+        println!(
+            "  {} {} pool(s), {} total actors, {} graph plan(s)",
+            "actor pool:".dimmed(),
+            plan.actor_pool.pools.len(),
+            total_actors,
+            plan.actor_pool.graph_plans.len(),
+        );
+    }
     println!();
 
     // Phase breakdown
