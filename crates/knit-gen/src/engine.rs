@@ -26,6 +26,7 @@ use crate::error::GenError;
 use crate::generators::actor_fk::ActorForeignKeyGenerator;
 use crate::generators::create_generator;
 use crate::generators::fk::ForeignKeyGenerator;
+use crate::generators::graph_fk::GraphTargetFkGenerator;
 use crate::generators::string_fk::StringForeignKeyGenerator;
 use crate::keystore::InMemoryKeyStore;
 use crate::null_mask::apply_null_mask;
@@ -127,6 +128,10 @@ pub struct GenerationEngine {
     params: HashMap<String, String>,
     /// Optional actor pool for persona-weighted FK generation.
     actor_pool: Option<Arc<ActorPool>>,
+    /// Generated relationship graphs: graph_name → adjacency list.
+    graph_adjacency: HashMap<String, Arc<crate::generators::graph_fk::AdjacencyList>>,
+    /// Reverse PK→index maps: entity_name → (PK → actor_index).
+    pk_reverse_maps: HashMap<String, Arc<std::collections::HashMap<i64, usize>>>,
 }
 
 impl GenerationEngine {
@@ -138,6 +143,8 @@ impl GenerationEngine {
             batch_size: DEFAULT_BATCH_SIZE,
             params: HashMap::new(),
             actor_pool: None,
+            graph_adjacency: HashMap::new(),
+            pk_reverse_maps: HashMap::new(),
         }
     }
 
@@ -149,6 +156,8 @@ impl GenerationEngine {
             batch_size: batch_size.max(1),
             params: HashMap::new(),
             actor_pool: None,
+            graph_adjacency: HashMap::new(),
+            pk_reverse_maps: HashMap::new(),
         }
     }
 
@@ -165,6 +174,66 @@ impl GenerationEngine {
     pub fn with_actor_pool(mut self, pool: Arc<ActorPool>) -> Self {
         self.actor_pool = Some(pool);
         self
+    }
+
+    /// Generate relationship graphs and pre-build adjacency lists.
+    ///
+    /// Must be called after `with_actor_pool` and before `execute`. Generates
+    /// all graphs from the plan's actor_pool.graph_plans and builds outbound
+    /// adjacency lists for use by [`GraphTargetFkGenerator`].
+    pub fn build_graphs(&mut self, plan: &ExecutionPlan) {
+        let pool = match &self.actor_pool {
+            Some(p) => p,
+            None => return,
+        };
+
+        for graph_plan in &plan.actor_pool.graph_plans {
+            let graph = crate::graph::generate_graph(graph_plan, pool, plan.rng_tree.global_seed);
+
+            // Build outbound adjacency list (Vec<Vec<usize>> indexed by source actor)
+            let source_count = graph.source_count as usize;
+            let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); source_count];
+            for edge in &graph.edges {
+                if edge.from < source_count {
+                    adjacency[edge.from].push(edge.to);
+                }
+            }
+
+            tracing::info!(
+                graph = %graph.name,
+                from = %graph.from_entity,
+                to = %graph.to_entity,
+                edges = graph.edges.len(),
+                "built graph adjacency"
+            );
+
+            self.graph_adjacency.insert(graph.name.clone(), Arc::new(adjacency));
+        }
+    }
+
+    /// Build the reverse PK→index map for an entity's key store.
+    ///
+    /// Must be called after the entity's key store has been populated
+    /// (i.e., after the actor entity's phase completes).
+    fn ensure_pk_reverse_map(&mut self, entity_name: &str) {
+        if self.pk_reverse_maps.contains_key(entity_name) {
+            return;
+        }
+        if let Some(ks) = self.key_stores.get(entity_name) {
+            let len = ks.len();
+            let mut map = std::collections::HashMap::with_capacity(len);
+            for i in 0..len {
+                if let Some(pk) = ks.get_by_index(i) {
+                    map.insert(pk, i);
+                }
+            }
+            tracing::debug!(
+                entity = entity_name,
+                entries = map.len(),
+                "built PK reverse map"
+            );
+            self.pk_reverse_maps.insert(entity_name.to_string(), Arc::new(map));
+        }
     }
 
     /// Execute the full plan, calling `on_batch` for every produced
@@ -214,6 +283,12 @@ impl GenerationEngine {
             // Deliver batches through the callback (sequential, in order).
             for (entity_name, batch) in &final_batches {
                 on_batch(entity_name, batch.clone())?;
+            }
+
+            // Build PK reverse maps for entities completed in this phase
+            // (needed by GraphTargetFkGenerator in subsequent phases).
+            for ep in &phase.entity_plans {
+                self.ensure_pk_reverse_map(&ep.entity_name);
             }
 
             tracing::info!(phase = phase_idx, "phase complete");
@@ -497,9 +572,111 @@ impl GenerationEngine {
                         )) as Box<dyn FieldGenerator>
                     }
                 }
+                GeneratorPlan::GraphTarget {
+                    graph_name,
+                    source_field,
+                    from_entity,
+                    target_entity,
+                    ..
+                } => {
+                    if let Some(gen) = self.build_graph_target_generator(ep, fp, graph_name, source_field, from_entity, target_entity, plan) {
+                        gen
+                    } else if let Some(ks) = self.key_stores.get(target_entity) {
+                        Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                    } else {
+                        Box::new(crate::generators::constant::ConstantGenerator::new(
+                            knit_core::Value::Null,
+                        )) as Box<dyn FieldGenerator>
+                    }
+                }
                 other => create_generator(other),
             })
             .collect()
+    }
+
+    /// Build a GraphTargetFkGenerator for a field with GraphTarget plan.
+    /// Returns None if preconditions aren't met (falls back to uniform FK).
+    fn build_graph_target_generator(
+        &self,
+        ep: &EntityPlan,
+        fp: &knit_plan::FieldPlan,
+        graph_name: &str,
+        source_field: &str,
+        from_entity: &str,
+        target_entity: &str,
+        plan: &ExecutionPlan,
+    ) -> Option<Box<dyn FieldGenerator>> {
+        // Safety check: source entity must be single-partition (same invariant as actor FK)
+        let from_partitions = Self::count_entity_partitions(plan, from_entity);
+        if from_partitions > 1 {
+            tracing::warn!(
+                entity = %ep.entity_name,
+                field = %fp.field_name,
+                from = from_entity,
+                partitions = from_partitions,
+                "graph source entity has multiple partitions — falling back to uniform FK"
+            );
+            return None;
+        }
+
+        // Need adjacency list for the graph
+        let adjacency = match self.graph_adjacency.get(graph_name) {
+            Some(adj) => Arc::clone(adj),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    graph = graph_name,
+                    "graph adjacency not found — falling back to uniform FK"
+                );
+                return None;
+            }
+        };
+
+        // Need PK reverse map for the source (from) entity
+        let pk_reverse = match self.pk_reverse_maps.get(from_entity) {
+            Some(m) => Arc::clone(m),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    from = from_entity,
+                    "PK reverse map not found for source entity — falling back to uniform FK"
+                );
+                return None;
+            }
+        };
+
+        // Need key store for target entity
+        let target_ks = match self.key_stores.get(target_entity) {
+            Some(ks) => Arc::clone(ks),
+            None => {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    target = target_entity,
+                    "target key store not found — falling back to uniform FK"
+                );
+                return None;
+            }
+        };
+
+        tracing::debug!(
+            entity = %ep.entity_name,
+            field = %fp.field_name,
+            graph = graph_name,
+            source = source_field,
+            from = from_entity,
+            target = target_entity,
+            "using graph-aware FK generator"
+        );
+
+        Some(Box::new(GraphTargetFkGenerator::new(
+            adjacency,
+            pk_reverse,
+            target_ks,
+            source_field.to_string(),
+        )))
     }
 
     /// Count the number of partitions for an entity in the plan.

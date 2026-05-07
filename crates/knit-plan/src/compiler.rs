@@ -81,7 +81,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
             let num_partitions = partitions.len() as u32;
 
             let entity_fks = fk_fields.get(entity_name).cloned().unwrap_or_default();
-            let field_plans = compile_field_plans(entity, &entity_fks, &row_counts, &index_strategy);
+            let field_plans = compile_field_plans(entity, &entity_fks, &row_counts, &index_strategy, &model.actor_relationships);
 
             let estimated_byte_size = estimate_byte_size(entity, row_count);
 
@@ -265,6 +265,7 @@ fn compile_field_plans(
     entity_fks: &[(String, String)],
     row_counts: &BTreeMap<String, u64>,
     _index_strategy: &IndexStrategy,
+    actor_relationships: &[knit_core::ActorRelationship],
 ) -> Vec<FieldPlan> {
     let fk_map: HashMap<&str, &str> = entity_fks
         .iter()
@@ -297,6 +298,23 @@ fn compile_field_plans(
             }
         } else {
             compile_generator(field, &entity.fields)
+        };
+
+        // Resolve GraphTarget's from/to entities from actor_relationships
+        let generator_plan = match generator_plan {
+            GeneratorPlan::GraphTarget { graph_name, source_field, key_store_kind, .. } => {
+                let ar = actor_relationships.iter().find(|ar| ar.name == graph_name);
+                let from_entity = ar.map(|a| a.from_entity.clone()).unwrap_or_default();
+                let target_entity = ar.map(|a| a.to_entity.clone()).unwrap_or_default();
+                GeneratorPlan::GraphTarget {
+                    graph_name,
+                    source_field,
+                    from_entity,
+                    target_entity,
+                    key_store_kind,
+                }
+            }
+            other => other,
         };
 
         let null_plan = compile_null_plan(&field.nullable);
@@ -482,8 +500,26 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     base_field: None,
                 }
             }
-            GeneratorSpec::RelationshipRef { relationship } => {
-                GeneratorPlan::Constant(Value::String(format!("{{relationship:{}}}", relationship)))
+            GeneratorSpec::RelationshipRef { relationship, source_field } => {
+                // Resolve source_field: use explicit value or auto-detect from
+                // other actor_column fields in the entity.
+                let resolved_source = source_field.clone().unwrap_or_else(|| {
+                    all_fields
+                        .iter()
+                        .find(|f| f.actor_column && f.name != field.name)
+                        .map(|f| f.name.clone())
+                        .unwrap_or_default()
+                });
+                // Target entity is inferred from the relationship's FK target.
+                // At this level we don't have the full model, so we use a
+                // placeholder that the top-level compiler resolves.
+                GeneratorPlan::GraphTarget {
+                    graph_name: relationship.clone(),
+                    source_field: resolved_source,
+                    from_entity: String::new(), // resolved below
+                    target_entity: String::new(), // resolved below
+                    key_store_kind: KeyStoreKind::InMemoryVec,
+                }
             }
             GeneratorSpec::PersonaField { trait_name } => {
                 GeneratorPlan::Constant(Value::String(format!("{{persona:{}}}", trait_name)))
@@ -666,6 +702,26 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .map(|d| compute_generator_spec_deps(d, all_fields))
                 .unwrap_or(0);
             ref_order.max(branch_max).max(default_max) + 1
+        }
+        // RelationshipRef depends on its source_field — must come after it
+        Some(GeneratorSpec::RelationshipRef { source_field, .. }) => {
+            if let Some(src) = source_field {
+                let src_order = all_fields
+                    .iter()
+                    .find(|f| f.name == *src)
+                    .map(|f| compute_dependency_order(f, all_fields))
+                    .unwrap_or(0);
+                src_order + 1
+            } else {
+                // Auto-detect: depends on any other actor_column field in the entity
+                let max_actor_order = all_fields
+                    .iter()
+                    .filter(|f| f.actor_column && f.name != field.name)
+                    .map(|f| compute_dependency_order(f, all_fields))
+                    .max()
+                    .unwrap_or(0);
+                max_actor_order + 1
+            }
         }
         _ => 0,
     }

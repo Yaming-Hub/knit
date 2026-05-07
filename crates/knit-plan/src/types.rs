@@ -329,6 +329,23 @@ pub enum GeneratorPlan {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source_file: Option<String>,
     },
+    /// Graph-aware FK — samples target actor from source actor's graph neighbors.
+    ///
+    /// At runtime, reads the source field column from `batch_columns`, maps each
+    /// PK value back to an actor index, looks up the actor's outgoing edges in the
+    /// named graph, and samples a neighbor's PK as the target value.
+    GraphTarget {
+        /// Name of the actor relationship graph to follow.
+        graph_name: String,
+        /// Field in the same entity to read source actor PKs from.
+        source_field: String,
+        /// Source entity for the graph (graph's from_entity, used for PK reverse map).
+        from_entity: String,
+        /// Entity that the target FK references (same as graph's to_entity).
+        target_entity: String,
+        /// Key store strategy for the target entity.
+        key_store_kind: KeyStoreKind,
+    },
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────
