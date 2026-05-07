@@ -219,17 +219,6 @@ fn build_entity_pool(plan: &ActorEntityPool, seed: u64) -> EntityActorPool {
     }
 }
 
-/// Build cumulative weights from persona weight specifications.
-fn build_cumulative_weights(personas: &[PersonaWeight]) -> Vec<f64> {
-    let mut cum = Vec::with_capacity(personas.len());
-    let mut total = 0.0;
-    for p in personas {
-        total += p.weight;
-        cum.push(total);
-    }
-    cum
-}
-
 /// Sample an index from a cumulative weight distribution.
 fn sample_from_cumulative(cum_weights: &[f64], rng: &mut impl Rng) -> usize {
     if cum_weights.is_empty() {

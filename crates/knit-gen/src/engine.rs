@@ -384,6 +384,14 @@ impl GenerationEngine {
     where
         F: FnMut(&str, RecordBatch) -> Result<(), GenError> + Send,
     {
+        // Auto-build relationship graphs if any are missing.
+        let needs_graphs = plan.actor_pool.graph_plans.iter().any(|gp| {
+            !self.graph_adjacency.contains_key(&gp.name)
+        });
+        if needs_graphs {
+            self.build_graphs(plan);
+        }
+
         for (phase_idx, phase) in plan.phases.iter().enumerate() {
             tracing::info!(phase = phase_idx, entities = phase.entity_plans.len(), "starting phase");
 
