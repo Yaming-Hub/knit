@@ -18,7 +18,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use knit_bind::{Compression, OutputFormat, Sink, SinkConfig};
 use knit_core::{CountSpec, DataModel, NoiseProfile};
-use knit_gen::GenerationEngine;
+use knit_gen::{ActorPool, GenerationEngine, generate_graph};
 use knit_noise::{Pipeline, PerturbConfig, ColumnFilter};
 use knit_plan::ExecutionPlan;
 
@@ -224,6 +224,48 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
             "⊘".yellow().bold(),
             model.noise_profiles.len(),
         );
+    }
+
+    // ── Build actor pool and relationship graphs ─────────────────────
+    // Only materialize behavioral pipeline when the plan has actor pools.
+    if !plan.actor_pool.pools.is_empty() {
+        let actor_pool = ActorPool::from_plan(&plan.actor_pool, model.seed);
+        let graphs: Vec<knit_gen::GeneratedGraph> = plan
+            .actor_pool
+            .graph_plans
+            .iter()
+            .filter_map(|gp| {
+                if !actor_pool.has_entity(&gp.from_entity) || !actor_pool.has_entity(&gp.to_entity) {
+                    if !cli.quiet {
+                        eprintln!(
+                            "{} graph '{}' skipped: entity not in pool (from: {}, to: {})",
+                            "⚠".yellow().bold(),
+                            gp.name,
+                            gp.from_entity,
+                            gp.to_entity,
+                        );
+                    }
+                    return None;
+                }
+                Some(generate_graph(gp, &actor_pool, model.seed))
+            })
+            .collect();
+
+        if !cli.quiet {
+            let total_actors: u64 = plan.actor_pool.pools.iter().map(|p| p.actor_count).sum();
+            eprintln!(
+                "{} actor pool ({} entity/entities, {} actors, {} graph(s))",
+                "✓".green().bold(),
+                plan.actor_pool.pools.len(),
+                format_count(total_actors),
+                graphs.len(),
+            );
+        }
+
+        // Materialize to validate behavioral pipeline end-to-end.
+        // Future PR will pass these to InteractionGenerator for behavioral records.
+        let _actor_pool = actor_pool;
+        let _graphs = graphs;
     }
 
     // Track per-entity row counts for JSON progress events
