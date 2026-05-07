@@ -87,7 +87,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
             let num_partitions = partitions.len() as u32;
 
             let entity_fks = fk_fields.get(entity_name).cloned().unwrap_or_default();
-            let field_plans = compile_field_plans(entity, &entity_fks, &row_counts, &index_strategy, &model.actor_relationships);
+            let field_plans = compile_field_plans(entity, &entity_fks, &row_counts, &index_strategy, &model.actor_relationships, model);
 
             let estimated_byte_size = estimate_byte_size(entity, row_count);
 
@@ -340,6 +340,7 @@ fn compile_field_plans(
     row_counts: &BTreeMap<String, u64>,
     _index_strategy: &IndexStrategy,
     actor_relationships: &[knit_core::ActorRelationship],
+    model: &DataModel,
 ) -> Vec<FieldPlan> {
     let fk_map: HashMap<&str, &str> = entity_fks
         .iter()
@@ -411,7 +412,40 @@ fn compile_field_plans(
                 let actor_entity = fk_map.get(actor_field.as_str())
                     .map(|s| s.to_string())
                     .unwrap_or_default();
-                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field }
+                // Auto-detect temporal_start_field: prefer a datetime field
+                // with a creation/signup-like name. Fall back to the sole
+                // datetime field only when exactly one exists.
+                let temporal_start_field = if !actor_entity.is_empty() {
+                    let actor_ent = model.entities.iter().find(|e| e.name == actor_entity);
+                    actor_ent.and_then(|e| {
+                        let dt_fields: Vec<&str> = e.fields.iter()
+                            .filter(|f| matches!(
+                                f.data_type,
+                                knit_core::DataType::Datetime
+                                    | knit_core::DataType::DatetimeUs
+                                    | knit_core::DataType::Datetimetz
+                                    | knit_core::DataType::Date
+                            ))
+                            .map(|f| f.name.as_str())
+                            .collect();
+                        // Try to find a creation/signup-like field first
+                        let creation_names = ["signup", "created", "registered", "joined", "creation"];
+                        let creation_field = dt_fields.iter().find(|name| {
+                            let lower = name.to_lowercase();
+                            creation_names.iter().any(|kw| lower.contains(kw))
+                        });
+                        if let Some(field) = creation_field {
+                            Some(field.to_string())
+                        } else if dt_fields.len() == 1 {
+                            Some(dt_fields[0].to_string())
+                        } else {
+                            None // ambiguous or none — skip auto-detection
+                        }
+                    })
+                } else {
+                    None
+                };
+                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field }
             }
             other => other,
         };
@@ -603,6 +637,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     trait_name: trait_name.clone(),
                     actor_entity: String::new(), // resolved in compile_field_plans
                     actor_field,
+                    temporal_start_field: None, // resolved in compile_field_plans
                 }
             }
             GeneratorSpec::RelationshipRef { relationship, source_field } => {

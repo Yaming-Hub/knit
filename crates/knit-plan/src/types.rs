@@ -364,6 +364,10 @@ pub enum GeneratorPlan {
     /// Reads the actor FK column, looks up the actor's temporal trait (expected
     /// to be a float representing preferred hour 0–23), and generates timestamps
     /// with a wrapped-normal distribution centered on that hour.
+    ///
+    /// When `temporal_start_field` is set, generated timestamps are constrained
+    /// to be **after** the actor's creation time (captured from the actor entity's
+    /// datetime column during generation).
     ActorTemporal {
         /// Name of the persona trait for temporal bias (e.g. `"peak_hours"`).
         trait_name: String,
@@ -371,6 +375,9 @@ pub enum GeneratorPlan {
         actor_entity: String,
         /// FK field in this entity that references the actor entity.
         actor_field: String,
+        /// Optional: datetime field in the actor entity whose value serves as
+        /// the lower bound for generated timestamps (e.g. `"signup_date"`).
+        temporal_start_field: Option<String>,
     },
 }
 

@@ -29,6 +29,7 @@ pub mod null_mask;
 pub mod plugin;
 pub mod sampled_key_store;
 pub mod string_keystore;
+pub mod temporal_store;
 pub mod traits;
 
 pub use actor_pool::ActorPool;
