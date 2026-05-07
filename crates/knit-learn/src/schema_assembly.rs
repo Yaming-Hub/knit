@@ -335,6 +335,7 @@ fn build_entity(
         topology: None,
         actor: is_actor,
         persona_distribution: None,
+            activity_count: None,
     };
 
     (entity, rels, corrs)

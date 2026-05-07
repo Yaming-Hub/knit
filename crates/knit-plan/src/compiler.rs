@@ -33,8 +33,14 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     // 1. Build dependency graph and assign phases.
     let assignment = graph::assign_phases(model)?;
 
-    // 2. Resolve row counts.
-    let row_counts = graph::resolve_row_counts(model);
+    // 2. Resolve row counts (static).
+    let mut row_counts = graph::resolve_row_counts(model);
+
+    // 2b. Build actor pool plan early to compute dynamic row counts.
+    let actor_pool = compile_actor_pool(model, &row_counts);
+
+    // 2c. Override row counts for entities with activity_count specification.
+    apply_activity_counts(model, &actor_pool, &mut row_counts);
 
     // 3. Build entity lookup.
     let entity_map: HashMap<&str, &Entity> =
@@ -126,10 +132,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     // 7. Build RNG tree.
     let rng_tree = rng_tree::build_rng_tree(model.seed, &rng_entities);
 
-    // 8. Build actor pool plan.
-    let actor_pool = compile_actor_pool(model, &row_counts);
-
-    // 9. Build metadata.
+    // 8. Build metadata.
     let deferred_ref_count = assignment.deferred_refs.len();
     let metadata = PlanMetadata {
         schema_name: model.name.clone(),
@@ -152,6 +155,77 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
         actor_pool,
         metadata,
     })
+}
+
+/// Override row counts for entities with `activity_count` specification.
+///
+/// For each entity with `activity_count`, computes the expected total rows
+/// as: Σ(persona.weight × actor_count × trait_value) across all personas.
+/// This gives the expected sum of per-actor activity rates.
+fn apply_activity_counts(
+    model: &DataModel,
+    actor_pool: &ActorPoolPlan,
+    row_counts: &mut BTreeMap<String, u64>,
+) {
+    for entity in &model.entities {
+        let ac = match &entity.activity_count {
+            Some(ac) => ac,
+            None => continue,
+        };
+
+        // Find the actor entity referenced by the actor_field FK.
+        // Look up the relationship to find which entity the FK points to.
+        let actor_entity = model
+            .relationships
+            .iter()
+            .find(|r| {
+                r.from == entity.name
+                    && r.foreign_key
+                        .as_deref()
+                        .unwrap_or(&format!("{}_id", r.to))
+                        == ac.actor_field
+            })
+            .map(|r| r.to.as_str());
+
+        let actor_entity = match actor_entity {
+            Some(e) => e,
+            None => {
+                // Could not resolve actor entity from FK field — skip.
+                continue;
+            }
+        };
+
+        // Find the actor entity's pool in the actor pool plan.
+        let pool = actor_pool
+            .pools
+            .iter()
+            .find(|p| p.entity_name == actor_entity);
+
+        let pool = match pool {
+            Some(p) => p,
+            None => {
+                // Actor entity has no pool — fall back to static count.
+                continue;
+            }
+        };
+
+        // Compute expected total: Σ(persona.weight × actor_count × trait_value)
+        let mut expected_total: f64 = 0.0;
+        for pw in &pool.persona_weights {
+            let trait_value = match pw.traits.get(&ac.trait_name) {
+                Some(Value::Float(f)) => *f,
+                Some(Value::Int(i)) => *i as f64,
+                _ => {
+                    // Trait not found or not numeric — treat as 0.
+                    0.0
+                }
+            };
+            expected_total += pw.weight * pool.actor_count as f64 * trait_value;
+        }
+
+        let dynamic_count = expected_total.round().max(0.0) as u64;
+        row_counts.insert(entity.name.clone(), dynamic_count);
+    }
 }
 
 /// Compile the actor pool plan from personas and actor relationships.
@@ -925,6 +999,7 @@ mod tests {
             topology: None,
         actor: false,
         persona_distribution: None,
+            activity_count: None,
         }
     }
 
@@ -1659,6 +1734,7 @@ mod tests {
                 topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
             }],
             vec![],
         );
@@ -2027,5 +2103,112 @@ mod tests {
         assert!((total - 1.0).abs() < 1e-10);
         assert!((pool.persona_weights[0].weight - 0.4).abs() < 1e-10);
         assert!((pool.persona_weights[1].weight - 0.6).abs() < 1e-10);
+    }
+
+    #[test]
+    fn activity_count_overrides_row_count() {
+        // Set up: actor entity "users" with 100 actors, two personas,
+        // and a "posts" entity with activity_count referencing users.
+        let mut users = simple_entity("users", 100);
+        users.actor = true;
+        users.persona_distribution = Some("personas".into());
+
+        let mut posts = simple_entity("posts", 9999); // static fallback
+        posts.fields.push(Field {
+            name: "author_id".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: true,
+        });
+        posts.activity_count = Some(ActivityCount {
+            actor_field: "author_id".to_string(),
+            trait_name: "post_rate".to_string(),
+        });
+
+        let mut model = simple_model(
+            "activity_test",
+            vec![users, posts],
+            vec![Relationship {
+                name: "post_author".to_string(),
+                from: "posts".to_string(),
+                to: "users".to_string(),
+                kind: RelationshipKind::ManyToOne,
+                foreign_key: Some("author_id".to_string()),
+                cardinality: None,
+            }],
+        );
+
+        // Personas: heavy (weight 0.3, post_rate=20), light (weight 0.7, post_rate=2)
+        model.personas.push(Persona {
+            name: "users_heavy".to_string(),
+            weight: 0.3,
+            traits: BTreeMap::from([("post_rate".to_string(), Value::Float(20.0))]),
+        });
+        model.personas.push(Persona {
+            name: "users_light".to_string(),
+            weight: 0.7,
+            traits: BTreeMap::from([("post_rate".to_string(), Value::Float(2.0))]),
+        });
+
+        let plan = compile(&model).unwrap();
+
+        // Expected: 0.3 * 100 * 20 + 0.7 * 100 * 2 = 600 + 140 = 740
+        let posts_plan = plan
+            .phases
+            .iter()
+            .flat_map(|p| &p.entity_plans)
+            .find(|ep| ep.entity_name == "posts")
+            .unwrap();
+        let total: u64 = posts_plan.partitions.iter().map(|p| p.end_row - p.start_row).sum();
+        assert_eq!(total, 740, "dynamic count should be 740, not the static 9999");
+    }
+
+    #[test]
+    fn activity_count_uses_fallback_when_no_pool() {
+        // Entity with activity_count but no actor pool (no personas defined).
+        let mut posts = simple_entity("posts", 500);
+        posts.fields.push(Field {
+            name: "author_id".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: true,
+        });
+        posts.activity_count = Some(ActivityCount {
+            actor_field: "author_id".to_string(),
+            trait_name: "post_rate".to_string(),
+        });
+
+        let model = simple_model(
+            "fallback_test",
+            vec![simple_entity("users", 100), posts],
+            vec![Relationship {
+                name: "post_author".to_string(),
+                from: "posts".to_string(),
+                to: "users".to_string(),
+                kind: RelationshipKind::ManyToOne,
+                foreign_key: Some("author_id".to_string()),
+                cardinality: None,
+            }],
+        );
+
+        let plan = compile(&model).unwrap();
+
+        // No personas → no pool → static count preserved.
+        let posts_plan = plan
+            .phases
+            .iter()
+            .flat_map(|p| &p.entity_plans)
+            .find(|ep| ep.entity_name == "posts")
+            .unwrap();
+        let total: u64 = posts_plan.partitions.iter().map(|p| p.end_row - p.start_row).sum();
+        assert_eq!(total, 500, "should use static fallback when no actor pool");
     }
 }

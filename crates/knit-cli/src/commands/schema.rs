@@ -157,6 +157,12 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
                 doc.push_str("**Actor entity** (no persona distribution specified)\n\n");
             }
         }
+        if let Some(ac) = &entity.activity_count {
+            doc.push_str(&format!(
+                "**Activity count:** actor\\_field=`{}`, trait=`{}`\n\n",
+                ac.actor_field, ac.trait_name
+            ));
+        }
 
         if !entity.fields.is_empty() {
             doc.push_str("| Field | Type | Nullable | Generator |\n");
@@ -443,6 +449,15 @@ fn diff_entity(diffs: &mut Vec<DiffEntry>, a: &Entity, b: &Entity) {
         });
     }
 
+    // Activity count diff
+    if a.activity_count != b.activity_count {
+        diffs.push(DiffEntry::FieldChanged {
+            entity: entity.clone(),
+            field: "activity_count".to_string(),
+            detail: format!("{:?} → {:?}", a.activity_count, b.activity_count),
+        });
+    }
+
     let fields_a: BTreeSet<&str> = a.fields.iter().map(|f| f.name.as_str()).collect();
     let fields_b: BTreeSet<&str> = b.fields.iter().map(|f| f.name.as_str()).collect();
 
@@ -601,6 +616,12 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
         if let Some(pd) = &entity.persona_distribution {
             out.push_str(&format!("persona_distribution = \"{}\"\n", pd));
         }
+        if let Some(ac) = &entity.activity_count {
+            out.push_str(&format!(
+                "activity_count = {{ actor_field = \"{}\", \"trait\" = \"{}\" }}\n",
+                ac.actor_field, ac.trait_name
+            ));
+        }
         // Count
         match &entity.count {
             knit_core::CountSpec::Fixed(n) => {
@@ -709,6 +730,7 @@ mod tests {
             topology: None,
             actor: false,
             persona_distribution: None,
+            activity_count: None,
         }
     }
 

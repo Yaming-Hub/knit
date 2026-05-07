@@ -54,9 +54,13 @@ fn social_platform_generates_all_entities() {
     );
 
     assert_eq!(total_rows(&batches["users"]), 500);
-    assert_eq!(total_rows(&batches["posts"]), 5000);
-    assert_eq!(total_rows(&batches["comments"]), 15000);
-    assert_eq!(total_rows(&batches["direct_messages"]), 8000);
+    // Posts, comments, and direct_messages use activity_count — their row
+    // counts are computed dynamically from persona weights × actor count.
+    // posts: 0.15×500×12 + 0.55×500×3 + 0.30×500×0.2 = 1755
+    assert_eq!(total_rows(&batches["posts"]), 1755);
+    // comments & direct_messages: 0.15×500×80 + 0.55×500×20 + 0.30×500×3 = 11950
+    assert_eq!(total_rows(&batches["comments"]), 11950);
+    assert_eq!(total_rows(&batches["direct_messages"]), 11950);
 }
 
 #[test]
@@ -128,8 +132,9 @@ fn social_platform_persona_weighted_distribution() {
     // With persona weighting (power_user activity=80 vs lurker activity=3),
     // the distribution should be heavily skewed.
     // Top 20% of authors (100 users) should produce much more than 20% of posts.
+    let total_posts = author_ids.len() as f64;
     let top_100_posts: u32 = sorted_counts.iter().take(100).sum();
-    let top_100_frac = top_100_posts as f64 / 5000.0;
+    let top_100_frac = top_100_posts as f64 / total_posts;
 
     assert!(
         top_100_frac > 0.50,
@@ -139,7 +144,7 @@ fn social_platform_persona_weighted_distribution() {
 
     // Bottom 100 authors should produce much less
     let bottom_100_posts: u32 = sorted_counts.iter().rev().take(100).sum();
-    let bottom_100_frac = bottom_100_posts as f64 / 5000.0;
+    let bottom_100_frac = bottom_100_posts as f64 / total_posts;
 
     assert!(
         bottom_100_frac < 0.15,
