@@ -179,6 +179,15 @@ enum Command {
         /// Learn only specific entities/tables (repeatable). Others are skipped.
         #[arg(long = "entity")]
         entities: Vec<String>,
+        /// Enable human behavioral analysis (actor profiling, persona clustering, relationship graphs).
+        #[arg(long)]
+        actors: bool,
+        /// Specify actor columns explicitly (repeatable). Skips auto-detection.
+        #[arg(long = "actor-column")]
+        actor_columns: Vec<String>,
+        /// Maximum number of personas to discover (default: auto via silhouette score).
+        #[arg(long)]
+        personas: Option<usize>,
     },
     /// Inspect an incremental learning state file.
     Inspect {
@@ -289,8 +298,16 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
-        Command::Learn { source, output, sample, state, finalize, strict, entities } => {
-            learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, entities, &cli)
+        Command::Learn { source, output, sample, state, finalize, strict, entities, actors, actor_columns, personas } => {
+            let actors_opts = if *actors || !actor_columns.is_empty() || personas.is_some() {
+                Some(learn::ActorsOpts {
+                    explicit_columns: actor_columns.clone(),
+                    max_personas: *personas,
+                })
+            } else {
+                None
+            };
+            learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, entities, actors_opts.as_ref(), &cli)
         }
         Command::Inspect { state, columns } => {
             inspect::run(state, *columns, &cli)

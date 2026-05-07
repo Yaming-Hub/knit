@@ -27,6 +27,14 @@ use knit_learn::schema_assembly::{assemble_data_model, ColumnAnalysis, TableAnal
 use knit_learn::temporal::{detect_temporal_pattern, TemporalPatternSpec};
 use knit_learn::type_inference::{infer_type, InferredType, StringPattern};
 
+/// Options for the `--actors` behavioral analysis pipeline.
+pub struct ActorsOpts {
+    /// Explicitly specified actor columns (empty = auto-detect).
+    pub explicit_columns: Vec<String>,
+    /// Maximum number of personas (None = auto via silhouette score).
+    pub max_personas: Option<usize>,
+}
+
 /// Intermediate struct for TOML serialization matching the Weave schema format.
 #[derive(Serialize)]
 struct RawOutputSchema {
@@ -38,6 +46,10 @@ struct RawOutputSchema {
     relationships: Vec<knit_core::Relationship>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     correlations: Vec<knit_core::Correlation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    personas: Vec<knit_core::Persona>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    actor_relationships: Vec<knit_core::ActorRelationship>,
 }
 
 /// Model metadata for TOML output.
@@ -64,6 +76,7 @@ pub fn run(
     finalize: bool,
     strict: bool,
     entities: &[String],
+    actors_opts: Option<&ActorsOpts>,
     cli: &crate::Cli,
 ) -> Result<()> {
     // Validate argument combinations
@@ -83,16 +96,19 @@ pub fn run(
 
     // Route: incremental mode if --state is provided
     if let Some(state_file) = state_path {
+        if actors_opts.is_some() {
+            anyhow::bail!("--actors is not supported with --state (incremental mode)");
+        }
         return run_incremental(source, output, sample, state_file, finalize, strict, &entity_filter, cli);
     }
 
     // Batch mode (original behavior)
     let source = source.unwrap();
-    run_batch(source, output, sample, &entity_filter, cli)
+    run_batch(source, output, sample, &entity_filter, actors_opts, cli)
 }
 
 /// Batch mode: load all data, profile, fit, emit schema (original behavior).
-fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &HashSet<String>, cli: &crate::Cli) -> Result<()> {
+fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &HashSet<String>, actors_opts: Option<&ActorsOpts>, cli: &crate::Cli) -> Result<()> {
     let source_path = Path::new(source);
     anyhow::ensure!(
         source_path.exists(),
@@ -287,6 +303,18 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
         pb.finish_and_clear();
     }
 
+    // 4b. Behavioral analysis (when --actors is enabled)
+    let mut behavioral_stats = BehavioralStats::default();
+    if let Some(opts) = actors_opts {
+        if !cli.quiet {
+            eprintln!(
+                "  {} running behavioral analysis",
+                "→".dimmed(),
+            );
+        }
+        behavioral_stats = run_behavioral_pipeline(&tables, &mut table_analyses, opts, cli)?;
+    }
+
     // 5. Assemble data model
     let model_name = Path::new(output)
         .file_stem()
@@ -317,6 +345,8 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
         entities: data_model.entities.clone(),
         relationships: data_model.relationships.clone(),
         correlations: data_model.correlations.clone(),
+        personas: data_model.personas.clone(),
+        actor_relationships: data_model.actor_relationships.clone(),
     };
     let schema_text = toml::to_string_pretty(&raw)
         .context("failed to serialize schema to TOML")?;
@@ -333,7 +363,7 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
     let total_corrs: usize = table_analyses.iter().map(|t| t.correlations.len()).sum();
 
     if cli.json {
-        let summary = serde_json::json!({
+        let mut summary = serde_json::json!({
             "event": "complete",
             "output": output,
             "tables": table_analyses.len(),
@@ -342,9 +372,14 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
             "correlations": total_corrs,
             "dictionaries": dict_count,
         });
+        if behavioral_stats.actors_profiled > 0 {
+            summary["actors"] = serde_json::json!(behavioral_stats.actors_profiled);
+            summary["personas"] = serde_json::json!(behavioral_stats.personas_discovered);
+            summary["actor_graphs"] = serde_json::json!(behavioral_stats.graphs_discovered);
+        }
         println!("{}", summary);
     } else if !cli.quiet {
-        eprintln!(
+        let mut line = format!(
             "\n{} Wrote {} — {} table(s), {} column(s), {} relationship(s), {} correlation(s), {} dictionary(ies)",
             "✓".green().bold(),
             output.cyan(),
@@ -354,6 +389,15 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
             total_corrs,
             dict_count,
         );
+        if behavioral_stats.actors_profiled > 0 {
+            line.push_str(&format!(
+                ", {} actor(s), {} persona(s), {} graph(s)",
+                behavioral_stats.actors_profiled,
+                behavioral_stats.personas_discovered,
+                behavioral_stats.graphs_discovered,
+            ));
+        }
+        eprintln!("{}", line);
     }
 
     Ok(())
@@ -642,6 +686,8 @@ fn emit_schema_from_state(
         entities: data_model.entities.clone(),
         relationships: data_model.relationships.clone(),
         correlations: data_model.correlations.clone(),
+        personas: data_model.personas.clone(),
+        actor_relationships: data_model.actor_relationships.clone(),
     };
     let schema_text = toml::to_string_pretty(&raw)
         .context("failed to serialize schema to TOML")?;
@@ -1809,6 +1855,234 @@ fn most_common_count(counts: &[usize]) -> usize {
         .unwrap_or(1)
 }
 
+/// Aggregated statistics from the behavioral analysis pipeline.
+#[derive(Default)]
+struct BehavioralStats {
+    actors_profiled: usize,
+    personas_discovered: usize,
+    graphs_discovered: usize,
+}
+
+/// Run the full behavioral analysis pipeline: actor profiling → persona clustering → relationship graphs.
+///
+/// Populates `table_analyses` with discovered personas and actor relationship specs so that
+/// `assemble_data_model` can emit them into the schema.
+fn run_behavioral_pipeline(
+    tables: &[IngestionResult],
+    table_analyses: &mut [TableAnalysis],
+    opts: &ActorsOpts,
+    cli: &crate::Cli,
+) -> Result<BehavioralStats> {
+    use knit_learn::actor_graph::{RelationshipAccumulator, RelationshipDiscoveryConfig};
+    use knit_learn::behavioral::ActorProfiler;
+    use knit_learn::clustering::{discover_personas, ClusteringConfig};
+    use knit_learn::schema_assembly::score_actor_column;
+
+    let mut stats = BehavioralStats::default();
+
+    // Validate explicit columns exist in at least one table
+    if !opts.explicit_columns.is_empty() {
+        let all_columns: HashSet<&str> = tables.iter()
+            .flat_map(|t| t.schema.fields().iter().map(|f| f.name().as_str()))
+            .collect();
+        let unknown: Vec<&str> = opts.explicit_columns.iter()
+            .filter(|c| !all_columns.contains(c.as_str()))
+            .map(|s| s.as_str())
+            .collect();
+        if !unknown.is_empty() {
+            anyhow::bail!(
+                "unknown --actor-column name(s): {}; available columns: {}",
+                unknown.join(", "),
+                {
+                    let mut avail: Vec<&str> = all_columns.into_iter().collect();
+                    avail.sort();
+                    avail.join(", ")
+                }
+            );
+        }
+    }
+
+    for (table, analysis) in tables.iter().zip(table_analyses.iter_mut()) {
+        // Determine actor columns for this table
+        let actor_cols: Vec<String> = if !opts.explicit_columns.is_empty() {
+            // Filter to columns that actually exist in this table
+            let schema_cols: HashSet<&str> = table.schema.fields()
+                .iter()
+                .map(|f| f.name().as_str())
+                .collect();
+            opts.explicit_columns.iter()
+                .filter(|c| schema_cols.contains(c.as_str()))
+                .cloned()
+                .collect()
+        } else {
+            // Auto-detect via name heuristics
+            table.schema.fields()
+                .iter()
+                .filter(|f| score_actor_column(f.name()) >= 0.6)
+                .map(|f| f.name().clone())
+                .collect()
+        };
+
+        if actor_cols.is_empty() {
+            continue;
+        }
+
+        // Mark explicit actor columns on the analysis so build_entity honors them
+        if !opts.explicit_columns.is_empty() {
+            for col in &mut analysis.columns {
+                if actor_cols.contains(&col.name) {
+                    col.is_actor_column = true;
+                }
+            }
+        }
+
+        // Find temporal columns (Timestamp types) for profiling
+        let temporal_col = table.schema.fields()
+            .iter()
+            .find(|f| matches!(f.data_type(), DataType::Timestamp(_, _)))
+            .map(|f| f.name().clone());
+
+        // Identify feature columns (non-actor, non-temporal, non-PK string/numeric)
+        let feature_cols: Vec<String> = table.schema.fields()
+            .iter()
+            .filter(|f| {
+                let name = f.name();
+                if actor_cols.contains(name) {
+                    return false;
+                }
+                if temporal_col.as_deref() == Some(name.as_str()) {
+                    return false;
+                }
+                // Only profile string and numeric columns
+                matches!(f.data_type(),
+                    DataType::Utf8 | DataType::LargeUtf8 |
+                    DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64 |
+                    DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64 |
+                    DataType::Float32 | DataType::Float64
+                )
+            })
+            .map(|f| f.name().clone())
+            .collect();
+
+        // Profile each actor column
+        for actor_col in &actor_cols {
+            if !cli.quiet {
+                eprintln!(
+                    "    {} profiling actors on {}.{}",
+                    "→".dimmed(),
+                    table.entity.cyan(),
+                    actor_col,
+                );
+            }
+
+            let mut profiler = ActorProfiler::new(
+                actor_col.clone(),
+                temporal_col.clone(),
+            );
+
+            let feature_refs: Vec<&str> = feature_cols.iter().map(|s| s.as_str()).collect();
+            for batch in &table.batches {
+                profiler.observe_batch(batch, &feature_refs);
+            }
+
+            let profiles = profiler.finalize();
+            if profiles.is_empty() {
+                continue;
+            }
+
+            stats.actors_profiled += profiles.len();
+
+            if !cli.quiet {
+                eprintln!(
+                    "    {} {} actor(s) profiled",
+                    "→".dimmed(),
+                    profiles.len(),
+                );
+            }
+
+            // Persona clustering
+            let mut cluster_config = ClusteringConfig::default();
+            if let Some(max_k) = opts.max_personas {
+                // Limit K range by adjusting min_actors if needed
+                cluster_config.min_actors = cluster_config.min_actors.min(max_k);
+            }
+
+            if let Some(result) = discover_personas(&profiles, &cluster_config) {
+                // If max_personas specified and result has more, take top-weighted
+                let mut personas = result.personas;
+                if let Some(max_k) = opts.max_personas {
+                    if personas.len() > max_k {
+                        personas.sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap_or(std::cmp::Ordering::Equal));
+                        personas.truncate(max_k);
+                        // Re-normalize weights
+                        let total: f64 = personas.iter().map(|p| p.weight).sum();
+                        if total > 0.0 {
+                            for p in &mut personas {
+                                p.weight /= total;
+                            }
+                        }
+                    }
+                }
+
+                stats.personas_discovered += personas.len();
+
+                if !cli.quiet {
+                    eprintln!(
+                        "    {} {} persona(s) discovered (silhouette: {:.3})",
+                        "→".dimmed(),
+                        personas.len(),
+                        result.silhouette_score,
+                    );
+                }
+
+                analysis.personas = personas;
+            }
+        }
+
+        // Actor-to-actor relationship discovery
+        // Look for pairs of actor columns within the same table
+        if actor_cols.len() >= 2 {
+            let graph_config = RelationshipDiscoveryConfig::default();
+            for i in 0..actor_cols.len() {
+                for j in (i + 1)..actor_cols.len() {
+                    let mut accumulator = RelationshipAccumulator::new(
+                        actor_cols[i].clone(),
+                        actor_cols[j].clone(),
+                        table.entity.clone(),
+                    );
+
+                    for batch in &table.batches {
+                        accumulator.observe_batch(batch);
+                    }
+
+                    if let Some(spec) = accumulator.finalize(&graph_config) {
+                        if !cli.quiet {
+                            eprintln!(
+                                "    {} actor graph discovered: {} ({} → {})",
+                                "→".dimmed(),
+                                spec.name,
+                                actor_cols[i],
+                                actor_cols[j],
+                            );
+                        }
+                        stats.graphs_discovered += 1;
+                        analysis.actor_relationships.push(spec);
+                    }
+                }
+            }
+        }
+    }
+
+    info!(
+        actors = stats.actors_profiled,
+        personas = stats.personas_discovered,
+        graphs = stats.graphs_discovered,
+        "behavioral analysis complete"
+    );
+
+    Ok(stats)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1842,6 +2116,7 @@ mod tests {
             false,
             false,
             &[],
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -1886,6 +2161,7 @@ mod tests {
             false,
             false,
             &[],
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -1902,7 +2178,7 @@ mod tests {
 
     #[test]
     fn learn_nonexistent_path_errors() {
-        let result = run(Some("nonexistent_path_12345.csv"), "out.toml", None, None, false, false, &[], &quiet_cli());
+        let result = run(Some("nonexistent_path_12345.csv"), "out.toml", None, None, false, false, &[], None, &quiet_cli());
         assert!(result.is_err());
     }
 
@@ -1926,6 +2202,7 @@ mod tests {
             false,
             false,
             &[],
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -2075,6 +2352,104 @@ mod tests {
         ];
         let best = pick_best_pk(&columns, "users");
         assert_eq!(best, 0, "should prefer plain 'id' column");
+    }
+
+    #[test]
+    fn learn_with_actors_flag_produces_actor_entities() {
+        let dir = tempfile::tempdir().unwrap();
+
+        // Create a messages table with sender/recipient actor columns
+        let csv_path = dir.path().join("messages.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "message_id,sender_id,recipient_id,body,status").unwrap();
+        // Generate enough data for actor profiling (need ≥4 distinct actors)
+        for i in 1..=50 {
+            let sender = (i % 8) + 1;  // 8 distinct senders
+            let recipient = ((i + 3) % 8) + 1;
+            let body = format!("Message number {i}");
+            let status = if i % 3 == 0 { "read" } else { "unread" };
+            writeln!(f, "{i},{sender},{recipient},{body},{status}").unwrap();
+        }
+        drop(f);
+
+        let output_path = dir.path().join("schema.weave.toml");
+        let opts = ActorsOpts {
+            explicit_columns: vec![],
+            max_personas: None,
+        };
+        let result = run(
+            Some(csv_path.to_str().unwrap()),
+            output_path.to_str().unwrap(),
+            None,
+            None,
+            false,
+            false,
+            &[],
+            Some(&opts),
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn --actors failed: {result:?}");
+
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        // Should detect sender_id and recipient_id as actor columns
+        assert!(
+            content.contains("actor_column = true"),
+            "should mark actor columns: {content}"
+        );
+    }
+
+    #[test]
+    fn learn_with_explicit_actor_column() {
+        let dir = tempfile::tempdir().unwrap();
+
+        let csv_path = dir.path().join("events.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "event_id,user_id,action,value").unwrap();
+        for i in 1..=30 {
+            let user = (i % 6) + 1;
+            let action = if i % 2 == 0 { "click" } else { "view" };
+            writeln!(f, "{i},{user},{action},{}", i * 10).unwrap();
+        }
+        drop(f);
+
+        let output_path = dir.path().join("schema.weave.toml");
+        let opts = ActorsOpts {
+            explicit_columns: vec!["user_id".to_string()],
+            max_personas: None,
+        };
+        let result = run(
+            Some(csv_path.to_str().unwrap()),
+            output_path.to_str().unwrap(),
+            None,
+            None,
+            false,
+            false,
+            &[],
+            Some(&opts),
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn --actor-column failed: {result:?}");
+
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        assert!(content.contains("actor_column = true"), "should mark user_id as actor: {content}");
+    }
+
+    #[test]
+    fn learn_actors_with_incremental_errors() {
+        let result = run(
+            Some("data.csv"),
+            "out.toml",
+            None,
+            Some("state.json"),
+            false,
+            false,
+            &[],
+            Some(&ActorsOpts { explicit_columns: vec![], max_personas: None }),
+            &quiet_cli(),
+        );
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("not supported with --state"), "should error: {msg}");
     }
 }
 

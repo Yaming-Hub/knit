@@ -90,6 +90,8 @@ pub struct ColumnAnalysis {
     pub source_arrow_type: Option<arrow::datatypes::DataType>,
     /// Maximum decimal places observed in float values (from profiling).
     pub max_decimal_places: Option<u8>,
+    /// Whether this column was explicitly marked as an actor column (via --actor-column).
+    pub is_actor_column: bool,
 }
 
 impl ColumnAnalysis {
@@ -110,6 +112,7 @@ impl ColumnAnalysis {
             temporal_range: None,
             source_arrow_type: None,
             max_decimal_places: None,
+            is_actor_column: false,
         }
     }
 }
@@ -152,14 +155,19 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         relationships.extend(rels);
         correlations.extend(corrs);
 
-        // Convert discovered personas into core types (only for actor entities)
+        // Convert discovered personas into core types
+        // Personas are emitted for actor entities and for activity entities
+        // that have actor columns (indicating --actors was used during learn).
         if !table.personas.is_empty() {
-            if let Some(entity) = entities.last() {
-                if entity.actor {
+            let has_actor_columns = entities.last()
+                .map(|e| e.fields.iter().any(|f| f.actor_column))
+                .unwrap_or(false);
+            let should_emit = entities.last().map(|e| e.actor).unwrap_or(false) || has_actor_columns;
+
+            if should_emit {
+                if let Some(entity) = entities.last() {
                     let entity_name = &entity.name;
                     for spec in &table.personas {
-                        // Namespace persona names by entity to avoid collisions
-                        // across multiple actor tables
                         let namespaced = format!("{}_{}", entity_name, spec.name);
                         personas.push(Persona {
                             name: namespaced,
@@ -168,11 +176,8 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
                         });
                     }
                 }
-            }
 
-            // Attach persona_distribution reference to actor entities.
-            if let Some(entity) = entities.last_mut() {
-                if entity.actor {
+                if let Some(entity) = entities.last_mut() {
                     entity.persona_distribution = Some("personas".into());
                 }
             }
@@ -316,11 +321,20 @@ fn build_entity(
     // An entity is an actor if it has a PK that looks actor-like (person table)
     let is_actor = is_actor_entity(&table.name, &actor_scores, &fields);
 
-    // Mark actor columns, but skip PKs on actor entities (PK is identity, not reference)
+    // Mark actor columns from heuristics, but skip PKs on actor entities
     for (col_name, _score) in &actor_scores {
         if let Some(field) = fields.iter_mut().find(|f| &f.name == col_name) {
             let is_pk_on_actor = is_actor && field.primary_key == Some(true);
             if !is_pk_on_actor {
+                field.actor_column = true;
+            }
+        }
+    }
+
+    // Also mark explicitly flagged actor columns (from --actor-column)
+    for col in &table.columns {
+        if col.is_actor_column {
+            if let Some(field) = fields.iter_mut().find(|f| f.name == col.name) {
                 field.actor_column = true;
             }
         }
@@ -358,7 +372,7 @@ const ACTOR_PREFIXES: &[&str] = &[
 /// - `*_by` suffix → 0.85
 /// - `sender`, `receiver`, `from`, `to` standalone → 0.80
 /// - `*_name` with actor prefix → 0.70
-fn score_actor_column(name: &str) -> f64 {
+pub fn score_actor_column(name: &str) -> f64 {
     let lower = name.to_lowercase();
 
     // Pattern: {actor_prefix}_id or {actor_prefix}id
@@ -1232,7 +1246,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -1247,7 +1261,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 },
             ],
             relationships: vec![],
@@ -1282,7 +1296,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -1323,7 +1337,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -1360,7 +1374,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -1451,7 +1465,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -1481,7 +1495,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -1515,7 +1529,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -1536,7 +1550,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
@@ -1557,7 +1571,7 @@ mod tests {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -1582,7 +1596,7 @@ mod tests {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -1609,7 +1623,7 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
                 }],
             relationships: vec![],
             correlations: vec![],
@@ -1638,7 +1652,7 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: false,
                 temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None,
+                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1687,7 +1701,7 @@ mod tests {
             is_integer_valued: true,
             has_time_component: false,
             temporal_range: None,
-            source_arrow_type: Some(arrow::datatypes::DataType::Int32),            max_decimal_places: None,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int32),            max_decimal_places: None, is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
     }
@@ -1707,7 +1721,7 @@ mod tests {
             is_integer_valued: true,
             has_time_component: false,
             temporal_range: None,
-            source_arrow_type: Some(arrow::datatypes::DataType::Int64),            max_decimal_places: None,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int64),            max_decimal_places: None, is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int);
     }
@@ -1727,7 +1741,7 @@ mod tests {
             is_integer_valued: true,
             has_time_component: false,
             temporal_range: None,
-            source_arrow_type: Some(arrow::datatypes::DataType::Int32),            max_decimal_places: None,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int32),            max_decimal_places: None, is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
     }
@@ -1757,7 +1771,7 @@ mod tests {
                 arrow::datatypes::TimeUnit::Microsecond,
                 None,
             )),
-            max_decimal_places: None,
+            max_decimal_places: None, is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::DatetimeUs);
     }
@@ -1787,7 +1801,7 @@ mod tests {
                 arrow::datatypes::TimeUnit::Nanosecond,
                 None,
             )),
-            max_decimal_places: None,
+            max_decimal_places: None, is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Datetime);
     }
@@ -1872,7 +1886,7 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: true,
                 temporal_range: Some((1_000_000.0, 1_100_000.0)),
-                source_arrow_type: None,                max_decimal_places: None,
+                source_arrow_type: None,                max_decimal_places: None, is_actor_column: false,
             },
             ColumnAnalysis {
                 name: "EndDate".into(),
@@ -1887,7 +1901,7 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: true,
                 temporal_range: Some((1_050_000.0, 1_200_000.0)),
-                source_arrow_type: None,                max_decimal_places: None,
+                source_arrow_type: None,                max_decimal_places: None, is_actor_column: false,
             },
         ];
         let mut fields = vec![
