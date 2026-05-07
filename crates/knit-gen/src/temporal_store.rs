@@ -158,13 +158,25 @@ impl TemporalStore {
             values.extend(std::iter::repeat_n(None, len));
         }
 
-        self.stores.insert(key, values);
+        // Only store if we found matching batches (avoid creating empty entries
+        // that block later capture attempts from the correct phase).
+        if !values.is_empty() {
+            self.stores.insert(key, values);
+        }
     }
 
     /// Check if baselines exist for a given entity + field.
     pub fn has(&self, entity: &str, field: &str) -> bool {
         self.stores
             .contains_key(&(entity.to_string(), field.to_string()))
+    }
+
+    /// Get the number of stored entries for a given entity + field.
+    pub fn len(&self, entity: &str, field: &str) -> usize {
+        self.stores
+            .get(&(entity.to_string(), field.to_string()))
+            .map(|v| v.len())
+            .unwrap_or(0)
     }
 }
 

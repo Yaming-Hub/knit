@@ -485,3 +485,37 @@ fn social_platform_graph_aware_receiver_ids() {
         "found {self_messages} self-messages (sender == receiver)"
     );
 }
+
+#[test]
+fn social_platform_comment_after_post() {
+    // Cross-entity causal ordering: comment.created_at >= post.created_at
+    // for the referenced post_id.
+    let batches = generate_from_file(&social_platform_path());
+
+    // Build post PK → created_at map
+    let post_ids = collect_i64_column(&batches["posts"], "id");
+    let post_timestamps = collect_timestamp_column(&batches["posts"], "created_at");
+    let post_ts_map: HashMap<i64, i64> = post_ids
+        .into_iter()
+        .zip(post_timestamps.into_iter())
+        .collect();
+
+    // Check each comment's created_at >= referenced post's created_at
+    let comment_post_ids = collect_i64_column(&batches["comments"], "post_id");
+    let comment_timestamps = collect_timestamp_column(&batches["comments"], "created_at");
+
+    let mut violations = 0;
+    let total = comment_post_ids.len();
+    for (i, &post_id) in comment_post_ids.iter().enumerate() {
+        if let Some(&post_ts) = post_ts_map.get(&post_id) {
+            if comment_timestamps[i] < post_ts {
+                violations += 1;
+            }
+        }
+    }
+
+    assert_eq!(
+        violations, 0,
+        "found {violations}/{total} comments created before their referenced post"
+    );
+}

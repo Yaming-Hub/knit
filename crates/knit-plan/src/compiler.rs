@@ -408,7 +408,7 @@ fn compile_field_plans(
                     .unwrap_or_default();
                 GeneratorPlan::PersonaField { trait_name, actor_entity, actor_field }
             }
-            GeneratorPlan::ActorTemporal { trait_name, actor_field, .. } => {
+            GeneratorPlan::ActorTemporal { trait_name, actor_field, temporal_after, .. } => {
                 let actor_entity = fk_map.get(actor_field.as_str())
                     .map(|s| s.to_string())
                     .unwrap_or_default();
@@ -445,7 +445,7 @@ fn compile_field_plans(
                 } else {
                     None
                 };
-                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field, min_event_gap_ms: None }
+                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field, min_event_gap_ms: None, temporal_after }
             }
             other => other,
         };
@@ -626,19 +626,27 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     key_store_kind: KeyStoreKind::InMemoryVec,
                 }
             }
-            GeneratorSpec::ActorTemporal { trait_name } => {
+            GeneratorSpec::ActorTemporal { trait_name, temporal_after } => {
                 // Auto-detect the actor FK field from actor_column fields.
                 let actor_field = all_fields
                     .iter()
                     .find(|f| f.actor_column && f.name != field.name)
                     .map(|f| f.name.clone())
                     .unwrap_or_default();
+                let ta_plan = temporal_after.as_ref().map(|ta| {
+                    crate::types::TemporalAfter {
+                        entity: ta.entity.clone(),
+                        field: ta.field.clone(),
+                        fk: ta.fk.clone(),
+                    }
+                });
                 GeneratorPlan::ActorTemporal {
                     trait_name: trait_name.clone(),
                     actor_entity: String::new(), // resolved in compile_field_plans
                     actor_field,
                     temporal_start_field: None, // resolved in compile_field_plans
                     min_event_gap_ms: None,     // uses default
+                    temporal_after: ta_plan,
                 }
             }
             GeneratorSpec::RelationshipRef { relationship, source_field } => {
@@ -875,7 +883,23 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
             }
         }
         // ActorTemporal/PersonaField depend on the actor FK field
-        Some(GeneratorSpec::ActorTemporal { .. }) | Some(GeneratorSpec::PersonaField { .. }) => {
+        Some(GeneratorSpec::ActorTemporal { temporal_after, .. }) => {
+            // Depends on any actor_column field in the entity
+            let max_actor_order = all_fields
+                .iter()
+                .filter(|f| f.actor_column && f.name != field.name)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .max()
+                .unwrap_or(0);
+            // Also depends on the causal FK field if temporal_after is set
+            let causal_order = temporal_after.as_ref().and_then(|ta| {
+                all_fields.iter()
+                    .find(|f| f.name == ta.fk)
+                    .map(|f| compute_dependency_order(f, all_fields))
+            }).unwrap_or(0);
+            max_actor_order.max(causal_order) + 1
+        }
+        Some(GeneratorSpec::PersonaField { .. }) => {
             // Depends on any actor_column field in the entity
             let max_actor_order = all_fields
                 .iter()
