@@ -301,6 +301,75 @@ impl GenerationEngine {
         }
     }
 
+    /// Apply per-actor inter-event minimum gaps to entities with ActorTemporal
+    /// generators. Groups batches by entity, identifies the actor FK and
+    /// timestamp columns, and delegates to `enforce_inter_event_gaps`.
+    fn apply_inter_event_gaps(
+        &self,
+        _plan: &ExecutionPlan,
+        entity_plans: &[EntityPlan],
+        mut batches: Vec<(String, RecordBatch)>,
+    ) -> Vec<(String, RecordBatch)> {
+        use crate::temporal_sort::{enforce_inter_event_gaps, DEFAULT_MIN_GAP_MS};
+
+        // Collect actor temporal info per entity. An entity may have multiple
+        // ActorTemporal fields (each produces a timestamp column that needs
+        // gap enforcement independently).
+        let mut temporal_info: HashMap<String, Vec<(String, String, i64)>> = HashMap::new();
+
+        for ep in entity_plans {
+            for fp in &ep.field_plans {
+                if let GeneratorPlan::ActorTemporal {
+                    ref actor_field,
+                    min_event_gap_ms,
+                    ..
+                } = fp.generator_plan
+                {
+                    let gap = min_event_gap_ms.unwrap_or(DEFAULT_MIN_GAP_MS);
+                    temporal_info
+                        .entry(ep.entity_name.clone())
+                        .or_default()
+                        .push((actor_field.clone(), fp.field_name.clone(), gap));
+                }
+            }
+        }
+
+        if temporal_info.is_empty() {
+            return batches;
+        }
+
+        for (entity_name, fields) in &temporal_info {
+            // Collect indices of batches belonging to this entity.
+            let entity_batch_indices: Vec<usize> = batches
+                .iter()
+                .enumerate()
+                .filter(|(_, (name, _))| name == entity_name)
+                .map(|(i, _)| i)
+                .collect();
+
+            if entity_batch_indices.is_empty() {
+                continue;
+            }
+
+            // Process each ActorTemporal field independently.
+            for (actor_fk_col, ts_col, gap) in fields {
+                let entity_batches: Vec<(String, RecordBatch)> = entity_batch_indices
+                    .iter()
+                    .map(|&i| batches[i].clone())
+                    .collect();
+
+                let adjusted =
+                    enforce_inter_event_gaps(&entity_batches, actor_fk_col, ts_col, *gap);
+
+                for (j, &idx) in entity_batch_indices.iter().enumerate() {
+                    batches[idx] = adjusted[j].clone();
+                }
+            }
+        }
+
+        batches
+    }
+
     /// Execute the full plan, calling `on_batch` for every produced
     /// [`RecordBatch`].
     ///
@@ -339,11 +408,15 @@ impl GenerationEngine {
 
             // Resolve deferred FK references (cyclic/self-ref backpatch) by
             // replacing the placeholder FK column in the original batches.
-            let final_batches = if !phase.deferred_refs.is_empty() {
+            let resolved_batches = if !phase.deferred_refs.is_empty() {
                 self.apply_deferred_refs(&phase.deferred_refs, plan, batches)?
             } else {
                 batches
             };
+
+            // Enforce per-actor inter-event minimum gaps on entities that
+            // have ActorTemporal generators (prevents duplicate timestamps).
+            let final_batches = self.apply_inter_event_gaps(plan, &phase.entity_plans, resolved_batches);
 
             // Deliver batches through the callback (sequential, in order).
             for (entity_name, batch) in &final_batches {
@@ -672,6 +745,7 @@ impl GenerationEngine {
                     actor_entity,
                     actor_field,
                     temporal_start_field,
+                    ..
                 } => {
                     self.build_actor_temporal_generator(
                         ep, fp, trait_name, actor_entity, actor_field,

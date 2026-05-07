@@ -445,7 +445,7 @@ fn compile_field_plans(
                 } else {
                     None
                 };
-                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field }
+                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field, min_event_gap_ms: None }
             }
             other => other,
         };
@@ -638,6 +638,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     actor_entity: String::new(), // resolved in compile_field_plans
                     actor_field,
                     temporal_start_field: None, // resolved in compile_field_plans
+                    min_event_gap_ms: None,     // uses default
                 }
             }
             GeneratorSpec::RelationshipRef { relationship, source_field } => {

@@ -30,6 +30,7 @@ pub mod plugin;
 pub mod sampled_key_store;
 pub mod string_keystore;
 pub mod temporal_store;
+pub mod temporal_sort;
 pub mod traits;
 
 pub use actor_pool::ActorPool;
