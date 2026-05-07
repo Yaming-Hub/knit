@@ -137,6 +137,9 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
         estimated_total_bytes,
         has_cycles: deferred_ref_count > 0,
         deferred_ref_count,
+        actor_entity_count: model.entities.iter().filter(|e| e.actor).count(),
+        persona_count: model.personas.len(),
+        actor_relationship_count: model.actor_relationships.len(),
     };
 
     Ok(ExecutionPlan {
@@ -1569,6 +1572,45 @@ mod tests {
             }
             other => panic!("expected Temporal/Relative, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn metadata_includes_behavioral_counts() {
+        let mut entity = simple_entity("users", 100);
+        entity.actor = true;
+        let mut model = simple_model("test", vec![entity], vec![]);
+        model.personas.push(Persona {
+            name: "power_user".to_string(),
+            weight: 0.3,
+            traits: BTreeMap::new(),
+        });
+        model.personas.push(Persona {
+            name: "casual".to_string(),
+            weight: 0.7,
+            traits: BTreeMap::new(),
+        });
+        model.actor_relationships.push(ActorRelationship {
+            name: "network".to_string(),
+            from_entity: "users".to_string(),
+            to_entity: "users".to_string(),
+            graph_type: GraphType::default(),
+            params: BTreeMap::new(),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let plan = compile(&model).unwrap();
+        assert_eq!(plan.metadata.actor_entity_count, 1);
+        assert_eq!(plan.metadata.persona_count, 2);
+        assert_eq!(plan.metadata.actor_relationship_count, 1);
+    }
+
+    #[test]
+    fn metadata_behavioral_counts_zero_when_no_actors() {
+        let model = simple_model("test", vec![simple_entity("items", 50)], vec![]);
+        let plan = compile(&model).unwrap();
+        assert_eq!(plan.metadata.actor_entity_count, 0);
+        assert_eq!(plan.metadata.persona_count, 0);
+        assert_eq!(plan.metadata.actor_relationship_count, 0);
     }
 
     #[test]
