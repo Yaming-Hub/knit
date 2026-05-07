@@ -368,6 +368,9 @@ pub enum GeneratorPlan {
     /// When `temporal_start_field` is set, generated timestamps are constrained
     /// to be **after** the actor's creation time (captured from the actor entity's
     /// datetime column during generation).
+    ///
+    /// When `temporal_after` is set, generated timestamps are also constrained
+    /// to be **after** the referenced entity's timestamp (cross-entity causality).
     ActorTemporal {
         /// Name of the persona trait for temporal bias (e.g. `"peak_hours"`).
         trait_name: String,
@@ -381,7 +384,24 @@ pub enum GeneratorPlan {
         /// Minimum milliseconds between consecutive events from the same actor.
         /// Defaults to 60_000 (1 minute) when `None`.
         min_event_gap_ms: Option<i64>,
+        /// Optional cross-entity causal constraint: timestamp must be >= the
+        /// referenced entity's timestamp field (looked up via FK).
+        temporal_after: Option<TemporalAfter>,
     },
+}
+
+/// Cross-entity causal ordering: ensures a timestamp is >= the referenced
+/// entity's timestamp, creating a parent→child temporal dependency.
+///
+/// Example: a comment's `created_at` must be >= the parent post's `created_at`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TemporalAfter {
+    /// Name of the referenced entity (e.g. `"posts"`).
+    pub entity: String,
+    /// Timestamp field in the referenced entity (e.g. `"created_at"`).
+    pub field: String,
+    /// FK field in *this* entity that references the parent entity's PK.
+    pub fk: String,
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────

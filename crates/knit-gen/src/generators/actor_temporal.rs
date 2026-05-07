@@ -24,6 +24,17 @@ const DEFAULT_SPAN_MS: i64 = 365 * 24 * 3_600 * 1_000;
 /// Standard deviation in hours for the wrapped normal distribution.
 const PEAK_HOUR_STD_DEV: f64 = 3.0;
 
+/// Cross-entity causal ordering data: maps referenced entity PKs to timestamps.
+///
+/// Used to enforce that a generated timestamp is >= a parent entity's timestamp
+/// (e.g., a comment must be after the post it references).
+pub struct CausalTimes {
+    /// Referenced entity PK → timestamp (ms since epoch).
+    pub pk_to_timestamp: HashMap<i64, i64>,
+    /// FK field in the current entity that references the parent entity.
+    pub fk_field: String,
+}
+
 /// Generates timestamps biased toward each actor's preferred activity hours.
 ///
 /// The generator uses a wrapped-normal distribution centered on the actor's
@@ -33,6 +44,9 @@ const PEAK_HOUR_STD_DEV: f64 = 3.0;
 /// When `creation_times` is set, generated timestamps are constrained to be
 /// **after** the actor's creation time (captured from a datetime field in the
 /// actor entity during a preceding phase).
+///
+/// When `causal_times` is set, generated timestamps are also constrained to be
+/// **after** the referenced entity's timestamp (cross-entity causal ordering).
 pub struct ActorTemporalGenerator {
     /// Actor pool to look up traits.
     actor_pool: Arc<ActorPool>,
@@ -47,6 +61,9 @@ pub struct ActorTemporalGenerator {
     /// Per-actor creation timestamps (indexed by actor_index).
     /// When set, generated timestamps are >= the actor's creation time.
     creation_times: Option<Arc<Vec<Option<i64>>>>,
+    /// Cross-entity causal ordering constraint.
+    /// When set, generated timestamps are >= the referenced entity's timestamp.
+    causal_times: Option<Arc<CausalTimes>>,
 }
 
 impl ActorTemporalGenerator {
@@ -54,6 +71,9 @@ impl ActorTemporalGenerator {
     ///
     /// `creation_times`: optional per-actor creation timestamps (ms since epoch).
     /// When provided, all generated timestamps will be >= the actor's creation time.
+    ///
+    /// `causal_times`: optional cross-entity constraint (PK→timestamp map + FK field name).
+    /// When provided, timestamps will be >= the referenced entity's timestamp.
     pub fn new(
         actor_pool: Arc<ActorPool>,
         pk_reverse_map: Arc<HashMap<i64, usize>>,
@@ -61,6 +81,7 @@ impl ActorTemporalGenerator {
         actor_entity: String,
         actor_field: String,
         creation_times: Option<Arc<Vec<Option<i64>>>>,
+        causal_times: Option<Arc<CausalTimes>>,
     ) -> Self {
         Self {
             actor_pool,
@@ -69,6 +90,7 @@ impl ActorTemporalGenerator {
             actor_entity,
             actor_field,
             creation_times,
+            causal_times,
         }
     }
 }
@@ -96,11 +118,35 @@ impl FieldGenerator for ActorTemporalGenerator {
             vec![None; count]
         };
 
+        // Read causal FK column (e.g., post_id) for cross-entity ordering
+        let causal_fk_pks: Vec<Option<i64>> = if let Some(ref ct) = self.causal_times {
+            if let Some(col) = ctx.batch_columns.get(&ct.fk_field) {
+                if let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>() {
+                    (0..i64_arr.len())
+                        .map(|i| {
+                            if i64_arr.is_null(i) {
+                                None
+                            } else {
+                                Some(i64_arr.value(i))
+                            }
+                        })
+                        .collect()
+                } else {
+                    vec![None; count]
+                }
+            } else {
+                vec![None; count]
+            }
+        } else {
+            vec![None; count]
+        };
+
         let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
 
         let values: Vec<Option<i64>> = actor_pks
             .iter()
-            .map(|pk_opt| {
+            .enumerate()
+            .map(|(row_idx, pk_opt)| {
                 let actor_idx = pk_opt.and_then(|pk| self.pk_reverse_map.get(&pk).copied());
 
                 let peak_hour = actor_idx
@@ -117,7 +163,7 @@ impl FieldGenerator for ActorTemporalGenerator {
                 let peak = peak_hour.unwrap_or(12.0);
 
                 // Determine lower bound: actor's creation time or DEFAULT_START.
-                let lower_bound = actor_idx
+                let actor_lower = actor_idx
                     .and_then(|idx| {
                         self.creation_times
                             .as_ref()
@@ -125,8 +171,18 @@ impl FieldGenerator for ActorTemporalGenerator {
                     })
                     .unwrap_or(DEFAULT_START_MS);
 
-                // Upper bound is DEFAULT_START + SPAN or lower_bound + SPAN,
-                // whichever is later.
+                // Determine causal lower bound from referenced entity.
+                let causal_lower = self.causal_times.as_ref().and_then(|ct| {
+                    let fk_pk = causal_fk_pks[row_idx]?;
+                    ct.pk_to_timestamp.get(&fk_pk).copied()
+                });
+
+                // Effective lower bound is the maximum of all constraints.
+                let lower_bound = match causal_lower {
+                    Some(cl) => actor_lower.max(cl),
+                    None => actor_lower,
+                };
+
                 // Normalize lower_bound to the start of its day so that
                 // day_offset + time_ms compose correctly regardless of when
                 // the actor was created during the day.
@@ -226,10 +282,10 @@ mod tests {
             "users".into(),
             "user_id".into(),
             None,
+            None,
         );
 
         let mut batch_columns = HashMap::new();
-        // Use actor 0 (night_owl with peak=22) for all 100 rows
         let user_ids = Arc::new(Int64Array::from(vec![100; 100])) as ArrayRef;
         batch_columns.insert("user_id".to_string(), user_ids);
 
@@ -275,6 +331,7 @@ mod tests {
             "peak_hours".into(),
             "users".into(),
             "user_id".into(),
+            None,
             None,
         );
 
@@ -322,6 +379,7 @@ mod tests {
             "users".into(),
             "user_id".into(),
             Some(creation_times),
+            None,
         );
 
         // Generate 300 rows: 100 per actor

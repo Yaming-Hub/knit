@@ -313,7 +313,7 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
             format!("dictionary({}, {})", file, expansion)
         }
         knit_core::GeneratorSpec::ActorRef { entity } => format!("actor_ref({})", entity),
-        knit_core::GeneratorSpec::ActorTemporal { trait_name } => {
+        knit_core::GeneratorSpec::ActorTemporal { trait_name, .. } => {
             format!("actor_temporal({})", trait_name)
         }
         knit_core::GeneratorSpec::RelationshipRef { relationship, source_field } => {

@@ -1141,12 +1141,67 @@ fn validate_generator(
                 }
             }
         }
-        GeneratorSpec::ActorTemporal { trait_name } => {
+        GeneratorSpec::ActorTemporal { trait_name, temporal_after, .. } => {
             if trait_name.is_empty() {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: "actor_temporal requires a non-empty 'trait' name".to_string(),
                 });
+            }
+            if let Some(ta) = temporal_after {
+                // Validate referenced entity exists
+                if !entity_names.contains(ta.entity.as_str()) {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "temporal_after references unknown entity '{}'",
+                            ta.entity
+                        ),
+                    });
+                } else {
+                    // Validate referenced field exists and is a temporal type
+                    let ref_entity = model.entities.iter().find(|e| e.name == ta.entity);
+                    if let Some(ref_ent) = ref_entity {
+                        match ref_ent.fields.iter().find(|f| f.name == ta.field) {
+                            None => {
+                                errors.push(SchemaError::Validation {
+                                    path: path.to_string(),
+                                    message: format!(
+                                        "temporal_after.field '{}' not found in entity '{}'",
+                                        ta.field, ta.entity
+                                    ),
+                                });
+                            }
+                            Some(f) => {
+                                if !matches!(
+                                    f.data_type,
+                                    DataType::Datetime
+                                        | DataType::DatetimeUs
+                                        | DataType::Datetimetz
+                                        | DataType::Date
+                                ) {
+                                    errors.push(SchemaError::Validation {
+                                        path: path.to_string(),
+                                        message: format!(
+                                            "temporal_after.field '{}' must be a temporal type, found '{}'",
+                                            ta.field, f.data_type
+                                        ),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                // Validate FK field exists in the current entity
+                if !entity.fields.iter().any(|f| f.name == ta.fk) {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "temporal_after.fk '{}' not found in entity '{}'",
+                            ta.fk, entity.name
+                        ),
+                    });
+                }
             }
         }
         GeneratorSpec::PersonaField { trait_name } => {
@@ -2763,6 +2818,7 @@ mod tests {
             data_type: DataType::String,
             generator: Some(GeneratorSpec::ActorTemporal {
                 trait_name: "activity_hours".to_string(),
+                temporal_after: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3032,6 +3088,219 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("avg_degree") && message.contains("finite"))
+        }));
+    }
+
+    // ── temporal_after validation tests ──
+
+    #[test]
+    fn test_temporal_after_unknown_entity_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: Some(TemporalAfterSpec {
+                    entity: "nonexistent".to_string(),
+                    field: "created_at".to_string(),
+                    fk: "parent_id".to_string(),
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after references unknown entity"))
+        }));
+    }
+
+    #[test]
+    fn test_temporal_after_unknown_field_rejected() {
+        let mut model = minimal_model();
+        // Add a "posts" entity with an "id" PK but no "created_at" field
+        model.entities.push(Entity {
+            name: "posts".to_string(),
+            description: None,
+            count: CountSpec::Fixed(50),
+            fields: vec![Field {
+                name: "id".to_string(),
+                description: None,
+                data_type: DataType::Int,
+                generator: None,
+                nullable: NullSpec::Never,
+                primary_key: Some(true),
+                precision: None,
+                actor_column: false,
+            }],
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.entities[0].fields.push(Field {
+            name: "post_id".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: Some(TemporalAfterSpec {
+                    entity: "posts".to_string(),
+                    field: "created_at".to_string(),
+                    fk: "post_id".to_string(),
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.field") && message.contains("not found"))
+        }));
+    }
+
+    #[test]
+    fn test_temporal_after_non_temporal_field_rejected() {
+        let mut model = minimal_model();
+        // Add "posts" entity with a String "title" field
+        model.entities.push(Entity {
+            name: "posts".to_string(),
+            description: None,
+            count: CountSpec::Fixed(50),
+            fields: vec![
+                Field {
+                    name: "id".to_string(),
+                    description: None,
+                    data_type: DataType::Int,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: Some(true),
+                    precision: None,
+                    actor_column: false,
+                },
+                Field {
+                    name: "title".to_string(),
+                    description: None,
+                    data_type: DataType::String,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: None,
+                    precision: None,
+                    actor_column: false,
+                },
+            ],
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            constraints: vec![],
+            topology: None,
+        });
+        model.entities[0].fields.push(Field {
+            name: "post_id".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: Some(TemporalAfterSpec {
+                    entity: "posts".to_string(),
+                    field: "title".to_string(),
+                    fk: "post_id".to_string(),
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.field") && message.contains("must be a temporal type"))
+        }));
+    }
+
+    #[test]
+    fn test_temporal_after_unknown_fk_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "posts".to_string(),
+            description: None,
+            count: CountSpec::Fixed(50),
+            fields: vec![
+                Field {
+                    name: "id".to_string(),
+                    description: None,
+                    data_type: DataType::Int,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: Some(true),
+                    precision: None,
+                    actor_column: false,
+                },
+                Field {
+                    name: "created_at".to_string(),
+                    description: None,
+                    data_type: DataType::Datetime,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                    primary_key: None,
+                    precision: None,
+                    actor_column: false,
+                },
+            ],
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            constraints: vec![],
+            topology: None,
+        });
+        // Note: no "post_id" field in user entity
+        model.entities[0].fields.push(Field {
+            name: "created_at".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::ActorTemporal {
+                trait_name: "activity_hours".to_string(),
+                temporal_after: Some(TemporalAfterSpec {
+                    entity: "posts".to_string(),
+                    field: "created_at".to_string(),
+                    fk: "post_id".to_string(),
+                }),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.fk") && message.contains("not found"))
         }));
     }
 }

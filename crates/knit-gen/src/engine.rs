@@ -24,7 +24,7 @@ use crate::batch::assemble_batch;
 use crate::context::GenContext;
 use crate::error::GenError;
 use crate::generators::actor_fk::ActorForeignKeyGenerator;
-use crate::generators::actor_temporal::ActorTemporalGenerator;
+use crate::generators::actor_temporal::{ActorTemporalGenerator, CausalTimes};
 use crate::generators::create_generator;
 use crate::generators::fk::ForeignKeyGenerator;
 use crate::generators::graph_fk::GraphTargetFkGenerator;
@@ -274,7 +274,7 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
         batches: &[(String, RecordBatch)],
     ) {
-        // Collect (actor_entity, datetime_field) pairs needed by future phases.
+        // Collect (entity, datetime_field) pairs needed by future phases.
         let mut needed: std::collections::HashSet<(String, String)> =
             std::collections::HashSet::new();
 
@@ -283,11 +283,17 @@ impl GenerationEngine {
                 for fp in &ep.field_plans {
                     if let GeneratorPlan::ActorTemporal {
                         ref actor_entity,
-                        temporal_start_field: Some(ref tsf),
+                        ref temporal_start_field,
+                        ref temporal_after,
                         ..
                     } = fp.generator_plan
                     {
-                        needed.insert((actor_entity.clone(), tsf.clone()));
+                        if let Some(ref tsf) = temporal_start_field {
+                            needed.insert((actor_entity.clone(), tsf.clone()));
+                        }
+                        if let Some(ref ta) = temporal_after {
+                            needed.insert((ta.entity.clone(), ta.field.clone()));
+                        }
                     }
                 }
             }
@@ -753,11 +759,12 @@ impl GenerationEngine {
                     actor_entity,
                     actor_field,
                     temporal_start_field,
+                    temporal_after,
                     ..
                 } => {
                     self.build_actor_temporal_generator(
                         ep, fp, trait_name, actor_entity, actor_field,
-                        temporal_start_field.as_deref(), plan,
+                        temporal_start_field.as_deref(), temporal_after.as_ref(), plan,
                     )
                 }
                 other => create_generator(other),
@@ -971,6 +978,7 @@ impl GenerationEngine {
         actor_entity: &str,
         actor_field: &str,
         temporal_start_field: Option<&str>,
+        temporal_after: Option<&knit_plan::TemporalAfter>,
         plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
         let bh_fallback = || -> Box<dyn FieldGenerator> {
@@ -1056,12 +1064,50 @@ impl GenerationEngine {
             }
         });
 
+        // Build causal_times map (PK → timestamp) for cross-entity ordering.
+        let causal_times = temporal_after.and_then(|ta| {
+            let ref_entity = &ta.entity;
+            let ref_field = &ta.field;
+            // Get the referenced entity's PK reverse map
+            let ref_pk_reverse = self.pk_reverse_maps.get(ref_entity.as_str())?;
+            let mut pk_to_ts: HashMap<i64, i64> = HashMap::new();
+            for (&pk, &idx) in ref_pk_reverse.iter() {
+                if let Some(ts) = self.temporal_store.get(ref_entity, ref_field, idx) {
+                    pk_to_ts.insert(pk, ts);
+                }
+            }
+            if pk_to_ts.is_empty() {
+                tracing::warn!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    ref_entity = ref_entity,
+                    ref_field = ref_field,
+                    "causal baselines not captured — cross-entity ordering disabled"
+                );
+                None
+            } else {
+                tracing::debug!(
+                    entity = %ep.entity_name,
+                    field = %fp.field_name,
+                    ref_entity = ref_entity,
+                    ref_field = ref_field,
+                    causal_entries = pk_to_ts.len(),
+                    "cross-entity causal ordering enabled"
+                );
+                Some(Arc::new(CausalTimes {
+                    pk_to_timestamp: pk_to_ts,
+                    fk_field: ta.fk.clone(),
+                }))
+            }
+        });
+
         tracing::debug!(
             entity = %ep.entity_name,
             field = %fp.field_name,
             trait_name = trait_name,
             actor = actor_entity,
             temporal_start = ?temporal_start_field,
+            has_causal = causal_times.is_some(),
             "using actor-temporal generator"
         );
 
@@ -1072,6 +1118,7 @@ impl GenerationEngine {
             actor_entity.to_string(),
             actor_field.to_string(),
             creation_times,
+            causal_times,
         ))
     }
 

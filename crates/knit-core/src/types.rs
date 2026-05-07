@@ -391,6 +391,9 @@ pub enum GeneratorSpec {
         /// Name of the persona trait to use for temporal distribution (e.g. `"peak_hours"`).
         #[serde(rename = "trait")]
         trait_name: String,
+        /// Optional cross-entity causal constraint: timestamp >= referenced entity's timestamp.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        temporal_after: Option<TemporalAfterSpec>,
     },
     /// Select target actor based on relationship graph topology.
     /// Used for fields like `receiver_id` where the target depends on the source actor's graph neighbors.
@@ -409,6 +412,20 @@ pub enum GeneratorSpec {
         #[serde(rename = "trait")]
         trait_name: String,
     },
+}
+
+/// Schema-level specification for cross-entity temporal ordering.
+///
+/// When attached to an `actor_temporal` generator, ensures the generated
+/// timestamp is >= the referenced entity's timestamp (looked up via FK).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TemporalAfterSpec {
+    /// Referenced entity name (e.g. `"posts"`).
+    pub entity: String,
+    /// Timestamp field in the referenced entity (e.g. `"created_at"`).
+    pub field: String,
+    /// FK field in the current entity that references the parent's PK.
+    pub fk: String,
 }
 
 fn default_step() -> i64 {
@@ -1323,7 +1340,7 @@ mod tests {
                 r#"{"type":"actor_ref","entity":"users"}"#,
             ),
             (
-                GeneratorSpec::ActorTemporal { trait_name: "peak_hours".into() },
+                GeneratorSpec::ActorTemporal { trait_name: "peak_hours".into(), temporal_after: None },
                 r#"{"type":"actor_temporal","trait":"peak_hours"}"#,
             ),
             (
