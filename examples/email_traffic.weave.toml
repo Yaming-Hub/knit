@@ -1,0 +1,172 @@
+schema_version = "1.0"
+
+[model]
+name = "email_traffic"
+description = "Email traffic dataset with behavioral modeling — actors, personas, and relationship graphs"
+seed = 20240601
+
+# ── Users (actor entity) ────────────────────────────────────────────
+
+[[entities]]
+name = "users"
+count = 200
+actor = true
+persona_distribution = "email_personas"
+
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "email"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "email"
+args = []
+
+[[entities.fields]]
+name = "display_name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "name"
+args = []
+
+[[entities.fields]]
+name = "department"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "Engineering", weight = 0.30 },
+    { value = "Sales", weight = 0.20 },
+    { value = "Marketing", weight = 0.15 },
+    { value = "Finance", weight = 0.10 },
+    { value = "HR", weight = 0.10 },
+    { value = "Legal", weight = 0.05 },
+    { value = "Executive", weight = 0.05 },
+    { value = "Support", weight = 0.05 },
+]
+
+# ── Emails (behavioral entity) ──────────────────────────────────────
+
+[[entities]]
+name = "emails"
+count = 5000
+
+[[entities.fields]]
+name = "email_id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "sender_id"
+data_type = "int"
+actor_column = true
+[entities.fields.generator]
+type = "actor_ref"
+entity = "users"
+
+[[entities.fields]]
+name = "recipient_id"
+data_type = "int"
+actor_column = true
+[entities.fields.generator]
+type = "relationship_ref"
+relationship = "email_network"
+
+[[entities.fields]]
+name = "sent_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
+
+[[entities.fields]]
+name = "subject"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "sentence"
+args = ["6"]
+
+[[entities.fields]]
+name = "priority"
+data_type = "string"
+[entities.fields.generator]
+type = "persona_field"
+trait = "email_priority"
+
+[[entities.fields]]
+name = "has_attachment"
+data_type = "bool"
+[entities.fields.generator]
+type = "distribution"
+kind = "bernoulli"
+[entities.fields.generator.params]
+p = 0.25
+
+# ── Personas ────────────────────────────────────────────────────────
+
+[[personas]]
+name = "power_user"
+weight = 0.15
+[personas.traits]
+peak_hours = [8, 9, 10, 14, 15, 16]
+activity_rate = 0.9
+email_priority = "high"
+
+[[personas]]
+name = "standard_worker"
+weight = 0.55
+[personas.traits]
+peak_hours = [9, 10, 11, 14, 15]
+activity_rate = 0.5
+email_priority = "normal"
+
+[[personas]]
+name = "occasional_user"
+weight = 0.20
+[personas.traits]
+peak_hours = [10, 11, 14]
+activity_rate = 0.2
+email_priority = "normal"
+
+[[personas]]
+name = "night_owl"
+weight = 0.10
+[personas.traits]
+peak_hours = [20, 21, 22, 23, 0, 1]
+activity_rate = 0.6
+email_priority = "low"
+
+# ── Actor Relationships ─────────────────────────────────────────────
+
+[[actor_relationships]]
+name = "email_network"
+from_entity = "users"
+to_entity = "users"
+graph_type = "small_world"
+[actor_relationships.params]
+avg_degree = 8.0
+reciprocity = 0.6
+clustering = 0.4
+
+[[actor_relationships]]
+name = "reports_to"
+from_entity = "users"
+to_entity = "users"
+graph_type = "hierarchical"
+hierarchy_depth = 3
+[actor_relationships.params]
+avg_degree = 4.0
