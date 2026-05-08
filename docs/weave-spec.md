@@ -769,10 +769,10 @@ A small, deterministic expression language with explicit scope:
 | **Utility** | | |
 | `hash(s)` | Deterministic hash | `hash(${email})` |
 | `row_number()` | Global row index (0-based) | `row_number()` |
-| **Random** *(planned)* | | |
-| `random_int(min, max)` | Random int in range | `random_int(1, 100)` |
-| `random_float(min, max)` | Random float in range | `random_float(0.0, 1.0)` |
-| `random_duration(min, max)` | Random duration (shorthand strings) | `random_duration("0s", "24h")` |
+| **Random** | | |
+| `random_int(min, max)` | Random int in range (inclusive) | `random_int(1, 100)` |
+| `random_float(min, max)` | Random float in range [min, max) | `random_float(0.0, 1.0)` |
+| `random_duration(min, max)` | Random duration in ms range | `random_duration(0, 86400000)` |
 | **Date / Time Construction** | | |
 | `make_date(y, m, d)` | Construct a date from parts | `make_date(2024, 3, 15)` |
 | `make_time(h, m, s)` | Construct a time from parts | `make_time(14, 30, 0)` |

@@ -14,12 +14,13 @@ All notable changes to Knit are documented in this file.
 - Modular example schemas in `examples/modular/`
 - **Expression engine** — Full expression language for derived fields with:
   - Pratt parser with proper operator precedence
-  - 60+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
+  - 63+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
     `max`, `clamp`, `sqrt`, `pow`, `log`, `ln`, `exp`), string (`upper`,
     `lower`, `trim`, `len`, `concat`, `substr`, `replace`, `left`, `right`,
     `pad_left`, `pad_right`, `starts_with`, `ends_with`, `contains`), type
     casts (`cast_int`, `cast_float`, `cast_string`), conditionals (`if`,
     `coalesce`, `nullif`, `case`), utility (`hash`, `row_number`),
+    random (`random_int`, `random_float`, `random_duration`),
     date/time construction (`make_date`, `make_time`, `make_datetime`,
     `make_duration`, `to_date`, `to_datetime`, `epoch_seconds`, `from_epoch`),
     date/time extraction (`year`, `month`, `day`, `hour`, `minute`, `second`,
@@ -29,6 +30,8 @@ All notable changes to Knit are documented in this file.
   - SQL three-valued null logic for `&&`/`||`
   - Domain-error handling (sqrt of negative → null, ln of non-positive → null)
   - Deterministic SipHash for `hash()` function
+  - Immutable per-row seeding for `random_*` functions — batch-size independent,
+    no shared RNG coupling between fields
   - Global `row_number()` with cross-batch offset tracking
   - Mixed numeric type promotion (Int64/Float64 → Float64 in if/coalesce)
   - UTF-8 safe string operations (character-based indexing)

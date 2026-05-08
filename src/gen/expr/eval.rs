@@ -10,6 +10,7 @@
 //! - **`if`**: Selects branch based on condition.
 //! - **`nullif`**: Returns null if both arguments are equal.
 
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -50,6 +51,14 @@ pub struct EvalContext<'a> {
     pub row_count: usize,
     /// Absolute row offset within the entity (cumulative across batches).
     pub row_offset: u64,
+    /// Base seed for random functions. Each `random_*` call derives
+    /// per-row values from `splitmix64(seed ⊕ call_id ⊕ row_index)`.
+    /// Set to 0 when random functions are not needed.
+    pub seed: u64,
+    /// Auto-incrementing counter for random call sites within one evaluation.
+    /// Ensures multiple `random_*` calls in the same expression produce
+    /// independent streams.
+    pub call_counter: Cell<u64>,
 }
 
 /// Evaluate an expression AST against a batch context, producing an Arrow array.
@@ -869,6 +878,25 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
             let d = evaluate(&args[0], ctx)?;
             let style = evaluate(&args[1], ctx)?;
             eval_format_duration(&d, &style)
+        }
+        // ─── Random functions ──────────────────────────────────────────
+        "random_int" => {
+            check_args(name, args, 2, 2)?;
+            let min_arr = evaluate(&args[0], ctx)?;
+            let max_arr = evaluate(&args[1], ctx)?;
+            eval_random_int(&min_arr, &max_arr, ctx)
+        }
+        "random_float" => {
+            check_args(name, args, 2, 2)?;
+            let min_arr = evaluate(&args[0], ctx)?;
+            let max_arr = evaluate(&args[1], ctx)?;
+            eval_random_float(&min_arr, &max_arr, ctx)
+        }
+        "random_duration" => {
+            check_args(name, args, 2, 2)?;
+            let min_arr = evaluate(&args[0], ctx)?;
+            let max_arr = evaluate(&args[1], ctx)?;
+            eval_random_duration(&min_arr, &max_arr, ctx)
         }
         _ => Err(EvalError {
             message: format!("unknown function: `{name}`"),
@@ -2214,6 +2242,112 @@ fn eval_format_duration(d: &ArrayRef, style: &ArrayRef) -> Result<ArrayRef, Eval
     Ok(Arc::new(result))
 }
 
+// ─── Random helpers ─────────────────────────────────────────────────────────
+
+/// Fast, deterministic mixing function (splitmix64).
+/// Produces a uniformly distributed u64 from any input.
+fn splitmix64(mut x: u64) -> u64 {
+    x = x.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    x ^ (x >> 31)
+}
+
+/// Allocate a unique call-site ID for this random invocation.
+fn next_call_id(ctx: &EvalContext<'_>) -> u64 {
+    let id = ctx.call_counter.get();
+    ctx.call_counter.set(id + 1);
+    id
+}
+
+/// Derive a per-row seed from the context seed, call ID, and row index.
+fn row_seed(ctx: &EvalContext<'_>, call_id: u64, row: usize) -> u64 {
+    splitmix64(ctx.seed ^ call_id.wrapping_mul(0x517C_C1B7_2722_0A95) ^ (ctx.row_offset + row as u64))
+}
+
+fn eval_random_int(
+    min_arr: &ArrayRef,
+    max_arr: &ArrayRef,
+    ctx: &EvalContext<'_>,
+) -> Result<ArrayRef, EvalError> {
+    let mins = as_i64(min_arr).ok_or_else(|| EvalError {
+        message: "random_int: min must be integer".into(),
+    })?;
+    let maxs = as_i64(max_arr).ok_or_else(|| EvalError {
+        message: "random_int: max must be integer".into(),
+    })?;
+    let call_id = next_call_id(ctx);
+    let result: Int64Array = (0..ctx.row_count)
+        .map(|i| {
+            if mins.is_null(i) || maxs.is_null(i) {
+                return None;
+            }
+            let lo = mins.value(i);
+            let hi = maxs.value(i);
+            if lo > hi {
+                return None;
+            }
+            // Use u128 to avoid overflow for large ranges (e.g., [0, i64::MAX])
+            let range = (hi as u128).wrapping_sub(lo as u128) + 1;
+            let r = row_seed(ctx, call_id, i) as u128;
+            Some(lo.wrapping_add((r % range) as i64))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_random_float(
+    min_arr: &ArrayRef,
+    max_arr: &ArrayRef,
+    ctx: &EvalContext<'_>,
+) -> Result<ArrayRef, EvalError> {
+    let mins = to_f64_vec(min_arr).map_err(|e| EvalError {
+        message: format!("random_float: {e}"),
+    })?;
+    let maxs = to_f64_vec(max_arr).map_err(|e| EvalError {
+        message: format!("random_float: {e}"),
+    })?;
+    let call_id = next_call_id(ctx);
+    let result: Float64Array = (0..ctx.row_count)
+        .map(|i| {
+            let lo = mins[i]?;
+            let hi = maxs[i]?;
+            if lo > hi {
+                return None;
+            }
+            let r = row_seed(ctx, call_id, i);
+            // Convert u64 to [0, 1) float
+            let t = (r >> 11) as f64 / (1u64 << 53) as f64;
+            Some(lo + t * (hi - lo))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_random_duration(
+    min_arr: &ArrayRef,
+    max_arr: &ArrayRef,
+    ctx: &EvalContext<'_>,
+) -> Result<ArrayRef, EvalError> {
+    let mins = require_millis(min_arr, "random_duration")?;
+    let maxs = require_millis(max_arr, "random_duration")?;
+    let call_id = next_call_id(ctx);
+    let result: Int64Array = (0..ctx.row_count)
+        .map(|i| {
+            let lo = mins[i]?;
+            let hi = maxs[i]?;
+            if lo > hi {
+                return None;
+            }
+            // Use u128 to avoid overflow for large ranges
+            let range = (hi as u128).wrapping_sub(lo as u128) + 1;
+            let r = row_seed(ctx, call_id, i) as u128;
+            Some(lo.wrapping_add((r % range) as i64))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2228,6 +2362,8 @@ mod tests {
             params: &params,
             row_count,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         evaluate(&ast, &ctx).unwrap()
     }
@@ -2449,6 +2585,8 @@ mod tests {
             params: &params,
             row_count: 2,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let fa = as_f64(&result).unwrap();
@@ -2583,6 +2721,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 2,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let fa = as_f64(&result).unwrap();
@@ -2749,6 +2889,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 5,
             row_offset: 100,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let ia = as_i64(&result).unwrap();
@@ -2829,6 +2971,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         // Should be a timestamp, extract year to verify
@@ -2849,6 +2993,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         assert!(result.is_null(0));
@@ -2863,6 +3009,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let ia = as_i64(&result).unwrap();
@@ -2879,6 +3027,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         assert!(result.is_null(0));
@@ -2893,6 +3043,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let millis = as_millis(&result).unwrap();
@@ -2913,6 +3065,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let ia = as_i64(&result).unwrap();
@@ -2928,6 +3082,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let millis = as_millis(&result).unwrap();
@@ -2946,6 +3102,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let millis = as_millis(&result).unwrap();
@@ -2977,6 +3135,8 @@ mod tests {
             params: &HashMap::new(),
             row_count: 1,
             row_offset: 0,
+            seed: 0,
+            call_counter: Cell::new(0),
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let millis = as_millis(&result).unwrap();
@@ -3260,5 +3420,194 @@ mod tests {
 
         let r = eval_expr("format_date(${ts}, \"%Y\")", cols);
         assert!(r.is_null(0));
+    }
+
+    // ─── Random function tests ─────────────────────────────────────
+
+    fn eval_seeded(expr_str: &str, seed: u64, row_count: usize) -> ArrayRef {
+        let ast = parser::parse(expr_str).unwrap();
+        let cols = HashMap::new();
+        let params = HashMap::new();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &params,
+            row_count,
+            row_offset: 0,
+            seed,
+            call_counter: Cell::new(0),
+        };
+        evaluate(&ast, &ctx).unwrap()
+    }
+
+    #[test]
+    fn random_int_in_range() {
+        let r = eval_seeded("random_int(1, 10)", 42, 100);
+        let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..100 {
+            let v = arr.value(i);
+            assert!(v >= 1 && v <= 10, "value {v} out of range [1, 10]");
+        }
+    }
+
+    #[test]
+    fn random_int_deterministic() {
+        let r1 = eval_seeded("random_int(0, 1000)", 123, 50);
+        let r2 = eval_seeded("random_int(0, 1000)", 123, 50);
+        let a1 = r1.as_any().downcast_ref::<Int64Array>().unwrap();
+        let a2 = r2.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..50 {
+            assert_eq!(a1.value(i), a2.value(i));
+        }
+    }
+
+    #[test]
+    fn random_int_different_seeds() {
+        let r1 = eval_seeded("random_int(0, 1000000)", 1, 10);
+        let r2 = eval_seeded("random_int(0, 1000000)", 2, 10);
+        let a1 = r1.as_any().downcast_ref::<Int64Array>().unwrap();
+        let a2 = r2.as_any().downcast_ref::<Int64Array>().unwrap();
+        // With different seeds, at least one value should differ
+        let any_diff = (0..10).any(|i| a1.value(i) != a2.value(i));
+        assert!(any_diff, "different seeds should produce different values");
+    }
+
+    #[test]
+    fn random_float_in_range() {
+        let r = eval_seeded("random_float(0.0, 1.0)", 42, 100);
+        let arr = r.as_any().downcast_ref::<Float64Array>().unwrap();
+        for i in 0..100 {
+            let v = arr.value(i);
+            assert!(v >= 0.0 && v < 1.0, "value {v} out of range [0, 1)");
+        }
+    }
+
+    #[test]
+    fn random_float_deterministic() {
+        let r1 = eval_seeded("random_float(0.0, 100.0)", 77, 30);
+        let r2 = eval_seeded("random_float(0.0, 100.0)", 77, 30);
+        let a1 = r1.as_any().downcast_ref::<Float64Array>().unwrap();
+        let a2 = r2.as_any().downcast_ref::<Float64Array>().unwrap();
+        for i in 0..30 {
+            assert_eq!(a1.value(i), a2.value(i));
+        }
+    }
+
+    #[test]
+    fn random_int_min_equals_max() {
+        let r = eval_seeded("random_int(5, 5)", 42, 10);
+        let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..10 {
+            assert_eq!(arr.value(i), 5);
+        }
+    }
+
+    #[test]
+    fn random_int_min_greater_than_max_null() {
+        let r = eval_seeded("random_int(10, 1)", 42, 5);
+        let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..5 {
+            assert!(arr.is_null(i));
+        }
+    }
+
+    #[test]
+    fn random_int_large_range_no_overflow() {
+        // Test with full i64 range — should not panic
+        let ast = parser::parse("random_int(${lo}, ${hi})").unwrap();
+        let mut cols = HashMap::new();
+        cols.insert(
+            "lo".into(),
+            Arc::new(Int64Array::from(vec![0i64, i64::MIN])) as ArrayRef,
+        );
+        cols.insert(
+            "hi".into(),
+            Arc::new(Int64Array::from(vec![i64::MAX, i64::MAX])) as ArrayRef,
+        );
+        let params = HashMap::new();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &params,
+            row_count: 2,
+            row_offset: 0,
+            seed: 42,
+            call_counter: Cell::new(0),
+        };
+        let r = evaluate(&ast, &ctx).unwrap();
+        let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
+        // Row 0: [0, i64::MAX] — result should be in range
+        assert!(arr.value(0) >= 0);
+        // Row 1: [i64::MIN, i64::MAX] — full range, should not panic
+        assert!(!arr.is_null(1));
+    }
+
+    #[test]
+    fn multiple_random_calls_independent() {
+        // Two random_int calls in the same expression should produce
+        // different streams (different call-site IDs).
+        let ast = parser::parse("random_int(0, 1000000) - random_int(0, 1000000)").unwrap();
+        let cols = HashMap::new();
+        let params = HashMap::new();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &params,
+            row_count: 20,
+            row_offset: 0,
+            seed: 99,
+            call_counter: Cell::new(0),
+        };
+        let r = evaluate(&ast, &ctx).unwrap();
+        let arr = as_f64(&r).unwrap();
+        // If both calls used the same stream, all differences would be 0
+        let any_nonzero = (0..20).any(|i| arr.value(i) != 0.0);
+        assert!(any_nonzero, "two random_int calls should produce different values");
+    }
+
+    #[test]
+    fn random_duration_in_range() {
+        // random_duration between 0ms and 86400000ms (24h)
+        let r = eval_seeded("random_duration(0, 86400000)", 42, 50);
+        let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
+        for i in 0..50 {
+            let v = arr.value(i);
+            assert!(v >= 0 && v <= 86_400_000, "duration {v} out of range");
+        }
+    }
+
+    #[test]
+    fn random_batch_size_independent() {
+        // Row 5 should produce the same value regardless of batch size.
+        // This is guaranteed because we use row_offset + row_index, not RNG state.
+        let ast = parser::parse("random_int(0, 1000000)").unwrap();
+        let cols = HashMap::new();
+        let params = HashMap::new();
+
+        // Batch of 10 starting at row 0 — get row 5
+        let ctx1 = EvalContext {
+            columns: &cols,
+            params: &params,
+            row_count: 10,
+            row_offset: 0,
+            seed: 42,
+            call_counter: Cell::new(0),
+        };
+        let r1 = evaluate(&ast, &ctx1).unwrap();
+        let a1 = r1.as_any().downcast_ref::<Int64Array>().unwrap();
+        let val_from_big_batch = a1.value(5);
+
+        // Batch of 3 starting at row 5 — get row 0 (which is absolute row 5)
+        let ctx2 = EvalContext {
+            columns: &cols,
+            params: &params,
+            row_count: 3,
+            row_offset: 5,
+            seed: 42,
+            call_counter: Cell::new(0),
+        };
+        let r2 = evaluate(&ast, &ctx2).unwrap();
+        let a2 = r2.as_any().downcast_ref::<Int64Array>().unwrap();
+        let val_from_small_batch = a2.value(0);
+
+        assert_eq!(val_from_big_batch, val_from_small_batch,
+            "same absolute row with same seed should produce same value");
     }
 }

@@ -345,7 +345,7 @@ type = "derived"
 expr = "${quantity} * ${unit_price}"
 ```
 
-The expression language supports 60+ built-in functions with SQL-like null
+The expression language supports 63+ built-in functions with SQL-like null
 semantics. Reference other fields with `${field_name}` and parameters with
 `${param.key}`.
 
@@ -392,6 +392,7 @@ expr = "row_number()"
 | String | `upper`, `lower`, `trim`, `len`, `concat`, `substr`, `replace`, `left`, `right`, `pad_left`, `pad_right`, `starts_with`, `ends_with`, `contains` |
 | Conditional | `if`, `case`, `coalesce`, `nullif` |
 | Type cast | `cast_int`, `cast_float`, `cast_string` |
+| Random | `random_int`, `random_float`, `random_duration` |
 | Date/time construction | `make_date`, `make_time`, `make_datetime`, `make_duration`, `to_date`, `to_datetime`, `epoch_seconds`, `from_epoch` |
 | Date/time extraction | `year`, `month`, `day`, `hour`, `minute`, `second`, `day_of_week`, `day_of_year`, `week_of_year`, `quarter` |
 | Date/time arithmetic | `date_add`, `date_sub`, `date_diff`, `duration_add`, `start_of`, `end_of` |
