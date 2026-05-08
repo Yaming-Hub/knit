@@ -98,6 +98,26 @@ pub struct DataModel {
     pub actor_relationships: Vec<ActorRelationship>,
 }
 
+impl Default for DataModel {
+    fn default() -> Self {
+        Self {
+            name: "unnamed".to_string(),
+            description: None,
+            seed: default_seed(),
+            locale: default_locale(),
+            timezone: default_timezone(),
+            entities: Vec::new(),
+            relationships: Vec::new(),
+            noise_profiles: Vec::new(),
+            correlations: Vec::new(),
+            params: BTreeMap::new(),
+            schema_version: default_schema_version(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
+        }
+    }
+}
+
 // ── Entity & Field ───────────────────────────────────────────────────
 
 /// A single entity (analogous to a database table) in the data model.
