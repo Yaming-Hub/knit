@@ -59,9 +59,7 @@ impl Perturbator for OutlierInjector {
         for (col_idx, field) in schema.fields().iter().enumerate() {
             let col = batch.column(col_idx);
 
-            if !is_numeric(field.data_type())
-                || !should_apply(field.name(), &config.columns)
-            {
+            if !is_numeric(field.data_type()) || !should_apply(field.name(), &config.columns) {
                 columns.push(Arc::clone(col));
                 continue;
             }
@@ -213,12 +211,16 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     fn num_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            true,
+        )]));
         RecordBatch::try_new(
             schema,
-            vec![Arc::new(Float64Array::from(vec![10.0, 20.0, 30.0, 40.0, 50.0]))],
+            vec![Arc::new(Float64Array::from(vec![
+                10.0, 20.0, 30.0, 40.0, 50.0,
+            ]))],
         )
         .unwrap()
     }
@@ -229,7 +231,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = o.perturb(num_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         // All values should be far from original range [10, 50]
         let extreme = (0..arr.len())
             .filter(|&i| arr.value(i) < 0.0 || arr.value(i) > 100.0)
@@ -244,7 +250,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = o.perturb(num_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         for i in 0..arr.len() {
             let deviation = (arr.value(i) - 30.0).abs(); // ~center of [10,50]
             assert!(
@@ -260,16 +270,16 @@ mod tests {
         let o = OutlierInjector::new(50.0);
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Int32, false),
-        ]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(vec![10, 20, 30]))],
-        )
-        .unwrap();
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int32, false)]));
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![10, 20, 30]))])
+                .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
         // range=20, multiplier=50 → offset=±1000, so values far from [10,30]
         let any_extreme = (0..arr.len()).any(|i| arr.value(i) < -100 || arr.value(i) > 200);
         assert!(any_extreme, "expected extreme int32 values");
@@ -280,16 +290,18 @@ mod tests {
         let o = OutlierInjector::new(50.0);
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Int64, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int64, false)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Int64Array::from(vec![100i64, 200, 300]))],
         )
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Int64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
         let any_extreme = (0..arr.len()).any(|i| arr.value(i) < -500 || arr.value(i) > 1000);
         assert!(any_extreme, "expected extreme int64 values");
     }
@@ -300,7 +312,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(0.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = o.perturb(num_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         let originals = [10.0, 20.0, 30.0, 40.0, 50.0];
         for i in 0..5 {
             assert!(
@@ -315,9 +331,11 @@ mod tests {
         let o = OutlierInjector::new(100.0);
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            true,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Float64Array::from(vec![
@@ -328,7 +346,11 @@ mod tests {
         )
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         assert!(arr.is_valid(0));
         assert!(!arr.is_valid(1), "null should remain null");
         assert!(arr.is_valid(2));
@@ -352,7 +374,11 @@ mod tests {
         )
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
-        let names = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let names = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert_eq!(names.value(0), "a", "string column should be untouched");
         assert_eq!(names.value(1), "b");
     }
@@ -377,15 +403,29 @@ mod tests {
         )
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
-        let targeted = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
-        let safe = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
+        let targeted = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        let safe = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         // Targeted column should have extreme outliers
-        let any_changed = (0..targeted.len())
-            .any(|i| (targeted.value(i) - [10.0, 20.0][i]).abs() > 1.0);
+        let any_changed =
+            (0..targeted.len()).any(|i| (targeted.value(i) - [10.0, 20.0][i]).abs() > 1.0);
         assert!(any_changed, "targeted column should have outliers injected");
         // Safe column should be untouched
-        assert!((safe.value(0) - 10.0).abs() < 1e-10, "safe col should be untouched");
-        assert!((safe.value(1) - 20.0).abs() < 1e-10, "safe col should be untouched");
+        assert!(
+            (safe.value(0) - 10.0).abs() < 1e-10,
+            "safe col should be untouched"
+        );
+        assert!(
+            (safe.value(1) - 20.0).abs() < 1e-10,
+            "safe col should be untouched"
+        );
     }
 
     #[test]
@@ -395,16 +435,22 @@ mod tests {
         let o = OutlierInjector::new(10.0);
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            false,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Float64Array::from(vec![5.0, 5.0, 5.0]))],
         )
         .unwrap();
         let result = o.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         let expected_offset = 1.0 * 10.0; // max(range=0, 1.0) * multiplier
         for i in 0..arr.len() {
             let deviation = (arr.value(i) - 5.0).abs();
@@ -421,6 +467,9 @@ mod tests {
         let o = OutlierInjector::default();
         assert_eq!(o.breaks(), InvariantSet::TYPE_RANGE);
         assert_eq!(o.name(), "OutlierInjector");
-        assert!((o.multiplier - 10.0).abs() < 1e-10, "default multiplier should be 10.0");
+        assert!(
+            (o.multiplier - 10.0).abs() < 1e-10,
+            "default multiplier should be 10.0"
+        );
     }
 }

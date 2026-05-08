@@ -161,8 +161,5 @@ max = 1000.0
             break;
         }
     }
-    assert!(
-        !all_equal,
-        "different seeds should produce different data"
-    );
+    assert!(!all_equal, "different seeds should produce different data");
 }

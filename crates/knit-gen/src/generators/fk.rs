@@ -39,9 +39,7 @@ impl ForeignKeyGenerator {
 
 impl FieldGenerator for ForeignKeyGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        let values: Vec<Option<i64>> = (0..count)
-            .map(|_| self.key_store.sample(rng))
-            .collect();
+        let values: Vec<Option<i64>> = (0..count).map(|_| self.key_store.sample(rng)).collect();
 
         // If all values are None, the key store was empty — warn once.
         if values.iter().all(|v| v.is_none()) && count > 0 {
@@ -65,8 +63,8 @@ mod tests {
     use crate::context::GenContext;
     use crate::keystore::InMemoryKeyStore;
     use arrow::array::Array;
-    use rand_chacha::ChaCha8Rng;
     use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {
@@ -162,7 +160,11 @@ mod tests {
         for i in 0..1000 {
             *counts.entry(int_arr.value(i)).or_insert(0u32) += 1;
         }
-        assert_eq!(counts.len(), 10, "all 10 keys should be sampled in 1000 draws");
+        assert_eq!(
+            counts.len(),
+            10,
+            "all 10 keys should be sampled in 1000 draws"
+        );
         // Each key expected ~100 times; allow 60-140 (generous but rejects severe bias)
         for (&key, &count) in &counts {
             assert!(
@@ -198,7 +200,10 @@ mod tests {
         let v1 = arr1.as_any().downcast_ref::<Int64Array>().unwrap();
         let v2 = arr2.as_any().downcast_ref::<Int64Array>().unwrap();
         let differs = (0..50).any(|i| v1.value(i) != v2.value(i));
-        assert!(differs, "different seeds should produce different FK columns");
+        assert!(
+            differs,
+            "different seeds should produce different FK columns"
+        );
     }
 
     #[test]
@@ -214,10 +219,7 @@ mod tests {
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..30 {
             let v = int_arr.value(i);
-            assert!(
-                v == -100 || v == -50 || v == 0,
-                "unexpected FK value: {v}"
-            );
+            assert!(v == -100 || v == -50 || v == 0, "unexpected FK value: {v}");
         }
     }
 }

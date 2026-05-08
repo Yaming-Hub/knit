@@ -20,7 +20,11 @@ fn test_batch() -> RecordBatch {
         schema,
         vec![
             Arc::new(Int64Array::from(vec![1, 2, 3])),
-            Arc::new(StringArray::from(vec![Some("alice"), None, Some("charlie")])),
+            Arc::new(StringArray::from(vec![
+                Some("alice"),
+                None,
+                Some("charlie"),
+            ])),
             Arc::new(Float64Array::from(vec![Some(95.5), Some(87.0), None])),
             Arc::new(BooleanArray::from(vec![true, false, true])),
         ],
@@ -44,7 +48,10 @@ fn timestamp_batch() -> RecordBatch {
         schema,
         vec![
             Arc::new(Int64Array::from(vec![1, 2])),
-            Arc::new(TimestampMicrosecondArray::from(vec![ts, ts + 3_600_000_000])),
+            Arc::new(TimestampMicrosecondArray::from(vec![
+                ts,
+                ts + 3_600_000_000,
+            ])),
         ],
     )
     .unwrap()
@@ -58,26 +65,31 @@ mod parquet_tests {
     use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
     // Helper that writes to a shared buffer and returns the bytes
-    fn write_parquet(batch: &RecordBatch, compression: Compression) -> (Vec<u8>, knit_bind::SinkStats) {
+    fn write_parquet(
+        batch: &RecordBatch,
+        compression: Compression,
+    ) -> (Vec<u8>, knit_bind::SinkStats) {
         use std::sync::{Arc, Mutex};
 
         let shared = Arc::new(Mutex::new(Vec::new()));
         let writer = SharedWriter(Arc::clone(&shared));
-        let mut sink =
-            ParquetSink::new(writer, batch.schema(), compression, None).unwrap();
+        let mut sink = ParquetSink::new(writer, batch.schema(), compression, None).unwrap();
         sink.write_batch(batch).unwrap();
         let stats = Box::new(sink).finish().unwrap();
         let buf = shared.lock().unwrap().clone();
         (buf, stats)
     }
 
-    fn write_parquet_multi(batch: &RecordBatch, count: usize, compression: Compression) -> (Vec<u8>, knit_bind::SinkStats) {
+    fn write_parquet_multi(
+        batch: &RecordBatch,
+        count: usize,
+        compression: Compression,
+    ) -> (Vec<u8>, knit_bind::SinkStats) {
         use std::sync::{Arc, Mutex};
 
         let shared = Arc::new(Mutex::new(Vec::new()));
         let writer = SharedWriter(Arc::clone(&shared));
-        let mut sink =
-            ParquetSink::new(writer, batch.schema(), compression, None).unwrap();
+        let mut sink = ParquetSink::new(writer, batch.schema(), compression, None).unwrap();
         for _ in 0..count {
             sink.write_batch(batch).unwrap();
         }
@@ -189,7 +201,9 @@ mod json_tests {
                 self.0.lock().unwrap().extend_from_slice(buf);
                 Ok(buf.len())
             }
-            fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
         }
         unsafe impl Send for SharedWriter {}
 
@@ -319,7 +333,9 @@ mod ipc_tests {
                 self.0.lock().unwrap().extend_from_slice(buf);
                 Ok(buf.len())
             }
-            fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
         }
         unsafe impl Send for SharedWriter {}
 
@@ -430,7 +446,7 @@ mod factory_tests {
 
 mod template_tests {
     use super::*;
-    use knit_bind::template::{TemplateSink, TemplateMode};
+    use knit_bind::template::{TemplateMode, TemplateSink};
     use knit_bind::traits::Sink;
 
     #[test]
@@ -529,4 +545,3 @@ mod template_tests {
         assert!(output.contains("2024-01-15"));
     }
 }
-

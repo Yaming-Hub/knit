@@ -83,13 +83,12 @@ impl Perturbator for DuplicateInjector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::datatypes::{DataType, Field, Schema};    use rand::SeedableRng;
+    use arrow::datatypes::{DataType, Field, Schema};
+    use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
 
     fn sample_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("id", DataType::Int32, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)]));
         RecordBatch::try_new(
             schema,
             vec![Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5]))],
@@ -122,13 +121,21 @@ mod tests {
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = d.perturb(sample_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
         // p=1.0: every row is duplicated, so result = originals ++ originals (same order)
         assert_eq!(arr.len(), 10);
         let originals: Vec<i32> = (0..5).map(|i| arr.value(i)).collect();
         let duplicates: Vec<i32> = (5..10).map(|i| arr.value(i)).collect();
         assert_eq!(originals, vec![1, 2, 3, 4, 5]);
-        assert_eq!(duplicates, vec![1, 2, 3, 4, 5], "duplicates should match originals exactly");
+        assert_eq!(
+            duplicates,
+            vec![1, 2, 3, 4, 5],
+            "duplicates should match originals exactly"
+        );
     }
 
     #[test]
@@ -136,14 +143,10 @@ mod tests {
         let d = DuplicateInjector::new();
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("id", DataType::Int32, false),
-        ]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(Vec::<i32>::new()))],
-        )
-        .unwrap();
+        let schema = Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)]));
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(Vec::<i32>::new()))])
+                .unwrap();
         let result = d.perturb(batch, &mut rng, &config).unwrap();
         assert_eq!(result.num_rows(), 0);
     }
@@ -154,9 +157,7 @@ mod tests {
         let config = PerturbConfig::default().with_probability(0.5);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         // Use larger batch for statistical assertions
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("id", DataType::Int32, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Int32Array::from((0..100).collect::<Vec<i32>>()))],

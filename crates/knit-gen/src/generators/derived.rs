@@ -88,10 +88,7 @@ fn parse_numeric_binop(expr: &str) -> Option<NumericBinOp> {
 fn extract_f64(arr: &ArrayRef, count: usize) -> Vec<f64> {
     if let Some(f) = arr.as_any().downcast_ref::<Float64Array>() {
         f.values().to_vec()
-    } else if let Some(i) = arr
-        .as_any()
-        .downcast_ref::<arrow::array::Int64Array>()
-    {
+    } else if let Some(i) = arr.as_any().downcast_ref::<arrow::array::Int64Array>() {
         i.values().iter().map(|v| *v as f64).collect()
     } else {
         vec![0.0; count]
@@ -104,15 +101,9 @@ fn extract_strings(arr: &ArrayRef, count: usize) -> Vec<String> {
         (0..count).map(|i| s.value(i).to_string()).collect()
     } else if let Some(f) = arr.as_any().downcast_ref::<Float64Array>() {
         f.values().iter().map(|v| v.to_string()).collect()
-    } else if let Some(i) = arr
-        .as_any()
-        .downcast_ref::<arrow::array::Int64Array>()
-    {
+    } else if let Some(i) = arr.as_any().downcast_ref::<arrow::array::Int64Array>() {
         i.values().iter().map(|v| v.to_string()).collect()
-    } else if let Some(b) = arr
-        .as_any()
-        .downcast_ref::<arrow::array::BooleanArray>()
-    {
+    } else if let Some(b) = arr.as_any().downcast_ref::<arrow::array::BooleanArray>() {
         (0..count)
             .map(|i| if b.value(i) { "true" } else { "false" }.to_string())
             .collect()
@@ -274,10 +265,7 @@ mod tests {
         );
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new(
-            "${a} + ${b}".into(),
-            vec!["a".into(), "b".into()],
-        );
+        let gen = DerivedGenerator::new("${a} + ${b}".into(), vec!["a".into(), "b".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let arr = gen.generate(&mut rng, 3, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -297,10 +285,7 @@ mod tests {
         );
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new(
-            "${x} / ${y}".into(),
-            vec!["x".into(), "y".into()],
-        );
+        let gen = DerivedGenerator::new("${x} / ${y}".into(), vec!["x".into(), "y".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let arr = gen.generate(&mut rng, 2, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -337,10 +322,7 @@ mod tests {
         let cols = HashMap::new();
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new(
-            "${a} + ${b}".into(),
-            vec!["a".into(), "b".into()],
-        );
+        let gen = DerivedGenerator::new("${a} + ${b}".into(), vec!["a".into(), "b".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let arr = gen.generate(&mut rng, 3, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -355,15 +337,13 @@ mod tests {
             Arc::new(StringArray::from(vec!["Alice", "Bob"])) as ArrayRef,
         );
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
-        let params: &'static HashMap<String, String> = Box::leak(Box::new(HashMap::from([
-            ("prefix".to_string(), "Dr.".to_string()),
-        ])));
+        let params: &'static HashMap<String, String> = Box::leak(Box::new(HashMap::from([(
+            "prefix".to_string(),
+            "Dr.".to_string(),
+        )])));
         let ctx = GenContext::new(map, 0, 0, 1, "test").with_params(params);
 
-        let gen = DerivedGenerator::new(
-            "${param.prefix} ${name}".into(),
-            vec!["name".into()],
-        );
+        let gen = DerivedGenerator::new("${param.prefix} ${name}".into(), vec!["name".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let arr = gen.generate(&mut rng, 2, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
@@ -376,10 +356,7 @@ mod tests {
         let cols = HashMap::new();
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new(
-            "prefix: ${param.missing}".into(),
-            vec![],
-        );
+        let gen = DerivedGenerator::new("prefix: ${param.missing}".into(), vec![]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let arr = gen.generate(&mut rng, 2, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();

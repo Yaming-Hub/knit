@@ -91,35 +91,65 @@ fn inject_nulls(
         DataType::Int32 => {
             let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
             let vals: Vec<Option<i32>> = (0..len)
-                .map(|i| if null_buf[i] { a.is_valid(i).then(|| a.value(i)) } else { None })
+                .map(|i| {
+                    if null_buf[i] {
+                        a.is_valid(i).then(|| a.value(i))
+                    } else {
+                        None
+                    }
+                })
                 .collect();
             Ok(Arc::new(Int32Array::from(vals)))
         }
         DataType::Int64 => {
             let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
             let vals: Vec<Option<i64>> = (0..len)
-                .map(|i| if null_buf[i] { a.is_valid(i).then(|| a.value(i)) } else { None })
+                .map(|i| {
+                    if null_buf[i] {
+                        a.is_valid(i).then(|| a.value(i))
+                    } else {
+                        None
+                    }
+                })
                 .collect();
             Ok(Arc::new(Int64Array::from(vals)))
         }
         DataType::Float64 => {
             let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
             let vals: Vec<Option<f64>> = (0..len)
-                .map(|i| if null_buf[i] { a.is_valid(i).then(|| a.value(i)) } else { None })
+                .map(|i| {
+                    if null_buf[i] {
+                        a.is_valid(i).then(|| a.value(i))
+                    } else {
+                        None
+                    }
+                })
                 .collect();
             Ok(Arc::new(Float64Array::from(vals)))
         }
         DataType::Utf8 => {
             let a = array.as_any().downcast_ref::<StringArray>().unwrap();
             let vals: Vec<Option<&str>> = (0..len)
-                .map(|i| if null_buf[i] { a.is_valid(i).then(|| a.value(i)) } else { None })
+                .map(|i| {
+                    if null_buf[i] {
+                        a.is_valid(i).then(|| a.value(i))
+                    } else {
+                        None
+                    }
+                })
                 .collect();
             Ok(Arc::new(StringArray::from(vals)))
         }
         DataType::Boolean => {
             let a = array.as_any().downcast_ref::<BooleanArray>().unwrap();
             let vals: Vec<Option<bool>> = (0..len)
-                .map(|i| if null_buf[i] { a.is_valid(i).then(|| a.value(i)) } else { None })
+                .map(|i| {
+                    if null_buf[i] {
+                        a.is_valid(i).then(|| a.value(i))
+                    } else {
+                        None
+                    }
+                })
                 .collect();
             Ok(Arc::new(BooleanArray::from(vals)))
         }
@@ -185,14 +215,14 @@ mod tests {
         let config = PerturbConfig::default().with_probability(0.5).with_seed(42);
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
         // Use a larger batch for statistical assertions
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, true),
-        ]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Float64Array::from(vec![1.0; 1000]))],
-        )
-        .unwrap();
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            true,
+        )]));
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Float64Array::from(vec![1.0; 1000]))])
+                .unwrap();
         let result = injector.perturb(batch, &mut rng, &config).unwrap();
         let nulls = result.column(0).null_count();
         // Expect ~50% nulls (allow 40-60%)
@@ -233,21 +263,33 @@ mod tests {
         .unwrap();
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
         let result = injector.perturb(batch, &mut rng, &config).unwrap();
-        assert_eq!(result.column(0).null_count(), 0, "non-nullable should be skipped");
-        assert_eq!(result.column(1).null_count(), 3, "nullable should be nulled");
+        assert_eq!(
+            result.column(0).null_count(),
+            0,
+            "non-nullable should be skipped"
+        );
+        assert_eq!(
+            result.column(1).null_count(),
+            3,
+            "nullable should be nulled"
+        );
     }
 
     #[test]
     fn null_injection_preserves_existing_nulls() {
         let injector = NullInjector::new();
         let config = PerturbConfig::default().with_probability(0.0);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Int64, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int64, true)]));
         // Array with pre-existing nulls
         let batch = RecordBatch::try_new(
             schema,
-            vec![Arc::new(Int64Array::from(vec![Some(1), None, Some(3), None, Some(5)]))],
+            vec![Arc::new(Int64Array::from(vec![
+                Some(1),
+                None,
+                Some(3),
+                None,
+                Some(5),
+            ]))],
         )
         .unwrap();
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);

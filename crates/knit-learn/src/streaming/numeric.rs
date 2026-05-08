@@ -117,12 +117,10 @@ impl NumericState {
         let delta = other.mean - self.mean;
 
         // Parallel Welford merge
-        let new_mean =
-            self.mean + delta * (other.count as f64 / combined_count as f64);
+        let new_mean = self.mean + delta * (other.count as f64 / combined_count as f64);
         let new_m2 = self.m2
             + other.m2
-            + delta * delta * (self.count as f64 * other.count as f64)
-                / combined_count as f64;
+            + delta * delta * (self.count as f64 * other.count as f64) / combined_count as f64;
 
         self.mean = new_mean;
         self.m2 = new_m2;
@@ -137,8 +135,7 @@ impl NumericState {
         }
 
         self.all_integer = self.all_integer && other.all_integer;
-        self.max_decimal_places =
-            self.max_decimal_places.max(other.max_decimal_places);
+        self.max_decimal_places = self.max_decimal_places.max(other.max_decimal_places);
     }
 
     /// Number of non-null values observed.

@@ -82,7 +82,11 @@ pub struct TypeInference {
 /// categorical — if `distinct / total <= threshold`, the column is considered
 /// categorical.
 pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeInference {
-    let non_null: Vec<&str> = values.iter().filter_map(|v| *v).filter(|v| !v.is_empty()).collect();
+    let non_null: Vec<&str> = values
+        .iter()
+        .filter_map(|v| *v)
+        .filter(|v| !v.is_empty())
+        .collect();
 
     if non_null.is_empty() {
         return TypeInference {
@@ -142,10 +146,8 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
     }
 
     // Try UUID
-    let uuid_re = Regex::new(
-        r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-    )
-    .unwrap();
+    let uuid_re =
+        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap();
     let uuid_count = non_null.iter().filter(|v| uuid_re.is_match(v)).count();
     if uuid_count as f64 / total >= 0.95 {
         return TypeInference {
@@ -205,7 +207,10 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
     } else {
         200
     };
-    if !has_strong_pattern && cardinality_ratio <= effective_threshold && distinct.len() <= max_distinct {
+    if !has_strong_pattern
+        && cardinality_ratio <= effective_threshold
+        && distinct.len() <= max_distinct
+    {
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,
@@ -231,10 +236,8 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
 
     let email_re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
     let phone_re = Regex::new(r"^\+?\d[\d\s\-\(\)]{6,14}$").unwrap();
-    let uuid_re = Regex::new(
-        r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-    )
-    .unwrap();
+    let uuid_re =
+        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap();
     let url_re = Regex::new(r"^https?://[^\s]+$").unwrap();
     let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap();
     // Name pattern: 2-4 capitalized words (e.g., "John Smith", "Mary Jane Watson")
@@ -283,9 +286,7 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
             for l in &hex_matches {
                 *len_counts.entry(*l).or_insert(0) += 1;
             }
-            if let Some((&dominant_len, &count)) =
-                len_counts.iter().max_by_key(|(_, c)| *c)
-            {
+            if let Some((&dominant_len, &count)) = len_counts.iter().max_by_key(|(_, c)| *c) {
                 let dominance = count as f64 / hex_matches.len() as f64;
                 if dominance >= 0.8 {
                     result.insert(StringPattern::HexString(dominant_len), hex_rate);
@@ -342,16 +343,14 @@ mod tests {
 
     #[test]
     fn infer_float_column() {
-        let vals: Vec<Option<&str>> =
-            vec![Some("1.5"), Some("2.7"), Some("3.14"), Some("0.001")];
+        let vals: Vec<Option<&str>> = vec![Some("1.5"), Some("2.7"), Some("3.14"), Some("0.001")];
         let result = infer_type(&vals, 0.05);
         assert_eq!(result.inferred_type, InferredType::Float);
     }
 
     #[test]
     fn infer_boolean_column() {
-        let vals: Vec<Option<&str>> =
-            vec![Some("true"), Some("false"), Some("yes"), Some("no")];
+        let vals: Vec<Option<&str>> = vec![Some("true"), Some("false"), Some("yes"), Some("no")];
         let result = infer_type(&vals, 0.05);
         assert_eq!(result.inferred_type, InferredType::Boolean);
     }
@@ -369,11 +368,8 @@ mod tests {
 
     #[test]
     fn infer_date_iso() {
-        let vals: Vec<Option<&str>> = vec![
-            Some("2024-01-15"),
-            Some("2024-02-20"),
-            Some("2023-12-01"),
-        ];
+        let vals: Vec<Option<&str>> =
+            vec![Some("2024-01-15"), Some("2024-02-20"), Some("2023-12-01")];
         let result = infer_type(&vals, 0.05);
         assert!(matches!(
             result.inferred_type,
@@ -413,11 +409,7 @@ mod tests {
 
     #[test]
     fn detect_email_pattern() {
-        let vals = vec![
-            "alice@example.com",
-            "bob@test.org",
-            "carol@domain.co.uk",
-        ];
+        let vals = vec!["alice@example.com", "bob@test.org", "carol@domain.co.uk"];
         let patterns = detect_patterns(&vals);
         assert!(patterns.contains_key(&StringPattern::Email));
         assert!(*patterns.get(&StringPattern::Email).unwrap() > 0.9);
@@ -452,7 +444,9 @@ mod tests {
             "00000000000000000000000000000001",
         ];
         let patterns = detect_patterns(&vals);
-        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        let hex_entry = patterns
+            .iter()
+            .find(|(p, _)| matches!(p, StringPattern::HexString(_)));
         assert!(hex_entry.is_some(), "should detect hex string pattern");
         if let Some((StringPattern::HexString(len), rate)) = hex_entry {
             assert_eq!(*len, 32, "should detect 32-char hex strings");
@@ -464,8 +458,13 @@ mod tests {
     fn hex_string_not_detected_for_short_strings() {
         let vals = vec!["abc123", "def456", "789abc"];
         let patterns = detect_patterns(&vals);
-        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
-        assert!(hex_entry.is_none(), "short hex strings should not be detected");
+        let hex_entry = patterns
+            .iter()
+            .find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(
+            hex_entry.is_none(),
+            "short hex strings should not be detected"
+        );
     }
 
     #[test]
@@ -477,8 +476,13 @@ mod tests {
         ];
         let patterns = detect_patterns(&vals);
         assert!(patterns.contains_key(&StringPattern::Uuid));
-        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
-        assert!(hex_entry.is_none(), "UUID columns should not also match as hex strings");
+        let hex_entry = patterns
+            .iter()
+            .find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(
+            hex_entry.is_none(),
+            "UUID columns should not also match as hex strings"
+        );
     }
 
     #[test]
@@ -492,23 +496,33 @@ mod tests {
             "33333333333333333333333333333333",
         ];
         let patterns = detect_patterns(&vals);
-        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
-        assert!(hex_entry.is_none(), "pure numeric strings should not be classified as hex");
+        let hex_entry = patterns
+            .iter()
+            .find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(
+            hex_entry.is_none(),
+            "pure numeric strings should not be classified as hex"
+        );
     }
 
     #[test]
     fn hex_string_not_detected_for_mixed_lengths() {
         // Mixed lengths: no single length dominates
         let vals = vec![
-            "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",          // 32
-            "1234567890abcdef1234567890abcdef",              // 32
-            "deadbeefcafebabe0123456789abcdef01234567",      // 40
-            "ffffffffffffffffffffffffffffffff01234567",      // 40
-            "aabbccdd11223344aabbccdd11223344aabbccdd",      // 40
+            "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",         // 32
+            "1234567890abcdef1234567890abcdef",         // 32
+            "deadbeefcafebabe0123456789abcdef01234567", // 40
+            "ffffffffffffffffffffffffffffffff01234567", // 40
+            "aabbccdd11223344aabbccdd11223344aabbccdd", // 40
         ];
         let patterns = detect_patterns(&vals);
-        let hex_entry = patterns.iter().find(|(p, _)| matches!(p, StringPattern::HexString(_)));
-        assert!(hex_entry.is_none(), "mixed-length hex should not be classified");
+        let hex_entry = patterns
+            .iter()
+            .find(|(p, _)| matches!(p, StringPattern::HexString(_)));
+        assert!(
+            hex_entry.is_none(),
+            "mixed-length hex should not be classified"
+        );
     }
 
     #[test]

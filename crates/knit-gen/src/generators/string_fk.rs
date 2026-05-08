@@ -1,5 +1,5 @@
 //! Foreign-key generator for string/UUID columns — samples from a parent
-//! entity's [`StringKeyStore`](crate::traits::StringKeyStore).
+//! entity's [`StringKeyStore`].
 //!
 //! This is the string-typed counterpart to
 //! [`ForeignKeyGenerator`](crate::generators::fk::ForeignKeyGenerator) which
@@ -36,9 +36,7 @@ impl StringForeignKeyGenerator {
 
 impl FieldGenerator for StringForeignKeyGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        let values: Vec<Option<String>> = (0..count)
-            .map(|_| self.key_store.sample(rng))
-            .collect();
+        let values: Vec<Option<String>> = (0..count).map(|_| self.key_store.sample(rng)).collect();
 
         // If all values are None, the key store was empty — warn once.
         if values.iter().all(|v| v.is_none()) && count > 0 {

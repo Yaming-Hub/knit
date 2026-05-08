@@ -17,7 +17,7 @@ use arrow::record_batch::RecordBatch;
 /// (matching the PK key store order).
 #[derive(Debug, Default)]
 pub struct TemporalStore {
-    /// (entity_name, field_name) → Vec<Option<i64>> indexed by actor_index.
+    /// (entity_name, field_name) → `Vec<Option<i64>>` indexed by actor_index.
     stores: HashMap<(String, String), Vec<Option<i64>>>,
 }
 
@@ -126,10 +126,7 @@ impl TemporalStore {
             }
 
             // Handle Date32 columns (days since epoch → ms)
-            if let Some(d32_arr) = col
-                .as_any()
-                .downcast_ref::<arrow::array::Date32Array>()
-            {
+            if let Some(d32_arr) = col.as_any().downcast_ref::<arrow::array::Date32Array>() {
                 for i in 0..d32_arr.len() {
                     if d32_arr.is_null(i) {
                         values.push(None);
@@ -183,9 +180,9 @@ impl TemporalStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use arrow::array::TimestampMillisecondArray;
     use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
+    use std::sync::Arc;
 
     fn make_batch(entity: &str, timestamps: Vec<Option<i64>>) -> (String, RecordBatch) {
         let schema = Schema::new(vec![Field::new(
@@ -200,9 +197,10 @@ mod tests {
 
     #[test]
     fn capture_and_retrieve() {
-        let batches = vec![
-            make_batch("users", vec![Some(1000), Some(2000), Some(3000)]),
-        ];
+        let batches = vec![make_batch(
+            "users",
+            vec![Some(1000), Some(2000), Some(3000)],
+        )];
 
         let mut store = TemporalStore::new();
         store.capture_from_batches("users", "created_at", &batches);
@@ -215,9 +213,7 @@ mod tests {
 
     #[test]
     fn null_timestamps_stored_as_none() {
-        let batches = vec![
-            make_batch("users", vec![Some(1000), None, Some(3000)]),
-        ];
+        let batches = vec![make_batch("users", vec![Some(1000), None, Some(3000)])];
 
         let mut store = TemporalStore::new();
         store.capture_from_batches("users", "created_at", &batches);
@@ -244,9 +240,7 @@ mod tests {
 
     #[test]
     fn missing_field_yields_empty() {
-        let batches = vec![
-            make_batch("users", vec![Some(1000)]),
-        ];
+        let batches = vec![make_batch("users", vec![Some(1000)])];
 
         let mut store = TemporalStore::new();
         store.capture_from_batches("users", "nonexistent", &batches);

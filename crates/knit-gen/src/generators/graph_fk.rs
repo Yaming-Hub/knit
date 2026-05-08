@@ -75,31 +75,32 @@ impl FieldGenerator for GraphTargetFkGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
         let source_col = ctx.batch_columns.get(&self.source_field);
 
-        let values: Vec<Option<i64>> = match source_col.and_then(|col| col.as_any().downcast_ref::<Int64Array>()) {
-            Some(source_arr) => {
-                (0..count)
-                    .map(|i| {
-                        if source_arr.is_null(i) {
-                            // Null source → null target
-                            return None;
-                        }
-                        let source_pk = source_arr.value(i);
-                        self.sample_target(source_pk, rng)
-                    })
-                    .collect()
-            }
-            None => {
-                // Source column not available or wrong type — fall back to uniform FK
-                tracing::warn!(
-                    source_field = %self.source_field,
-                    entity = %ctx.entity_name,
-                    "graph target: source column not found or not Int64, using uniform FK"
-                );
-                (0..count)
-                    .map(|_| self.target_key_store.sample(rng))
-                    .collect()
-            }
-        };
+        let values: Vec<Option<i64>> =
+            match source_col.and_then(|col| col.as_any().downcast_ref::<Int64Array>()) {
+                Some(source_arr) => {
+                    (0..count)
+                        .map(|i| {
+                            if source_arr.is_null(i) {
+                                // Null source → null target
+                                return None;
+                            }
+                            let source_pk = source_arr.value(i);
+                            self.sample_target(source_pk, rng)
+                        })
+                        .collect()
+                }
+                None => {
+                    // Source column not available or wrong type — fall back to uniform FK
+                    tracing::warn!(
+                        source_field = %self.source_field,
+                        entity = %ctx.entity_name,
+                        "graph target: source column not found or not Int64, using uniform FK"
+                    );
+                    (0..count)
+                        .map(|_| self.target_key_store.sample(rng))
+                        .collect()
+                }
+            };
 
         Arc::new(Int64Array::from(values))
     }
@@ -124,7 +125,11 @@ impl GraphTargetFkGenerator {
         };
 
         // Step 2: get neighbors
-        let neighbors = self.adjacency.get(actor_idx).map(|v| v.as_slice()).unwrap_or(&[]);
+        let neighbors = self
+            .adjacency
+            .get(actor_idx)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
 
         if neighbors.is_empty() {
             // No outbound edges — fall back to uniform FK
@@ -157,7 +162,7 @@ mod tests {
             vec![1, 2],
             vec![0, 3],
             vec![4],
-            vec![],       // isolated — will fall back
+            vec![], // isolated — will fall back
             vec![0, 1, 2, 3],
         ]
     }
@@ -213,12 +218,7 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let gen = GraphTargetFkGenerator::new(
-            adjacency,
-            pk_to_index,
-            ks,
-            "sender_id".to_string(),
-        );
+        let gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
 
         // Actor 3 (PK=400) has no outbound edges — should fall back to uniform
         let source_arr = Arc::new(Int64Array::from(vec![400; 50]));
@@ -232,7 +232,8 @@ mod tests {
         let result_arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // All values should be valid PKs from key store
-        let valid_pks: std::collections::HashSet<i64> = [100, 200, 300, 400, 500].into_iter().collect();
+        let valid_pks: std::collections::HashSet<i64> =
+            [100, 200, 300, 400, 500].into_iter().collect();
         for i in 0..50 {
             assert!(!result_arr.is_null(i));
             assert!(valid_pks.contains(&result_arr.value(i)));
@@ -245,16 +246,15 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let gen = GraphTargetFkGenerator::new(
-            adjacency,
-            pk_to_index,
-            ks,
-            "sender_id".to_string(),
-        );
+        let gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
 
         // Mix of null and non-null source values
         let source_arr = Arc::new(Int64Array::from(vec![
-            Some(100), None, Some(200), None, Some(500),
+            Some(100),
+            None,
+            Some(200),
+            None,
+            Some(500),
         ]));
         let mut batch_columns = HashMap::new();
         batch_columns.insert("sender_id".to_string(), source_arr as ArrayRef);
@@ -267,9 +267,9 @@ mod tests {
 
         // Null sources produce null targets
         assert!(!result_arr.is_null(0)); // source 100 → non-null
-        assert!(result_arr.is_null(1));  // source null → null
+        assert!(result_arr.is_null(1)); // source null → null
         assert!(!result_arr.is_null(2)); // source 200 → non-null
-        assert!(result_arr.is_null(3));  // source null → null
+        assert!(result_arr.is_null(3)); // source null → null
         assert!(!result_arr.is_null(4)); // source 500 → non-null
     }
 }

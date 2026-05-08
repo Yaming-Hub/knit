@@ -33,9 +33,7 @@ fn collect_i64_column(batches: &[RecordBatch], column: &str) -> Vec<i64> {
 /// Collect all timestamp values from a column across batches, normalized to milliseconds.
 /// Handles all Arrow timestamp types: Second, Millisecond, Microsecond, Nanosecond.
 fn collect_timestamp_column(batches: &[RecordBatch], column: &str) -> Vec<i64> {
-    use arrow::array::{
-        TimestampMicrosecondArray, TimestampNanosecondArray, TimestampSecondArray,
-    };
+    use arrow::array::{TimestampMicrosecondArray, TimestampNanosecondArray, TimestampSecondArray};
     let mut values = Vec::new();
     for batch in batches {
         let idx = batch
@@ -74,7 +72,10 @@ fn collect_timestamp_column(batches: &[RecordBatch], column: &str) -> Vec<i64> {
                 }
             }
         } else {
-            panic!("column '{column}' has unsupported type: {:?}", arr.data_type());
+            panic!(
+                "column '{column}' has unsupported type: {:?}",
+                arr.data_type()
+            );
         }
     }
     values
@@ -86,38 +87,50 @@ fn collect_fk_timestamp_pairs(
     fk_col: &str,
     ts_col: &str,
 ) -> Vec<(i64, i64)> {
-    use arrow::array::{
-        TimestampMicrosecondArray, TimestampNanosecondArray, TimestampSecondArray,
-    };
+    use arrow::array::{TimestampMicrosecondArray, TimestampNanosecondArray, TimestampSecondArray};
     let mut pairs = Vec::new();
     for batch in batches {
         let fk_idx = batch.schema().index_of(fk_col).unwrap();
         let ts_idx = batch.schema().index_of(ts_col).unwrap();
-        let fk_arr = batch.column(fk_idx).as_any().downcast_ref::<Int64Array>().unwrap();
+        let fk_arr = batch
+            .column(fk_idx)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
         let ts_col_arr = batch.column(ts_idx);
         for i in 0..batch.num_rows() {
             if fk_arr.is_null(i) {
                 continue;
             }
-            let ts_val = if let Some(ts_arr) =
-                ts_col_arr.as_any().downcast_ref::<TimestampMillisecondArray>()
+            let ts_val = if let Some(ts_arr) = ts_col_arr
+                .as_any()
+                .downcast_ref::<TimestampMillisecondArray>()
             {
-                if ts_arr.is_null(i) { continue; }
+                if ts_arr.is_null(i) {
+                    continue;
+                }
                 ts_arr.value(i)
-            } else if let Some(ts_arr) =
-                ts_col_arr.as_any().downcast_ref::<TimestampMicrosecondArray>()
+            } else if let Some(ts_arr) = ts_col_arr
+                .as_any()
+                .downcast_ref::<TimestampMicrosecondArray>()
             {
-                if ts_arr.is_null(i) { continue; }
+                if ts_arr.is_null(i) {
+                    continue;
+                }
                 ts_arr.value(i) / 1000
-            } else if let Some(ts_arr) =
-                ts_col_arr.as_any().downcast_ref::<TimestampNanosecondArray>()
+            } else if let Some(ts_arr) = ts_col_arr
+                .as_any()
+                .downcast_ref::<TimestampNanosecondArray>()
             {
-                if ts_arr.is_null(i) { continue; }
+                if ts_arr.is_null(i) {
+                    continue;
+                }
                 ts_arr.value(i) / 1_000_000
-            } else if let Some(ts_arr) =
-                ts_col_arr.as_any().downcast_ref::<TimestampSecondArray>()
+            } else if let Some(ts_arr) = ts_col_arr.as_any().downcast_ref::<TimestampSecondArray>()
             {
-                if ts_arr.is_null(i) { continue; }
+                if ts_arr.is_null(i) {
+                    continue;
+                }
                 ts_arr.value(i) * 1000
             } else {
                 continue;
@@ -146,7 +159,10 @@ fn social_platform_generates_all_entities() {
 
     assert!(batches.contains_key("users"), "missing 'users' entity");
     assert!(batches.contains_key("posts"), "missing 'posts' entity");
-    assert!(batches.contains_key("comments"), "missing 'comments' entity");
+    assert!(
+        batches.contains_key("comments"),
+        "missing 'comments' entity"
+    );
     assert!(
         batches.contains_key("direct_messages"),
         "missing 'direct_messages' entity"
@@ -303,10 +319,8 @@ fn social_platform_activity_after_signup() {
     // Build user_id → signup_date map
     let user_ids = collect_i64_column(&batches["users"], "id");
     let signup_dates = collect_timestamp_column(&batches["users"], "signup_date");
-    let signup_map: HashMap<i64, i64> = user_ids
-        .into_iter()
-        .zip(signup_dates.into_iter())
-        .collect();
+    let signup_map: HashMap<i64, i64> =
+        user_ids.into_iter().zip(signup_dates.into_iter()).collect();
 
     // Posts: created_at >= author's signup_date
     let post_pairs = collect_fk_timestamp_pairs(&batches["posts"], "author_id", "created_at");
@@ -324,8 +338,7 @@ fn social_platform_activity_after_signup() {
     );
 
     // Comments: created_at >= author's signup_date
-    let comment_pairs =
-        collect_fk_timestamp_pairs(&batches["comments"], "author_id", "created_at");
+    let comment_pairs = collect_fk_timestamp_pairs(&batches["comments"], "author_id", "created_at");
     let mut violations = 0;
     for (author_id, created_at) in &comment_pairs {
         if let Some(&signup) = signup_map.get(author_id) {
@@ -340,8 +353,7 @@ fn social_platform_activity_after_signup() {
     );
 
     // Direct messages: sent_at >= sender's signup_date
-    let dm_pairs =
-        collect_fk_timestamp_pairs(&batches["direct_messages"], "sender_id", "sent_at");
+    let dm_pairs = collect_fk_timestamp_pairs(&batches["direct_messages"], "sender_id", "sent_at");
     let mut violations = 0;
     for (sender_id, sent_at) in &dm_pairs {
         if let Some(&signup) = signup_map.get(sender_id) {
@@ -383,8 +395,7 @@ fn social_platform_inter_event_gaps() {
     );
 
     // Check direct_messages: per-sender gaps
-    let dm_pairs =
-        collect_fk_timestamp_pairs(&batches["direct_messages"], "sender_id", "sent_at");
+    let dm_pairs = collect_fk_timestamp_pairs(&batches["direct_messages"], "sender_id", "sent_at");
     let mut per_sender: HashMap<i64, Vec<i64>> = HashMap::new();
     for (sender, ts) in &dm_pairs {
         per_sender.entry(*sender).or_default().push(*ts);
@@ -414,7 +425,8 @@ fn social_platform_temporal_hour_bias() {
     let mut hour_counts = [0u32; 24];
     for ts in &timestamps {
         // Convert ms to hours within day
-        let hour = (((*ts % (24 * 3_600_000)) + 24 * 3_600_000) % (24 * 3_600_000) / 3_600_000) as usize;
+        let hour =
+            (((*ts % (24 * 3_600_000)) + 24 * 3_600_000) % (24 * 3_600_000) / 3_600_000) as usize;
         if hour < 24 {
             hour_counts[hour] += 1;
         }

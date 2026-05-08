@@ -181,7 +181,10 @@ mod tests {
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let val = str_arr.value(0);
         // Should be a JSON array of two float values
-        assert!(val.starts_with('[') && val.ends_with(']'), "should be JSON array: {val}");
+        assert!(
+            val.starts_with('[') && val.ends_with(']'),
+            "should be JSON array: {val}"
+        );
         assert!(val.contains("3.14"), "should contain 3.14: {val}");
     }
 
@@ -211,9 +214,15 @@ mod tests {
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let val = str_arr.value(0);
         // Quotes should be escaped
-        assert!(val.contains("\\\""), "quotes should be escaped in JSON: {val}");
+        assert!(
+            val.contains("\\\""),
+            "quotes should be escaped in JSON: {val}"
+        );
         // Backslashes should be escaped (original \ becomes \\)
-        assert!(val.contains("\\\\"), "backslashes should be escaped in JSON: {val}");
+        assert!(
+            val.contains("\\\\"),
+            "backslashes should be escaped in JSON: {val}"
+        );
     }
 
     #[test]
@@ -233,8 +242,14 @@ mod tests {
             &GeneratorPlan::Constant(Value::Int(7)),
             &GeneratorPlan::OneOf {
                 choices: vec![
-                    WeightedChoice { value: Value::Int(1), weight: 1.0 },
-                    WeightedChoice { value: Value::Int(3), weight: 1.0 },
+                    WeightedChoice {
+                        value: Value::Int(1),
+                        weight: 1.0,
+                    },
+                    WeightedChoice {
+                        value: Value::Int(3),
+                        weight: 1.0,
+                    },
                 ],
                 cumulative_weights: vec![0.5, 1.0],
             },
@@ -246,9 +261,16 @@ mod tests {
         let mut seen_lengths = std::collections::HashSet::new();
         for i in 0..10 {
             let val = str_arr.value(i);
-            assert!(val.starts_with('[') && val.ends_with(']'), "row {i}: should be JSON array: {val}");
-            let inner = &val[1..val.len()-1];
-            let elem_count = if inner.is_empty() { 0 } else { inner.split(',').count() };
+            assert!(
+                val.starts_with('[') && val.ends_with(']'),
+                "row {i}: should be JSON array: {val}"
+            );
+            let inner = &val[1..val.len() - 1];
+            let elem_count = if inner.is_empty() {
+                0
+            } else {
+                inner.split(',').count()
+            };
             seen_lengths.insert(elem_count);
             if !inner.is_empty() {
                 for part in inner.split(',') {
@@ -272,7 +294,11 @@ mod tests {
         let a_s = a.as_any().downcast_ref::<StringArray>().unwrap();
         let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
-            assert_eq!(a_s.value(i), b_s.value(i), "row {i} should be deterministic");
+            assert_eq!(
+                a_s.value(i),
+                b_s.value(i),
+                "row {i} should be deterministic"
+            );
         }
     }
 
@@ -288,7 +314,11 @@ mod tests {
         let arr = gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
-            assert_eq!(str_arr.value(i), "[]", "negative length should produce empty array");
+            assert_eq!(
+                str_arr.value(i),
+                "[]",
+                "negative length should produce empty array"
+            );
         }
     }
 }

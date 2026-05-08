@@ -46,20 +46,16 @@ fn ecommerce_order_user_fk_integrity() {
 
     let batches = generate_from_file(&path);
 
-    let user_ids: HashSet<i64> = collect_i64_column(
-        batches.get("users").expect("no users batches"),
-        "id",
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let user_ids: HashSet<i64> =
+        collect_i64_column(batches.get("users").expect("no users batches"), "id")
+            .into_iter()
+            .flatten()
+            .collect();
 
     assert!(!user_ids.is_empty(), "users.id should not be empty");
 
-    let order_user_ids = collect_i64_column(
-        batches.get("orders").expect("no orders batches"),
-        "user_id",
-    );
+    let order_user_ids =
+        collect_i64_column(batches.get("orders").expect("no orders batches"), "user_id");
 
     for (i, val) in order_user_ids.iter().enumerate() {
         if let Some(uid) = val {
@@ -84,18 +80,13 @@ fn ecommerce_order_product_fk_integrity() {
 
     let batches = generate_from_file(&path);
 
-    let product_ids: HashSet<i64> = collect_i64_column(
-        batches.get("products").expect("no products batches"),
-        "id",
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let product_ids: HashSet<i64> =
+        collect_i64_column(batches.get("products").expect("no products batches"), "id")
+            .into_iter()
+            .flatten()
+            .collect();
 
-    assert!(
-        !product_ids.is_empty(),
-        "products.id should not be empty"
-    );
+    assert!(!product_ids.is_empty(), "products.id should not be empty");
 
     let order_product_ids = collect_i64_column(
         batches.get("orders").expect("no orders batches"),
@@ -125,21 +116,17 @@ fn ecommerce_review_fk_integrity() {
 
     let batches = generate_from_file(&path);
 
-    let user_ids: HashSet<i64> = collect_i64_column(
-        batches.get("users").expect("no users batches"),
-        "id",
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let user_ids: HashSet<i64> =
+        collect_i64_column(batches.get("users").expect("no users batches"), "id")
+            .into_iter()
+            .flatten()
+            .collect();
 
-    let product_ids: HashSet<i64> = collect_i64_column(
-        batches.get("products").expect("no products batches"),
-        "id",
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let product_ids: HashSet<i64> =
+        collect_i64_column(batches.get("products").expect("no products batches"), "id")
+            .into_iter()
+            .flatten()
+            .collect();
 
     let review_user_ids = collect_i64_column(
         batches.get("reviews").expect("no reviews batches"),
@@ -181,13 +168,11 @@ fn iot_reading_device_fk_integrity() {
 
     let batches = generate_from_file(&path);
 
-    let device_ids: HashSet<i64> = collect_i64_column(
-        batches.get("devices").expect("no devices batches"),
-        "id",
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let device_ids: HashSet<i64> =
+        collect_i64_column(batches.get("devices").expect("no devices batches"), "id")
+            .into_iter()
+            .flatten()
+            .collect();
 
     let reading_device_ids = collect_i64_column(
         batches.get("readings").expect("no readings batches"),
@@ -217,16 +202,16 @@ fn financial_transaction_account_fk_integrity() {
 
     let batches = generate_from_file(&path);
 
-    let account_ids: HashSet<i64> = collect_i64_column(
-        batches.get("accounts").expect("no accounts batches"),
-        "id",
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let account_ids: HashSet<i64> =
+        collect_i64_column(batches.get("accounts").expect("no accounts batches"), "id")
+            .into_iter()
+            .flatten()
+            .collect();
 
     let tx_account_ids = collect_i64_column(
-        batches.get("transactions").expect("no transactions batches"),
+        batches
+            .get("transactions")
+            .expect("no transactions batches"),
         "account_id",
     );
 

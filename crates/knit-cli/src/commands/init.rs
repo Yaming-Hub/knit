@@ -67,9 +67,8 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
                         sidecar_count += 1;
                         dest_dir.join(&file_name)
                     };
-                    fs::copy(entry.path(), &dest_file).with_context(|| {
-                        format!("failed to copy {}", entry.path().display())
-                    })?;
+                    fs::copy(entry.path(), &dest_file)
+                        .with_context(|| format!("failed to copy {}", entry.path().display()))?;
                 }
             }
             if !found_schema {
@@ -81,9 +80,8 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
         }
         Some(src) => {
             // Template is a single file — copy it as the schema
-            fs::copy(&src, dest).with_context(|| {
-                format!("failed to copy template from {}", src.display())
-            })?;
+            fs::copy(&src, dest)
+                .with_context(|| format!("failed to copy template from {}", src.display()))?;
 
             // Also copy sibling files (dictionaries, etc.) from same directory
             if let Some(src_dir) = src.parent() {
@@ -128,21 +126,10 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
         println!("  {} copied {} sidecar file(s)", "+".green(), sidecar_count);
     }
     println!();
-    println!(
-        "  Edit the schema to define your data model, then run:"
-    );
-    println!(
-        "    {} to verify syntax",
-        "knit validate".yellow()
-    );
-    println!(
-        "    {} to preview the execution plan",
-        "knit plan".yellow()
-    );
-    println!(
-        "    {} to generate data",
-        "knit generate".yellow()
-    );
+    println!("  Edit the schema to define your data model, then run:");
+    println!("    {} to verify syntax", "knit validate".yellow());
+    println!("    {} to preview the execution plan", "knit plan".yellow());
+    println!("    {} to generate data", "knit generate".yellow());
 
     Ok(())
 }
@@ -274,10 +261,18 @@ mod tests {
         // Create a fake template file
         let template_dir = tempfile::tempdir().unwrap();
         let template_file = template_dir.path().join("my.weave.toml");
-        fs::write(&template_file, "schema_version = \"1.0\"\n[model]\nname = \"test\"").unwrap();
+        fs::write(
+            &template_file,
+            "schema_version = \"1.0\"\n[model]\nname = \"test\"",
+        )
+        .unwrap();
 
         let dest = dir.path().join("output.weave.toml");
-        run(dest.to_str().unwrap(), Some(template_file.to_str().unwrap())).unwrap();
+        run(
+            dest.to_str().unwrap(),
+            Some(template_file.to_str().unwrap()),
+        )
+        .unwrap();
         assert!(dest.exists());
         let content = fs::read_to_string(&dest).unwrap();
         assert!(content.contains("name = \"test\""));
@@ -296,7 +291,11 @@ mod tests {
         fs::write(template_dir.path().join("words.dict.txt"), "hello\nworld").unwrap();
 
         let dest = dir.path().join("out.weave.toml");
-        run(dest.to_str().unwrap(), Some(template_dir.path().to_str().unwrap())).unwrap();
+        run(
+            dest.to_str().unwrap(),
+            Some(template_dir.path().to_str().unwrap()),
+        )
+        .unwrap();
         assert!(dest.exists());
         let content = fs::read_to_string(&dest).unwrap();
         assert!(content.contains("from_dir"));
@@ -335,7 +334,11 @@ mod tests {
 
         let dest_dir = tempfile::tempdir().unwrap();
         let dest = dest_dir.path().join("schema.weave.toml");
-        run(dest.to_str().unwrap(), Some(template_file.to_str().unwrap())).unwrap();
+        run(
+            dest.to_str().unwrap(),
+            Some(template_file.to_str().unwrap()),
+        )
+        .unwrap();
 
         assert!(dest_dir.path().join("names.dict.txt").exists());
         assert!(dest_dir.path().join("data.csv").exists());
@@ -349,7 +352,10 @@ mod tests {
 
         let dest_dir = tempfile::tempdir().unwrap();
         let dest = dest_dir.path().join("out.weave.toml");
-        let result = run(dest.to_str().unwrap(), Some(template_dir.path().to_str().unwrap()));
+        let result = run(
+            dest.to_str().unwrap(),
+            Some(template_dir.path().to_str().unwrap()),
+        );
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("no .weave.toml"));

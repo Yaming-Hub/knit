@@ -42,11 +42,7 @@ fn run_schema(schema_path: &str, show_actors: bool, cli: &Cli) -> Result<()> {
 }
 
 fn print_schema_human(model: &knit_core::DataModel, show_actors: bool) {
-    println!(
-        "{} — {}",
-        "Schema Summary".bold(),
-        model.name.cyan(),
-    );
+    println!("{} — {}", "Schema Summary".bold(), model.name.cyan(),);
     if let Some(ref desc) = model.description {
         println!("  {}", desc.dimmed());
     }
@@ -98,10 +94,7 @@ fn print_schema_human(model: &knit_core::DataModel, show_actors: bool) {
         }
 
         if !actor_cols.is_empty() {
-            println!(
-                "    actor columns: {}",
-                actor_cols.join(", ").yellow(),
-            );
+            println!("    actor columns: {}", actor_cols.join(", ").yellow(),);
         }
     }
 
@@ -129,7 +122,8 @@ fn print_schema_human(model: &knit_core::DataModel, show_actors: bool) {
         // The compiler matches personas to entities by "{entity_name}_" prefix,
         // so we use the same rule here.
         let persona_groups: std::collections::BTreeMap<String, Vec<&knit_core::types::Persona>> = {
-            let mut groups = std::collections::BTreeMap::<String, Vec<&knit_core::types::Persona>>::new();
+            let mut groups =
+                std::collections::BTreeMap::<String, Vec<&knit_core::types::Persona>>::new();
             for entity in &model.entities {
                 if let Some(ref pd) = entity.persona_distribution {
                     groups.entry(pd.clone()).or_default();
@@ -186,7 +180,11 @@ fn print_schema_human(model: &knit_core::DataModel, show_actors: bool) {
         println!("{}", "Actor Relationships:".bold());
         for rel in &model.actor_relationships {
             let direction = if rel.from_entity == rel.to_entity {
-                format!("{} ↔ {} (self-referential)", rel.from_entity.green(), rel.to_entity.green())
+                format!(
+                    "{} ↔ {} (self-referential)",
+                    rel.from_entity.green(),
+                    rel.to_entity.green()
+                )
             } else {
                 format!("{} → {}", rel.from_entity.green(), rel.to_entity.green())
             };
@@ -217,7 +215,9 @@ fn print_schema_human(model: &knit_core::DataModel, show_actors: bool) {
                     knit_core::types::GeneratorSpec::ActorRef { .. } => Some("actor_ref"),
                     knit_core::types::GeneratorSpec::ActorTemporal { .. } => Some("actor_temporal"),
                     knit_core::types::GeneratorSpec::PersonaField { .. } => Some("persona_field"),
-                    knit_core::types::GeneratorSpec::RelationshipRef { .. } => Some("relationship_ref"),
+                    knit_core::types::GeneratorSpec::RelationshipRef { .. } => {
+                        Some("relationship_ref")
+                    }
                     knit_core::types::GeneratorSpec::ThreadRef { .. } => Some("thread_ref"),
                     _ => None,
                 });
@@ -301,9 +301,15 @@ fn print_schema_json(model: &knit_core::DataModel, show_actors: bool) {
                 e.fields.iter().filter_map(move |f| {
                     let gen_type = f.generator.as_ref().and_then(|g| match g {
                         knit_core::types::GeneratorSpec::ActorRef { .. } => Some("actor_ref"),
-                        knit_core::types::GeneratorSpec::ActorTemporal { .. } => Some("actor_temporal"),
-                        knit_core::types::GeneratorSpec::PersonaField { .. } => Some("persona_field"),
-                        knit_core::types::GeneratorSpec::RelationshipRef { .. } => Some("relationship_ref"),
+                        knit_core::types::GeneratorSpec::ActorTemporal { .. } => {
+                            Some("actor_temporal")
+                        }
+                        knit_core::types::GeneratorSpec::PersonaField { .. } => {
+                            Some("persona_field")
+                        }
+                        knit_core::types::GeneratorSpec::RelationshipRef { .. } => {
+                            Some("relationship_ref")
+                        }
                         knit_core::types::GeneratorSpec::ThreadRef { .. } => Some("thread_ref"),
                         _ => None,
                     });
@@ -442,10 +448,7 @@ fn print_human(state: &LearnState, show_columns: bool) {
         );
     }
     if !state.correlations.is_empty() {
-        println!(
-            "  {} correlation pair(s) tracked",
-            state.correlations.len(),
-        );
+        println!("  {} correlation pair(s) tracked", state.correlations.len(),);
     }
     println!();
 

@@ -24,5 +24,5 @@ pub mod traits;
 pub use error::BindError;
 pub use factory::{create_sink, OutputFormat, SinkConfig};
 pub use parquet::Compression;
-pub use template::{TemplateSink, TemplateMode};
+pub use template::{TemplateMode, TemplateSink};
 pub use traits::{Sink, SinkStats};

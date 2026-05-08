@@ -5,7 +5,7 @@
 use arrow::array::Array;
 
 use knit_integration_tests::generate_from_toml;
-use knit_noise::{NullInjector, Pipeline, PerturbConfig};
+use knit_noise::{NullInjector, PerturbConfig, Pipeline};
 
 /// Schema with a noise profile that injects nulls into the `value` column.
 const NOISY_SCHEMA: &str = r#"
@@ -112,7 +112,10 @@ fn clean_schema_produces_no_nulls_in_value_column() {
         total += col.len() as u64;
     }
 
-    assert_eq!(null_count, 0, "clean schema should have no nulls in value column");
+    assert_eq!(
+        null_count, 0,
+        "clean schema should have no nulls in value column"
+    );
     assert_eq!(total, 5000);
 }
 
@@ -163,4 +166,3 @@ fn noise_pipeline_injects_nulls_into_generated_data() {
         "null rate {null_rate:.3} unreasonably high for 10% injection"
     );
 }
-

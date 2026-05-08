@@ -21,7 +21,8 @@ use crate::types::{EntitySeedNode, FieldSeedNode, RngTree};
 /// a deterministic, well-distributed 64-bit seed from any parent seed and
 /// arbitrary key bytes (entity name, field name, or partition ID).
 pub fn derive_seed(parent_seed: u64, key: &[u8]) -> u64 {
-    let mut hasher = SipHasher::new_with_keys(parent_seed, parent_seed.wrapping_mul(0x517cc1b727220a95));
+    let mut hasher =
+        SipHasher::new_with_keys(parent_seed, parent_seed.wrapping_mul(0x517cc1b727220a95));
     key.hash(&mut hasher);
     hasher.finish()
 }
@@ -97,8 +98,16 @@ mod tests {
     #[test]
     fn test_rng_tree_seeds_unique() {
         let entities = vec![
-            ("users".to_string(), vec!["id".to_string(), "name".to_string()], 2),
-            ("orders".to_string(), vec!["id".to_string(), "total".to_string()], 3),
+            (
+                "users".to_string(),
+                vec!["id".to_string(), "name".to_string()],
+                2,
+            ),
+            (
+                "orders".to_string(),
+                vec!["id".to_string(), "total".to_string()],
+                3,
+            ),
         ];
         let tree = build_rng_tree(42, &entities);
 

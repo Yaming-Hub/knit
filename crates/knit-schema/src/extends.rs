@@ -44,7 +44,11 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
 
     // Merge entities by name
     for child_entity in &child.entities {
-        if let Some(parent_entity) = result.entities.iter_mut().find(|e| e.name == child_entity.name) {
+        if let Some(parent_entity) = result
+            .entities
+            .iter_mut()
+            .find(|e| e.name == child_entity.name)
+        {
             merge_entity(parent_entity, child_entity);
         } else {
             result.entities.push(child_entity.clone());
@@ -53,7 +57,11 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
 
     // Merge relationships by name
     for child_rel in &child.relationships {
-        if let Some(parent_rel) = result.relationships.iter_mut().find(|r| r.name == child_rel.name) {
+        if let Some(parent_rel) = result
+            .relationships
+            .iter_mut()
+            .find(|r| r.name == child_rel.name)
+        {
             *parent_rel = child_rel.clone();
         } else {
             result.relationships.push(child_rel.clone());
@@ -62,7 +70,11 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
 
     // Merge noise profiles by name
     for child_noise in &child.noise_profiles {
-        if let Some(parent_noise) = result.noise_profiles.iter_mut().find(|n| n.name == child_noise.name) {
+        if let Some(parent_noise) = result
+            .noise_profiles
+            .iter_mut()
+            .find(|n| n.name == child_noise.name)
+        {
             *parent_noise = child_noise.clone();
         } else {
             result.noise_profiles.push(child_noise.clone());
@@ -71,7 +83,11 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
 
     // Merge correlations by entity
     for child_corr in &child.correlations {
-        if let Some(parent_corr) = result.correlations.iter_mut().find(|c| c.entity == child_corr.entity) {
+        if let Some(parent_corr) = result
+            .correlations
+            .iter_mut()
+            .find(|c| c.entity == child_corr.entity)
+        {
             *parent_corr = child_corr.clone();
         } else {
             result.correlations.push(child_corr.clone());
@@ -80,7 +96,11 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
 
     // Merge personas by name
     for child_persona in &child.personas {
-        if let Some(parent_persona) = result.personas.iter_mut().find(|p| p.name == child_persona.name) {
+        if let Some(parent_persona) = result
+            .personas
+            .iter_mut()
+            .find(|p| p.name == child_persona.name)
+        {
             *parent_persona = child_persona.clone();
         } else {
             result.personas.push(child_persona.clone());
@@ -89,7 +109,11 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
 
     // Merge actor_relationships by name
     for child_ar in &child.actor_relationships {
-        if let Some(parent_ar) = result.actor_relationships.iter_mut().find(|a| a.name == child_ar.name) {
+        if let Some(parent_ar) = result
+            .actor_relationships
+            .iter_mut()
+            .find(|a| a.name == child_ar.name)
+        {
             *parent_ar = child_ar.clone();
         } else {
             result.actor_relationships.push(child_ar.clone());
@@ -124,7 +148,11 @@ fn merge_entity(parent: &mut Entity, child: &Entity) {
 
     // Merge fields by name
     for child_field in &child.fields {
-        if let Some(parent_field) = parent.fields.iter_mut().find(|f| f.name == child_field.name) {
+        if let Some(parent_field) = parent
+            .fields
+            .iter_mut()
+            .find(|f| f.name == child_field.name)
+        {
             *parent_field = child_field.clone();
         } else {
             parent.fields.push(child_field.clone());
@@ -149,7 +177,10 @@ pub fn resolve_extends(
             message: "absolute paths are not allowed in extends".to_string(),
         });
     }
-    if extends_path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+    if extends_path
+        .components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
         return Err(SchemaError::Validation {
             path: "extends".to_string(),
             message: "path traversal ('..') is not allowed in extends".to_string(),
@@ -191,9 +222,9 @@ mod tests {
                         generator: None,
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
-            precision: None,
-        actor_column: false,
-        },
+                        precision: None,
+                        actor_column: false,
+                    },
                     Field {
                         name: "email".to_string(),
                         description: None,
@@ -201,15 +232,15 @@ mod tests {
                         generator: None,
                         nullable: NullSpec::Never,
                         primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                        precision: None,
+                        actor_column: false,
+                    },
                 ],
                 constraints: vec![],
                 topology: None,
-            actor: false,
-            persona_distribution: None,
-            activity_count: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
             }],
             relationships: vec![Relationship {
                 name: "user_order".to_string(),
@@ -223,8 +254,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 
@@ -241,8 +272,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 
@@ -268,8 +299,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         let merged = merge_models(&parent, &child);
@@ -288,8 +319,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         let merged = merge_models(&parent, &child);
@@ -312,13 +343,13 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        }],
+                precision: None,
+                actor_column: false,
+            }],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         let merged = merge_models(&parent, &child);
@@ -341,13 +372,13 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Always,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        }],
+                precision: None,
+                actor_column: false,
+            }],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         let merged = merge_models(&parent, &child);
@@ -399,7 +430,10 @@ mod tests {
         parent.entities[0].constraints = vec![Constraint::Unique {
             fields: vec!["email".to_string()],
         }];
-        parent.entities[0].topology = Some(TopologySpec::Tree { max_depth: 5, branching_factor: 3 });
+        parent.entities[0].topology = Some(TopologySpec::Tree {
+            max_depth: 5,
+            branching_factor: 3,
+        });
         // Child overrides entity with no constraints/topology
         let mut child = child_model();
         child.entities.push(Entity {
@@ -409,8 +443,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         let merged = merge_models(&parent, &child);

@@ -28,9 +28,7 @@ enum Stage {
 fn classify(invariants: InvariantSet) -> Stage {
     if invariants.is_empty() {
         Stage::Clean
-    } else if invariants
-        .intersects(InvariantSet::FK_INTEGRITY | InvariantSet::UNIQUE)
-    {
+    } else if invariants.intersects(InvariantSet::FK_INTEGRITY | InvariantSet::UNIQUE) {
         Stage::Breaking
     } else {
         Stage::Constrained
@@ -93,10 +91,13 @@ impl Pipeline {
     /// The `rate` is clamped to `[0.0, 1.0]` and overrides `config.probability`
     /// for this perturbator only.
     pub fn add_with_rate(&mut self, p: Box<dyn Perturbator>, rate: f64) {
-        self.perturbators.push((p, PerturbOverrides {
-            probability: Some(rate.clamp(0.0, 1.0)),
-            columns: None,
-        }));
+        self.perturbators.push((
+            p,
+            PerturbOverrides {
+                probability: Some(rate.clamp(0.0, 1.0)),
+                columns: None,
+            },
+        ));
     }
 
     /// Append a perturbator with full overrides for probability and column filter.
@@ -303,9 +304,7 @@ mod tests {
     fn per_perturbator_rate_override() {
         use crate::NullInjector;
 
-        let cfg = PerturbConfig::default()
-            .with_probability(0.05)
-            .with_seed(0);
+        let cfg = PerturbConfig::default().with_probability(0.05).with_seed(0);
         let mut pipe = Pipeline::new(cfg);
 
         // NullInjector with pipeline default (0.05)

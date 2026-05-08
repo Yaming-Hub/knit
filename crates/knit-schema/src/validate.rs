@@ -141,10 +141,7 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaErr
             if min > max {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
-                    message: format!(
-                        "range requires min <= max, got min={}, max={}",
-                        min, max
-                    ),
+                    message: format!("range requires min <= max, got min={}, max={}", min, max),
                 });
             }
         }
@@ -203,10 +200,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
     // actor_field must point to a known FK relationship
     let target_rel = model.relationships.iter().find(|r| {
         r.from == entity.name
-            && r.foreign_key
-                .as_deref()
-                .unwrap_or(&format!("{}_id", r.to))
-                == ac.actor_field
+            && r.foreign_key.as_deref().unwrap_or(&format!("{}_id", r.to)) == ac.actor_field
     });
 
     match target_rel {
@@ -244,16 +238,17 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
                     .iter()
                     .filter(|p| {
                         p.name.starts_with(&entity_prefix)
-                            || !model.entities.iter().any(|e| {
-                                p.name.starts_with(&format!("{}_", e.name))
-                            })
+                            || !model
+                                .entities
+                                .iter()
+                                .any(|e| p.name.starts_with(&format!("{}_", e.name)))
                     })
                     .filter(|p| {
                         // Trait must be present and scalar (Int or Float)
                         match p.traits.get(&ac.trait_name) {
                             Some(Value::Float(_)) | Some(Value::Int(_)) => false,
                             Some(_) => true, // non-scalar
-                            None => true,     // missing
+                            None => true,    // missing
                         }
                     })
                     .map(|p| p.name.as_str())
@@ -768,7 +763,10 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
             }
         }
         GeneratorSpec::Sequence { .. } => {
-            let compatible = matches!(data_type, DataType::Int | DataType::Int32 | DataType::String);
+            let compatible = matches!(
+                data_type,
+                DataType::Int | DataType::Int32 | DataType::String
+            );
             if !compatible {
                 Some(format!(
                     "sequence generator is not compatible with data_type '{}'; expected 'int', 'int32', or 'string'",
@@ -951,10 +949,7 @@ fn validate_generator(
             if *version != 4 {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
-                    message: format!(
-                        "only UUID version 4 is supported, got {}",
-                        version
-                    ),
+                    message: format!("only UUID version 4 is supported, got {}", version),
                 });
             }
         }
@@ -996,10 +991,7 @@ fn validate_generator(
             if !entity_names.contains(lookup_entity.as_str()) {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
-                    message: format!(
-                        "lookup references unknown entity '{}'",
-                        lookup_entity
-                    ),
+                    message: format!("lookup references unknown entity '{}'", lookup_entity),
                 });
             }
         }
@@ -1072,7 +1064,17 @@ fn validate_generator(
             }
         }
         GeneratorSpec::Unique { inner, .. } => {
-            validate_generator(path, inner, field_name, data_type, entity, entity_names, model, true, errors);
+            validate_generator(
+                path,
+                inner,
+                field_name,
+                data_type,
+                entity,
+                entity_names,
+                model,
+                true,
+                errors,
+            );
         }
         GeneratorSpec::Composite { generators, .. } => {
             // Composite always produces a string by concatenating sub-generator outputs,
@@ -1091,7 +1093,9 @@ fn validate_generator(
                 );
             }
         }
-        GeneratorSpec::Dictionary { file, expansion, .. } => {
+        GeneratorSpec::Dictionary {
+            file, expansion, ..
+        } => {
             if file.is_empty() {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -1110,14 +1114,13 @@ fn validate_generator(
                 });
             }
         }
-        GeneratorSpec::ActorRef { entity: ref actor_entity } => {
+        GeneratorSpec::ActorRef {
+            entity: ref actor_entity,
+        } => {
             if !entity_names.contains(actor_entity.as_str()) {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
-                    message: format!(
-                        "actor_ref references unknown entity '{}'",
-                        actor_entity
-                    ),
+                    message: format!("actor_ref references unknown entity '{}'", actor_entity),
                 });
             } else if let Some(target) = model.entities.iter().find(|e| e.name == *actor_entity) {
                 if !target.actor {
@@ -1131,13 +1134,21 @@ fn validate_generator(
                 }
             }
         }
-        GeneratorSpec::RelationshipRef { relationship, source_field } => {
+        GeneratorSpec::RelationshipRef {
+            relationship,
+            source_field,
+        } => {
             if relationship.is_empty() {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
-                    message: "relationship_ref requires a non-empty 'relationship' name".to_string(),
+                    message: "relationship_ref requires a non-empty 'relationship' name"
+                        .to_string(),
                 });
-            } else if !model.actor_relationships.iter().any(|ar| ar.name == *relationship) {
+            } else if !model
+                .actor_relationships
+                .iter()
+                .any(|ar| ar.name == *relationship)
+            {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: format!(
@@ -1150,12 +1161,18 @@ fn validate_generator(
                 if src.is_empty() {
                     errors.push(SchemaError::Validation {
                         path: path.to_string(),
-                        message: "relationship_ref source_field must not be empty when specified".to_string(),
+                        message: "relationship_ref source_field must not be empty when specified"
+                            .to_string(),
                     });
                 }
             }
         }
-        GeneratorSpec::ActorTemporal { trait_name, temporal_after, burst, .. } => {
+        GeneratorSpec::ActorTemporal {
+            trait_name,
+            temporal_after,
+            burst,
+            ..
+        } => {
             if trait_name.is_empty() {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -1246,7 +1263,12 @@ fn validate_generator(
                 });
             }
         }
-        GeneratorSpec::ThreadRef { reply_probability, max_depth, reply_window, .. } => {
+        GeneratorSpec::ThreadRef {
+            reply_probability,
+            max_depth,
+            reply_window,
+            ..
+        } => {
             if nested {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
@@ -1260,7 +1282,10 @@ fn validate_generator(
                     message: "thread_ref reply_window must be at least 1".to_string(),
                 });
             }
-            if !reply_probability.is_finite() || *reply_probability < 0.0 || *reply_probability > 1.0 {
+            if !reply_probability.is_finite()
+                || *reply_probability < 0.0
+                || *reply_probability > 1.0
+            {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: format!(
@@ -1275,7 +1300,10 @@ fn validate_generator(
                 });
             }
             // Verify entity has a PK field with Int type
-            let pk_field = entity.fields.iter().find(|f| f.primary_key.unwrap_or(false));
+            let pk_field = entity
+                .fields
+                .iter()
+                .find(|f| f.primary_key.unwrap_or(false));
             if let Some(pk) = pk_field {
                 if pk.data_type != DataType::Int {
                     errors.push(SchemaError::Validation {
@@ -1362,9 +1390,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
             // Validate FK field type matches target PK type
             if let Some(pk) = pk_field {
-                if let Some(from_entity) =
-                    model.entities.iter().find(|e| e.name == rel.from)
-                {
+                if let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from) {
                     if let Some(fk_field) =
                         from_entity.fields.iter().find(|f| f.name == effective_fk)
                     {
@@ -1383,11 +1409,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         }
 
         if let Some(ref count) = rel.cardinality {
-            validate_count_spec(
-                &format!("{}.cardinality", path),
-                count,
-                errors,
-            );
+            validate_count_spec(&format!("{}.cardinality", path), count, errors);
         }
     }
 }
@@ -1414,10 +1436,7 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 if !fields.contains(f.as_str()) {
                     errors.push(SchemaError::Validation {
                         path: path.clone(),
-                        message: format!(
-                            "field '{}' not found in entity '{}'",
-                            f, noise.entity
-                        ),
+                        message: format!("field '{}' not found in entity '{}'", f, noise.entity),
                     });
                 }
             }
@@ -1453,10 +1472,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 if !fields.contains(f.as_str()) {
                     errors.push(SchemaError::Validation {
                         path: path.clone(),
-                        message: format!(
-                            "field '{}' not found in entity '{}'",
-                            f, corr.entity
-                        ),
+                        message: format!("field '{}' not found in entity '{}'", f, corr.entity),
                     });
                 }
             }
@@ -1527,10 +1543,7 @@ fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
         if !persona.weight.is_finite() {
             errors.push(SchemaError::Validation {
                 path: path.clone(),
-                message: format!(
-                    "persona '{}' has non-finite weight",
-                    persona.name
-                ),
+                message: format!("persona '{}' has non-finite weight", persona.name),
             });
         }
 
@@ -1573,10 +1586,7 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
         if !names.contains(ar.from_entity.as_str()) {
             errors.push(SchemaError::Validation {
                 path: path.clone(),
-                message: format!(
-                    "from_entity '{}' references unknown entity",
-                    ar.from_entity
-                ),
+                message: format!("from_entity '{}' references unknown entity", ar.from_entity),
             });
         } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.from_entity) {
             if !entity.actor {
@@ -1594,19 +1604,13 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
         if !names.contains(ar.to_entity.as_str()) {
             errors.push(SchemaError::Validation {
                 path: path.clone(),
-                message: format!(
-                    "to_entity '{}' references unknown entity",
-                    ar.to_entity
-                ),
+                message: format!("to_entity '{}' references unknown entity", ar.to_entity),
             });
         } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.to_entity) {
             if !entity.actor {
                 errors.push(SchemaError::Validation {
                     path: path.clone(),
-                    message: format!(
-                        "to_entity '{}' is not marked as actor = true",
-                        ar.to_entity
-                    ),
+                    message: format!("to_entity '{}' is not marked as actor = true", ar.to_entity),
                 });
             }
         }
@@ -1652,9 +1656,9 @@ mod tests {
                         generator: None,
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
-            precision: None,
-        actor_column: false,
-        },
+                        precision: None,
+                        actor_column: false,
+                    },
                     Field {
                         name: "email".to_string(),
                         description: None,
@@ -1662,23 +1666,23 @@ mod tests {
                         generator: None,
                         nullable: NullSpec::Never,
                         primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                        precision: None,
+                        actor_column: false,
+                    },
                 ],
                 constraints: vec![],
                 topology: None,
-            actor: false,
-            persona_distribution: None,
-            activity_count: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 
@@ -1710,7 +1714,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -1759,13 +1763,13 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
-            precision: None,
-        actor_column: false,
-        }],
+                precision: None,
+                actor_column: false,
+            }],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         model.relationships.push(Relationship {
@@ -1798,12 +1802,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
                 precision: None,
-            actor_column: false,
+                actor_column: false,
             }],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         model.relationships.push(Relationship {
@@ -1839,7 +1843,7 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
                     precision: None,
-                actor_column: false,
+                    actor_column: false,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -1849,13 +1853,13 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: None,
                     precision: None,
-                actor_column: false,
+                    actor_column: false,
                 },
             ],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         model.relationships.push(Relationship {
@@ -1891,7 +1895,7 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
                     precision: None,
-                actor_column: false,
+                    actor_column: false,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -1901,13 +1905,13 @@ mod tests {
                     nullable: NullSpec::Never,
                     primary_key: None,
                     precision: None,
-                actor_column: false,
+                    actor_column: false,
                 },
             ],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         model.relationships.push(Relationship {
@@ -1942,12 +1946,12 @@ mod tests {
                 nullable: NullSpec::Never,
                 primary_key: None,
                 precision: None,
-            actor_column: false,
+                actor_column: false,
             }],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         // Relationship without explicit foreign_key — implicit FK is "order_id"
@@ -2045,8 +2049,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         let rel = Relationship {
@@ -2104,7 +2108,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2131,7 +2135,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -2162,7 +2166,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2193,7 +2197,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2220,7 +2224,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2247,7 +2251,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -2278,7 +2282,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2343,7 +2347,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2362,7 +2366,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2384,7 +2388,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2406,7 +2410,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -2429,7 +2433,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2452,7 +2456,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2475,7 +2479,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(
@@ -2501,7 +2505,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2529,7 +2533,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2551,7 +2555,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2576,7 +2580,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2602,13 +2606,13 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
-            precision: None,
-        actor_column: false,
-        }],
+                precision: None,
+                actor_column: false,
+            }],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         });
         model.entities[0].fields.push(Field {
@@ -2625,7 +2629,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2684,7 +2688,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2706,7 +2710,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2725,7 +2729,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2740,11 +2744,15 @@ mod tests {
             name: "val".to_string(),
             description: None,
             data_type: DataType::String,
-            generator: Some(GeneratorSpec::Sequence { start: 1, step: 1, prefix: None }),
+            generator: Some(GeneratorSpec::Sequence {
+                start: 1,
+                step: 1,
+                prefix: None,
+            }),
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
@@ -2759,11 +2767,15 @@ mod tests {
             name: "val".to_string(),
             description: None,
             data_type: DataType::Bool,
-            generator: Some(GeneratorSpec::Sequence { start: 1, step: 1, prefix: None }),
+            generator: Some(GeneratorSpec::Sequence {
+                start: 1,
+                step: 1,
+                prefix: None,
+            }),
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2784,7 +2796,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {

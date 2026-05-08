@@ -14,8 +14,7 @@ fn all_example_schemas_parse_successfully() {
 
     for path in &schemas {
         let stem = path.file_name().unwrap().to_string_lossy();
-        let model = parse_toml_file(path)
-            .unwrap_or_else(|e| panic!("{stem}: parse error: {e}"));
+        let model = parse_toml_file(path).unwrap_or_else(|e| panic!("{stem}: parse error: {e}"));
 
         // Smoke-check: the model name should be non-empty.
         assert!(
@@ -30,13 +29,9 @@ fn all_example_schemas_validate_successfully() {
     let schemas = example_schemas();
     for path in &schemas {
         let stem = path.file_name().unwrap().to_string_lossy();
-        let model = parse_toml_file(path)
-            .unwrap_or_else(|e| panic!("{stem}: parse error: {e}"));
+        let model = parse_toml_file(path).unwrap_or_else(|e| panic!("{stem}: parse error: {e}"));
         let errors = validate(&model);
-        assert!(
-            errors.is_empty(),
-            "{stem}: validation errors: {errors:?}"
-        );
+        assert!(errors.is_empty(), "{stem}: validation errors: {errors:?}");
     }
 }
 
@@ -163,8 +158,7 @@ fn relationship_entity_references_are_valid() {
     for path in &schemas {
         let stem = path.file_name().unwrap().to_string_lossy();
         let model = parse_toml_file(path).unwrap();
-        let entity_names: Vec<&str> =
-            model.entities.iter().map(|e| e.name.as_str()).collect();
+        let entity_names: Vec<&str> = model.entities.iter().map(|e| e.name.as_str()).collect();
 
         for rel in &model.relationships {
             assert!(

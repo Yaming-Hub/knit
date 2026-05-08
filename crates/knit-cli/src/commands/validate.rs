@@ -5,8 +5,8 @@ use std::path::Path;
 use anyhow::{bail, Result};
 use colored::Colorize;
 
-use crate::Cli;
 use super::{load_schema, validate_model};
+use crate::Cli;
 
 /// Run the validate command.
 ///
@@ -24,12 +24,7 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
                 });
                 println!("{}", serde_json::to_string_pretty(&obj)?);
             } else {
-                eprintln!(
-                    "{} {} {}",
-                    "error".red().bold(),
-                    "parse failure:".bold(),
-                    e
-                );
+                eprintln!("{} {} {}", "error".red().bold(), "parse failure:".bold(), e);
             }
             bail!("schema parsing failed");
         }
@@ -60,7 +55,10 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
         });
         println!("{}", serde_json::to_string_pretty(&obj)?);
         if !errors.is_empty() || !fs_warnings.is_empty() {
-            bail!("validation failed with {} error(s)", errors.len() + fs_warnings.len());
+            bail!(
+                "validation failed with {} error(s)",
+                errors.len() + fs_warnings.len()
+            );
         }
         return Ok(());
     }
@@ -146,7 +144,9 @@ fn collect_dictionary_file_errors(
             if !dict_path.exists() {
                 errors.push(format!(
                     "{}: dictionary file '{}' not found (resolved to '{}')",
-                    path, file, dict_path.display()
+                    path,
+                    file,
+                    dict_path.display()
                 ));
             } else {
                 // Check that file has at least one non-empty line (matching generate.rs parsing)
@@ -167,7 +167,9 @@ fn collect_dictionary_file_errors(
         knit_core::GeneratorSpec::Unique { inner, .. } => {
             collect_dictionary_file_errors(inner, schema_dir, path, errors);
         }
-        knit_core::GeneratorSpec::Conditional { branches, default, .. } => {
+        knit_core::GeneratorSpec::Conditional {
+            branches, default, ..
+        } => {
             for (i, branch) in branches.iter().enumerate() {
                 collect_dictionary_file_errors(
                     &branch.generator,
@@ -177,7 +179,12 @@ fn collect_dictionary_file_errors(
                 );
             }
             if let Some(def) = default {
-                collect_dictionary_file_errors(def, schema_dir, &format!("{}.default", path), errors);
+                collect_dictionary_file_errors(
+                    def,
+                    schema_dir,
+                    &format!("{}.default", path),
+                    errors,
+                );
             }
         }
         knit_core::GeneratorSpec::Composite { generators, .. } => {
@@ -225,11 +232,7 @@ fn print_schema_summary(model: &knit_core::DataModel) {
         );
     }
     if !model.personas.is_empty() {
-        println!(
-            "  {} {}",
-            "personas:".dimmed(),
-            model.personas.len()
-        );
+        println!("  {} {}", "personas:".dimmed(), model.personas.len());
     }
     if !model.actor_relationships.is_empty() {
         println!(

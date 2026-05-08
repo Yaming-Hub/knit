@@ -236,7 +236,8 @@ pub fn detect_candidates(
         .collect();
 
     // Find PK columns
-    let pk_columns: Vec<&IncrementalRelColumn> = columns.iter().filter(|c| c.is_likely_pk).collect();
+    let pk_columns: Vec<&IncrementalRelColumn> =
+        columns.iter().filter(|c| c.is_likely_pk).collect();
 
     for fk_col in &fk_candidates {
         let stripped = strip_fk_suffix(&fk_col.name);
@@ -284,9 +285,7 @@ pub fn detect_candidates(
 ///
 /// Applies coverage threshold and returns confirmed relationships with
 /// the same structure as batch-mode detection.
-pub fn finalize_relationships(
-    evidence: &[RelationshipEvidence],
-) -> Vec<FinalizedRelationship> {
+pub fn finalize_relationships(evidence: &[RelationshipEvidence]) -> Vec<FinalizedRelationship> {
     let mut results: Vec<FinalizedRelationship> = evidence
         .iter()
         .filter(|e| e.confidence() >= 0.4)
@@ -320,7 +319,11 @@ pub fn finalize_relationships(
         })
         .collect();
 
-    results.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap_or(std::cmp::Ordering::Equal));
+    results.sort_by(|a, b| {
+        b.confidence
+            .partial_cmp(&a.confidence)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     results.truncate(100);
     results
 }
@@ -358,7 +361,9 @@ pub enum RelKind {
 /// Check if a column name has a FK-like suffix.
 fn has_fk_suffix(name: &str) -> bool {
     let lower = name.to_lowercase();
-    FK_SUFFIXES.iter().any(|s| lower.ends_with(&s.to_lowercase()))
+    FK_SUFFIXES
+        .iter()
+        .any(|s| lower.ends_with(&s.to_lowercase()))
 }
 
 /// Strip FK-like suffix to extract the referenced entity name.
@@ -510,7 +515,9 @@ mod tests {
 
         let candidates = detect_candidates(&columns, &[]);
         assert!(!candidates.is_empty());
-        assert!(candidates.iter().any(|c| c.from_column == "user_id" && c.to_table == "users"));
+        assert!(candidates
+            .iter()
+            .any(|c| c.from_column == "user_id" && c.to_table == "users"));
     }
 
     #[test]

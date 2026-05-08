@@ -361,19 +361,35 @@ fn collect_string_columns(
 fn append_numeric_values_aligned(col: &dyn Array, values: &mut Vec<f64>) {
     if let Some(arr) = col.as_any().downcast_ref::<Float64Array>() {
         for i in 0..arr.len() {
-            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) });
+            values.push(if arr.is_null(i) {
+                f64::NAN
+            } else {
+                arr.value(i)
+            });
         }
     } else if let Some(arr) = col.as_any().downcast_ref::<arrow::array::Int64Array>() {
         for i in 0..arr.len() {
-            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) as f64 });
+            values.push(if arr.is_null(i) {
+                f64::NAN
+            } else {
+                arr.value(i) as f64
+            });
         }
     } else if let Some(arr) = col.as_any().downcast_ref::<arrow::array::Int32Array>() {
         for i in 0..arr.len() {
-            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) as f64 });
+            values.push(if arr.is_null(i) {
+                f64::NAN
+            } else {
+                arr.value(i) as f64
+            });
         }
     } else if let Some(arr) = col.as_any().downcast_ref::<arrow::array::Float32Array>() {
         for i in 0..arr.len() {
-            values.push(if arr.is_null(i) { f64::NAN } else { arr.value(i) as f64 });
+            values.push(if arr.is_null(i) {
+                f64::NAN
+            } else {
+                arr.value(i) as f64
+            });
         }
     }
 }
@@ -387,7 +403,10 @@ mod tests {
         let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
         let y: Vec<f64> = x.iter().map(|v| v * 2.0 + 1.0).collect();
         let r = pearson_correlation(&x, &y);
-        assert!((r - 1.0).abs() < 0.001, "perfect linear should be r≈1.0, got {r}");
+        assert!(
+            (r - 1.0).abs() < 0.001,
+            "perfect linear should be r≈1.0, got {r}"
+        );
     }
 
     #[test]
@@ -395,7 +414,10 @@ mod tests {
         let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
         let y: Vec<f64> = x.iter().map(|v| -v * 3.0 + 50.0).collect();
         let r = pearson_correlation(&x, &y);
-        assert!((r + 1.0).abs() < 0.001, "perfect negative should be r≈-1.0, got {r}");
+        assert!(
+            (r + 1.0).abs() < 0.001,
+            "perfect negative should be r≈-1.0, got {r}"
+        );
     }
 
     #[test]

@@ -18,7 +18,9 @@ use crate::traits::KeyStore;
 
 /// Fast bijective hash (splitmix64) for deterministic key priorities.
 fn key_hash(seed: u64, key: i64) -> u64 {
-    let mut x = seed.wrapping_add(key as u64).wrapping_mul(0x9E3779B97F4A7C15);
+    let mut x = seed
+        .wrapping_add(key as u64)
+        .wrapping_mul(0x9E3779B97F4A7C15);
     x = (x ^ (x >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
     x = (x ^ (x >> 27)).wrapping_mul(0x94D049BB133111EB);
     x ^ (x >> 31)
@@ -84,12 +86,18 @@ impl SampledKeyStore {
 
     /// Return the total number of keys that have been offered for insertion.
     pub fn total_seen(&self) -> u64 {
-        self.inner.read().expect("sampled keystore lock poisoned").total_seen
+        self.inner
+            .read()
+            .expect("sampled keystore lock poisoned")
+            .total_seen
     }
 
     /// Return the maximum capacity of the reservoir.
     pub fn capacity(&self) -> usize {
-        self.inner.read().expect("sampled keystore lock poisoned").capacity
+        self.inner
+            .read()
+            .expect("sampled keystore lock poisoned")
+            .capacity
     }
 }
 
@@ -136,7 +144,11 @@ impl KeyStore for SampledKeyStore {
     }
 
     fn len(&self) -> usize {
-        self.inner.read().expect("sampled keystore lock poisoned").heap.len()
+        self.inner
+            .read()
+            .expect("sampled keystore lock poisoned")
+            .heap
+            .len()
     }
 }
 

@@ -123,22 +123,28 @@ impl FieldGenerator for DistributionGenerator {
             DistributionKind::Normal => {
                 let mean = self.param("mean", 0.0);
                 let std_dev = self.param("std_dev", 1.0).abs().max(f64::EPSILON);
-                let dist =
-                    rand_distr::Normal::new(mean, std_dev).unwrap_or_else(|_| {
-                        tracing::warn!(mean, std_dev, "invalid Normal params, falling back to N(0,1)");
-                        rand_distr::Normal::new(0.0, 1.0).unwrap()
-                    });
+                let dist = rand_distr::Normal::new(mean, std_dev).unwrap_or_else(|_| {
+                    tracing::warn!(
+                        mean,
+                        std_dev,
+                        "invalid Normal params, falling back to N(0,1)"
+                    );
+                    rand_distr::Normal::new(0.0, 1.0).unwrap()
+                });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
             }
             DistributionKind::LogNormal => {
                 let mu = self.param("mu", 0.0);
                 let sigma = self.param("sigma", 1.0).abs().max(f64::EPSILON);
-                let dist = rand_distr::LogNormal::new(mu, sigma)
-                    .unwrap_or_else(|_| {
-                        tracing::warn!(mu, sigma, "invalid LogNormal params, falling back to LN(0,1)");
-                        rand_distr::LogNormal::new(0.0, 1.0).unwrap()
-                    });
+                let dist = rand_distr::LogNormal::new(mu, sigma).unwrap_or_else(|_| {
+                    tracing::warn!(
+                        mu,
+                        sigma,
+                        "invalid LogNormal params, falling back to LN(0,1)"
+                    );
+                    rand_distr::LogNormal::new(0.0, 1.0).unwrap()
+                });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
             }
@@ -153,11 +159,10 @@ impl FieldGenerator for DistributionGenerator {
             }
             DistributionKind::Poisson => {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
-                let dist =
-                    rand_distr::Poisson::new(lambda).unwrap_or_else(|_| {
-                        tracing::warn!(lambda, "invalid Poisson params, falling back to Poisson(1)");
-                        rand_distr::Poisson::new(1.0).unwrap()
-                    });
+                let dist = rand_distr::Poisson::new(lambda).unwrap_or_else(|_| {
+                    tracing::warn!(lambda, "invalid Poisson params, falling back to Poisson(1)");
+                    rand_distr::Poisson::new(1.0).unwrap()
+                });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
                         let v: f64 = dist.sample(rng);
@@ -211,7 +216,11 @@ impl FieldGenerator for DistributionGenerator {
                 let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
                 let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Pareto::new(scale, shape).unwrap_or_else(|_| {
-                    tracing::warn!(scale, shape, "invalid Pareto params, falling back to Pareto(1,1)");
+                    tracing::warn!(
+                        scale,
+                        shape,
+                        "invalid Pareto params, falling back to Pareto(1,1)"
+                    );
                     rand_distr::Pareto::new(1.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -221,7 +230,11 @@ impl FieldGenerator for DistributionGenerator {
                 let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
                 let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Weibull::new(scale, shape).unwrap_or_else(|_| {
-                    tracing::warn!(scale, shape, "invalid Weibull params, falling back to Weibull(1,1)");
+                    tracing::warn!(
+                        scale,
+                        shape,
+                        "invalid Weibull params, falling back to Weibull(1,1)"
+                    );
                     rand_distr::Weibull::new(1.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -231,7 +244,11 @@ impl FieldGenerator for DistributionGenerator {
                 let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
                 let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Gamma::new(shape, scale).unwrap_or_else(|_| {
-                    tracing::warn!(shape, scale, "invalid Gamma params, falling back to Gamma(1,1)");
+                    tracing::warn!(
+                        shape,
+                        scale,
+                        "invalid Gamma params, falling back to Gamma(1,1)"
+                    );
                     rand_distr::Gamma::new(1.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -241,7 +258,11 @@ impl FieldGenerator for DistributionGenerator {
                 let alpha = self.param("alpha", 2.0).abs().max(f64::EPSILON);
                 let beta = self.param("beta", 2.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Beta::new(alpha, beta).unwrap_or_else(|_| {
-                    tracing::warn!(alpha, beta, "invalid Beta params, falling back to Beta(2,2)");
+                    tracing::warn!(
+                        alpha,
+                        beta,
+                        "invalid Beta params, falling back to Beta(2,2)"
+                    );
                     rand_distr::Beta::new(2.0, 2.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -251,7 +272,11 @@ impl FieldGenerator for DistributionGenerator {
                 let median = self.param("median", 0.0);
                 let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Cauchy::new(median, scale).unwrap_or_else(|_| {
-                    tracing::warn!(median, scale, "invalid Cauchy params, falling back to Cauchy(0,1)");
+                    tracing::warn!(
+                        median,
+                        scale,
+                        "invalid Cauchy params, falling back to Cauchy(0,1)"
+                    );
                     rand_distr::Cauchy::new(0.0, 1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -260,7 +285,10 @@ impl FieldGenerator for DistributionGenerator {
             DistributionKind::ChiSquared => {
                 let k = self.param("k", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::ChiSquared::new(k).unwrap_or_else(|_| {
-                    tracing::warn!(k, "invalid ChiSquared params, falling back to ChiSquared(1)");
+                    tracing::warn!(
+                        k,
+                        "invalid ChiSquared params, falling back to ChiSquared(1)"
+                    );
                     rand_distr::ChiSquared::new(1.0).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -282,7 +310,12 @@ impl FieldGenerator for DistributionGenerator {
                 let (min, max) = if min >= max { (0.0, 1.0) } else { (min, max) };
                 let mode = mode.clamp(min, max);
                 let dist = rand_distr::Triangular::new(min, max, mode).unwrap_or_else(|_| {
-                    tracing::warn!(min, max, mode, "invalid Triangular params, falling back to Tri(0,1,0.5)");
+                    tracing::warn!(
+                        min,
+                        max,
+                        mode,
+                        "invalid Triangular params, falling back to Tri(0,1,0.5)"
+                    );
                     rand_distr::Triangular::new(0.0, 1.0, 0.5).unwrap()
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
@@ -295,10 +328,12 @@ impl FieldGenerator for DistributionGenerator {
                     tracing::warn!(n, s, "invalid Zipf params, falling back to Zipf(100,1)");
                     rand_distr::Zipf::new(100, 1.0).unwrap()
                 });
-                let values: Vec<i64> = (0..count).map(|_| {
-                    let v: f64 = dist.sample(rng);
-                    self.clamp(v) as i64
-                }).collect();
+                let values: Vec<i64> = (0..count)
+                    .map(|_| {
+                        let v: f64 = dist.sample(rng);
+                        self.clamp(v) as i64
+                    })
+                    .collect();
                 Arc::new(Int64Array::from(values))
             }
         }
@@ -370,7 +405,11 @@ mod tests {
 
     #[test]
     fn uniform_in_range() {
-        let vals = gen_f64(DistributionKind::Uniform, &[("min", 10.0), ("max", 20.0)], 500);
+        let vals = gen_f64(
+            DistributionKind::Uniform,
+            &[("min", 10.0), ("max", 20.0)],
+            500,
+        );
         assert_eq!(vals.len(), 500);
         for v in &vals {
             assert!(*v >= 10.0 && *v < 20.0, "uniform value out of range: {v}");
@@ -380,7 +419,11 @@ mod tests {
     #[test]
     fn uniform_invalid_params_fallback() {
         // min >= max should fallback to (0, 1)
-        let vals = gen_f64(DistributionKind::Uniform, &[("min", 5.0), ("max", 5.0)], 100);
+        let vals = gen_f64(
+            DistributionKind::Uniform,
+            &[("min", 5.0), ("max", 5.0)],
+            100,
+        );
         for v in &vals {
             assert!(*v >= 0.0 && *v < 1.0, "fallback uniform out of (0,1): {v}");
         }
@@ -388,16 +431,27 @@ mod tests {
 
     #[test]
     fn normal_produces_float64() {
-        let vals = gen_f64(DistributionKind::Normal, &[("mean", 100.0), ("std_dev", 5.0)], 1000);
+        let vals = gen_f64(
+            DistributionKind::Normal,
+            &[("mean", 100.0), ("std_dev", 5.0)],
+            1000,
+        );
         assert_eq!(vals.len(), 1000);
         let mean: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
         // With 1000 samples, mean should be roughly near 100
-        assert!((mean - 100.0).abs() < 5.0, "normal mean too far from 100: {mean}");
+        assert!(
+            (mean - 100.0).abs() < 5.0,
+            "normal mean too far from 100: {mean}"
+        );
     }
 
     #[test]
     fn lognormal_positive() {
-        let vals = gen_f64(DistributionKind::LogNormal, &[("mu", 0.0), ("sigma", 0.5)], 500);
+        let vals = gen_f64(
+            DistributionKind::LogNormal,
+            &[("mu", 0.0), ("sigma", 0.5)],
+            500,
+        );
         for v in &vals {
             assert!(*v > 0.0, "lognormal should be positive: {v}");
         }
@@ -432,9 +486,15 @@ mod tests {
     fn bernoulli_extreme_p() {
         // p=0 → all zeros; p=1 → all ones
         let vals_zero = gen_i64(DistributionKind::Bernoulli, &[("p", 0.0)], 100);
-        assert!(vals_zero.iter().all(|v| *v == 0), "p=0 should produce all zeros");
+        assert!(
+            vals_zero.iter().all(|v| *v == 0),
+            "p=0 should produce all zeros"
+        );
         let vals_one = gen_i64(DistributionKind::Bernoulli, &[("p", 1.0)], 100);
-        assert!(vals_one.iter().all(|v| *v == 1), "p=1 should produce all ones");
+        assert!(
+            vals_one.iter().all(|v| *v == 1),
+            "p=1 should produce all ones"
+        );
     }
 
     #[test]
@@ -455,7 +515,11 @@ mod tests {
 
     #[test]
     fn pareto_above_scale() {
-        let vals = gen_f64(DistributionKind::Pareto, &[("scale", 2.0), ("shape", 3.0)], 500);
+        let vals = gen_f64(
+            DistributionKind::Pareto,
+            &[("scale", 2.0), ("shape", 3.0)],
+            500,
+        );
         for v in &vals {
             assert!(*v >= 2.0, "pareto should be >= scale: {v}");
         }
@@ -463,7 +527,11 @@ mod tests {
 
     #[test]
     fn weibull_positive() {
-        let vals = gen_f64(DistributionKind::Weibull, &[("scale", 1.0), ("shape", 2.0)], 500);
+        let vals = gen_f64(
+            DistributionKind::Weibull,
+            &[("scale", 1.0), ("shape", 2.0)],
+            500,
+        );
         for v in &vals {
             assert!(*v >= 0.0, "weibull should be non-negative: {v}");
         }
@@ -471,7 +539,11 @@ mod tests {
 
     #[test]
     fn gamma_positive() {
-        let vals = gen_f64(DistributionKind::Gamma, &[("shape", 2.0), ("scale", 1.0)], 500);
+        let vals = gen_f64(
+            DistributionKind::Gamma,
+            &[("shape", 2.0), ("scale", 1.0)],
+            500,
+        );
         for v in &vals {
             assert!(*v > 0.0, "gamma should be positive: {v}");
         }
@@ -479,7 +551,11 @@ mod tests {
 
     #[test]
     fn beta_in_unit_interval() {
-        let vals = gen_f64(DistributionKind::Beta, &[("alpha", 2.0), ("beta", 5.0)], 1000);
+        let vals = gen_f64(
+            DistributionKind::Beta,
+            &[("alpha", 2.0), ("beta", 5.0)],
+            1000,
+        );
         for v in &vals {
             assert!(*v >= 0.0 && *v <= 1.0, "beta should be in [0,1]: {v}");
         }
@@ -493,7 +569,11 @@ mod tests {
 
     #[test]
     fn cauchy_centered_near_median() {
-        let vals = gen_f64(DistributionKind::Cauchy, &[("median", 50.0), ("scale", 1.0)], 1000);
+        let vals = gen_f64(
+            DistributionKind::Cauchy,
+            &[("median", 50.0), ("scale", 1.0)],
+            1000,
+        );
         assert_eq!(vals.len(), 1000);
         // Cauchy has no mean, but median should be near 50. Sort and check.
         let mut sorted = vals.clone();
@@ -574,7 +654,11 @@ mod tests {
         ];
         for kind in &continuous {
             let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None, false);
-            assert_eq!(g.output_type(), DataType::Float64, "expected Float64 for {kind:?}");
+            assert_eq!(
+                g.output_type(),
+                DataType::Float64,
+                "expected Float64 for {kind:?}"
+            );
         }
     }
 
@@ -589,14 +673,26 @@ mod tests {
         ];
         for kind in &discrete {
             let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None, false);
-            assert_eq!(g.output_type(), DataType::Int64, "expected Int64 for {kind:?}");
+            assert_eq!(
+                g.output_type(),
+                DataType::Int64,
+                "expected Int64 for {kind:?}"
+            );
         }
     }
 
     #[test]
     fn deterministic_with_same_seed() {
-        let a = gen_f64(DistributionKind::Normal, &[("mean", 0.0), ("std_dev", 1.0)], 50);
-        let b = gen_f64(DistributionKind::Normal, &[("mean", 0.0), ("std_dev", 1.0)], 50);
+        let a = gen_f64(
+            DistributionKind::Normal,
+            &[("mean", 0.0), ("std_dev", 1.0)],
+            50,
+        );
+        let b = gen_f64(
+            DistributionKind::Normal,
+            &[("mean", 0.0), ("std_dev", 1.0)],
+            50,
+        );
         assert_eq!(a, b, "same seed must produce same output");
     }
 
@@ -611,7 +707,11 @@ mod tests {
     #[test]
     fn normal_negative_std_dev_fallback() {
         // Negative std_dev is abs'd then clamped to epsilon
-        let vals = gen_f64(DistributionKind::Normal, &[("mean", 0.0), ("std_dev", -5.0)], 100);
+        let vals = gen_f64(
+            DistributionKind::Normal,
+            &[("mean", 0.0), ("std_dev", -5.0)],
+            100,
+        );
         assert_eq!(vals.len(), 100);
     }
 
@@ -620,7 +720,10 @@ mod tests {
         let vals = gen_f64(DistributionKind::Exponential, &[("lambda", 0.0)], 100);
         assert_eq!(vals.len(), 100);
         for v in &vals {
-            assert!(*v >= 0.0, "exponential fallback should be non-negative: {v}");
+            assert!(
+                *v >= 0.0,
+                "exponential fallback should be non-negative: {v}"
+            );
         }
     }
 
@@ -637,15 +740,25 @@ mod tests {
     fn bernoulli_out_of_range_clamped() {
         // p > 1 should be clamped to 1.0
         let vals = gen_i64(DistributionKind::Bernoulli, &[("p", 5.0)], 50);
-        assert!(vals.iter().all(|v| *v == 1), "p=5 clamped to 1 should produce all ones");
+        assert!(
+            vals.iter().all(|v| *v == 1),
+            "p=5 clamped to 1 should produce all ones"
+        );
         // p < 0 should be clamped to 0.0
         let vals = gen_i64(DistributionKind::Bernoulli, &[("p", -1.0)], 50);
-        assert!(vals.iter().all(|v| *v == 0), "p=-1 clamped to 0 should produce all zeros");
+        assert!(
+            vals.iter().all(|v| *v == 0),
+            "p=-1 clamped to 0 should produce all zeros"
+        );
     }
 
     #[test]
     fn pareto_zero_params_fallback() {
-        let vals = gen_f64(DistributionKind::Pareto, &[("scale", 0.0), ("shape", 0.0)], 100);
+        let vals = gen_f64(
+            DistributionKind::Pareto,
+            &[("scale", 0.0), ("shape", 0.0)],
+            100,
+        );
         assert_eq!(vals.len(), 100);
         for v in &vals {
             assert!(*v > 0.0, "pareto fallback should be positive: {v}");
@@ -655,7 +768,11 @@ mod tests {
     #[test]
     fn gamma_zero_shape_fallback() {
         // shape=0 is abs'd then clamped to epsilon, so produces valid output
-        let vals = gen_f64(DistributionKind::Gamma, &[("shape", 0.0), ("scale", 0.0)], 100);
+        let vals = gen_f64(
+            DistributionKind::Gamma,
+            &[("shape", 0.0), ("scale", 0.0)],
+            100,
+        );
         assert_eq!(vals.len(), 100);
         for v in &vals {
             assert!(*v >= 0.0, "gamma fallback should be non-negative: {v}");
@@ -671,13 +788,20 @@ mod tests {
             100,
         );
         for v in &vals {
-            assert!(*v >= 0.0 && *v <= 1.0, "triangular fallback out of [0,1]: {v}");
+            assert!(
+                *v >= 0.0 && *v <= 1.0,
+                "triangular fallback out of [0,1]: {v}"
+            );
         }
     }
 
     #[test]
     fn lognormal_zero_sigma_fallback() {
-        let vals = gen_f64(DistributionKind::LogNormal, &[("mu", 0.0), ("sigma", 0.0)], 100);
+        let vals = gen_f64(
+            DistributionKind::LogNormal,
+            &[("mu", 0.0), ("sigma", 0.0)],
+            100,
+        );
         assert_eq!(vals.len(), 100);
         for v in &vals {
             assert!(*v > 0.0, "lognormal should be positive: {v}");

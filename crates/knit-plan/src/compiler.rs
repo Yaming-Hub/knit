@@ -43,8 +43,11 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     apply_activity_counts(model, &actor_pool, &mut row_counts);
 
     // 3. Build entity lookup.
-    let entity_map: HashMap<&str, &Entity> =
-        model.entities.iter().map(|e| (e.name.as_str(), e)).collect();
+    let entity_map: HashMap<&str, &Entity> = model
+        .entities
+        .iter()
+        .map(|e| (e.name.as_str(), e))
+        .collect();
 
     // 4. Build relationship lookup: from_entity → Vec<(to_entity, fk_field)>.
     let mut fk_fields: HashMap<String, Vec<(String, String)>> = HashMap::new();
@@ -75,22 +78,29 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
         let mut entity_plans = Vec::new();
 
         for entity_name in phase_entities {
-            let entity = entity_map.get(entity_name.as_str()).ok_or_else(|| {
-                PlanError::UnknownEntity {
-                    name: entity_name.clone(),
-                }
-            })?;
+            let entity =
+                entity_map
+                    .get(entity_name.as_str())
+                    .ok_or_else(|| PlanError::UnknownEntity {
+                        name: entity_name.clone(),
+                    })?;
 
             let row_count = row_counts.get(entity_name).copied().unwrap_or(1000);
             let entity_seed = rng_tree::derive_seed(model.seed, entity_name.as_bytes());
             let partitions = {
                 let computed = partition::compute_partitions(row_count, entity_seed);
                 // Force single partition for entities with thread_ref (requires ordered generation)
-                let has_thread_ref = entity.fields.iter().any(|f| {
-                    matches!(&f.generator, Some(GeneratorSpec::ThreadRef { .. }))
-                });
+                let has_thread_ref = entity
+                    .fields
+                    .iter()
+                    .any(|f| matches!(&f.generator, Some(GeneratorSpec::ThreadRef { .. })));
                 if has_thread_ref && computed.len() > 1 {
-                    vec![PartitionRange { partition_id: 0, start_row: 0, end_row: row_count, seed: entity_seed }]
+                    vec![PartitionRange {
+                        partition_id: 0,
+                        start_row: 0,
+                        end_row: row_count,
+                        seed: entity_seed,
+                    }]
                 } else {
                     computed
                 }
@@ -98,12 +108,18 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
             let num_partitions = partitions.len() as u32;
 
             let entity_fks = fk_fields.get(entity_name).cloned().unwrap_or_default();
-            let field_plans = compile_field_plans(entity, &entity_fks, &row_counts, &index_strategy, &model.actor_relationships, model);
+            let field_plans = compile_field_plans(
+                entity,
+                &entity_fks,
+                &row_counts,
+                &index_strategy,
+                &model.actor_relationships,
+                model,
+            );
 
             let estimated_byte_size = estimate_byte_size(entity, row_count);
 
-            let field_names: Vec<String> =
-                entity.fields.iter().map(|f| f.name.clone()).collect();
+            let field_names: Vec<String> = entity.fields.iter().map(|f| f.name.clone()).collect();
             rng_entities.push((entity_name.clone(), field_names, num_partitions));
 
             total_partitions += partitions.len();
@@ -191,10 +207,7 @@ fn apply_activity_counts(
             .iter()
             .find(|r| {
                 r.from == entity.name
-                    && r.foreign_key
-                        .as_deref()
-                        .unwrap_or(&format!("{}_id", r.to))
-                        == ac.actor_field
+                    && r.foreign_key.as_deref().unwrap_or(&format!("{}_id", r.to)) == ac.actor_field
             })
             .map(|r| r.to.as_str());
 
@@ -268,7 +281,9 @@ fn compile_actor_pool(model: &DataModel, row_counts: &BTreeMap<String, u64>) -> 
         let mut persona_weights: Vec<PersonaWeight> = model
             .personas
             .iter()
-            .filter(|p| p.name.starts_with(&entity_prefix) || !has_entity_prefix(&p.name, &model.entities))
+            .filter(|p| {
+                p.name.starts_with(&entity_prefix) || !has_entity_prefix(&p.name, &model.entities)
+            })
             .map(|p| PersonaWeight {
                 name: p.name.clone(),
                 weight: p.weight,
@@ -335,7 +350,9 @@ fn resolve_count_estimate(count: &knit_core::CountSpec) -> u64 {
                 mean.max(1.0) as u64
             } else if let Some(&lambda) = spec.params.get("lambda") {
                 lambda.max(1.0) as u64
-            } else if let (Some(&min), Some(&max)) = (spec.params.get("min"), spec.params.get("max")) {
+            } else if let (Some(&min), Some(&max)) =
+                (spec.params.get("min"), spec.params.get("max"))
+            {
                 ((min + max) / 2.0).max(1.0) as u64
             } else {
                 1000
@@ -401,7 +418,12 @@ fn compile_field_plans(
         // Resolve GraphTarget's from/to entities from actor_relationships
         // and PersonaField/ActorTemporal actor_entity from FK map
         let generator_plan = match generator_plan {
-            GeneratorPlan::GraphTarget { graph_name, source_field, key_store_kind, .. } => {
+            GeneratorPlan::GraphTarget {
+                graph_name,
+                source_field,
+                key_store_kind,
+                ..
+            } => {
                 let ar = actor_relationships.iter().find(|ar| ar.name == graph_name);
                 let from_entity = ar.map(|a| a.from_entity.clone()).unwrap_or_default();
                 let target_entity = ar.map(|a| a.to_entity.clone()).unwrap_or_default();
@@ -413,14 +435,30 @@ fn compile_field_plans(
                     key_store_kind,
                 }
             }
-            GeneratorPlan::PersonaField { trait_name, actor_field, .. } => {
-                let actor_entity = fk_map.get(actor_field.as_str())
+            GeneratorPlan::PersonaField {
+                trait_name,
+                actor_field,
+                ..
+            } => {
+                let actor_entity = fk_map
+                    .get(actor_field.as_str())
                     .map(|s| s.to_string())
                     .unwrap_or_default();
-                GeneratorPlan::PersonaField { trait_name, actor_entity, actor_field }
+                GeneratorPlan::PersonaField {
+                    trait_name,
+                    actor_entity,
+                    actor_field,
+                }
             }
-            GeneratorPlan::ActorTemporal { trait_name, actor_field, temporal_after, burst, .. } => {
-                let actor_entity = fk_map.get(actor_field.as_str())
+            GeneratorPlan::ActorTemporal {
+                trait_name,
+                actor_field,
+                temporal_after,
+                burst,
+                ..
+            } => {
+                let actor_entity = fk_map
+                    .get(actor_field.as_str())
                     .map(|s| s.to_string())
                     .unwrap_or_default();
                 // Auto-detect temporal_start_field: prefer a datetime field
@@ -429,18 +467,23 @@ fn compile_field_plans(
                 let temporal_start_field = if !actor_entity.is_empty() {
                     let actor_ent = model.entities.iter().find(|e| e.name == actor_entity);
                     actor_ent.and_then(|e| {
-                        let dt_fields: Vec<&str> = e.fields.iter()
-                            .filter(|f| matches!(
-                                f.data_type,
-                                knit_core::DataType::Datetime
-                                    | knit_core::DataType::DatetimeUs
-                                    | knit_core::DataType::Datetimetz
-                                    | knit_core::DataType::Date
-                            ))
+                        let dt_fields: Vec<&str> = e
+                            .fields
+                            .iter()
+                            .filter(|f| {
+                                matches!(
+                                    f.data_type,
+                                    knit_core::DataType::Datetime
+                                        | knit_core::DataType::DatetimeUs
+                                        | knit_core::DataType::Datetimetz
+                                        | knit_core::DataType::Date
+                                )
+                            })
                             .map(|f| f.name.as_str())
                             .collect();
                         // Try to find a creation/signup-like field first
-                        let creation_names = ["signup", "created", "registered", "joined", "creation"];
+                        let creation_names =
+                            ["signup", "created", "registered", "joined", "creation"];
                         let creation_field = dt_fields.iter().find(|name| {
                             let lower = name.to_lowercase();
                             creation_names.iter().any(|kw| lower.contains(kw))
@@ -456,7 +499,15 @@ fn compile_field_plans(
                 } else {
                     None
                 };
-                GeneratorPlan::ActorTemporal { trait_name, actor_entity, actor_field, temporal_start_field, min_event_gap_ms: None, temporal_after, burst }
+                GeneratorPlan::ActorTemporal {
+                    trait_name,
+                    actor_entity,
+                    actor_field,
+                    temporal_start_field,
+                    min_event_gap_ms: None,
+                    temporal_after,
+                    burst,
+                }
             }
             other => other,
         };
@@ -488,8 +539,8 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 // Auto-enable rounding when the field's declared data type is integer.
                 // This ensures distribution generators produce integer values even when
                 // the user doesn't explicitly set `round = true` in the schema.
-                let round = dist_spec.round
-                    || matches!(field.data_type, DataType::Int | DataType::Int32);
+                let round =
+                    dist_spec.round || matches!(field.data_type, DataType::Int | DataType::Int32);
                 GeneratorPlan::Distribution {
                     kind: dist_spec.kind.clone(),
                     params: dist_spec.params.clone(),
@@ -522,7 +573,11 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 let mut cumulative = Vec::with_capacity(choices.len());
                 let mut running = 0.0;
                 for choice in choices {
-                    let w = if total_weight == 0.0 { 1.0 } else { choice.weight };
+                    let w = if total_weight == 0.0 {
+                        1.0
+                    } else {
+                        choice.weight
+                    };
                     running += w / effective_total;
                     cumulative.push(running);
                 }
@@ -545,7 +600,11 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 generators,
             } => {
                 if let Some((_, first_gen)) = generators.iter().next() {
-                    let element = Box::new(compile_generator_from_spec(first_gen, all_fields, &field.data_type));
+                    let element = Box::new(compile_generator_from_spec(
+                        first_gen,
+                        all_fields,
+                        &field.data_type,
+                    ));
                     let length = Box::new(GeneratorPlan::Constant(knit_core::Value::Int(1)));
                     GeneratorPlan::Composite { element, length }
                 } else {
@@ -557,9 +616,9 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 target_field: field.clone(),
                 key_store_kind: KeyStoreKind::InMemoryVec,
             },
-            GeneratorSpec::Pattern { pattern } => {
-                GeneratorPlan::Pattern { pattern: pattern.clone() }
-            }
+            GeneratorSpec::Pattern { pattern } => GeneratorPlan::Pattern {
+                pattern: pattern.clone(),
+            },
             GeneratorSpec::Unique { inner, max_retries } => {
                 let inner_plan = compile_generator_from_spec(inner, all_fields, &field.data_type);
                 GeneratorPlan::Unique {
@@ -593,24 +652,36 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 params.insert("start_hour".into(), *start_hour as f64);
                 params.insert("end_hour".into(), *end_hour as f64);
                 // Generator reads "weekdays_only" (1.0 = true, 0.0 = false)
-                params.insert("weekdays_only".into(), if *exclude_weekends { 1.0 } else { 0.0 });
+                params.insert(
+                    "weekdays_only".into(),
+                    if *exclude_weekends { 1.0 } else { 0.0 },
+                );
                 GeneratorPlan::Temporal {
                     kind: TemporalKind::BusinessHours,
                     params,
                     base_field: None,
                 }
             }
-            GeneratorSpec::Conditional { field: cond_field, branches, default } => {
+            GeneratorSpec::Conditional {
+                field: cond_field,
+                branches,
+                default,
+            } => {
                 // Compile each branch's generator recursively
                 let compiled_branches: Vec<(Value, Box<GeneratorPlan>)> = branches
                     .iter()
                     .map(|b| {
-                        let plan = compile_generator_from_spec(&b.generator, all_fields, &field.data_type);
+                        let plan =
+                            compile_generator_from_spec(&b.generator, all_fields, &field.data_type);
                         (b.condition.clone(), Box::new(plan))
                     })
                     .collect();
                 let default_plan = match default {
-                    Some(gen) => Box::new(compile_generator_from_spec(gen, all_fields, &field.data_type)),
+                    Some(gen) => Box::new(compile_generator_from_spec(
+                        gen,
+                        all_fields,
+                        &field.data_type,
+                    )),
                     None => Box::new(GeneratorPlan::Constant(Value::Null)),
                 };
                 GeneratorPlan::Conditional {
@@ -630,33 +701,33 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             }
             // Behavioral modeling generators — placeholder plans until
             // the generation engine implements persona/graph-based generation.
-            GeneratorSpec::ActorRef { entity } => {
-                GeneratorPlan::ForeignKey {
-                    target_entity: entity.clone(),
-                    target_field: "id".to_string(),
-                    key_store_kind: KeyStoreKind::InMemoryVec,
-                }
-            }
-            GeneratorSpec::ActorTemporal { trait_name, temporal_after, burst } => {
+            GeneratorSpec::ActorRef { entity } => GeneratorPlan::ForeignKey {
+                target_entity: entity.clone(),
+                target_field: "id".to_string(),
+                key_store_kind: KeyStoreKind::InMemoryVec,
+            },
+            GeneratorSpec::ActorTemporal {
+                trait_name,
+                temporal_after,
+                burst,
+            } => {
                 // Auto-detect the actor FK field from actor_column fields.
                 let actor_field = all_fields
                     .iter()
                     .find(|f| f.actor_column && f.name != field.name)
                     .map(|f| f.name.clone())
                     .unwrap_or_default();
-                let ta_plan = temporal_after.as_ref().map(|ta| {
-                    crate::types::TemporalAfter {
+                let ta_plan = temporal_after
+                    .as_ref()
+                    .map(|ta| crate::types::TemporalAfter {
                         entity: ta.entity.clone(),
                         field: ta.field.clone(),
                         fk: ta.fk.clone(),
-                    }
-                });
-                let burst_plan = burst.as_ref().map(|b| {
-                    crate::types::BurstPlan {
-                        avg_events: b.avg_events,
-                        avg_gap_ms: (b.avg_gap_minutes * 60_000.0) as i64,
-                        avg_idle_ms: (b.avg_idle_hours * 3_600_000.0) as i64,
-                    }
+                    });
+                let burst_plan = burst.as_ref().map(|b| crate::types::BurstPlan {
+                    avg_events: b.avg_events,
+                    avg_gap_ms: (b.avg_gap_minutes * 60_000.0) as i64,
+                    avg_idle_ms: (b.avg_idle_hours * 3_600_000.0) as i64,
                 });
                 GeneratorPlan::ActorTemporal {
                     trait_name: trait_name.clone(),
@@ -668,7 +739,10 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     burst: burst_plan,
                 }
             }
-            GeneratorSpec::RelationshipRef { relationship, source_field } => {
+            GeneratorSpec::RelationshipRef {
+                relationship,
+                source_field,
+            } => {
                 // Resolve source_field: use explicit value or auto-detect from
                 // other actor_column fields in the entity.
                 let resolved_source = source_field.clone().unwrap_or_else(|| {
@@ -684,7 +758,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 GeneratorPlan::GraphTarget {
                     graph_name: relationship.clone(),
                     source_field: resolved_source,
-                    from_entity: String::new(), // resolved below
+                    from_entity: String::new(),   // resolved below
                     target_entity: String::new(), // resolved below
                     key_store_kind: KeyStoreKind::InMemoryVec,
                 }
@@ -702,7 +776,11 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     actor_field,
                 }
             }
-            GeneratorSpec::ThreadRef { reply_probability, max_depth, reply_window } => {
+            GeneratorSpec::ThreadRef {
+                reply_probability,
+                max_depth,
+                reply_window,
+            } => {
                 // Find the PK field in this entity for self-referential threading.
                 let pk_field = all_fields
                     .iter()
@@ -719,9 +797,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.
-            if field.primary_key.unwrap_or(false)
-                && field.data_type == knit_core::DataType::Uuid
-            {
+            if field.primary_key.unwrap_or(false) && field.data_type == knit_core::DataType::Uuid {
                 GeneratorPlan::Uuid
             } else if field.primary_key.unwrap_or(false) {
                 GeneratorPlan::Sequence { start: 1, step: 1 }
@@ -876,7 +952,11 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
             base_order + 1
         }
         // Conditional depends on the field it branches on + any deps inside branches
-        Some(GeneratorSpec::Conditional { field: ref_field, branches, default }) => {
+        Some(GeneratorSpec::Conditional {
+            field: ref_field,
+            branches,
+            default,
+        }) => {
             // Dependency on the reference field
             let ref_order = all_fields
                 .iter()
@@ -925,11 +1005,15 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .max()
                 .unwrap_or(0);
             // Also depends on the causal FK field if temporal_after is set
-            let causal_order = temporal_after.as_ref().and_then(|ta| {
-                all_fields.iter()
-                    .find(|f| f.name == ta.fk)
-                    .map(|f| compute_dependency_order(f, all_fields))
-            }).unwrap_or(0);
+            let causal_order = temporal_after
+                .as_ref()
+                .and_then(|ta| {
+                    all_fields
+                        .iter()
+                        .find(|f| f.name == ta.fk)
+                        .map(|f| compute_dependency_order(f, all_fields))
+                })
+                .unwrap_or(0);
             max_actor_order.max(causal_order) + 1
         }
         Some(GeneratorSpec::PersonaField { .. }) => {
@@ -1021,7 +1105,9 @@ fn estimate_byte_size(entity: &Entity, row_count: u64) -> u64 {
             knit_core::DataType::Uuid => 16,
             knit_core::DataType::Date => 4,
             knit_core::DataType::Time => 8,
-            knit_core::DataType::Datetime | knit_core::DataType::DatetimeUs | knit_core::DataType::Datetimetz => 8,
+            knit_core::DataType::Datetime
+            | knit_core::DataType::DatetimeUs
+            | knit_core::DataType::Datetimetz => 8,
             knit_core::DataType::Duration => 8,
             knit_core::DataType::Bytes => 128,
             knit_core::DataType::Array => 128,
@@ -1080,9 +1166,9 @@ mod tests {
                     }),
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
-            precision: None,
-        actor_column: false,
-        },
+                    precision: None,
+                    actor_column: false,
+                },
                 Field {
                     name: "name".to_string(),
                     description: None,
@@ -1093,19 +1179,23 @@ mod tests {
                     }),
                     nullable: NullSpec::Never,
                     primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                    precision: None,
+                    actor_column: false,
+                },
             ],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         }
     }
 
-    fn simple_model(name: &str, entities: Vec<Entity>, relationships: Vec<Relationship>) -> DataModel {
+    fn simple_model(
+        name: &str,
+        entities: Vec<Entity>,
+        relationships: Vec<Relationship>,
+    ) -> DataModel {
         DataModel {
             name: name.to_string(),
             description: None,
@@ -1118,8 +1208,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 
@@ -1200,10 +1290,7 @@ mod tests {
     fn test_independent_entities() {
         let model = simple_model(
             "independent",
-            vec![
-                simple_entity("user", 1000),
-                simple_entity("product", 500),
-            ],
+            vec![simple_entity("user", 1000), simple_entity("product", 500)],
             vec![],
         );
 
@@ -1223,7 +1310,7 @@ mod tests {
             nullable: NullSpec::Probability(0.1),
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model(
@@ -1264,7 +1351,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let mut entity_b = simple_entity("b", 1000);
@@ -1276,7 +1363,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model(
@@ -1375,7 +1462,9 @@ mod tests {
         let plan = compile(&model).unwrap();
         assert!(matches!(
             plan.index_strategy.per_entity["huge"],
-            KeyStoreKind::SampledSubset { sample_size: 10_000_000 }
+            KeyStoreKind::SampledSubset {
+                sample_size: 10_000_000
+            }
         ));
     }
 
@@ -1401,13 +1490,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let score_plan = ep.field_plans.iter().find(|fp| fp.field_name == "score").unwrap();
+        let score_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "score")
+            .unwrap();
         assert!(matches!(
             score_plan.generator_plan,
             GeneratorPlan::Distribution { .. }
@@ -1438,13 +1531,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("autoround", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let age_plan = ep.field_plans.iter().find(|fp| fp.field_name == "age").unwrap();
+        let age_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "age")
+            .unwrap();
         match &age_plan.generator_plan {
             GeneratorPlan::Distribution { round, .. } => {
                 assert!(round, "round should be auto-enabled for data_type=Int");
@@ -1476,13 +1573,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("noround", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let score_plan = ep.field_plans.iter().find(|fp| fp.field_name == "score").unwrap();
+        let score_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "score")
+            .unwrap();
         match &score_plan.generator_plan {
             GeneratorPlan::Distribution { round, .. } => {
                 assert!(!round, "round should stay false for data_type=Float");
@@ -1496,7 +1597,11 @@ mod tests {
         let model = simple_model("fields", vec![simple_entity("test", 100)], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let id_plan = ep.field_plans.iter().find(|fp| fp.field_name == "id").unwrap();
+        let id_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "id")
+            .unwrap();
         assert!(matches!(
             id_plan.generator_plan,
             GeneratorPlan::Sequence { start: 1, step: 1 }
@@ -1508,8 +1613,15 @@ mod tests {
         let model = simple_model("fields", vec![simple_entity("test", 100)], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let name_plan = ep.field_plans.iter().find(|fp| fp.field_name == "name").unwrap();
-        assert!(matches!(name_plan.generator_plan, GeneratorPlan::Faker { .. }));
+        let name_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "name")
+            .unwrap();
+        assert!(matches!(
+            name_plan.generator_plan,
+            GeneratorPlan::Faker { .. }
+        ));
     }
 
     #[test]
@@ -1534,13 +1646,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let status_plan = ep.field_plans.iter().find(|fp| fp.field_name == "status").unwrap();
+        let status_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "status")
+            .unwrap();
         match &status_plan.generator_plan {
             GeneratorPlan::OneOf {
                 choices,
@@ -1566,13 +1682,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let uuid_plan = ep.field_plans.iter().find(|fp| fp.field_name == "uuid_field").unwrap();
+        let uuid_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "uuid_field")
+            .unwrap();
         assert!(matches!(uuid_plan.generator_plan, GeneratorPlan::Uuid));
     }
 
@@ -1589,13 +1709,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let version_plan = ep.field_plans.iter().find(|fp| fp.field_name == "version").unwrap();
+        let version_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "version")
+            .unwrap();
         assert!(matches!(
             version_plan.generator_plan,
             GeneratorPlan::Constant(Value::Int(1))
@@ -1624,7 +1748,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         entity.fields.push(Field {
             name: "tax".to_string(),
@@ -1636,13 +1760,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let tax_plan = ep.field_plans.iter().find(|fp| fp.field_name == "tax").unwrap();
+        let tax_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "tax")
+            .unwrap();
         match &tax_plan.generator_plan {
             GeneratorPlan::Derived { expr, depends_on } => {
                 assert_eq!(expr, "price * 0.1");
@@ -1651,7 +1779,11 @@ mod tests {
             other => panic!("expected Derived, got {other:?}"),
         }
         // Derived field should have higher dependency_order.
-        let price_plan = ep.field_plans.iter().find(|fp| fp.field_name == "price").unwrap();
+        let price_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "price")
+            .unwrap();
         assert!(tax_plan.dependency_order > price_plan.dependency_order);
     }
 
@@ -1670,7 +1802,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
         entity.fields.push(Field {
             name: "label".to_string(),
@@ -1682,13 +1814,17 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model("params", vec![entity], vec![]);
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let label_plan = ep.field_plans.iter().find(|fp| fp.field_name == "label").unwrap();
+        let label_plan = ep
+            .field_plans
+            .iter()
+            .find(|fp| fp.field_name == "label")
+            .unwrap();
         match &label_plan.generator_plan {
             GeneratorPlan::Derived { depends_on, .. } => {
                 assert!(
@@ -1710,8 +1846,14 @@ mod tests {
 
     #[test]
     fn test_null_plan_conversion() {
-        assert!(matches!(compile_null_plan(&NullSpec::Never), NullPlan::Never));
-        assert!(matches!(compile_null_plan(&NullSpec::Always), NullPlan::Always));
+        assert!(matches!(
+            compile_null_plan(&NullSpec::Never),
+            NullPlan::Never
+        ));
+        assert!(matches!(
+            compile_null_plan(&NullSpec::Always),
+            NullPlan::Always
+        ));
         assert!(matches!(
             compile_null_plan(&NullSpec::Probability(0.05)),
             NullPlan::Probability(p) if (p - 0.05).abs() < 1e-10
@@ -1724,11 +1866,7 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let model = simple_model(
-            "display_test",
-            vec![simple_entity("users", 1000)],
-            vec![],
-        );
+        let model = simple_model("display_test", vec![simple_entity("users", 1000)], vec![]);
         let plan = compile(&model).unwrap();
         let display = format!("{plan}");
         assert!(display.contains("display_test"));
@@ -1768,7 +1906,7 @@ mod tests {
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
-        actor_column: false,
+            actor_column: false,
         });
 
         let model = simple_model(
@@ -1823,28 +1961,40 @@ mod tests {
                     data_type: DataType::String,
                     generator: Some(GeneratorSpec::OneOf {
                         choices: vec![
-                            WeightedChoice { value: Value::String("red".into()), weight: 0.0 },
-                            WeightedChoice { value: Value::String("blue".into()), weight: 0.0 },
+                            WeightedChoice {
+                                value: Value::String("red".into()),
+                                weight: 0.0,
+                            },
+                            WeightedChoice {
+                                value: Value::String("blue".into()),
+                                weight: 0.0,
+                            },
                         ],
                     }),
                     nullable: NullSpec::Never,
                     primary_key: None,
-            precision: None,
-        actor_column: false,
-        }],
+                    precision: None,
+                    actor_column: false,
+                }],
                 constraints: vec![],
                 topology: None,
-            actor: false,
-            persona_distribution: None,
-            activity_count: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
             }],
             vec![],
         );
         let plan = compile(&model).unwrap();
         let ep = &plan.phases[0].entity_plans[0];
-        let fp = ep.field_plans.iter().find(|f| f.field_name == "color").unwrap();
+        let fp = ep
+            .field_plans
+            .iter()
+            .find(|f| f.field_name == "color")
+            .unwrap();
         match &fp.generator_plan {
-            GeneratorPlan::OneOf { cumulative_weights, .. } => {
+            GeneratorPlan::OneOf {
+                cumulative_weights, ..
+            } => {
                 // Should be uniform [0.5, 1.0], not [inf, inf]
                 assert!(cumulative_weights.iter().all(|w| w.is_finite()));
                 assert!((cumulative_weights.last().unwrap() - 1.0).abs() < 1e-9);
@@ -1863,9 +2013,9 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
             Field {
                 name: "price".to_string(),
                 description: None,
@@ -1873,9 +2023,9 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
         ];
         // "price * 2" should match only "price", not "p"
         let deps = extract_dependencies("price * 2", &fields);
@@ -1900,7 +2050,10 @@ mod tests {
         match plan {
             GeneratorPlan::Unique { inner, max_retries } => {
                 assert_eq!(max_retries, 50);
-                assert!(matches!(*inner, GeneratorPlan::Sequence { start: 1, step: 1 }));
+                assert!(matches!(
+                    *inner,
+                    GeneratorPlan::Sequence { start: 1, step: 1 }
+                ));
             }
             other => panic!("expected GeneratorPlan::Unique, got {other:?}"),
         }
@@ -2023,9 +2176,9 @@ mod tests {
                     offset: Value::Int(3600),
                 }),
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
             Field {
                 name: "start_date".to_string(),
                 description: None,
@@ -2039,13 +2192,16 @@ mod tests {
                     },
                 }),
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
         ];
         let order_end = compute_dependency_order(&fields[0], &fields);
         let order_start = compute_dependency_order(&fields[1], &fields);
-        assert!(order_end > order_start, "relative field should come after base field");
+        assert!(
+            order_end > order_start,
+            "relative field should come after base field"
+        );
     }
 
     #[test]
@@ -2265,8 +2421,15 @@ mod tests {
             .flat_map(|p| &p.entity_plans)
             .find(|ep| ep.entity_name == "posts")
             .unwrap();
-        let total: u64 = posts_plan.partitions.iter().map(|p| p.end_row - p.start_row).sum();
-        assert_eq!(total, 740, "dynamic count should be 740, not the static 9999");
+        let total: u64 = posts_plan
+            .partitions
+            .iter()
+            .map(|p| p.end_row - p.start_row)
+            .sum();
+        assert_eq!(
+            total, 740,
+            "dynamic count should be 740, not the static 9999"
+        );
     }
 
     #[test]
@@ -2310,7 +2473,11 @@ mod tests {
             .flat_map(|p| &p.entity_plans)
             .find(|ep| ep.entity_name == "posts")
             .unwrap();
-        let total: u64 = posts_plan.partitions.iter().map(|p| p.end_row - p.start_row).sum();
+        let total: u64 = posts_plan
+            .partitions
+            .iter()
+            .map(|p| p.end_row - p.start_row)
+            .sum();
         assert_eq!(total, 500, "should use static fallback when no actor pool");
     }
 }

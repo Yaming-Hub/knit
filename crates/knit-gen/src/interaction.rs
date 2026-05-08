@@ -21,7 +21,7 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
 use crate::actor_pool::ActorPool;
-use crate::graph::{GeneratedGraph, Edge};
+use crate::graph::{Edge, GeneratedGraph};
 
 /// Configuration for generating interactions for one behavioral entity.
 #[derive(Debug, Clone)]
@@ -80,7 +80,8 @@ impl InteractionGenerator {
                 debug_assert!(
                     g.from_entity == config.actor_entity,
                     "Graph from_entity '{}' doesn't match config actor_entity '{}'",
-                    g.from_entity, config.actor_entity
+                    g.from_entity,
+                    config.actor_entity
                 );
                 (g.edges.clone(), true)
             }
@@ -162,20 +163,18 @@ impl InteractionGenerator {
     }
 
     /// Generate a single interaction by sampling from the actor pool.
-    fn generate_pool_interaction(
-        &self,
-        pool: &ActorPool,
-        rng: &mut impl Rng,
-    ) -> InteractionRecord {
+    fn generate_pool_interaction(&self, pool: &ActorPool, rng: &mut impl Rng) -> InteractionRecord {
         // Sample source actor weighted by activity (caller ensures pool is non-empty)
         let actor_index = pool
             .sample_actor(&self.config.actor_entity, rng)
             .expect("pool should be non-empty (checked in generate_batch)");
 
         // Sample target if configured
-        let target_index = self.config.target_entity.as_ref().and_then(|target_entity| {
-            pool.sample_actor(target_entity, rng)
-        });
+        let target_index = self
+            .config
+            .target_entity
+            .as_ref()
+            .and_then(|target_entity| pool.sample_actor(target_entity, rng));
 
         let persona = pool
             .get_persona(&self.config.actor_entity, actor_index)
@@ -193,11 +192,16 @@ impl InteractionGenerator {
     }
 
     /// Collect trait values for the given actor, mapped to output field names.
-    fn collect_trait_values(&self, pool: &ActorPool, actor_index: usize) -> BTreeMap<String, Value> {
+    fn collect_trait_values(
+        &self,
+        pool: &ActorPool,
+        actor_index: usize,
+    ) -> BTreeMap<String, Value> {
         let mut values = BTreeMap::new();
 
         for (trait_name, field_name) in &self.config.trait_fields {
-            if let Some(value) = pool.get_trait(&self.config.actor_entity, actor_index, trait_name) {
+            if let Some(value) = pool.get_trait(&self.config.actor_entity, actor_index, trait_name)
+            {
                 values.insert(field_name.clone(), value.clone());
             }
         }
@@ -285,9 +289,7 @@ mod tests {
             target_entity: None,
             actor_field: "user_id".into(),
             target_field: None,
-            trait_fields: HashMap::from([
-                ("session_length".into(), "avg_session".into()),
-            ]),
+            trait_fields: HashMap::from([("session_length".into(), "avg_session".into())]),
             total_count: 100,
         }
     }
@@ -378,7 +380,10 @@ mod tests {
         for r in &records {
             assert!(r.target_index.is_some());
             // All edges should come from our edge list
-            let edge = Edge { from: r.actor_index, to: r.target_index.unwrap() };
+            let edge = Edge {
+                from: r.actor_index,
+                to: r.target_index.unwrap(),
+            };
             assert!(
                 graph.edges.contains(&edge),
                 "Generated edge {:?} not in graph",
@@ -433,7 +438,11 @@ mod tests {
 
         // Generate with small batch size
         let records = generate_interactions(&config, &pool, None, 42, 7);
-        assert_eq!(records.len(), 100, "Should produce exactly total_count records");
+        assert_eq!(
+            records.len(),
+            100,
+            "Should produce exactly total_count records"
+        );
     }
 
     #[test]

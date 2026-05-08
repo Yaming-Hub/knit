@@ -81,8 +81,18 @@ impl Perturbator for GaussianNoise {
                 continue;
             }
 
-            let noisy = add_noise(col.as_ref(), rng, config.probability, self.stddev, self.relative)?;
-            trace!(column = field.name(), stddev = self.stddev, "added gaussian noise");
+            let noisy = add_noise(
+                col.as_ref(),
+                rng,
+                config.probability,
+                self.stddev,
+                self.relative,
+            )?;
+            trace!(
+                column = field.name(),
+                stddev = self.stddev,
+                "added gaussian noise"
+            );
             columns.push(noisy);
         }
 
@@ -178,14 +188,12 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     fn float_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, true),
-        ]));
-        RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Float64Array::from(vec![100.0; 50]))],
-        )
-        .unwrap()
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            true,
+        )]));
+        RecordBatch::try_new(schema, vec![Arc::new(Float64Array::from(vec![100.0; 50]))]).unwrap()
     }
 
     #[test]
@@ -194,9 +202,15 @@ mod tests {
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(99);
         let result = g.perturb(float_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         // At least some values should differ from 100.0
-        let changed = (0..arr.len()).filter(|&i| (arr.value(i) - 100.0).abs() > 0.01).count();
+        let changed = (0..arr.len())
+            .filter(|&i| (arr.value(i) - 100.0).abs() > 0.01)
+            .count();
         assert!(changed > 0, "expected some values to change");
     }
 
@@ -206,7 +220,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(0.0);
         let mut rng = ChaCha8Rng::seed_from_u64(0);
         let result = g.perturb(float_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         for i in 0..arr.len() {
             assert!((arr.value(i) - 100.0).abs() < 1e-10);
         }
@@ -216,19 +234,21 @@ mod tests {
     fn relative_noise_scales_with_value() {
         let g = GaussianNoise::relative(0.1); // 10% of value
         let config = PerturbConfig::default().with_probability(1.0);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            true,
+        )]));
         // Two groups: small values (1.0) and large values (1000.0)
         let vals: Vec<f64> = (0..50).map(|i| if i < 25 { 1.0 } else { 1000.0 }).collect();
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Float64Array::from(vals))],
-        )
-        .unwrap();
+        let batch = RecordBatch::try_new(schema, vec![Arc::new(Float64Array::from(vals))]).unwrap();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = g.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
 
         // Large values should have larger deviations
         let small_dev: f64 = (0..25).map(|i| (arr.value(i) - 1.0).abs()).sum::<f64>() / 25.0;
@@ -243,17 +263,20 @@ mod tests {
     fn gaussian_noise_int32_column() {
         let g = GaussianNoise::absolute(10.0);
         let config = PerturbConfig::default().with_probability(1.0);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("count", DataType::Int32, true),
-        ]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(vec![100; 50]))],
-        )
-        .unwrap();
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "count",
+            DataType::Int32,
+            true,
+        )]));
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![100; 50]))]).unwrap();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = g.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
         let changed = (0..arr.len()).filter(|&i| arr.value(i) != 100).count();
         assert!(changed > 0, "expected some int values to change");
     }
@@ -277,34 +300,57 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = g.perturb(batch, &mut rng, &config).unwrap();
         // String column unchanged
-        let strs = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let strs = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert_eq!(strs.value(0), "a");
         assert_eq!(strs.value(1), "b");
         assert_eq!(strs.value(2), "c");
         // Float column SHOULD be noised
-        let floats = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
-        let changed = (0..3).filter(|&i| {
-            let orig = [10.0, 20.0, 30.0];
-            (floats.value(i) - orig[i]).abs() > 0.01
-        }).count();
-        assert!(changed > 0, "numeric column should be noised in mixed-type batch");
+        let floats = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        let changed = (0..3)
+            .filter(|&i| {
+                let orig = [10.0, 20.0, 30.0];
+                (floats.value(i) - orig[i]).abs() > 0.01
+            })
+            .count();
+        assert!(
+            changed > 0,
+            "numeric column should be noised in mixed-type batch"
+        );
     }
 
     #[test]
     fn gaussian_noise_preserves_nulls() {
         let g = GaussianNoise::absolute(5.0);
         let config = PerturbConfig::default().with_probability(1.0);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Float64, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Float64,
+            true,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
-            vec![Arc::new(Float64Array::from(vec![Some(1.0), None, Some(3.0)]))],
+            vec![Arc::new(Float64Array::from(vec![
+                Some(1.0),
+                None,
+                Some(3.0),
+            ]))],
         )
         .unwrap();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = g.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
         assert!(arr.is_valid(0));
         assert!(!arr.is_valid(1), "null should remain null");
         assert!(arr.is_valid(2));

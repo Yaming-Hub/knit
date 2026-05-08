@@ -58,9 +58,7 @@ pub fn enforce_inter_event_gaps(
         let ts_arr = batch.column(ts_idx);
 
         let fk_i64 = fk_arr.as_any().downcast_ref::<Int64Array>();
-        let ts_i64 = ts_arr
-            .as_any()
-            .downcast_ref::<TimestampMillisecondArray>();
+        let ts_i64 = ts_arr.as_any().downcast_ref::<TimestampMillisecondArray>();
 
         let (fk_arr, ts_arr) = match (fk_i64, ts_i64) {
             (Some(f), Some(t)) => (f, t),
@@ -121,8 +119,8 @@ pub fn enforce_inter_event_gaps(
             };
 
             // Check if any rows in this batch need adjustment.
-            let needs_adjustment = (0..batch.num_rows())
-                .any(|row| adjustments.contains_key(&(batch_idx, row)));
+            let needs_adjustment =
+                (0..batch.num_rows()).any(|row| adjustments.contains_key(&(batch_idx, row)));
 
             if !needs_adjustment {
                 return (entity.clone(), batch.clone());
@@ -202,7 +200,8 @@ mod tests {
             vec![1, 1, 2],
             vec![1000, 1000 + DEFAULT_MIN_GAP_MS, 500],
         )];
-        let result = enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
+        let result =
+            enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
         let ts = result[0]
             .1
             .column(1)
@@ -217,7 +216,8 @@ mod tests {
     #[test]
     fn duplicate_timestamps_get_separated() {
         let batches = vec![make_batch("posts", vec![1, 1, 1], vec![1000, 1000, 1000])];
-        let result = enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
+        let result =
+            enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
         let ts = result[0]
             .1
             .column(1)
@@ -233,8 +233,12 @@ mod tests {
     fn cross_batch_enforcement() {
         let batch1 = make_batch("posts", vec![1], vec![1000]);
         let batch2 = make_batch("posts", vec![1], vec![1000]); // duplicate across batches
-        let result =
-            enforce_inter_event_gaps(&[batch1, batch2], "user_id", "created_at", DEFAULT_MIN_GAP_MS);
+        let result = enforce_inter_event_gaps(
+            &[batch1, batch2],
+            "user_id",
+            "created_at",
+            DEFAULT_MIN_GAP_MS,
+        );
         let ts0 = result[0]
             .1
             .column(1)
@@ -254,7 +258,8 @@ mod tests {
     #[test]
     fn different_actors_independent() {
         let batches = vec![make_batch("posts", vec![1, 2, 1], vec![1000, 1000, 1000])];
-        let result = enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
+        let result =
+            enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
         let ts = result[0]
             .1
             .column(1)
@@ -284,7 +289,8 @@ mod tests {
             RecordBatch::try_new(Arc::new(schema), vec![Arc::new(fk_arr), Arc::new(ts_arr)])
                 .unwrap();
         let batches = vec![("posts".to_string(), batch)];
-        let result = enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
+        let result =
+            enforce_inter_event_gaps(&batches, "user_id", "created_at", DEFAULT_MIN_GAP_MS);
         let ts = result[0]
             .1
             .column(1)

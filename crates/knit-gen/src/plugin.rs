@@ -77,7 +77,10 @@ impl Registry {
     pub fn find(&self, name: &str) -> Option<Box<dyn FieldGenerator>> {
         let plugins = self.plugins.read().expect("plugin registry lock poisoned");
         let params = HashMap::new();
-        plugins.iter().find(|p| p.name() == name).map(|p| p.create(&params))
+        plugins
+            .iter()
+            .find(|p| p.name() == name)
+            .map(|p| p.create(&params))
     }
 
     /// Look up a plugin by name and create a generator with the given parameters.
@@ -89,7 +92,10 @@ impl Registry {
         params: &HashMap<String, String>,
     ) -> Option<Box<dyn FieldGenerator>> {
         let plugins = self.plugins.read().expect("plugin registry lock poisoned");
-        plugins.iter().find(|p| p.name() == name).map(|p| p.create(params))
+        plugins
+            .iter()
+            .find(|p| p.name() == name)
+            .map(|p| p.create(params))
     }
 
     /// List the names of all registered plugins.

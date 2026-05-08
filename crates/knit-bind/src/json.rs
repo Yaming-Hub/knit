@@ -51,15 +51,13 @@ impl<W: Write + Send> JsonSink<W> {
 #[macro_export]
 macro_rules! downcast_col {
     ($col:expr, $arr_ty:ty) => {
-        $col.as_any()
-            .downcast_ref::<$arr_ty>()
-            .ok_or_else(|| {
-                $crate::BindError::Other(format!(
-                    "Arrow type mismatch: expected {}, got {:?}",
-                    stringify!($arr_ty),
-                    $col.data_type(),
-                ))
-            })
+        $col.as_any().downcast_ref::<$arr_ty>().ok_or_else(|| {
+            $crate::BindError::Other(format!(
+                "Arrow type mismatch: expected {}, got {:?}",
+                stringify!($arr_ty),
+                $col.data_type(),
+            ))
+        })
     };
 }
 pub use downcast_col;
@@ -150,18 +148,13 @@ fn cell_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindEr
         DataType::List(_) | DataType::LargeList(_) | DataType::FixedSizeList(_, _) => {
             list_to_json(col, row)
         }
-        DataType::Map(_, _) => {
-            map_to_json(col, row)
-        }
-        DataType::Struct(_) => {
-            struct_to_json(col, row)
-        }
+        DataType::Map(_, _) => map_to_json(col, row),
+        DataType::Struct(_) => struct_to_json(col, row),
         _ => {
             // Fallback: cast the entire column to Utf8 and read the row.
             match arrow::compute::cast(col, &DataType::Utf8) {
                 Ok(casted) => {
-                    let formatted =
-                        array::cast::as_string_array(&casted).value(row).to_string();
+                    let formatted = array::cast::as_string_array(&casted).value(row).to_string();
                     Ok(serde_json::Value::String(formatted))
                 }
                 Err(_) => Ok(serde_json::Value::String("<unsupported>".to_string())),
@@ -198,7 +191,8 @@ fn list_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindEr
 fn map_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, BindError> {
     let map = downcast_col!(col, array::MapArray)?;
     let entries = map.value(row);
-    let struct_arr = entries.as_any()
+    let struct_arr = entries
+        .as_any()
         .downcast_ref::<array::StructArray>()
         .ok_or_else(|| BindError::Other("Map entries not a StructArray".to_string()))?;
     let keys = struct_arr.column(0);
@@ -275,7 +269,11 @@ impl<W: Write + Send> Sink for JsonSink<W> {
             self.first_row = false;
         }
         self.rows_written += batch.num_rows() as u64;
-        debug!(rows = batch.num_rows(), total = self.rows_written, "wrote json batch");
+        debug!(
+            rows = batch.num_rows(),
+            total = self.rows_written,
+            "wrote json batch"
+        );
         Ok(())
     }
 
@@ -285,7 +283,11 @@ impl<W: Write + Send> Sink for JsonSink<W> {
             self.bytes_written += b as u64;
         }
         self.writer.flush()?;
-        debug!(rows = self.rows_written, bytes = self.bytes_written, "json sink finished");
+        debug!(
+            rows = self.rows_written,
+            bytes = self.bytes_written,
+            "json sink finished"
+        );
         Ok(SinkStats {
             rows_written: self.rows_written,
             bytes_written: self.bytes_written,
@@ -353,7 +355,10 @@ mod tests {
     fn cell_to_json_all_basic_types() {
         // Boolean
         let arr = BooleanArray::from(vec![true]);
-        assert_eq!(cell_to_json(&arr, 0).unwrap(), serde_json::Value::Bool(true));
+        assert_eq!(
+            cell_to_json(&arr, 0).unwrap(),
+            serde_json::Value::Bool(true)
+        );
 
         // Int64
         let arr = Int64Array::from(vec![42]);
@@ -414,11 +419,7 @@ mod tests {
             (Arc::new(entries_field[0].clone()), Arc::new(keys) as _),
             (Arc::new(entries_field[1].clone()), Arc::new(vals) as _),
         ]);
-        let map_field = Field::new(
-            "entries",
-            DataType::Struct(entries_field.into()),
-            false,
-        );
+        let map_field = Field::new("entries", DataType::Struct(entries_field.into()), false);
         let offsets = OffsetBuffer::new(vec![0i32, 2].into());
         let map = MapArray::new(Arc::new(map_field), offsets, entries, None, false);
 
@@ -473,22 +474,28 @@ mod tests {
 
         let schema = Arc::new(Schema::new(vec![
             Field::new("id", DataType::Int64, false),
-            Field::new("tags", DataType::List(Arc::new(Field::new("item", DataType::Utf8, false))), false),
-            Field::new("meta", DataType::Struct(
-                vec![
-                    Field::new("name", DataType::Utf8, false),
-                    Field::new("age", DataType::Int64, false),
-                ].into()
-            ), false),
+            Field::new(
+                "tags",
+                DataType::List(Arc::new(Field::new("item", DataType::Utf8, false))),
+                false,
+            ),
+            Field::new(
+                "meta",
+                DataType::Struct(
+                    vec![
+                        Field::new("name", DataType::Utf8, false),
+                        Field::new("age", DataType::Int64, false),
+                    ]
+                    .into(),
+                ),
+                false,
+            ),
         ]));
         let batch = RecordBatch::try_new(
             schema,
-            vec![
-                Arc::new(id_arr),
-                Arc::new(list_arr),
-                Arc::new(struct_arr),
-            ],
-        ).unwrap();
+            vec![Arc::new(id_arr), Arc::new(list_arr), Arc::new(struct_arr)],
+        )
+        .unwrap();
 
         let buf = Cursor::new(Vec::new());
         let mut sink = JsonSink::new(buf, JsonMode::Jsonl).unwrap();

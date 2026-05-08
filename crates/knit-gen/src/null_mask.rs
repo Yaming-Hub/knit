@@ -59,9 +59,7 @@ pub fn apply_null_mask(
                 // every_n=0 is nonsensical; treat as "never null"
                 return Ok(array);
             }
-            let keep: BooleanArray = (0..count)
-                .map(|i| Some(i % every_n != 0))
-                .collect();
+            let keep: BooleanArray = (0..count).map(|i| Some(i % every_n != 0)).collect();
             let null_arr = arrow::array::new_null_array(array.data_type(), count);
             Ok(zip(&keep, &array, &null_arr)?)
         }
@@ -109,8 +107,13 @@ mod tests {
     #[test]
     fn probability_zero_no_nulls() {
         let arr = make_int_array(100);
-        let result =
-            apply_null_mask(arr.clone(), &NullPlan::Probability(0.0), &mut make_rng(), 100).unwrap();
+        let result = apply_null_mask(
+            arr.clone(),
+            &NullPlan::Probability(0.0),
+            &mut make_rng(),
+            100,
+        )
+        .unwrap();
         assert_eq!(result.null_count(), 0);
         // Verify values preserved
         let orig = arr.as_any().downcast_ref::<Int64Array>().unwrap();
@@ -169,8 +172,13 @@ mod tests {
     #[test]
     fn pattern_every_n_zero_no_nulls() {
         let arr = make_int_array(10);
-        let result =
-            apply_null_mask(arr.clone(), &NullPlan::Pattern { every_n: 0 }, &mut make_rng(), 10).unwrap();
+        let result = apply_null_mask(
+            arr.clone(),
+            &NullPlan::Pattern { every_n: 0 },
+            &mut make_rng(),
+            10,
+        )
+        .unwrap();
         // every_n=0 treated as "never null"
         assert_eq!(result.null_count(), 0);
         // Verify values preserved

@@ -25,9 +25,9 @@
 use std::collections::{BTreeMap, HashMap};
 
 use arrow::array::{
-    Array, Float32Array, Float64Array, Int32Array, Int64Array,
-    StringArray, TimestampMicrosecondArray, TimestampMillisecondArray,
-    TimestampNanosecondArray, TimestampSecondArray,
+    Array, Float32Array, Float64Array, Int32Array, Int64Array, StringArray,
+    TimestampMicrosecondArray, TimestampMillisecondArray, TimestampNanosecondArray,
+    TimestampSecondArray,
 };
 use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
@@ -158,10 +158,9 @@ impl ActorAccumulator {
 
     /// Record a categorical field observation.
     pub fn observe_categorical(&mut self, field: &str, value: &str) {
-        let acc = self
-            .fields
-            .entry(field.to_string())
-            .or_insert_with(|| FieldAccumulator::Categorical(TopKTracker::new(FIELD_TOPK_CAPACITY)));
+        let acc = self.fields.entry(field.to_string()).or_insert_with(|| {
+            FieldAccumulator::Categorical(TopKTracker::new(FIELD_TOPK_CAPACITY))
+        });
         if let FieldAccumulator::Categorical(tracker) = acc {
             tracker.add(value);
         }
@@ -314,10 +313,7 @@ impl ActorProfiler {
                 continue;
             }
 
-            let acc = self
-                .accumulators
-                .entry(actor_id.to_string())
-                .or_default();
+            let acc = self.accumulators.entry(actor_id.to_string()).or_default();
             acc.activity_count += 1;
 
             // Extract and observe timestamp
@@ -383,7 +379,13 @@ fn extract_string_values(array: &dyn Array) -> Option<StringArray> {
                 .as_any()
                 .downcast_ref::<arrow::array::LargeStringArray>()?;
             let values: Vec<Option<&str>> = (0..arr.len())
-                .map(|i| if arr.is_null(i) { None } else { Some(arr.value(i)) })
+                .map(|i| {
+                    if arr.is_null(i) {
+                        None
+                    } else {
+                        Some(arr.value(i))
+                    }
+                })
                 .collect();
             let result: StringArray = values.into_iter().collect();
             Some(result)
@@ -408,15 +410,26 @@ fn extract_string_values(array: &dyn Array) -> Option<StringArray> {
                 .map(|i| {
                     if array.is_null(i) {
                         None
-                    } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>() {
+                    } else if let Some(dict) = array
+                        .as_any()
+                        .downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>(
+                        )
+                    {
                         let values = dict.values().as_any().downcast_ref::<StringArray>()?;
                         let key = dict.keys().value(i) as usize;
                         Some(values.value(key).to_string())
-                    } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int8Type>>() {
+                    } else if let Some(dict) = array
+                        .as_any()
+                        .downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int8Type>>()
+                    {
                         let values = dict.values().as_any().downcast_ref::<StringArray>()?;
                         let key = dict.keys().value(i) as usize;
                         Some(values.value(key).to_string())
-                    } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int16Type>>() {
+                    } else if let Some(dict) = array
+                        .as_any()
+                        .downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int16Type>>(
+                        )
+                    {
                         let values = dict.values().as_any().downcast_ref::<StringArray>()?;
                         let key = dict.keys().value(i) as usize;
                         Some(values.value(key).to_string())
@@ -501,7 +514,10 @@ fn observe_field_value(
             }
         }
         DataType::LargeUtf8 => {
-            if let Some(arr) = array.as_any().downcast_ref::<arrow::array::LargeStringArray>() {
+            if let Some(arr) = array
+                .as_any()
+                .downcast_ref::<arrow::array::LargeStringArray>()
+            {
                 acc.observe_categorical(field_name, arr.value(row));
             }
         }
@@ -533,7 +549,10 @@ fn observe_field_value(
         }
         DataType::Dictionary(_, value_type) if is_string_dict(value_type) => {
             // Dictionary-encoded categorical strings
-            if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>() {
+            if let Some(dict) = array
+                .as_any()
+                .downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>()
+            {
                 if let Some(values) = dict.values().as_any().downcast_ref::<StringArray>() {
                     let key = dict.keys().value(row) as usize;
                     acc.observe_categorical(field_name, values.value(key));
@@ -742,8 +761,8 @@ mod tests {
             &[1.0, 2.0, 3.0],
         );
 
-        let mut profiler = ActorProfiler::new("user_id".into(), Some("created_at".into()))
-            .with_max_actors(2);
+        let mut profiler =
+            ActorProfiler::new("user_id".into(), Some("created_at".into())).with_max_actors(2);
         profiler.observe_batch(&batch, &[]);
 
         assert_eq!(profiler.actor_count(), 2);
@@ -752,9 +771,11 @@ mod tests {
 
     #[test]
     fn profiler_missing_actor_column_skips_batch() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("other_col", DataType::Utf8, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "other_col",
+            DataType::Utf8,
+            false,
+        )]));
         let arr = Arc::new(StringArray::from(vec!["x"]));
         let batch = RecordBatch::try_new(schema, vec![arr]).unwrap();
 

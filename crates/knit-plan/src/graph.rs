@@ -36,8 +36,11 @@ pub struct PhaseAssignment {
 /// so B must be generated before A.
 pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
     let entity_names: Vec<&str> = model.entities.iter().map(|e| e.name.as_str()).collect();
-    let entity_index: HashMap<&str, usize> =
-        entity_names.iter().enumerate().map(|(i, n)| (*n, i)).collect();
+    let entity_index: HashMap<&str, usize> = entity_names
+        .iter()
+        .enumerate()
+        .map(|(i, n)| (*n, i))
+        .collect();
 
     let mut graph = DiGraph::<&str, ()>::new();
     let nodes: Vec<_> = entity_names.iter().map(|n| graph.add_node(*n)).collect();
@@ -45,16 +48,17 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
     // Build edges: "from" entity has FK pointing to "to" entity,
     // so "from" depends on "to" → edge from_node → to_node.
     for rel in &model.relationships {
-        let from_idx = entity_index.get(rel.from.as_str()).ok_or_else(|| {
-            PlanError::UnknownEntity {
-                name: rel.from.clone(),
-            }
-        })?;
-        let to_idx = entity_index.get(rel.to.as_str()).ok_or_else(|| {
-            PlanError::UnknownEntity {
+        let from_idx =
+            entity_index
+                .get(rel.from.as_str())
+                .ok_or_else(|| PlanError::UnknownEntity {
+                    name: rel.from.clone(),
+                })?;
+        let to_idx = entity_index
+            .get(rel.to.as_str())
+            .ok_or_else(|| PlanError::UnknownEntity {
                 name: rel.to.clone(),
-            }
-        })?;
+            })?;
         graph.add_edge(nodes[*from_idx], nodes[*to_idx], ());
     }
 
@@ -231,8 +235,10 @@ pub fn resolve_row_counts(model: &DataModel) -> BTreeMap<String, u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use knit_core::{
+        CountSpec, DistributionKind, DistributionSpec, Entity, Relationship, RelationshipKind,
+    };
     use std::collections::BTreeMap;
-    use knit_core::{CountSpec, DistributionKind, DistributionSpec, Entity, Relationship, RelationshipKind};
 
     /// Helper to build a minimal entity with a given name and count.
     fn entity(name: &str, count: u64) -> Entity {
@@ -243,8 +249,8 @@ mod tests {
             fields: vec![],
             constraints: vec![],
             topology: None,
-        actor: false,
-        persona_distribution: None,
+            actor: false,
+            persona_distribution: None,
             activity_count: None,
         }
     }
@@ -274,8 +280,8 @@ mod tests {
             correlations: vec![],
             params: BTreeMap::new(),
             schema_version: "1.0".to_string(),
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }
     }
 
@@ -292,10 +298,7 @@ mod tests {
 
     #[test]
     fn two_independent_entities_same_phase() {
-        let model = model_with(
-            vec![entity("users", 100), entity("products", 50)],
-            vec![],
-        );
+        let model = model_with(vec![entity("users", 100), entity("products", 50)], vec![]);
         let result = assign_phases(&model).unwrap();
         assert_eq!(result.phases.len(), 1);
         // Both in phase 0, sorted alphabetically
@@ -382,7 +385,10 @@ mod tests {
         assert_eq!(dr.from_entity, "employees");
         assert_eq!(dr.to_entity, "employees");
         assert_eq!(dr.from_field, "employees_id"); // default FK naming
-        assert!(matches!(dr.strategy, DeferralStrategy::SelfReference { .. }));
+        assert!(matches!(
+            dr.strategy,
+            DeferralStrategy::SelfReference { .. }
+        ));
     }
 
     #[test]
@@ -390,10 +396,7 @@ mod tests {
         // A → B and B → A (mutual dependency)
         let model = model_with(
             vec![entity("A", 10), entity("B", 20)],
-            vec![
-                rel("A_B", "A", "B"),
-                rel("B_A", "B", "A"),
-            ],
+            vec![rel("A_B", "A", "B"), rel("B_A", "B", "A")],
         );
         let result = assign_phases(&model).unwrap();
         // Both in same phase (SCC)
@@ -474,10 +477,7 @@ mod tests {
 
     #[test]
     fn resolve_counts_fixed() {
-        let model = model_with(
-            vec![entity("a", 100), entity("b", 200)],
-            vec![],
-        );
+        let model = model_with(vec![entity("a", 100), entity("b", 200)], vec![]);
         let counts = resolve_row_counts(&model);
         assert_eq!(counts["a"], 100);
         assert_eq!(counts["b"], 200);
@@ -493,9 +493,9 @@ mod tests {
                 fields: vec![],
                 constraints: vec![],
                 topology: None,
-            actor: false,
-            persona_distribution: None,
-            activity_count: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
             }],
             vec![],
         );
@@ -521,9 +521,9 @@ mod tests {
                 fields: vec![],
                 constraints: vec![],
                 topology: None,
-            actor: false,
-            persona_distribution: None,
-            activity_count: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
             }],
             vec![],
         );
@@ -534,7 +534,7 @@ mod tests {
 
     #[test]
     fn actor_ref_creates_dependency_edge() {
-        use knit_core::{Field, DataType, NullSpec, GeneratorSpec};
+        use knit_core::{DataType, Field, GeneratorSpec, NullSpec};
         // "events" has actor_ref pointing to "users" → events depends on users
         let users = Entity {
             name: "users".to_string(),
@@ -587,14 +587,27 @@ mod tests {
         let result = assign_phases(&model).unwrap();
         // Users must be in an earlier phase than events
         assert!(result.phases.len() >= 2);
-        let users_phase = result.phases.iter().position(|p| p.contains(&"users".to_string())).unwrap();
-        let events_phase = result.phases.iter().position(|p| p.contains(&"events".to_string())).unwrap();
-        assert!(users_phase < events_phase, "users (phase {}) must come before events (phase {})", users_phase, events_phase);
+        let users_phase = result
+            .phases
+            .iter()
+            .position(|p| p.contains(&"users".to_string()))
+            .unwrap();
+        let events_phase = result
+            .phases
+            .iter()
+            .position(|p| p.contains(&"events".to_string()))
+            .unwrap();
+        assert!(
+            users_phase < events_phase,
+            "users (phase {}) must come before events (phase {})",
+            users_phase,
+            events_phase
+        );
     }
 
     #[test]
     fn actor_ref_self_referential_no_edge() {
-        use knit_core::{Field, DataType, NullSpec, GeneratorSpec};
+        use knit_core::{DataType, Field, GeneratorSpec, NullSpec};
         // Self-referential actor_ref (same entity) should not create an edge
         let users = Entity {
             name: "users".to_string(),
@@ -625,4 +638,3 @@ mod tests {
         assert_eq!(result.phases[0], vec!["users"]);
     }
 }
-
