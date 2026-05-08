@@ -3,11 +3,13 @@
 //! Wraps any inner [`FieldGenerator`] and deduplicates output values via retry.
 //! Uses a [`Mutex`]-protected set to track seen values across calls.
 //!
-//! **Partition scope:** uniqueness is enforced within a single partition. For
-//! multi-partition entities (>1M rows), duplicates may still occur across
-//! partitions. This is a known limitation.
+//! **Cross-partition scope:** when the engine detects `Unique` fields in a
+//! multi-partition entity, it switches to sequential partition generation and
+//! shares the seen-set across partitions via [`UniqueGenerator::with_shared_seen`].
+//! This ensures global uniqueness while preserving deterministic output.
 
 use std::collections::HashSet;
+use std::sync::Arc;
 
 use parking_lot::Mutex;
 
@@ -33,21 +35,23 @@ use crate::traits::FieldGenerator;
 /// The seen-value set is protected by a [`Mutex`], satisfying the
 /// `Send + Sync` requirement of [`FieldGenerator`].
 ///
-/// # Limitations
+/// # Cross-partition uniqueness
 ///
-/// Uniqueness is tracked per generator instance (i.e. per partition). For
-/// multi-partition entities, duplicates can appear across partitions.
+/// When constructed with [`with_shared_seen`](Self::with_shared_seen), the
+/// seen-set is shared across multiple generator instances (one per partition).
+/// The engine uses sequential partition generation in this case to preserve
+/// deterministic output.
 pub struct UniqueGenerator {
     /// The wrapped inner generator.
     inner: Box<dyn FieldGenerator>,
     /// Maximum retry rounds before accepting duplicates for remaining rows.
     max_retries: u32,
     /// Set of previously emitted values (string representation).
-    seen: Mutex<HashSet<String>>,
+    seen: Arc<Mutex<HashSet<String>>>,
 }
 
 impl UniqueGenerator {
-    /// Create a new uniqueness-enforcing wrapper.
+    /// Create a new uniqueness-enforcing wrapper with a fresh (empty) seen-set.
     ///
     /// * `inner` – the generator to wrap.
     /// * `max_retries` – how many retry rounds when duplicates are produced.
@@ -55,7 +59,24 @@ impl UniqueGenerator {
         Self {
             inner,
             max_retries,
-            seen: Mutex::new(HashSet::new()),
+            seen: Arc::new(Mutex::new(HashSet::new())),
+        }
+    }
+
+    /// Create a uniqueness-enforcing wrapper that shares a seen-set with other
+    /// instances (e.g. across partitions).
+    ///
+    /// The caller is responsible for ensuring deterministic access order
+    /// (sequential partition generation) when sharing.
+    pub fn with_shared_seen(
+        inner: Box<dyn FieldGenerator>,
+        max_retries: u32,
+        seen: Arc<Mutex<HashSet<String>>>,
+    ) -> Self {
+        Self {
+            inner,
+            max_retries,
+            seen,
         }
     }
 }
@@ -460,5 +481,69 @@ mod tests {
             .map(|i| float_arr.value(i).to_bits())
             .collect();
         assert_eq!(values.len(), 3, "all 3 unique floats should be produced");
+    }
+
+    #[test]
+    fn shared_seen_set_cross_partition_uniqueness() {
+        // Two generators sharing the same seen-set should not produce overlapping values.
+        use crate::generators::uuid_gen::UuidGenerator;
+
+        let shared = Arc::new(Mutex::new(HashSet::new()));
+        let gen1 =
+            UniqueGenerator::with_shared_seen(Box::new(UuidGenerator), 100, Arc::clone(&shared));
+        let gen2 =
+            UniqueGenerator::with_shared_seen(Box::new(UuidGenerator), 100, Arc::clone(&shared));
+        let ctx = test_ctx();
+
+        let mut rng1 = ChaCha8Rng::seed_from_u64(1);
+        let arr1 = gen1.generate(&mut rng1, 50, &ctx);
+        let mut rng2 = ChaCha8Rng::seed_from_u64(2);
+        let arr2 = gen2.generate(&mut rng2, 50, &ctx);
+
+        let s1 = arr1.as_any().downcast_ref::<StringArray>().unwrap();
+        let s2 = arr2.as_any().downcast_ref::<StringArray>().unwrap();
+        let set1: HashSet<&str> = (0..s1.len()).map(|i| s1.value(i)).collect();
+        let set2: HashSet<&str> = (0..s2.len()).map(|i| s2.value(i)).collect();
+        assert_eq!(set1.len(), 50);
+        assert_eq!(set2.len(), 50);
+        assert!(
+            set1.is_disjoint(&set2),
+            "shared seen-set should prevent cross-partition duplicates"
+        );
+    }
+
+    #[test]
+    fn shared_seen_deterministic() {
+        // Shared-seen generators must produce identical output across runs.
+        use crate::generators::uuid_gen::UuidGenerator;
+
+        let run = || {
+            let shared = Arc::new(Mutex::new(HashSet::new()));
+            let gen1 = UniqueGenerator::with_shared_seen(
+                Box::new(UuidGenerator),
+                100,
+                Arc::clone(&shared),
+            );
+            let gen2 = UniqueGenerator::with_shared_seen(
+                Box::new(UuidGenerator),
+                100,
+                Arc::clone(&shared),
+            );
+            let ctx = test_ctx();
+            let mut rng1 = ChaCha8Rng::seed_from_u64(10);
+            let a1 = gen1.generate(&mut rng1, 20, &ctx);
+            let mut rng2 = ChaCha8Rng::seed_from_u64(20);
+            let a2 = gen2.generate(&mut rng2, 20, &ctx);
+            (a1, a2)
+        };
+
+        let (a1_r1, a2_r1) = run();
+        let (a1_r2, a2_r2) = run();
+        let s = |a: &ArrayRef| {
+            let s = a.as_any().downcast_ref::<StringArray>().unwrap();
+            (0..s.len()).map(|i| s.value(i).to_string()).collect::<Vec<_>>()
+        };
+        assert_eq!(s(&a1_r1), s(&a1_r2), "partition 1 must be deterministic");
+        assert_eq!(s(&a2_r1), s(&a2_r2), "partition 2 must be deterministic");
     }
 }

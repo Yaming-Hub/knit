@@ -32,6 +32,12 @@ use knit_plan::GeneratorPlan;
 
 use crate::traits::FieldGenerator;
 
+/// Shared seen-set for cross-partition uniqueness enforcement.
+///
+/// When present, `Unique` generators use the shared set instead of creating
+/// a private one so that uniqueness is enforced globally across partitions.
+pub type SharedSeen = std::sync::Arc<parking_lot::Mutex<std::collections::HashSet<String>>>;
+
 /// Create a boxed [`FieldGenerator`] from a compiled [`GeneratorPlan`].
 ///
 /// This is the factory function invoked once per field during engine
@@ -41,6 +47,15 @@ use crate::traits::FieldGenerator;
 /// to a null-constant generator with a warning, since there is no key-store
 /// available at the factory level.
 pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
+    create_generator_with_seen(plan, None)
+}
+
+/// Like [`create_generator`], but threads a shared seen-set through to any
+/// `Unique` sub-generators so uniqueness spans all partitions.
+pub fn create_generator_with_seen(
+    plan: &GeneratorPlan,
+    shared_seen: Option<&SharedSeen>,
+) -> Box<dyn FieldGenerator> {
     match plan {
         GeneratorPlan::Distribution {
             kind,
@@ -72,7 +87,11 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             depends_on.clone(),
         )),
         GeneratorPlan::Composite { element, length } => {
-            Box::new(composite::CompositeGenerator::new(element, length))
+            Box::new(composite::CompositeGenerator::new_with_seen(
+                element,
+                length,
+                shared_seen,
+            ))
         }
         GeneratorPlan::Faker {
             category,
@@ -117,8 +136,16 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             *correlation,
         )),
         GeneratorPlan::Unique { inner, max_retries } => {
-            let inner_gen = create_generator(inner);
-            Box::new(unique::UniqueGenerator::new(inner_gen, *max_retries))
+            let inner_gen = create_generator_with_seen(inner, shared_seen);
+            if let Some(seen) = shared_seen {
+                Box::new(unique::UniqueGenerator::with_shared_seen(
+                    inner_gen,
+                    *max_retries,
+                    std::sync::Arc::clone(seen),
+                ))
+            } else {
+                Box::new(unique::UniqueGenerator::new(inner_gen, *max_retries))
+            }
         }
         GeneratorPlan::Topology { model, params } => match model {
             knit_plan::TopologyModel::BarabasiAlbert => {
@@ -136,13 +163,14 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             field,
             branches,
             default,
-        } => Box::new(conditional::ConditionalGenerator::new(
+        } => Box::new(conditional::ConditionalGenerator::new_with_seen(
             field.clone(),
             branches
                 .iter()
                 .map(|(v, p)| (v.clone(), (**p).clone()))
                 .collect(),
             (**default).clone(),
+            shared_seen,
         )),
         GeneratorPlan::Dictionary {
             entries, expansion, ..
@@ -203,5 +231,23 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
                 }
             }
         }
+    }
+}
+
+/// Recursively check whether a [`GeneratorPlan`] contains a `Unique` node
+/// at any nesting depth (e.g. inside `Conditional` or `Composite`).
+pub fn plan_contains_unique(plan: &GeneratorPlan) -> bool {
+    match plan {
+        GeneratorPlan::Unique { .. } => true,
+        GeneratorPlan::Conditional {
+            branches, default, ..
+        } => {
+            branches.iter().any(|(_, p)| plan_contains_unique(p))
+                || plan_contains_unique(default)
+        }
+        GeneratorPlan::Composite { element, length } => {
+            plan_contains_unique(element) || plan_contains_unique(length)
+        }
+        _ => false,
     }
 }

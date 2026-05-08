@@ -13,7 +13,7 @@ use rand::RngCore;
 use knit_plan::GeneratorPlan;
 
 use crate::context::GenContext;
-use crate::generators::create_generator;
+use crate::generators::{create_generator, create_generator_with_seen, SharedSeen};
 use crate::traits::FieldGenerator;
 
 /// Generate JSON array strings by composing an element generator and a length generator.
@@ -36,6 +36,19 @@ impl CompositeGenerator {
         Self {
             element_gen: create_generator(element_plan),
             length_gen: create_generator(length_plan),
+        }
+    }
+
+    /// Like [`new`](Self::new), but threads a shared seen-set through to any
+    /// nested `Unique` sub-generators.
+    pub fn new_with_seen(
+        element_plan: &GeneratorPlan,
+        length_plan: &GeneratorPlan,
+        shared_seen: Option<&SharedSeen>,
+    ) -> Self {
+        Self {
+            element_gen: create_generator_with_seen(element_plan, shared_seen),
+            length_gen: create_generator_with_seen(length_plan, shared_seen),
         }
     }
 }
