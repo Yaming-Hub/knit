@@ -2,8 +2,47 @@ schema_version = "1.0"
 
 [model]
 name = "hr_org"
-description = "HR organisation with departments and employees in a hierarchy"
+description = """
+HR organisation with departments, employees, and tasks. Employees have
+behavioral personas (high_performer, steady, new_hire, veteran) that drive
+task volume via activity_count and work-hour biases via actor_temporal.
+Manager relationships form a tree hierarchy. Demonstrates persona-driven
+activity patterns in an enterprise setting.
+"""
 seed = 20240501
+
+# ── Personas ──────────────────────────────────────────────────────────
+# Employee work-style segments that drive task generation rates and
+# work-hour preferences.
+# Trait units: activity_rate = tasks/month, peak_hours = preferred work hour (0–23).
+
+[[personas]]
+name = "high_performer"
+weight = 0.15
+[personas.traits]
+activity_rate = 22.0
+peak_hours = 9.0
+
+[[personas]]
+name = "steady_contributor"
+weight = 0.50
+[personas.traits]
+activity_rate = 8.0
+peak_hours = 10.0
+
+[[personas]]
+name = "new_hire"
+weight = 0.20
+[personas.traits]
+activity_rate = 5.0
+peak_hours = 11.0
+
+[[personas]]
+name = "veteran"
+weight = 0.15
+[personas.traits]
+activity_rate = 12.0
+peak_hours = 8.0
 
 # ── Departments ──────────────────────────────────────────────────────
 
@@ -72,11 +111,13 @@ choices = [
     { value = "Tokyo", weight = 0.10 },
 ]
 
-# ── Employees ────────────────────────────────────────────────────────
+# ── Employees (actor entity) ─────────────────────────────────────────
 
 [[entities]]
 name = "employees"
 count = 500
+actor = true
+persona_distribution = "personas"
 
 [[entities.fields]]
 name = "id"
@@ -147,6 +188,16 @@ mu = 11.2
 sigma = 0.5
 
 [[entities.fields]]
+name = "hire_date"
+data_type = "datetime"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 1546300800.0
+max = 1704067200.0
+
+[[entities.fields]]
 name = "years_experience"
 data_type = "int"
 [entities.fields.generator]
@@ -166,6 +217,87 @@ kind = "beta"
 alpha = 5.0
 beta = 2.0
 
+# ── Tasks (activity-driven) ──────────────────────────────────────────
+
+[[entities]]
+name = "tasks"
+count = 5000
+[entities.activity_count]
+actor_field = "assignee_id"
+trait = "activity_rate"
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "assignee_id"
+data_type = "int"
+actor_column = true
+
+[[entities.fields]]
+name = "title"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "sentence"
+args = []
+
+[[entities.fields]]
+name = "priority"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "critical", weight = 0.05 },
+    { value = "high", weight = 0.20 },
+    { value = "medium", weight = 0.45 },
+    { value = "low", weight = 0.30 },
+]
+
+[[entities.fields]]
+name = "status"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "open", weight = 0.15 },
+    { value = "in_progress", weight = 0.25 },
+    { value = "review", weight = 0.10 },
+    { value = "done", weight = 0.40 },
+    { value = "blocked", weight = 0.10 },
+]
+
+[[entities.fields]]
+name = "created_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
+[entities.fields.generator.temporal_after]
+entity = "employees"
+field = "hire_date"
+fk = "assignee_id"
+
+[[entities.fields]]
+name = "story_points"
+data_type = "int"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = 1, weight = 0.20 },
+    { value = 2, weight = 0.25 },
+    { value = 3, weight = 0.25 },
+    { value = 5, weight = 0.15 },
+    { value = 8, weight = 0.10 },
+    { value = 13, weight = 0.05 },
+]
+
 # ── Relationships ────────────────────────────────────────────────────
 
 [[relationships]]
@@ -181,3 +313,10 @@ from = "employees"
 to = "employees"
 kind = "many_to_one"
 foreign_key = "manager_id"
+
+[[relationships]]
+name = "task_assignee"
+from = "tasks"
+to = "employees"
+kind = "many_to_one"
+foreign_key = "assignee_id"
