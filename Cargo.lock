@@ -947,7 +947,7 @@ dependencies = [
 
 [[package]]
 name = "knit-bind"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "bytes",
@@ -962,7 +962,7 @@ dependencies = [
 
 [[package]]
 name = "knit-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
@@ -990,7 +990,7 @@ dependencies = [
 
 [[package]]
 name = "knit-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "serde",
@@ -1002,7 +1002,7 @@ dependencies = [
 
 [[package]]
 name = "knit-gen"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "chrono",
@@ -1020,7 +1020,7 @@ dependencies = [
 
 [[package]]
 name = "knit-integration-tests"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "assert_cmd",
@@ -1037,7 +1037,7 @@ dependencies = [
 
 [[package]]
 name = "knit-learn"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "arrow-csv",
@@ -1059,7 +1059,7 @@ dependencies = [
 
 [[package]]
 name = "knit-noise"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "bitflags 2.11.1",
@@ -1074,7 +1074,7 @@ dependencies = [
 
 [[package]]
 name = "knit-plan"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "knit-core",
  "petgraph",
@@ -1086,7 +1086,7 @@ dependencies = [
 
 [[package]]
 name = "knit-schema"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "indoc",
  "knit-core",
