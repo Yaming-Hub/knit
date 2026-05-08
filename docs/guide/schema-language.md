@@ -342,24 +342,47 @@ name = "total"
 data_type = "float"
 [entities.fields.generator]
 type = "derived"
-expr = "quantity * unit_price"
+expr = "${quantity} * ${unit_price}"
 ```
 
-The expression language supports 50+ functions:
+The expression language supports 34+ built-in functions with SQL-like null
+semantics. Reference other fields with `${field_name}` and parameters with
+`${param.key}`.
 
 ```toml
 # String manipulation
-expr = "upper(first_name) || ' ' || upper(last_name)"
+expr = "upper(${first_name}) + \" \" + upper(${last_name})"
 
-# Date arithmetic
-expr = "date_add(start_date, duration_days, 'day')"
+# Math functions
+expr = "round(${amount} * ${param.tax_rate}, 2)"
+expr = "sqrt(pow(${x}, 2) + pow(${y}, 2))"
 
 # Conditional logic
-expr = "case when age >= 18 then 'adult' else 'minor' end"
+expr = "if(${age} >= 18, \"adult\", \"minor\")"
+expr = "case(${score} >= 90, \"A\", ${score} >= 80, \"B\", ${score} >= 70, \"C\", \"F\")"
 
-# Numeric
-expr = "round(amount * tax_rate, 2)"
+# String predicates
+expr = "if(starts_with(${email}, \"admin\"), \"staff\", \"user\")"
+
+# Padding and formatting
+expr = "pad_left(cast_string(${id}), 8, \"0\")"
+
+# Hashing for deterministic bucketing
+expr = "hash(${user_id}) % 10"
+
+# Global row numbering
+expr = "row_number()"
 ```
+
+**Function categories:**
+
+| Category | Functions |
+|----------|-----------|
+| Math | `abs`, `ceil`, `floor`, `round`, `min`, `max`, `clamp`, `sqrt`, `pow`, `ln`, `log`, `exp` |
+| String | `upper`, `lower`, `trim`, `len`, `concat`, `substr`, `replace`, `left`, `right`, `pad_left`, `pad_right`, `starts_with`, `ends_with`, `contains` |
+| Conditional | `if`, `case`, `coalesce`, `nullif` |
+| Type cast | `cast_int`, `cast_float`, `cast_string` |
+| Utility | `hash`, `row_number` |
 
 See the [Weave Specification](../weave-spec.md) for the full expression
 function reference.

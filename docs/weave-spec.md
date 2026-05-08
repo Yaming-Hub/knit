@@ -708,17 +708,17 @@ name and must be defined *before* the derived field (topological ordering).
 [[entities.fields]]
 name = "total"
 type = "float"
-generator = { type = "derived", params = { expr = "quantity * unit_price * (1 - discount)" } }
+generator = { type = "derived", params = { expr = "${quantity} * ${unit_price} * (1 - ${discount})" } }
 
 [[entities.fields]]
 name = "full_name"
 type = "string"
-generator = { type = "derived", params = { expr = "first_name + ' ' + last_name" } }
+generator = { type = "derived", params = { expr = "${first_name} + \" \" + ${last_name}" } }
 
 [[entities.fields]]
 name = "age_group"
 type = "string"
-generator = { type = "derived", params = { expr = "case(age < 18, 'minor', age < 65, 'adult', 'senior')" } }
+generator = { type = "derived", params = { expr = "case(${age} < 18, \"minor\", ${age} < 65, \"adult\", \"senior\")" } }
 ```
 
 #### Expression Language (Weave Expressions)
@@ -733,57 +733,79 @@ A small, deterministic expression language with explicit scope:
 
 | Function | Description | Example |
 |----------|-------------|---------|
-| **General** | | |
-| `case(cond, val, ...)` | Multi-branch conditional | `case(x > 0, "pos", x < 0, "neg", "zero")` |
-| `coalesce(a, b, ...)` | First non-null value | `coalesce(nickname, first_name)` |
 | **String** | | |
-| `concat(a, b, ...)` | String concatenation | `concat(first, " ", last)` |
-| `upper(s)` / `lower(s)` | Case conversion | `upper(country_code)` |
-| `len(s)` | String length | `len(name)` |
-| `substr(s, start, len)` | Substring | `substr(code, 0, 3)` |
+| `concat(a, b, ...)` | String concatenation | `concat(${first}, " ", ${last})` |
+| `upper(s)` / `lower(s)` | Case conversion | `upper(${country_code})` |
+| `len(s)` | String length (chars) | `len(${name})` |
+| `substr(s, start, len)` | Substring | `substr(${code}, 0, 3)` |
+| `left(s, n)` | First n characters | `left(${name}, 1)` |
+| `right(s, n)` | Last n characters | `right(${phone}, 4)` |
+| `pad_left(s, n, fill)` | Pad left to length n | `pad_left(${id}, 6, "0")` |
+| `pad_right(s, n, fill)` | Pad right to length n | `pad_right(${name}, 20, " ")` |
+| `starts_with(s, prefix)` | Starts-with predicate | `starts_with(${email}, "admin")` |
+| `ends_with(s, suffix)` | Ends-with predicate | `ends_with(${file}, ".csv")` |
+| `contains(s, needle)` | Contains predicate | `contains(${name}, "test")` |
+| `replace(s, from, to)` | Replace substring | `replace(${name}, " ", "_")` |
 | **Numeric** | | |
-| `round(x, n)` | Round to n decimals | `round(price, 2)` |
-| `floor(x)` / `ceil(x)` | Floor/ceiling | `floor(age)` |
-| `abs(x)` | Absolute value | `abs(balance)` |
-| `clamp(x, min, max)` | Clamp to range | `clamp(score, 0, 100)` |
+| `round(x, n)` | Round to n decimals | `round(${price}, 2)` |
+| `floor(x)` / `ceil(x)` | Floor/ceiling | `floor(${age})` |
+| `abs(x)` | Absolute value | `abs(${balance})` |
+| `clamp(x, min, max)` | Clamp to range | `clamp(${score}, 0, 100)` |
+| `min(a, b)` / `max(a, b)` | Minimum / maximum | `min(${stock}, ${demand})` |
+| `sqrt(x)` | Square root (negative → null) | `sqrt(${variance})` |
+| `pow(base, exp)` | Exponentiation | `pow(2, ${bits})` |
+| `ln(x)` | Natural logarithm (x ≤ 0 → null) | `ln(${price})` |
+| `log(x, base)` | Logarithm (domain checks) | `log(${value}, 10)` |
+| `exp(x)` | Exponential (overflow → null) | `exp(${rate})` |
+| **Conditional** | | |
+| `if(cond, then, else)` | Conditional | `if(${age} >= 18, "adult", "minor")` |
+| `case(cond, val, ...)` | Multi-branch conditional | `case(${x} > 0, "pos", ${x} < 0, "neg", "zero")` |
+| `coalesce(a, b, ...)` | First non-null value | `coalesce(${nickname}, ${first_name})` |
+| `nullif(a, b)` | Null if equal | `nullif(${value}, 0)` |
+| **Type Cast** | | |
+| `cast_int(x)` | Convert to integer | `cast_int(${price})` |
+| `cast_float(x)` | Convert to float | `cast_float(${count})` |
+| `cast_string(x)` | Convert to string | `cast_string(${id})` |
+| **Utility** | | |
+| `hash(s)` | Deterministic hash | `hash(${email})` |
+| `row_number()` | Global row index (0-based) | `row_number()` |
 | **Random** | | |
 | `random_int(min, max)` | Random int in range | `random_int(1, 100)` |
 | `random_float(min, max)` | Random float in range | `random_float(0.0, 1.0)` |
 | `random_duration(min, max)` | Random duration (shorthand strings) | `random_duration("0s", "24h")` |
-| `hash(s)` | Deterministic hash | `hash(email)` |
-| **Date / Time Construction** | | |
+| **Date / Time Construction** *(planned)* | | |
 | `make_date(y, m, d)` | Construct a date from parts | `make_date(2024, 3, 15)` |
 | `make_time(h, m, s)` | Construct a time from parts | `make_time(14, 30, 0)` |
 | `make_datetime(y, M, d, h, m, s)` | Construct a datetime | `make_datetime(2024, 3, 15, 14, 30, 0)` |
 | `make_duration(n, unit)` | Construct a duration | `make_duration(30, "day")` |
 | `to_date(s, fmt)` | Parse string to date | `to_date("2024-03-15", "%Y-%m-%d")` |
 | `to_datetime(s, fmt)` | Parse string to datetime | `to_datetime("2024-03-15 14:30", "%Y-%m-%d %H:%M")` |
-| `epoch_seconds(dt)` | Datetime to Unix epoch seconds | `epoch_seconds(created_at)` |
+| `epoch_seconds(dt)` | Datetime to Unix epoch seconds | `epoch_seconds(${created_at})` |
 | `from_epoch(n)` | Unix epoch seconds to datetime | `from_epoch(1710500000)` |
-| **Date / Time Extraction** | | |
-| `year(d)` | Extract year | `year(created_at)` → `2024` |
-| `month(d)` | Extract month (1–12) | `month(created_at)` → `3` |
-| `day(d)` | Extract day of month (1–31) | `day(created_at)` → `15` |
-| `hour(dt)` | Extract hour (0–23) | `hour(event_time)` → `14` |
-| `minute(dt)` | Extract minute (0–59) | `minute(event_time)` → `30` |
-| `second(dt)` | Extract second (0–59) | `second(event_time)` → `45` |
-| `day_of_week(d)` | Day of week (0=Mon, 6=Sun) | `day_of_week(order_date)` → `2` |
-| `day_of_year(d)` | Day of year (1–366) | `day_of_year(order_date)` → `75` |
-| `week_of_year(d)` | ISO week number (1–53) | `week_of_year(order_date)` → `11` |
-| `quarter(d)` | Quarter (1–4) | `quarter(order_date)` → `1` |
-| **Date / Time Arithmetic** | | |
-| `date_add(d, n, unit)` | Add to date/datetime | `date_add(start_date, 30, "day")` |
-| `date_sub(d, n, unit)` | Subtract from date/datetime | `date_sub(end_date, 1, "month")` |
-| `date_diff(d1, d2, unit)` | Difference between two dates | `date_diff(end_date, start_date, "day")` |
-| `duration_add(d, dur)` | Add a duration to date/datetime | `duration_add(start, processing_time)` |
-| `start_of(d, unit)` | Truncate to start of unit | `start_of(event_time, "hour")` → `14:00:00` |
-| `end_of(d, unit)` | End of unit boundary | `end_of(order_date, "month")` → last day |
-| **Date / Time Formatting** | | |
-| `format_date(d, fmt)` | Format date/datetime as string | `format_date(created_at, "%Y-%m")` |
-| `format_duration(dur, style)` | Format duration as string | `format_duration(elapsed, "hms")` |
-| **Timezone** | | |
-| `to_timezone(dt, tz)` | Convert datetimetz to timezone | `to_timezone(event_time, "Asia/Tokyo")` |
-| `timezone_offset(dt)` | Get UTC offset as duration | `timezone_offset(event_time)` → `"-08:00"` |
+| **Date / Time Extraction** *(planned)* | | |
+| `year(d)` | Extract year | `year(${created_at})` → `2024` |
+| `month(d)` | Extract month (1–12) | `month(${created_at})` → `3` |
+| `day(d)` | Extract day of month (1–31) | `day(${created_at})` → `15` |
+| `hour(dt)` | Extract hour (0–23) | `hour(${event_time})` → `14` |
+| `minute(dt)` | Extract minute (0–59) | `minute(${event_time})` → `30` |
+| `second(dt)` | Extract second (0–59) | `second(${event_time})` → `45` |
+| `day_of_week(d)` | Day of week (0=Mon, 6=Sun) | `day_of_week(${order_date})` → `2` |
+| `day_of_year(d)` | Day of year (1–366) | `day_of_year(${order_date})` → `75` |
+| `week_of_year(d)` | ISO week number (1–53) | `week_of_year(${order_date})` → `11` |
+| `quarter(d)` | Quarter (1–4) | `quarter(${order_date})` → `1` |
+| **Date / Time Arithmetic** *(planned)* | | |
+| `date_add(d, n, unit)` | Add to date/datetime | `date_add(${start_date}, 30, "day")` |
+| `date_sub(d, n, unit)` | Subtract from date/datetime | `date_sub(${end_date}, 1, "month")` |
+| `date_diff(d1, d2, unit)` | Difference between two dates | `date_diff(${end_date}, ${start_date}, "day")` |
+| `duration_add(d, dur)` | Add a duration to date/datetime | `duration_add(${start}, ${processing_time})` |
+| `start_of(d, unit)` | Truncate to start of unit | `start_of(${event_time}, "hour")` → `14:00:00` |
+| `end_of(d, unit)` | End of unit boundary | `end_of(${order_date}, "month")` → last day |
+| **Date / Time Formatting** *(planned)* | | |
+| `format_date(d, fmt)` | Format date/datetime as string | `format_date(${created_at}, "%Y-%m")` |
+| `format_duration(dur, style)` | Format duration as string | `format_duration(${elapsed}, "hms")` |
+| **Timezone** *(planned)* | | |
+| `to_timezone(dt, tz)` | Convert datetimetz to timezone | `to_timezone(${event_time}, "Asia/Tokyo")` |
+| `timezone_offset(dt)` | Get UTC offset as duration | `timezone_offset(${event_time})` → `"-08:00"` |
 
 **Date/time unit strings** (used in `date_add`, `date_diff`, `start_of`, etc.):
 `"microsecond"`, `"millisecond"`, `"second"`, `"minute"`, `"hour"`, `"day"`,

@@ -315,6 +315,14 @@ static BUILTINS: &[FuncSig] = &[
         return_type: ExprType::Int,
         null_safe: true,
     },
+    FuncSig {
+        name: "case",
+        min_args: 2,
+        max_args: 32,
+        arg_types: &[],
+        return_type: ExprType::Unknown,
+        null_safe: true,
+    },
 ];
 
 #[cfg(test)]
@@ -346,7 +354,7 @@ mod tests {
     #[test]
     fn available_names_not_empty() {
         let names = available_names();
-        assert!(names.len() >= 33);
+        assert!(names.len() >= 34);
         assert!(names.contains(&"abs"));
         assert!(names.contains(&"concat"));
     }
