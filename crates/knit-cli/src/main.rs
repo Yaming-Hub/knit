@@ -189,13 +189,17 @@ enum Command {
         #[arg(long)]
         personas: Option<usize>,
     },
-    /// Inspect an incremental learning state file.
+    /// Inspect a learning state file or schema file.
     Inspect {
-        /// Path to the state file to inspect.
-        state: String,
+        /// Path to the state file (.json) or schema file (.toml) to inspect.
+        #[arg(name = "FILE")]
+        file: String,
         /// Show per-column details (cardinality, nulls, top values).
         #[arg(long)]
         columns: bool,
+        /// Show actor, persona, and relationship summary (schema files only).
+        #[arg(long)]
+        actors: bool,
     },
     /// Generate shell completion scripts.
     Completions {
@@ -309,8 +313,8 @@ fn main() -> anyhow::Result<()> {
             };
             learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, entities, actors_opts.as_ref(), &cli)
         }
-        Command::Inspect { state, columns } => {
-            inspect::run(state, *columns, &cli)
+        Command::Inspect { file, columns, actors } => {
+            inspect::run(file, *columns, *actors, &cli)
         }
         Command::Completions { shell } => {
             clap_complete::generate(
