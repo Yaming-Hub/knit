@@ -643,10 +643,11 @@ knit inspect state.json --actors
 
 ### 12.3 Example Datasets
 
-Create example datasets that exercise human behavioral modeling:
-- `examples/email-traffic.weave.toml` — messaging with sender/receiver personas
-- `examples/hr-org.weave.toml` — hierarchical org with manager relationships
-- `examples/ecommerce-users.weave.toml` — customer behavioral segments
+Example datasets that exercise human behavioral modeling:
+- `examples/email_traffic.weave.toml` — messaging with sender/receiver personas
+- `examples/hr_org.weave.toml` — hierarchical org with manager relationships and activity-driven tasks
+- `examples/ecommerce_behavioral.weave.toml` — customer behavioral segments with persona-driven purchasing
+- `examples/social_platform.weave.toml` — social network with graphs, actor_temporal patterns, and burst sessions
 
 ---
 
