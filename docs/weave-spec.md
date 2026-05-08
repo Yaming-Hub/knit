@@ -769,11 +769,11 @@ A small, deterministic expression language with explicit scope:
 | **Utility** | | |
 | `hash(s)` | Deterministic hash | `hash(${email})` |
 | `row_number()` | Global row index (0-based) | `row_number()` |
-| **Random** | | |
+| **Random** *(planned)* | | |
 | `random_int(min, max)` | Random int in range | `random_int(1, 100)` |
 | `random_float(min, max)` | Random float in range | `random_float(0.0, 1.0)` |
 | `random_duration(min, max)` | Random duration (shorthand strings) | `random_duration("0s", "24h")` |
-| **Date / Time Construction** *(planned)* | | |
+| **Date / Time Construction** | | |
 | `make_date(y, m, d)` | Construct a date from parts | `make_date(2024, 3, 15)` |
 | `make_time(h, m, s)` | Construct a time from parts | `make_time(14, 30, 0)` |
 | `make_datetime(y, M, d, h, m, s)` | Construct a datetime | `make_datetime(2024, 3, 15, 14, 30, 0)` |
@@ -782,7 +782,7 @@ A small, deterministic expression language with explicit scope:
 | `to_datetime(s, fmt)` | Parse string to datetime | `to_datetime("2024-03-15 14:30", "%Y-%m-%d %H:%M")` |
 | `epoch_seconds(dt)` | Datetime to Unix epoch seconds | `epoch_seconds(${created_at})` |
 | `from_epoch(n)` | Unix epoch seconds to datetime | `from_epoch(1710500000)` |
-| **Date / Time Extraction** *(planned)* | | |
+| **Date / Time Extraction** | | |
 | `year(d)` | Extract year | `year(${created_at})` → `2024` |
 | `month(d)` | Extract month (1–12) | `month(${created_at})` → `3` |
 | `day(d)` | Extract day of month (1–31) | `day(${created_at})` → `15` |
@@ -793,14 +793,14 @@ A small, deterministic expression language with explicit scope:
 | `day_of_year(d)` | Day of year (1–366) | `day_of_year(${order_date})` → `75` |
 | `week_of_year(d)` | ISO week number (1–53) | `week_of_year(${order_date})` → `11` |
 | `quarter(d)` | Quarter (1–4) | `quarter(${order_date})` → `1` |
-| **Date / Time Arithmetic** *(planned)* | | |
+| **Date / Time Arithmetic** | | |
 | `date_add(d, n, unit)` | Add to date/datetime | `date_add(${start_date}, 30, "day")` |
 | `date_sub(d, n, unit)` | Subtract from date/datetime | `date_sub(${end_date}, 1, "month")` |
 | `date_diff(d1, d2, unit)` | Difference between two dates | `date_diff(${end_date}, ${start_date}, "day")` |
 | `duration_add(d, dur)` | Add a duration to date/datetime | `duration_add(${start}, ${processing_time})` |
 | `start_of(d, unit)` | Truncate to start of unit | `start_of(${event_time}, "hour")` → `14:00:00` |
 | `end_of(d, unit)` | End of unit boundary | `end_of(${order_date}, "month")` → last day |
-| **Date / Time Formatting** *(planned)* | | |
+| **Date / Time Formatting** | | |
 | `format_date(d, fmt)` | Format date/datetime as string | `format_date(${created_at}, "%Y-%m")` |
 | `format_duration(dur, style)` | Format duration as string | `format_duration(${elapsed}, "hms")` |
 | **Timezone** *(planned)* | | |

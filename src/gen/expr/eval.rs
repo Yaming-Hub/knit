@@ -14,8 +14,13 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use arrow::array::{Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray};
+use arrow::array::{
+    Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray,
+    TimestampMicrosecondArray, TimestampMillisecondArray, TimestampNanosecondArray,
+    TimestampSecondArray,
+};
 use arrow::datatypes::DataType;
+use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, Timelike};
 use siphasher::sip::SipHasher;
 
 use super::ast::{BinOp, Expr, LiteralValue, UnOp};
@@ -101,6 +106,34 @@ fn as_bool(arr: &ArrayRef) -> Option<&BooleanArray> {
     arr.as_any().downcast_ref::<BooleanArray>()
 }
 
+/// Extract millisecond timestamps from any temporal array type.
+///
+/// Handles `TimestampSecondArray`, `TimestampMillisecondArray`,
+/// `TimestampMicrosecondArray`, `TimestampNanosecondArray`, and `Int64Array`.
+fn as_millis(arr: &ArrayRef) -> Option<Vec<Option<i64>>> {
+    let len = arr.len();
+    if let Some(a) = arr.as_any().downcast_ref::<TimestampMillisecondArray>() {
+        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i)) }).collect())
+    } else if let Some(a) = arr.as_any().downcast_ref::<TimestampSecondArray>() {
+        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i) * 1_000) }).collect())
+    } else if let Some(a) = arr.as_any().downcast_ref::<TimestampMicrosecondArray>() {
+        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i).div_euclid(1_000)) }).collect())
+    } else if let Some(a) = arr.as_any().downcast_ref::<TimestampNanosecondArray>() {
+        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i).div_euclid(1_000_000)) }).collect())
+    } else {
+        as_i64(arr).map(|a| {
+            (0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i)) }).collect()
+        })
+    }
+}
+
+/// Extract millis or return an error.
+fn require_millis(arr: &ArrayRef, fname: &str) -> Result<Vec<Option<i64>>, EvalError> {
+    as_millis(arr).ok_or_else(|| EvalError {
+        message: format!("{fname}: expected timestamp or integer, got {:?}", arr.data_type()),
+    })
+}
+
 fn require_bool(arr: &ArrayRef) -> Result<&BooleanArray, EvalError> {
     as_bool(arr).ok_or_else(|| EvalError {
         message: format!("expected Boolean, got {:?}", arr.data_type()),
@@ -138,7 +171,7 @@ fn typed_nulls(dt: &DataType, count: usize) -> ArrayRef {
     }
 }
 
-/// Extract f64 values from an array, supporting Int64, Float64, and Null.
+/// Extract f64 values from an array, supporting Int64, Float64, timestamps, and Null.
 fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
     if is_null_array(arr) {
         return Ok(vec![None; arr.len()]);
@@ -157,6 +190,8 @@ fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
                 }
             })
             .collect())
+    } else if let Some(millis) = as_millis(arr) {
+        Ok(millis.into_iter().map(|v| v.map(|m| m as f64)).collect())
     } else {
         Err(EvalError {
             message: format!("cannot convert {:?} to Float64", arr.data_type()),
@@ -676,6 +711,165 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
             check_args(name, args, 2, 32)?;
             eval_case(args, ctx)
         }
+        // ─── Date/time construction ────────────────────────────────────
+        "make_date" => {
+            check_args(name, args, 3, 3)?;
+            let y = evaluate(&args[0], ctx)?;
+            let m = evaluate(&args[1], ctx)?;
+            let d = evaluate(&args[2], ctx)?;
+            eval_make_date(&y, &m, &d)
+        }
+        "make_time" => {
+            check_args(name, args, 3, 3)?;
+            let h = evaluate(&args[0], ctx)?;
+            let m = evaluate(&args[1], ctx)?;
+            let s = evaluate(&args[2], ctx)?;
+            eval_make_time(&h, &m, &s)
+        }
+        "make_datetime" => {
+            check_args(name, args, 6, 6)?;
+            let y = evaluate(&args[0], ctx)?;
+            let mo = evaluate(&args[1], ctx)?;
+            let d = evaluate(&args[2], ctx)?;
+            let h = evaluate(&args[3], ctx)?;
+            let mi = evaluate(&args[4], ctx)?;
+            let s = evaluate(&args[5], ctx)?;
+            eval_make_datetime(&y, &mo, &d, &h, &mi, &s)
+        }
+        "make_duration" => {
+            check_args(name, args, 2, 2)?;
+            let n = evaluate(&args[0], ctx)?;
+            let unit = evaluate(&args[1], ctx)?;
+            eval_make_duration(&n, &unit)
+        }
+        "to_date" => {
+            check_args(name, args, 2, 2)?;
+            let s = evaluate(&args[0], ctx)?;
+            let fmt = evaluate(&args[1], ctx)?;
+            eval_to_date(&s, &fmt)
+        }
+        "to_datetime" => {
+            check_args(name, args, 2, 2)?;
+            let s = evaluate(&args[0], ctx)?;
+            let fmt = evaluate(&args[1], ctx)?;
+            eval_to_datetime(&s, &fmt)
+        }
+        "epoch_seconds" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_epoch_seconds(&arr)
+        }
+        "from_epoch" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_from_epoch(&arr)
+        }
+        // ─── Date/time extraction ──────────────────────────────────────
+        "year" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "year", |dt| dt.year() as i64)
+        }
+        "month" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "month", |dt| dt.month() as i64)
+        }
+        "day" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "day", |dt| dt.day() as i64)
+        }
+        "hour" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "hour", |dt| dt.hour() as i64)
+        }
+        "minute" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "minute", |dt| dt.minute() as i64)
+        }
+        "second" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "second", |dt| dt.second() as i64)
+        }
+        "day_of_week" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "day_of_week", |dt| {
+                dt.weekday().num_days_from_monday() as i64
+            })
+        }
+        "day_of_year" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "day_of_year", |dt| dt.ordinal() as i64)
+        }
+        "week_of_year" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "week_of_year", |dt| dt.iso_week().week() as i64)
+        }
+        "quarter" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_date_extract(&arr, "quarter", |dt| ((dt.month() - 1) / 3 + 1) as i64)
+        }
+        // ─── Date/time arithmetic ──────────────────────────────────────
+        "date_add" => {
+            check_args(name, args, 3, 3)?;
+            let d = evaluate(&args[0], ctx)?;
+            let n = evaluate(&args[1], ctx)?;
+            let unit = evaluate(&args[2], ctx)?;
+            eval_date_add_sub(&d, &n, &unit, true)
+        }
+        "date_sub" => {
+            check_args(name, args, 3, 3)?;
+            let d = evaluate(&args[0], ctx)?;
+            let n = evaluate(&args[1], ctx)?;
+            let unit = evaluate(&args[2], ctx)?;
+            eval_date_add_sub(&d, &n, &unit, false)
+        }
+        "date_diff" => {
+            check_args(name, args, 3, 3)?;
+            let d1 = evaluate(&args[0], ctx)?;
+            let d2 = evaluate(&args[1], ctx)?;
+            let unit = evaluate(&args[2], ctx)?;
+            eval_date_diff(&d1, &d2, &unit)
+        }
+        "duration_add" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let dur = evaluate(&args[1], ctx)?;
+            eval_duration_add(&d, &dur)
+        }
+        "start_of" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let unit = evaluate(&args[1], ctx)?;
+            eval_start_of(&d, &unit)
+        }
+        "end_of" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let unit = evaluate(&args[1], ctx)?;
+            eval_end_of(&d, &unit)
+        }
+        // ─── Date/time formatting ──────────────────────────────────────
+        "format_date" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let fmt = evaluate(&args[1], ctx)?;
+            eval_format_date(&d, &fmt)
+        }
+        "format_duration" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let style = evaluate(&args[1], ctx)?;
+            eval_format_duration(&d, &style)
+        }
         _ => Err(EvalError {
             message: format!("unknown function: `{name}`"),
         }),
@@ -734,7 +928,7 @@ fn eval_f64_map_checked(
     })?;
     let result: Float64Array = v
         .into_iter()
-        .map(|opt| opt.and_then(|x| f(x)))
+        .map(|opt| opt.and_then(&f))
         .collect();
     Ok(Arc::new(result))
 }
@@ -1036,7 +1230,7 @@ fn eval_pad(
                 return Some(s.to_string());
             }
             let pad_count = target_len - char_count;
-            let padding: String = std::iter::repeat(fill_char).take(pad_count).collect();
+            let padding: String = std::iter::repeat_n(fill_char, pad_count).collect();
             if is_left {
                 Some(format!("{padding}{s}"))
             } else {
@@ -1440,7 +1634,7 @@ fn eval_coalesce(arrays: &[ArrayRef]) -> Result<ArrayRef, EvalError> {
         DataType::Float64 => {
             let vecs: Vec<Vec<Option<f64>>> = typed_arrays
                 .iter()
-                .map(|a| to_f64_vec(a))
+                .map(to_f64_vec)
                 .collect::<Result<_, _>>()?;
             let result: Float64Array = (0..count)
                 .map(|i| {
@@ -1561,6 +1755,463 @@ fn eval_nullif(a: &ArrayRef, b: &ArrayRef) -> Result<ArrayRef, EvalError> {
     Err(EvalError {
         message: format!("nullif: unsupported type {:?}", a.data_type()),
     })
+}
+
+// ─── Date/time helpers ──────────────────────────────────────────────────────
+
+/// Convert epoch millis to NaiveDateTime, returning None for out-of-range.
+fn millis_to_datetime(ms: i64) -> Option<NaiveDateTime> {
+    let secs = ms.div_euclid(1_000);
+    let nsecs = (ms.rem_euclid(1_000) * 1_000_000) as u32;
+    DateTime::from_timestamp(secs, nsecs).map(|dt| dt.naive_utc())
+}
+
+/// Convert NaiveDateTime to epoch millis.
+fn datetime_to_millis(dt: &NaiveDateTime) -> i64 {
+    dt.and_utc().timestamp_millis()
+}
+
+/// Parse a temporal unit string into milliseconds multiplier.
+/// Returns None for units that need special handling (microsecond, month/quarter/year).
+fn unit_to_millis(unit: &str) -> Option<i64> {
+    match unit {
+        "millisecond" => Some(1),
+        "second" => Some(1_000),
+        "minute" => Some(60_000),
+        "hour" => Some(3_600_000),
+        "day" => Some(86_400_000),
+        "week" => Some(604_800_000),
+        _ => None, // microsecond, month, quarter, year need special handling
+    }
+}
+
+fn eval_make_date(y: &ArrayRef, m: &ArrayRef, d: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let ya = as_i64(y).ok_or_else(|| EvalError { message: "make_date: year must be integer".into() })?;
+    let ma = as_i64(m).ok_or_else(|| EvalError { message: "make_date: month must be integer".into() })?;
+    let da = as_i64(d).ok_or_else(|| EvalError { message: "make_date: day must be integer".into() })?;
+    let result: TimestampMillisecondArray = (0..ya.len())
+        .map(|i| {
+            if ya.is_null(i) || ma.is_null(i) || da.is_null(i) { return None; }
+            let yv = i32::try_from(ya.value(i)).ok()?;
+            let mv = u32::try_from(ma.value(i)).ok()?;
+            let dv = u32::try_from(da.value(i)).ok()?;
+            let dt = NaiveDate::from_ymd_opt(yv, mv, dv)?;
+            Some(datetime_to_millis(&dt.and_hms_opt(0, 0, 0)?))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_make_time(h: &ArrayRef, m: &ArrayRef, s: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let ha = as_i64(h).ok_or_else(|| EvalError { message: "make_time: hour must be integer".into() })?;
+    let ma = as_i64(m).ok_or_else(|| EvalError { message: "make_time: minute must be integer".into() })?;
+    let sa = as_i64(s).ok_or_else(|| EvalError { message: "make_time: second must be integer".into() })?;
+    // Returns millis since midnight
+    let result: Int64Array = (0..ha.len())
+        .map(|i| {
+            if ha.is_null(i) || ma.is_null(i) || sa.is_null(i) { return None; }
+            let h = ha.value(i);
+            let m = ma.value(i);
+            let s = sa.value(i);
+            if !(0..24).contains(&h) || !(0..60).contains(&m) || !(0..60).contains(&s) {
+                return None;
+            }
+            Some(h * 3_600_000 + m * 60_000 + s * 1_000)
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_make_datetime(
+    y: &ArrayRef, mo: &ArrayRef, d: &ArrayRef,
+    h: &ArrayRef, mi: &ArrayRef, s: &ArrayRef,
+) -> Result<ArrayRef, EvalError> {
+    let ya = as_i64(y).ok_or_else(|| EvalError { message: "make_datetime: year must be integer".into() })?;
+    let moa = as_i64(mo).ok_or_else(|| EvalError { message: "make_datetime: month must be integer".into() })?;
+    let da = as_i64(d).ok_or_else(|| EvalError { message: "make_datetime: day must be integer".into() })?;
+    let ha = as_i64(h).ok_or_else(|| EvalError { message: "make_datetime: hour must be integer".into() })?;
+    let mia = as_i64(mi).ok_or_else(|| EvalError { message: "make_datetime: minute must be integer".into() })?;
+    let sa = as_i64(s).ok_or_else(|| EvalError { message: "make_datetime: second must be integer".into() })?;
+    let result: TimestampMillisecondArray = (0..ya.len())
+        .map(|i| {
+            if ya.is_null(i) || moa.is_null(i) || da.is_null(i)
+                || ha.is_null(i) || mia.is_null(i) || sa.is_null(i) { return None; }
+            let yv = i32::try_from(ya.value(i)).ok()?;
+            let mov = u32::try_from(moa.value(i)).ok()?;
+            let dv = u32::try_from(da.value(i)).ok()?;
+            let hv = u32::try_from(ha.value(i)).ok()?;
+            let miv = u32::try_from(mia.value(i)).ok()?;
+            let sv = u32::try_from(sa.value(i)).ok()?;
+            let date = NaiveDate::from_ymd_opt(yv, mov, dv)?;
+            let dt = date.and_hms_opt(hv, miv, sv)?;
+            Some(datetime_to_millis(&dt))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_make_duration(n: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let na = as_i64(n).ok_or_else(|| EvalError { message: "make_duration: n must be integer".into() })?;
+    let ua = as_str(unit).ok_or_else(|| EvalError { message: "make_duration: unit must be string".into() })?;
+    let result: Int64Array = (0..na.len())
+        .map(|i| {
+            if na.is_null(i) || ua.is_null(i) { return None; }
+            let val = na.value(i);
+            let u = ua.value(i);
+            if let Some(m) = unit_to_millis(u) {
+                return Some(val * m);
+            }
+            match u {
+                "microsecond" => Some(val / 1_000), // truncate sub-ms
+                "month" => Some(val * 30 * 86_400_000),
+                "quarter" => Some(val * 91 * 86_400_000),
+                "year" => Some(val * 365 * 86_400_000),
+                _ => None,
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_to_date(s: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(s).ok_or_else(|| EvalError { message: "to_date: expected string".into() })?;
+    let fa = as_str(fmt).ok_or_else(|| EvalError { message: "to_date: format must be string".into() })?;
+    let result: TimestampMillisecondArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) || fa.is_null(i) { return None; }
+            let date = NaiveDate::parse_from_str(sa.value(i), fa.value(i)).ok()?;
+            Some(datetime_to_millis(&date.and_hms_opt(0, 0, 0)?))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_to_datetime(s: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(s).ok_or_else(|| EvalError { message: "to_datetime: expected string".into() })?;
+    let fa = as_str(fmt).ok_or_else(|| EvalError { message: "to_datetime: format must be string".into() })?;
+    let result: TimestampMillisecondArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) || fa.is_null(i) { return None; }
+            let dt = NaiveDateTime::parse_from_str(sa.value(i), fa.value(i)).ok()?;
+            Some(datetime_to_millis(&dt))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_epoch_seconds(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let millis = require_millis(arr, "epoch_seconds")?;
+    let result: Float64Array = millis.into_iter()
+        .map(|v| v.map(|m| m as f64 / 1_000.0))
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_from_epoch(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let v = to_f64_vec(arr).map_err(|e| EvalError {
+        message: format!("from_epoch: {e}"),
+    })?;
+    let result: TimestampMillisecondArray = v.into_iter()
+        .map(|opt| opt.map(|secs| (secs * 1_000.0) as i64))
+        .collect();
+    Ok(Arc::new(result))
+}
+
+/// Generic date field extraction: convert millis → NaiveDateTime → extract component.
+fn eval_date_extract(
+    arr: &ArrayRef,
+    fname: &str,
+    f: fn(&NaiveDateTime) -> i64,
+) -> Result<ArrayRef, EvalError> {
+    let millis = require_millis(arr, fname)?;
+    let result: Int64Array = millis.into_iter()
+        .map(|v| v.and_then(|m| millis_to_datetime(m).map(|dt| f(&dt))))
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_date_add_sub(
+    d: &ArrayRef,
+    n: &ArrayRef,
+    unit: &ArrayRef,
+    is_add: bool,
+) -> Result<ArrayRef, EvalError> {
+    let fname = if is_add { "date_add" } else { "date_sub" };
+    let dm = require_millis(d, fname)?;
+    let na = as_i64(n).ok_or_else(|| EvalError {
+        message: format!("{fname}: n must be integer"),
+    })?;
+    let ua = as_str(unit).ok_or_else(|| EvalError {
+        message: format!("{fname}: unit must be string"),
+    })?;
+
+    let result: TimestampMillisecondArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if na.is_null(i) || ua.is_null(i) { return None; }
+            let amount = if is_add { na.value(i) } else { -na.value(i) };
+            let unit_str = ua.value(i);
+
+            if let Some(unit_ms) = unit_to_millis(unit_str) {
+                return Some(ms + amount * unit_ms);
+            }
+
+            // Sub-millisecond: truncate to nearest ms
+            if unit_str == "microsecond" {
+                return Some(ms + amount / 1_000);
+            }
+
+            // Calendar-based arithmetic for month/quarter/year
+            let dt = millis_to_datetime(ms)?;
+            match unit_str {
+                "month" => {
+                    let total_months = dt.year() as i64 * 12 + (dt.month() as i64 - 1) + amount;
+                    let new_year = total_months.div_euclid(12) as i32;
+                    let new_month = (total_months.rem_euclid(12) + 1) as u32;
+                    let max_day = days_in_month(new_year, new_month);
+                    let new_day = dt.day().min(max_day);
+                    let new_dt = NaiveDate::from_ymd_opt(new_year, new_month, new_day)?
+                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), dt.and_utc().timestamp_subsec_millis())?;
+                    Some(datetime_to_millis(&new_dt))
+                }
+                "quarter" => {
+                    let total_months = dt.year() as i64 * 12 + (dt.month() as i64 - 1) + amount * 3;
+                    let new_year = total_months.div_euclid(12) as i32;
+                    let new_month = (total_months.rem_euclid(12) + 1) as u32;
+                    let max_day = days_in_month(new_year, new_month);
+                    let new_day = dt.day().min(max_day);
+                    let new_dt = NaiveDate::from_ymd_opt(new_year, new_month, new_day)?
+                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), dt.and_utc().timestamp_subsec_millis())?;
+                    Some(datetime_to_millis(&new_dt))
+                }
+                "year" => {
+                    let new_year = dt.year() + amount as i32;
+                    let max_day = days_in_month(new_year, dt.month());
+                    let new_day = dt.day().min(max_day);
+                    let new_dt = NaiveDate::from_ymd_opt(new_year, dt.month(), new_day)?
+                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), dt.and_utc().timestamp_subsec_millis())?;
+                    Some(datetime_to_millis(&new_dt))
+                }
+                _ => None,
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+/// Number of days in a given month (handles leap years).
+fn days_in_month(year: i32, month: u32) -> u32 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 => {
+            if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 { 29 } else { 28 }
+        }
+        _ => 30,
+    }
+}
+
+fn eval_date_diff(d1: &ArrayRef, d2: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let m1 = require_millis(d1, "date_diff")?;
+    let m2 = require_millis(d2, "date_diff")?;
+    let ua = as_str(unit).ok_or_else(|| EvalError {
+        message: "date_diff: unit must be string".into(),
+    })?;
+
+    let result: Int64Array = (0..m1.len())
+        .map(|i| {
+            let ms1 = m1[i]?;
+            let ms2 = m2[i]?;
+            if ua.is_null(i) { return None; }
+            let diff_ms = ms1 - ms2;
+            let unit_str = ua.value(i);
+
+            if let Some(unit_ms) = unit_to_millis(unit_str) {
+                return Some(diff_ms / unit_ms);
+            }
+
+            if unit_str == "microsecond" {
+                return Some(diff_ms * 1_000); // approximate: ms → µs
+            }
+
+            let dt1 = millis_to_datetime(ms1)?;
+            let dt2 = millis_to_datetime(ms2)?;
+            match unit_str {
+                "month" => {
+                    Some((dt1.year() as i64 - dt2.year() as i64) * 12
+                        + dt1.month() as i64 - dt2.month() as i64)
+                }
+                "quarter" => {
+                    let months = (dt1.year() as i64 - dt2.year() as i64) * 12
+                        + dt1.month() as i64 - dt2.month() as i64;
+                    Some(months / 3)
+                }
+                "year" => Some(dt1.year() as i64 - dt2.year() as i64),
+                _ => None,
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_duration_add(d: &ArrayRef, dur: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "duration_add")?;
+    let dur_m = require_millis(dur, "duration_add")?;
+    let result: TimestampMillisecondArray = dm.iter().zip(dur_m.iter())
+        .map(|(a, b)| match (a, b) {
+            (Some(a), Some(b)) => Some(a + b),
+            _ => None,
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_start_of(d: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "start_of")?;
+    let ua = as_str(unit).ok_or_else(|| EvalError {
+        message: "start_of: unit must be string".into(),
+    })?;
+
+    let result: TimestampMillisecondArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if ua.is_null(i) { return None; }
+            let dt = millis_to_datetime(ms)?;
+            let truncated = match ua.value(i) {
+                "second" => dt.date().and_hms_opt(dt.hour(), dt.minute(), dt.second())?,
+                "minute" => dt.date().and_hms_opt(dt.hour(), dt.minute(), 0)?,
+                "hour" => dt.date().and_hms_opt(dt.hour(), 0, 0)?,
+                "day" => dt.date().and_hms_opt(0, 0, 0)?,
+                "week" => {
+                    let weekday = dt.weekday().num_days_from_monday();
+                    let start = dt.date() - chrono::Duration::days(weekday as i64);
+                    start.and_hms_opt(0, 0, 0)?
+                }
+                "month" => NaiveDate::from_ymd_opt(dt.year(), dt.month(), 1)?
+                    .and_hms_opt(0, 0, 0)?,
+                "quarter" => {
+                    let q_month = (dt.month() - 1) / 3 * 3 + 1;
+                    NaiveDate::from_ymd_opt(dt.year(), q_month, 1)?
+                        .and_hms_opt(0, 0, 0)?
+                }
+                "year" => NaiveDate::from_ymd_opt(dt.year(), 1, 1)?
+                    .and_hms_opt(0, 0, 0)?,
+                _ => return None,
+            };
+            Some(datetime_to_millis(&truncated))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_end_of(d: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "end_of")?;
+    let ua = as_str(unit).ok_or_else(|| EvalError {
+        message: "end_of: unit must be string".into(),
+    })?;
+
+    let result: TimestampMillisecondArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if ua.is_null(i) { return None; }
+            let dt = millis_to_datetime(ms)?;
+            let end = match ua.value(i) {
+                "second" => dt.date().and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), 999)?,
+                "minute" => dt.date().and_hms_milli_opt(dt.hour(), dt.minute(), 59, 999)?,
+                "hour" => dt.date().and_hms_milli_opt(dt.hour(), 59, 59, 999)?,
+                "day" => dt.date().and_hms_milli_opt(23, 59, 59, 999)?,
+                "week" => {
+                    let weekday = dt.weekday().num_days_from_monday();
+                    let end_date = dt.date() + chrono::Duration::days(6 - weekday as i64);
+                    end_date.and_hms_milli_opt(23, 59, 59, 999)?
+                }
+                "month" => {
+                    let last_day = days_in_month(dt.year(), dt.month());
+                    NaiveDate::from_ymd_opt(dt.year(), dt.month(), last_day)?
+                        .and_hms_milli_opt(23, 59, 59, 999)?
+                }
+                "quarter" => {
+                    let q_end_month = ((dt.month() - 1) / 3 + 1) * 3;
+                    let last_day = days_in_month(dt.year(), q_end_month);
+                    NaiveDate::from_ymd_opt(dt.year(), q_end_month, last_day)?
+                        .and_hms_milli_opt(23, 59, 59, 999)?
+                }
+                "year" => NaiveDate::from_ymd_opt(dt.year(), 12, 31)?
+                    .and_hms_milli_opt(23, 59, 59, 999)?,
+                _ => return None,
+            };
+            Some(datetime_to_millis(&end))
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_format_date(d: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "format_date")?;
+    let fa = as_str(fmt).ok_or_else(|| EvalError {
+        message: "format_date: format must be string".into(),
+    })?;
+
+    let result: StringArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if fa.is_null(i) { return None; }
+            let dt = millis_to_datetime(ms)?;
+            Some(dt.format(fa.value(i)).to_string())
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_format_duration(d: &ArrayRef, style: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "format_duration")?;
+    let sa = as_str(style).ok_or_else(|| EvalError {
+        message: "format_duration: style must be string".into(),
+    })?;
+
+    let result: StringArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if sa.is_null(i) { return None; }
+            let total_secs = ms / 1_000;
+            let remaining_ms = ms % 1_000;
+            match sa.value(i) {
+                "hms" => {
+                    let h = total_secs / 3600;
+                    let m = (total_secs % 3600) / 60;
+                    let s = total_secs % 60;
+                    Some(format!("{h:02}:{m:02}:{s:02}"))
+                }
+                "human" => {
+                    let days = total_secs / 86400;
+                    let h = (total_secs % 86400) / 3600;
+                    let m = (total_secs % 3600) / 60;
+                    let s = total_secs % 60;
+                    if days > 0 {
+                        Some(format!("{days}d {h}h {m}m {s}s"))
+                    } else if h > 0 {
+                        Some(format!("{h}h {m}m {s}s"))
+                    } else if m > 0 {
+                        Some(format!("{m}m {s}s"))
+                    } else {
+                        Some(format!("{s}s"))
+                    }
+                }
+                "iso" => {
+                    let h = total_secs / 3600;
+                    let m = (total_secs % 3600) / 60;
+                    let s = total_secs % 60;
+                    if remaining_ms > 0 {
+                        Some(format!("PT{h}H{m}M{s}.{remaining_ms:03}S"))
+                    } else {
+                        Some(format!("PT{h}H{m}M{s}S"))
+                    }
+                }
+                _ => None,
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
 }
 
 #[cfg(test)]
@@ -2165,5 +2816,449 @@ mod tests {
         let fa = as_f64(&result).unwrap();
         assert!((fa.value(0) - 2.5).abs() < 1e-10); // default
         assert!((fa.value(1) - 1.0).abs() < 1e-10); // matched
+    }
+
+    // ─── Date/time tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn make_date_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("make_date(2024, 3, 15)").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        // Should be a timestamp, extract year to verify
+        let millis = as_millis(&result).unwrap();
+        let dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(dt.year(), 2024);
+        assert_eq!(dt.month(), 3);
+        assert_eq!(dt.day(), 15);
+    }
+
+    #[test]
+    fn make_date_invalid_returns_null() {
+        let cols = HashMap::new();
+        // Feb 30 doesn't exist
+        let ast = parser::parse("make_date(2024, 2, 30)").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        assert!(result.is_null(0));
+    }
+
+    #[test]
+    fn make_time_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("make_time(14, 30, 45)").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let ia = as_i64(&result).unwrap();
+        // 14*3600000 + 30*60000 + 45*1000 = 52245000
+        assert_eq!(ia.value(0), 52_245_000);
+    }
+
+    #[test]
+    fn make_time_invalid_returns_null() {
+        let cols = HashMap::new();
+        let ast = parser::parse("make_time(25, 0, 0)").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        assert!(result.is_null(0));
+    }
+
+    #[test]
+    fn make_datetime_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("make_datetime(2024, 3, 15, 14, 30, 0)").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let millis = as_millis(&result).unwrap();
+        let dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(dt.year(), 2024);
+        assert_eq!(dt.month(), 3);
+        assert_eq!(dt.day(), 15);
+        assert_eq!(dt.hour(), 14);
+        assert_eq!(dt.minute(), 30);
+    }
+
+    #[test]
+    fn make_duration_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("make_duration(30, \"day\")").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.value(0), 30 * 86_400_000);
+    }
+
+    #[test]
+    fn to_date_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("to_date(\"2024-03-15\", \"%Y-%m-%d\")").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let millis = as_millis(&result).unwrap();
+        let dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(dt.year(), 2024);
+        assert_eq!(dt.month(), 3);
+        assert_eq!(dt.day(), 15);
+    }
+
+    #[test]
+    fn to_datetime_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("to_datetime(\"2024-03-15 14:30\", \"%Y-%m-%d %H:%M\")").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let millis = as_millis(&result).unwrap();
+        let dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(dt.year(), 2024);
+        assert_eq!(dt.hour(), 14);
+        assert_eq!(dt.minute(), 30);
+    }
+
+    #[test]
+    fn epoch_seconds_function() {
+        let mut cols = HashMap::new();
+        // 2024-01-01 00:00:00 UTC = 1704067200000 ms
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![1704067200000i64])) as ArrayRef,
+        );
+        let result = eval_expr("epoch_seconds(${ts})", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 1704067200.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn from_epoch_function() {
+        let cols = HashMap::new();
+        let ast = parser::parse("from_epoch(1704067200)").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 1,
+            row_offset: 0,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let millis = as_millis(&result).unwrap();
+        let dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(dt.year(), 2024);
+        assert_eq!(dt.month(), 1);
+        assert_eq!(dt.day(), 1);
+    }
+
+    #[test]
+    fn date_extraction_functions() {
+        let mut cols = HashMap::new();
+        // 2024-03-15 14:30:45 UTC
+        let dt = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
+            .and_hms_opt(14, 30, 45).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+
+        let r = eval_expr("year(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 2024);
+
+        let r = eval_expr("month(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 3);
+
+        let r = eval_expr("day(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 15);
+
+        let r = eval_expr("hour(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 14);
+
+        let r = eval_expr("minute(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 30);
+
+        let r = eval_expr("second(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 45);
+
+        // 2024-03-15 is a Friday → day_of_week = 4 (Mon=0)
+        let r = eval_expr("day_of_week(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 4);
+
+        // Day 75 of 2024 (leap year)
+        let r = eval_expr("day_of_year(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 75);
+
+        let r = eval_expr("quarter(${ts})", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 1);
+
+        let r = eval_expr("week_of_year(${ts})", cols);
+        assert_eq!(as_i64(&r).unwrap().value(0), 11);
+    }
+
+    #[test]
+    fn date_add_sub_fixed_units() {
+        let mut cols = HashMap::new();
+        let dt = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap()
+            .and_hms_opt(12, 0, 0).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+
+        // Add 7 days
+        let r = eval_expr("date_add(${ts}, 7, \"day\")", cols.clone());
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.day(), 22);
+
+        // Subtract 2 hours
+        let r = eval_expr("date_sub(${ts}, 2, \"hour\")", cols);
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.hour(), 10);
+    }
+
+    #[test]
+    fn date_add_month_clamp() {
+        // Jan 31 + 1 month should clamp to Feb 29 (2024 is leap year)
+        let mut cols = HashMap::new();
+        let dt = NaiveDate::from_ymd_opt(2024, 1, 31).unwrap()
+            .and_hms_opt(0, 0, 0).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+        let r = eval_expr("date_add(${ts}, 1, \"month\")", cols);
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.month(), 2);
+        assert_eq!(result_dt.day(), 29); // clamped to leap year Feb
+    }
+
+    #[test]
+    fn date_diff_function() {
+        let mut cols = HashMap::new();
+        let dt1 = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
+            .and_hms_opt(0, 0, 0).unwrap();
+        let dt2 = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap()
+            .and_hms_opt(0, 0, 0).unwrap();
+        cols.insert(
+            "d1".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![datetime_to_millis(&dt1)])) as ArrayRef,
+        );
+        cols.insert(
+            "d2".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![datetime_to_millis(&dt2)])) as ArrayRef,
+        );
+
+        let r = eval_expr("date_diff(${d1}, ${d2}, \"day\")", cols.clone());
+        assert_eq!(as_i64(&r).unwrap().value(0), 60); // 2024 is leap year: Jan has 31, Feb has 29
+
+        let r = eval_expr("date_diff(${d1}, ${d2}, \"month\")", cols);
+        assert_eq!(as_i64(&r).unwrap().value(0), 2);
+    }
+
+    #[test]
+    fn duration_add_function() {
+        let mut cols = HashMap::new();
+        let dt = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
+            .and_hms_opt(0, 0, 0).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+        cols.insert(
+            "dur".into(),
+            Arc::new(Int64Array::from(vec![3_600_000i64])) as ArrayRef, // 1 hour in ms
+        );
+        let r = eval_expr("duration_add(${ts}, ${dur})", cols);
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.hour(), 1);
+    }
+
+    #[test]
+    fn start_of_function() {
+        let mut cols = HashMap::new();
+        let dt = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
+            .and_hms_opt(14, 30, 45).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+
+        let r = eval_expr("start_of(${ts}, \"day\")", cols.clone());
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.hour(), 0);
+        assert_eq!(result_dt.minute(), 0);
+        assert_eq!(result_dt.second(), 0);
+        assert_eq!(result_dt.day(), 15);
+
+        let r = eval_expr("start_of(${ts}, \"month\")", cols.clone());
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.day(), 1);
+        assert_eq!(result_dt.month(), 3);
+
+        let r = eval_expr("start_of(${ts}, \"year\")", cols);
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.day(), 1);
+        assert_eq!(result_dt.month(), 1);
+    }
+
+    #[test]
+    fn end_of_function() {
+        let mut cols = HashMap::new();
+        let dt = NaiveDate::from_ymd_opt(2024, 2, 15).unwrap()
+            .and_hms_opt(10, 0, 0).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+
+        let r = eval_expr("end_of(${ts}, \"month\")", cols.clone());
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.day(), 29); // Feb 2024 is leap year
+        assert_eq!(result_dt.hour(), 23);
+        assert_eq!(result_dt.minute(), 59);
+
+        let r = eval_expr("end_of(${ts}, \"day\")", cols);
+        let millis = as_millis(&r).unwrap();
+        let result_dt = millis_to_datetime(millis[0].unwrap()).unwrap();
+        assert_eq!(result_dt.day(), 15);
+        assert_eq!(result_dt.hour(), 23);
+        assert_eq!(result_dt.minute(), 59);
+        assert_eq!(result_dt.second(), 59);
+    }
+
+    #[test]
+    fn format_date_function() {
+        let mut cols = HashMap::new();
+        let dt = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
+            .and_hms_opt(14, 30, 0).unwrap();
+        let ms = datetime_to_millis(&dt);
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![ms])) as ArrayRef,
+        );
+
+        let r = eval_expr("format_date(${ts}, \"%Y-%m\")", cols.clone());
+        let sa = as_str(&r).unwrap();
+        assert_eq!(sa.value(0), "2024-03");
+
+        let r = eval_expr("format_date(${ts}, \"%Y-%m-%d %H:%M:%S\")", cols);
+        let sa = as_str(&r).unwrap();
+        assert_eq!(sa.value(0), "2024-03-15 14:30:00");
+    }
+
+    #[test]
+    fn format_duration_function() {
+        let mut cols = HashMap::new();
+        // 1 hour, 30 minutes, 45 seconds = 5445000 ms
+        cols.insert(
+            "dur".into(),
+            Arc::new(Int64Array::from(vec![5_445_000i64])) as ArrayRef,
+        );
+
+        let r = eval_expr("format_duration(${dur}, \"hms\")", cols.clone());
+        let sa = as_str(&r).unwrap();
+        assert_eq!(sa.value(0), "01:30:45");
+
+        let r = eval_expr("format_duration(${dur}, \"human\")", cols.clone());
+        let sa = as_str(&r).unwrap();
+        assert_eq!(sa.value(0), "1h 30m 45s");
+
+        let r = eval_expr("format_duration(${dur}, \"iso\")", cols);
+        let sa = as_str(&r).unwrap();
+        assert_eq!(sa.value(0), "PT1H30M45S");
+    }
+
+    #[test]
+    fn timestamp_precision_handling() {
+        // Test that different timestamp precisions are handled correctly
+        let mut cols = HashMap::new();
+        // 2024-01-01 00:00:00 UTC in different precisions
+        let epoch_ms = 1704067200000i64;
+        cols.insert(
+            "ts_ms".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![epoch_ms])) as ArrayRef,
+        );
+        cols.insert(
+            "ts_s".into(),
+            Arc::new(TimestampSecondArray::from(vec![epoch_ms / 1_000])) as ArrayRef,
+        );
+        cols.insert(
+            "ts_us".into(),
+            Arc::new(TimestampMicrosecondArray::from(vec![epoch_ms * 1_000])) as ArrayRef,
+        );
+        cols.insert(
+            "ts_ns".into(),
+            Arc::new(TimestampNanosecondArray::from(vec![epoch_ms * 1_000_000])) as ArrayRef,
+        );
+
+        // All should extract year=2024
+        for field in &["ts_ms", "ts_s", "ts_us", "ts_ns"] {
+            let r = eval_expr(&format!("year(${{{field}}})"), cols.clone());
+            let ia = as_i64(&r).unwrap();
+            assert_eq!(ia.value(0), 2024, "year extraction failed for {field}");
+        }
+    }
+
+    #[test]
+    fn datetime_null_propagation() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![None::<i64>])) as ArrayRef,
+        );
+        let r = eval_expr("year(${ts})", cols.clone());
+        assert!(r.is_null(0));
+
+        let r = eval_expr("format_date(${ts}, \"%Y\")", cols);
+        assert!(r.is_null(0));
     }
 }
