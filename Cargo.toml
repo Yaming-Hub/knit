@@ -11,3 +11,9 @@ members = [
     "crates/knit-integration-tests",
 ]
 resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+repository = "https://github.com/Yaming-Hub/knit"
