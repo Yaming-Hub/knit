@@ -1,0 +1,7 @@
+# Knit workspace formatting configuration
+# Run: cargo fmt --all
+
+# Stable options only — works with any stable Rust toolchain
+max_width = 100
+tab_spaces = 4
+edition = "2021"
