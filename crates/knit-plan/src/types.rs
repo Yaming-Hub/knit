@@ -390,6 +390,21 @@ pub enum GeneratorPlan {
         /// Optional burst/session pattern for clustered event generation.
         burst: Option<BurstPlan>,
     },
+    /// Self-referential thread/conversation generator.
+    ///
+    /// Produces nullable Int64 values: NULL for thread starters, a previous
+    /// row's PK for replies. Uses a recency-weighted ring buffer to select
+    /// parent messages, creating realistic conversation tree structures.
+    ThreadRef {
+        /// Probability that a row is a reply (0.0 = all starters, 1.0 = all replies).
+        reply_probability: f64,
+        /// Maximum thread depth before forcing a new thread.
+        max_depth: u32,
+        /// Number of recent PKs to consider for reply targets.
+        reply_window: usize,
+        /// Name of the PK field in the same entity (to read generated PKs).
+        pk_field: String,
+    },
 }
 
 /// Cross-entity causal ordering: ensures a timestamp is >= the referenced

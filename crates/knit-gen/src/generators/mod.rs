@@ -23,6 +23,7 @@ pub mod persona_field;
 pub mod sequence;
 pub mod string_fk;
 pub mod temporal;
+pub mod thread_ref;
 pub mod topology;
 pub mod unique;
 pub mod uuid_gen;
@@ -158,6 +159,14 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::ActorTemporal { .. } => {
             tracing::warn!("ActorTemporal inside nested generator: no actor pool available, emitting nulls");
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
+        }
+        GeneratorPlan::ThreadRef { reply_probability, max_depth, reply_window, pk_field } => {
+            Box::new(thread_ref::ThreadRefGenerator::new(
+                *reply_probability,
+                *max_depth,
+                *reply_window,
+                pk_field.clone(),
+            ))
         }
     }
 }
