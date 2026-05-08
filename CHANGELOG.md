@@ -4,6 +4,22 @@ All notable changes to Knit are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-05-08
+
+### Changed
+
+- **Single-crate refactor** — Consolidated 9-crate workspace into a single
+  `knit` crate for simpler installation, faster compilation, and crates.io
+  publishing. All functionality is preserved; only the internal module layout
+  changed.
+- Module paths now use `knit::{core,schema,plan,gen,noise,bind,learn,cli}::`
+  instead of separate `knit_core::`, `knit_schema::`, etc. crates.
+
+### Fixed
+
+- Cross-partition uniqueness enforcement (shared seen-set across partitions)
+- Plugin system pipeline integration (graceful errors, correct lock handling)
+
 ## [0.2.0] — 2026-05-07
 
 ### Added

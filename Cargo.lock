@@ -946,154 +946,44 @@ dependencies = [
 ]
 
 [[package]]
-name = "knit-bind"
-version = "0.2.0"
-dependencies = [
- "arrow",
- "bytes",
- "chrono",
- "minijinja",
- "parking_lot",
- "parquet",
- "serde_json",
- "thiserror 2.0.18",
- "tracing",
-]
-
-[[package]]
-name = "knit-cli"
-version = "0.2.0"
+name = "knit"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "arrow",
+ "arrow-csv",
+ "arrow-json",
+ "assert_cmd",
+ "bitflags 2.11.1",
+ "bytes",
+ "chrono",
  "clap",
  "clap_complete",
  "colored",
  "dirs",
  "indicatif",
  "indoc",
- "knit-bind",
- "knit-core",
- "knit-gen",
- "knit-learn",
- "knit-noise",
- "knit-plan",
- "knit-schema",
- "rayon",
- "serde",
- "serde_json",
- "tempfile",
- "toml",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "knit-core"
-version = "0.2.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "toml",
- "uuid",
-]
-
-[[package]]
-name = "knit-gen"
-version = "0.2.0"
-dependencies = [
- "arrow",
- "chrono",
- "knit-core",
- "knit-plan",
+ "minijinja",
  "parking_lot",
+ "parquet",
+ "petgraph",
+ "predicates",
  "rand",
  "rand_chacha",
  "rand_distr",
  "rayon",
- "thiserror 2.0.18",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "knit-integration-tests"
-version = "0.2.0"
-dependencies = [
- "arrow",
- "assert_cmd",
- "knit-core",
- "knit-gen",
- "knit-learn",
- "knit-noise",
- "knit-plan",
- "knit-schema",
- "predicates",
- "serde_json",
- "tempfile",
-]
-
-[[package]]
-name = "knit-learn"
-version = "0.2.0"
-dependencies = [
- "arrow",
- "arrow-csv",
- "arrow-json",
- "chrono",
- "knit-core",
- "parquet",
- "rand",
- "rand_distr",
  "regex",
  "rustfft",
  "serde",
  "serde_json",
+ "siphasher",
  "statrs",
  "tempfile",
  "thiserror 2.0.18",
- "tracing",
-]
-
-[[package]]
-name = "knit-noise"
-version = "0.2.0"
-dependencies = [
- "arrow",
- "bitflags 2.11.1",
- "chrono",
- "knit-core",
- "rand",
- "rand_chacha",
- "rand_distr",
- "thiserror 2.0.18",
- "tracing",
-]
-
-[[package]]
-name = "knit-plan"
-version = "0.2.0"
-dependencies = [
- "knit-core",
- "petgraph",
- "serde",
- "serde_json",
- "siphasher",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "knit-schema"
-version = "0.2.0"
-dependencies = [
- "indoc",
- "knit-core",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
  "toml",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
