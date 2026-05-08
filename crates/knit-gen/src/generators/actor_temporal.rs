@@ -84,6 +84,7 @@ impl ActorTemporalGenerator {
     /// When provided, timestamps will be >= the referenced entity's timestamp.
     ///
     /// `burst`: optional burst/session configuration for clustered event generation.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         actor_pool: Arc<ActorPool>,
         pk_reverse_map: Arc<HashMap<i64, usize>>,

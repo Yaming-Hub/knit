@@ -453,7 +453,7 @@ impl FakerGenerator {
                         _ => None,
                     })
                     .unwrap_or(32);
-                let byte_count = (len + 1) / 2;
+                let byte_count = len.div_ceil(2);
                 let mut bytes = vec![0u8; byte_count];
                 rng.fill_bytes(&mut bytes);
                 let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
@@ -580,7 +580,7 @@ fn days_from_epoch(year: i32, month: u32, day: u32) -> i64 {
     let y = if month <= 2 { year as i64 - 1 } else { year as i64 };
     let era = if y >= 0 { y } else { y - 399 } / 400;
     let yoe = (y - era * 400) as u32;
-    let m = month as u32;
+    let m = month;
     let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + day - 1;
     let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
     (era * 146097 + doe as i64) - 719468

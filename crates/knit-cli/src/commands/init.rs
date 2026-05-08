@@ -89,23 +89,21 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
             if let Some(src_dir) = src.parent() {
                 let src_name = src.file_name().unwrap();
                 let dest_dir = dest.parent().unwrap_or(Path::new("."));
-                for entry in fs::read_dir(src_dir).into_iter().flatten() {
-                    if let Ok(entry) = entry {
-                        let name = entry.file_name();
-                        if name == src_name {
-                            continue; // skip the schema itself
-                        }
-                        if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
-                            let ext = Path::new(&name)
-                                .extension()
-                                .and_then(|e| e.to_str())
-                                .unwrap_or("");
-                            // Copy known sidecar extensions
-                            if matches!(ext, "txt" | "csv" | "json" | "dict") {
-                                let dest_file = dest_dir.join(&name);
-                                fs::copy(entry.path(), &dest_file).ok();
-                                sidecar_count += 1;
-                            }
+                for entry in fs::read_dir(src_dir).into_iter().flatten().flatten() {
+                    let name = entry.file_name();
+                    if name == src_name {
+                        continue; // skip the schema itself
+                    }
+                    if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
+                        let ext = Path::new(&name)
+                            .extension()
+                            .and_then(|e| e.to_str())
+                            .unwrap_or("");
+                        // Copy known sidecar extensions
+                        if matches!(ext, "txt" | "csv" | "json" | "dict") {
+                            let dest_file = dest_dir.join(&name);
+                            fs::copy(entry.path(), &dest_file).ok();
+                            sidecar_count += 1;
                         }
                     }
                 }

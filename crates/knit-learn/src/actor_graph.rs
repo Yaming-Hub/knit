@@ -261,7 +261,7 @@ fn compute_graph_metrics(edges: &HashMap<(String, String), u64>) -> GraphMetrics
     // since we're classifying graph *structure*, not interaction *volume*.
     let mut reciprocal_count = 0u64;
     let mut total_directed = 0u64;
-    for ((from, to), _) in edges {
+    for (from, to) in edges.keys() {
         total_directed += 1;
         if edges.contains_key(&(to.clone(), from.clone())) {
             reciprocal_count += 1;

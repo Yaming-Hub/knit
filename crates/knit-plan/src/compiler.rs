@@ -299,7 +299,7 @@ fn compile_actor_pool(model: &DataModel, row_counts: &BTreeMap<String, u64>) -> 
 
     // Compile graph plans from actor relationships
     for rel in &model.actor_relationships {
-        let community_count = rel.community_count.as_ref().map(|cs| resolve_count_estimate(cs));
+        let community_count = rel.community_count.as_ref().map(resolve_count_estimate);
 
         graph_plans.push(GraphPlan {
             name: rel.name.clone(),

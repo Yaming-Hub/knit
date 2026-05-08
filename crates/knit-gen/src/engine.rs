@@ -776,6 +776,7 @@ impl GenerationEngine {
 
     /// Build a GraphTargetFkGenerator for a field with GraphTarget plan.
     /// Returns None if preconditions aren't met (falls back to uniform FK).
+    #[allow(clippy::too_many_arguments)]
     fn build_graph_target_generator(
         &self,
         ep: &EntityPlan,
@@ -972,6 +973,7 @@ impl GenerationEngine {
 
     /// Build an ActorTemporalGenerator for a field with ActorTemporal plan.
     /// Falls back to a BusinessHoursGenerator if prerequisites aren't met.
+    #[allow(clippy::too_many_arguments)]
     fn build_actor_temporal_generator(
         &self,
         ep: &EntityPlan,

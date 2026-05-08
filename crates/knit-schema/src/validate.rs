@@ -895,6 +895,7 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn validate_generator(
     path: &str,
     gen: &GeneratorSpec,

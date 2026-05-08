@@ -385,7 +385,7 @@ fn name_match_score(stripped: &str, table_name: &str) -> f64 {
     }
 
     // Singular/plural match (simple: add/remove 's')
-    if stripped.ends_with('s') && &stripped[..stripped.len() - 1] == table_lower {
+    if stripped.ends_with('s') && stripped[..stripped.len() - 1] == table_lower {
         return 0.9;
     }
     if table_lower.ends_with('s') && &table_lower[..table_lower.len() - 1] == stripped {
