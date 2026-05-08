@@ -57,11 +57,17 @@ pub struct PerturbOverrides {
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```no_run
+/// use knit_noise::pipeline::Pipeline;
+/// use knit_noise::traits::PerturbConfig;
+/// use knit_noise::gaussian_noise::GaussianNoise;
+/// use knit_noise::null_injector::NullInjector;
+///
 /// let mut pipe = Pipeline::new(PerturbConfig::default());
 /// pipe.add(Box::new(GaussianNoise::default()));
 /// pipe.add_with_rate(Box::new(NullInjector::default()), 0.10);
-/// let noisy = pipe.run(batch)?;
+/// # let batch = arrow::record_batch::RecordBatch::new_empty(std::sync::Arc::new(arrow::datatypes::Schema::empty()));
+/// let noisy = pipe.run(batch).unwrap();
 /// ```
 pub struct Pipeline {
     perturbators: Vec<(Box<dyn Perturbator>, PerturbOverrides)>,
