@@ -28,6 +28,9 @@ injection — all from a single CLI command.
   variation).
 - **Reverse engineering** — Ingest existing data, profile distributions, and fit
   schemas automatically (`knit learn`).
+- **Behavioral modeling** — Define actor personas with trait distributions,
+  activity-driven row counts, temporal biases, social graphs, and conversation
+  threading. Learn behavioral patterns from existing data with `knit learn --actors`.
 - **Incremental learning** — Process datasets larger than memory in bounded
   chunks with streaming statistics and persistent state files.
 - **Dictionary extraction** — Automatically extracts domain-specific vocabularies
@@ -136,18 +139,24 @@ knit generate demo.weave.toml --dry-run
 | `knit-gen` | Generation engine: executes plans → Arrow `RecordBatch`es |
 | `knit-noise` | Post-generation perturbation pipeline (7 perturbators) |
 | `knit-bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC |
-| `knit-learn` | Data ingestion, profiling, distribution fitting, schema inference |
-| `knit-cli` | Binary: `validate`, `plan`, `generate`, `schema`, `init`, `learn` |
+| `knit-learn` | Data ingestion, profiling, distribution fitting, schema inference, behavioral persona discovery |
+| `knit-cli` | Binary: `validate`, `plan`, `generate`, `schema`, `init`, `learn`, `inspect`, `completions`, `generators` |
 
 ## Examples
 
 The `examples/` directory contains sample schemas:
 
 - `ecommerce.weave.toml` — Users, products, orders, reviews with FK relationships
+- `ecommerce_behavioral.weave.toml` — Persona-driven purchasing: 4 customer
+  segments, activity-driven orders, temporal shopping biases, review threading
+- `email_traffic.weave.toml` — Email messaging with sender/receiver personas
 - `financial.weave.toml` — Accounts and transactions with risk scoring
-- `hr_org.weave.toml` — Employees, departments with self-referential FKs
+- `hr_org.weave.toml` — Employees with behavioral personas, activity-driven tasks,
+  manager hierarchy, and work-hour temporal biases
 - `iot_sensors.weave.toml` — Devices, sensor readings, and alerts with FK chains
 - `server_logs.weave.toml` — Servers, HTTP requests, and error logs
+- `social_platform.weave.toml` — Social network with actor graphs, persona-driven
+  temporal patterns, burst sessions, and posts/comments/DMs
 - `cli_test.weave.toml` — Minimal schema for integration testing
 
 Generate all examples:
@@ -208,6 +217,81 @@ from it — producing output that matches the domain vocabulary of the original
 data. Dictionary extraction works in both batch and incremental modes.
 Extracted dictionaries are capped at ~10,000 entries for large vocabularies.
 
+### Behavioral Modeling
+
+Define actor personas with distinct behavioral traits to generate data with
+realistic human-like patterns:
+
+```toml
+# Define behavioral segments
+[[personas]]
+name = "power_user"
+weight = 0.15
+[personas.traits]
+activity_rate = 20.0    # events/month
+peak_hours = 9.0        # preferred hour of day
+
+[[personas]]
+name = "casual_user"
+weight = 0.85
+[personas.traits]
+activity_rate = 3.0
+peak_hours = 20.0
+
+# Mark an entity as an actor with persona assignment
+[[entities]]
+name = "users"
+count = 1000
+actor = true
+persona_distribution = "personas"
+
+# Activity-driven row counts (total rows = sum of per-actor trait values)
+[[entities]]
+name = "events"
+count = 5000  # fallback estimate
+[entities.activity_count]
+actor_field = "user_id"
+trait = "activity_rate"
+
+# FK field linking events to their actor
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+actor_column = true
+
+# Temporal bias — timestamps cluster around each actor's peak_hours
+[[entities.fields]]
+name = "created_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
+
+# Relationship required for activity_count resolution
+[[relationships]]
+name = "event_user"
+from = "events"
+to = "users"
+kind = "many_to_one"
+foreign_key = "user_id"
+```
+
+Learn behavioral patterns from existing data:
+
+```bash
+# Infer personas and actor relationships from data
+knit learn ./my-data/ --actors -o behavioral.weave.toml
+
+# Inspect discovered behavioral structure
+knit inspect behavioral.weave.toml --actors
+
+# Generate with persona-driven realism
+knit generate behavioral.weave.toml -o ./synthetic
+```
+
+See `examples/social_platform.weave.toml` and `examples/ecommerce_behavioral.weave.toml`
+for complete behavioral schemas.
+
 ### Parameterized Schemas
 
 Derived expressions can reference `--param` values using `${param.key}` syntax:
@@ -234,13 +318,15 @@ Unresolved params stay as literal `${param.key}` in the output.
 knit [OPTIONS] <COMMAND>
 
 Commands:
-  validate   Parse and validate a schema file
-  plan       Show execution plan (dry run)
-  generate   Generate synthetic data
-  schema     Schema manipulation (expand, normalize, diff)
-  init       Create a starter schema
-  learn      Infer schema from data
-  inspect    Inspect incremental learning state file
+  validate     Parse and validate a schema file
+  plan         Show execution plan (dry run)
+  generate     Generate synthetic data
+  schema       Schema manipulation (expand, normalize, diff)
+  init         Create a starter schema
+  learn        Infer schema from data
+  inspect      Inspect state files or schema summaries
+  generators   List available generator types
+  completions  Generate shell completions
 
 Global options:
   --seed <N>            Override schema seed
@@ -262,6 +348,10 @@ Learn-specific options:
   --state <PATH>        Incremental mode: persist statistics to a state file
   --finalize            Emit schema from state without processing new data
   --strict              Error on reprocessing same source into same state (default: warn)
+  --actors              Enable behavioral modeling (persona discovery, actor graphs)
+
+Inspect options:
+  --actors              Show behavioral summary (personas, relationships, generators)
 ```
 
 ## Contributing
