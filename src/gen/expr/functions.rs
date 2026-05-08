@@ -200,6 +200,121 @@ static BUILTINS: &[FuncSig] = &[
         return_type: ExprType::Unknown,
         null_safe: true,
     },
+    // Phase 2: Math functions
+    FuncSig {
+        name: "sqrt",
+        min_args: 1,
+        max_args: 1,
+        arg_types: &[],
+        return_type: ExprType::Float,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "pow",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[],
+        return_type: ExprType::Float,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "log",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[],
+        return_type: ExprType::Float,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "ln",
+        min_args: 1,
+        max_args: 1,
+        arg_types: &[],
+        return_type: ExprType::Float,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "exp",
+        min_args: 1,
+        max_args: 1,
+        arg_types: &[],
+        return_type: ExprType::Float,
+        null_safe: false,
+    },
+    // Phase 2: String functions
+    FuncSig {
+        name: "left",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[],
+        return_type: ExprType::Str,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "right",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[],
+        return_type: ExprType::Str,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "pad_left",
+        min_args: 3,
+        max_args: 3,
+        arg_types: &[],
+        return_type: ExprType::Str,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "pad_right",
+        min_args: 3,
+        max_args: 3,
+        arg_types: &[],
+        return_type: ExprType::Str,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "starts_with",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[ExprType::Str, ExprType::Str],
+        return_type: ExprType::Bool,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "ends_with",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[ExprType::Str, ExprType::Str],
+        return_type: ExprType::Bool,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "contains",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[ExprType::Str, ExprType::Str],
+        return_type: ExprType::Bool,
+        null_safe: false,
+    },
+    // Phase 2: Hash and row numbering
+    FuncSig {
+        name: "hash",
+        min_args: 1,
+        max_args: 1,
+        arg_types: &[],
+        return_type: ExprType::Int,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "row_number",
+        min_args: 0,
+        max_args: 0,
+        arg_types: &[],
+        return_type: ExprType::Int,
+        null_safe: true,
+    },
 ];
 
 #[cfg(test)]
@@ -231,7 +346,7 @@ mod tests {
     #[test]
     fn available_names_not_empty() {
         let names = available_names();
-        assert!(names.len() >= 20);
+        assert!(names.len() >= 33);
         assert!(names.contains(&"abs"));
         assert!(names.contains(&"concat"));
     }

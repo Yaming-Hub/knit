@@ -11,10 +11,12 @@
 //! - **`nullif`**: Returns null if both arguments are equal.
 
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use arrow::array::{Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::datatypes::DataType;
+use siphasher::sip::SipHasher;
 
 use super::ast::{BinOp, Expr, LiteralValue, UnOp};
 
@@ -41,6 +43,8 @@ pub struct EvalContext<'a> {
     pub params: &'a HashMap<String, String>,
     /// Number of rows in the batch.
     pub row_count: usize,
+    /// Absolute row offset within the entity (cumulative across batches).
+    pub row_offset: u64,
 }
 
 /// Evaluate an expression AST against a batch context, producing an Arrow array.
@@ -565,6 +569,109 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
             let b = evaluate(&args[1], ctx)?;
             eval_nullif(&a, &b)
         }
+        // Phase 2: Math functions
+        "sqrt" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_f64_map_checked(&arr, "sqrt", |x| {
+                if x < 0.0 { None } else { Some(x.sqrt()) }
+            })
+        }
+        "pow" => {
+            check_args(name, args, 2, 2)?;
+            let base = evaluate(&args[0], ctx)?;
+            let exp = evaluate(&args[1], ctx)?;
+            eval_f64_map2(&base, &exp, "pow", |b, e| {
+                let result = b.powf(e);
+                if result.is_finite() { Some(result) } else { None }
+            })
+        }
+        "log" => {
+            check_args(name, args, 2, 2)?;
+            let val = evaluate(&args[0], ctx)?;
+            let base = evaluate(&args[1], ctx)?;
+            eval_f64_map2(&val, &base, "log", |v, b| {
+                if v <= 0.0 || b <= 0.0 || (b - 1.0).abs() < f64::EPSILON {
+                    None
+                } else {
+                    let result = v.log(b);
+                    if result.is_finite() { Some(result) } else { None }
+                }
+            })
+        }
+        "ln" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_f64_map_checked(&arr, "ln", |x| {
+                if x <= 0.0 { None } else { Some(x.ln()) }
+            })
+        }
+        "exp" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_f64_map_checked(&arr, "exp", |x| {
+                let result = x.exp();
+                if result.is_finite() { Some(result) } else { None }
+            })
+        }
+        // Phase 2: String functions
+        "left" => {
+            check_args(name, args, 2, 2)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let n = evaluate(&args[1], ctx)?;
+            eval_left_right(&arr, &n, true)
+        }
+        "right" => {
+            check_args(name, args, 2, 2)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let n = evaluate(&args[1], ctx)?;
+            eval_left_right(&arr, &n, false)
+        }
+        "pad_left" => {
+            check_args(name, args, 3, 3)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let len = evaluate(&args[1], ctx)?;
+            let fill = evaluate(&args[2], ctx)?;
+            eval_pad(&arr, &len, &fill, true)
+        }
+        "pad_right" => {
+            check_args(name, args, 3, 3)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let len = evaluate(&args[1], ctx)?;
+            let fill = evaluate(&args[2], ctx)?;
+            eval_pad(&arr, &len, &fill, false)
+        }
+        "starts_with" => {
+            check_args(name, args, 2, 2)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let prefix = evaluate(&args[1], ctx)?;
+            eval_string_predicate(&arr, &prefix, "starts_with", |s, p| s.starts_with(p))
+        }
+        "ends_with" => {
+            check_args(name, args, 2, 2)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let suffix = evaluate(&args[1], ctx)?;
+            eval_string_predicate(&arr, &suffix, "ends_with", |s, p| s.ends_with(p))
+        }
+        "contains" => {
+            check_args(name, args, 2, 2)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let needle = evaluate(&args[1], ctx)?;
+            eval_string_predicate(&arr, &needle, "contains", |s, p| s.contains(p))
+        }
+        // Phase 2: Hash and row numbering
+        "hash" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_hash(&arr)
+        }
+        "row_number" => {
+            check_args(name, args, 0, 0)?;
+            let result: Int64Array = (0..ctx.row_count as i64)
+                .map(|i| Some(ctx.row_offset as i64 + i))
+                .collect();
+            Ok(Arc::new(result))
+        }
         _ => Err(EvalError {
             message: format!("unknown function: `{name}`"),
         }),
@@ -609,6 +716,46 @@ fn eval_f64_map(
         message: format!("{name}: {e}"),
     })?;
     let result: Float64Array = v.into_iter().map(|opt| opt.map(f)).collect();
+    Ok(Arc::new(result))
+}
+
+/// Like `eval_f64_map` but the function returns `Option<f64>` for domain errors.
+fn eval_f64_map_checked(
+    arr: &ArrayRef,
+    name: &str,
+    f: impl Fn(f64) -> Option<f64>,
+) -> Result<ArrayRef, EvalError> {
+    let v = to_f64_vec(arr).map_err(|e| EvalError {
+        message: format!("{name}: {e}"),
+    })?;
+    let result: Float64Array = v
+        .into_iter()
+        .map(|opt| opt.and_then(|x| f(x)))
+        .collect();
+    Ok(Arc::new(result))
+}
+
+/// Two-argument Float64 operation with domain error handling.
+fn eval_f64_map2(
+    a: &ArrayRef,
+    b: &ArrayRef,
+    name: &str,
+    f: impl Fn(f64, f64) -> Option<f64>,
+) -> Result<ArrayRef, EvalError> {
+    let av = to_f64_vec(a).map_err(|e| EvalError {
+        message: format!("{name}: {e}"),
+    })?;
+    let bv = to_f64_vec(b).map_err(|e| EvalError {
+        message: format!("{name}: {e}"),
+    })?;
+    let result: Float64Array = av
+        .iter()
+        .zip(bv.iter())
+        .map(|(a, b)| match (a, b) {
+            (Some(a), Some(b)) => f(*a, *b),
+            _ => None,
+        })
+        .collect();
     Ok(Arc::new(result))
 }
 
@@ -821,6 +968,120 @@ fn eval_cast_int(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
 fn eval_cast_string(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let strings = array_to_strings(arr)?;
     let result: StringArray = strings.iter().map(|v| v.as_deref()).collect();
+    Ok(Arc::new(result))
+}
+
+// ─── Phase 2 string helpers ────────────────────────────────────────────────
+
+fn eval_left_right(arr: &ArrayRef, n: &ArrayRef, is_left: bool) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(arr).ok_or_else(|| EvalError {
+        message: format!("{}: expected string", if is_left { "left" } else { "right" }),
+    })?;
+    let na = as_i64(n).ok_or_else(|| EvalError {
+        message: format!("{}: n must be integer", if is_left { "left" } else { "right" }),
+    })?;
+    let result: StringArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) || na.is_null(i) {
+                return None;
+            }
+            let s = sa.value(i);
+            let count = na.value(i).max(0) as usize;
+            let chars: Vec<char> = s.chars().collect();
+            if is_left {
+                Some(chars.iter().take(count).collect::<String>())
+            } else {
+                let skip = chars.len().saturating_sub(count);
+                Some(chars.iter().skip(skip).collect::<String>())
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_pad(
+    arr: &ArrayRef,
+    len: &ArrayRef,
+    fill: &ArrayRef,
+    is_left: bool,
+) -> Result<ArrayRef, EvalError> {
+    let fname = if is_left { "pad_left" } else { "pad_right" };
+    let sa = as_str(arr).ok_or_else(|| EvalError {
+        message: format!("{fname}: expected string"),
+    })?;
+    let la = as_i64(len).ok_or_else(|| EvalError {
+        message: format!("{fname}: length must be integer"),
+    })?;
+    let fa = as_str(fill).ok_or_else(|| EvalError {
+        message: format!("{fname}: fill must be string"),
+    })?;
+    let result: StringArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) || la.is_null(i) || fa.is_null(i) {
+                return None;
+            }
+            let s = sa.value(i);
+            let target_len = la.value(i).max(0) as usize;
+            let fill_str = fa.value(i);
+            let fill_char = match fill_str.chars().next() {
+                Some(c) => c,
+                None => return Some(s.to_string()),
+            };
+            let char_count = s.chars().count();
+            if char_count >= target_len {
+                return Some(s.to_string());
+            }
+            let pad_count = target_len - char_count;
+            let padding: String = std::iter::repeat(fill_char).take(pad_count).collect();
+            if is_left {
+                Some(format!("{padding}{s}"))
+            } else {
+                Some(format!("{s}{padding}"))
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_string_predicate(
+    arr: &ArrayRef,
+    pattern: &ArrayRef,
+    name: &str,
+    f: fn(&str, &str) -> bool,
+) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(arr).ok_or_else(|| EvalError {
+        message: format!("{name}: expected string"),
+    })?;
+    let pa = as_str(pattern).ok_or_else(|| EvalError {
+        message: format!("{name}: pattern must be string"),
+    })?;
+    let result: BooleanArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) || pa.is_null(i) {
+                None
+            } else {
+                Some(f(sa.value(i), pa.value(i)))
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+// ─── Hash helper ────────────────────────────────────────────────────────────
+
+fn eval_hash(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    // Fixed keys for deterministic hashing across runs
+    let strings = array_to_strings(arr)?;
+    let result: Int64Array = strings
+        .iter()
+        .map(|v| {
+            v.as_ref().map(|s| {
+                let mut hasher = SipHasher::new_with_keys(0x5175_6972_6B79_2D6B, 0x6E69_745F_6861_7368);
+                s.hash(&mut hasher);
+                hasher.finish() as i64
+            })
+        })
+        .collect();
     Ok(Arc::new(result))
 }
 
@@ -1164,6 +1425,7 @@ mod tests {
             columns: &columns,
             params: &params,
             row_count,
+            row_offset: 0,
         };
         evaluate(&ast, &ctx).unwrap()
     }
@@ -1384,6 +1646,7 @@ mod tests {
             columns: &cols,
             params: &params,
             row_count: 2,
+            row_offset: 0,
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let fa = as_f64(&result).unwrap();
@@ -1517,10 +1780,176 @@ mod tests {
             columns: &cols,
             params: &HashMap::new(),
             row_count: 2,
+            row_offset: 0,
         };
         let result = evaluate(&ast, &ctx).unwrap();
         let fa = as_f64(&result).unwrap();
         assert!(fa.is_null(0));
         assert!(fa.is_null(1));
+    }
+
+    // ─── Phase 2 tests ─────────────────────────────────────────────────────
+
+    #[test]
+    fn sqrt_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Float64Array::from(vec![Some(4.0), Some(9.0), Some(-1.0), None])) as ArrayRef,
+        );
+        let result = eval_expr("sqrt(${x})", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 2.0).abs() < 1e-10);
+        assert!((fa.value(1) - 3.0).abs() < 1e-10);
+        assert!(fa.is_null(2)); // sqrt(-1) → null
+        assert!(fa.is_null(3)); // null propagation
+    }
+
+    #[test]
+    fn pow_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "base".into(),
+            Arc::new(Float64Array::from(vec![2.0, 10.0, 0.0])) as ArrayRef,
+        );
+        cols.insert(
+            "exp".into(),
+            Arc::new(Float64Array::from(vec![3.0, 2.0, 0.0])) as ArrayRef,
+        );
+        let result = eval_expr("pow(${base}, ${exp})", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 8.0).abs() < 1e-10);
+        assert!((fa.value(1) - 100.0).abs() < 1e-10);
+        assert!((fa.value(2) - 1.0).abs() < 1e-10); // 0^0 = 1
+    }
+
+    #[test]
+    fn ln_and_exp_functions() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Float64Array::from(vec![Some(1.0), Some(std::f64::consts::E), Some(0.0), Some(-1.0)])) as ArrayRef,
+        );
+        let result = eval_expr("ln(${x})", cols.clone());
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 0.0).abs() < 1e-10);
+        assert!((fa.value(1) - 1.0).abs() < 1e-10);
+        assert!(fa.is_null(2)); // ln(0) → null
+        assert!(fa.is_null(3)); // ln(-1) → null
+
+        let result2 = eval_expr("exp(${x})", cols);
+        let fa2 = as_f64(&result2).unwrap();
+        assert!((fa2.value(0) - std::f64::consts::E).abs() < 1e-10);
+    }
+
+    #[test]
+    fn log_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Float64Array::from(vec![8.0, 100.0])) as ArrayRef,
+        );
+        cols.insert(
+            "b".into(),
+            Arc::new(Float64Array::from(vec![2.0, 10.0])) as ArrayRef,
+        );
+        let result = eval_expr("log(${x}, ${b})", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 3.0).abs() < 1e-10);
+        assert!((fa.value(1) - 2.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn left_right_functions() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "s".into(),
+            Arc::new(StringArray::from(vec!["hello", "日本語テスト"])) as ArrayRef,
+        );
+        let result_l = eval_expr("left(${s}, 3)", cols.clone());
+        let sa = as_str(&result_l).unwrap();
+        assert_eq!(sa.value(0), "hel");
+        assert_eq!(sa.value(1), "日本語");
+
+        let result_r = eval_expr("right(${s}, 3)", cols);
+        let sa = as_str(&result_r).unwrap();
+        assert_eq!(sa.value(0), "llo");
+        assert_eq!(sa.value(1), "テスト");
+    }
+
+    #[test]
+    fn pad_left_right() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "s".into(),
+            Arc::new(StringArray::from(vec!["42", "hello"])) as ArrayRef,
+        );
+        let result = eval_expr("pad_left(${s}, 5, \"0\")", cols.clone());
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "00042");
+        assert_eq!(sa.value(1), "hello"); // already 5 chars
+
+        let result2 = eval_expr("pad_right(${s}, 6, \".\")", cols);
+        let sa2 = as_str(&result2).unwrap();
+        assert_eq!(sa2.value(0), "42....");
+        assert_eq!(sa2.value(1), "hello.");
+    }
+
+    #[test]
+    fn starts_ends_contains() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "s".into(),
+            Arc::new(StringArray::from(vec!["hello world", "foobar"])) as ArrayRef,
+        );
+        let r1 = eval_expr("starts_with(${s}, \"hello\")", cols.clone());
+        let ba1 = as_bool(&r1).unwrap();
+        assert!(ba1.value(0));
+        assert!(!ba1.value(1));
+
+        let r2 = eval_expr("ends_with(${s}, \"bar\")", cols.clone());
+        let ba2 = as_bool(&r2).unwrap();
+        assert!(!ba2.value(0));
+        assert!(ba2.value(1));
+
+        let r3 = eval_expr("contains(${s}, \"oo\")", cols);
+        let ba3 = as_bool(&r3).unwrap();
+        assert!(!ba3.value(0));
+        assert!(ba3.value(1));
+    }
+
+    #[test]
+    fn hash_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(StringArray::from(vec![Some("hello"), Some("world"), None])) as ArrayRef,
+        );
+        let result = eval_expr("hash(${x})", cols.clone());
+        let ia = as_i64(&result).unwrap();
+        assert!(!ia.is_null(0));
+        assert!(!ia.is_null(1));
+        assert!(ia.is_null(2)); // null → null
+        assert_ne!(ia.value(0), ia.value(1)); // different inputs → different hashes
+
+        // Deterministic: same input → same hash
+        let result2 = eval_expr("hash(${x})", cols);
+        let ia2 = as_i64(&result2).unwrap();
+        assert_eq!(ia.value(0), ia2.value(0));
+    }
+
+    #[test]
+    fn row_number_function() {
+        let ast = parser::parse("row_number()").unwrap();
+        let cols = HashMap::new();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 5,
+            row_offset: 100,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.values(), &[100, 101, 102, 103, 104]);
     }
 }
