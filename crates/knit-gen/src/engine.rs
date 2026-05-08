@@ -5,7 +5,7 @@
 //! for each batch. Phases execute sequentially; entities and partitions within
 //! a phase run in parallel via Rayon.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow::array::{Array, Int64Array, StringArray};
@@ -25,9 +25,10 @@ use crate::context::GenContext;
 use crate::error::GenError;
 use crate::generators::actor_fk::ActorForeignKeyGenerator;
 use crate::generators::actor_temporal::{ActorTemporalGenerator, CausalTimes};
-use crate::generators::create_generator;
+use crate::generators::create_generator_with_seen;
 use crate::generators::fk::ForeignKeyGenerator;
 use crate::generators::graph_fk::GraphTargetFkGenerator;
+use crate::generators::plan_contains_unique;
 use crate::generators::persona_field::PersonaFieldGenerator;
 use crate::generators::string_fk::StringForeignKeyGenerator;
 use crate::keystore::InMemoryKeyStore;
@@ -548,19 +549,32 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
         ep: &EntityPlan,
     ) -> Result<Vec<(String, RecordBatch)>, GenError> {
+        // Pre-build shared seen-sets for any Unique fields so uniqueness is
+        // enforced across partitions, not just within each one.
+        let shared_seen = Self::build_shared_seen_sets(ep);
+        let has_unique = !shared_seen.is_empty();
+
         tracing::info!(
             entity = %ep.entity_name,
             rows = ep.estimated_row_count,
             partitions = ep.partitions.len(),
+            sequential = has_unique,
             "generating entity"
         );
 
-        // Parallel across partitions.
-        let partition_results: Vec<Result<Vec<(String, RecordBatch)>, GenError>> = ep
-            .partitions
-            .par_iter()
-            .map(|part| self.generate_partition_batches(plan, ep, part))
-            .collect();
+        // When shared seen-sets exist we must generate partitions sequentially
+        // so the dedup order is deterministic across runs.
+        let partition_results: Vec<Result<Vec<(String, RecordBatch)>, GenError>> = if has_unique {
+            ep.partitions
+                .iter()
+                .map(|part| self.generate_partition_batches(plan, ep, part, &shared_seen))
+                .collect()
+        } else {
+            ep.partitions
+                .par_iter()
+                .map(|part| self.generate_partition_batches(plan, ep, part, &shared_seen))
+                .collect()
+        };
 
         let mut entity_batches = Vec::new();
         for r in partition_results {
@@ -575,6 +589,7 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
         ep: &EntityPlan,
         part: &PartitionRange,
+        shared_seen: &HashMap<usize, Arc<parking_lot::Mutex<HashSet<String>>>>,
     ) -> Result<Vec<(String, RecordBatch)>, GenError> {
         let total_rows = (part.end_row - part.start_row) as usize;
         let mut rng = ChaCha8Rng::seed_from_u64(part.seed);
@@ -582,7 +597,7 @@ impl GenerationEngine {
         let mut batches = Vec::new();
 
         // Build field generators once for this partition.
-        let generators = self.build_field_generators(ep, plan);
+        let generators = self.build_field_generators(ep, plan, shared_seen);
         // Identify the primary-key field index.
         let pk_field_idx = self.find_pk_field_index(ep);
         let key_store = self.key_stores.get(&ep.entity_name).cloned();
@@ -659,10 +674,12 @@ impl GenerationEngine {
         &self,
         ep: &EntityPlan,
         plan: &ExecutionPlan,
+        shared_seen: &HashMap<usize, Arc<parking_lot::Mutex<HashSet<String>>>>,
     ) -> Vec<Box<dyn FieldGenerator>> {
         ep.field_plans
             .iter()
-            .map(|fp| match &fp.generator_plan {
+            .enumerate()
+            .map(|(field_idx, fp)| match &fp.generator_plan {
                 GeneratorPlan::ForeignKey {
                     target_entity,
                     key_store_kind,
@@ -776,7 +793,33 @@ impl GenerationEngine {
                         burst.as_ref(), plan,
                     )
                 }
-                other => create_generator(other),
+                other => {
+                    // Thread the shared seen-set (if any) through to nested
+                    // Unique generators inside Conditional/Composite.
+                    let seen = shared_seen.get(&field_idx);
+                    create_generator_with_seen(other, seen)
+                }
+            })
+            .collect()
+    }
+
+    /// Build shared seen-sets for any field whose plan contains a `Unique`
+    /// node at any nesting depth.
+    ///
+    /// Returns a map from field index to a shared `HashSet` that will be
+    /// reused across all partitions to enforce global uniqueness.
+    fn build_shared_seen_sets(
+        ep: &EntityPlan,
+    ) -> HashMap<usize, Arc<parking_lot::Mutex<HashSet<String>>>> {
+        ep.field_plans
+            .iter()
+            .enumerate()
+            .filter_map(|(i, fp)| {
+                if plan_contains_unique(&fp.generator_plan) {
+                    Some((i, Arc::new(parking_lot::Mutex::new(HashSet::new()))))
+                } else {
+                    None
+                }
             })
             .collect()
     }

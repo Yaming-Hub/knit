@@ -20,7 +20,7 @@ use rand::RngCore;
 use crate::context::GenContext;
 use crate::traits::FieldGenerator;
 
-use super::create_generator;
+use super::{create_generator_with_seen, SharedSeen};
 
 /// A conditional generator that switches on a reference field's value.
 ///
@@ -49,15 +49,26 @@ impl ConditionalGenerator {
         branches: Vec<(knit_core::Value, knit_plan::GeneratorPlan)>,
         default_plan: knit_plan::GeneratorPlan,
     ) -> Self {
+        Self::new_with_seen(field, branches, default_plan, None)
+    }
+
+    /// Like [`new`](Self::new), but threads a shared seen-set through to any
+    /// nested `Unique` sub-generators.
+    pub fn new_with_seen(
+        field: String,
+        branches: Vec<(knit_core::Value, knit_plan::GeneratorPlan)>,
+        default_plan: knit_plan::GeneratorPlan,
+        shared_seen: Option<&SharedSeen>,
+    ) -> Self {
         let compiled_branches: Vec<(String, Box<dyn FieldGenerator>)> = branches
             .into_iter()
             .map(|(cond, plan)| {
                 let cond_str = value_to_string(&cond);
-                let gen = create_generator(&plan);
+                let gen = create_generator_with_seen(&plan, shared_seen);
                 (cond_str, gen)
             })
             .collect();
-        let default_gen = create_generator(&default_plan);
+        let default_gen = create_generator_with_seen(&default_plan, shared_seen);
         Self {
             field,
             branches: compiled_branches,
