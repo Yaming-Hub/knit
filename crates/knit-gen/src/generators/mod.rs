@@ -183,5 +183,25 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             *reply_window,
             pk_field.clone(),
         )),
+        GeneratorPlan::Plugin { name, params } => {
+            match crate::plugin::registry().create(name, params) {
+                Some(Ok(gen)) => gen,
+                Some(Err(e)) => {
+                    tracing::error!(plugin = %name, error = %e, "plugin creation failed — using null constant");
+                    Box::new(crate::generators::constant::ConstantGenerator::new(
+                        knit_core::Value::Null,
+                    ))
+                }
+                None => {
+                    tracing::error!(
+                        plugin = %name,
+                        "plugin not found in registry — using null constant; register it before generation"
+                    );
+                    Box::new(crate::generators::constant::ConstantGenerator::new(
+                        knit_core::Value::Null,
+                    ))
+                }
+            }
+        }
     }
 }

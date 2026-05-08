@@ -405,6 +405,16 @@ pub enum GeneratorPlan {
         /// Name of the PK field in the same entity (to read generated PKs).
         pk_field: String,
     },
+    /// Custom generator supplied by a runtime plugin.
+    ///
+    /// At execution time, the plugin is looked up by name in the global registry.
+    /// If not found, generation fails with an error.
+    Plugin {
+        /// Registered plugin name.
+        name: String,
+        /// Typed parameters passed to the plugin factory.
+        params: BTreeMap<String, knit_core::Value>,
+    },
 }
 
 /// Cross-entity causal ordering: ensures a timestamp is >= the referenced

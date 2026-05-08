@@ -2,24 +2,23 @@
 //!
 //! This module provides a [`Registry`] that allows external code to register
 //! custom [`FieldGenerator`] implementations at runtime. Registered plugins
-//! can be discovered by name via [`Registry::find`].
-//!
-//! **Note:** The generation engine does not yet automatically consult the
-//! registry for unknown generator types. Integration with the schema parser
-//! and plan compiler is planned for a future release. Currently, plugins must
-//! be manually instantiated after lookup.
+//! are automatically consulted during generation when a schema field uses
+//! `type = "plugin"` with a matching `name`.
 //!
 //! # Usage
 //!
 //! ```no_run
-//! use std::collections::HashMap;
+//! use std::collections::BTreeMap;
 //! use knit_gen::plugin::{registry, GeneratorPlugin};
 //! use knit_gen::traits::FieldGenerator;
 //!
 //! struct MyPlugin;
 //! impl GeneratorPlugin for MyPlugin {
 //!     fn name(&self) -> &str { "my_custom" }
-//!     fn create(&self, _params: &HashMap<String, String>) -> Box<dyn FieldGenerator> {
+//!     fn create(
+//!         &self,
+//!         _params: &BTreeMap<String, knit_core::Value>,
+//!     ) -> Result<Box<dyn FieldGenerator>, String> {
 //!         unimplemented!("provide your generator here")
 //!     }
 //! }
@@ -27,21 +26,26 @@
 //! registry().register(Box::new(MyPlugin));
 //! ```
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::{OnceLock, RwLock};
 
 use crate::traits::FieldGenerator;
 
 /// A trait for custom generator plugins that can be registered at runtime.
 ///
-/// Implementors provide a unique name (used in schema `type = "..."` fields)
-/// and a factory method that produces a [`FieldGenerator`] from string parameters.
+/// Implementors provide a unique name (used in schema `type = "plugin"` fields)
+/// and a factory method that produces a [`FieldGenerator`] from typed parameters.
 pub trait GeneratorPlugin: Send + Sync {
-    /// Unique name for this generator type (used in schema `type = "..."`).
+    /// Unique name for this generator type (used in schema `name = "..."`).
     fn name(&self) -> &str;
 
     /// Create a [`FieldGenerator`] instance from the given parameters.
-    fn create(&self, params: &HashMap<String, String>) -> Box<dyn FieldGenerator>;
+    ///
+    /// Returns an error string if required parameters are missing or invalid.
+    fn create(
+        &self,
+        params: &BTreeMap<String, knit_core::Value>,
+    ) -> Result<Box<dyn FieldGenerator>, String>;
 }
 
 /// Thread-safe registry of [`GeneratorPlugin`] instances.
@@ -49,7 +53,7 @@ pub trait GeneratorPlugin: Send + Sync {
 /// Plugins are stored in insertion order and looked up by name.
 /// The registry is globally accessible via [`registry()`].
 pub struct Registry {
-    plugins: RwLock<Vec<Box<dyn GeneratorPlugin>>>,
+    plugins: RwLock<Vec<std::sync::Arc<dyn GeneratorPlugin>>>,
 }
 
 impl Registry {
@@ -64,6 +68,7 @@ impl Registry {
     ///
     /// If a plugin with the same name already exists, the new one replaces it.
     pub fn register(&self, plugin: Box<dyn GeneratorPlugin>) {
+        let plugin: std::sync::Arc<dyn GeneratorPlugin> = plugin.into();
         let mut plugins = self.plugins.write().expect("plugin registry lock poisoned");
         let name = plugin.name().to_string();
         plugins.retain(|p| p.name() != name);
@@ -71,31 +76,33 @@ impl Registry {
         plugins.push(plugin);
     }
 
-    /// Look up a registered plugin by name.
+    /// Look up a registered plugin by name and create a generator with default (empty) params.
     ///
     /// Returns `None` if no plugin with the given name has been registered.
-    pub fn find(&self, name: &str) -> Option<Box<dyn FieldGenerator>> {
-        let plugins = self.plugins.read().expect("plugin registry lock poisoned");
-        let params = HashMap::new();
-        plugins
-            .iter()
-            .find(|p| p.name() == name)
-            .map(|p| p.create(&params))
+    /// Returns `Some(Err(...))` if the plugin exists but creation fails.
+    pub fn find(&self, name: &str) -> Option<Result<Box<dyn FieldGenerator>, String>> {
+        let plugin = {
+            let plugins = self.plugins.read().expect("plugin registry lock poisoned");
+            plugins.iter().find(|p| p.name() == name).cloned()
+        };
+        let params = BTreeMap::new();
+        plugin.map(|p| p.create(&params))
     }
 
     /// Look up a plugin by name and create a generator with the given parameters.
     ///
     /// Returns `None` if no plugin with the given name has been registered.
+    /// Returns `Some(Err(...))` if the plugin exists but creation fails.
     pub fn create(
         &self,
         name: &str,
-        params: &HashMap<String, String>,
-    ) -> Option<Box<dyn FieldGenerator>> {
-        let plugins = self.plugins.read().expect("plugin registry lock poisoned");
-        plugins
-            .iter()
-            .find(|p| p.name() == name)
-            .map(|p| p.create(params))
+        params: &BTreeMap<String, knit_core::Value>,
+    ) -> Option<Result<Box<dyn FieldGenerator>, String>> {
+        let plugin = {
+            let plugins = self.plugins.read().expect("plugin registry lock poisoned");
+            plugins.iter().find(|p| p.name() == name).cloned()
+        };
+        plugin.map(|p| p.create(params))
     }
 
     /// List the names of all registered plugins.
@@ -145,8 +152,29 @@ mod tests {
         fn name(&self) -> &str {
             "forty_two"
         }
-        fn create(&self, _params: &HashMap<String, String>) -> Box<dyn FieldGenerator> {
-            Box::new(FortyTwoGenerator)
+        fn create(
+            &self,
+            _params: &BTreeMap<String, knit_core::Value>,
+        ) -> Result<Box<dyn FieldGenerator>, String> {
+            Ok(Box::new(FortyTwoGenerator))
+        }
+    }
+
+    struct FailingPlugin;
+
+    impl GeneratorPlugin for FailingPlugin {
+        fn name(&self) -> &str {
+            "failing"
+        }
+        fn create(
+            &self,
+            params: &BTreeMap<String, knit_core::Value>,
+        ) -> Result<Box<dyn FieldGenerator>, String> {
+            if params.contains_key("required_param") {
+                Ok(Box::new(FortyTwoGenerator))
+            } else {
+                Err("missing required_param".to_string())
+            }
         }
     }
 
@@ -173,8 +201,36 @@ mod tests {
         let reg = Registry::new();
         reg.register(Box::new(TestPlugin));
 
-        let gen = reg.find("forty_two").expect("plugin should exist");
+        let gen = reg.find("forty_two").unwrap().unwrap();
         assert_eq!(gen.output_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn plugin_creation_can_fail() {
+        let reg = Registry::new();
+        reg.register(Box::new(FailingPlugin));
+
+        let result = reg.find("failing").unwrap();
+        assert!(result.is_err());
+        let err = match result {
+            Err(e) => e,
+            Ok(_) => unreachable!(),
+        };
+        assert_eq!(err, "missing required_param");
+    }
+
+    #[test]
+    fn plugin_creation_with_params_succeeds() {
+        let reg = Registry::new();
+        reg.register(Box::new(FailingPlugin));
+
+        let mut params = BTreeMap::new();
+        params.insert(
+            "required_param".to_string(),
+            knit_core::Value::String("value".to_string()),
+        );
+        let result = reg.create("failing", &params).unwrap();
+        assert!(result.is_ok());
     }
 
     #[test]
