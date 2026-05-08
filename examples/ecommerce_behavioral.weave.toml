@@ -1,0 +1,349 @@
+schema_version = "1.0"
+
+[model]
+name = "ecommerce_behavioral"
+description = """
+E-commerce platform with customer behavioral segments: persona-driven purchasing
+patterns, activity-weighted order volumes, temporal shopping biases, and
+customer-to-customer referral relationships. Demonstrates persona_field for
+tier correlation, actor_temporal for shopping-hour preferences, and thread_ref
+for review reply chains.
+"""
+seed = 20240315
+
+# ── Personas ─────────────────────────────────────────────────────────
+# Customer behavioral segments with distinct purchasing patterns.
+# Trait units: activity_rate = orders/month, avg_spend = dollars/order,
+# peak_hours = preferred shopping hour (0–23), browse_sessions = sessions/month,
+# review_rate = reviews/month (absolute count for activity_count).
+
+[[personas]]
+name = "power_buyer"
+weight = 0.10
+[personas.traits]
+activity_rate = 15.0
+avg_spend = 120.0
+peak_hours = 12.0
+browse_sessions = 30.0
+review_rate = 8.0
+
+[[personas]]
+name = "regular_shopper"
+weight = 0.45
+[personas.traits]
+activity_rate = 4.0
+avg_spend = 55.0
+peak_hours = 20.0
+browse_sessions = 8.0
+review_rate = 2.0
+
+[[personas]]
+name = "bargain_hunter"
+weight = 0.25
+[personas.traits]
+activity_rate = 6.0
+avg_spend = 25.0
+peak_hours = 10.0
+browse_sessions = 15.0
+review_rate = 3.0
+
+[[personas]]
+name = "window_shopper"
+weight = 0.20
+[personas.traits]
+activity_rate = 1.0
+avg_spend = 40.0
+peak_hours = 21.0
+browse_sessions = 20.0
+review_rate = 0.5
+
+# ── Actor Relationships ──────────────────────────────────────────────
+
+[[actor_relationships]]
+name = "referrals"
+from_entity = "customers"
+to_entity = "customers"
+graph_type = "scale_free"
+[actor_relationships.params]
+avg_degree = 3.0
+reciprocity = 0.1
+
+# ── Customers (actor entity) ─────────────────────────────────────────
+
+[[entities]]
+name = "customers"
+count = 500
+actor = true
+persona_distribution = "personas"
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "email"
+data_type = "string"
+[entities.fields.generator]
+type = "pattern"
+pattern = "customer####@shop.example"
+
+[[entities.fields]]
+name = "tier"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "platinum", weight = 0.10 },
+    { value = "gold", weight = 0.45 },
+    { value = "silver", weight = 0.25 },
+    { value = "bronze", weight = 0.20 },
+]
+
+[[entities.fields]]
+name = "signup_date"
+data_type = "datetime"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 1672531200.0
+max = 1704067200.0
+
+[[entities.fields]]
+name = "referred_by"
+data_type = "int"
+nullable = { probability = 0.6 }
+actor_column = true
+[entities.fields.generator]
+type = "relationship_ref"
+relationship = "referrals"
+source_field = "id"
+
+# ── Products ─────────────────────────────────────────────────────────
+
+[[entities]]
+name = "products"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "sku"
+data_type = "string"
+[entities.fields.generator]
+type = "pattern"
+pattern = "SKU-AAA-####"
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "dictionary"
+file = "products.dict.txt"
+expansion = "combinatorial"
+
+[[entities.fields]]
+name = "price"
+data_type = "float"
+precision = 2
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 3.5
+sigma = 1.0
+
+[[entities.fields]]
+name = "category"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "electronics", weight = 0.25 },
+    { value = "clothing", weight = 0.20 },
+    { value = "books", weight = 0.15 },
+    { value = "home", weight = 0.15 },
+    { value = "sports", weight = 0.10 },
+    { value = "toys", weight = 0.10 },
+    { value = "food", weight = 0.05 },
+]
+
+# ── Orders (activity-driven) ─────────────────────────────────────────
+
+[[entities]]
+name = "orders"
+count = 3000  # fallback estimate; actual count driven by activity_rate
+[entities.activity_count]
+actor_field = "customer_id"
+trait = "activity_rate"
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "customer_id"
+data_type = "int"
+actor_column = true
+
+[[entities.fields]]
+name = "product_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "quantity"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "zipf"
+[entities.fields.generator.params]
+n = 10.0
+s = 1.5
+
+[[entities.fields]]
+name = "total_amount"
+data_type = "float"
+precision = 2
+[entities.fields.generator]
+type = "distribution"
+kind = "pareto"
+[entities.fields.generator.params]
+scale = 10.0
+shape = 1.5
+
+[[entities.fields]]
+name = "status"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "pending", weight = 0.10 },
+    { value = "shipped", weight = 0.25 },
+    { value = "delivered", weight = 0.55 },
+    { value = "returned", weight = 0.07 },
+    { value = "cancelled", weight = 0.03 },
+]
+
+[[entities.fields]]
+name = "ordered_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
+[entities.fields.generator.temporal_after]
+entity = "customers"
+field = "signup_date"
+fk = "customer_id"
+
+# ── Reviews (with thread replies) ─────────────────────────────────────
+
+[[entities]]
+name = "reviews"
+count = 2000  # fallback; driven by review_ratio persona trait
+[entities.activity_count]
+actor_field = "reviewer_id"
+trait = "review_rate"
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "reviewer_id"
+data_type = "int"
+actor_column = true
+
+[[entities.fields]]
+name = "product_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "rating"
+data_type = "int"
+[entities.fields.generator]
+type = "distribution"
+kind = "zipf"
+[entities.fields.generator.params]
+n = 5.0
+s = 1.2
+
+[[entities.fields]]
+name = "reply_to"
+data_type = "int"
+[entities.fields.generator]
+type = "thread_ref"
+reply_probability = 0.3
+max_depth = 3
+reply_window = 50
+
+[[entities.fields]]
+name = "comment"
+data_type = "string"
+nullable = { probability = 0.2 }
+[entities.fields.generator]
+type = "faker"
+method = "sentence"
+args = []
+
+[[entities.fields]]
+name = "reviewed_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "actor_temporal"
+trait = "peak_hours"
+[entities.fields.generator.temporal_after]
+entity = "customers"
+field = "signup_date"
+fk = "reviewer_id"
+
+# ── Relationships ────────────────────────────────────────────────────
+
+[[relationships]]
+name = "order_customer"
+from = "orders"
+to = "customers"
+kind = "many_to_one"
+foreign_key = "customer_id"
+
+[[relationships]]
+name = "order_product"
+from = "orders"
+to = "products"
+kind = "many_to_one"
+foreign_key = "product_id"
+
+[[relationships]]
+name = "review_customer"
+from = "reviews"
+to = "customers"
+kind = "many_to_one"
+foreign_key = "reviewer_id"
+
+[[relationships]]
+name = "review_product"
+from = "reviews"
+to = "products"
+kind = "many_to_one"
+foreign_key = "product_id"
