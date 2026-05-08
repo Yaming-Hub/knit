@@ -7,10 +7,25 @@ data model in a declarative TOML or JSON schema, and Knit handles execution
 planning, deterministic generation, output formatting, and optional noise
 injection — all from a single CLI command.
 
-[![Rust](https://img.shields.io/badge/Rust-1.75%2B-orange)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/Rust-1.87%2B-orange)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![crates.io](https://img.shields.io/crates/v/knit.svg)](https://crates.io/crates/knit)
 
 ---
+
+## Installation
+
+```bash
+cargo install knit
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/Yaming-Hub/knit.git
+cd knit
+cargo build --release
+```
 
 ## Features
 
@@ -46,13 +61,13 @@ injection — all from a single CLI command.
 
 ```mermaid
 graph LR
-    A[Schema TOML/JSON] -->|knit-schema| B[DataModel]
-    B -->|knit-plan| C[ExecutionPlan]
-    C -->|knit-gen| D[RecordBatches]
-    D -->|knit-noise| E[Perturbed Batches]
-    E -->|knit-bind| F[Parquet / CSV / JSON / Arrow]
-    G[knit-learn] -->|ingest + profile| B
-    H[knit-cli] --> A
+    A[Schema TOML/JSON] -->|schema| B[DataModel]
+    B -->|plan| C[ExecutionPlan]
+    C -->|gen| D[RecordBatches]
+    D -->|noise| E[Perturbed Batches]
+    E -->|bind| F[Parquet / CSV / JSON / Arrow]
+    G[learn] -->|ingest + profile| B
+    H[cli] --> A
 ```
 
 ## Quick Start
@@ -129,18 +144,20 @@ knit generate demo.weave.toml --format csv --seed 123 -o ./data
 knit generate demo.weave.toml --dry-run
 ```
 
-## Crate Structure
+## Module Structure
 
-| Crate | Description |
+Knit is published as a single crate. Internally it is organized into modules:
+
+| Module | Description |
 |---|---|
-| `knit-core` | Shared types: `DataModel`, `Entity`, `Field`, `Value`, `GeneratorSpec` |
-| `knit-schema` | TOML/JSON parsing, validation, schema inheritance (`extends`) |
-| `knit-plan` | Compiles a `DataModel` into an `ExecutionPlan` with RNG tree |
-| `knit-gen` | Generation engine: executes plans → Arrow `RecordBatch`es |
-| `knit-noise` | Post-generation perturbation pipeline (7 perturbators) |
-| `knit-bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC |
-| `knit-learn` | Data ingestion, profiling, distribution fitting, schema inference, behavioral persona discovery |
-| `knit-cli` | Binary: `validate`, `plan`, `generate`, `schema`, `init`, `learn`, `inspect`, `completions`, `generators` |
+| `knit::core` | Shared types: `DataModel`, `Entity`, `Field`, `Value`, `GeneratorSpec` |
+| `knit::schema` | TOML/JSON parsing, validation, schema inheritance (`extends`) |
+| `knit::plan` | Compiles a `DataModel` into an `ExecutionPlan` with RNG tree |
+| `knit::gen` | Generation engine: executes plans → Arrow `RecordBatch`es |
+| `knit::noise` | Post-generation perturbation pipeline (7 perturbators) |
+| `knit::bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC |
+| `knit::learn` | Data ingestion, profiling, distribution fitting, schema inference, behavioral persona discovery |
+| `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `schema`, `init`, `learn`, `inspect`, `completions`, `generators` |
 
 ## Examples
 
