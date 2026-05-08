@@ -21,6 +21,7 @@ pub mod batch;
 pub mod context;
 pub mod engine;
 pub mod error;
+pub mod expr;
 pub mod generators;
 pub mod graph;
 pub mod interaction;

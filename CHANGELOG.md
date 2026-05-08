@@ -12,6 +12,15 @@ All notable changes to Knit are documented in this file.
   Fragment validation rejects `[model]` sections and `extends` in included
   files.
 - Modular example schemas in `examples/modular/`
+- **Expression engine** — Full expression language for derived fields with:
+  - Pratt parser with proper operator precedence
+  - 20+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
+    `max`, `clamp`), string (`upper`, `lower`, `trim`, `len`, `concat`,
+    `substr`, `replace`), type casts (`cast_int`, `cast_float`, `cast_string`),
+    conditionals (`if`, `coalesce`, `nullif`)
+  - Vectorized evaluation over Arrow arrays with SQL-like null propagation
+  - Backward compatible with legacy string templates
+  - AST-based dependency extraction in the plan compiler
 
 ## [0.3.0] — 2026-05-08
 
