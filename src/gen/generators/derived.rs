@@ -173,6 +173,7 @@ impl FieldGenerator for DerivedGenerator {
                 columns: ctx.batch_columns,
                 params: ctx.params,
                 row_count: count,
+                row_offset: ctx.row_offset,
             };
             match eval::evaluate(ast, &eval_ctx) {
                 Ok(result) => return result,

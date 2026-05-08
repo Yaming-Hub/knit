@@ -14,10 +14,18 @@ All notable changes to Knit are documented in this file.
 - Modular example schemas in `examples/modular/`
 - **Expression engine** — Full expression language for derived fields with:
   - Pratt parser with proper operator precedence
-  - 20+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
-    `max`, `clamp`), string (`upper`, `lower`, `trim`, `len`, `concat`,
-    `substr`, `replace`), type casts (`cast_int`, `cast_float`, `cast_string`),
-    conditionals (`if`, `coalesce`, `nullif`)
+  - 33+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
+    `max`, `clamp`, `sqrt`, `pow`, `log`, `ln`, `exp`), string (`upper`,
+    `lower`, `trim`, `len`, `concat`, `substr`, `replace`, `left`, `right`,
+    `pad_left`, `pad_right`, `starts_with`, `ends_with`, `contains`), type
+    casts (`cast_int`, `cast_float`, `cast_string`), conditionals (`if`,
+    `coalesce`, `nullif`), utility (`hash`, `row_number`)
+  - SQL three-valued null logic for `&&`/`||`
+  - Domain-error handling (sqrt of negative → null, ln of non-positive → null)
+  - Deterministic SipHash for `hash()` function
+  - Global `row_number()` with cross-batch offset tracking
+  - Mixed numeric type promotion (Int64/Float64 → Float64 in if/coalesce)
+  - UTF-8 safe string operations (character-based indexing)
   - Vectorized evaluation over Arrow arrays with SQL-like null propagation
   - Backward compatible with legacy string templates
   - AST-based dependency extraction in the plan compiler
