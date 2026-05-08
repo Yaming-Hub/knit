@@ -1,7 +1,10 @@
 [package]
 name = "knit-learn"
 version = "0.2.0"
-edition = "2021"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "Schema inference from existing data sources"
 
 [dependencies]

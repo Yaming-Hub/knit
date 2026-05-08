@@ -1,7 +1,10 @@
 [package]
 name = "knit-noise"
 version = "0.2.0"
-edition = "2021"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "Noise injection and data quality simulation"
 
 [dependencies]
