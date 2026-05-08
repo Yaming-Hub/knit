@@ -77,7 +77,10 @@ fn generators_json_output() {
     let generators = json["generators"].as_array().unwrap();
     assert!(generators.len() >= 15, "expected at least 15 generators");
     let distributions = json["distributions"].as_array().unwrap();
-    assert!(distributions.len() >= 10, "expected at least 10 distributions");
+    assert!(
+        distributions.len() >= 10,
+        "expected at least 10 distributions"
+    );
     // Check structure of first generator
     let first = &generators[0];
     assert!(first["name"].is_string());
@@ -656,7 +659,10 @@ fn generate_seed_override_differs_from_schema_default() {
 
     let c1 = fs::read(dir_default.path().join("items.csv")).unwrap();
     let c2 = fs::read(dir_override.path().join("items.csv")).unwrap();
-    assert_ne!(c1, c2, "--seed override should produce different output than schema default seed");
+    assert_ne!(
+        c1, c2,
+        "--seed override should produce different output than schema default seed"
+    );
 }
 
 #[test]
@@ -894,7 +900,10 @@ fn generate_json_progress_events() {
             has_complete = true;
         }
     }
-    assert!(has_progress, "expected at least one progress event in JSON output");
+    assert!(
+        has_progress,
+        "expected at least one progress event in JSON output"
+    );
     assert!(has_complete, "expected a complete event in JSON output");
 }
 
@@ -922,7 +931,11 @@ fn generate_entity_filter_single() {
         .filter_map(|e| e.ok())
         .map(|e| e.file_name().to_string_lossy().to_string())
         .collect();
-    assert_eq!(files, vec!["users.csv"], "only users.csv should be generated");
+    assert_eq!(
+        files,
+        vec!["users.csv"],
+        "only users.csv should be generated"
+    );
 }
 
 #[test]
@@ -998,12 +1011,19 @@ fn generate_entity_filter_fk_integrity() {
         .filter_map(|e| e.ok())
         .map(|e| e.file_name().to_string_lossy().to_string())
         .collect();
-    assert_eq!(files, vec!["orders.csv"], "only orders.csv should be generated");
+    assert_eq!(
+        files,
+        vec!["orders.csv"],
+        "only orders.csv should be generated"
+    );
 
     // Verify the orders file has data (FK columns should be populated)
     let content = fs::read_to_string(dir.path().join("orders.csv")).unwrap();
     let row_count = content.lines().count() - 1; // minus header
-    assert!(row_count > 0, "orders should have rows with FK values populated");
+    assert!(
+        row_count > 0,
+        "orders should have rows with FK values populated"
+    );
 }
 
 // ── Init ────────────────────────────────────────────────────────────
@@ -1121,7 +1141,13 @@ fn init_template_from_file_path() {
         .join("../../examples/ecommerce.weave.toml");
 
     knit()
-        .args(["init", "-o", schema.to_str().unwrap(), "--template", example_path.to_str().unwrap()])
+        .args([
+            "init",
+            "-o",
+            schema.to_str().unwrap(),
+            "--template",
+            example_path.to_str().unwrap(),
+        ])
         .assert()
         .success();
 
@@ -1141,11 +1167,16 @@ fn init_template_from_directory() {
     let schema = dir.path().join("schema.weave.toml");
 
     // Use the examples/ directory as a template directory
-    let examples_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../examples");
+    let examples_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples");
 
     knit()
-        .args(["init", "-o", schema.to_str().unwrap(), "--template", examples_dir.to_str().unwrap()])
+        .args([
+            "init",
+            "-o",
+            schema.to_str().unwrap(),
+            "--template",
+            examples_dir.to_str().unwrap(),
+        ])
         .assert()
         .success();
 
@@ -1157,7 +1188,13 @@ fn init_template_nonexistent_path_fails() {
     let dir = TempDir::new().unwrap();
     let schema = dir.path().join("bad.weave.toml");
     knit()
-        .args(["init", "-o", schema.to_str().unwrap(), "--template", "/nonexistent/path.weave.toml"])
+        .args([
+            "init",
+            "-o",
+            schema.to_str().unwrap(),
+            "--template",
+            "/nonexistent/path.weave.toml",
+        ])
         .assert()
         .failure()
         .stderr(predicates::str::contains("does not exist"));
@@ -1255,10 +1292,7 @@ fn schema_diff_learned_vs_original() {
 
 #[test]
 fn unknown_command_fails() {
-    knit()
-        .arg("nonexistent")
-        .assert()
-        .failure();
+    knit().arg("nonexistent").assert().failure();
 }
 
 #[test]
@@ -1477,13 +1511,19 @@ fn learn_round_trip_generates_data() {
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "csv"))
         .collect();
-    assert!(!files.is_empty(), "round-trip generation should produce CSV files");
+    assert!(
+        !files.is_empty(),
+        "round-trip generation should produce CSV files"
+    );
 
     // Verify the generated file has rows
     for entry in &files {
         let content = fs::read_to_string(entry.path()).unwrap();
         let line_count = content.lines().count();
-        assert!(line_count > 1, "generated file should have header + data rows");
+        assert!(
+            line_count > 1,
+            "generated file should have header + data rows"
+        );
     }
 }
 
@@ -1548,7 +1588,10 @@ fn learn_json_round_trip_generates_data() {
     for entry in &files {
         let content = fs::read_to_string(entry.path()).unwrap();
         let line_count = content.lines().count();
-        assert!(line_count > 1, "generated file should have header + data rows");
+        assert!(
+            line_count > 1,
+            "generated file should have header + data rows"
+        );
     }
 }
 
@@ -1638,8 +1681,8 @@ fn learn_json_mode_outputs_summary() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let json: serde_json::Value = serde_json::from_str(&stdout)
-        .expect("--json should output valid JSON");
+    let json: serde_json::Value =
+        serde_json::from_str(&stdout).expect("--json should output valid JSON");
     assert_eq!(json["event"], "complete");
     assert_eq!(json["tables"], 1);
     assert!(json["columns"].as_u64().unwrap() > 0);
@@ -1709,7 +1752,10 @@ fn learn_sample_limits_rows() {
     assert!(learned.exists(), "learned schema should be created");
     let content = fs::read_to_string(&learned).unwrap();
     // Should still produce a valid schema with entity "big"
-    assert!(content.contains("big"), "entity name should come from file stem");
+    assert!(
+        content.contains("big"),
+        "entity name should come from file stem"
+    );
     assert!(content.contains("[[entities.fields]]"));
 }
 
@@ -1740,8 +1786,14 @@ fn learn_entity_filter_includes_only_matching() {
         .success();
 
     let content = fs::read_to_string(&learned).unwrap();
-    assert!(content.contains(r#"name = "users""#), "should contain users entity");
-    assert!(!content.contains(r#"name = "orders""#), "should NOT contain orders entity");
+    assert!(
+        content.contains(r#"name = "users""#),
+        "should contain users entity"
+    );
+    assert!(
+        !content.contains(r#"name = "orders""#),
+        "should NOT contain orders entity"
+    );
 }
 
 #[test]
@@ -1795,7 +1847,9 @@ fn learn_entity_filter_no_match_fails() {
         ])
         .assert()
         .failure()
-        .stderr(predicates::str::contains("unknown --entity name(s): nonexistent"));
+        .stderr(predicates::str::contains(
+            "unknown --entity name(s): nonexistent",
+        ));
 }
 
 #[test]
@@ -1839,8 +1893,14 @@ fn learn_entity_filter_incremental_mode() {
         .success();
 
     let content = fs::read_to_string(&learned).unwrap();
-    assert!(content.contains(r#"name = "orders""#), "should contain orders entity");
-    assert!(!content.contains(r#"name = "users""#), "should NOT contain users entity");
+    assert!(
+        content.contains(r#"name = "orders""#),
+        "should contain orders entity"
+    );
+    assert!(
+        !content.contains(r#"name = "users""#),
+        "should NOT contain users entity"
+    );
 }
 
 #[test]
@@ -2056,11 +2116,15 @@ fn learn_dictionary_extraction_round_trip() {
     // Parse generated CSV and verify product_name column uses dictionary values
     let gen_csv = fs::read_to_string(&gen_csv_path).unwrap();
     let gen_lines: Vec<&str> = gen_csv.lines().collect();
-    assert!(gen_lines.len() > 1, "generated CSV should have header + data rows");
+    assert!(
+        gen_lines.len() > 1,
+        "generated CSV should have header + data rows"
+    );
 
     // Find product_name column index
     let header = gen_lines[0];
-    let col_idx = header.split(',')
+    let col_idx = header
+        .split(',')
         .position(|h| h == "product_name")
         .expect("generated CSV should have product_name column");
 
@@ -2078,7 +2142,10 @@ fn learn_dictionary_extraction_round_trip() {
             found_dict_value = true;
         }
     }
-    assert!(found_dict_value, "at least some generated rows should have dictionary values");
+    assert!(
+        found_dict_value,
+        "at least some generated rows should have dictionary values"
+    );
 }
 
 #[test]
@@ -2111,12 +2178,7 @@ fn learn_dictionary_threshold_boundary() {
     let dict_files_50: Vec<_> = fs::read_dir(dir_50.path())
         .unwrap()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .to_str()
-                .unwrap_or("")
-                .contains(".dict.txt")
-        })
+        .filter(|e| e.path().to_str().unwrap_or("").contains(".dict.txt"))
         .collect();
     assert!(
         dict_files_50.is_empty(),
@@ -2147,12 +2209,7 @@ fn learn_dictionary_threshold_boundary() {
     let dict_files_51: Vec<_> = fs::read_dir(dir_51.path())
         .unwrap()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .to_str()
-                .unwrap_or("")
-                .contains(".dict.txt")
-        })
+        .filter(|e| e.path().to_str().unwrap_or("").contains(".dict.txt"))
         .collect();
     assert!(
         !dict_files_51.is_empty(),
@@ -2265,14 +2322,18 @@ fn learn_incremental_generates_valid_schema() {
     // Verify generated values come from dictionary
     let dict_set: std::collections::HashSet<&str> = dict_lines.iter().copied().collect();
     let header = gen_csv.lines().next().unwrap();
-    let col_idx = header.split(',')
+    let col_idx = header
+        .split(',')
         .position(|h| h == "sku_code")
         .expect("should have sku_code column");
     let has_dict_value = gen_csv.lines().skip(1).any(|line| {
         let fields: Vec<&str> = line.split(',').collect();
         fields.len() > col_idx && dict_set.contains(fields[col_idx])
     });
-    assert!(has_dict_value, "generated data should use dictionary values");
+    assert!(
+        has_dict_value,
+        "generated data should use dictionary values"
+    );
 }
 
 #[test]
@@ -2391,7 +2452,10 @@ fn learn_actors_round_trip() {
     for actor_field in &["sender_id", "recipient_id"] {
         let field_block = format!("name = \"{actor_field}\"");
         let pos = schema_text.find(&field_block);
-        assert!(pos.is_some(), "schema should contain field {actor_field}.\nSchema:\n{schema_text}");
+        assert!(
+            pos.is_some(),
+            "schema should contain field {actor_field}.\nSchema:\n{schema_text}"
+        );
         // Check that actor_column = true appears in the same field block (within next ~200 chars)
         let after = &schema_text[pos.unwrap()..];
         let block_end = after.find("\n[[").unwrap_or(after.len());
@@ -2404,14 +2468,20 @@ fn learn_actors_round_trip() {
 }
 
 #[test]
-fn learn_actor_column_explicit_round_trip(){
+fn learn_actor_column_explicit_round_trip() {
     let dir = TempDir::new().unwrap();
 
     let csv_path = dir.path().join("events.csv");
     let mut csv_content = String::from("event_id,user_id,action,value\n");
     for i in 1..=100 {
         let user = (i % 8) + 1;
-        let action = if i % 3 == 0 { "purchase" } else if i % 2 == 0 { "click" } else { "view" };
+        let action = if i % 3 == 0 {
+            "purchase"
+        } else if i % 2 == 0 {
+            "click"
+        } else {
+            "view"
+        };
         csv_content.push_str(&format!("{i},{user},{action},{}\n", i * 10));
     }
     fs::write(&csv_path, &csv_content).unwrap();
@@ -2434,7 +2504,10 @@ fn learn_actor_column_explicit_round_trip(){
     // Verify user_id specifically is marked as actor
     let field_block = "name = \"user_id\"";
     let pos = schema_text.find(field_block);
-    assert!(pos.is_some(), "schema should contain field user_id.\nSchema:\n{schema_text}");
+    assert!(
+        pos.is_some(),
+        "schema should contain field user_id.\nSchema:\n{schema_text}"
+    );
     let after = &schema_text[pos.unwrap()..];
     let block_end = after.find("\n[[").unwrap_or(after.len());
     let block = &after[..block_end];

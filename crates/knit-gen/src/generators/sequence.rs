@@ -98,8 +98,7 @@ mod tests {
         assert_eq!(p0, vec![1, 2, 3]);
         assert_eq!(p1, vec![4, 5, 6]);
         // No overlap
-        let all: std::collections::HashSet<i64> =
-            p0.into_iter().chain(p1.into_iter()).collect();
+        let all: std::collections::HashSet<i64> = p0.into_iter().chain(p1.into_iter()).collect();
         assert_eq!(all.len(), 6);
     }
 
@@ -138,6 +137,9 @@ mod tests {
         let vb: Vec<i64> = (0..5)
             .map(|i| b.as_any().downcast_ref::<Int64Array>().unwrap().value(i))
             .collect();
-        assert_eq!(va, vb, "sequence should be deterministic regardless of RNG seed");
+        assert_eq!(
+            va, vb,
+            "sequence should be deterministic regardless of RNG seed"
+        );
     }
 }

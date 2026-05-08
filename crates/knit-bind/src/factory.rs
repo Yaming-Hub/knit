@@ -10,7 +10,7 @@ use crate::error::BindError;
 use crate::ipc::ArrowIpcSink;
 use crate::json::{JsonMode, JsonSink};
 use crate::parquet::{Compression, ParquetSink};
-use crate::template::{TemplateSink, TemplateMode};
+use crate::template::{TemplateMode, TemplateSink};
 use crate::traits::Sink;
 
 /// Supported output formats.
@@ -98,11 +98,8 @@ pub fn create_sink(
             Ok(Box::new(sink))
         }
         OutputFormat::Template => {
-            let sink = TemplateSink::new(
-                writer,
-                config.template_source.clone(),
-                config.template_mode,
-            )?;
+            let sink =
+                TemplateSink::new(writer, config.template_source.clone(), config.template_mode)?;
             Ok(Box::new(sink))
         }
     }
@@ -173,7 +170,10 @@ mod tests {
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
         let content = buf.to_string();
-        assert!(content.contains("id,name"), "CSV output should contain header");
+        assert!(
+            content.contains("id,name"),
+            "CSV output should contain header"
+        );
         assert!(content.contains("1,a"), "CSV output should contain data");
     }
 
@@ -190,8 +190,14 @@ mod tests {
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
         let content = buf.to_string();
-        assert!(content.contains('['), "JSON array output should start with [");
-        assert!(content.contains("\"id\""), "JSON output should contain field names");
+        assert!(
+            content.contains('['),
+            "JSON array output should start with ["
+        );
+        assert!(
+            content.contains("\"id\""),
+            "JSON output should contain field names"
+        );
     }
 
     #[test]
@@ -209,7 +215,10 @@ mod tests {
         let content = buf.to_string();
         let lines: Vec<&str> = content.trim().lines().collect();
         assert_eq!(lines.len(), 2, "JSONL should have one line per record");
-        assert!(lines[0].contains("\"id\""), "JSONL line should contain field name");
+        assert!(
+            lines[0].contains("\"id\""),
+            "JSONL line should contain field name"
+        );
     }
 
     #[test]
@@ -227,7 +236,11 @@ mod tests {
         // Parquet magic bytes: PAR1
         let bytes = buf.bytes();
         assert!(bytes.len() >= 4, "Parquet output should not be empty");
-        assert_eq!(&bytes[..4], b"PAR1", "Parquet output should start with magic bytes");
+        assert_eq!(
+            &bytes[..4],
+            b"PAR1",
+            "Parquet output should start with magic bytes"
+        );
     }
 
     #[test]
@@ -245,7 +258,11 @@ mod tests {
         // Arrow IPC magic bytes: ARROW1
         let bytes = buf.bytes();
         assert!(bytes.len() >= 6, "IPC output should not be empty");
-        assert_eq!(&bytes[..6], b"ARROW1", "IPC output should start with magic bytes");
+        assert_eq!(
+            &bytes[..6],
+            b"ARROW1",
+            "IPC output should start with magic bytes"
+        );
     }
 
     #[test]
@@ -262,7 +279,13 @@ mod tests {
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
         let content = buf.to_string();
-        assert!(content.contains("ROW:1,a"), "template output should contain rendered row");
-        assert!(content.contains("ROW:2,b"), "template output should contain second row");
+        assert!(
+            content.contains("ROW:1,a"),
+            "template output should contain rendered row"
+        );
+        assert!(
+            content.contains("ROW:2,b"),
+            "template output should contain second row"
+        );
     }
 }

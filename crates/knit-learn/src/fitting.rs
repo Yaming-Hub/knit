@@ -96,11 +96,7 @@ pub struct CategoricalFit {
 /// Filters out NaN and Infinity values. Returns `None` if fewer than 2 valid
 /// values remain.
 pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
-    let mut clean: Vec<f64> = values
-        .iter()
-        .copied()
-        .filter(|v| v.is_finite())
-        .collect();
+    let mut clean: Vec<f64> = values.iter().copied().filter(|v| v.is_finite()).collect();
 
     if clean.len() < 2 {
         warn!("fit_distribution: fewer than 2 finite values");
@@ -127,7 +123,13 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         if let Some(d) = dist {
             let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
             let ll = -(n as f64) * (max_val - min_val).ln();
-            push_candidate(&mut candidates, Distribution::Uniform(min_val, max_val), ks, ll, n);
+            push_candidate(
+                &mut candidates,
+                Distribution::Uniform(min_val, max_val),
+                ks,
+                ll,
+                n,
+            );
         }
     }
 
@@ -136,7 +138,13 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         if let Ok(d) = Normal::new(mean, std_dev) {
             let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
             let ll = normal_log_likelihood(&clean, mean, std_dev);
-            push_candidate(&mut candidates, Distribution::Normal(mean, std_dev), ks, ll, n);
+            push_candidate(
+                &mut candidates,
+                Distribution::Normal(mean, std_dev),
+                ks,
+                ll,
+                n,
+            );
         }
     }
 
@@ -153,12 +161,19 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
                 let ll: f64 = clean
                     .iter()
                     .map(|&x| {
-                        -x.ln() - 0.5 * ((x.ln() - mu) / sigma).powi(2)
+                        -x.ln()
+                            - 0.5 * ((x.ln() - mu) / sigma).powi(2)
                             - sigma.ln()
                             - (2.0 * PI).sqrt().ln()
                     })
                     .sum();
-                push_candidate(&mut candidates, Distribution::LogNormal(mu, sigma), ks, ll, n);
+                push_candidate(
+                    &mut candidates,
+                    Distribution::LogNormal(mu, sigma),
+                    ks,
+                    ll,
+                    n,
+                );
             }
         }
     }
@@ -169,7 +184,13 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         if let Ok(d) = Exp::new(lambda) {
             let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
             let ll = n as f64 * lambda.ln() - lambda * clean.iter().sum::<f64>();
-            push_candidate(&mut candidates, Distribution::Exponential(lambda), ks, ll, n);
+            push_candidate(
+                &mut candidates,
+                Distribution::Exponential(lambda),
+                ks,
+                ll,
+                n,
+            );
         }
     }
 
@@ -224,7 +245,13 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
             });
             let ll = n as f64 * alpha_hat.ln() + n as f64 * alpha_hat * x_m.ln()
                 - (alpha_hat + 1.0) * clean.iter().map(|v| v.ln()).sum::<f64>();
-            push_candidate(&mut candidates, Distribution::Pareto(x_m, alpha_hat), ks, ll, n);
+            push_candidate(
+                &mut candidates,
+                Distribution::Pareto(x_m, alpha_hat),
+                ks,
+                ll,
+                n,
+            );
         }
     }
 
@@ -234,7 +261,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         let is_integer_like = clean.iter().all(|v| (v - v.round()).abs() < 1e-6);
         if is_integer_like {
             let lambda = mean; // MLE for Poisson is sample mean
-            // Compute KS using Poisson CDF approximation (normal approximation for large lambda)
+                               // Compute KS using Poisson CDF approximation (normal approximation for large lambda)
             let ks = ks_stat_continuous(&clean, |x| {
                 // Use normal approximation to Poisson CDF
                 if lambda > 0.0 {
@@ -245,9 +272,10 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
                 }
             });
             // Poisson log-likelihood: sum(x_i * ln(lambda) - lambda - ln(x_i!))
-            let ll = clean.iter().map(|&x| {
-                x * lambda.ln() - lambda - ln_gamma(x + 1.0)
-            }).sum::<f64>();
+            let ll = clean
+                .iter()
+                .map(|&x| x * lambda.ln() - lambda - ln_gamma(x + 1.0))
+                .sum::<f64>();
             push_candidate(&mut candidates, Distribution::Poisson(lambda), ks, ll, n);
         }
     }
@@ -271,12 +299,20 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
                             // KS with Zipf CDF
                             let ks = ks_stat_continuous(&clean, |x| {
                                 let k = x.floor() as u64;
-                                if k < 1 { return 0.0; }
+                                if k < 1 {
+                                    return 0.0;
+                                }
                                 let k = k.min(max_rank);
                                 let partial: f64 = (1..=k).map(|i| (i as f64).powf(-s_hat)).sum();
                                 (partial / h_n_s).clamp(0.0, 1.0)
                             });
-                            push_candidate(&mut candidates, Distribution::Zipf(max_rank, s_hat), ks, ll, n);
+                            push_candidate(
+                                &mut candidates,
+                                Distribution::Zipf(max_rank, s_hat),
+                                ks,
+                                ll,
+                                n,
+                            );
                         }
                     }
                 }
@@ -288,10 +324,19 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         return None;
     }
 
-    candidates.sort_by(|a, b| a.aic.partial_cmp(&b.aic).unwrap_or(std::cmp::Ordering::Equal));
+    candidates.sort_by(|a, b| {
+        a.aic
+            .partial_cmp(&b.aic)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     let best = candidates[0].clone();
-    debug!(best_dist = best.distribution.name(), ks = best.ks_stat, aic = best.aic, "best fit");
+    debug!(
+        best_dist = best.distribution.name(),
+        ks = best.ks_stat,
+        aic = best.aic,
+        "best fit"
+    );
 
     Some(FitResult {
         best: candidates[0].clone(),
@@ -427,7 +472,9 @@ mod tests {
     use super::*;
     use rand::rngs::StdRng;
     use rand::SeedableRng;
-    use rand_distr::{Distribution as RandDist, Exp as ExpDist, LogNormal as LnDist, Normal as NormDist};
+    use rand_distr::{
+        Distribution as RandDist, Exp as ExpDist, LogNormal as LnDist, Normal as NormDist,
+    };
 
     #[test]
     fn fit_normal_distribution() {
@@ -436,7 +483,11 @@ mod tests {
         let samples: Vec<f64> = (0..1000).map(|_| dist.sample(&mut rng)).collect();
         let result = fit_distribution(&samples).unwrap();
         // Should identify normal or similar
-        let names: Vec<&str> = result.alternatives.iter().map(|c| c.distribution.name()).collect();
+        let names: Vec<&str> = result
+            .alternatives
+            .iter()
+            .map(|c| c.distribution.name())
+            .collect();
         assert!(names.contains(&"normal"), "normal should be a candidate");
         // The best fit params should be close to (50, 10)
         if let Distribution::Normal(m, s) = &result.best.distribution {
@@ -451,7 +502,11 @@ mod tests {
         let dist = ExpDist::new(2.0).unwrap();
         let samples: Vec<f64> = (0..500).map(|_| dist.sample(&mut rng)).collect();
         let result = fit_distribution(&samples).unwrap();
-        let names: Vec<&str> = result.alternatives.iter().map(|c| c.distribution.name()).collect();
+        let names: Vec<&str> = result
+            .alternatives
+            .iter()
+            .map(|c| c.distribution.name())
+            .collect();
         assert!(names.contains(&"exponential"));
     }
 
@@ -461,7 +516,11 @@ mod tests {
         let dist = LnDist::new(0.0, 0.5).unwrap();
         let samples: Vec<f64> = (0..500).map(|_| dist.sample(&mut rng)).collect();
         let result = fit_distribution(&samples).unwrap();
-        let names: Vec<&str> = result.alternatives.iter().map(|c| c.distribution.name()).collect();
+        let names: Vec<&str> = result
+            .alternatives
+            .iter()
+            .map(|c| c.distribution.name())
+            .collect();
         assert!(names.contains(&"log_normal"));
     }
 

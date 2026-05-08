@@ -7,8 +7,8 @@
 use std::collections::HashSet;
 
 use arrow::array::{
-    Array, AsArray, TimestampMicrosecondArray,
-    TimestampMillisecondArray, TimestampNanosecondArray, TimestampSecondArray,
+    Array, AsArray, TimestampMicrosecondArray, TimestampMillisecondArray, TimestampNanosecondArray,
+    TimestampSecondArray,
 };
 use arrow::compute::concat_batches;
 use arrow::datatypes::{DataType, TimeUnit};
@@ -315,15 +315,21 @@ fn compute_numeric(data_type: &DataType, array: &dyn Array) -> Option<NumericPro
     let std_dev = variance.sqrt();
 
     let skewness = if std_dev > 0.0 && n > 2.0 {
-        let m3 = sorted.iter().map(|v| ((v - mean) / std_dev).powi(3)).sum::<f64>();
+        let m3 = sorted
+            .iter()
+            .map(|v| ((v - mean) / std_dev).powi(3))
+            .sum::<f64>();
         m3 * n / ((n - 1.0) * (n - 2.0))
     } else {
         0.0
     };
 
     let kurtosis = if std_dev > 0.0 && n > 3.0 {
-        let m4 = sorted.iter().map(|v| ((v - mean) / std_dev).powi(4)).sum::<f64>();
-        
+        let m4 = sorted
+            .iter()
+            .map(|v| ((v - mean) / std_dev).powi(4))
+            .sum::<f64>();
+
         (n * (n + 1.0) * m4) / ((n - 1.0) * (n - 2.0) * (n - 3.0))
             - 3.0 * (n - 1.0).powi(2) / ((n - 2.0) * (n - 3.0))
     } else {
@@ -378,13 +384,14 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
     let sample: Vec<&f64> = if values.len() <= 1000 {
         values.iter().collect()
     } else {
-        values.iter().step_by(values.len() / 1000).take(1000).collect()
+        values
+            .iter()
+            .step_by(values.len() / 1000)
+            .take(1000)
+            .collect()
     };
 
-    let mut places: Vec<u8> = sample
-        .iter()
-        .map(|v| count_decimal_places(**v))
-        .collect();
+    let mut places: Vec<u8> = sample.iter().map(|v| count_decimal_places(**v)).collect();
     places.sort_unstable();
 
     // Use p95 to be robust against floating-point noise
@@ -469,10 +476,8 @@ fn detect_string_patterns(values: &[&str]) -> Vec<(String, f64)> {
         ("phone", Regex::new(r"^\+?[\d\s\-\(\)]{7,15}$").unwrap()),
         (
             "uuid",
-            Regex::new(
-                r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            )
-            .unwrap(),
+            Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                .unwrap(),
         ),
         ("url", Regex::new(r"^https?://[^\s]+$").unwrap()),
         ("date", Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap()),
@@ -494,53 +499,65 @@ fn detect_string_patterns(values: &[&str]) -> Vec<(String, f64)> {
 fn compute_temporal(data_type: &DataType, array: &dyn Array) -> Option<TemporalProfile> {
     let (min_ts, max_ts) = match data_type {
         DataType::Timestamp(TimeUnit::Second, _) => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<TimestampSecondArray>()?;
+            let arr = array.as_any().downcast_ref::<TimestampSecondArray>()?;
             extract_ts_range(arr.len(), |i| {
-                if arr.is_null(i) { None } else { Some(arr.value(i) * 1_000_000) }
+                if arr.is_null(i) {
+                    None
+                } else {
+                    Some(arr.value(i) * 1_000_000)
+                }
             })?
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<TimestampMillisecondArray>()?;
+            let arr = array.as_any().downcast_ref::<TimestampMillisecondArray>()?;
             extract_ts_range(arr.len(), |i| {
-                if arr.is_null(i) { None } else { Some(arr.value(i) * 1_000) }
+                if arr.is_null(i) {
+                    None
+                } else {
+                    Some(arr.value(i) * 1_000)
+                }
             })?
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<TimestampMicrosecondArray>()?;
+            let arr = array.as_any().downcast_ref::<TimestampMicrosecondArray>()?;
             extract_ts_range(arr.len(), |i| {
-                if arr.is_null(i) { None } else { Some(arr.value(i)) }
+                if arr.is_null(i) {
+                    None
+                } else {
+                    Some(arr.value(i))
+                }
             })?
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<TimestampNanosecondArray>()?;
+            let arr = array.as_any().downcast_ref::<TimestampNanosecondArray>()?;
             extract_ts_range(arr.len(), |i| {
-                if arr.is_null(i) { None } else { Some(arr.value(i) / 1_000) }
+                if arr.is_null(i) {
+                    None
+                } else {
+                    Some(arr.value(i) / 1_000)
+                }
             })?
         }
         DataType::Date32 => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<arrow::array::Date32Array>()?;
+            let arr = array.as_any().downcast_ref::<arrow::array::Date32Array>()?;
             // Date32 stores days since epoch; convert to microseconds
             extract_ts_range(arr.len(), |i| {
-                if arr.is_null(i) { None } else { Some(arr.value(i) as i64 * 86_400_000_000) }
+                if arr.is_null(i) {
+                    None
+                } else {
+                    Some(arr.value(i) as i64 * 86_400_000_000)
+                }
             })?
         }
         DataType::Date64 => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<arrow::array::Date64Array>()?;
+            let arr = array.as_any().downcast_ref::<arrow::array::Date64Array>()?;
             // Date64 stores milliseconds since epoch; convert to microseconds
             extract_ts_range(arr.len(), |i| {
-                if arr.is_null(i) { None } else { Some(arr.value(i) * 1_000) }
+                if arr.is_null(i) {
+                    None
+                } else {
+                    Some(arr.value(i) * 1_000)
+                }
             })?
         }
         _ => return None,
@@ -575,10 +592,7 @@ fn compute_temporal(data_type: &DataType, array: &dyn Array) -> Option<TemporalP
 }
 
 /// Extract min/max from a timestamp array, values in microseconds.
-fn extract_ts_range(
-    len: usize,
-    get_us: impl Fn(usize) -> Option<i64>,
-) -> Option<(i64, i64)> {
+fn extract_ts_range(len: usize, get_us: impl Fn(usize) -> Option<i64>) -> Option<(i64, i64)> {
     let mut min_v = i64::MAX;
     let mut max_v = i64::MIN;
     let mut found = false;
@@ -608,9 +622,7 @@ mod tests {
     use std::sync::Arc;
 
     fn make_int_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("val", DataType::Int32, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int32, true)]));
         RecordBatch::try_new(
             schema,
             vec![Arc::new(Int32Array::from(vec![
@@ -626,9 +638,7 @@ mod tests {
     }
 
     fn make_string_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("text", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("text", DataType::Utf8, true)]));
         RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec![
@@ -679,9 +689,7 @@ mod tests {
 
     #[test]
     fn profile_float_column() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("f", DataType::Float64, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("f", DataType::Float64, false)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Float64Array::from(vec![1.0, 2.0, 3.0, 4.0, 5.0]))],
@@ -718,9 +726,7 @@ mod tests {
 
     #[test]
     fn distinct_count_strings() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("s", DataType::Utf8, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("s", DataType::Utf8, false)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec!["a", "b", "a", "c", "b"]))],
@@ -734,15 +740,9 @@ mod tests {
 
     #[test]
     fn numeric_percentiles() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("v", DataType::Float64, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("v", DataType::Float64, false)]));
         let vals: Vec<f64> = (1..=100).map(|i| i as f64).collect();
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Float64Array::from(vals))],
-        )
-        .unwrap();
+        let batch = RecordBatch::try_new(schema, vec![Arc::new(Float64Array::from(vals))]).unwrap();
         let profiles = compute_profiles(&[batch]).unwrap();
         let p = profiles[0].numeric.as_ref().unwrap().percentiles.clone();
         assert!(p.p25 >= 24.0 && p.p25 <= 26.0);
@@ -751,9 +751,11 @@ mod tests {
 
     #[test]
     fn string_pattern_detection() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("email", DataType::Utf8, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "email",
+            DataType::Utf8,
+            false,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec![
@@ -765,6 +767,9 @@ mod tests {
         .unwrap();
         let profiles = compute_profiles(&[batch]).unwrap();
         let s = profiles[0].string.as_ref().unwrap();
-        assert!(s.patterns.iter().any(|(name, rate)| name == "email" && *rate > 0.9));
+        assert!(s
+            .patterns
+            .iter()
+            .any(|(name, rate)| name == "email" && *rate > 0.9));
     }
 }

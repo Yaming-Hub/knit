@@ -74,9 +74,15 @@ pub fn generate_graph(plan: &GraphPlan, pool: &ActorPool, seed: u64) -> Generate
     let avg_degree = plan.params.get("avg_degree").copied().unwrap_or(4.0);
 
     let edges = match plan.graph_type {
-        GraphType::ScaleFree => generate_scale_free(source_count, target_count, avg_degree, &mut rng),
+        GraphType::ScaleFree => {
+            generate_scale_free(source_count, target_count, avg_degree, &mut rng)
+        }
         GraphType::SmallWorld => {
-            let rewire_prob = plan.params.get("rewire_probability").copied().unwrap_or(0.1);
+            let rewire_prob = plan
+                .params
+                .get("rewire_probability")
+                .copied()
+                .unwrap_or(0.1);
             if source_count != target_count || plan.from_entity != plan.to_entity {
                 // Small-world is inherently unipartite; fall back to Erdős-Rényi for bipartite
                 generate_erdos_renyi(source_count, target_count, avg_degree, &mut rng)
@@ -84,7 +90,9 @@ pub fn generate_graph(plan: &GraphPlan, pool: &ActorPool, seed: u64) -> Generate
                 generate_small_world(source_count, avg_degree, rewire_prob, &mut rng)
             }
         }
-        GraphType::ErdosRenyi => generate_erdos_renyi(source_count, target_count, avg_degree, &mut rng),
+        GraphType::ErdosRenyi => {
+            generate_erdos_renyi(source_count, target_count, avg_degree, &mut rng)
+        }
         GraphType::Hierarchical => {
             let depth = plan.hierarchy_depth.unwrap_or(3);
             if source_count != target_count || plan.from_entity != plan.to_entity {
@@ -161,7 +169,10 @@ fn generate_scale_free(
                 }
                 if !targets_used.contains(&selected) {
                     targets_used.push(selected);
-                    edges.push(Edge { from: i, to: selected });
+                    edges.push(Edge {
+                        from: i,
+                        to: selected,
+                    });
                     target_degrees[selected] += 1;
                     attached += 1;
                 }
@@ -220,7 +231,10 @@ fn generate_scale_free(
 
                 if !targets_used.contains(&target) {
                     targets_used.push(target);
-                    edges.push(Edge { from: new_node, to: target });
+                    edges.push(Edge {
+                        from: new_node,
+                        to: target,
+                    });
                     degrees[new_node] += 1;
                     degrees[target] += 1;
                     attached += 1;
@@ -374,7 +388,10 @@ fn generate_hierarchical(
                 }
                 parent[next_node] = p_idx;
                 level[next_node] = d;
-                edges.push(Edge { from: p_idx, to: next_node });
+                edges.push(Edge {
+                    from: p_idx,
+                    to: next_node,
+                });
                 next_node += 1;
             }
             if next_node >= n {
@@ -431,8 +448,8 @@ fn fnv1a_hash(bytes: &[u8]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::BTreeMap;
     use knit_plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
+    use std::collections::BTreeMap;
 
     fn make_pool(entity: &str, count: u64) -> ActorPool {
         let plan = ActorPoolPlan {
@@ -471,7 +488,11 @@ mod tests {
         assert_eq!(graph.name, "follows");
         assert!(!graph.edges.is_empty());
         // Avg degree ~4 means ~200 edges for 100 nodes (directed)
-        assert!(graph.edges.len() > 50, "Too few edges: {}", graph.edges.len());
+        assert!(
+            graph.edges.len() > 50,
+            "Too few edges: {}",
+            graph.edges.len()
+        );
         // All indices valid
         for e in &graph.edges {
             assert!(e.from < 100);
@@ -487,7 +508,11 @@ mod tests {
         let graph = generate_graph(&plan, &pool, 42);
 
         // SmallWorld with avg_degree=6 → half_k=3, so 50*3=150 edges
-        assert!(graph.edges.len() >= 100, "Expected ~150 edges, got {}", graph.edges.len());
+        assert!(
+            graph.edges.len() >= 100,
+            "Expected ~150 edges, got {}",
+            graph.edges.len()
+        );
         for e in &graph.edges {
             assert!(e.from < 50);
             assert!(e.to < 50);
@@ -543,18 +568,22 @@ mod tests {
         let graph = generate_graph(&plan, &pool, 42);
 
         // With full reciprocity, for every A→B there should be B→A
-        let mut edge_set: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
+        let mut edge_set: std::collections::HashSet<(usize, usize)> =
+            std::collections::HashSet::new();
         for e in &graph.edges {
             edge_set.insert((e.from, e.to));
         }
         // Count how many edges have reciprocal
-        let reciprocal_count = graph.edges.iter()
+        let reciprocal_count = graph
+            .edges
+            .iter()
             .filter(|e| edge_set.contains(&(e.to, e.from)))
             .count();
         // Should be high with reciprocity=1.0
         assert!(
             reciprocal_count > graph.edges.len() / 2,
-            "Expected high reciprocity, got {reciprocal_count}/{}", graph.edges.len()
+            "Expected high reciprocity, got {reciprocal_count}/{}",
+            graph.edges.len()
         );
     }
 

@@ -11,8 +11,8 @@ use tracing::{debug, info};
 
 use knit_core::{
     ActorRelationship, CountSpec, DataModel, DistributionKind, DistributionSpec, Entity, Field,
-    GeneratorSpec, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind,
-    Value, WeightedChoice,
+    GeneratorSpec, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind, Value,
+    WeightedChoice,
 };
 
 use crate::actor_graph::ActorRelationshipSpec;
@@ -159,10 +159,12 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         // Personas are emitted for actor entities and for activity entities
         // that have actor columns (indicating --actors was used during learn).
         if !table.personas.is_empty() {
-            let has_actor_columns = entities.last()
+            let has_actor_columns = entities
+                .last()
                 .map(|e| e.fields.iter().any(|f| f.actor_column))
                 .unwrap_or(false);
-            let should_emit = entities.last().map(|e| e.actor).unwrap_or(false) || has_actor_columns;
+            let should_emit =
+                entities.last().map(|e| e.actor).unwrap_or(false) || has_actor_columns;
 
             if should_emit {
                 if let Some(entity) = entities.last() {
@@ -233,9 +235,7 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
 
 /// Build an [`Entity`] from a `TableAnalysis`, extracting relationships
 /// and correlations as separate top-level items.
-fn build_entity(
-    table: &TableAnalysis,
-) -> (Entity, Vec<Relationship>, Vec<knit_core::Correlation>) {
+fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<knit_core::Correlation>) {
     let mut fields = Vec::with_capacity(table.columns.len());
 
     for col in &table.columns {
@@ -306,10 +306,7 @@ fn build_entity(
             Some(knit_core::Correlation {
                 entity: table.name.clone(),
                 fields,
-                matrix: vec![
-                    vec![1.0, c.coefficient],
-                    vec![c.coefficient, 1.0],
-                ],
+                matrix: vec![vec![1.0, c.coefficient], vec![c.coefficient, 1.0]],
                 conditional: Vec::new(),
             })
         })
@@ -349,7 +346,7 @@ fn build_entity(
         topology: None,
         actor: is_actor,
         persona_distribution: None,
-            activity_count: None,
+        activity_count: None,
     };
 
     (entity, rels, corrs)
@@ -359,10 +356,28 @@ fn build_entity(
 
 /// Actor-related name prefixes that suggest a human/person column.
 const ACTOR_PREFIXES: &[&str] = &[
-    "user", "person", "employee", "customer", "member", "agent",
-    "author", "owner", "sender", "receiver", "recipient", "creator",
-    "assignee", "requester", "approver", "reviewer", "manager",
-    "patient", "student", "teacher", "driver", "passenger",
+    "user",
+    "person",
+    "employee",
+    "customer",
+    "member",
+    "agent",
+    "author",
+    "owner",
+    "sender",
+    "receiver",
+    "recipient",
+    "creator",
+    "assignee",
+    "requester",
+    "approver",
+    "reviewer",
+    "manager",
+    "patient",
+    "student",
+    "teacher",
+    "driver",
+    "passenger",
 ];
 
 /// Score a column name for actor likelihood using name-based heuristics.
@@ -382,7 +397,10 @@ pub fn score_actor_column(name: &str) -> f64 {
         } else {
             &lower[..lower.len() - 2]
         };
-        if ACTOR_PREFIXES.iter().any(|p| stem == *p || stem.ends_with(&format!("_{}", p))) {
+        if ACTOR_PREFIXES
+            .iter()
+            .any(|p| stem == *p || stem.ends_with(&format!("_{}", p)))
+        {
             return 0.95;
         }
     }
@@ -391,10 +409,29 @@ pub fn score_actor_column(name: &str) -> f64 {
     // (e.g. group_by, sort_by, order_by should NOT match)
     if lower.ends_with("_by") {
         let action_verbs = [
-            "created", "updated", "modified", "assigned", "approved", "rejected",
-            "reviewed", "submitted", "completed", "closed", "opened", "resolved",
-            "owned", "managed", "handled", "processed", "requested", "reported",
-            "sent", "received", "initiated", "authorized", "verified",
+            "created",
+            "updated",
+            "modified",
+            "assigned",
+            "approved",
+            "rejected",
+            "reviewed",
+            "submitted",
+            "completed",
+            "closed",
+            "opened",
+            "resolved",
+            "owned",
+            "managed",
+            "handled",
+            "processed",
+            "requested",
+            "reported",
+            "sent",
+            "received",
+            "initiated",
+            "authorized",
+            "verified",
         ];
         let stem = &lower[..lower.len() - 3];
         if action_verbs.contains(&stem) {
@@ -404,9 +441,17 @@ pub fn score_actor_column(name: &str) -> f64 {
 
     // Pattern: standalone actor names in messaging/role context
     let standalone_actors = [
-        "sender", "receiver", "recipient", "assignee",
-        "owner", "author", "reviewer", "manager", "creator",
-        "requester", "approver",
+        "sender",
+        "receiver",
+        "recipient",
+        "assignee",
+        "owner",
+        "author",
+        "reviewer",
+        "manager",
+        "creator",
+        "requester",
+        "approver",
     ];
     if standalone_actors.contains(&lower.as_str()) {
         return 0.80;
@@ -457,13 +502,23 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
     // Check if the table name contains an actor keyword (handles prefixed
     // tables like app_users, dim_customer, hr_employees, user_accounts)
     let actor_keywords = [
-        "user", "employee", "customer", "member", "agent", "person",
-        "people", "author", "owner", "student", "teacher", "driver",
-        "passenger", "patient",
+        "user",
+        "employee",
+        "customer",
+        "member",
+        "agent",
+        "person",
+        "people",
+        "author",
+        "owner",
+        "student",
+        "teacher",
+        "driver",
+        "passenger",
+        "patient",
     ];
     // Split on common delimiters and check tokens
-    let tokens: Vec<&str> = lower_name.split(['_', '-', '.'])
-        .collect();
+    let tokens: Vec<&str> = lower_name.split(['_', '-', '.']).collect();
     for keyword in &actor_keywords {
         // Check singular or plural form in any token
         let plural = format!("{}s", keyword);
@@ -487,10 +542,7 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
 }
 
 /// Build a [`GeneratorSpec`] for a column based on inferred properties.
-fn build_generator(
-    col: &ColumnAnalysis,
-    fk: Option<&RelationshipCandidate>,
-) -> GeneratorSpec {
+fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> GeneratorSpec {
     // FK → Lookup (only for non-string sources; string FKs use categorical)
     if let Some(rel) = fk {
         let source_is_string = matches!(
@@ -519,7 +571,11 @@ fn build_generator(
         return GeneratorSpec::Sequence {
             start: 1,
             step: 1,
-            prefix: if source_is_string { Some(String::new()) } else { None },
+            prefix: if source_is_string {
+                Some(String::new())
+            } else {
+                None
+            },
         };
     }
 
@@ -552,19 +608,39 @@ fn build_generator(
         );
         if !source_is_string {
             if let Some(weights) = &col.categorical_weights {
-                let true_w = weights.iter().find(|(k, _)| k == "true").map(|(_, w)| *w).unwrap_or(0.5);
-                let false_w = weights.iter().find(|(k, _)| k == "false").map(|(_, w)| *w).unwrap_or(0.5);
+                let true_w = weights
+                    .iter()
+                    .find(|(k, _)| k == "true")
+                    .map(|(_, w)| *w)
+                    .unwrap_or(0.5);
+                let false_w = weights
+                    .iter()
+                    .find(|(k, _)| k == "false")
+                    .map(|(_, w)| *w)
+                    .unwrap_or(0.5);
                 return GeneratorSpec::OneOf {
                     choices: vec![
-                        WeightedChoice { value: Value::Bool(true), weight: true_w },
-                        WeightedChoice { value: Value::Bool(false), weight: false_w },
+                        WeightedChoice {
+                            value: Value::Bool(true),
+                            weight: true_w,
+                        },
+                        WeightedChoice {
+                            value: Value::Bool(false),
+                            weight: false_w,
+                        },
                     ],
                 };
             }
             return GeneratorSpec::OneOf {
                 choices: vec![
-                    WeightedChoice { value: Value::Bool(true), weight: 0.5 },
-                    WeightedChoice { value: Value::Bool(false), weight: 0.5 },
+                    WeightedChoice {
+                        value: Value::Bool(true),
+                        weight: 0.5,
+                    },
+                    WeightedChoice {
+                        value: Value::Bool(false),
+                        weight: 0.5,
+                    },
                 ],
             };
         }
@@ -594,8 +670,15 @@ fn build_generator(
                 return GeneratorSpec::UuidGen { version: 4 };
             }
             InferredType::Date(_) => {
-                let method = if col.has_time_component { "datetime" } else { "date" };
-                return GeneratorSpec::Faker { method: method.into(), args: vec![] };
+                let method = if col.has_time_component {
+                    "datetime"
+                } else {
+                    "date"
+                };
+                return GeneratorSpec::Faker {
+                    method: method.into(),
+                    args: vec![],
+                };
             }
             _ => {}
         }
@@ -605,23 +688,38 @@ fn build_generator(
     // Placed before string pattern matching so semantic names override generic patterns
     // (e.g., "PostalCode" → zip_code instead of phone pattern match).
     if let Some(method) = faker_method_from_column_name(&col.name) {
-        return GeneratorSpec::Faker { method: method.into(), args: vec![] };
+        return GeneratorSpec::Faker {
+            method: method.into(),
+            args: vec![],
+        };
     }
 
     // String pattern → Faker
     if let Some((pattern, _rate)) = col.string_patterns.first() {
         match pattern {
             StringPattern::Email => {
-                return GeneratorSpec::Faker { method: "email".into(), args: vec![] };
+                return GeneratorSpec::Faker {
+                    method: "email".into(),
+                    args: vec![],
+                };
             }
             StringPattern::Phone => {
-                return GeneratorSpec::Faker { method: "phone".into(), args: vec![] };
+                return GeneratorSpec::Faker {
+                    method: "phone".into(),
+                    args: vec![],
+                };
             }
             StringPattern::Name => {
-                return GeneratorSpec::Faker { method: "name".into(), args: vec![] };
+                return GeneratorSpec::Faker {
+                    method: "name".into(),
+                    args: vec![],
+                };
             }
             StringPattern::Date => {
-                return GeneratorSpec::Faker { method: "date".into(), args: vec![] };
+                return GeneratorSpec::Faker {
+                    method: "date".into(),
+                    args: vec![],
+                };
             }
             StringPattern::HexString(len) => {
                 return GeneratorSpec::Faker {
@@ -710,7 +808,11 @@ fn build_distribution_generator(dist: &Distribution, round: bool) -> GeneratorSp
     };
 
     GeneratorSpec::Distribution {
-        spec: DistributionSpec { kind, params, round },
+        spec: DistributionSpec {
+            kind,
+            params,
+            round,
+        },
     }
 }
 
@@ -748,7 +850,11 @@ fn build_int_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
 
 /// Map a temporal pattern to a [`GeneratorSpec`].
 fn build_temporal_generator(col: &ColumnAnalysis) -> GeneratorSpec {
-    let method = if col.has_time_component { "datetime" } else { "date" };
+    let method = if col.has_time_component {
+        "datetime"
+    } else {
+        "date"
+    };
     let args = if let Some((min_s, max_s)) = col.temporal_range {
         // Convert epoch seconds to ISO date strings for args
         let min_days = (min_s / 86_400.0).floor() as i64;
@@ -786,13 +892,20 @@ fn rewrite_temporal_pairs(fields: &mut [Field], columns: &[ColumnAnalysis]) {
 
     for (start_name, end_idx) in pairs {
         // Compute mean offset from temporal ranges
-        let offset_seconds = match (range_map.get(start_name.as_str()), range_map.get(fields[end_idx].name.as_str())) {
+        let offset_seconds = match (
+            range_map.get(start_name.as_str()),
+            range_map.get(fields[end_idx].name.as_str()),
+        ) {
             (Some(&(s_min, s_max)), Some(&(e_min, e_max))) => {
                 // Use midpoint difference as the mean offset
                 let s_mid = (s_min + s_max) / 2.0;
                 let e_mid = (e_min + e_max) / 2.0;
                 let diff = e_mid - s_mid;
-                if diff > 0.0 { diff } else { 86_400.0 } // default 1 day if ranges overlap completely
+                if diff > 0.0 {
+                    diff
+                } else {
+                    86_400.0
+                } // default 1 day if ranges overlap completely
             }
             _ => 86_400.0, // default 1 day
         };
@@ -820,7 +933,10 @@ fn find_temporal_pairs(fields: &[Field]) -> Vec<(String, usize)> {
     let mut pairs = Vec::new();
 
     let is_temporal = |dt: &DataType| {
-        matches!(dt, DataType::Datetime | DataType::DatetimeUs | DataType::Date | DataType::Datetimetz)
+        matches!(
+            dt,
+            DataType::Datetime | DataType::DatetimeUs | DataType::Date | DataType::Datetimetz
+        )
     };
 
     // Common patterns: StartDate/EndDate, start_time/end_time, StartedAt/EndedAt
@@ -852,7 +968,9 @@ fn find_temporal_pairs(fields: &[Field]) -> Vec<(String, usize)> {
                 continue;
             }
 
-            let start_match = start_patterns.iter().find(|&&pat| start_lower.contains(pat));
+            let start_match = start_patterns
+                .iter()
+                .find(|&&pat| start_lower.contains(pat));
             if start_match.is_none() {
                 continue;
             }
@@ -910,7 +1028,9 @@ fn faker_method_from_column_name(name: &str) -> Option<&'static str> {
         return Some("zip_code");
     }
     // Organization — match "company" but exclude non-semantic suffixes like _id, _count
-    if (lower.contains("company") || lower.contains("organization") || lower.contains("organisation"))
+    if (lower.contains("company")
+        || lower.contains("organization")
+        || lower.contains("organisation"))
         && !lower.ends_with("_id")
         && !lower.ends_with("_count")
         && !lower.ends_with("_num")
@@ -942,7 +1062,10 @@ fn is_narrow_int_source(col: &ColumnAnalysis) -> bool {
 fn is_microsecond_timestamp(col: &ColumnAnalysis) -> bool {
     matches!(
         col.source_arrow_type,
-        Some(arrow::datatypes::DataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, _))
+        Some(arrow::datatypes::DataType::Timestamp(
+            arrow::datatypes::TimeUnit::Microsecond,
+            _
+        ))
     )
 }
 
@@ -956,7 +1079,10 @@ fn is_list_source(col: &ColumnAnalysis) -> bool {
 
 /// Check whether source is a Map type.
 fn is_map_source(col: &ColumnAnalysis) -> bool {
-    matches!(col.source_arrow_type, Some(arrow::datatypes::DataType::Map(_, _)))
+    matches!(
+        col.source_arrow_type,
+        Some(arrow::datatypes::DataType::Map(_, _))
+    )
 }
 
 /// Select the appropriate datetime DataType based on source precision.
@@ -1123,15 +1249,39 @@ fn assemble_column(
         "one_of(\"true\" => 50%, \"false\" => 50%)".to_string()
     } else if matches!(col.inferred_type, Some(InferredType::Date(_))) {
         "faker(\"date\")".to_string()
-    } else if col.string_patterns.iter().any(|(p, _)| *p == StringPattern::Email) {
+    } else if col
+        .string_patterns
+        .iter()
+        .any(|(p, _)| *p == StringPattern::Email)
+    {
         "faker(\"email\")".to_string()
-    } else if col.string_patterns.iter().any(|(p, _)| *p == StringPattern::Phone) {
+    } else if col
+        .string_patterns
+        .iter()
+        .any(|(p, _)| *p == StringPattern::Phone)
+    {
         "faker(\"phone\")".to_string()
-    } else if col.string_patterns.iter().any(|(p, _)| *p == StringPattern::Name) {
+    } else if col
+        .string_patterns
+        .iter()
+        .any(|(p, _)| *p == StringPattern::Name)
+    {
         "faker(\"name\")".to_string()
-    } else if col.string_patterns.iter().any(|(p, _)| matches!(p, StringPattern::HexString(_))) {
-        let len = col.string_patterns.iter()
-            .find_map(|(p, _)| if let StringPattern::HexString(n) = p { Some(*n) } else { None })
+    } else if col
+        .string_patterns
+        .iter()
+        .any(|(p, _)| matches!(p, StringPattern::HexString(_)))
+    {
+        let len = col
+            .string_patterns
+            .iter()
+            .find_map(|(p, _)| {
+                if let StringPattern::HexString(n) = p {
+                    Some(*n)
+                } else {
+                    None
+                }
+            })
             .unwrap_or(32);
         format!("faker(\"hex_string\", {})", len)
     } else {
@@ -1151,7 +1301,12 @@ fn assemble_column(
         String::new()
     };
 
-    writeln!(out, "  {} = {}{}{}", col.name, generator, null_suffix, comment).unwrap();
+    writeln!(
+        out,
+        "  {} = {}{}{}",
+        col.name, generator, null_suffix, comment
+    )
+    .unwrap();
 }
 
 /// Map a fitted distribution to a Weave generator expression.
@@ -1246,7 +1401,9 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
+                    source_arrow_type: None,
+                    max_decimal_places: None,
+                    is_actor_column: false,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -1261,14 +1418,16 @@ mod tests {
                     is_integer_valued: false,
                     has_time_component: false,
                     temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
+                    source_arrow_type: None,
+                    max_decimal_places: None,
+                    is_actor_column: false,
                 },
             ],
             relationships: vec![],
             correlations: vec![],
             row_count: 5000,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1293,11 +1452,13 @@ mod tests {
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                }],
+                is_integer_valued: false,
+                has_time_component: false,
+                temporal_range: None,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
+            }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
                 from_column: "user_id".into(),
@@ -1309,8 +1470,8 @@ mod tests {
             }],
             correlations: vec![],
             row_count: 1000,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1326,24 +1487,23 @@ mod tests {
                 is_primary_key: false,
                 distribution: None,
                 temporal_pattern: None,
-                categorical_weights: Some(vec![
-                    ("active".into(), 0.7),
-                    ("inactive".into(), 0.3),
-                ]),
+                categorical_weights: Some(vec![("active".into(), 0.7), ("inactive".into(), 0.3)]),
                 null_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: None,
                 string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                }],
+                is_integer_valued: false,
+                has_time_component: false,
+                temporal_range: None,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 500,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1371,20 +1531,26 @@ mod tests {
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                }],
+                is_integer_valued: false,
+                has_time_component: false,
+                temporal_range: None,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 2000,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
-        assert!(schema.contains("time_series(interval=3600s)"), "schema: {}", schema);
+        assert!(
+            schema.contains("time_series(interval=3600s)"),
+            "schema: {}",
+            schema
+        );
     }
 
     #[test]
@@ -1401,12 +1567,28 @@ mod tests {
         assert!(distribution_to_generator(&Distribution::Beta(2.0, 5.0)).contains("beta"));
         let gamma = distribution_to_generator(&Distribution::Gamma(1.0, 2.0));
         assert!(gamma.contains("gamma"), "gamma: {}", gamma);
-        assert!(gamma.contains("shape="), "gamma should have shape param: {}", gamma);
-        assert!(gamma.contains("scale="), "gamma should have scale param: {}", gamma);
+        assert!(
+            gamma.contains("shape="),
+            "gamma should have shape param: {}",
+            gamma
+        );
+        assert!(
+            gamma.contains("scale="),
+            "gamma should have scale param: {}",
+            gamma
+        );
         let pareto = distribution_to_generator(&Distribution::Pareto(1.0, 2.0));
         assert!(pareto.contains("pareto"), "pareto: {}", pareto);
-        assert!(pareto.contains("scale="), "pareto should have scale param: {}", pareto);
-        assert!(pareto.contains("shape="), "pareto should have shape param: {}", pareto);
+        assert!(
+            pareto.contains("scale="),
+            "pareto should have scale param: {}",
+            pareto
+        );
+        assert!(
+            pareto.contains("shape="),
+            "pareto should have shape param: {}",
+            pareto
+        );
     }
 
     #[test]
@@ -1429,8 +1611,14 @@ mod tests {
         let spec = build_distribution_generator(&Distribution::Pareto(1.0, 3.0), false);
         if let GeneratorSpec::Distribution { spec: ds } = &spec {
             assert_eq!(ds.kind, DistributionKind::Pareto);
-            assert!(ds.params.contains_key("scale"), "Pareto missing scale param");
-            assert!(ds.params.contains_key("shape"), "Pareto missing shape param");
+            assert!(
+                ds.params.contains_key("scale"),
+                "Pareto missing scale param"
+            );
+            assert!(
+                ds.params.contains_key("shape"),
+                "Pareto missing shape param"
+            );
             assert!((ds.params["scale"] - 1.0).abs() < 1e-10);
             assert!((ds.params["shape"] - 3.0).abs() < 1e-10);
         } else {
@@ -1462,11 +1650,13 @@ mod tests {
                 confidence: 1.0,
                 inferred_type: None,
                 string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                }],
+                is_integer_valued: false,
+                has_time_component: false,
+                temporal_range: None,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 50_000,
@@ -1492,16 +1682,18 @@ mod tests {
                 confidence: 0.95,
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                }],
+                is_integer_valued: false,
+                has_time_component: false,
+                temporal_range: None,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1526,11 +1718,13 @@ mod tests {
             confidence: 0.95,
             inferred_type: Some(InferredType::Uuid),
             string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                };
+            is_integer_valued: false,
+            has_time_component: false,
+            temporal_range: None,
+            source_arrow_type: None,
+            max_decimal_places: None,
+            is_actor_column: false,
+        };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
     }
@@ -1547,11 +1741,13 @@ mod tests {
             confidence: 0.9,
             inferred_type: Some(InferredType::Boolean),
             string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                };
+            is_integer_valued: false,
+            has_time_component: false,
+            temporal_range: None,
+            source_arrow_type: None,
+            max_decimal_places: None,
+            is_actor_column: false,
+        };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
     }
@@ -1571,7 +1767,9 @@ mod tests {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
+            source_arrow_type: None,
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -1596,7 +1794,9 @@ mod tests {
             is_integer_valued: false,
             has_time_component: false,
             temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
+            source_arrow_type: None,
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -1620,16 +1820,18 @@ mod tests {
                 confidence: 0.95,
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
-                    is_integer_valued: false,
-                    has_time_component: false,
-                    temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
-                }],
+                is_integer_valued: false,
+                has_time_component: false,
+                temporal_range: None,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
+            }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -1652,13 +1854,15 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: false,
                 temporal_range: None,
-                    source_arrow_type: None,                    max_decimal_places: None, is_actor_column: false,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
             }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
-        personas: Vec::new(),
-        actor_relationships: Vec::new(),
+            personas: Vec::new(),
+            actor_relationships: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
@@ -1667,12 +1871,21 @@ mod tests {
     #[test]
     fn column_name_heuristic() {
         assert_eq!(faker_method_from_column_name("Address"), Some("address"));
-        assert_eq!(faker_method_from_column_name("street_address"), Some("address"));
+        assert_eq!(
+            faker_method_from_column_name("street_address"),
+            Some("address")
+        );
         assert_eq!(faker_method_from_column_name("City"), Some("city"));
         assert_eq!(faker_method_from_column_name("Country"), Some("country"));
-        assert_eq!(faker_method_from_column_name("PostalCode"), Some("zip_code"));
+        assert_eq!(
+            faker_method_from_column_name("PostalCode"),
+            Some("zip_code")
+        );
         assert_eq!(faker_method_from_column_name("ZipCode"), Some("zip_code"));
-        assert_eq!(faker_method_from_column_name("CompanyName"), Some("company"));
+        assert_eq!(
+            faker_method_from_column_name("CompanyName"),
+            Some("company")
+        );
         assert_eq!(faker_method_from_column_name("company_url"), Some("url"));
         // Should NOT match non-semantic suffixes
         assert_eq!(faker_method_from_column_name("company_id"), None);
@@ -1701,7 +1914,9 @@ mod tests {
             is_integer_valued: true,
             has_time_component: false,
             temporal_range: None,
-            source_arrow_type: Some(arrow::datatypes::DataType::Int32),            max_decimal_places: None, is_actor_column: false,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int32),
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
     }
@@ -1721,7 +1936,9 @@ mod tests {
             is_integer_valued: true,
             has_time_component: false,
             temporal_range: None,
-            source_arrow_type: Some(arrow::datatypes::DataType::Int64),            max_decimal_places: None, is_actor_column: false,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int64),
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int);
     }
@@ -1741,7 +1958,9 @@ mod tests {
             is_integer_valued: true,
             has_time_component: false,
             temporal_range: None,
-            source_arrow_type: Some(arrow::datatypes::DataType::Int32),            max_decimal_places: None, is_actor_column: false,
+            source_arrow_type: Some(arrow::datatypes::DataType::Int32),
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Int32);
     }
@@ -1771,7 +1990,8 @@ mod tests {
                 arrow::datatypes::TimeUnit::Microsecond,
                 None,
             )),
-            max_decimal_places: None, is_actor_column: false,
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::DatetimeUs);
     }
@@ -1801,7 +2021,8 @@ mod tests {
                 arrow::datatypes::TimeUnit::Nanosecond,
                 None,
             )),
-            max_decimal_places: None, is_actor_column: false,
+            max_decimal_places: None,
+            is_actor_column: false,
         };
         assert_eq!(infer_data_type(&col, None), knit_core::DataType::Datetime);
     }
@@ -1819,9 +2040,9 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
             Field {
                 name: "EndDate".into(),
                 description: None,
@@ -1832,9 +2053,9 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
         ];
         let pairs = find_temporal_pairs(&fields);
         assert_eq!(pairs.len(), 1);
@@ -1852,9 +2073,9 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
             Field {
                 name: "end_balance".into(),
                 description: None,
@@ -1862,9 +2083,9 @@ mod tests {
                 generator: None,
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
         ];
         let pairs = find_temporal_pairs(&fields);
         assert!(pairs.is_empty(), "non-temporal fields should not be paired");
@@ -1886,7 +2107,9 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: true,
                 temporal_range: Some((1_000_000.0, 1_100_000.0)),
-                source_arrow_type: None,                max_decimal_places: None, is_actor_column: false,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
             },
             ColumnAnalysis {
                 name: "EndDate".into(),
@@ -1901,7 +2124,9 @@ mod tests {
                 is_integer_valued: false,
                 has_time_component: true,
                 temporal_range: Some((1_050_000.0, 1_200_000.0)),
-                source_arrow_type: None,                max_decimal_places: None, is_actor_column: false,
+                source_arrow_type: None,
+                max_decimal_places: None,
+                is_actor_column: false,
             },
         ];
         let mut fields = vec![
@@ -1915,9 +2140,9 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
             Field {
                 name: "EndDate".into(),
                 description: None,
@@ -1928,9 +2153,9 @@ mod tests {
                 }),
                 nullable: NullSpec::Never,
                 primary_key: None,
-            precision: None,
-        actor_column: false,
-        },
+                precision: None,
+                actor_column: false,
+            },
         ];
         rewrite_temporal_pairs(&mut fields, &cols);
 
@@ -2039,8 +2264,15 @@ mod tests {
         ];
         let table = TableAnalysis::new("emails".into(), columns, 100);
         let (entity, _, _) = build_entity(&table);
-        let sender = entity.fields.iter().find(|f| f.name == "sender_id").unwrap();
-        assert!(sender.actor_column, "sender_id should be marked as actor_column");
+        let sender = entity
+            .fields
+            .iter()
+            .find(|f| f.name == "sender_id")
+            .unwrap();
+        assert!(
+            sender.actor_column,
+            "sender_id should be marked as actor_column"
+        );
         let subject = entity.fields.iter().find(|f| f.name == "subject").unwrap();
         assert!(!subject.actor_column, "subject should not be actor_column");
     }
@@ -2056,7 +2288,10 @@ mod tests {
         let (entity, _, _) = build_entity(&table);
         assert!(entity.actor, "users entity should be marked as actor");
         let pk = entity.fields.iter().find(|f| f.name == "user_id").unwrap();
-        assert!(!pk.actor_column, "PK on actor entity should not be marked actor_column");
+        assert!(
+            !pk.actor_column,
+            "PK on actor entity should not be marked actor_column"
+        );
     }
 
     #[test]
@@ -2120,16 +2355,12 @@ mod tests {
             PersonaSpec {
                 name: "power_user".into(),
                 weight: 0.3,
-                traits: BTreeMap::from([
-                    ("activity_rate".into(), Value::Float(50.0)),
-                ]),
+                traits: BTreeMap::from([("activity_rate".into(), Value::Float(50.0))]),
             },
             PersonaSpec {
                 name: "casual_user".into(),
                 weight: 0.7,
-                traits: BTreeMap::from([
-                    ("activity_rate".into(), Value::Float(5.0)),
-                ]),
+                traits: BTreeMap::from([("activity_rate".into(), Value::Float(5.0))]),
             },
         ];
 
@@ -2164,10 +2395,7 @@ mod tests {
             from_entity: "messages".into(),
             to_entity: "messages".into(),
             graph_type: knit_core::GraphType::SmallWorld,
-            params: BTreeMap::from([
-                ("avg_degree".into(), 8.0),
-                ("reciprocity".into(), 0.6),
-            ]),
+            params: BTreeMap::from([("avg_degree".into(), 8.0), ("reciprocity".into(), 0.6)]),
             community_count: Some(3),
             hierarchy_depth: None,
         }];

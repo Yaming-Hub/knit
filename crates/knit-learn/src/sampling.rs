@@ -80,9 +80,8 @@ fn sample_reservoir(batches: &[RecordBatch], n: usize) -> LearnResult<Vec<Record
     debug!(sample_size = n, total, "Reservoir sampling");
 
     // Build index array for take
-    let indices = arrow::array::UInt64Array::from(
-        reservoir.iter().map(|&i| i as u64).collect::<Vec<_>>(),
-    );
+    let indices =
+        arrow::array::UInt64Array::from(reservoir.iter().map(|&i| i as u64).collect::<Vec<_>>());
     let columns: Vec<_> = (0..combined.num_columns())
         .map(|c| arrow::compute::take(combined.column(c), &indices, None))
         .collect::<Result<Vec<_>, _>>()?;

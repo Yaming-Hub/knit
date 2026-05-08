@@ -74,7 +74,11 @@ impl<W: Write + Send> Sink for ParquetSink<W> {
         let num_rows = batch.num_rows() as u64;
         writer.write(batch)?;
         self.rows_written += num_rows;
-        debug!(rows = num_rows, total = self.rows_written, "wrote parquet batch");
+        debug!(
+            rows = num_rows,
+            total = self.rows_written,
+            "wrote parquet batch"
+        );
         Ok(())
     }
 
@@ -89,7 +93,11 @@ impl<W: Write + Send> Sink for ParquetSink<W> {
             .iter()
             .map(|rg| rg.total_byte_size as u64)
             .sum();
-        debug!(rows = self.rows_written, bytes = bytes_written, "parquet sink finished");
+        debug!(
+            rows = self.rows_written,
+            bytes = bytes_written,
+            "parquet sink finished"
+        );
         Ok(SinkStats {
             rows_written: self.rows_written,
             bytes_written,
@@ -125,8 +133,7 @@ mod tests {
     #[test]
     fn parquet_write_and_finish() {
         let buf = Vec::new();
-        let mut sink =
-            ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
+        let mut sink = ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = Box::new(sink).finish().unwrap();
         assert_eq!(stats.rows_written, 3);
@@ -137,8 +144,7 @@ mod tests {
     #[test]
     fn parquet_multiple_batches() {
         let buf = Vec::new();
-        let mut sink =
-            ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
+        let mut sink = ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         sink.write_batch(&sample_batch()).unwrap();
         let stats = Box::new(sink).finish().unwrap();
@@ -160,17 +166,13 @@ mod tests {
             .as_ref()
             .expect("column metadata should be present")
             .codec;
-        assert_eq!(
-            codec,
-            parquet::format::CompressionCodec::SNAPPY
-        );
+        assert_eq!(codec, parquet::format::CompressionCodec::SNAPPY);
     }
 
     #[test]
     fn parquet_finish_twice_errors() {
         let buf = Vec::new();
-        let mut sink =
-            ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
+        let mut sink = ParquetSink::new(buf, sample_schema(), Compression::None, None).unwrap();
         sink.writer = None;
         let result = Box::new(sink).finish();
         assert!(result.is_err());

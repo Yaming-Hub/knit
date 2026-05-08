@@ -136,9 +136,7 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     fn email_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("email", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("email", DataType::Utf8, true)]));
         RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec![
@@ -158,7 +156,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = f.perturb(email_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         let originals = [
             "alice@example.com",
             "bob@test.org",
@@ -181,16 +183,18 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for seed in 0..20u64 {
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
-            let schema = Arc::new(Schema::new(vec![
-                Field::new("email", DataType::Utf8, true),
-            ]));
+            let schema = Arc::new(Schema::new(vec![Field::new("email", DataType::Utf8, true)]));
             let batch = RecordBatch::try_new(
                 schema,
                 vec![Arc::new(StringArray::from(vec!["user@example.com"]))],
             )
             .unwrap();
             let result = f.perturb(batch, &mut rng, &config).unwrap();
-            let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+            let arr = result
+                .column(0)
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap();
             let val = arr.value(0);
             assert_ne!(val, "user@example.com", "seed {seed}: expected corruption");
             // Must match one of the 3 strategies
@@ -205,7 +209,11 @@ mod tests {
             };
             seen.insert(strategy);
         }
-        assert_eq!(seen.len(), 3, "all 3 email strategies should be exercised: {seen:?}");
+        assert_eq!(
+            seen.len(),
+            3,
+            "all 3 email strategies should be exercised: {seen:?}"
+        );
     }
 
     #[test]
@@ -215,16 +223,18 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for seed in 0..20u64 {
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
-            let schema = Arc::new(Schema::new(vec![
-                Field::new("d", DataType::Utf8, false),
-            ]));
+            let schema = Arc::new(Schema::new(vec![Field::new("d", DataType::Utf8, false)]));
             let batch = RecordBatch::try_new(
                 schema,
                 vec![Arc::new(StringArray::from(vec!["2024-01-15"]))],
             )
             .unwrap();
             let result = f.perturb(batch, &mut rng, &config).unwrap();
-            let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+            let arr = result
+                .column(0)
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap();
             let val = arr.value(0);
             assert_ne!(val, "2024-01-15", "seed {seed}: expected corruption");
             let strategy = if val == "20240115" {
@@ -238,7 +248,11 @@ mod tests {
             };
             seen.insert(strategy);
         }
-        assert_eq!(seen.len(), 3, "all 3 date strategies should be exercised: {seen:?}");
+        assert_eq!(
+            seen.len(),
+            3,
+            "all 3 date strategies should be exercised: {seen:?}"
+        );
     }
 
     #[test]
@@ -248,16 +262,18 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for seed in 0..20u64 {
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
-            let schema = Arc::new(Schema::new(vec![
-                Field::new("url", DataType::Utf8, false),
-            ]));
+            let schema = Arc::new(Schema::new(vec![Field::new("url", DataType::Utf8, false)]));
             let batch = RecordBatch::try_new(
                 schema,
                 vec![Arc::new(StringArray::from(vec!["https://example.com"]))],
             )
             .unwrap();
             let result = f.perturb(batch, &mut rng, &config).unwrap();
-            let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+            let arr = result
+                .column(0)
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap();
             let val = arr.value(0);
             assert_ne!(val, "https://example.com", "seed {seed}");
             let strategy = if val == "https:/example.com" {
@@ -269,7 +285,11 @@ mod tests {
             };
             seen.insert(strategy);
         }
-        assert_eq!(seen.len(), 2, "both URL strategies should be exercised: {seen:?}");
+        assert_eq!(
+            seen.len(),
+            2,
+            "both URL strategies should be exercised: {seen:?}"
+        );
     }
 
     #[test]
@@ -277,18 +297,23 @@ mod tests {
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("s", DataType::Utf8, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("s", DataType::Utf8, false)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec!["hello world"]))],
         )
         .unwrap();
         let result = f.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         let val = arr.value(0);
-        assert!(val.contains('#'), "generic string should get # replacement: {val}");
+        assert!(
+            val.contains('#'),
+            "generic string should get # replacement: {val}"
+        );
         assert_eq!(val.len(), "hello world".len(), "length should be preserved");
     }
 
@@ -297,16 +322,15 @@ mod tests {
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("s", DataType::Utf8, false),
-        ]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(StringArray::from(vec!["ab"]))],
-        )
-        .unwrap();
+        let schema = Arc::new(Schema::new(vec![Field::new("s", DataType::Utf8, false)]));
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(StringArray::from(vec!["ab"]))]).unwrap();
         let result = f.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert_eq!(arr.value(0), "#ab");
     }
 
@@ -316,7 +340,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(0.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = f.perturb(email_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert_eq!(arr.value(0), "alice@example.com");
         assert_eq!(arr.value(1), "bob@test.org");
         assert_eq!(arr.value(2), "2024-01-15");
@@ -329,16 +357,15 @@ mod tests {
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("num", DataType::Int32, false),
-        ]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
-        )
-        .unwrap();
+        let schema = Arc::new(Schema::new(vec![Field::new("num", DataType::Int32, false)]));
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();
         let result = f.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
         assert_eq!(arr.value(0), 1);
         assert_eq!(arr.value(1), 2);
         assert_eq!(arr.value(2), 3);
@@ -364,10 +391,26 @@ mod tests {
         )
         .unwrap();
         let result = f.perturb(batch, &mut rng, &config).unwrap();
-        let targeted = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
-        let safe = result.column(1).as_any().downcast_ref::<StringArray>().unwrap();
-        assert_ne!(targeted.value(0), "user@example.com", "targeted col should be corrupted");
-        assert_eq!(safe.value(0), "user@example.com", "safe col should be untouched");
+        let targeted = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        let safe = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        assert_ne!(
+            targeted.value(0),
+            "user@example.com",
+            "targeted col should be corrupted"
+        );
+        assert_eq!(
+            safe.value(0),
+            "user@example.com",
+            "safe col should be untouched"
+        );
     }
 
     #[test]
@@ -375,9 +418,7 @@ mod tests {
         let f = FormatCorruptor::new();
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("s", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("s", DataType::Utf8, true)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec![
@@ -388,7 +429,11 @@ mod tests {
         )
         .unwrap();
         let result = f.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert!(!arr.is_valid(1), "null should remain null");
     }
 

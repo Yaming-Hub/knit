@@ -199,10 +199,7 @@ mod tests {
         hll.add("cherry");
         let est = hll.cardinality();
         // For very small sets, linear counting should be accurate
-        assert!(
-            (2.0..5.0).contains(&est),
-            "expected ~3, got {est}"
-        );
+        assert!((2.0..5.0).contains(&est), "expected ~3, got {est}");
     }
 
     #[test]
@@ -212,10 +209,7 @@ mod tests {
             hll.add("same_value");
         }
         let est = hll.cardinality();
-        assert!(
-            est < 2.0,
-            "expected ~1, got {est}"
-        );
+        assert!(est < 2.0, "expected ~1, got {est}");
     }
 
     #[test]

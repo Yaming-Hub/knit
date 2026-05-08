@@ -231,7 +231,8 @@ impl ActorTemporalGenerator {
 
         // Group row indices by actor PK (preserving encounter order per actor).
         // Use BTreeMap for deterministic iteration order.
-        let mut actor_rows: std::collections::BTreeMap<i64, Vec<usize>> = std::collections::BTreeMap::new();
+        let mut actor_rows: std::collections::BTreeMap<i64, Vec<usize>> =
+            std::collections::BTreeMap::new();
         let mut no_actor_rows: Vec<usize> = Vec::new();
         for (idx, pk_opt) in actor_pks.iter().enumerate() {
             match pk_opt {
@@ -253,10 +254,13 @@ impl ActorTemporalGenerator {
             let base_lower = self.compute_actor_lower_bound(actor_idx);
 
             // Generate burst event count distribution (Poisson, min 1)
-            let poisson = Poisson::new(burst_cfg.avg_events.max(1.0)).unwrap_or(Poisson::new(3.0).unwrap());
+            let poisson =
+                Poisson::new(burst_cfg.avg_events.max(1.0)).unwrap_or(Poisson::new(3.0).unwrap());
             // Exponential for inter-burst idle and intra-burst gap
-            let gap_exp = Exp::new(1.0 / (burst_cfg.avg_gap_ms as f64).max(1.0)).unwrap_or(Exp::new(1.0 / 180_000.0).unwrap());
-            let idle_exp = Exp::new(1.0 / (burst_cfg.avg_idle_ms as f64).max(1.0)).unwrap_or(Exp::new(1.0 / 28_800_000.0).unwrap());
+            let gap_exp = Exp::new(1.0 / (burst_cfg.avg_gap_ms as f64).max(1.0))
+                .unwrap_or(Exp::new(1.0 / 180_000.0).unwrap());
+            let idle_exp = Exp::new(1.0 / (burst_cfg.avg_idle_ms as f64).max(1.0))
+                .unwrap_or(Exp::new(1.0 / 28_800_000.0).unwrap());
 
             let mut cursor = base_lower;
             let mut events_remaining_in_burst: u32 = 0;
@@ -396,17 +400,15 @@ mod tests {
             pools: vec![ActorEntityPool {
                 entity_name: "users".into(),
                 actor_count: 3,
-                persona_weights: vec![
-                    PersonaWeight {
-                        name: "night_owl".into(),
-                        weight: 1.0,
-                        traits: {
-                            let mut m = BTreeMap::new();
-                            m.insert("peak_hours".into(), Value::Float(22.0));
-                            m
-                        },
+                persona_weights: vec![PersonaWeight {
+                    name: "night_owl".into(),
+                    weight: 1.0,
+                    traits: {
+                        let mut m = BTreeMap::new();
+                        m.insert("peak_hours".into(), Value::Float(22.0));
+                        m
                     },
-                ],
+                }],
             }],
             graph_plans: vec![],
         };
@@ -457,11 +459,18 @@ mod tests {
 
         // The peak should be near 22:00 — check that hours 20-23 + 0-1
         // (the wrapped window) have more hits than hours 8-14
-        let near_peak: u32 = hour_counts[20] + hour_counts[21] + hour_counts[22]
-            + hour_counts[23] + hour_counts[0] + hour_counts[1];
-        let far_from_peak: u32 =
-            hour_counts[8] + hour_counts[9] + hour_counts[10]
-            + hour_counts[11] + hour_counts[12] + hour_counts[13];
+        let near_peak: u32 = hour_counts[20]
+            + hour_counts[21]
+            + hour_counts[22]
+            + hour_counts[23]
+            + hour_counts[0]
+            + hour_counts[1];
+        let far_from_peak: u32 = hour_counts[8]
+            + hour_counts[9]
+            + hour_counts[10]
+            + hour_counts[11]
+            + hour_counts[12]
+            + hour_counts[13];
 
         assert!(
             near_peak > far_from_peak,
@@ -484,8 +493,7 @@ mod tests {
         );
 
         let mut batch_columns = HashMap::new();
-        let user_ids =
-            Arc::new(Int64Array::from(vec![Some(100), None, Some(300)])) as ArrayRef;
+        let user_ids = Arc::new(Int64Array::from(vec![Some(100), None, Some(300)])) as ArrayRef;
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
@@ -533,9 +541,15 @@ mod tests {
 
         // Generate 300 rows: 100 per actor
         let mut user_ids_vec = Vec::new();
-        for _ in 0..100 { user_ids_vec.push(100i64); }
-        for _ in 0..100 { user_ids_vec.push(200i64); }
-        for _ in 0..100 { user_ids_vec.push(300i64); }
+        for _ in 0..100 {
+            user_ids_vec.push(100i64);
+        }
+        for _ in 0..100 {
+            user_ids_vec.push(200i64);
+        }
+        for _ in 0..100 {
+            user_ids_vec.push(300i64);
+        }
 
         let mut batch_columns = HashMap::new();
         let user_ids = Arc::new(Int64Array::from(user_ids_vec)) as ArrayRef;

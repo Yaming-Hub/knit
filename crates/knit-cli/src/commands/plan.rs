@@ -1,11 +1,11 @@
 //! `knit plan` — display the execution plan without generating data.
 
-use std::collections::HashSet;
 use anyhow::{bail, Result};
 use colored::Colorize;
+use std::collections::HashSet;
 
-use crate::Cli;
 use super::{load_schema, validate_model};
+use crate::Cli;
 
 /// Run the plan command.
 ///
@@ -13,9 +13,8 @@ use super::{load_schema, validate_model};
 /// human-readable (or JSON) summary of the planned generation pipeline.
 pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     // Load and validate
-    let mut model = load_schema(schema_path).map_err(|e| {
-        anyhow::anyhow!("failed to parse schema `{}`: {}", schema_path, e)
-    })?;
+    let mut model = load_schema(schema_path)
+        .map_err(|e| anyhow::anyhow!("failed to parse schema `{}`: {}", schema_path, e))?;
 
     // Apply --count override so the plan reflects it
     if let Some(ref count_str) = cli.count {
@@ -31,9 +30,8 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     }
 
     // Compile execution plan
-    let plan = knit_plan::compile(&model).map_err(|e| {
-        anyhow::anyhow!("plan compilation failed: {}", e)
-    })?;
+    let plan = knit_plan::compile(&model)
+        .map_err(|e| anyhow::anyhow!("plan compilation failed: {}", e))?;
 
     if cli.json {
         println!("{}", serde_json::to_string_pretty(&plan)?);
@@ -96,9 +94,8 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan, behavioral: &Behaviora
         "global seed:".dimmed(),
         plan.rng_tree.global_seed,
     );
-    let has_behavioral = meta.actor_entity_count > 0
-        || meta.persona_count > 0
-        || meta.actor_relationship_count > 0;
+    let has_behavioral =
+        meta.actor_entity_count > 0 || meta.persona_count > 0 || meta.actor_relationship_count > 0;
     if has_behavioral {
         println!(
             "  {} {} actor(s), {} persona(s), {} actor relationship(s)",
@@ -165,7 +162,11 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan, behavioral: &Behaviora
 
     // RNG tree summary
     println!("{}", "── RNG Tree ──".bold());
-    println!("  {} {}", "global seed:".dimmed(), plan.rng_tree.global_seed);
+    println!(
+        "  {} {}",
+        "global seed:".dimmed(),
+        plan.rng_tree.global_seed
+    );
     for (name, node) in &plan.rng_tree.entity_nodes {
         println!(
             "  {} {} (seed {}, {} fields)",
@@ -181,7 +182,9 @@ pub(crate) fn print_plan(plan: &knit_plan::ExecutionPlan, behavioral: &Behaviora
 fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
     match gp {
         knit_plan::GeneratorPlan::Distribution { kind, .. } => format!("dist({:?})", kind),
-        knit_plan::GeneratorPlan::Faker { category, locale, .. } => {
+        knit_plan::GeneratorPlan::Faker {
+            category, locale, ..
+        } => {
             format!("faker({}, {})", category, locale)
         }
         knit_plan::GeneratorPlan::Sequence { start, step } => {
@@ -210,27 +213,57 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
             format!("topology({:?})", model)
         }
         knit_plan::GeneratorPlan::Unique { inner, max_retries } => {
-            format!("unique({}, retries={})", generator_label(inner), max_retries)
+            format!(
+                "unique({}, retries={})",
+                generator_label(inner),
+                max_retries
+            )
         }
         knit_plan::GeneratorPlan::Conditional {
             field, branches, ..
         } => {
             format!("conditional({}, {} branches)", field, branches.len())
         }
-        knit_plan::GeneratorPlan::Dictionary { entries, expansion, .. } => {
+        knit_plan::GeneratorPlan::Dictionary {
+            entries, expansion, ..
+        } => {
             format!("dictionary({} entries, {})", entries.len(), expansion)
         }
-        knit_plan::GeneratorPlan::GraphTarget { graph_name, source_field, target_entity, .. } => {
-            format!("graph_fk({}→{}, src={})", graph_name, target_entity, source_field)
+        knit_plan::GeneratorPlan::GraphTarget {
+            graph_name,
+            source_field,
+            target_entity,
+            ..
+        } => {
+            format!(
+                "graph_fk({}→{}, src={})",
+                graph_name, target_entity, source_field
+            )
         }
-        knit_plan::GeneratorPlan::PersonaField { trait_name, actor_entity, .. } => {
+        knit_plan::GeneratorPlan::PersonaField {
+            trait_name,
+            actor_entity,
+            ..
+        } => {
             format!("persona({}.{})", actor_entity, trait_name)
         }
-        knit_plan::GeneratorPlan::ActorTemporal { trait_name, actor_entity, .. } => {
+        knit_plan::GeneratorPlan::ActorTemporal {
+            trait_name,
+            actor_entity,
+            ..
+        } => {
             format!("actor_temporal({}.{})", actor_entity, trait_name)
         }
-        knit_plan::GeneratorPlan::ThreadRef { reply_probability, max_depth, .. } => {
-            format!("thread_ref(p={:.0}%, depth={})", reply_probability * 100.0, max_depth)
+        knit_plan::GeneratorPlan::ThreadRef {
+            reply_probability,
+            max_depth,
+            ..
+        } => {
+            format!(
+                "thread_ref(p={:.0}%, depth={})",
+                reply_probability * 100.0,
+                max_depth
+            )
         }
     }
 }

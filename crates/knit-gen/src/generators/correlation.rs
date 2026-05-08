@@ -333,7 +333,12 @@ mod tests {
         let n = x.len() as f64;
         let mx = x.iter().sum::<f64>() / n;
         let my = y.iter().sum::<f64>() / n;
-        let cov: f64 = x.iter().zip(y).map(|(a, b)| (a - mx) * (b - my)).sum::<f64>() / n;
+        let cov: f64 = x
+            .iter()
+            .zip(y)
+            .map(|(a, b)| (a - mx) * (b - my))
+            .sum::<f64>()
+            / n;
         let sx = (x.iter().map(|a| (a - mx).powi(2)).sum::<f64>() / n).sqrt();
         let sy = (y.iter().map(|b| (b - my).powi(2)).sum::<f64>() / n).sqrt();
         cov / (sx * sy).max(1e-12)

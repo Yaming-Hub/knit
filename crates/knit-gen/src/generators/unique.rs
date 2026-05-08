@@ -13,8 +13,8 @@ use parking_lot::Mutex;
 
 use arrow::array::{
     Array, ArrayRef, BooleanArray, Date32Array, Float64Array, Int64Array, StringArray,
-    TimestampMillisecondArray, TimestampMicrosecondArray,
-    TimestampNanosecondArray, TimestampSecondArray, UInt64Array,
+    TimestampMicrosecondArray, TimestampMillisecondArray, TimestampNanosecondArray,
+    TimestampSecondArray, UInt64Array,
 };
 use arrow::datatypes::DataType;
 use rand::RngCore;
@@ -167,9 +167,7 @@ fn build_result_array(collected: &[(ArrayRef, Vec<usize>)]) -> ArrayRef {
     // Fast path: single batch with all indices sequential
     if collected.len() == 1 {
         let (arr, indices) = &collected[0];
-        if indices.len() == arr.len()
-            && indices.iter().enumerate().all(|(i, &idx)| i == idx)
-        {
+        if indices.len() == arr.len() && indices.iter().enumerate().all(|(i, &idx)| i == idx) {
             return arr.clone();
         }
     }
@@ -187,9 +185,7 @@ fn build_result_array(collected: &[(ArrayRef, Vec<usize>)]) -> ArrayRef {
         return collected
             .first()
             .map(|(a, _)| a.slice(0, 0))
-            .unwrap_or_else(|| {
-                std::sync::Arc::new(arrow::array::NullArray::new(0)) as ArrayRef
-            });
+            .unwrap_or_else(|| std::sync::Arc::new(arrow::array::NullArray::new(0)) as ArrayRef);
     }
 
     let refs: Vec<&dyn Array> = slices.iter().map(|a| a.as_ref()).collect();
@@ -209,8 +205,7 @@ mod tests {
     /// Build a minimal [`GenContext`] for tests.
     fn test_ctx() -> GenContext<'static> {
         // Leak a HashMap so we can return a 'static reference.
-        let map: &'static HashMap<String, ArrayRef> =
-            Box::leak(Box::new(HashMap::new()));
+        let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
         GenContext::new(map, 0, 0, 1, "test")
     }
 
@@ -233,9 +228,18 @@ mod tests {
     fn unique_with_small_one_of_set_collisions() {
         // OneOf with only 3 choices — generating 3 values should still work.
         let choices = vec![
-            WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
+            WeightedChoice {
+                value: Value::String("a".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("b".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("c".into()),
+                weight: 1.0,
+            },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
         let gen = UniqueGenerator::new(inner, 1000);
@@ -245,7 +249,11 @@ mod tests {
         let arr = gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let values: HashSet<&str> = (0..str_arr.len()).map(|i| str_arr.value(i)).collect();
-        assert_eq!(values.len(), 3, "should produce 3 unique values from 3 choices");
+        assert_eq!(
+            values.len(),
+            3,
+            "should produce 3 unique values from 3 choices"
+        );
     }
 
     #[test]
@@ -287,7 +295,11 @@ mod tests {
     fn unique_wrapping_faker() {
         // Faker generators produce strings; just make sure it doesn't panic.
         use crate::generators::faker::FakerGenerator;
-        let inner = Box::new(FakerGenerator::new("first_name".into(), "en_US".into(), vec![]));
+        let inner = Box::new(FakerGenerator::new(
+            "first_name".into(),
+            "en_US".into(),
+            vec![],
+        ));
         let gen = UniqueGenerator::new(inner, 100);
         let mut rng = ChaCha8Rng::seed_from_u64(7);
         let ctx = test_ctx();
@@ -301,12 +313,30 @@ mod tests {
     fn unique_cross_batch_dedup() {
         // Use low-cardinality inner so second call MUST rely on persisted seen set
         let choices = vec![
-            WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("d".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("e".into()), weight: 1.0 },
-            WeightedChoice { value: Value::String("f".into()), weight: 1.0 },
+            WeightedChoice {
+                value: Value::String("a".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("b".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("c".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("d".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("e".into()),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::String("f".into()),
+                weight: 1.0,
+            },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
         let gen = UniqueGenerator::new(inner, 1000);
@@ -332,11 +362,26 @@ mod tests {
     fn unique_with_int_inner() {
         // Use OneOf with integer choices to test Int64Array dedup path
         let choices = vec![
-            WeightedChoice { value: Value::Int(10), weight: 1.0 },
-            WeightedChoice { value: Value::Int(20), weight: 1.0 },
-            WeightedChoice { value: Value::Int(30), weight: 1.0 },
-            WeightedChoice { value: Value::Int(40), weight: 1.0 },
-            WeightedChoice { value: Value::Int(50), weight: 1.0 },
+            WeightedChoice {
+                value: Value::Int(10),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::Int(20),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::Int(30),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::Int(40),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::Int(50),
+                weight: 1.0,
+            },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
         let gen = UniqueGenerator::new(inner, 1000);
@@ -391,9 +436,18 @@ mod tests {
     fn unique_with_float_inner() {
         // Float dedup uses scientific notation key
         let choices = vec![
-            WeightedChoice { value: Value::Float(1.1), weight: 1.0 },
-            WeightedChoice { value: Value::Float(2.2), weight: 1.0 },
-            WeightedChoice { value: Value::Float(3.3), weight: 1.0 },
+            WeightedChoice {
+                value: Value::Float(1.1),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::Float(2.2),
+                weight: 1.0,
+            },
+            WeightedChoice {
+                value: Value::Float(3.3),
+                weight: 1.0,
+            },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
         let gen = UniqueGenerator::new(inner, 1000);

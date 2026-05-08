@@ -135,10 +135,7 @@ pub fn build_actor_registry(
     }
     for (col_name, entries) in &name_groups {
         if entries.len() > 1 {
-            let locations: Vec<String> = entries
-                .iter()
-                .map(|(e, _)| e.clone())
-                .collect();
+            let locations: Vec<String> = entries.iter().map(|(e, _)| e.clone()).collect();
             warnings.push(format!(
                 "actor column '{}' appears in {} entities ({}) but no FK link found — \
                  treated as separate populations. Use --actor-column to override.",
@@ -227,7 +224,10 @@ mod tests {
     fn same_entity_different_targets() {
         // emails.sender_id → users, emails.org_id → orgs
         let actor_cols = vec![
-            ("emails".to_string(), vec!["sender_id".to_string(), "org_id".to_string()]),
+            (
+                "emails".to_string(),
+                vec!["sender_id".to_string(), "org_id".to_string()],
+            ),
             ("users".to_string(), vec![]),
             ("orgs".to_string(), vec![]),
         ];
@@ -245,9 +245,7 @@ mod tests {
 
     #[test]
     fn unlinked_columns_get_separate_namespaces() {
-        let actor_cols = vec![
-            ("events".to_string(), vec!["actor_id".to_string()]),
-        ];
+        let actor_cols = vec![("events".to_string(), vec!["actor_id".to_string()])];
         let rels = vec![];
 
         let registry = build_actor_registry(&actor_cols, &rels);
@@ -287,6 +285,9 @@ mod tests {
         // Each gets its own namespace
         assert_eq!(registry.namespaces.len(), 2);
         // Should warn about potential missed unification
-        assert!(registry.warnings.iter().any(|w| w.contains("appears in 2 entities")));
+        assert!(registry
+            .warnings
+            .iter()
+            .any(|w| w.contains("appears in 2 entities")));
     }
 }

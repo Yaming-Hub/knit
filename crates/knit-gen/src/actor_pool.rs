@@ -7,7 +7,7 @@
 //!
 //! ## Lifecycle
 //!
-//! 1. The [`GenerationEngine`] calls [`ActorPool::from_plan`] before phase execution.
+//! 1. The `GenerationEngine` calls [`ActorPool::from_plan`] before phase execution.
 //! 2. Actor entities are generated normally (their row counts come from the pool).
 //! 3. Behavioral entity generators call [`ActorPool::sample_actor`] to select actors
 //!    weighted by activity rate, then read traits via [`ActorPool::get_trait`].
@@ -16,9 +16,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use knit_core::Value;
 use knit_plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
+use rand::SeedableRng;
 use rand::{Rng, RngCore};
 use rand_chacha::ChaCha8Rng;
-use rand::SeedableRng;
 
 /// Runtime actor pool — holds per-actor persona assignments and trait values.
 #[derive(Debug, Clone)]
@@ -103,7 +103,11 @@ impl ActorPool {
     }
 
     /// Get all trait values for a specific actor.
-    pub fn get_all_traits(&self, entity: &str, actor_index: usize) -> Option<&BTreeMap<String, Value>> {
+    pub fn get_all_traits(
+        &self,
+        entity: &str,
+        actor_index: usize,
+    ) -> Option<&BTreeMap<String, Value>> {
         self.pools
             .get(entity)
             .and_then(|p| p.actor_traits.get(actor_index))
@@ -414,16 +418,12 @@ mod tests {
                 PersonaWeight {
                     name: "power_user".into(),
                     weight: 0.3,
-                    traits: BTreeMap::from([
-                        ("activity_rate".into(), Value::Float(50.0)),
-                    ]),
+                    traits: BTreeMap::from([("activity_rate".into(), Value::Float(50.0))]),
                 },
                 PersonaWeight {
                     name: "casual_user".into(),
                     weight: 0.7,
-                    traits: BTreeMap::from([
-                        ("activity_rate".into(), Value::Float(5.0)),
-                    ]),
+                    traits: BTreeMap::from([("activity_rate".into(), Value::Float(5.0))]),
                 },
             ],
         );
@@ -521,9 +521,10 @@ mod tests {
                 name: "test".into(),
                 weight: 1.0,
                 traits: BTreeMap::from([
-                    ("peak_hours".into(), Value::Array(vec![
-                        Value::Int(9), Value::Int(10), Value::Int(14),
-                    ])),
+                    (
+                        "peak_hours".into(),
+                        Value::Array(vec![Value::Int(9), Value::Int(10), Value::Int(14)]),
+                    ),
                     ("label".into(), Value::String("vip".into())),
                 ]),
             }],
@@ -538,7 +539,11 @@ mod tests {
             );
             assert_eq!(
                 pool.get_trait("users", i, "peak_hours"),
-                Some(&Value::Array(vec![Value::Int(9), Value::Int(10), Value::Int(14)]))
+                Some(&Value::Array(vec![
+                    Value::Int(9),
+                    Value::Int(10),
+                    Value::Int(14)
+                ]))
             );
         }
     }
@@ -551,16 +556,12 @@ mod tests {
                 PersonaWeight {
                     name: "heavy".into(),
                     weight: 0.1,
-                    traits: BTreeMap::from([
-                        ("activity_rate".into(), Value::Float(100.0)),
-                    ]),
+                    traits: BTreeMap::from([("activity_rate".into(), Value::Float(100.0))]),
                 },
                 PersonaWeight {
                     name: "light".into(),
                     weight: 0.9,
-                    traits: BTreeMap::from([
-                        ("activity_rate".into(), Value::Float(1.0)),
-                    ]),
+                    traits: BTreeMap::from([("activity_rate".into(), Value::Float(1.0))]),
                 },
             ],
         );
@@ -611,7 +612,10 @@ mod tests {
 
         for i in 0..50 {
             assert_eq!(pool1.get_persona("users", i), pool2.get_persona("users", i));
-            assert_eq!(pool1.get_all_traits("users", i), pool2.get_all_traits("users", i));
+            assert_eq!(
+                pool1.get_all_traits("users", i),
+                pool2.get_all_traits("users", i)
+            );
         }
     }
 

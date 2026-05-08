@@ -18,12 +18,12 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use knit_bind::{Compression, OutputFormat, Sink, SinkConfig};
 use knit_core::{CountSpec, DataModel, NoiseProfile};
-use knit_gen::{ActorPool, GenerationEngine, generate_graph};
-use knit_noise::{Pipeline, PerturbConfig, ColumnFilter};
+use knit_gen::{generate_graph, ActorPool, GenerationEngine};
+use knit_noise::{ColumnFilter, PerturbConfig, Pipeline};
 use knit_plan::ExecutionPlan;
 
-use crate::{Cli, CompressionArg, Format};
 use super::{load_schema, validate_model};
+use crate::{Cli, CompressionArg, Format};
 
 /// Run the generate command — full forward pipeline.
 ///
@@ -46,10 +46,9 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     }
     // Store params in the model (for plan metadata) and later pass to engine.
     for (key, value) in &cli.params {
-        model.params.insert(
-            key.clone(),
-            knit_core::Value::String(value.clone()),
-        );
+        model
+            .params
+            .insert(key.clone(), knit_core::Value::String(value.clone()));
     }
 
     let errors = validate_model(&model);
@@ -68,7 +67,12 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
             bail!(
                 "unknown entity '{}' in --entity filter; available: {}",
                 name,
-                model.entities.iter().map(|e| e.name.as_str()).collect::<Vec<_>>().join(", ")
+                model
+                    .entities
+                    .iter()
+                    .map(|e| e.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
             );
         }
     }
@@ -150,14 +154,18 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
         .phases
         .iter()
         .flat_map(|p| &p.entity_plans)
-        .filter(|ep| output_entities.is_empty() || output_entities.contains(ep.entity_name.as_str()))
+        .filter(|ep| {
+            output_entities.is_empty() || output_entities.contains(ep.entity_name.as_str())
+        })
         .map(|ep| ep.estimated_row_count)
         .sum();
     let entity_count = plan
         .phases
         .iter()
         .flat_map(|p| &p.entity_plans)
-        .filter(|ep| output_entities.is_empty() || output_entities.contains(ep.entity_name.as_str()))
+        .filter(|ep| {
+            output_entities.is_empty() || output_entities.contains(ep.entity_name.as_str())
+        })
         .count();
 
     if cli.json {
@@ -235,7 +243,8 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
             .graph_plans
             .iter()
             .filter_map(|gp| {
-                if !actor_pool.has_entity(&gp.from_entity) || !actor_pool.has_entity(&gp.to_entity) {
+                if !actor_pool.has_entity(&gp.from_entity) || !actor_pool.has_entity(&gp.to_entity)
+                {
                     if !cli.quiet {
                         eprintln!(
                             "{} graph '{}' skipped: entity not in pool (from: {}, to: {})",
@@ -313,7 +322,9 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
             };
 
             // Track per-entity progress
-            let done = entity_row_counts.entry(entity_name.to_string()).or_insert(0);
+            let done = entity_row_counts
+                .entry(entity_name.to_string())
+                .or_insert(0);
             *done += row_count;
 
             // Lazily create sink
@@ -328,9 +339,10 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                 })?;
                 let writer: Box<dyn std::io::Write + Send> = Box::new(BufWriter::new(file));
 
-                let schema = entity_schemas.get(entity_name).cloned().unwrap_or_else(|| {
-                    batch.schema()
-                });
+                let schema = entity_schemas
+                    .get(entity_name)
+                    .cloned()
+                    .unwrap_or_else(|| batch.schema());
 
                 // For CSV, flatten nested types in the schema to Utf8
                 let schema = if matches!(format, OutputFormat::Csv) {
@@ -351,9 +363,10 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
             }
 
             // Cast columns to match the declared Arrow schema (e.g. Int64 → Int32)
-            let target_schema = entity_schemas.get(entity_name).cloned().unwrap_or_else(|| {
-                batch.schema()
-            });
+            let target_schema = entity_schemas
+                .get(entity_name)
+                .cloned()
+                .unwrap_or_else(|| batch.schema());
             let batch = cast_batch_to_schema(&batch, &target_schema)?;
 
             // For CSV format, flatten nested columns (List, Map) to JSON strings
@@ -637,12 +650,15 @@ fn string_to_list_array(
     element_field_name: &str,
 ) -> Option<ArrayRef> {
     use arrow::array::{
-        Array, as_string_array, Int32Builder, Int64Builder, ListBuilder, StringBuilder,
-        GenericListArray,
+        as_string_array, Array, GenericListArray, Int32Builder, Int64Builder, ListBuilder,
+        StringBuilder,
     };
 
     // Only attempt conversion if source column is actually a string array
-    if !matches!(col.data_type(), ArrowDataType::Utf8 | ArrowDataType::LargeUtf8) {
+    if !matches!(
+        col.data_type(),
+        ArrowDataType::Utf8 | ArrowDataType::LargeUtf8
+    ) {
         return None;
     }
     let str_arr = as_string_array(col.as_ref());
@@ -721,9 +737,15 @@ fn string_to_list_array(
 
     // Re-wrap with correct element field name to match source schema
     built_array.map(|arr| {
-        let list_arr = arr.as_any().downcast_ref::<GenericListArray<i32>>()
+        let list_arr = arr
+            .as_any()
+            .downcast_ref::<GenericListArray<i32>>()
             .expect("string_to_list_array builds ListArray<i32> via ListBuilder");
-        let field = Arc::new(ArrowField::new(element_field_name, element_type.clone(), true));
+        let field = Arc::new(ArrowField::new(
+            element_field_name,
+            element_type.clone(),
+            true,
+        ));
         let new_list = GenericListArray::<i32>::new(
             field,
             list_arr.offsets().clone(),
@@ -741,10 +763,13 @@ fn string_to_map_array(
     value_type: &ArrowDataType,
     field_names: Option<arrow::array::MapFieldNames>,
 ) -> Option<ArrayRef> {
-    use arrow::array::{Array, as_string_array, Int32Builder, MapBuilder, StringBuilder};
+    use arrow::array::{as_string_array, Array, Int32Builder, MapBuilder, StringBuilder};
 
     // Only attempt conversion if source column is actually a string array
-    if !matches!(col.data_type(), ArrowDataType::Utf8 | ArrowDataType::LargeUtf8) {
+    if !matches!(
+        col.data_type(),
+        ArrowDataType::Utf8 | ArrowDataType::LargeUtf8
+    ) {
         return None;
     }
     let str_arr = as_string_array(col.as_ref());
@@ -756,7 +781,8 @@ fn string_to_map_array(
 
     match value_type {
         ArrowDataType::Int32 => {
-            let mut builder = MapBuilder::new(field_names, StringBuilder::new(), Int32Builder::new());
+            let mut builder =
+                MapBuilder::new(field_names, StringBuilder::new(), Int32Builder::new());
             for i in 0..str_arr.len() {
                 if str_arr.is_null(i) {
                     builder.append(false).ok()?;
@@ -770,7 +796,9 @@ fn string_to_map_array(
                             if v.is_null() {
                                 builder.values().append_null();
                             } else {
-                                builder.values().append_value(v.as_i64().unwrap_or(0) as i32);
+                                builder
+                                    .values()
+                                    .append_value(v.as_i64().unwrap_or(0) as i32);
                             }
                         }
                         builder.append(true).ok()?;
@@ -782,7 +810,8 @@ fn string_to_map_array(
             Some(Arc::new(builder.finish()) as ArrayRef)
         }
         ArrowDataType::Utf8 => {
-            let mut builder = MapBuilder::new(field_names, StringBuilder::new(), StringBuilder::new());
+            let mut builder =
+                MapBuilder::new(field_names, StringBuilder::new(), StringBuilder::new());
             for i in 0..str_arr.len() {
                 if str_arr.is_null(i) {
                     builder.append(false).ok()?;
@@ -830,7 +859,11 @@ fn cast_batch_to_schema(
         return Ok(batch.clone());
     }
 
-    let mut adjusted_fields: Vec<ArrowField> = target_schema.fields().iter().map(|f| f.as_ref().clone()).collect();
+    let mut adjusted_fields: Vec<ArrowField> = target_schema
+        .fields()
+        .iter()
+        .map(|f| f.as_ref().clone())
+        .collect();
 
     let columns: Vec<ArrayRef> = batch
         .columns()
@@ -895,9 +928,8 @@ fn cast_batch_to_schema(
         .collect();
 
     let final_schema = Arc::new(Schema::new(adjusted_fields));
-    RecordBatch::try_new(final_schema, columns).map_err(|e| {
-        knit_gen::GenError::Generation(format!("schema cast error: {}", e))
-    })
+    RecordBatch::try_new(final_schema, columns)
+        .map_err(|e| knit_gen::GenError::Generation(format!("schema cast error: {}", e)))
 }
 
 /// Infer the Arrow data type from a GeneratorPlan variant.
@@ -918,7 +950,7 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
                     _ => ArrowDataType::Float64,
                 }
             }
-        },
+        }
         knit_plan::GeneratorPlan::Sequence { .. } => ArrowDataType::Int64,
         knit_plan::GeneratorPlan::Uuid => ArrowDataType::Utf8,
         knit_plan::GeneratorPlan::Faker { category, .. } => match category.as_str() {
@@ -996,9 +1028,7 @@ fn create_progress_bars(
     for phase in &plan.phases {
         for ep in &phase.entity_plans {
             // Only show progress bars for entities that will be output
-            if !output_entities.is_empty()
-                && !output_entities.contains(ep.entity_name.as_str())
-            {
+            if !output_entities.is_empty() && !output_entities.contains(ep.entity_name.as_str()) {
                 continue;
             }
             let pb = multi.add(ProgressBar::new(ep.estimated_row_count));
@@ -1041,13 +1071,9 @@ fn format_bytes(b: u64) -> String {
 /// is respected. Each perturbator carries its own rate and column filter
 /// overrides via [`knit_noise::PerturbOverrides`], so multiple profiles targeting the
 /// same entity with different rates and column sets work correctly.
-fn build_noise_pipelines(
-    profiles: &[NoiseProfile],
-    model_seed: u64,
-) -> HashMap<String, Pipeline> {
+fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<String, Pipeline> {
     use knit_noise::{
-        NullInjector, TypoInjector, OutlierInjector, DuplicateInjector,
-        PerturbOverrides,
+        DuplicateInjector, NullInjector, OutlierInjector, PerturbOverrides, TypoInjector,
     };
 
     let mut entity_pipelines: HashMap<String, Pipeline> = HashMap::new();
@@ -1092,16 +1118,28 @@ fn build_noise_pipelines(
 
         // Add perturbators with their individual rates and column filters
         if profile.null_rate > 0.0 {
-            pipeline.add_with_overrides(Box::new(NullInjector::new()), make_overrides(profile.null_rate));
+            pipeline.add_with_overrides(
+                Box::new(NullInjector::new()),
+                make_overrides(profile.null_rate),
+            );
         }
         if profile.typo_rate > 0.0 {
-            pipeline.add_with_overrides(Box::new(TypoInjector::new()), make_overrides(profile.typo_rate));
+            pipeline.add_with_overrides(
+                Box::new(TypoInjector::new()),
+                make_overrides(profile.typo_rate),
+            );
         }
         if profile.outlier_rate > 0.0 {
-            pipeline.add_with_overrides(Box::new(OutlierInjector::new(5.0)), make_overrides(profile.outlier_rate));
+            pipeline.add_with_overrides(
+                Box::new(OutlierInjector::new(5.0)),
+                make_overrides(profile.outlier_rate),
+            );
         }
         if profile.duplicate_rate > 0.0 {
-            pipeline.add_with_overrides(Box::new(DuplicateInjector::new()), make_overrides(profile.duplicate_rate));
+            pipeline.add_with_overrides(
+                Box::new(DuplicateInjector::new()),
+                make_overrides(profile.duplicate_rate),
+            );
         }
     }
 
@@ -1197,7 +1235,11 @@ fn flatten_nested_columns(batch: &RecordBatch) -> Result<RecordBatch, knit_gen::
                 .collect();
             let string_arr = StringArray::from(json_strings);
             columns.push(Arc::new(string_arr));
-            fields.push(ArrowField::new(field.name(), ArrowDataType::Utf8, field.is_nullable()));
+            fields.push(ArrowField::new(
+                field.name(),
+                ArrowDataType::Utf8,
+                field.is_nullable(),
+            ));
         } else {
             columns.push(Arc::clone(col));
             fields.push(field.as_ref().clone());
@@ -1287,8 +1329,8 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
                     .unwrap_or(JVal::Null)
             }
             ArrowDataType::Date32 | ArrowDataType::Date64 | ArrowDataType::Timestamp(_, _) => {
-                let formatted = arrow::util::display::array_value_to_string(arr, row)
-                    .unwrap_or_default();
+                let formatted =
+                    arrow::util::display::array_value_to_string(arr, row).unwrap_or_default();
                 JVal::String(formatted)
             }
             ArrowDataType::List(_) => {
@@ -1339,7 +1381,7 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
                 // Fallback: use Arrow's built-in display for the specific row value
                 JVal::String(
                     arrow::util::display::array_value_to_string(arr, row)
-                        .unwrap_or_else(|_| format!("<unsupported: {:?}>", arr.data_type()))
+                        .unwrap_or_else(|_| format!("<unsupported: {:?}>", arr.data_type())),
                 )
             }
         }
@@ -1365,10 +1407,7 @@ fn resolve_dictionary_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Resu
 }
 
 /// Recursively resolve dictionary generators (handles Unique/Conditional wrapping).
-fn resolve_dict_in_generator(
-    plan: &mut knit_plan::GeneratorPlan,
-    schema_dir: &Path,
-) -> Result<()> {
+fn resolve_dict_in_generator(plan: &mut knit_plan::GeneratorPlan, schema_dir: &Path) -> Result<()> {
     use std::io::BufRead;
 
     match plan {

@@ -30,24 +30,24 @@
 #![warn(missing_docs)]
 
 pub mod error;
-pub mod traits;
 pub mod pipeline;
+pub mod traits;
 
-pub mod null_injector;
-pub mod gaussian_noise;
-pub mod typo_injector;
-pub mod outlier_injector;
 pub mod duplicate_injector;
-pub mod value_drifter;
 pub mod format_corruptor;
+pub mod gaussian_noise;
+pub mod null_injector;
+pub mod outlier_injector;
+pub mod typo_injector;
+pub mod value_drifter;
 
-pub use error::NoiseError;
-pub use traits::{Perturbator, InvariantSet, PerturbConfig, ColumnFilter};
-pub use pipeline::{Pipeline, PerturbOverrides};
-pub use null_injector::NullInjector;
-pub use gaussian_noise::GaussianNoise;
-pub use typo_injector::TypoInjector;
-pub use outlier_injector::OutlierInjector;
 pub use duplicate_injector::DuplicateInjector;
-pub use value_drifter::ValueDrifter;
+pub use error::NoiseError;
 pub use format_corruptor::FormatCorruptor;
+pub use gaussian_noise::GaussianNoise;
+pub use null_injector::NullInjector;
+pub use outlier_injector::OutlierInjector;
+pub use pipeline::{PerturbOverrides, Pipeline};
+pub use traits::{ColumnFilter, InvariantSet, PerturbConfig, Perturbator};
+pub use typo_injector::TypoInjector;
+pub use value_drifter::ValueDrifter;

@@ -74,8 +74,8 @@ mod tests {
     use super::*;
     use crate::context::GenContext;
     use arrow::array::Array;
-    use rand_chacha::ChaCha8Rng;
     use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

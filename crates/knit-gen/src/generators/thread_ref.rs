@@ -131,7 +131,12 @@ impl ThreadRefGenerator {
     /// * `max_depth` — maximum reply chain depth
     /// * `reply_window` — ring buffer capacity for recent PKs
     /// * `pk_field` — name of the primary key field to read from batch columns
-    pub fn new(reply_probability: f64, max_depth: u32, reply_window: usize, pk_field: String) -> Self {
+    pub fn new(
+        reply_probability: f64,
+        max_depth: u32,
+        reply_window: usize,
+        pk_field: String,
+    ) -> Self {
         Self {
             reply_probability,
             max_depth,
@@ -144,9 +149,13 @@ impl ThreadRefGenerator {
 impl FieldGenerator for ThreadRefGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
         // Read the PK column (already generated for this batch)
-        let pk_col = ctx.batch_columns.get(&self.pk_field)
+        let pk_col = ctx
+            .batch_columns
+            .get(&self.pk_field)
             .expect("thread_ref: PK field must be generated before thread_ref field");
-        let pks: Vec<i64> = pk_col.as_any().downcast_ref::<Int64Array>()
+        let pks: Vec<i64> = pk_col
+            .as_any()
+            .downcast_ref::<Int64Array>()
             .expect("thread_ref: PK field must be Int64")
             .values()
             .iter()
@@ -189,10 +198,10 @@ impl FieldGenerator for ThreadRefGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use arrow::array::{Array, Int64Array};
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
+    use std::collections::HashMap;
 
     fn run_with_pks(gen: &ThreadRefGenerator, rng: &mut ChaCha8Rng, pks: &[i64]) -> ArrayRef {
         let pk_array: ArrayRef = std::sync::Arc::new(Int64Array::from(pks.to_vec()));
@@ -223,7 +232,10 @@ mod tests {
         let arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // First row must be null (no prior messages to reply to)
-        assert!(arr.is_null(0), "first row should be null (no prior messages)");
+        assert!(
+            arr.is_null(0),
+            "first row should be null (no prior messages)"
+        );
 
         // Subsequent rows should reference PKs that appeared before them
         let mut seen_pks = vec![pks[0]];
@@ -257,7 +269,10 @@ mod tests {
                 let parent_pk = arr.value(i);
                 depths.get(&parent_pk).copied().unwrap_or(0) + 1
             };
-            assert!(depth <= 2, "row {i} (pk={pk}) has depth {depth} which exceeds max_depth=2");
+            assert!(
+                depth <= 2,
+                "row {i} (pk={pk}) has depth {depth} which exceeds max_depth=2"
+            );
             depths.insert(pk, depth);
         }
     }

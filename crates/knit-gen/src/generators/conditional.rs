@@ -11,8 +11,7 @@
 use std::sync::Arc;
 
 use arrow::array::{
-    Array, ArrayRef, BooleanArray, Float64Array, Int64Array,
-    StringArray, UInt64Array,
+    Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray, UInt64Array,
 };
 use arrow::compute;
 use arrow::datatypes::DataType;
@@ -163,18 +162,32 @@ fn value_to_string(v: &knit_core::Value) -> String {
 fn array_to_optional_strings(arr: &ArrayRef, count: usize) -> Vec<Option<String>> {
     let len = arr.len().min(count);
     let to_opt = |i: usize, s: String| -> Option<String> {
-        if arr.is_null(i) { None } else { Some(s) }
+        if arr.is_null(i) {
+            None
+        } else {
+            Some(s)
+        }
     };
     if let Some(sa) = arr.as_any().downcast_ref::<StringArray>() {
-        (0..len).map(|i| to_opt(i, sa.value(i).to_string())).collect()
+        (0..len)
+            .map(|i| to_opt(i, sa.value(i).to_string()))
+            .collect()
     } else if let Some(ia) = arr.as_any().downcast_ref::<Int64Array>() {
-        (0..len).map(|i| to_opt(i, ia.value(i).to_string())).collect()
+        (0..len)
+            .map(|i| to_opt(i, ia.value(i).to_string()))
+            .collect()
     } else if let Some(ua) = arr.as_any().downcast_ref::<UInt64Array>() {
-        (0..len).map(|i| to_opt(i, ua.value(i).to_string())).collect()
+        (0..len)
+            .map(|i| to_opt(i, ua.value(i).to_string()))
+            .collect()
     } else if let Some(fa) = arr.as_any().downcast_ref::<Float64Array>() {
-        (0..len).map(|i| to_opt(i, format!("{}", fa.value(i)))).collect()
+        (0..len)
+            .map(|i| to_opt(i, format!("{}", fa.value(i))))
+            .collect()
     } else if let Some(ba) = arr.as_any().downcast_ref::<BooleanArray>() {
-        (0..len).map(|i| to_opt(i, ba.value(i).to_string())).collect()
+        (0..len)
+            .map(|i| to_opt(i, ba.value(i).to_string()))
+            .collect()
     } else {
         tracing::warn!("unsupported array type for conditional matching, using default for all");
         vec![None; len]
@@ -354,7 +367,11 @@ mod tests {
         let ctx = GenContext::new(&batch, 0, 0, 1, "items");
 
         let result = gen.generate(&mut rng, 3, &ctx);
-        assert_eq!(result.data_type(), &DataType::Float64, "should preserve Float64 type");
+        assert_eq!(
+            result.data_type(),
+            &DataType::Float64,
+            "should preserve Float64 type"
+        );
         let fa = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert!((fa.value(0) - 100.0).abs() < 1e-10, "high → 100.0");
         assert!((fa.value(1) - 10.0).abs() < 1e-10, "low → 10.0");
@@ -395,12 +412,10 @@ mod tests {
     fn test_conditional_float_reference() {
         let gen = ConditionalGenerator::new(
             "score".into(),
-            vec![
-                (
-                    Value::Float(1.5),
-                    GeneratorPlan::Constant(Value::String("matched_1.5".into())),
-                ),
-            ],
+            vec![(
+                Value::Float(1.5),
+                GeneratorPlan::Constant(Value::String("matched_1.5".into())),
+            )],
             GeneratorPlan::Constant(Value::String("default".into())),
         );
 
@@ -429,11 +444,7 @@ mod tests {
         );
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let null_col: ArrayRef = Arc::new(StringArray::from(vec![
-            None::<&str>,
-            None,
-            None,
-        ]));
+        let null_col: ArrayRef = Arc::new(StringArray::from(vec![None::<&str>, None, None]));
         let mut batch = HashMap::new();
         batch.insert("status".to_string(), null_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
@@ -441,17 +452,18 @@ mod tests {
         let result = gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
-            assert_eq!(sa.value(i), "fallback", "row {i}: all nulls should use default");
+            assert_eq!(
+                sa.value(i),
+                "fallback",
+                "row {i}: all nulls should use default"
+            );
         }
     }
 
     #[test]
     fn test_conditional_output_type_matches_default() {
-        let gen = ConditionalGenerator::new(
-            "x".into(),
-            vec![],
-            GeneratorPlan::Constant(Value::Int(42)),
-        );
+        let gen =
+            ConditionalGenerator::new("x".into(), vec![], GeneratorPlan::Constant(Value::Int(42)));
         // ConstantGenerator for Int produces Int64
         assert_eq!(gen.output_type(), DataType::Int64);
     }
@@ -520,9 +532,9 @@ mod tests {
         );
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let ts_col: ArrayRef = Arc::new(
-            arrow::array::TimestampMillisecondArray::from(vec![1000i64, 2000, 3000]),
-        );
+        let ts_col: ArrayRef = Arc::new(arrow::array::TimestampMillisecondArray::from(vec![
+            1000i64, 2000, 3000,
+        ]));
         let mut batch = HashMap::new();
         batch.insert("ts".to_string(), ts_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
@@ -531,7 +543,8 @@ mod tests {
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(
-                sa.value(i), "default_for_unsupported",
+                sa.value(i),
+                "default_for_unsupported",
                 "unsupported type should fallback to default"
             );
         }

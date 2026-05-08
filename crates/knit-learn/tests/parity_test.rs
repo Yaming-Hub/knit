@@ -16,7 +16,9 @@ use arrow::array::{
 use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
 use arrow::record_batch::RecordBatch;
 
-use knit_learn::incremental::{finalize_state, ingest_batches_to_state, update_relationship_evidence};
+use knit_learn::incremental::{
+    finalize_state, ingest_batches_to_state, update_relationship_evidence,
+};
 use knit_learn::streaming::LearnState;
 use knit_learn::type_inference::InferredType;
 
@@ -103,8 +105,16 @@ fn determinism_same_seed_same_result() {
     let result2 = run_incremental_single("orders", &[batch]);
 
     for (c1, c2) in result1.columns.iter().zip(result2.columns.iter()) {
-        assert_eq!(c1.inferred_type, c2.inferred_type, "type differs for '{}'", c1.name);
-        assert_eq!(c1.null_rate, c2.null_rate, "null_rate differs for '{}'", c1.name);
+        assert_eq!(
+            c1.inferred_type, c2.inferred_type,
+            "type differs for '{}'",
+            c1.name
+        );
+        assert_eq!(
+            c1.null_rate, c2.null_rate,
+            "null_rate differs for '{}'",
+            c1.name
+        );
         assert_eq!(c1.is_integer_valued, c2.is_integer_valued);
         assert_eq!(c1.distribution.is_some(), c2.distribution.is_some());
     }
@@ -123,7 +133,11 @@ fn determinism_different_seeds_same_types() {
     let (r2, _) = finalize_state(&state2);
 
     for (c1, c2) in r1[0].columns.iter().zip(r2[0].columns.iter()) {
-        assert_eq!(c1.inferred_type, c2.inferred_type, "type differs for '{}'", c1.name);
+        assert_eq!(
+            c1.inferred_type, c2.inferred_type,
+            "type differs for '{}'",
+            c1.name
+        );
     }
 }
 
@@ -131,9 +145,7 @@ fn determinism_different_seeds_same_types() {
 
 #[test]
 fn chunking_types_equivalent() {
-    let batches: Vec<RecordBatch> = (0..5)
-        .map(|i| make_realistic_batch(50, i * 50))
-        .collect();
+    let batches: Vec<RecordBatch> = (0..5).map(|i| make_realistic_batch(50, i * 50)).collect();
 
     let single = run_incremental_single("orders", &batches);
     let chunked = run_incremental_chunked("orders", &batches);
@@ -150,9 +162,7 @@ fn chunking_types_equivalent() {
 
 #[test]
 fn chunking_row_count_equivalent() {
-    let batches: Vec<RecordBatch> = (0..4)
-        .map(|i| make_realistic_batch(25, i * 25))
-        .collect();
+    let batches: Vec<RecordBatch> = (0..4).map(|i| make_realistic_batch(25, i * 25)).collect();
 
     let single = run_incremental_single("orders", &batches);
     let chunked = run_incremental_chunked("orders", &batches);
@@ -205,7 +215,9 @@ fn chunking_null_rates_equivalent() {
         assert!(
             diff < 0.001,
             "null rate differs for '{}': {} vs {}",
-            sc.name, sc.null_rate, cc.null_rate
+            sc.name,
+            sc.null_rate,
+            cc.null_rate
         );
     }
 }
@@ -214,7 +226,11 @@ fn chunking_null_rates_equivalent() {
 fn chunking_distribution_params_equivalent() {
     // Verify that distribution fitting produces same parameters
     // whether data arrives in one chunk or multiple chunks
-    let schema = Arc::new(Schema::new(vec![Field::new("value", DataType::Float64, false)]));
+    let schema = Arc::new(Schema::new(vec![Field::new(
+        "value",
+        DataType::Float64,
+        false,
+    )]));
 
     // Create data with known distribution (uniform 0..100)
     let batch1_vals: Vec<f64> = (0..500).map(|i| i as f64 * 0.2).collect();
@@ -239,7 +255,10 @@ fn chunking_distribution_params_equivalent() {
 
     // Both should have distributions
     assert!(sc.distribution.is_some(), "single should have distribution");
-    assert!(cc.distribution.is_some(), "chunked should have distribution");
+    assert!(
+        cc.distribution.is_some(),
+        "chunked should have distribution"
+    );
 
     // Distribution families should match
     assert_eq!(
@@ -283,7 +302,10 @@ fn chunking_numeric_statistics_correct() {
     let min = numeric.min();
     let max = numeric.max();
 
-    assert!((mean - 50.5).abs() < 0.01, "mean should be 50.5, got {mean}");
+    assert!(
+        (mean - 50.5).abs() < 0.01,
+        "mean should be 50.5, got {mean}"
+    );
     assert!((min - 1.0).abs() < 0.01, "min should be 1.0, got {min}");
     assert!((max - 100.0).abs() < 0.01, "max should be 100.0, got {max}");
     assert_eq!(col.count, 100);
@@ -294,13 +316,14 @@ fn chunking_numeric_statistics_correct() {
 #[test]
 fn type_detection_integer() {
     // Need enough unique values to avoid categorical detection
-    let schema = Arc::new(Schema::new(vec![Field::new("count", DataType::Int32, false)]));
+    let schema = Arc::new(Schema::new(vec![Field::new(
+        "count",
+        DataType::Int32,
+        false,
+    )]));
     let values: Vec<i32> = (1..=100).collect();
-    let batch = RecordBatch::try_new(
-        schema,
-        vec![Arc::new(Int32Array::from(values)) as ArrayRef],
-    )
-    .unwrap();
+    let batch =
+        RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(values)) as ArrayRef]).unwrap();
 
     let result = run_incremental_single("t", &[batch]);
     let col = &result.columns[0];
@@ -310,7 +333,11 @@ fn type_detection_integer() {
 
 #[test]
 fn type_detection_categorical_string() {
-    let schema = Arc::new(Schema::new(vec![Field::new("color", DataType::Utf8, false)]));
+    let schema = Arc::new(Schema::new(vec![Field::new(
+        "color",
+        DataType::Utf8,
+        false,
+    )]));
     let values: Vec<&str> = (0..100)
         .map(|i| match i % 3 {
             0 => "red",
@@ -332,7 +359,11 @@ fn type_detection_categorical_string() {
 
 #[test]
 fn type_detection_boolean() {
-    let schema = Arc::new(Schema::new(vec![Field::new("flag", DataType::Boolean, false)]));
+    let schema = Arc::new(Schema::new(vec![Field::new(
+        "flag",
+        DataType::Boolean,
+        false,
+    )]));
     let batch = RecordBatch::try_new(
         schema,
         vec![Arc::new(BooleanArray::from(vec![true, false, true, true, false])) as ArrayRef],
@@ -362,7 +393,10 @@ fn type_detection_temporal() {
     let result = run_incremental_single("t", &[batch]);
     let col = &result.columns[0];
     // Temporal columns get time component detection from Arrow hint
-    assert!(col.has_time_component, "should detect time component from Timestamp type");
+    assert!(
+        col.has_time_component,
+        "should detect time component from Timestamp type"
+    );
 }
 
 // ─── Relationship Detection Tests ───────────────────────────────────────────
@@ -471,7 +505,11 @@ fn stress_test_10k_rows() {
     let status_col = result.columns.iter().find(|c| c.name == "status").unwrap();
     assert_eq!(status_col.inferred_type, Some(InferredType::Categorical));
 
-    let bool_col = result.columns.iter().find(|c| c.name == "is_active").unwrap();
+    let bool_col = result
+        .columns
+        .iter()
+        .find(|c| c.name == "is_active")
+        .unwrap();
     assert_eq!(bool_col.inferred_type, Some(InferredType::Boolean));
 }
 
@@ -505,10 +543,7 @@ fn state_save_load_round_trip() {
     ingest_batches_to_state(&mut state, "orders", &[batch], "test.csv");
     update_relationship_evidence(&mut state);
 
-    let tmp = std::env::temp_dir().join(format!(
-        "knit_parity_test_{}.json",
-        std::process::id()
-    ));
+    let tmp = std::env::temp_dir().join(format!("knit_parity_test_{}.json", std::process::id()));
 
     // Ensure cleanup even on panic
     struct Cleanup(std::path::PathBuf);
@@ -520,7 +555,9 @@ fn state_save_load_round_trip() {
     let _guard = Cleanup(tmp.clone());
 
     state.save(&tmp).unwrap();
-    let loaded = LearnState::load(&tmp).unwrap().expect("state file should exist");
+    let loaded = LearnState::load(&tmp)
+        .unwrap()
+        .expect("state file should exist");
 
     let (orig_analyses, orig_rels) = finalize_state(&state);
     let (loaded_analyses, loaded_rels) = finalize_state(&loaded);

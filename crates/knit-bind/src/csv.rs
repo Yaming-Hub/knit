@@ -86,7 +86,11 @@ impl<W: Write + Send> Sink for CsvSink<W> {
         let num_rows = batch.num_rows() as u64;
         self.writer.write(batch)?;
         self.rows_written += num_rows;
-        debug!(rows = num_rows, total = self.rows_written, "wrote csv batch");
+        debug!(
+            rows = num_rows,
+            total = self.rows_written,
+            "wrote csv batch"
+        );
         Ok(())
     }
 
@@ -96,7 +100,11 @@ impl<W: Write + Send> Sink for CsvSink<W> {
         // but the CountingWriter has already tracked all successful writes.
         drop(self.writer);
         let bytes_written = *self.byte_count.lock();
-        debug!(rows = self.rows_written, bytes = bytes_written, "csv sink finished");
+        debug!(
+            rows = self.rows_written,
+            bytes = bytes_written,
+            "csv sink finished"
+        );
         Ok(SinkStats {
             rows_written: self.rows_written,
             bytes_written,
@@ -188,9 +196,18 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
         let content = buf.to_string();
-        assert!(content.contains("id\tname"), "header should use tab delimiter");
-        assert!(content.contains("1\talice"), "data should use tab delimiter");
-        assert!(!content.contains("id,name"), "should not contain comma delimiter");
+        assert!(
+            content.contains("id\tname"),
+            "header should use tab delimiter"
+        );
+        assert!(
+            content.contains("1\talice"),
+            "data should use tab delimiter"
+        );
+        assert!(
+            !content.contains("id,name"),
+            "should not contain comma delimiter"
+        );
     }
 
     #[test]
@@ -204,7 +221,10 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
         let content = buf.to_string();
-        assert!(!content.contains("id,name"), "should not contain header row");
+        assert!(
+            !content.contains("id,name"),
+            "should not contain header row"
+        );
         assert!(content.starts_with("1,alice"), "should start with data row");
     }
 }

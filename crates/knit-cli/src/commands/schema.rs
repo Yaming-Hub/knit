@@ -19,8 +19,7 @@ use super::load_schema;
 /// Loads a schema file (resolving any `extends` chain via `knit_schema`),
 /// then serializes the fully resolved model back to TOML.
 pub fn run_expand(path: &str, json: bool) -> Result<()> {
-    let model = load_schema(path)
-        .with_context(|| format!("failed to load schema `{}`", path))?;
+    let model = load_schema(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&model)?);
@@ -36,8 +35,7 @@ pub fn run_expand(path: &str, json: bool) -> Result<()> {
 /// Parses a schema and re-serializes it in canonical TOML form with
 /// sorted keys and consistent formatting.
 pub fn run_normalize(path: &str, json: bool) -> Result<()> {
-    let model = load_schema(path)
-        .with_context(|| format!("failed to load schema `{}`", path))?;
+    let model = load_schema(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&model)?);
@@ -53,30 +51,22 @@ pub fn run_normalize(path: &str, json: bool) -> Result<()> {
 /// Parses two schema files and compares them entity-by-entity
 /// and field-by-field, printing colored diff output.
 pub fn run_diff(path_a: &str, path_b: &str) -> Result<()> {
-    let model_a = load_schema(path_a)
-        .with_context(|| format!("failed to load schema `{}`", path_a))?;
-    let model_b = load_schema(path_b)
-        .with_context(|| format!("failed to load schema `{}`", path_b))?;
+    let model_a =
+        load_schema(path_a).with_context(|| format!("failed to load schema `{}`", path_a))?;
+    let model_b =
+        load_schema(path_b).with_context(|| format!("failed to load schema `{}`", path_b))?;
 
     let diffs = compute_diff(&model_a, &model_b);
 
     if diffs.is_empty() {
         println!("{}", "schemas are identical".green());
     } else {
-        println!(
-            "{} {} and {}",
-            "diff".bold(),
-            path_a.cyan(),
-            path_b.cyan()
-        );
+        println!("{} {} and {}", "diff".bold(), path_a.cyan(), path_b.cyan());
         println!();
         for entry in &diffs {
             print_diff_entry(entry);
         }
-        println!(
-            "\n{} change(s) found",
-            diffs.len().to_string().yellow()
-        );
+        println!("\n{} change(s) found", diffs.len().to_string().yellow());
     }
     Ok(())
 }
@@ -86,8 +76,7 @@ pub fn run_diff(path_a: &str, path_b: &str) -> Result<()> {
 /// Generates markdown documentation for the schema including entity descriptions,
 /// field tables, relationships, and generator info.
 pub fn run_doc(path: &str, output: Option<&str>) -> Result<()> {
-    let model = load_schema(path)
-        .with_context(|| format!("failed to load schema `{}`", path))?;
+    let model = load_schema(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     let markdown = generate_schema_doc(&model);
 
@@ -122,9 +111,15 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     doc.push_str(&format!("| Seed | {} |\n", model.seed));
     doc.push_str(&format!("| Locale | {} |\n", model.locale));
     doc.push_str(&format!("| Entities | {} |\n", model.entities.len()));
-    doc.push_str(&format!("| Relationships | {} |\n", model.relationships.len()));
+    doc.push_str(&format!(
+        "| Relationships | {} |\n",
+        model.relationships.len()
+    ));
     if !model.noise_profiles.is_empty() {
-        doc.push_str(&format!("| Noise profiles | {} |\n", model.noise_profiles.len()));
+        doc.push_str(&format!(
+            "| Noise profiles | {} |\n",
+            model.noise_profiles.len()
+        ));
     }
     let actor_count = model.entities.iter().filter(|e| e.actor).count();
     if actor_count > 0 {
@@ -145,11 +140,18 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     doc.push_str("## Entities\n\n");
     for entity in &model.entities {
         let actor_badge = if entity.actor { " 🎭" } else { "" };
-        doc.push_str(&format!("### {}{}\n\n", md_escape(&entity.name), actor_badge));
+        doc.push_str(&format!(
+            "### {}{}\n\n",
+            md_escape(&entity.name),
+            actor_badge
+        ));
         if let Some(desc) = &entity.description {
             doc.push_str(&format!("{}\n\n", desc));
         }
-        doc.push_str(&format!("**Rows:** {}\n\n", format_count_spec(&entity.count)));
+        doc.push_str(&format!(
+            "**Rows:** {}\n\n",
+            format_count_spec(&entity.count)
+        ));
         if entity.actor {
             if let Some(pd) = &entity.persona_distribution {
                 doc.push_str(&format!("**Persona distribution:** {}\n\n", md_escape(pd)));
@@ -309,14 +311,19 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
         knit_core::GeneratorSpec::Unique { .. } => "unique(…)".to_string(),
         knit_core::GeneratorSpec::Relative { field, .. } => format!("relative({})", field),
         knit_core::GeneratorSpec::BusinessHours { .. } => "business_hours".to_string(),
-        knit_core::GeneratorSpec::Dictionary { file, expansion, .. } => {
+        knit_core::GeneratorSpec::Dictionary {
+            file, expansion, ..
+        } => {
             format!("dictionary({}, {})", file, expansion)
         }
         knit_core::GeneratorSpec::ActorRef { entity } => format!("actor_ref({})", entity),
         knit_core::GeneratorSpec::ActorTemporal { trait_name, .. } => {
             format!("actor_temporal({})", trait_name)
         }
-        knit_core::GeneratorSpec::RelationshipRef { relationship, source_field } => {
+        knit_core::GeneratorSpec::RelationshipRef {
+            relationship,
+            source_field,
+        } => {
             if let Some(src) = source_field {
                 format!("relationship_ref({}, source={})", relationship, src)
             } else {
@@ -326,8 +333,16 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
         knit_core::GeneratorSpec::PersonaField { trait_name } => {
             format!("persona_field({})", trait_name)
         }
-        knit_core::GeneratorSpec::ThreadRef { reply_probability, max_depth, .. } => {
-            format!("thread_ref(p={:.0}%, depth={})", reply_probability * 100.0, max_depth)
+        knit_core::GeneratorSpec::ThreadRef {
+            reply_probability,
+            max_depth,
+            ..
+        } => {
+            format!(
+                "thread_ref(p={:.0}%, depth={})",
+                reply_probability * 100.0,
+                max_depth
+            )
         }
     }
 }
@@ -340,15 +355,9 @@ pub enum DiffEntry {
     /// Entity present only in the second schema.
     EntityAdded(String),
     /// Field removed from an entity.
-    FieldRemoved {
-        entity: String,
-        field: String,
-    },
+    FieldRemoved { entity: String, field: String },
     /// Field added to an entity.
-    FieldAdded {
-        entity: String,
-        field: String,
-    },
+    FieldAdded { entity: String, field: String },
     /// Field changed between schemas.
     FieldChanged {
         entity: String,
@@ -409,9 +418,15 @@ pub fn compute_diff(a: &DataModel, b: &DataModel) -> Vec<DiffEntry> {
 
     // Compare common entities
     for name in names_a.intersection(&names_b) {
-        let ea = a.entities.iter().find(|e| e.name == *name)
+        let ea = a
+            .entities
+            .iter()
+            .find(|e| e.name == *name)
             .expect("entity present in intersection");
-        let eb = b.entities.iter().find(|e| e.name == *name)
+        let eb = b
+            .entities
+            .iter()
+            .find(|e| e.name == *name)
             .expect("entity present in intersection");
         diff_entity(&mut diffs, ea, eb);
     }
@@ -448,7 +463,10 @@ fn diff_entity(diffs: &mut Vec<DiffEntry>, a: &Entity, b: &Entity) {
         diffs.push(DiffEntry::FieldChanged {
             entity: entity.clone(),
             field: "persona_distribution".to_string(),
-            detail: format!("{:?} → {:?}", a.persona_distribution, b.persona_distribution),
+            detail: format!(
+                "{:?} → {:?}",
+                a.persona_distribution, b.persona_distribution
+            ),
         });
     }
 
@@ -478,9 +496,15 @@ fn diff_entity(diffs: &mut Vec<DiffEntry>, a: &Entity, b: &Entity) {
     }
 
     for name in fields_a.intersection(&fields_b) {
-        let fa = a.fields.iter().find(|f| f.name == *name)
+        let fa = a
+            .fields
+            .iter()
+            .find(|f| f.name == *name)
             .expect("field present in intersection");
-        let fb = b.fields.iter().find(|f| f.name == *name)
+        let fb = b
+            .fields
+            .iter()
+            .find(|f| f.name == *name)
             .expect("field present in intersection");
         diff_field(diffs, entity, fa, fb);
     }
@@ -538,12 +562,7 @@ fn print_diff_entry(entry: &DiffEntry) {
             );
         }
         DiffEntry::FieldRemoved { entity, field } => {
-            println!(
-                "  {} {}.{}",
-                "-".red().bold(),
-                entity.dimmed(),
-                field.red()
-            );
+            println!("  {} {}.{}", "-".red().bold(), entity.dimmed(), field.red());
         }
         DiffEntry::FieldChanged {
             entity,
@@ -595,7 +614,10 @@ fn print_diff_entry(entry: &DiffEntry) {
 fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
     let mut out = String::new();
 
-    out.push_str(&format!("schema_version = \"{}\"\n\n", model.schema_version));
+    out.push_str(&format!(
+        "schema_version = \"{}\"\n\n",
+        model.schema_version
+    ));
 
     // [model]
     out.push_str("[model]\n");
@@ -631,20 +653,23 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
                 out.push_str(&format!("count = {}\n", n));
             }
             knit_core::CountSpec::Range { min, max } => {
-                out.push_str(&format!(
-                    "count = {{ min = {}, max = {} }}\n",
-                    min, max
-                ));
+                out.push_str(&format!("count = {{ min = {}, max = {} }}\n", min, max));
             }
             knit_core::CountSpec::Distribution(dist) => {
                 let dist_toml = toml::to_string(dist).unwrap_or_default();
-                out.push_str(&format!("count = {{ distribution = {} }}\n", dist_toml.trim()));
+                out.push_str(&format!(
+                    "count = {{ distribution = {} }}\n",
+                    dist_toml.trim()
+                ));
             }
         }
 
         // Fields
         for field in &entity.fields {
-            out.push_str(&format!("\n[[entities.fields]]\nname = \"{}\"\n", field.name));
+            out.push_str(&format!(
+                "\n[[entities.fields]]\nname = \"{}\"\n",
+                field.name
+            ));
             out.push_str(&format!("data_type = \"{:?}\"\n", field.data_type).to_lowercase());
             if let Some(pk) = field.primary_key {
                 if pk {
@@ -858,7 +883,10 @@ mod tests {
             "my_schema",
             vec![make_entity(
                 "users",
-                vec![make_field("id", DataType::Int), make_field("name", DataType::String)],
+                vec![
+                    make_field("id", DataType::Int),
+                    make_field("name", DataType::String),
+                ],
             )],
         );
         let doc = generate_schema_doc(&model);
@@ -915,14 +943,20 @@ mod tests {
         a_field.actor_column = false;
         let mut b_field = make_field("user_id", DataType::Int);
         b_field.actor_column = true;
-        let a = make_model("test", vec![make_entity("events", vec![
-            make_field("id", DataType::Int),
-            a_field,
-        ])]);
-        let b = make_model("test", vec![make_entity("events", vec![
-            make_field("id", DataType::Int),
-            b_field,
-        ])]);
+        let a = make_model(
+            "test",
+            vec![make_entity(
+                "events",
+                vec![make_field("id", DataType::Int), a_field],
+            )],
+        );
+        let b = make_model(
+            "test",
+            vec![make_entity(
+                "events",
+                vec![make_field("id", DataType::Int), b_field],
+            )],
+        );
         let diffs = compute_diff(&a, &b);
         assert!(diffs.iter().any(|d| matches!(
             d,
@@ -939,7 +973,10 @@ mod tests {
         let model = make_model("test", vec![entity]);
         let doc = generate_schema_doc(&model);
         assert!(doc.contains("### users 🎭"), "should have actor badge");
-        assert!(doc.contains("Actor entities | 1"), "overview should count actors");
+        assert!(
+            doc.contains("Actor entities | 1"),
+            "overview should count actors"
+        );
         assert!(doc.contains("**Persona distribution:** power_mix"));
     }
 
@@ -952,7 +989,10 @@ mod tests {
         );
         let mut traits = std::collections::BTreeMap::new();
         traits.insert("activity_rate".to_string(), knit_core::Value::Float(0.8));
-        traits.insert("peak_hours".to_string(), knit_core::Value::String("morning".to_string()));
+        traits.insert(
+            "peak_hours".to_string(),
+            knit_core::Value::String("morning".to_string()),
+        );
         model.personas.push(Persona {
             name: "power_user".to_string(),
             weight: 0.3,
@@ -965,7 +1005,10 @@ mod tests {
         });
         let doc = generate_schema_doc(&model);
         assert!(doc.contains("## Personas"), "should have personas section");
-        assert!(doc.contains("| Personas | 2 |"), "overview should count personas");
+        assert!(
+            doc.contains("| Personas | 2 |"),
+            "overview should count personas"
+        );
         assert!(doc.contains("| power_user | 30% | activity_rate, peak_hours |"));
         assert!(doc.contains("| casual | 70% | — |"));
     }

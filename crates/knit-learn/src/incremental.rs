@@ -40,9 +40,7 @@ pub fn arrow_to_column_type(dt: &DataType) -> ColumnDataType {
         | DataType::Duration(_) => ColumnDataType::Temporal,
 
         // Dictionary-encoded strings
-        DataType::Dictionary(_, value_type) if is_string_type(value_type) => {
-            ColumnDataType::String
-        }
+        DataType::Dictionary(_, value_type) if is_string_type(value_type) => ColumnDataType::String,
 
         _ => ColumnDataType::Other,
     }
@@ -93,8 +91,8 @@ pub fn ingest_batches_to_state(
 
         for (col_idx, field) in batch.schema().fields().iter().enumerate() {
             let array = batch.column(col_idx);
-            let col = table
-                .get_or_create_column(field.name(), arrow_to_column_type(field.data_type()));
+            let col =
+                table.get_or_create_column(field.name(), arrow_to_column_type(field.data_type()));
             update_column_from_array(col, array, field.data_type());
             seen_columns.insert(field.name().to_string());
         }
@@ -110,7 +108,7 @@ pub fn ingest_batches_to_state(
     table.add_rows(total_rows);
 
     // Record chunk (once per source file)
-    
+
     state.record_chunk(source_path, total_rows)
 }
 
@@ -242,8 +240,8 @@ fn update_column_from_array(col: &mut ColumnState, array: &dyn Array, dt: &DataT
                 if array.is_null(i) {
                     col.update_null();
                 } else {
-                    let s = arrow::util::display::array_value_to_string(array, i)
-                        .unwrap_or_default();
+                    let s =
+                        arrow::util::display::array_value_to_string(array, i).unwrap_or_default();
                     col.update_string(&s);
                 }
             }
@@ -349,8 +347,8 @@ fn update_temporal_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType
                 if array.is_null(i) {
                     col.update_null();
                 } else {
-                    let s = arrow::util::display::array_value_to_string(array, i)
-                        .unwrap_or_default();
+                    let s =
+                        arrow::util::display::array_value_to_string(array, i).unwrap_or_default();
                     if let Some(ts_arr) = array.as_any().downcast_ref::<arrow::array::PrimitiveArray<arrow::datatypes::TimestampSecondType>>() {
                         let secs = ts_arr.value(i) as f64;
                         col.update_numeric(secs, &s);
@@ -375,8 +373,8 @@ fn update_temporal_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType
                 if array.is_null(i) {
                     col.update_null();
                 } else {
-                    let s = arrow::util::display::array_value_to_string(array, i)
-                        .unwrap_or_default();
+                    let s =
+                        arrow::util::display::array_value_to_string(array, i).unwrap_or_default();
                     col.update_string(&s);
                 }
             }
@@ -394,16 +392,15 @@ fn update_temporal_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType
 /// Also returns finalized relationships derived from HLL evidence.
 pub fn finalize_state(
     state: &LearnState,
-) -> (Vec<TableAnalysis>, Vec<crate::streaming::FinalizedRelationship>) {
+) -> (
+    Vec<TableAnalysis>,
+    Vec<crate::streaming::FinalizedRelationship>,
+) {
     let mut analyses = Vec::new();
 
     for (entity_name, table_state) in &state.tables {
         let col_analyses = finalize_columns(table_state);
-        let analysis = TableAnalysis::new(
-            entity_name.clone(),
-            col_analyses,
-            table_state.row_count,
-        );
+        let analysis = TableAnalysis::new(entity_name.clone(), col_analyses, table_state.row_count);
         analyses.push(analysis);
     }
 
@@ -415,11 +412,7 @@ pub fn finalize_state(
 
 /// Finalize all columns of a single table.
 fn finalize_columns(table: &TableState) -> Vec<ColumnAnalysis> {
-    table
-        .columns
-        .iter()
-        .map(finalize_column)
-        .collect()
+    table.columns.iter().map(finalize_column).collect()
 }
 
 /// Convert a single ColumnState into a ColumnAnalysis for schema assembly.
@@ -467,9 +460,8 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
                         .iter()
                         .map(|(v, c)| (v.clone(), *c as f64 / total as f64))
                         .collect();
-                    weights.sort_by(|a, b| {
-                        b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-                    });
+                    weights
+                        .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                     ca.categorical_weights = Some(weights);
                     ca.inferred_type = Some(InferredType::Categorical);
                 }
@@ -525,9 +517,8 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
                         .iter()
                         .map(|(v, c)| (v.clone(), *c as f64 / total as f64))
                         .collect();
-                    weights.sort_by(|a, b| {
-                        b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-                    });
+                    weights
+                        .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                     ca.categorical_weights = Some(weights);
                     ca.inferred_type = Some(InferredType::Categorical);
                 }
@@ -541,10 +532,7 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
                     ca.inferred_type = Some(inference.inferred_type);
                     ca.confidence = inference.confidence;
                     // Copy detected patterns
-                    ca.string_patterns = inference
-                        .patterns
-                        .into_iter()
-                        .collect();
+                    ca.string_patterns = inference.patterns.into_iter().collect();
                 }
             }
         }
@@ -558,8 +546,7 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
                     .iter()
                     .map(|(v, c)| (v.clone(), *c as f64 / total as f64))
                     .collect();
-                weights
-                    .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                 ca.categorical_weights = Some(weights);
             }
         }
@@ -722,7 +709,11 @@ mod tests {
     #[test]
     fn test_finalize_categorical_detection() {
         // Create a batch with low-cardinality integer column
-        let schema = Arc::new(Schema::new(vec![Field::new("status", DataType::Int32, false)]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "status",
+            DataType::Int32,
+            false,
+        )]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Int32Array::from(vec![1, 2, 1, 1, 2, 3, 1, 2]))],
@@ -740,12 +731,27 @@ mod tests {
 
     #[test]
     fn test_arrow_to_column_type() {
-        assert_eq!(arrow_to_column_type(&DataType::Int32), ColumnDataType::Integer);
-        assert_eq!(arrow_to_column_type(&DataType::Float64), ColumnDataType::Float);
-        assert_eq!(arrow_to_column_type(&DataType::Utf8), ColumnDataType::String);
-        assert_eq!(arrow_to_column_type(&DataType::Boolean), ColumnDataType::Boolean);
         assert_eq!(
-            arrow_to_column_type(&DataType::Timestamp(arrow::datatypes::TimeUnit::Second, None)),
+            arrow_to_column_type(&DataType::Int32),
+            ColumnDataType::Integer
+        );
+        assert_eq!(
+            arrow_to_column_type(&DataType::Float64),
+            ColumnDataType::Float
+        );
+        assert_eq!(
+            arrow_to_column_type(&DataType::Utf8),
+            ColumnDataType::String
+        );
+        assert_eq!(
+            arrow_to_column_type(&DataType::Boolean),
+            ColumnDataType::Boolean
+        );
+        assert_eq!(
+            arrow_to_column_type(&DataType::Timestamp(
+                arrow::datatypes::TimeUnit::Second,
+                None
+            )),
             ColumnDataType::Temporal
         );
     }
@@ -757,7 +763,10 @@ mod tests {
         assert_eq!(parse_arrow_type_hint("Utf8"), Some(DataType::Utf8));
         assert_eq!(
             parse_arrow_type_hint("Timestamp(Nanosecond, None)"),
-            Some(DataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None))
+            Some(DataType::Timestamp(
+                arrow::datatypes::TimeUnit::Nanosecond,
+                None
+            ))
         );
         assert_eq!(parse_arrow_type_hint("Unknown"), None);
     }

@@ -66,7 +66,11 @@ impl<W: Write + Send> Sink for ArrowIpcSink<W> {
         let num_rows = batch.num_rows() as u64;
         writer.write(batch)?;
         self.rows_written += num_rows;
-        debug!(rows = num_rows, total = self.rows_written, "wrote ipc batch");
+        debug!(
+            rows = num_rows,
+            total = self.rows_written,
+            "wrote ipc batch"
+        );
         Ok(())
     }
 
@@ -77,7 +81,11 @@ impl<W: Write + Send> Sink for ArrowIpcSink<W> {
             .ok_or_else(|| BindError::Other("sink already finished".into()))?;
         let _inner = writer.into_inner()?;
         let bytes_written = *self.byte_count.lock();
-        debug!(rows = self.rows_written, bytes = bytes_written, "ipc sink finished");
+        debug!(
+            rows = self.rows_written,
+            bytes = bytes_written,
+            "ipc sink finished"
+        );
         Ok(SinkStats {
             rows_written: self.rows_written,
             bytes_written,

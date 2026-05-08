@@ -141,9 +141,7 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     fn string_batch() -> RecordBatch {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("word", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("word", DataType::Utf8, true)]));
         RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec![
@@ -159,7 +157,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = t.perturb(string_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         let changed = (0..arr.len())
             .filter(|&i| {
                 let orig = ["hello", "world", "testing", "typos", "here"];
@@ -191,7 +193,10 @@ mod tests {
                 }
             }
         }
-        assert!(saw_swap, "expected to see at least one swap in 200 iterations");
+        assert!(
+            saw_swap,
+            "expected to see at least one swap in 200 iterations"
+        );
     }
 
     #[test]
@@ -213,9 +218,8 @@ mod tests {
                 6 => saw_insert = true,
                 5 if r != original => {
                     // Distinguish swap vs substitute: swap has exactly 2 adjacent diffs
-                    let diffs: Vec<usize> = (0..5)
-                        .filter(|&i| r_chars[i] != orig_chars[i])
-                        .collect();
+                    let diffs: Vec<usize> =
+                        (0..5).filter(|&i| r_chars[i] != orig_chars[i]).collect();
                     if diffs.len() == 2
                         && diffs[1] == diffs[0] + 1
                         && r_chars[diffs[0]] == orig_chars[diffs[1]]
@@ -254,8 +258,11 @@ mod tests {
             results.insert(apply_typo("x", &mut rng).len());
         }
         // delete→0, substitute→1, insert→2 (swap would stay 1)
-        assert!(results.contains(&0) || results.contains(&2),
-            "single char should produce varied lengths: {:?}", results);
+        assert!(
+            results.contains(&0) || results.contains(&2),
+            "single char should produce varied lengths: {:?}",
+            results
+        );
     }
 
     #[test]
@@ -264,7 +271,11 @@ mod tests {
         let config = PerturbConfig::default().with_probability(0.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = t.perturb(string_batch(), &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         let orig = ["hello", "world", "testing", "typos", "here"];
         for i in 0..5 {
             assert_eq!(arr.value(i), orig[i]);
@@ -290,7 +301,11 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = t.perturb(batch, &mut rng, &config).unwrap();
         // Int column unchanged
-        let nums = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        let nums = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
         assert_eq!(nums.value(0), 1);
         assert_eq!(nums.value(1), 2);
         assert_eq!(nums.value(2), 3);
@@ -298,19 +313,25 @@ mod tests {
 
     #[test]
     fn typo_null_values_preserved() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("word", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("word", DataType::Utf8, true)]));
         let batch = RecordBatch::try_new(
             schema,
-            vec![Arc::new(StringArray::from(vec![Some("hello"), None, Some("world")]))],
+            vec![Arc::new(StringArray::from(vec![
+                Some("hello"),
+                None,
+                Some("world"),
+            ]))],
         )
         .unwrap();
         let t = TypoInjector::new();
         let config = PerturbConfig::default().with_probability(1.0);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let result = t.perturb(batch, &mut rng, &config).unwrap();
-        let arr = result.column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert!(arr.is_valid(0));
         assert!(!arr.is_valid(1), "null should remain null");
         assert!(arr.is_valid(2));

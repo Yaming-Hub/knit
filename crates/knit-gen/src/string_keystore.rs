@@ -65,7 +65,10 @@ impl StringKeyStore for InMemoryStringKeyStore {
     }
 
     fn len(&self) -> usize {
-        self.keys.read().expect("string keystore lock poisoned").len()
+        self.keys
+            .read()
+            .expect("string keystore lock poisoned")
+            .len()
     }
 }
 

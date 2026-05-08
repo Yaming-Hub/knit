@@ -147,9 +147,9 @@ impl FieldGenerator for RelativeGenerator {
             }
         };
 
-        let dist = Normal::new(self.offset_mean, self.offset_std.max(1e-9))
-            .unwrap_or_else(|_| Normal::new(self.offset_mean, 1.0)
-                .expect("stddev=1.0 is always valid"));
+        let dist = Normal::new(self.offset_mean, self.offset_std.max(1e-9)).unwrap_or_else(|_| {
+            Normal::new(self.offset_mean, 1.0).expect("stddev=1.0 is always valid")
+        });
         let factor = self.unit.to_millis();
 
         let values: Vec<i64> = base_values
@@ -210,7 +210,10 @@ impl TimeSeriesGenerator {
         for n in 0..4 {
             let key = format!("s{n}_period");
             if let Some(&period) = params.get(&key) {
-                let amp = params.get(&format!("s{n}_amplitude")).copied().unwrap_or(0.1);
+                let amp = params
+                    .get(&format!("s{n}_amplitude"))
+                    .copied()
+                    .unwrap_or(0.1);
                 let phase = params.get(&format!("s{n}_phase")).copied().unwrap_or(0.0);
                 seasonality.push(SeasonalityComponent {
                     period_ms: period as i64,
@@ -233,14 +236,15 @@ impl TimeSeriesGenerator {
 impl FieldGenerator for TimeSeriesGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
         let noise_dist = Normal::new(0.0, self.noise_std.max(1e-9))
-            .unwrap_or_else(|_| Normal::new(0.0, 1.0)
-                .expect("stddev=1.0 is always valid"));
+            .unwrap_or_else(|_| Normal::new(0.0, 1.0).expect("stddev=1.0 is always valid"));
         let base_offset = ctx.row_offset as i64;
 
         let values: Vec<i64> = (0..count)
             .map(|i| {
                 let idx = base_offset.saturating_add(i as i64);
-                let base_t = self.start.saturating_add(idx.saturating_mul(self.interval_ms));
+                let base_t = self
+                    .start
+                    .saturating_add(idx.saturating_mul(self.interval_ms));
                 let trend = (self.trend_slope * idx as f64) as i64;
 
                 let seasonal: f64 = self
@@ -249,7 +253,9 @@ impl FieldGenerator for TimeSeriesGenerator {
                     .map(|s| {
                         let t_frac =
                             (base_t as f64 + trend as f64) / s.period_ms.max(1) as f64 + s.phase;
-                        s.amplitude * (self.interval_ms as f64) * (2.0 * std::f64::consts::PI * t_frac).sin()
+                        s.amplitude
+                            * (self.interval_ms as f64)
+                            * (2.0 * std::f64::consts::PI * t_frac).sin()
                     })
                     .sum();
 
@@ -259,7 +265,10 @@ impl FieldGenerator for TimeSeriesGenerator {
                     0
                 };
 
-                base_t.saturating_add(trend).saturating_add(seasonal as i64).saturating_add(noise)
+                base_t
+                    .saturating_add(trend)
+                    .saturating_add(seasonal as i64)
+                    .saturating_add(noise)
             })
             .collect();
 
@@ -313,8 +322,7 @@ impl BusinessHoursGenerator {
 
 impl FieldGenerator for BusinessHoursGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        let hour_range_ms =
-            (self.end_hour as i64 - self.start_hour as i64) * 3_600_000;
+        let hour_range_ms = (self.end_hour as i64 - self.start_hour as i64) * 3_600_000;
         let intra_day = Uniform::new(0i64, hour_range_ms.max(1));
         let base_offset = ctx.row_offset as i64;
 
@@ -323,8 +331,11 @@ impl FieldGenerator for BusinessHoursGenerator {
         let start_dt = Utc
             .timestamp_millis_opt(self.start_date)
             .single()
-            .unwrap_or_else(|| Utc.timestamp_millis_opt(0).single()
-                .expect("epoch 0 is always valid"));
+            .unwrap_or_else(|| {
+                Utc.timestamp_millis_opt(0)
+                    .single()
+                    .expect("epoch 0 is always valid")
+            });
 
         let mut day_cursor: NaiveDate = start_dt.date_naive();
 
@@ -394,14 +405,12 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, 5, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
         for (i, &bv) in base_values.iter().enumerate() {
-            assert!(
-                ts.value(i) >= bv,
-                "row {i}: {} < {}",
-                ts.value(i),
-                bv
-            );
+            assert!(ts.value(i) >= bv, "row {i}: {} < {}", ts.value(i), bv);
         }
     }
 
@@ -417,7 +426,10 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 100, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
         // With no noise and no seasonality, should be strictly increasing.
         for i in 1..100 {
             assert!(ts.value(i) > ts.value(i - 1));
@@ -437,15 +449,15 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 50, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         for i in 0..50 {
             let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
             let hour = dt.hour();
-            assert!(
-                (9..17).contains(&hour),
-                "row {i}: hour {hour} outside 9–17"
-            );
+            assert!((9..17).contains(&hour), "row {i}: hour {hour} outside 9–17");
             let wd = dt.weekday().num_days_from_monday();
             assert!(wd < 5, "row {i}: weekday {wd} is weekend");
         }
@@ -481,7 +493,10 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 50, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // All timestamps should be in the 20–23 hour range (end_hour=24 is exclusive)
         for i in 0..50 {
@@ -508,7 +523,10 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 5, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // offset_mean=5s, offset_std≈0 → each value ≈ 5000ms from epoch 0
         for i in 0..5 {
@@ -540,7 +558,10 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, 5, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // 1 day = 86_400_000 ms; with 0 std should be close to that
         for i in 0..5 {
@@ -575,7 +596,10 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 10, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // With no noise/seasonality: gap = interval_ms + trend_slope = 1000 + 500 = 1500ms exactly
         for i in 1..10 {
@@ -604,7 +628,10 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 20, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // Seasonality should cause some non-monotonic behavior
         let mut has_decrease = false;
@@ -632,12 +659,18 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 100, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // Compute gaps and verify the empirical std is near the configured noise_std=1000ms
         let gaps: Vec<i64> = (1..100).map(|i| ts.value(i) - ts.value(i - 1)).collect();
         let mean_gap = gaps.iter().sum::<i64>() as f64 / gaps.len() as f64;
-        let variance = gaps.iter().map(|&g| (g as f64 - mean_gap).powi(2)).sum::<f64>()
+        let variance = gaps
+            .iter()
+            .map(|&g| (g as f64 - mean_gap).powi(2))
+            .sum::<f64>()
             / gaps.len() as f64;
         let empirical_std = variance.sqrt();
         // Each gap has noise contribution of diff of two N(0,1000) draws → std of diff = sqrt(2)*1000 ≈ 1414
@@ -663,13 +696,19 @@ mod tests {
         let ctx0 = GenContext::new(map, 0, 0, 1, "test");
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr0 = gen.generate(&mut rng, 5, &ctx0);
-        let ts0 = arr0.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts0 = arr0
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // Partition 1: rows 5-9 (row_offset=5)
         let ctx1 = GenContext::new(map, 5, 0, 1, "test");
         let mut rng2 = ChaCha8Rng::seed_from_u64(99);
         let arr1 = gen.generate(&mut rng2, 5, &ctx1);
-        let ts1 = arr1.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts1 = arr1
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // First value of partition 1 should continue from where partition 0 left off
         assert_eq!(ts0.value(4) + 1000, ts1.value(0));
@@ -699,7 +738,10 @@ mod tests {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         let arr = gen.generate(&mut rng, 7, &ctx);
-        let ts = arr.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
 
         // Should include weekend days
         let mut has_weekend = false;
@@ -711,7 +753,10 @@ mod tests {
                 break;
             }
         }
-        assert!(has_weekend, "weekdays_only=false should include weekend days");
+        assert!(
+            has_weekend,
+            "weekdays_only=false should include weekend days"
+        );
     }
 
     #[test]
@@ -729,8 +774,14 @@ mod tests {
         let mut rng2 = ChaCha8Rng::seed_from_u64(42);
         let arr2 = gen.generate(&mut rng2, 20, &ctx);
 
-        let ts1 = arr1.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
-        let ts2 = arr2.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+        let ts1 = arr1
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+        let ts2 = arr2
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
         for i in 0..20 {
             assert_eq!(ts1.value(i), ts2.value(i), "row {i} mismatch");
         }

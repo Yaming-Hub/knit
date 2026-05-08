@@ -573,8 +573,7 @@ impl std::fmt::Display for DistributionKind {
 ///
 /// Serialized as a bare boolean (`false`/`true`) or an object
 /// (`{ "probability": 0.05 }`, `{ "every_n": 10 }`).
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum NullSpec {
     /// The field never produces nulls (default).
     #[default]
@@ -609,7 +608,6 @@ impl Serialize for NullSpec {
         }
     }
 }
-
 
 impl<'de> Deserialize<'de> for NullSpec {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -694,7 +692,7 @@ impl Default for CountSpec {
 
 /// Specification for dynamic, activity-driven row counts.
 ///
-/// When an entity has this set, total rows = Σ(actor[i].trait_value) across
+/// When an entity has this set, total rows = Σ(`actor[i].trait_value`) across
 /// all actors in the referenced entity's actor pool. The `actor_field`
 /// identifies the FK column pointing to the actor entity, and `trait_name`
 /// names the persona trait to sum.
@@ -750,7 +748,6 @@ pub enum RelationshipKind {
     /// Many-to-many via an implicit junction table.
     ManyToMany,
 }
-
 
 impl std::fmt::Display for RelationshipKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -1149,7 +1146,11 @@ mod tests {
         let json = r#"{"type": "sequence", "start": 1, "step": 1, "prefix": "ORD-"}"#;
         let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
         match gen {
-            GeneratorSpec::Sequence { start, step, prefix } => {
+            GeneratorSpec::Sequence {
+                start,
+                step,
+                prefix,
+            } => {
                 assert_eq!(start, 1);
                 assert_eq!(step, 1);
                 assert_eq!(prefix, Some("ORD-".into()));
@@ -1192,9 +1193,10 @@ mod tests {
             ("42", Value::Int(42)),
             ("2.72", Value::Float(2.72)),
             ("\"hello\"", Value::String("hello".into())),
-            ("[1, 2, 3]", Value::Array(vec![
-                Value::Int(1), Value::Int(2), Value::Int(3),
-            ])),
+            (
+                "[1, 2, 3]",
+                Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)]),
+            ),
         ];
         for (json, expected) in cases {
             let parsed: Value = serde_json::from_str(json).unwrap();
@@ -1264,7 +1266,7 @@ mod tests {
                 topology: None,
                 actor: false,
                 persona_distribution: None,
-            activity_count: None,
+                activity_count: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -1287,7 +1289,10 @@ mod tests {
         let back: DataModel = toml::from_str(&toml_str).unwrap();
         assert_eq!(model.name, back.name);
         assert_eq!(model.entities.len(), back.entities.len());
-        assert_eq!(model.entities[0].fields.len(), back.entities[0].fields.len());
+        assert_eq!(
+            model.entities[0].fields.len(),
+            back.entities[0].fields.len()
+        );
         assert_eq!(model.noise_profiles.len(), back.noise_profiles.len());
     }
 
@@ -1313,7 +1318,10 @@ mod tests {
             name: "power_user".into(),
             weight: 0.15,
             traits: BTreeMap::from([
-                ("peak_hours".into(), Value::Array(vec![Value::Int(9), Value::Int(10)])),
+                (
+                    "peak_hours".into(),
+                    Value::Array(vec![Value::Int(9), Value::Int(10)]),
+                ),
                 ("active_days".into(), Value::String("weekday_heavy".into())),
             ]),
         };
@@ -1357,10 +1365,7 @@ mod tests {
             from_entity: "users".into(),
             to_entity: "users".into(),
             graph_type: GraphType::ScaleFree,
-            params: BTreeMap::from([
-                ("avg_degree".into(), 8.0),
-                ("reciprocity".into(), 0.4),
-            ]),
+            params: BTreeMap::from([("avg_degree".into(), 8.0), ("reciprocity".into(), 0.4)]),
             community_count: Some(CountSpec::Fixed(5)),
             hierarchy_depth: Some(3),
         };
@@ -1377,19 +1382,30 @@ mod tests {
     fn test_actor_generators_serde() {
         let specs = vec![
             (
-                GeneratorSpec::ActorRef { entity: "users".into() },
+                GeneratorSpec::ActorRef {
+                    entity: "users".into(),
+                },
                 r#"{"type":"actor_ref","entity":"users"}"#,
             ),
             (
-                GeneratorSpec::ActorTemporal { trait_name: "peak_hours".into(), temporal_after: None, burst: None },
+                GeneratorSpec::ActorTemporal {
+                    trait_name: "peak_hours".into(),
+                    temporal_after: None,
+                    burst: None,
+                },
                 r#"{"type":"actor_temporal","trait":"peak_hours"}"#,
             ),
             (
-                GeneratorSpec::RelationshipRef { relationship: "email_net".into(), source_field: None },
+                GeneratorSpec::RelationshipRef {
+                    relationship: "email_net".into(),
+                    source_field: None,
+                },
                 r#"{"type":"relationship_ref","relationship":"email_net"}"#,
             ),
             (
-                GeneratorSpec::PersonaField { trait_name: "activity_rate".into() },
+                GeneratorSpec::PersonaField {
+                    trait_name: "activity_rate".into(),
+                },
                 r#"{"type":"persona_field","trait":"activity_rate"}"#,
             ),
         ];

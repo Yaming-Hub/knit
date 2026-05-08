@@ -58,9 +58,7 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::Sequence { start, step } => {
             Box::new(sequence::SequenceGenerator::new(*start, *step))
         }
-        GeneratorPlan::Constant(value) => {
-            Box::new(constant::ConstantGenerator::new(value.clone()))
-        }
+        GeneratorPlan::Constant(value) => Box::new(constant::ConstantGenerator::new(value.clone())),
         GeneratorPlan::Uuid => Box::new(uuid_gen::UuidGenerator),
         GeneratorPlan::OneOf {
             choices,
@@ -69,21 +67,30 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         GeneratorPlan::Pattern { pattern } => {
             Box::new(pattern::PatternGenerator::new(pattern.clone()))
         }
-        GeneratorPlan::Derived { expr, depends_on } => {
-            Box::new(derived::DerivedGenerator::new(expr.clone(), depends_on.clone()))
-        }
+        GeneratorPlan::Derived { expr, depends_on } => Box::new(derived::DerivedGenerator::new(
+            expr.clone(),
+            depends_on.clone(),
+        )),
         GeneratorPlan::Composite { element, length } => {
             Box::new(composite::CompositeGenerator::new(element, length))
         }
-        GeneratorPlan::Faker { category, locale, args } => {
-            Box::new(faker::FakerGenerator::new(category.clone(), locale.clone(), args.clone()))
-        }
+        GeneratorPlan::Faker {
+            category,
+            locale,
+            args,
+        } => Box::new(faker::FakerGenerator::new(
+            category.clone(),
+            locale.clone(),
+            args.clone(),
+        )),
         // FK generators are created directly by the engine (which has access
         // to the key-store). If we reach here it means an FK was nested inside
         // another generator (e.g. Unique or Conditional) — fall back to null
         // with a warning since we lack key-store context.
         GeneratorPlan::ForeignKey { .. } => {
-            tracing::warn!("ForeignKey inside nested generator: no key-store available, emitting nulls");
+            tracing::warn!(
+                "ForeignKey inside nested generator: no key-store available, emitting nulls"
+            );
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
         GeneratorPlan::Temporal {
@@ -117,9 +124,7 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             knit_plan::TopologyModel::BarabasiAlbert => {
                 Box::new(topology::BarabasiAlbertGenerator::new(params))
             }
-            knit_plan::TopologyModel::Tree => {
-                Box::new(topology::TreeGenerator::new(params))
-            }
+            knit_plan::TopologyModel::Tree => Box::new(topology::TreeGenerator::new(params)),
             knit_plan::TopologyModel::WattsStrogatz => {
                 Box::new(topology::WattsStrogatzGenerator::new(params))
             }
@@ -133,13 +138,14 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
             default,
         } => Box::new(conditional::ConditionalGenerator::new(
             field.clone(),
-            branches.iter().map(|(v, p)| (v.clone(), (**p).clone())).collect(),
+            branches
+                .iter()
+                .map(|(v, p)| (v.clone(), (**p).clone()))
+                .collect(),
             (**default).clone(),
         )),
         GeneratorPlan::Dictionary {
-            entries,
-            expansion,
-            ..
+            entries, expansion, ..
         } => Box::new(dictionary::DictionaryGenerator::new(
             entries.clone(),
             expansion.clone(),
@@ -147,26 +153,35 @@ pub fn create_generator(plan: &GeneratorPlan) -> Box<dyn FieldGenerator> {
         // GraphTarget generators are created by the engine (which has graphs +
         // key stores). If nested, fall back to null.
         GeneratorPlan::GraphTarget { .. } => {
-            tracing::warn!("GraphTarget inside nested generator: no graph/key-store available, emitting nulls");
+            tracing::warn!(
+                "GraphTarget inside nested generator: no graph/key-store available, emitting nulls"
+            );
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
         // PersonaField/ActorTemporal are created by the engine (which has the
         // actor pool + PK reverse maps). If nested, fall back to null.
         GeneratorPlan::PersonaField { .. } => {
-            tracing::warn!("PersonaField inside nested generator: no actor pool available, emitting nulls");
+            tracing::warn!(
+                "PersonaField inside nested generator: no actor pool available, emitting nulls"
+            );
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
         GeneratorPlan::ActorTemporal { .. } => {
-            tracing::warn!("ActorTemporal inside nested generator: no actor pool available, emitting nulls");
+            tracing::warn!(
+                "ActorTemporal inside nested generator: no actor pool available, emitting nulls"
+            );
             Box::new(constant::ConstantGenerator::new(knit_core::Value::Null))
         }
-        GeneratorPlan::ThreadRef { reply_probability, max_depth, reply_window, pk_field } => {
-            Box::new(thread_ref::ThreadRefGenerator::new(
-                *reply_probability,
-                *max_depth,
-                *reply_window,
-                pk_field.clone(),
-            ))
-        }
+        GeneratorPlan::ThreadRef {
+            reply_probability,
+            max_depth,
+            reply_window,
+            pk_field,
+        } => Box::new(thread_ref::ThreadRefGenerator::new(
+            *reply_probability,
+            *max_depth,
+            *reply_window,
+            pk_field.clone(),
+        )),
     }
 }

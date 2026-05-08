@@ -292,9 +292,11 @@ fn main() -> anyhow::Result<()> {
     match &cli.command {
         Command::Validate { schema } => validate::run(schema, &cli),
         Command::Plan { schema } => plan::run(schema, &cli),
-        Command::Generate { schema, output, entities } => {
-            generate::run(schema, output, entities, &cli)
-        }
+        Command::Generate {
+            schema,
+            output,
+            entities,
+        } => generate::run(schema, output, entities, &cli),
         Command::Schema { action } => match action {
             SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
             SchemaAction::Normalize { file } => schema::run_normalize(file, cli.json),
@@ -302,7 +304,18 @@ fn main() -> anyhow::Result<()> {
             SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
-        Command::Learn { source, output, sample, state, finalize, strict, entities, actors, actor_columns, personas } => {
+        Command::Learn {
+            source,
+            output,
+            sample,
+            state,
+            finalize,
+            strict,
+            entities,
+            actors,
+            actor_columns,
+            personas,
+        } => {
             let actors_opts = if *actors || !actor_columns.is_empty() || personas.is_some() {
                 Some(learn::ActorsOpts {
                     explicit_columns: actor_columns.clone(),
@@ -311,18 +324,25 @@ fn main() -> anyhow::Result<()> {
             } else {
                 None
             };
-            learn::run(source.as_deref(), output, *sample, state.as_deref(), *finalize, *strict, entities, actors_opts.as_ref(), &cli)
+            learn::run(
+                source.as_deref(),
+                output,
+                *sample,
+                state.as_deref(),
+                *finalize,
+                *strict,
+                entities,
+                actors_opts.as_ref(),
+                &cli,
+            )
         }
-        Command::Inspect { file, columns, actors } => {
-            inspect::run(file, *columns, *actors, &cli)
-        }
+        Command::Inspect {
+            file,
+            columns,
+            actors,
+        } => inspect::run(file, *columns, *actors, &cli),
         Command::Completions { shell } => {
-            clap_complete::generate(
-                *shell,
-                &mut Cli::command(),
-                "knit",
-                &mut std::io::stdout(),
-            );
+            clap_complete::generate(*shell, &mut Cli::command(), "knit", &mut std::io::stdout());
             Ok(())
         }
         Command::Generators => generators::run(cli.json),

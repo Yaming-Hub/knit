@@ -117,9 +117,7 @@ impl DictionaryGenerator {
 
 impl FieldGenerator for DictionaryGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
-        let values: Vec<String> = (0..count)
-            .map(|i| self.generate_one(rng, i))
-            .collect();
+        let values: Vec<String> = (0..count).map(|i| self.generate_one(rng, i)).collect();
         Arc::new(StringArray::from(
             values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
         ))
@@ -177,10 +175,10 @@ fn build_token_pools(entries: &[String]) -> Vec<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
+    use std::collections::HashMap;
 
     fn test_ctx() -> GenContext<'static> {
         static COLS: std::sync::LazyLock<HashMap<String, ArrayRef>> =
@@ -241,10 +239,7 @@ mod tests {
         // First 2 should be plain (index < entries.len())
         for i in 0..2 {
             let val = str_arr.value(i);
-            assert!(
-                val == "Widget" || val == "Gadget",
-                "unexpected: {}", val
-            );
+            assert!(val == "Widget" || val == "Gadget", "unexpected: {}", val);
         }
         // Indices >= 2 should have suffix
         for i in 2..5 {
@@ -267,10 +262,7 @@ mod tests {
 
     #[test]
     fn build_token_pools_deduplicates() {
-        let entries = vec![
-            "Ultra Steel Watch".into(),
-            "Ultra Cotton Shoes".into(),
-        ];
+        let entries = vec!["Ultra Steel Watch".into(), "Ultra Cotton Shoes".into()];
         let pools = build_token_pools(&entries);
         assert_eq!(pools.len(), 3);
         // "Ultra" appears once in pool 0

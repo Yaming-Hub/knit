@@ -86,8 +86,8 @@ impl KeyStore for InMemoryKeyStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand_chacha::ChaCha8Rng;
     use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
 
     #[test]
     fn empty_store_returns_none() {
@@ -215,7 +215,10 @@ mod tests {
 
         writer.join().unwrap();
         let sampled = reader.join().unwrap();
-        assert_eq!(sampled, 500, "all samples should succeed since store is never empty");
+        assert_eq!(
+            sampled, 500,
+            "all samples should succeed since store is never empty"
+        );
         assert_eq!(store.len(), 1100);
     }
 }

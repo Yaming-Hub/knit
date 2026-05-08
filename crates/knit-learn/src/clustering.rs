@@ -114,7 +114,11 @@ pub fn profiles_to_features(profiles: &[ActorProfile]) -> (Vec<Vec<f64>>, Vec<St
 
     for col in 0..num_features {
         let mean: f64 = raw_matrix.iter().map(|r| r[col]).sum::<f64>() / n;
-        let variance: f64 = raw_matrix.iter().map(|r| (r[col] - mean).powi(2)).sum::<f64>() / n;
+        let variance: f64 = raw_matrix
+            .iter()
+            .map(|r| (r[col] - mean).powi(2))
+            .sum::<f64>()
+            / n;
         let std_dev = variance.sqrt();
 
         if std_dev > 1e-10 {
@@ -134,7 +138,7 @@ pub fn profiles_to_features(profiles: &[ActorProfile]) -> (Vec<Vec<f64>>, Vec<St
 
 /// Run K-means clustering on feature vectors.
 ///
-/// Returns (assignments, centroids) where assignments[i] is the cluster
+/// Returns (assignments, centroids) where `assignments[i]` is the cluster
 /// index for the i-th data point.
 pub fn kmeans(
     data: &[Vec<f64>],
@@ -221,12 +225,7 @@ pub fn silhouette_score(data: &[Vec<f64>], assignments: &[usize], k: usize) -> f
 const SILHOUETTE_SAMPLE_SIZE: usize = 2000;
 
 /// Silhouette score with configurable seed (for deterministic sampling).
-fn silhouette_score_seeded(
-    data: &[Vec<f64>],
-    assignments: &[usize],
-    k: usize,
-    seed: u64,
-) -> f64 {
+fn silhouette_score_seeded(data: &[Vec<f64>], assignments: &[usize], k: usize, seed: u64) -> f64 {
     if k <= 1 || data.len() <= k {
         return 0.0;
     }
@@ -234,22 +233,23 @@ fn silhouette_score_seeded(
     let n = data.len();
 
     // For large datasets, sample to keep O(N²) manageable
-    let (sample_data, sample_assignments): (Vec<&Vec<f64>>, Vec<usize>) = if n > SILHOUETTE_SAMPLE_SIZE {
-        let mut rng = StdRng::seed_from_u64(seed);
-        let mut indices: Vec<usize> = (0..n).collect();
-        // Fisher-Yates shuffle, take first SILHOUETTE_SAMPLE_SIZE
-        for i in 0..SILHOUETTE_SAMPLE_SIZE {
-            let j = rng.gen_range(i..n);
-            indices.swap(i, j);
-        }
-        indices.truncate(SILHOUETTE_SAMPLE_SIZE);
-        let data_refs: Vec<&Vec<f64>> = indices.iter().map(|&i| &data[i]).collect();
-        let assign_refs: Vec<usize> = indices.iter().map(|&i| assignments[i]).collect();
-        (data_refs, assign_refs)
-    } else {
-        let data_refs: Vec<&Vec<f64>> = data.iter().collect();
-        (data_refs, assignments.to_vec())
-    };
+    let (sample_data, sample_assignments): (Vec<&Vec<f64>>, Vec<usize>) =
+        if n > SILHOUETTE_SAMPLE_SIZE {
+            let mut rng = StdRng::seed_from_u64(seed);
+            let mut indices: Vec<usize> = (0..n).collect();
+            // Fisher-Yates shuffle, take first SILHOUETTE_SAMPLE_SIZE
+            for i in 0..SILHOUETTE_SAMPLE_SIZE {
+                let j = rng.gen_range(i..n);
+                indices.swap(i, j);
+            }
+            indices.truncate(SILHOUETTE_SAMPLE_SIZE);
+            let data_refs: Vec<&Vec<f64>> = indices.iter().map(|&i| &data[i]).collect();
+            let assign_refs: Vec<usize> = indices.iter().map(|&i| assignments[i]).collect();
+            (data_refs, assign_refs)
+        } else {
+            let data_refs: Vec<&Vec<f64>> = data.iter().collect();
+            (data_refs, assignments.to_vec())
+        };
 
     let sample_n = sample_data.len();
     let mut total_score = 0.0;
@@ -327,7 +327,9 @@ pub fn discover_personas(
     }
 
     // Determine K range: 2..min(√N, MAX_K)
-    let max_k = ((profiles.len() as f64).sqrt().ceil() as usize).min(MAX_K).min(profiles.len() / MIN_CLUSTER_SIZE);
+    let max_k = ((profiles.len() as f64).sqrt().ceil() as usize)
+        .min(MAX_K)
+        .min(profiles.len() / MIN_CLUSTER_SIZE);
     if max_k < 2 {
         return None;
     }
@@ -416,11 +418,8 @@ fn build_personas(
         for h in &mut avg_hours {
             *h /= member_count;
         }
-        let mut hour_scores: Vec<(usize, f64)> = avg_hours
-            .iter()
-            .enumerate()
-            .map(|(h, &v)| (h, v))
-            .collect();
+        let mut hour_scores: Vec<(usize, f64)> =
+            avg_hours.iter().enumerate().map(|(h, &v)| (h, v)).collect();
         hour_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         let peak_hours: Vec<Value> = hour_scores
             .iter()
@@ -457,10 +456,7 @@ fn build_personas(
             .map(|p| p.activity_count as f64)
             .sum::<f64>()
             / cluster_members.len() as f64;
-        traits.insert(
-            "activity_rate".into(),
-            Value::Float(mean_activity),
-        );
+        traits.insert("activity_rate".into(), Value::Float(mean_activity));
 
         // Active span (mean days)
         let mean_span: f64 = cluster_members
@@ -530,10 +526,7 @@ fn generate_persona_name(
 // ── Math helpers ────────────────────────────────────────────────────────
 
 fn euclidean_dist_sq(a: &[f64], b: &[f64]) -> f64 {
-    a.iter()
-        .zip(b.iter())
-        .map(|(x, y)| (x - y).powi(2))
-        .sum()
+    a.iter().zip(b.iter()).map(|(x, y)| (x - y).powi(2)).sum()
 }
 
 /// K-means++ initialization: select initial centroids with probability
@@ -709,8 +702,8 @@ mod tests {
         for i in 0..10 {
             profiles.push(make_profile(
                 &format!("morning_{i}"),
-                8 + (i % 3),   // peak hour 8-10
-                i % 5,         // weekdays
+                8 + (i % 3), // peak hour 8-10
+                i % 5,       // weekdays
                 50 + i as u64 * 5,
                 30.0,
             ));
@@ -718,8 +711,8 @@ mod tests {
         for i in 0..10 {
             profiles.push(make_profile(
                 &format!("evening_{i}"),
-                20 + (i % 3),  // peak hour 20-22
-                5 + (i % 2),   // weekends
+                20 + (i % 3), // peak hour 20-22
+                5 + (i % 2),  // weekends
                 20 + i as u64 * 2,
                 15.0,
             ));
@@ -734,8 +727,15 @@ mod tests {
         assert!(result.is_some());
 
         let result = result.unwrap();
-        assert!(result.k >= 2, "should find at least 2 clusters, got {}", result.k);
-        assert!(result.silhouette_score > 0.0, "silhouette should be positive");
+        assert!(
+            result.k >= 2,
+            "should find at least 2 clusters, got {}",
+            result.k
+        );
+        assert!(
+            result.silhouette_score > 0.0,
+            "silhouette should be positive"
+        );
         assert_eq!(result.personas.len(), result.k);
         assert_eq!(result.assignments.len(), 20);
 
@@ -759,7 +759,10 @@ mod tests {
         avg_hours[8] = 0.6;
         let name = generate_persona_name(0, &avg_hours, "weekday_heavy", 150.0);
         assert!(name.contains("power"), "expected 'power' in {name}");
-        assert!(name.contains("early_bird"), "expected 'early_bird' in {name}");
+        assert!(
+            name.contains("early_bird"),
+            "expected 'early_bird' in {name}"
+        );
 
         // Peak at hour 22, low activity
         avg_hours[8] = 0.0;

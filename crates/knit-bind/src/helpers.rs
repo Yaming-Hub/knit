@@ -274,7 +274,10 @@ mod tests {
 
     #[test]
     fn test_escape_xml() {
-        assert_eq!(escape_xml(Value::from("<b>\"hi\" & 'bye'</b>")), "&lt;b&gt;&quot;hi&quot; &amp; &apos;bye&apos;&lt;/b&gt;");
+        assert_eq!(
+            escape_xml(Value::from("<b>\"hi\" & 'bye'</b>")),
+            "&lt;b&gt;&quot;hi&quot; &amp; &apos;bye&apos;&lt;/b&gt;"
+        );
     }
 
     #[test]

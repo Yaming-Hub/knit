@@ -100,7 +100,11 @@ pub fn read_csv_with_limit(
         None => batches,
     };
 
-    info!(batches = batches.len(), rows = rows_read, "CSV ingestion complete");
+    info!(
+        batches = batches.len(),
+        rows = rows_read,
+        "CSV ingestion complete"
+    );
     Ok(batches)
 }
 
@@ -311,7 +315,10 @@ fn collect_files_recursive(dir: &Path) -> LearnResult<Vec<PathBuf>> {
 
     // Canonicalize and visit the root; propagate error if unreadable
     let root_canonical = dir.canonicalize().map_err(|e| {
-        LearnError::Io(std::io::Error::new(e.kind(), format!("cannot read directory {}: {e}", dir.display())))
+        LearnError::Io(std::io::Error::new(
+            e.kind(),
+            format!("cannot read directory {}: {e}", dir.display()),
+        ))
     })?;
     visited.insert(root_canonical);
 
@@ -367,12 +374,22 @@ pub fn ingest_directory_with_limit(
     let stems: Vec<String> = entries
         .iter()
         .filter(|p| {
-            let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+            let ext = p
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("")
+                .to_lowercase();
             ["csv", "tsv", "parquet", "json", "jsonl"].contains(&ext.as_str())
         })
-        .map(|p| p.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown").to_string())
+        .map(|p| {
+            p.file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown")
+                .to_string()
+        })
         .collect();
-    let mut stem_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    let mut stem_counts: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::new();
     for s in &stems {
         *stem_counts.entry(s.clone()).or_insert(0) += 1;
     }
@@ -460,11 +477,7 @@ mod tests {
     #[test]
     fn tsv_auto_detect() {
         let dir = tempfile::tempdir().unwrap();
-        let tsv = write_csv(
-            dir.path(),
-            "data.tsv",
-            "col_a\tcol_b\n1\thello\n2\tworld\n",
-        );
+        let tsv = write_csv(dir.path(), "data.tsv", "col_a\tcol_b\n1\thello\n2\tworld\n");
         let batches = read_auto(&tsv).unwrap();
         assert!(!batches.is_empty());
     }
@@ -492,11 +505,7 @@ mod tests {
     fn json_array_read() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("data.json");
-        std::fs::write(
-            &p,
-            r#"[{"x":1,"y":"a"},{"x":2,"y":"b"},{"x":3,"y":"c"}]"#,
-        )
-        .unwrap();
+        std::fs::write(&p, r#"[{"x":1,"y":"a"},{"x":2,"y":"b"},{"x":3,"y":"c"}]"#).unwrap();
         let batches = read_json(&p, 1024).unwrap();
         assert!(!batches.is_empty());
         let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
@@ -507,11 +516,7 @@ mod tests {
     #[test]
     fn directory_ingestion() {
         let dir = tempfile::tempdir().unwrap();
-        write_csv(
-            dir.path(),
-            "users.csv",
-            "id,name\n1,Alice\n2,Bob\n",
-        );
+        write_csv(dir.path(), "users.csv", "id,name\n1,Alice\n2,Bob\n");
         write_csv(
             dir.path(),
             "orders.csv",
@@ -565,8 +570,14 @@ mod tests {
         assert_eq!(results.len(), 2);
         let names: Vec<&str> = results.iter().map(|r| r.entity.as_str()).collect();
         // Should be disambiguated with parent dir prefix
-        assert!(names.contains(&"alpha_test"), "expected alpha_test, got {names:?}");
-        assert!(names.contains(&"beta_test"), "expected beta_test, got {names:?}");
+        assert!(
+            names.contains(&"alpha_test"),
+            "expected alpha_test, got {names:?}"
+        );
+        assert!(
+            names.contains(&"beta_test"),
+            "expected beta_test, got {names:?}"
+        );
     }
 
     #[test]
@@ -608,11 +619,7 @@ mod tests {
     fn ingest_directory_with_limit_truncates() {
         let dir = tempfile::tempdir().unwrap();
         // 5 rows of data
-        write_csv(
-            dir.path(),
-            "data.csv",
-            "id,val\n1,a\n2,b\n3,c\n4,d\n5,e\n",
-        );
+        write_csv(dir.path(), "data.csv", "id,val\n1,a\n2,b\n3,c\n4,d\n5,e\n");
 
         let results = ingest_directory_with_limit(dir.path(), Some(3)).unwrap();
         assert_eq!(results.len(), 1);

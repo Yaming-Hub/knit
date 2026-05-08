@@ -162,7 +162,10 @@ impl RelationshipAccumulator {
             None
         };
 
-        let name = format!("{}_{}_{}_network", self.entity_name, self.from_column, self.to_column);
+        let name = format!(
+            "{}_{}_{}_network",
+            self.entity_name, self.from_column, self.to_column
+        );
 
         info!(
             name = %name,
@@ -306,7 +309,10 @@ fn estimate_clustering(
     // Build adjacency for sampling (undirected view)
     let mut neighbors: HashMap<&str, Vec<&str>> = HashMap::new();
     for (from, to) in edges.keys() {
-        neighbors.entry(from.as_str()).or_default().push(to.as_str());
+        neighbors
+            .entry(from.as_str())
+            .or_default()
+            .push(to.as_str());
     }
 
     // Sample up to 100 actors deterministically (sorted by name)
@@ -413,7 +419,13 @@ fn extract_strings(array: &dyn Array) -> Option<StringArray> {
                 .as_any()
                 .downcast_ref::<arrow::array::LargeStringArray>()?;
             let values: Vec<Option<&str>> = (0..arr.len())
-                .map(|i| if arr.is_null(i) { None } else { Some(arr.value(i)) })
+                .map(|i| {
+                    if arr.is_null(i) {
+                        None
+                    } else {
+                        Some(arr.value(i))
+                    }
+                })
                 .collect();
             Some(values.into_iter().collect())
         }
@@ -471,11 +483,8 @@ mod tests {
             &["alice", "alice", "bob", "charlie"],
             &["bob", "charlie", "alice", "bob"],
         );
-        let mut acc = RelationshipAccumulator::new(
-            "sender_id".into(),
-            "receiver_id".into(),
-            "emails".into(),
-        );
+        let mut acc =
+            RelationshipAccumulator::new("sender_id".into(), "receiver_id".into(), "emails".into());
         acc.observe_batch(&batch);
         assert_eq!(acc.total_observations(), 4);
         assert_eq!(acc.edge_count(), 4); // 4 unique directed edges
@@ -483,15 +492,9 @@ mod tests {
 
     #[test]
     fn accumulator_skips_self_edges() {
-        let batch = make_edge_batch(
-            &["alice", "bob", "alice"],
-            &["alice", "charlie", "bob"],
-        );
-        let mut acc = RelationshipAccumulator::new(
-            "sender_id".into(),
-            "receiver_id".into(),
-            "emails".into(),
-        );
+        let batch = make_edge_batch(&["alice", "bob", "alice"], &["alice", "charlie", "bob"]);
+        let mut acc =
+            RelationshipAccumulator::new("sender_id".into(), "receiver_id".into(), "emails".into());
         acc.observe_batch(&batch);
         // alice→alice is a self-edge and should be skipped
         assert_eq!(acc.total_observations(), 2);
@@ -499,17 +502,16 @@ mod tests {
 
     #[test]
     fn accumulator_missing_column_skips_batch() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("other", DataType::Utf8, false),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "other",
+            DataType::Utf8,
+            false,
+        )]));
         let arr = Arc::new(StringArray::from(vec!["x"]));
         let batch = RecordBatch::try_new(schema, vec![arr]).unwrap();
 
-        let mut acc = RelationshipAccumulator::new(
-            "sender_id".into(),
-            "receiver_id".into(),
-            "emails".into(),
-        );
+        let mut acc =
+            RelationshipAccumulator::new("sender_id".into(), "receiver_id".into(), "emails".into());
         acc.observe_batch(&batch);
         assert_eq!(acc.total_observations(), 0);
     }
@@ -517,35 +519,39 @@ mod tests {
     #[test]
     fn finalize_insufficient_edges_returns_none() {
         let batch = make_edge_batch(&["alice"], &["bob"]);
-        let mut acc = RelationshipAccumulator::new(
-            "sender_id".into(),
-            "receiver_id".into(),
-            "emails".into(),
-        );
+        let mut acc =
+            RelationshipAccumulator::new("sender_id".into(), "receiver_id".into(), "emails".into());
         acc.observe_batch(&batch);
 
-        let config = RelationshipDiscoveryConfig { min_edges: 10, min_actors: 3 };
+        let config = RelationshipDiscoveryConfig {
+            min_edges: 10,
+            min_actors: 3,
+        };
         assert!(acc.finalize(&config).is_none());
     }
 
     #[test]
     fn finalize_produces_relationship_spec() {
         // Create enough edges for analysis
-        let mut acc = RelationshipAccumulator::new(
-            "sender_id".into(),
-            "receiver_id".into(),
-            "emails".into(),
-        );
+        let mut acc =
+            RelationshipAccumulator::new("sender_id".into(), "receiver_id".into(), "emails".into());
 
         // 5 actors, many interactions
-        let senders = vec!["alice", "alice", "bob", "bob", "charlie", "charlie",
-                           "dave", "dave", "eve", "eve", "alice", "bob"];
-        let receivers = vec!["bob", "charlie", "alice", "charlie", "alice", "dave",
-                             "eve", "alice", "dave", "charlie", "dave", "eve"];
+        let senders = vec![
+            "alice", "alice", "bob", "bob", "charlie", "charlie", "dave", "dave", "eve", "eve",
+            "alice", "bob",
+        ];
+        let receivers = vec![
+            "bob", "charlie", "alice", "charlie", "alice", "dave", "eve", "alice", "dave",
+            "charlie", "dave", "eve",
+        ];
         let batch = make_edge_batch(&senders, &receivers);
         acc.observe_batch(&batch);
 
-        let config = RelationshipDiscoveryConfig { min_edges: 5, min_actors: 3 };
+        let config = RelationshipDiscoveryConfig {
+            min_edges: 5,
+            min_actors: 3,
+        };
         let spec = acc.finalize(&config).unwrap();
 
         assert_eq!(spec.name, "emails_sender_id_receiver_id_network");
@@ -563,7 +569,7 @@ mod tests {
             avg_degree: 3.0,
             reciprocity: 0.1,
             clustering_coefficient: 0.1,
-            degree_variance: 25.0,  // CV = 5/3 ≈ 1.67
+            degree_variance: 25.0, // CV = 5/3 ≈ 1.67
             community_estimate: 3,
             estimated_depth: 4,
         };
@@ -578,7 +584,7 @@ mod tests {
             avg_degree: 5.0,
             reciprocity: 0.4,
             clustering_coefficient: 0.2,
-            degree_variance: 100.0,  // CV = 10/5 = 2.0
+            degree_variance: 100.0, // CV = 10/5 = 2.0
             community_estimate: 5,
             estimated_depth: 3,
         };
@@ -593,7 +599,7 @@ mod tests {
             avg_degree: 4.0,
             reciprocity: 0.6,
             clustering_coefficient: 0.5,
-            degree_variance: 4.0,  // CV = 2/4 = 0.5
+            degree_variance: 4.0, // CV = 2/4 = 0.5
             community_estimate: 2,
             estimated_depth: 2,
         };
@@ -608,7 +614,7 @@ mod tests {
             avg_degree: 5.0,
             reciprocity: 0.5,
             clustering_coefficient: 0.1,
-            degree_variance: 4.0,  // CV = 2/5 = 0.4
+            degree_variance: 4.0, // CV = 2/5 = 0.4
             community_estimate: 1,
             estimated_depth: 1,
         };
@@ -642,16 +648,16 @@ mod tests {
             &["alice", "bob", "alice", "bob"],
             &["bob", "alice", "bob", "alice"],
         );
-        let mut acc = RelationshipAccumulator::new(
-            "sender_id".into(),
-            "receiver_id".into(),
-            "chat".into(),
-        );
+        let mut acc =
+            RelationshipAccumulator::new("sender_id".into(), "receiver_id".into(), "chat".into());
         acc.observe_batch(&batch);
 
         let metrics = compute_graph_metrics(&acc.edges);
-        assert!((metrics.reciprocity - 1.0).abs() < 1e-10,
-            "fully reciprocal graph should have reciprocity 1.0, got {}", metrics.reciprocity);
+        assert!(
+            (metrics.reciprocity - 1.0).abs() < 1e-10,
+            "fully reciprocal graph should have reciprocity 1.0, got {}",
+            metrics.reciprocity
+        );
     }
 
     #[test]
@@ -669,7 +675,9 @@ mod tests {
         acc.observe_batch(&batch);
 
         let metrics = compute_graph_metrics(&acc.edges);
-        assert_eq!(metrics.reciprocity, 0.0,
-            "one-directional graph should have reciprocity 0.0");
+        assert_eq!(
+            metrics.reciprocity, 0.0,
+            "one-directional graph should have reciprocity 0.0"
+        );
     }
 }

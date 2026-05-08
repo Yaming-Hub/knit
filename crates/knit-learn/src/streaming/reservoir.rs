@@ -85,8 +85,7 @@ impl ReservoirSample {
         let mut rng_state = self.rng_state ^ other.rng_state;
         let mut merged = Vec::with_capacity(self.capacity);
 
-        let combined_items: Vec<&String> =
-            self.items.iter().chain(other.items.iter()).collect();
+        let combined_items: Vec<&String> = self.items.iter().chain(other.items.iter()).collect();
 
         if combined_items.len() <= self.capacity {
             // Both fit entirely
@@ -222,7 +221,10 @@ mod tests {
         // Should have items from both sources
         let has_a = a.items().iter().any(|s| s.starts_with("a_"));
         let has_b = a.items().iter().any(|s| s.starts_with("b_"));
-        assert!(has_a || has_b, "merged sample should contain items from at least one source");
+        assert!(
+            has_a || has_b,
+            "merged sample should contain items from at least one source"
+        );
     }
 
     #[test]

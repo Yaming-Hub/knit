@@ -214,7 +214,11 @@ impl TableState {
     }
 
     /// Get or create a column state for the given column name.
-    pub fn get_or_create_column(&mut self, name: &str, data_type: ColumnDataType) -> &mut ColumnState {
+    pub fn get_or_create_column(
+        &mut self,
+        name: &str,
+        data_type: ColumnDataType,
+    ) -> &mut ColumnState {
         let pos = self.columns.iter().position(|c| c.name == name);
         match pos {
             Some(idx) => {
@@ -223,8 +227,11 @@ impl TableState {
                 &mut self.columns[idx]
             }
             None => {
-                let col_seed = self.seed.wrapping_add((self.columns.len() as u64).wrapping_mul(0x9e3779b97f4a7c15));
-                self.columns.push(ColumnState::new(name.to_string(), data_type, col_seed));
+                let col_seed = self
+                    .seed
+                    .wrapping_add((self.columns.len() as u64).wrapping_mul(0x9e3779b97f4a7c15));
+                self.columns
+                    .push(ColumnState::new(name.to_string(), data_type, col_seed));
                 self.columns.last_mut().unwrap()
             }
         }
@@ -437,13 +444,14 @@ impl ColumnState {
             && matches!(
                 self.data_type,
                 ColumnDataType::Integer | ColumnDataType::Float | ColumnDataType::Temporal
-            ) {
-                match (&mut self.numeric, &other.numeric) {
-                    (Some(ref mut s), Some(ref o)) => s.merge(o),
-                    (None, Some(o)) => self.numeric = Some(o.clone()),
-                    _ => {}
-                }
+            )
+        {
+            match (&mut self.numeric, &other.numeric) {
+                (Some(ref mut s), Some(ref o)) => s.merge(o),
+                (None, Some(o)) => self.numeric = Some(o.clone()),
+                _ => {}
             }
+        }
     }
 }
 

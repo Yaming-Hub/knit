@@ -19,30 +19,32 @@
 pub mod actor_pool;
 pub mod batch;
 pub mod context;
-pub mod graph;
-pub mod interaction;
 pub mod engine;
 pub mod error;
 pub mod generators;
+pub mod graph;
+pub mod interaction;
 pub mod keystore;
 pub mod null_mask;
 pub mod plugin;
 pub mod sampled_key_store;
 pub mod string_keystore;
-pub mod temporal_store;
 pub mod temporal_sort;
+pub mod temporal_store;
 pub mod traits;
 
 pub use actor_pool::ActorPool;
 pub use batch::assemble_batch;
-pub use graph::{generate_graph, GeneratedGraph, Edge};
-pub use interaction::{generate_interactions, InteractionGenerator, InteractionConfig, InteractionRecord};
 pub use context::GenContext;
 pub use engine::GenerationEngine;
 pub use error::GenError;
 pub use generators::create_generator;
 pub use generators::fk::ForeignKeyGenerator;
 pub use generators::string_fk::StringForeignKeyGenerator;
+pub use graph::{generate_graph, Edge, GeneratedGraph};
+pub use interaction::{
+    generate_interactions, InteractionConfig, InteractionGenerator, InteractionRecord,
+};
 pub use keystore::InMemoryKeyStore;
 pub use null_mask::apply_null_mask;
 pub use plugin::{registry, GeneratorPlugin, Registry};
@@ -150,10 +152,7 @@ mod tests {
 
     #[test]
     fn sequence_with_offset() {
-        let plan = GeneratorPlan::Sequence {
-            start: 0,
-            step: 1,
-        };
+        let plan = GeneratorPlan::Sequence { start: 0, step: 1 };
         let gen = create_generator(&plan);
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
         let ctx = GenContext::new(map, 100, 1, 2, "test");
@@ -194,11 +193,7 @@ mod tests {
             let s = str_arr.value(i);
             let parsed = uuid::Uuid::parse_str(s);
             assert!(parsed.is_ok(), "invalid UUID: {s}");
-            assert_eq!(
-                parsed.unwrap().get_version_num(),
-                4,
-                "not UUID v4: {s}"
-            );
+            assert_eq!(parsed.unwrap().get_version_num(), 4, "not UUID v4: {s}");
         }
     }
 
@@ -257,10 +252,7 @@ mod tests {
 
         let null_count = masked.null_count();
         let ratio = null_count as f64 / 10_000.0;
-        assert!(
-            (ratio - 0.3).abs() < 0.05,
-            "null ratio {ratio} not ≈ 0.3"
-        );
+        assert!((ratio - 0.3).abs() < 0.05, "null ratio {ratio} not ≈ 0.3");
     }
 
     #[test]
@@ -289,20 +281,13 @@ mod tests {
     fn batch_assembly() {
         let names = vec!["id".to_string(), "value".to_string()];
         let id_arr: ArrayRef = std::sync::Arc::new(Int64Array::from(vec![1, 2, 3]));
-        let val_arr: ArrayRef =
-            std::sync::Arc::new(Float64Array::from(vec![1.1, 2.2, 3.3]));
+        let val_arr: ArrayRef = std::sync::Arc::new(Float64Array::from(vec![1.1, 2.2, 3.3]));
 
         let batch = assemble_batch(&names, vec![id_arr, val_arr]).unwrap();
         assert_eq!(batch.num_columns(), 2);
         assert_eq!(batch.num_rows(), 3);
-        assert_eq!(
-            *batch.schema().field(0).data_type(),
-            DataType::Int64
-        );
-        assert_eq!(
-            *batch.schema().field(1).data_type(),
-            DataType::Float64
-        );
+        assert_eq!(*batch.schema().field(0).data_type(), DataType::Int64);
+        assert_eq!(*batch.schema().field(1).data_type(), DataType::Float64);
     }
 
     // ── KeyStore tests ──────────────────────────────────────────────
@@ -451,9 +436,18 @@ mod tests {
         use knit_core::WeightedChoice;
         let plan = GeneratorPlan::OneOf {
             choices: vec![
-                WeightedChoice { value: Value::String("a".into()), weight: 1.0 },
-                WeightedChoice { value: Value::String("b".into()), weight: 1.0 },
-                WeightedChoice { value: Value::String("c".into()), weight: 1.0 },
+                WeightedChoice {
+                    value: Value::String("a".into()),
+                    weight: 1.0,
+                },
+                WeightedChoice {
+                    value: Value::String("b".into()),
+                    weight: 1.0,
+                },
+                WeightedChoice {
+                    value: Value::String("c".into()),
+                    weight: 1.0,
+                },
             ],
             cumulative_weights: vec![1.0 / 3.0, 2.0 / 3.0, 1.0],
         };
@@ -473,9 +467,18 @@ mod tests {
         use knit_core::WeightedChoice;
         let plan = GeneratorPlan::OneOf {
             choices: vec![
-                WeightedChoice { value: Value::Int(10), weight: 1.0 },
-                WeightedChoice { value: Value::Int(20), weight: 1.0 },
-                WeightedChoice { value: Value::Int(30), weight: 1.0 },
+                WeightedChoice {
+                    value: Value::Int(10),
+                    weight: 1.0,
+                },
+                WeightedChoice {
+                    value: Value::Int(20),
+                    weight: 1.0,
+                },
+                WeightedChoice {
+                    value: Value::Int(30),
+                    weight: 1.0,
+                },
             ],
             cumulative_weights: vec![1.0 / 3.0, 2.0 / 3.0, 1.0],
         };
@@ -495,8 +498,14 @@ mod tests {
         // 90% weight on "common", 10% on "rare"
         let plan = GeneratorPlan::OneOf {
             choices: vec![
-                WeightedChoice { value: Value::String("common".into()), weight: 9.0 },
-                WeightedChoice { value: Value::String("rare".into()), weight: 1.0 },
+                WeightedChoice {
+                    value: Value::String("common".into()),
+                    weight: 9.0,
+                },
+                WeightedChoice {
+                    value: Value::String("rare".into()),
+                    weight: 1.0,
+                },
             ],
             cumulative_weights: vec![0.9, 1.0],
         };
@@ -508,10 +517,7 @@ mod tests {
             .filter(|i| str_arr.value(*i) == "common")
             .count();
         let ratio = common_count as f64 / 10_000.0;
-        assert!(
-            (ratio - 0.9).abs() < 0.05,
-            "common ratio {ratio} not ≈ 0.9"
-        );
+        assert!((ratio - 0.9).abs() < 0.05, "common ratio {ratio} not ≈ 0.9");
     }
 
     // ── Pattern tests ───────────────────────────────────────────────

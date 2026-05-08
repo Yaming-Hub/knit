@@ -48,7 +48,10 @@ impl ActorForeignKeyGenerator {
 
 impl FieldGenerator for ActorForeignKeyGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        let pool_count = self.actor_pool.actor_count(&self.target_entity).unwrap_or(0);
+        let pool_count = self
+            .actor_pool
+            .actor_count(&self.target_entity)
+            .unwrap_or(0);
         let store_len = self.key_store.len();
 
         // Validate: actor pool count must match key store size for index→PK mapping.
@@ -62,9 +65,7 @@ impl FieldGenerator for ActorForeignKeyGenerator {
                     "actor pool size != key store size — falling back to uniform FK"
                 );
             }
-            let values: Vec<Option<i64>> = (0..count)
-                .map(|_| self.key_store.sample(rng))
-                .collect();
+            let values: Vec<Option<i64>> = (0..count).map(|_| self.key_store.sample(rng)).collect();
             return Arc::new(Int64Array::from(values));
         }
 
@@ -244,4 +245,3 @@ mod tests {
         }
     }
 }
-

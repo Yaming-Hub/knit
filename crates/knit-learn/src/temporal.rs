@@ -103,11 +103,8 @@ pub fn detect_temporal_pattern(timestamps_secs: &[f64]) -> Option<TemporalPatter
     }
 
     let mean_delta = deltas.iter().sum::<f64>() / deltas.len() as f64;
-    let var_delta = deltas
-        .iter()
-        .map(|d| (d - mean_delta).powi(2))
-        .sum::<f64>()
-        / deltas.len() as f64;
+    let var_delta =
+        deltas.iter().map(|d| (d - mean_delta).powi(2)).sum::<f64>() / deltas.len() as f64;
     let std_delta = var_delta.sqrt();
     let cv = if mean_delta > 0.0 {
         std_delta / mean_delta
@@ -391,11 +388,17 @@ mod tests {
     #[test]
     fn fixed_interval_detection() {
         // Every 60 seconds, with tiny jitter
-        let ts: Vec<f64> = (0..100).map(|i| 1_000_000.0 + i as f64 * 60.0 + (i % 3) as f64 * 0.1).collect();
+        let ts: Vec<f64> = (0..100)
+            .map(|i| 1_000_000.0 + i as f64 * 60.0 + (i % 3) as f64 * 0.1)
+            .collect();
         let result = detect_temporal_pattern(&ts).unwrap();
         match &result.pattern {
             TemporalPattern::FixedInterval { interval_secs } => {
-                assert!((interval_secs - 60.0).abs() < 1.0, "interval should be ~60s, got {}", interval_secs);
+                assert!(
+                    (interval_secs - 60.0).abs() < 1.0,
+                    "interval should be ~60s, got {}",
+                    interval_secs
+                );
             }
             other => panic!("expected FixedInterval, got {:?}", other),
         }
@@ -406,15 +409,23 @@ mod tests {
     fn weekly_schedule_detection() {
         // Events every ~7 days
         let day = 86400.0;
-        let ts: Vec<f64> = (0..52).map(|i| 1_700_000_000.0 + i as f64 * 7.0 * day + (i % 5) as f64 * 100.0).collect();
+        let ts: Vec<f64> = (0..52)
+            .map(|i| 1_700_000_000.0 + i as f64 * 7.0 * day + (i % 5) as f64 * 100.0)
+            .collect();
         let result = detect_temporal_pattern(&ts).unwrap();
         // Should detect as fixed interval or schedule (weekly)
         let is_fixed_or_schedule = matches!(
             &result.pattern,
             TemporalPattern::FixedInterval { .. }
-                | TemporalPattern::Schedule { kind: ScheduleKind::Weekly }
+                | TemporalPattern::Schedule {
+                    kind: ScheduleKind::Weekly
+                }
         );
-        assert!(is_fixed_or_schedule, "expected weekly pattern, got {:?}", result.pattern);
+        assert!(
+            is_fixed_or_schedule,
+            "expected weekly pattern, got {:?}",
+            result.pattern
+        );
     }
 
     #[test]
@@ -456,7 +467,9 @@ mod tests {
     #[test]
     fn hour_of_day_nonuniform() {
         // All events at the same hour
-        let ts: Vec<f64> = (0..100).map(|i| 1_700_000_000.0 + i as f64 * 86400.0).collect();
+        let ts: Vec<f64> = (0..100)
+            .map(|i| 1_700_000_000.0 + i as f64 * 86400.0)
+            .collect();
         let hod = hour_of_day_distribution(&ts);
         let total: u64 = hod.counts.iter().sum();
         assert_eq!(total, 100);

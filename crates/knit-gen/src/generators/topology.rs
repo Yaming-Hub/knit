@@ -153,7 +153,11 @@ impl TreeGenerator {
     /// Create from plan parameters. Expected keys: `max_depth`, `branching_mean`.
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
         let max_depth = params.get("max_depth").copied().unwrap_or(4.0).max(1.0) as usize;
-        let branching_mean = params.get("branching_mean").copied().unwrap_or(3.0).max(0.1);
+        let branching_mean = params
+            .get("branching_mean")
+            .copied()
+            .unwrap_or(3.0)
+            .max(0.1);
         Self {
             max_depth,
             branching_mean,
@@ -179,8 +183,7 @@ impl FieldGenerator for TreeGenerator {
         queue.push_back((0, 0));
 
         let poisson = Poisson::new(self.branching_mean)
-            .unwrap_or_else(|_| Poisson::new(2.0)
-                .expect("lambda=2.0 is always valid"));
+            .unwrap_or_else(|_| Poisson::new(2.0).expect("lambda=2.0 is always valid"));
 
         while parent_ids.len() < count {
             let (parent_idx, depth) = match queue.pop_front() {
@@ -259,7 +262,11 @@ impl WattsStrogatzGenerator {
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
         let k_raw = params.get("k").copied().unwrap_or(4.0).max(2.0) as usize;
         // Ensure k is even
-        let k = if k_raw.is_multiple_of(2) { k_raw } else { k_raw + 1 };
+        let k = if k_raw.is_multiple_of(2) {
+            k_raw
+        } else {
+            k_raw + 1
+        };
         let beta = params.get("beta").copied().unwrap_or(0.3).clamp(0.0, 1.0);
         Self { k, beta }
     }
@@ -470,7 +477,10 @@ mod tests {
 
         // Check: at least one root (null parent).
         let null_count = (0..500).filter(|&i| parents.is_null(i)).count();
-        assert!(null_count >= 1, "expected at least 1 root, got {null_count}");
+        assert!(
+            null_count >= 1,
+            "expected at least 1 root, got {null_count}"
+        );
 
         // Check: all non-null parent ids point to a valid earlier node.
         for i in 0..500 {
@@ -530,8 +540,14 @@ mod tests {
             .filter(|&i| targets.value(i) == ((i + 1) % 100) as i64)
             .count();
         // At least some should be ring-like, and at least some should be rewired
-        assert!(ring_targets > 30, "expected some ring edges, got {ring_targets}");
-        assert!(ring_targets < 95, "expected some rewired edges, got {ring_targets} ring");
+        assert!(
+            ring_targets > 30,
+            "expected some ring edges, got {ring_targets}"
+        );
+        assert!(
+            ring_targets < 95,
+            "expected some rewired edges, got {ring_targets} ring"
+        );
     }
 
     #[test]
@@ -586,10 +602,11 @@ mod tests {
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With p=0.99, almost all nodes should have a neighbour (very few isolated)
-        let non_self = (0..50)
-            .filter(|&i| targets.value(i) != i as i64)
-            .count();
-        assert!(non_self > 45, "expected most nodes to have edges, got {non_self}");
+        let non_self = (0..50).filter(|&i| targets.value(i) != i as i64).count();
+        assert!(
+            non_self > 45,
+            "expected most nodes to have edges, got {non_self}"
+        );
     }
 
     #[test]
@@ -604,10 +621,11 @@ mod tests {
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With p=0.01, most nodes should be isolated (self-referencing)
-        let isolated = (0..100)
-            .filter(|&i| targets.value(i) == i as i64)
-            .count();
-        assert!(isolated > 30, "expected many isolated nodes with p=0.01, got {isolated}");
+        let isolated = (0..100).filter(|&i| targets.value(i) == i as i64).count();
+        assert!(
+            isolated > 30,
+            "expected many isolated nodes with p=0.01, got {isolated}"
+        );
     }
 
     #[test]

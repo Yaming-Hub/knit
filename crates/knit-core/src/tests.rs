@@ -3,8 +3,8 @@
 
 use std::collections::BTreeMap;
 
-use crate::types::*;
 use crate::error::ModelError;
+use crate::types::*;
 
 // ── Value serde ─────────────────────────────────────────────────────
 
@@ -133,10 +133,7 @@ fn null_spec_display() {
     assert_eq!(NullSpec::Never.to_string(), "never");
     assert_eq!(NullSpec::Always.to_string(), "always");
     assert_eq!(NullSpec::Probability(0.1).to_string(), "probability(0.1)");
-    assert_eq!(
-        NullSpec::Pattern { every_n: 5 }.to_string(),
-        "every_5"
-    );
+    assert_eq!(NullSpec::Pattern { every_n: 5 }.to_string(), "every_5");
 }
 
 // ── DataType Display ────────────────────────────────────────────────
@@ -378,7 +375,10 @@ fn model_error_missing_field_message() {
         path: "entities[0]".into(),
         field: "name".into(),
     };
-    assert_eq!(err.to_string(), "entities[0]: missing required field 'name'");
+    assert_eq!(
+        err.to_string(),
+        "entities[0]: missing required field 'name'"
+    );
 }
 
 #[test]

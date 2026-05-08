@@ -191,10 +191,7 @@ mod tests {
         let field = &model.entities[0].fields[0];
         match field.generator.as_ref().unwrap() {
             GeneratorSpec::Distribution { spec } => {
-                assert_eq!(
-                    spec.kind,
-                    knit_core::DistributionKind::Normal
-                );
+                assert_eq!(spec.kind, knit_core::DistributionKind::Normal);
                 assert_eq!(spec.params.get("mean"), Some(&35.0));
                 assert_eq!(spec.params.get("std_dev"), Some(&12.0));
             }

@@ -47,9 +47,7 @@ fn knit_data_type_to_arrow(dt: &knit_core::DataType) -> arrow::datatypes::DataTy
         knit_core::DataType::Int => arrow::datatypes::DataType::Int64,
         knit_core::DataType::Int32 => arrow::datatypes::DataType::Int32,
         knit_core::DataType::Float => arrow::datatypes::DataType::Float64,
-        knit_core::DataType::String | knit_core::DataType::Uuid => {
-            arrow::datatypes::DataType::Utf8
-        }
+        knit_core::DataType::String | knit_core::DataType::Uuid => arrow::datatypes::DataType::Utf8,
         knit_core::DataType::Date => arrow::datatypes::DataType::Date32,
         knit_core::DataType::Datetime
         | knit_core::DataType::DatetimeUs
@@ -98,10 +96,8 @@ fn coerce_to_logical_type(
                 return arr;
             }
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
-                let bools: arrow::array::BooleanArray = i64_arr
-                    .iter()
-                    .map(|v| v.map(|x| x != 0))
-                    .collect();
+                let bools: arrow::array::BooleanArray =
+                    i64_arr.iter().map(|v| v.map(|x| x != 0)).collect();
                 return Arc::new(bools);
             }
             arr
@@ -236,7 +232,8 @@ impl GenerationEngine {
                 "built graph adjacency"
             );
 
-            self.graph_adjacency.insert(graph.name.clone(), Arc::new(adjacency));
+            self.graph_adjacency
+                .insert(graph.name.clone(), Arc::new(adjacency));
         }
     }
 
@@ -261,7 +258,8 @@ impl GenerationEngine {
                 entries = map.len(),
                 "built PK reverse map"
             );
-            self.pk_reverse_maps.insert(entity_name.to_string(), Arc::new(map));
+            self.pk_reverse_maps
+                .insert(entity_name.to_string(), Arc::new(map));
         }
     }
 
@@ -391,15 +389,21 @@ impl GenerationEngine {
         F: FnMut(&str, RecordBatch) -> Result<(), GenError> + Send,
     {
         // Auto-build relationship graphs if any are missing.
-        let needs_graphs = plan.actor_pool.graph_plans.iter().any(|gp| {
-            !self.graph_adjacency.contains_key(&gp.name)
-        });
+        let needs_graphs = plan
+            .actor_pool
+            .graph_plans
+            .iter()
+            .any(|gp| !self.graph_adjacency.contains_key(&gp.name));
         if needs_graphs {
             self.build_graphs(plan);
         }
 
         for (phase_idx, phase) in plan.phases.iter().enumerate() {
-            tracing::info!(phase = phase_idx, entities = phase.entity_plans.len(), "starting phase");
+            tracing::info!(
+                phase = phase_idx,
+                entities = phase.entity_plans.len(),
+                "starting phase"
+            );
 
             // Pre-create key stores for entities that need them.
             for ep in &phase.entity_plans {
@@ -430,7 +434,8 @@ impl GenerationEngine {
 
             // Enforce per-actor inter-event minimum gaps on entities that
             // have ActorTemporal generators (prevents duplicate timestamps).
-            let final_batches = self.apply_inter_event_gaps(plan, &phase.entity_plans, resolved_batches);
+            let final_batches =
+                self.apply_inter_event_gaps(plan, &phase.entity_plans, resolved_batches);
 
             // Deliver batches through the callback (sequential, in order).
             for (entity_name, batch) in &final_batches {
@@ -465,9 +470,9 @@ impl GenerationEngine {
             }
             KeyStoreKind::SampledSubset { sample_size } => {
                 // Use a deterministic seed derived from entity name for reproducibility.
-                let seed = entity_name.bytes().fold(0u64, |acc, b| {
-                    acc.wrapping_mul(31).wrapping_add(b as u64)
-                });
+                let seed = entity_name
+                    .bytes()
+                    .fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(b as u64));
                 tracing::info!(
                     entity = entity_name,
                     sample_size,
@@ -491,9 +496,11 @@ impl GenerationEngine {
         if self.string_key_stores.contains_key(entity_name) {
             return;
         }
-        let store: Arc<dyn StringKeyStore> =
-            Arc::new(InMemoryStringKeyStore::with_capacity(estimated_rows as usize));
-        self.string_key_stores.insert(entity_name.to_string(), store);
+        let store: Arc<dyn StringKeyStore> = Arc::new(InMemoryStringKeyStore::with_capacity(
+            estimated_rows as usize,
+        ));
+        self.string_key_stores
+            .insert(entity_name.to_string(), store);
     }
 
     /// Check if an entity has a string/UUID primary key (vs Int64).
@@ -916,7 +923,9 @@ impl GenerationEngine {
         }
 
         // Safety: only Int64 actor PKs supported (string/UUID key stores have no reverse map)
-        if self.string_key_stores.contains_key(actor_entity) && !self.key_stores.contains_key(actor_entity) {
+        if self.string_key_stores.contains_key(actor_entity)
+            && !self.key_stores.contains_key(actor_entity)
+        {
             tracing::warn!(
                 entity = %ep.entity_name,
                 field = %fp.field_name,
@@ -1006,7 +1015,9 @@ impl GenerationEngine {
         }
 
         // Safety: only Int64 actor PKs supported
-        if self.string_key_stores.contains_key(actor_entity) && !self.key_stores.contains_key(actor_entity) {
+        if self.string_key_stores.contains_key(actor_entity)
+            && !self.key_stores.contains_key(actor_entity)
+        {
             tracing::warn!(
                 entity = %ep.entity_name,
                 field = %fp.field_name,
@@ -1136,14 +1147,12 @@ impl GenerationEngine {
             return Some(idx);
         }
         // Fallback: first Sequence or Uuid field.
-        ep.field_plans
-            .iter()
-            .position(|fp| {
-                matches!(
-                    &fp.generator_plan,
-                    GeneratorPlan::Sequence { .. } | GeneratorPlan::Uuid
-                )
-            })
+        ep.field_plans.iter().position(|fp| {
+            matches!(
+                &fp.generator_plan,
+                GeneratorPlan::Sequence { .. } | GeneratorPlan::Uuid
+            )
+        })
     }
 
     /// Generate a single batch for one partition slice.
@@ -1229,8 +1238,7 @@ impl GenerationEngine {
                 };
 
                 // Per-batch deterministic seed
-                let mut rng =
-                    ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
+                let mut rng = ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
                 batch_counter += 1;
 
                 let count = batch.num_rows();
@@ -1250,21 +1258,21 @@ impl GenerationEngine {
                             })
                             .collect()
                     }
-                    _ => (0..count)
-                        .map(|_| target_ks.sample(&mut rng))
-                        .collect(),
+                    _ => (0..count).map(|_| target_ks.sample(&mut rng)).collect(),
                 };
 
                 // Replace the FK column in the batch
-                let new_arr: arrow::array::ArrayRef =
-                    Arc::new(Int64Array::from(fk_values));
+                let new_arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(fk_values));
 
                 // Build a new schema with the FK column typed as Int64
                 let schema = batch.schema();
                 let mut fields: Vec<arrow::datatypes::Field> =
                     schema.fields().iter().map(|f| f.as_ref().clone()).collect();
-                fields[col_idx] =
-                    arrow::datatypes::Field::new(&dr.from_field, arrow::datatypes::DataType::Int64, true);
+                fields[col_idx] = arrow::datatypes::Field::new(
+                    &dr.from_field,
+                    arrow::datatypes::DataType::Int64,
+                    true,
+                );
                 let new_schema = Arc::new(arrow::datatypes::Schema::new(fields));
 
                 // Replace the column
@@ -1273,8 +1281,7 @@ impl GenerationEngine {
                     .collect();
                 columns[col_idx] = new_arr;
 
-                *batch =
-                    RecordBatch::try_new(new_schema, columns).map_err(GenError::Arrow)?;
+                *batch = RecordBatch::try_new(new_schema, columns).map_err(GenError::Arrow)?;
             }
         }
 
@@ -1377,18 +1384,18 @@ mod tests {
                                 generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
-            precision: None,
-            actor_column: false,
-        },
+                                precision: None,
+                                actor_column: false,
+                            },
                             FieldPlan {
                                 field_name: "value".into(),
                                 data_type: knit_core::DataType::Int,
                                 generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(99)),
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
-            precision: None,
-            actor_column: false,
-        },
+                                precision: None,
+                                actor_column: false,
+                            },
                         ],
                         estimated_row_count: 100,
                         estimated_byte_size: 800,
@@ -1413,9 +1420,9 @@ mod tests {
                                 generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
-            precision: None,
-            actor_column: false,
-        },
+                                precision: None,
+                                actor_column: false,
+                            },
                             FieldPlan {
                                 field_name: "parent_id".into(),
                                 data_type: knit_core::DataType::Int,
@@ -1426,9 +1433,9 @@ mod tests {
                                 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
-            precision: None,
-            actor_column: false,
-        },
+                                precision: None,
+                                actor_column: false,
+                            },
                         ],
                         estimated_row_count: 500,
                         estimated_byte_size: 4000,
@@ -1469,7 +1476,10 @@ mod tests {
 
         engine
             .execute(&plan, move |entity, batch| {
-                batches_ref.lock().unwrap().push((entity.to_string(), batch));
+                batches_ref
+                    .lock()
+                    .unwrap()
+                    .push((entity.to_string(), batch));
                 Ok(())
             })
             .expect("execution failed");
@@ -1584,16 +1594,16 @@ mod tests {
                     field_plans: vec![
                         FieldPlan {
                             field_name: "id".into(),
-                                data_type: knit_core::DataType::Int,
+                            data_type: knit_core::DataType::Int,
                             generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                             null_plan: NullPlan::Never,
                             dependency_order: 0,
-            precision: None,
-            actor_column: false,
-        },
+                            precision: None,
+                            actor_column: false,
+                        },
                         FieldPlan {
                             field_name: "manager_id".into(),
-                                data_type: knit_core::DataType::Int,
+                            data_type: knit_core::DataType::Int,
                             generator_plan: GeneratorPlan::ForeignKey {
                                 target_entity: "employee".into(),
                                 target_field: "id".into(),
@@ -1601,9 +1611,9 @@ mod tests {
                             },
                             null_plan: NullPlan::Never,
                             dependency_order: 1,
-            precision: None,
-            actor_column: false,
-        },
+                            precision: None,
+                            actor_column: false,
+                        },
                     ],
                     estimated_row_count: 50,
                     estimated_byte_size: 400,
@@ -1677,7 +1687,10 @@ mod tests {
             })
             .collect();
 
-        assert!(!deferred_cols.is_empty(), "should have manager_id column in batches");
+        assert!(
+            !deferred_cols.is_empty(),
+            "should have manager_id column in batches"
+        );
 
         for arr in deferred_cols {
             let mut has_null = false;
@@ -1726,20 +1739,40 @@ mod tests {
                 entity_plans: vec![EntityPlan {
                     entity_name: "items".into(),
                     partitions: vec![
-                        PartitionRange { partition_id: 0, start_row: 0, end_row: 250, seed: 10 },
-                        PartitionRange { partition_id: 1, start_row: 250, end_row: 500, seed: 20 },
-                        PartitionRange { partition_id: 2, start_row: 500, end_row: 750, seed: 30 },
-                        PartitionRange { partition_id: 3, start_row: 750, end_row: 1000, seed: 40 },
+                        PartitionRange {
+                            partition_id: 0,
+                            start_row: 0,
+                            end_row: 250,
+                            seed: 10,
+                        },
+                        PartitionRange {
+                            partition_id: 1,
+                            start_row: 250,
+                            end_row: 500,
+                            seed: 20,
+                        },
+                        PartitionRange {
+                            partition_id: 2,
+                            start_row: 500,
+                            end_row: 750,
+                            seed: 30,
+                        },
+                        PartitionRange {
+                            partition_id: 3,
+                            start_row: 750,
+                            end_row: 1000,
+                            seed: 40,
+                        },
                     ],
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
-                                data_type: knit_core::DataType::Int,
+                        data_type: knit_core::DataType::Int,
                         generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
-            precision: None,
-            actor_column: false,
-        }],
+                        precision: None,
+                        actor_column: false,
+                    }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
                     primary_key_field_index: Some(0),
@@ -1817,13 +1850,13 @@ mod tests {
                     }],
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
-                                data_type: knit_core::DataType::Int,
+                        data_type: knit_core::DataType::Int,
                         generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
-            precision: None,
-            actor_column: false,
-        }],
+                        precision: None,
+                        actor_column: false,
+                    }],
                     estimated_row_count: 25,
                     estimated_byte_size: 200,
                     primary_key_field_index: Some(0),
@@ -1901,7 +1934,10 @@ mod tests {
         });
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("intentional error"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("intentional error"));
     }
 
     #[test]
@@ -1937,13 +1973,13 @@ mod tests {
                     }],
                     field_plans: vec![FieldPlan {
                         field_name: "val".into(),
-                                data_type: knit_core::DataType::Int,
+                        data_type: knit_core::DataType::Int,
                         generator_plan: GeneratorPlan::Constant(knit_core::Value::Int(42)),
                         null_plan: NullPlan::Probability(0.5),
                         dependency_order: 0,
-            precision: None,
-            actor_column: false,
-        }],
+                        precision: None,
+                        actor_column: false,
+                    }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
                     primary_key_field_index: Some(0),
@@ -2009,13 +2045,9 @@ mod tests {
     fn apply_precision_rounds_floats() {
         use arrow::array::Float64Array;
 
-        let arr: arrow::array::ArrayRef =
-            Arc::new(Float64Array::from(vec![1.23456, 99.999, 0.1]));
+        let arr: arrow::array::ArrayRef = Arc::new(Float64Array::from(vec![1.23456, 99.999, 0.1]));
         let result = apply_precision(arr, Some(2));
-        let float_arr = result
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let float_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(float_arr.value(0), 1.23);
         assert_eq!(float_arr.value(1), 100.0);
         assert_eq!(float_arr.value(2), 0.1);
@@ -2025,13 +2057,9 @@ mod tests {
     fn apply_precision_none_is_noop() {
         use arrow::array::Float64Array;
 
-        let arr: arrow::array::ArrayRef =
-            Arc::new(Float64Array::from(vec![1.23456789]));
+        let arr: arrow::array::ArrayRef = Arc::new(Float64Array::from(vec![1.23456789]));
         let result = apply_precision(arr.clone(), None);
-        let float_arr = result
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let float_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(float_arr.value(0), 1.23456789);
     }
 
@@ -2042,10 +2070,7 @@ mod tests {
         let arr: arrow::array::ArrayRef =
             Arc::new(Float64Array::from(vec![Some(3.14159), None, Some(2.71828)]));
         let result = apply_precision(arr, Some(2));
-        let float_arr = result
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let float_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(float_arr.value(0), 3.14);
         assert!(float_arr.is_null(1));
         assert_eq!(float_arr.value(2), 2.72);
@@ -2068,8 +2093,7 @@ mod tests {
     fn coerce_bool_preserves_nulls() {
         use arrow::array::BooleanArray;
 
-        let arr: arrow::array::ArrayRef =
-            Arc::new(Int64Array::from(vec![Some(1), None, Some(0)]));
+        let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(vec![Some(1), None, Some(0)]));
         let result = coerce_to_logical_type(arr, &knit_core::DataType::Bool);
         let bool_arr = result.as_any().downcast_ref::<BooleanArray>().unwrap();
         assert_eq!(bool_arr.value(0), true);

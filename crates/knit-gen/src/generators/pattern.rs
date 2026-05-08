@@ -163,7 +163,10 @@ mod tests {
         for i in 0..100 {
             let s = str_arr.value(i);
             assert_eq!(s.len(), 6);
-            assert!(s.chars().all(|c| c.is_ascii_digit()), "expected all digits: {s}");
+            assert!(
+                s.chars().all(|c| c.is_ascii_digit()),
+                "expected all digits: {s}"
+            );
         }
     }
 
@@ -209,6 +212,10 @@ mod tests {
         let arr = gen.generate(&mut rng, 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let unique: std::collections::HashSet<&str> = (0..100).map(|i| str_arr.value(i)).collect();
-        assert!(unique.len() > 10, "expected variety, got {} unique values", unique.len());
+        assert!(
+            unique.len() > 10,
+            "expected variety, got {} unique values",
+            unique.len()
+        );
     }
 }

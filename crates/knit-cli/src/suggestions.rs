@@ -51,7 +51,9 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
     }
 
     if lower.contains("duplicate") && lower.contains("entity") {
-        return Some("Each entity name must be unique within a schema. Rename one of the duplicates.");
+        return Some(
+            "Each entity name must be unique within a schema. Rename one of the duplicates.",
+        );
     }
 
     if lower.contains("missing") && lower.contains("primary_key") {

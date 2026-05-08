@@ -110,7 +110,8 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
                     .collect();
 
                 for target_pk in &target_pks {
-                    let overlap = value_overlap_ratio(&col.distinct_values, &target_pk.distinct_values);
+                    let overlap =
+                        value_overlap_ratio(&col.distinct_values, &target_pk.distinct_values);
                     if overlap < 0.1 {
                         continue;
                     }
@@ -143,7 +144,11 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
     detect_composite_keys(tables, &mut candidates);
 
     // Sort by confidence descending
-    candidates.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap_or(std::cmp::Ordering::Equal));
+    candidates.sort_by(|a, b| {
+        b.confidence
+            .partial_cmp(&a.confidence)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     // Cap results
     candidates.truncate(1000);
@@ -366,7 +371,10 @@ mod tests {
     #[test]
     fn value_overlap_full() {
         let a: HashSet<String> = ["1", "2", "3"].iter().map(|s| s.to_string()).collect();
-        let b: HashSet<String> = ["1", "2", "3", "4", "5"].iter().map(|s| s.to_string()).collect();
+        let b: HashSet<String> = ["1", "2", "3", "4", "5"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         let overlap = value_overlap_ratio(&a, &b);
         assert!((overlap - 1.0).abs() < 0.01);
     }
@@ -387,6 +395,9 @@ mod tests {
             row_count: 10,
             distinct_count: 10,
         };
-        assert_eq!(infer_cardinality(&source, &target), RelationshipKind::OneToMany);
+        assert_eq!(
+            infer_cardinality(&source, &target),
+            RelationshipKind::OneToMany
+        );
     }
 }

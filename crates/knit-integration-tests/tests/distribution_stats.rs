@@ -5,10 +5,7 @@ use arrow::array::{Array, Float64Array};
 use knit_integration_tests::generate_from_toml;
 
 /// Collect all `Float64` values from the named column across batches.
-fn collect_f64(
-    batches: &[arrow::record_batch::RecordBatch],
-    column: &str,
-) -> Vec<f64> {
+fn collect_f64(batches: &[arrow::record_batch::RecordBatch], column: &str) -> Vec<f64> {
     let mut values = Vec::new();
     for batch in batches {
         let idx = batch
@@ -64,10 +61,7 @@ std_dev = 10.0
 "#;
 
     let batches = generate_from_toml(schema);
-    let values = collect_f64(
-        batches.get("data").expect("no data batches"),
-        "value",
-    );
+    let values = collect_f64(batches.get("data").expect("no data batches"), "value");
 
     assert_eq!(values.len(), 10_000, "expected 10 000 values");
 
@@ -111,10 +105,7 @@ max = 50.0
 "#;
 
     let batches = generate_from_toml(schema);
-    let values = collect_f64(
-        batches.get("data").expect("no data batches"),
-        "value",
-    );
+    let values = collect_f64(batches.get("data").expect("no data batches"), "value");
 
     assert_eq!(values.len(), 5_000);
 
@@ -211,10 +202,7 @@ lambda = 2.0
 "#;
 
     let batches = generate_from_toml(schema);
-    let values = collect_f64(
-        batches.get("data").expect("no data batches"),
-        "value",
-    );
+    let values = collect_f64(batches.get("data").expect("no data batches"), "value");
 
     assert_eq!(values.len(), 5_000);
 

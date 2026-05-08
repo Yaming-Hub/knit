@@ -85,10 +85,7 @@ mod tests {
                     "UUID parts should be hex: {v}"
                 );
             }
-            assert_eq!(
-                v, &v.to_ascii_lowercase(),
-                "UUID should be lowercase: {v}"
-            );
+            assert_eq!(v, &v.to_ascii_lowercase(), "UUID should be lowercase: {v}");
         }
     }
 

@@ -7,7 +7,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use arrow::array::{Array, ArrayRef, BooleanArray, Float64Array, Int32Array, Int64Array, StringArray};
+use arrow::array::{
+    Array, ArrayRef, BooleanArray, Float64Array, Int32Array, Int64Array, StringArray,
+};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
@@ -178,18 +180,16 @@ mod tests {
             pools: vec![ActorEntityPool {
                 entity_name: "users".into(),
                 actor_count: 3,
-                persona_weights: vec![
-                    PersonaWeight {
-                        name: "power".into(),
-                        weight: 1.0,
-                        traits: {
-                            let mut m = BTreeMap::new();
-                            m.insert("activity_rate".into(), Value::Float(5.0));
-                            m.insert("label".into(), Value::Float(1.0));
-                            m
-                        },
+                persona_weights: vec![PersonaWeight {
+                    name: "power".into(),
+                    weight: 1.0,
+                    traits: {
+                        let mut m = BTreeMap::new();
+                        m.insert("activity_rate".into(), Value::Float(5.0));
+                        m.insert("label".into(), Value::Float(1.0));
+                        m
                     },
-                ],
+                }],
             }],
             graph_plans: vec![],
         };
@@ -244,8 +244,7 @@ mod tests {
         );
 
         let mut batch_columns = HashMap::new();
-        let user_ids =
-            Arc::new(Int64Array::from(vec![Some(100), None, Some(300)])) as ArrayRef;
+        let user_ids = Arc::new(Int64Array::from(vec![Some(100), None, Some(300)])) as ArrayRef;
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");

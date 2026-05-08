@@ -158,17 +158,21 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Result<Value, BindError> {
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
             let arr = downcast_col!(col, array::TimestampMicrosecondArray)?;
-            Ok(match chrono::DateTime::from_timestamp_micros(arr.value(row)) {
-                Some(d) => Value::from(d.to_rfc3339()),
-                None => Value::from(()),
-            })
+            Ok(
+                match chrono::DateTime::from_timestamp_micros(arr.value(row)) {
+                    Some(d) => Value::from(d.to_rfc3339()),
+                    None => Value::from(()),
+                },
+            )
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
             let arr = downcast_col!(col, array::TimestampMillisecondArray)?;
-            Ok(match chrono::DateTime::from_timestamp_millis(arr.value(row)) {
-                Some(d) => Value::from(d.to_rfc3339()),
-                None => Value::from(()),
-            })
+            Ok(
+                match chrono::DateTime::from_timestamp_millis(arr.value(row)) {
+                    Some(d) => Value::from(d.to_rfc3339()),
+                    None => Value::from(()),
+                },
+            )
         }
         DataType::Timestamp(TimeUnit::Second, _) => {
             let arr = downcast_col!(col, array::TimestampSecondArray)?;
@@ -216,7 +220,10 @@ fn row_to_value(batch: &RecordBatch, row: usize) -> Result<Value, BindError> {
     let columns = batch.columns();
     let mut map = std::collections::BTreeMap::new();
     for (i, field) in fields.iter().enumerate() {
-        map.insert(field.name().clone(), cell_to_value(columns[i].as_ref(), row)?);
+        map.insert(
+            field.name().clone(),
+            cell_to_value(columns[i].as_ref(), row)?,
+        );
     }
     Ok(Value::from(map))
 }
@@ -230,7 +237,10 @@ fn schema_to_value(batch: &RecordBatch) -> Value {
         .map(|f| {
             let mut m = std::collections::BTreeMap::new();
             m.insert("name".to_string(), Value::from(f.name().as_str()));
-            m.insert("type".to_string(), Value::from(format!("{}", f.data_type())));
+            m.insert(
+                "type".to_string(),
+                Value::from(format!("{}", f.data_type())),
+            );
             m.insert("nullable".to_string(), Value::from(f.is_nullable()));
             Value::from(m)
         })
@@ -342,14 +352,16 @@ mod tests {
     fn test_per_row_rendering() {
         let buf = Cursor::new(Vec::new());
         let tmpl = "INSERT INTO users VALUES ({{ row.id }}, '{{ row.name }}', {{ row.score }});";
-        let mut sink = TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
         sink.write_batch(&test_batch()).unwrap();
         let stats = Box::new(sink).finish().unwrap();
         assert_eq!(stats.rows_written, 2);
 
         // Reconstruct to check output
         let buf2 = Cursor::new(Vec::new());
-        let mut sink2 = TemplateSink::new(buf2, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        let mut sink2 =
+            TemplateSink::new(buf2, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
         sink2.write_batch(&test_batch()).unwrap();
         let stats2 = Box::new(sink2).finish().unwrap();
         assert!(stats2.bytes_written > 0);
@@ -361,7 +373,8 @@ mod tests {
         let tmpl = r#"<table>
 {% for r in rows %}<tr><td>{{ r.id }}</td><td>{{ r.name }}</td></tr>
 {% endfor %}</table>"#;
-        let mut sink = TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerBatch)).unwrap();
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerBatch)).unwrap();
         sink.write_batch(&test_batch()).unwrap();
         let inner = sink.writer.into_inner();
         let output = String::from_utf8(inner).unwrap();
@@ -390,9 +403,7 @@ mod tests {
 
     #[test]
     fn test_null_handling() {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("name", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![Field::new("name", DataType::Utf8, true)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(StringArray::from(vec![None as Option<&str>]))],
@@ -401,7 +412,8 @@ mod tests {
 
         let buf = Cursor::new(Vec::new());
         let tmpl = "name={{ row.name }}";
-        let mut sink = TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
+        let mut sink =
+            TemplateSink::new(buf, tmpl.to_string(), Some(TemplateMode::PerRow)).unwrap();
         sink.write_batch(&batch).unwrap();
         let inner = sink.writer.into_inner();
         let output = String::from_utf8(inner).unwrap();
