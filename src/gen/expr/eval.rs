@@ -1,0 +1,1526 @@
+//! Vectorized expression evaluator over Arrow arrays.
+//!
+//! Walks the expression AST and produces an [`ArrayRef`] for a batch of rows.
+//! Uses per-element iteration with null-aware logic.
+//!
+//! # Null semantics
+//!
+//! - **Scalar ops**: SQL-like null propagation — if any operand is null, the result is null.
+//! - **`coalesce`**: Returns the first non-null argument.
+//! - **`if`**: Selects branch based on condition.
+//! - **`nullif`**: Returns null if both arguments are equal.
+
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use arrow::array::{Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray};
+use arrow::datatypes::DataType;
+
+use super::ast::{BinOp, Expr, LiteralValue, UnOp};
+
+/// Error during expression evaluation.
+#[derive(Debug, Clone)]
+pub struct EvalError {
+    /// Error message.
+    pub message: String,
+}
+
+impl std::fmt::Display for EvalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "eval error: {}", self.message)
+    }
+}
+
+impl std::error::Error for EvalError {}
+
+/// Context for evaluation — provides column data and parameters.
+pub struct EvalContext<'a> {
+    /// Batch columns keyed by field name.
+    pub columns: &'a HashMap<String, ArrayRef>,
+    /// User parameters keyed by name.
+    pub params: &'a HashMap<String, String>,
+    /// Number of rows in the batch.
+    pub row_count: usize,
+}
+
+/// Evaluate an expression AST against a batch context, producing an Arrow array.
+pub fn evaluate(expr: &Expr, ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError> {
+    match expr {
+        Expr::Literal(lit) => eval_literal(lit, ctx.row_count),
+        Expr::FieldRef(name) => {
+            ctx.columns.get(name).cloned().ok_or_else(|| EvalError {
+                message: format!("field `{name}` not found in batch"),
+            })
+        }
+        Expr::ParamRef(key) => {
+            let value = ctx.params.get(key).ok_or_else(|| EvalError {
+                message: format!("parameter `{key}` not found"),
+            })?;
+            if let Ok(i) = value.parse::<i64>() {
+                Ok(Arc::new(Int64Array::from(vec![i; ctx.row_count])))
+            } else if let Ok(f) = value.parse::<f64>() {
+                Ok(Arc::new(Float64Array::from(vec![f; ctx.row_count])))
+            } else {
+                Ok(Arc::new(StringArray::from(
+                    vec![value.as_str(); ctx.row_count],
+                )))
+            }
+        }
+        Expr::BinaryOp { left, op, right } => {
+            let left_arr = evaluate(left, ctx)?;
+            let right_arr = evaluate(right, ctx)?;
+            eval_binary_op(&left_arr, *op, &right_arr)
+        }
+        Expr::UnaryOp { op, operand } => {
+            let arr = evaluate(operand, ctx)?;
+            eval_unary_op(*op, &arr)
+        }
+        Expr::FuncCall { name, args } => eval_function(name, args, ctx),
+    }
+}
+
+// ─── Downcasting helpers ────────────────────────────────────────────────────
+
+fn as_i64(arr: &ArrayRef) -> Option<&Int64Array> {
+    arr.as_any().downcast_ref::<Int64Array>()
+}
+
+fn as_f64(arr: &ArrayRef) -> Option<&Float64Array> {
+    arr.as_any().downcast_ref::<Float64Array>()
+}
+
+fn as_str(arr: &ArrayRef) -> Option<&StringArray> {
+    arr.as_any().downcast_ref::<StringArray>()
+}
+
+fn as_bool(arr: &ArrayRef) -> Option<&BooleanArray> {
+    arr.as_any().downcast_ref::<BooleanArray>()
+}
+
+fn require_bool(arr: &ArrayRef) -> Result<&BooleanArray, EvalError> {
+    as_bool(arr).ok_or_else(|| EvalError {
+        message: format!("expected Boolean, got {:?}", arr.data_type()),
+    })
+}
+
+// ─── Literal ────────────────────────────────────────────────────────────────
+
+fn eval_literal(lit: &LiteralValue, count: usize) -> Result<ArrayRef, EvalError> {
+    Ok(match lit {
+        LiteralValue::Int(v) => Arc::new(Int64Array::from(vec![*v; count])),
+        LiteralValue::Float(v) => Arc::new(Float64Array::from(vec![*v; count])),
+        LiteralValue::Str(v) => Arc::new(StringArray::from(vec![v.as_str(); count])),
+        LiteralValue::Bool(v) => Arc::new(BooleanArray::from(vec![*v; count])),
+        // Null uses a NullArray that signals "untyped null" — downstream functions
+        // (if, coalesce, nullif) must handle this by coercing to the peer type.
+        LiteralValue::Null => Arc::new(arrow::array::NullArray::new(count)),
+    })
+}
+
+// ─── Numeric coercion ───────────────────────────────────────────────────────
+
+fn is_null_array(arr: &ArrayRef) -> bool {
+    arr.data_type() == &DataType::Null
+}
+
+/// Create a typed all-null array matching the given data type.
+fn typed_nulls(dt: &DataType, count: usize) -> ArrayRef {
+    match dt {
+        DataType::Int64 => Arc::new(Int64Array::from(vec![None::<i64>; count])),
+        DataType::Float64 => Arc::new(Float64Array::from(vec![None::<f64>; count])),
+        DataType::Utf8 => Arc::new(StringArray::from(vec![None::<&str>; count])),
+        DataType::Boolean => Arc::new(BooleanArray::from(vec![None::<bool>; count])),
+        _ => Arc::new(arrow::array::NullArray::new(count)),
+    }
+}
+
+/// Extract f64 values from an array, supporting Int64, Float64, and Null.
+fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
+    if is_null_array(arr) {
+        return Ok(vec![None; arr.len()]);
+    }
+    if let Some(fa) = as_f64(arr) {
+        Ok((0..fa.len())
+            .map(|i| if fa.is_null(i) { None } else { Some(fa.value(i)) })
+            .collect())
+    } else if let Some(ia) = as_i64(arr) {
+        Ok((0..ia.len())
+            .map(|i| {
+                if ia.is_null(i) {
+                    None
+                } else {
+                    Some(ia.value(i) as f64)
+                }
+            })
+            .collect())
+    } else {
+        Err(EvalError {
+            message: format!("cannot convert {:?} to Float64", arr.data_type()),
+        })
+    }
+}
+
+fn is_numeric(dt: &DataType) -> bool {
+    matches!(dt, DataType::Int64 | DataType::Float64)
+}
+
+// ─── Binary ops ─────────────────────────────────────────────────────────────
+
+fn eval_binary_op(left: &ArrayRef, op: BinOp, right: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    match op {
+        BinOp::Add => eval_arith(left, right, op),
+        BinOp::Sub | BinOp::Mul | BinOp::Div => eval_arith(left, right, op),
+        BinOp::Mod => eval_mod(left, right),
+        BinOp::Eq | BinOp::Ne | BinOp::Lt | BinOp::Gt | BinOp::Le | BinOp::Ge => {
+            eval_cmp(left, right, op)
+        }
+        BinOp::And => {
+            let l = require_bool(left)?;
+            let r = require_bool(right)?;
+            // SQL three-valued logic: false AND null = false
+            let result: BooleanArray = (0..l.len())
+                .map(|i| match (null_safe_bool(l, i), null_safe_bool(r, i)) {
+                    (Some(a), Some(b)) => Some(a && b),
+                    (Some(false), _) | (_, Some(false)) => Some(false),
+                    _ => None,
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        BinOp::Or => {
+            let l = require_bool(left)?;
+            let r = require_bool(right)?;
+            // SQL three-valued logic: true OR null = true
+            let result: BooleanArray = (0..l.len())
+                .map(|i| match (null_safe_bool(l, i), null_safe_bool(r, i)) {
+                    (Some(a), Some(b)) => Some(a || b),
+                    (Some(true), _) | (_, Some(true)) => Some(true),
+                    _ => None,
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+    }
+}
+
+fn null_safe_bool(arr: &BooleanArray, i: usize) -> Option<bool> {
+    if arr.is_null(i) {
+        None
+    } else {
+        Some(arr.value(i))
+    }
+}
+
+fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, EvalError> {
+    // NullArray + anything → all null
+    if is_null_array(left) || is_null_array(right) {
+        return Ok(Arc::new(Float64Array::from(vec![None::<f64>; left.len()])));
+    }
+
+    // String concatenation via +
+    if op == BinOp::Add && left.data_type() == &DataType::Utf8 && right.data_type() == &DataType::Utf8
+    {
+        let l = as_str(left).unwrap();
+        let r = as_str(right).unwrap();
+        let result: StringArray = (0..l.len())
+            .map(|i| {
+                if l.is_null(i) || r.is_null(i) {
+                    None
+                } else {
+                    Some(format!("{}{}", l.value(i), r.value(i)))
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+
+    let lv = to_f64_vec(left)?;
+    let rv = to_f64_vec(right)?;
+    let result: Float64Array = lv
+        .iter()
+        .zip(rv.iter())
+        .map(|(a, b)| match (a, b) {
+            (Some(a), Some(b)) => Some(match op {
+                BinOp::Add => a + b,
+                BinOp::Sub => a - b,
+                BinOp::Mul => a * b,
+                BinOp::Div => {
+                    if *b == 0.0 {
+                        return None; // SQL-like: div by zero → null
+                    }
+                    a / b
+                }
+                _ => unreachable!(),
+            }),
+            _ => None,
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_mod(left: &ArrayRef, right: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    if left.data_type() == &DataType::Int64 && right.data_type() == &DataType::Int64 {
+        let la = as_i64(left).unwrap();
+        let ra = as_i64(right).unwrap();
+        let result: Int64Array = (0..la.len())
+            .map(|i| {
+                if la.is_null(i) || ra.is_null(i) {
+                    None
+                } else {
+                    let b = ra.value(i);
+                    if b == 0 {
+                        None
+                    } else {
+                        Some(la.value(i) % b)
+                    }
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    let lv = to_f64_vec(left)?;
+    let rv = to_f64_vec(right)?;
+    let result: Float64Array = lv
+        .iter()
+        .zip(rv.iter())
+        .map(|(a, b)| match (a, b) {
+            (Some(a), Some(b)) if *b != 0.0 => Some(a % b),
+            _ => None,
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_cmp(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, EvalError> {
+    // NullArray compared with anything → all null
+    if is_null_array(left) || is_null_array(right) {
+        return Ok(Arc::new(BooleanArray::from(vec![None::<bool>; left.len()])));
+    }
+
+    if is_numeric(left.data_type()) && is_numeric(right.data_type()) {
+        let lv = to_f64_vec(left)?;
+        let rv = to_f64_vec(right)?;
+        let result: BooleanArray = lv
+            .iter()
+            .zip(rv.iter())
+            .map(|(a, b)| match (a, b) {
+                (Some(a), Some(b)) => Some(match op {
+                    BinOp::Eq => a == b,
+                    BinOp::Ne => a != b,
+                    BinOp::Lt => a < b,
+                    BinOp::Gt => a > b,
+                    BinOp::Le => a <= b,
+                    BinOp::Ge => a >= b,
+                    _ => unreachable!(),
+                }),
+                _ => None,
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+
+    if left.data_type() == &DataType::Utf8 && right.data_type() == &DataType::Utf8 {
+        let l = as_str(left).unwrap();
+        let r = as_str(right).unwrap();
+        let result: BooleanArray = (0..l.len())
+            .map(|i| {
+                if l.is_null(i) || r.is_null(i) {
+                    None
+                } else {
+                    let a = l.value(i);
+                    let b = r.value(i);
+                    Some(match op {
+                        BinOp::Eq => a == b,
+                        BinOp::Ne => a != b,
+                        BinOp::Lt => a < b,
+                        BinOp::Gt => a > b,
+                        BinOp::Le => a <= b,
+                        BinOp::Ge => a >= b,
+                        _ => unreachable!(),
+                    })
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+
+    // Boolean comparison (equality only)
+    if left.data_type() == &DataType::Boolean && right.data_type() == &DataType::Boolean {
+        let l = as_bool(left).unwrap();
+        let r = as_bool(right).unwrap();
+        let result: BooleanArray = (0..l.len())
+            .map(|i| {
+                if l.is_null(i) || r.is_null(i) {
+                    None
+                } else {
+                    let a = l.value(i);
+                    let b = r.value(i);
+                    Some(match op {
+                        BinOp::Eq => a == b,
+                        BinOp::Ne => a != b,
+                        _ => return None,
+                    })
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+
+    Err(EvalError {
+        message: format!(
+            "cannot compare {:?} and {:?}",
+            left.data_type(),
+            right.data_type()
+        ),
+    })
+}
+
+// ─── Unary ops ──────────────────────────────────────────────────────────────
+
+fn eval_unary_op(op: UnOp, arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    match op {
+        UnOp::Neg => {
+            if let Some(ia) = as_i64(arr) {
+                let result: Int64Array =
+                    ia.iter().map(|v| v.map(|i| -i)).collect();
+                Ok(Arc::new(result))
+            } else if let Some(fa) = as_f64(arr) {
+                let result: Float64Array =
+                    fa.iter().map(|v| v.map(|f| -f)).collect();
+                Ok(Arc::new(result))
+            } else {
+                Err(EvalError {
+                    message: format!("cannot negate {:?}", arr.data_type()),
+                })
+            }
+        }
+        UnOp::Not => {
+            let b = require_bool(arr)?;
+            let result: BooleanArray = (0..b.len())
+                .map(|i| {
+                    if b.is_null(i) {
+                        None
+                    } else {
+                        Some(!b.value(i))
+                    }
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+    }
+}
+
+// ─── Functions ──────────────────────────────────────────────────────────────
+
+fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError> {
+    match name {
+        "abs" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_abs(&arr)
+        }
+        "ceil" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_f64_map(&arr, "ceil", f64::ceil)
+        }
+        "floor" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_f64_map(&arr, "floor", f64::floor)
+        }
+        "round" => {
+            check_args(name, args, 1, 2)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let decimals = if args.len() > 1 {
+                match &args[1] {
+                    Expr::Literal(LiteralValue::Int(d)) => *d as i32,
+                    _ => {
+                        let d = evaluate(&args[1], ctx)?;
+                        as_i64(&d)
+                            .ok_or_else(|| EvalError {
+                                message: "round: decimals must be integer".into(),
+                            })?
+                            .value(0) as i32
+                    }
+                }
+            } else {
+                0
+            };
+            eval_round(&arr, decimals)
+        }
+        "min" => {
+            check_args(name, args, 2, 2)?;
+            let a = evaluate(&args[0], ctx)?;
+            let b = evaluate(&args[1], ctx)?;
+            eval_min_max(&a, &b, true)
+        }
+        "max" => {
+            check_args(name, args, 2, 2)?;
+            let a = evaluate(&args[0], ctx)?;
+            let b = evaluate(&args[1], ctx)?;
+            eval_min_max(&a, &b, false)
+        }
+        "clamp" => {
+            check_args(name, args, 3, 3)?;
+            let val = evaluate(&args[0], ctx)?;
+            let lo = evaluate(&args[1], ctx)?;
+            let hi = evaluate(&args[2], ctx)?;
+            let clamped = eval_min_max(&val, &hi, true)?;
+            eval_min_max(&clamped, &lo, false)
+        }
+        "upper" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_string_map(&arr, "upper", |s| s.to_uppercase())
+        }
+        "lower" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_string_map(&arr, "lower", |s| s.to_lowercase())
+        }
+        "trim" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_string_map(&arr, "trim", |s| s.trim().to_string())
+        }
+        "len" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let sa = as_str(&arr).ok_or_else(|| EvalError {
+                message: "len: expected string".into(),
+            })?;
+            let result: Int64Array = (0..sa.len())
+                .map(|i| {
+                    if sa.is_null(i) {
+                        None
+                    } else {
+                        Some(sa.value(i).chars().count() as i64)
+                    }
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        "concat" => {
+            check_args(name, args, 2, 16)?;
+            let arrays: Vec<ArrayRef> = args
+                .iter()
+                .map(|a| evaluate(a, ctx))
+                .collect::<Result<_, _>>()?;
+            eval_concat(&arrays, ctx.row_count)
+        }
+        "substr" => {
+            check_args(name, args, 2, 3)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let start = evaluate(&args[1], ctx)?;
+            let length = if args.len() > 2 {
+                Some(evaluate(&args[2], ctx)?)
+            } else {
+                None
+            };
+            eval_substr(&arr, &start, length.as_ref())
+        }
+        "replace" => {
+            check_args(name, args, 3, 3)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let from = evaluate(&args[1], ctx)?;
+            let to = evaluate(&args[2], ctx)?;
+            eval_replace(&arr, &from, &to)
+        }
+        "cast_int" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_cast_int(&arr)
+        }
+        "cast_float" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            let v = to_f64_vec(&arr)?;
+            let result: Float64Array = v.into_iter().collect();
+            Ok(Arc::new(result))
+        }
+        "cast_string" => {
+            check_args(name, args, 1, 1)?;
+            let arr = evaluate(&args[0], ctx)?;
+            eval_cast_string(&arr)
+        }
+        "if" => {
+            check_args(name, args, 3, 3)?;
+            let cond = evaluate(&args[0], ctx)?;
+            let then = evaluate(&args[1], ctx)?;
+            let otherwise = evaluate(&args[2], ctx)?;
+            eval_if(&cond, &then, &otherwise)
+        }
+        "coalesce" => {
+            check_args(name, args, 2, 16)?;
+            let arrays: Vec<ArrayRef> = args
+                .iter()
+                .map(|a| evaluate(a, ctx))
+                .collect::<Result<_, _>>()?;
+            eval_coalesce(&arrays)
+        }
+        "nullif" => {
+            check_args(name, args, 2, 2)?;
+            let a = evaluate(&args[0], ctx)?;
+            let b = evaluate(&args[1], ctx)?;
+            eval_nullif(&a, &b)
+        }
+        _ => Err(EvalError {
+            message: format!("unknown function: `{name}`"),
+        }),
+    }
+}
+
+fn check_args(name: &str, args: &[Expr], min: usize, max: usize) -> Result<(), EvalError> {
+    if args.len() < min || args.len() > max {
+        Err(EvalError {
+            message: format!(
+                "`{name}` expects {min}..={max} arguments, got {}",
+                args.len()
+            ),
+        })
+    } else {
+        Ok(())
+    }
+}
+
+// ─── Math helpers ───────────────────────────────────────────────────────────
+
+fn eval_abs(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    if let Some(ia) = as_i64(arr) {
+        let result: Int64Array = ia.iter().map(|v| v.map(|i| i.abs())).collect();
+        Ok(Arc::new(result))
+    } else if let Some(fa) = as_f64(arr) {
+        let result: Float64Array = fa.iter().map(|v| v.map(|f| f.abs())).collect();
+        Ok(Arc::new(result))
+    } else {
+        Err(EvalError {
+            message: format!("abs: unsupported type {:?}", arr.data_type()),
+        })
+    }
+}
+
+fn eval_f64_map(
+    arr: &ArrayRef,
+    name: &str,
+    f: fn(f64) -> f64,
+) -> Result<ArrayRef, EvalError> {
+    let v = to_f64_vec(arr).map_err(|e| EvalError {
+        message: format!("{name}: {e}"),
+    })?;
+    let result: Float64Array = v.into_iter().map(|opt| opt.map(f)).collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_round(arr: &ArrayRef, decimals: i32) -> Result<ArrayRef, EvalError> {
+    let v = to_f64_vec(arr)?;
+    let factor = 10f64.powi(decimals);
+    let result: Float64Array = v
+        .into_iter()
+        .map(|opt| opt.map(|f| (f * factor).round() / factor))
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_min_max(a: &ArrayRef, b: &ArrayRef, is_min: bool) -> Result<ArrayRef, EvalError> {
+    let av = to_f64_vec(a)?;
+    let bv = to_f64_vec(b)?;
+    let result: Float64Array = av
+        .iter()
+        .zip(bv.iter())
+        .map(|(a, b)| match (a, b) {
+            (Some(a), Some(b)) => Some(if is_min { a.min(*b) } else { a.max(*b) }),
+            _ => None,
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+// ─── String helpers ─────────────────────────────────────────────────────────
+
+fn eval_string_map(
+    arr: &ArrayRef,
+    name: &str,
+    f: fn(&str) -> String,
+) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(arr).ok_or_else(|| EvalError {
+        message: format!("{name}: expected string"),
+    })?;
+    let result: StringArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) {
+                None
+            } else {
+                Some(f(sa.value(i)))
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn array_to_strings(arr: &ArrayRef) -> Result<Vec<Option<String>>, EvalError> {
+    let len = arr.len();
+    if is_null_array(arr) {
+        return Ok(vec![None; len]);
+    }
+    if let Some(sa) = as_str(arr) {
+        Ok((0..len)
+            .map(|i| {
+                if sa.is_null(i) {
+                    None
+                } else {
+                    Some(sa.value(i).to_string())
+                }
+            })
+            .collect())
+    } else if let Some(ia) = as_i64(arr) {
+        Ok(ia.iter().map(|v| v.map(|i| i.to_string())).collect())
+    } else if let Some(fa) = as_f64(arr) {
+        Ok(fa.iter().map(|v| v.map(|f| f.to_string())).collect())
+    } else if let Some(ba) = as_bool(arr) {
+        Ok((0..len)
+            .map(|i| {
+                if ba.is_null(i) {
+                    None
+                } else {
+                    Some(ba.value(i).to_string())
+                }
+            })
+            .collect())
+    } else {
+        Err(EvalError {
+            message: format!("cannot convert {:?} to strings", arr.data_type()),
+        })
+    }
+}
+
+fn eval_concat(arrays: &[ArrayRef], count: usize) -> Result<ArrayRef, EvalError> {
+    let string_arrays: Vec<Vec<Option<String>>> = arrays
+        .iter()
+        .map(array_to_strings)
+        .collect::<Result<_, _>>()?;
+
+    let result: StringArray = (0..count)
+        .map(|i| {
+            let mut s = String::new();
+            for arr in &string_arrays {
+                match &arr[i] {
+                    Some(v) => s.push_str(v),
+                    None => return None,
+                }
+            }
+            Some(s)
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_substr(
+    arr: &ArrayRef,
+    start: &ArrayRef,
+    length: Option<&ArrayRef>,
+) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(arr).ok_or_else(|| EvalError {
+        message: "substr: expected string".into(),
+    })?;
+    let starts = as_i64(start).ok_or_else(|| EvalError {
+        message: "substr: start must be integer".into(),
+    })?;
+
+    let count = sa.len();
+    let result: StringArray = (0..count)
+        .map(|i| {
+            if sa.is_null(i) || starts.is_null(i) {
+                return None;
+            }
+            let s = sa.value(i);
+            let st = starts.value(i).max(0) as usize;
+            // Use character indices for UTF-8 safety
+            let chars: Vec<char> = s.chars().collect();
+            if st >= chars.len() {
+                return Some(String::new());
+            }
+            if let Some(len_arr) = length {
+                let la = as_i64(len_arr)?;
+                if la.is_null(i) {
+                    return None;
+                }
+                let l = la.value(i).max(0) as usize;
+                let end = (st + l).min(chars.len());
+                Some(chars[st..end].iter().collect())
+            } else {
+                Some(chars[st..].iter().collect())
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+fn eval_replace(arr: &ArrayRef, from: &ArrayRef, to: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let sa = as_str(arr).ok_or_else(|| EvalError {
+        message: "replace: expected string".into(),
+    })?;
+    let fa = as_str(from).ok_or_else(|| EvalError {
+        message: "replace: from must be string".into(),
+    })?;
+    let ta = as_str(to).ok_or_else(|| EvalError {
+        message: "replace: to must be string".into(),
+    })?;
+
+    let result: StringArray = (0..sa.len())
+        .map(|i| {
+            if sa.is_null(i) || fa.is_null(i) || ta.is_null(i) {
+                None
+            } else {
+                Some(sa.value(i).replace(fa.value(i), ta.value(i)))
+            }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+// ─── Cast helpers ───────────────────────────────────────────────────────────
+
+fn eval_cast_int(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    if let Some(ia) = as_i64(arr) {
+        return Ok(Arc::new(ia.clone()));
+    }
+    if let Some(fa) = as_f64(arr) {
+        let result: Int64Array = fa.iter().map(|v| v.map(|f| f as i64)).collect();
+        return Ok(Arc::new(result));
+    }
+    if let Some(sa) = as_str(arr) {
+        let result: Int64Array = (0..sa.len())
+            .map(|i| {
+                if sa.is_null(i) {
+                    None
+                } else {
+                    sa.value(i).parse::<i64>().ok()
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    if let Some(ba) = as_bool(arr) {
+        let result: Int64Array = (0..ba.len())
+            .map(|i| {
+                if ba.is_null(i) {
+                    None
+                } else {
+                    Some(ba.value(i) as i64)
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    Err(EvalError {
+        message: format!("cannot cast {:?} to Int64", arr.data_type()),
+    })
+}
+
+fn eval_cast_string(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let strings = array_to_strings(arr)?;
+    let result: StringArray = strings.iter().map(|v| v.as_deref()).collect();
+    Ok(Arc::new(result))
+}
+
+/// When one of a pair of arrays is NullArray, coerce it to typed nulls
+/// matching the other's data type.
+fn resolve_null_pair(a: &ArrayRef, b: &ArrayRef) -> (ArrayRef, ArrayRef) {
+    if is_null_array(a) && !is_null_array(b) {
+        (typed_nulls(b.data_type(), a.len()), b.clone())
+    } else if !is_null_array(a) && is_null_array(b) {
+        (a.clone(), typed_nulls(a.data_type(), b.len()))
+    } else {
+        (a.clone(), b.clone())
+    }
+}
+
+// ─── Conditional helpers ────────────────────────────────────────────────────
+
+fn eval_if(
+    cond: &ArrayRef,
+    then: &ArrayRef,
+    otherwise: &ArrayRef,
+) -> Result<ArrayRef, EvalError> {
+    let ba = require_bool(cond)?;
+    let count = ba.len();
+
+    // Resolve NullArray to the peer's type
+    let (then, otherwise) = resolve_null_pair(then, otherwise);
+
+    // Promote mixed numeric types to Float64
+    let (then, otherwise) = if is_numeric(then.data_type())
+        && is_numeric(otherwise.data_type())
+        && then.data_type() != otherwise.data_type()
+    {
+        let promote = |arr: &ArrayRef| -> ArrayRef {
+            if arr.data_type() == &DataType::Float64 {
+                arr.clone()
+            } else {
+                let ia = as_i64(arr).unwrap();
+                let fa: Float64Array = (0..ia.len())
+                    .map(|i| {
+                        if ia.is_null(i) {
+                            None
+                        } else {
+                            Some(ia.value(i) as f64)
+                        }
+                    })
+                    .collect();
+                Arc::new(fa) as ArrayRef
+            }
+        };
+        (promote(&then), promote(&otherwise))
+    } else {
+        (then, otherwise)
+    };
+
+    match then.data_type() {
+        DataType::Int64 => {
+            let t_vals = as_i64(&then).unwrap();
+            let o_vals = as_i64(&otherwise).ok_or_else(|| EvalError {
+                message: format!(
+                    "if: type mismatch: then is Int64, otherwise is {:?}",
+                    otherwise.data_type()
+                ),
+            })?;
+            let result: Int64Array = (0..count)
+                .map(|i| {
+                    if ba.is_null(i) {
+                        return None;
+                    }
+                    if ba.value(i) {
+                        if t_vals.is_null(i) { None } else { Some(t_vals.value(i)) }
+                    } else if o_vals.is_null(i) {
+                        None
+                    } else {
+                        Some(o_vals.value(i))
+                    }
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        DataType::Float64 => {
+            let tv = to_f64_vec(&then)?;
+            let ov = to_f64_vec(&otherwise)?;
+            let result: Float64Array = (0..count)
+                .map(|i| {
+                    if ba.is_null(i) {
+                        None
+                    } else if ba.value(i) {
+                        tv[i]
+                    } else {
+                        ov[i]
+                    }
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        DataType::Utf8 => {
+            let ts = array_to_strings(&then)?;
+            let os = array_to_strings(&otherwise)?;
+            let result: StringArray = (0..count)
+                .map(|i| {
+                    if ba.is_null(i) {
+                        None
+                    } else if ba.value(i) {
+                        ts[i].as_deref()
+                    } else {
+                        os[i].as_deref()
+                    }
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        DataType::Boolean => {
+            let t = as_bool(&then).unwrap();
+            let o = require_bool(&otherwise)?;
+            let result: BooleanArray = (0..count)
+                .map(|i| {
+                    if ba.is_null(i) {
+                        None
+                    } else if ba.value(i) {
+                        null_safe_bool(t, i)
+                    } else {
+                        null_safe_bool(o, i)
+                    }
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        other => Err(EvalError {
+            message: format!("if: unsupported result type {other}"),
+        }),
+    }
+}
+
+fn eval_coalesce(arrays: &[ArrayRef]) -> Result<ArrayRef, EvalError> {
+    if arrays.is_empty() {
+        return Err(EvalError {
+            message: "coalesce requires at least one argument".into(),
+        });
+    }
+    let count = arrays[0].len();
+
+    // Find the first non-Null type to determine output type
+    let mut result_type = arrays
+        .iter()
+        .map(|a| a.data_type().clone())
+        .find(|dt| dt != &DataType::Null)
+        .unwrap_or(DataType::Int64);
+
+    // Promote to Float64 if any non-null array is Float64 and result_type is Int64
+    if result_type == DataType::Int64
+        && arrays
+            .iter()
+            .any(|a| a.data_type() == &DataType::Float64)
+    {
+        result_type = DataType::Float64;
+    }
+
+    // Coerce NullArrays and promote Int64→Float64 when needed
+    let typed_arrays: Vec<ArrayRef> = arrays
+        .iter()
+        .map(|a| {
+            if is_null_array(a) {
+                typed_nulls(&result_type, a.len())
+            } else if result_type == DataType::Float64 && a.data_type() == &DataType::Int64 {
+                let ia = as_i64(a).unwrap();
+                let fa: Float64Array = (0..ia.len())
+                    .map(|i| {
+                        if ia.is_null(i) {
+                            None
+                        } else {
+                            Some(ia.value(i) as f64)
+                        }
+                    })
+                    .collect();
+                Arc::new(fa) as ArrayRef
+            } else {
+                a.clone()
+            }
+        })
+        .collect();
+
+    match result_type {
+        DataType::Int64 => {
+            let typed: Vec<&Int64Array> = typed_arrays
+                .iter()
+                .map(|a| {
+                    as_i64(a).ok_or_else(|| EvalError {
+                        message: "coalesce: type mismatch".into(),
+                    })
+                })
+                .collect::<Result<_, _>>()?;
+            let result: Int64Array = (0..count)
+                .map(|i| {
+                    for arr in &typed {
+                        if !arr.is_null(i) {
+                            return Some(arr.value(i));
+                        }
+                    }
+                    None
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        DataType::Float64 => {
+            let vecs: Vec<Vec<Option<f64>>> = typed_arrays
+                .iter()
+                .map(|a| to_f64_vec(a))
+                .collect::<Result<_, _>>()?;
+            let result: Float64Array = (0..count)
+                .map(|i| {
+                    for v in &vecs {
+                        if let Some(val) = v[i] {
+                            return Some(val);
+                        }
+                    }
+                    None
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        DataType::Utf8 => {
+            let typed: Vec<&StringArray> = typed_arrays
+                .iter()
+                .map(|a| {
+                    as_str(a).ok_or_else(|| EvalError {
+                        message: "coalesce: type mismatch".into(),
+                    })
+                })
+                .collect::<Result<_, _>>()?;
+            let result: StringArray = (0..count)
+                .map(|i| {
+                    for arr in &typed {
+                        if !arr.is_null(i) {
+                            return Some(arr.value(i).to_string());
+                        }
+                    }
+                    None
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        DataType::Boolean => {
+            let typed: Vec<&BooleanArray> = typed_arrays
+                .iter()
+                .map(|a| {
+                    as_bool(a).ok_or_else(|| EvalError {
+                        message: "coalesce: type mismatch".into(),
+                    })
+                })
+                .collect::<Result<_, _>>()?;
+            let result: BooleanArray = (0..count)
+                .map(|i| {
+                    for arr in &typed {
+                        if !arr.is_null(i) {
+                            return Some(arr.value(i));
+                        }
+                    }
+                    None
+                })
+                .collect();
+            Ok(Arc::new(result))
+        }
+        other => Err(EvalError {
+            message: format!("coalesce: unsupported type {other}"),
+        }),
+    }
+}
+
+fn eval_nullif(a: &ArrayRef, b: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let eq_arr = eval_cmp(a, b, BinOp::Eq)?;
+    let eq = as_bool(&eq_arr).unwrap();
+    let count = eq.len();
+
+    if let Some(ia) = as_i64(a) {
+        let result: Int64Array = (0..count)
+            .map(|i| {
+                if ia.is_null(i) || (!eq.is_null(i) && eq.value(i)) {
+                    None
+                } else {
+                    Some(ia.value(i))
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    if let Some(fa) = as_f64(a) {
+        let result: Float64Array = (0..count)
+            .map(|i| {
+                if fa.is_null(i) || (!eq.is_null(i) && eq.value(i)) {
+                    None
+                } else {
+                    Some(fa.value(i))
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    if let Some(sa) = as_str(a) {
+        let result: StringArray = (0..count)
+            .map(|i| {
+                if sa.is_null(i) || (!eq.is_null(i) && eq.value(i)) {
+                    None
+                } else {
+                    Some(sa.value(i).to_string())
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    if let Some(ba_arr) = as_bool(a) {
+        let result: BooleanArray = (0..count)
+            .map(|i| {
+                if ba_arr.is_null(i) || (!eq.is_null(i) && eq.value(i)) {
+                    None
+                } else {
+                    Some(ba_arr.value(i))
+                }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+    if is_null_array(a) {
+        return Ok(typed_nulls(&DataType::Int64, count));
+    }
+    Err(EvalError {
+        message: format!("nullif: unsupported type {:?}", a.data_type()),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gen::expr::parser;
+
+    fn eval_expr(expr_str: &str, columns: HashMap<String, ArrayRef>) -> ArrayRef {
+        let ast = parser::parse(expr_str).unwrap();
+        let params = HashMap::new();
+        let row_count = columns.values().next().map(|a| a.len()).unwrap_or(0);
+        let ctx = EvalContext {
+            columns: &columns,
+            params: &params,
+            row_count,
+        };
+        evaluate(&ast, &ctx).unwrap()
+    }
+
+    #[test]
+    fn add_int() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "a".into(),
+            Arc::new(Int64Array::from(vec![1, 2, 3])) as ArrayRef,
+        );
+        cols.insert(
+            "b".into(),
+            Arc::new(Int64Array::from(vec![10, 20, 30])) as ArrayRef,
+        );
+        let result = eval_expr("${a} + ${b}", cols);
+        let fa = as_f64(&result).unwrap();
+        assert_eq!(fa.values(), &[11.0, 22.0, 33.0]);
+    }
+
+    #[test]
+    fn mul_float() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "price".into(),
+            Arc::new(Float64Array::from(vec![10.0, 20.0, 30.0])) as ArrayRef,
+        );
+        cols.insert(
+            "qty".into(),
+            Arc::new(Int64Array::from(vec![2, 3, 4])) as ArrayRef,
+        );
+        let result = eval_expr("${price} * ${qty}", cols);
+        let fa = as_f64(&result).unwrap();
+        assert_eq!(fa.values(), &[20.0, 60.0, 120.0]);
+    }
+
+    #[test]
+    fn comparison() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![1, 5, 10])) as ArrayRef,
+        );
+        let result = eval_expr("${x} > 3", cols);
+        let ba = as_bool(&result).unwrap();
+        assert!(!ba.value(0));
+        assert!(ba.value(1));
+        assert!(ba.value(2));
+    }
+
+    #[test]
+    fn abs_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![-5, 0, 3])) as ArrayRef,
+        );
+        let result = eval_expr("abs(${x})", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.values(), &[5, 0, 3]);
+    }
+
+    #[test]
+    fn round_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Float64Array::from(vec![3.14159, 2.71828])) as ArrayRef,
+        );
+        let result = eval_expr("round(${x}, 2)", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 3.14).abs() < 1e-10);
+        assert!((fa.value(1) - 2.72).abs() < 1e-10);
+    }
+
+    #[test]
+    fn upper_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "name".into(),
+            Arc::new(StringArray::from(vec!["hello", "world"])) as ArrayRef,
+        );
+        let result = eval_expr("upper(${name})", cols);
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "HELLO");
+        assert_eq!(sa.value(1), "WORLD");
+    }
+
+    #[test]
+    fn concat_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "first".into(),
+            Arc::new(StringArray::from(vec!["John", "Jane"])) as ArrayRef,
+        );
+        cols.insert(
+            "last".into(),
+            Arc::new(StringArray::from(vec!["Doe", "Smith"])) as ArrayRef,
+        );
+        let result = eval_expr("concat(${first}, \" \", ${last})", cols);
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "John Doe");
+        assert_eq!(sa.value(1), "Jane Smith");
+    }
+
+    #[test]
+    fn if_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "age".into(),
+            Arc::new(Int64Array::from(vec![15, 25])) as ArrayRef,
+        );
+        let result = eval_expr("if(${age} >= 18, \"adult\", \"minor\")", cols);
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "minor");
+        assert_eq!(sa.value(1), "adult");
+    }
+
+    #[test]
+    fn coalesce_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![None, Some(5), None])) as ArrayRef,
+        );
+        cols.insert(
+            "y".into(),
+            Arc::new(Int64Array::from(vec![Some(10), None, Some(20)])) as ArrayRef,
+        );
+        let result = eval_expr("coalesce(${x}, ${y})", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.value(0), 10);
+        assert_eq!(ia.value(1), 5);
+        assert_eq!(ia.value(2), 20);
+    }
+
+    #[test]
+    fn modulo() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![7, 10, 15])) as ArrayRef,
+        );
+        let result = eval_expr("${x} % 3", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.values(), &[1, 1, 0]);
+    }
+
+    #[test]
+    fn unary_neg() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![1, -2, 3])) as ArrayRef,
+        );
+        let result = eval_expr("-${x}", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.values(), &[-1, 2, -3]);
+    }
+
+    #[test]
+    fn complex_expression() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "price".into(),
+            Arc::new(Float64Array::from(vec![100.0, 200.0])) as ArrayRef,
+        );
+        cols.insert(
+            "qty".into(),
+            Arc::new(Int64Array::from(vec![2, 3])) as ArrayRef,
+        );
+        let result = eval_expr("round(${price} * ${qty} * 1.1, 2)", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 220.0).abs() < 1e-10);
+        assert!((fa.value(1) - 660.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn len_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "s".into(),
+            Arc::new(StringArray::from(vec!["hi", "hello"])) as ArrayRef,
+        );
+        let result = eval_expr("len(${s})", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.values(), &[2, 5]);
+    }
+
+    #[test]
+    fn string_add_concat() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "a".into(),
+            Arc::new(StringArray::from(vec!["hello", "foo"])) as ArrayRef,
+        );
+        cols.insert(
+            "b".into(),
+            Arc::new(StringArray::from(vec![" world", "bar"])) as ArrayRef,
+        );
+        let result = eval_expr("${a} + ${b}", cols);
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "hello world");
+        assert_eq!(sa.value(1), "foobar");
+    }
+
+    #[test]
+    fn param_ref() {
+        let ast = parser::parse("${price} * ${param.tax_rate}").unwrap();
+        let mut cols = HashMap::new();
+        cols.insert(
+            "price".into(),
+            Arc::new(Float64Array::from(vec![100.0, 200.0])) as ArrayRef,
+        );
+        let mut params = HashMap::new();
+        params.insert("tax_rate".into(), "0.08".into());
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &params,
+            row_count: 2,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 8.0).abs() < 1e-10);
+        assert!((fa.value(1) - 16.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn cast_int_from_float() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Float64Array::from(vec![3.7, 5.2])) as ArrayRef,
+        );
+        let result = eval_expr("cast_int(${x})", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.values(), &[3, 5]);
+    }
+
+    #[test]
+    fn nullif_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![1, 0, 3])) as ArrayRef,
+        );
+        let result = eval_expr("nullif(${x}, 0)", cols);
+        let ia = as_i64(&result).unwrap();
+        assert_eq!(ia.value(0), 1);
+        assert!(ia.is_null(1));
+        assert_eq!(ia.value(2), 3);
+    }
+
+    #[test]
+    fn min_max_functions() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "a".into(),
+            Arc::new(Int64Array::from(vec![1, 5, 3])) as ArrayRef,
+        );
+        cols.insert(
+            "b".into(),
+            Arc::new(Int64Array::from(vec![4, 2, 6])) as ArrayRef,
+        );
+        let result_min = eval_expr("min(${a}, ${b})", cols.clone());
+        let result_max = eval_expr("max(${a}, ${b})", cols);
+        let fa_min = as_f64(&result_min).unwrap();
+        let fa_max = as_f64(&result_max).unwrap();
+        assert_eq!(fa_min.values(), &[1.0, 2.0, 3.0]);
+        assert_eq!(fa_max.values(), &[4.0, 5.0, 6.0]);
+    }
+
+    #[test]
+    fn clamp_function() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Float64Array::from(vec![-5.0, 50.0, 150.0])) as ArrayRef,
+        );
+        let result = eval_expr("clamp(${x}, 0.0, 100.0)", cols);
+        let fa = as_f64(&result).unwrap();
+        assert_eq!(fa.values(), &[0.0, 50.0, 100.0]);
+    }
+
+    #[test]
+    fn substr_utf8_safe() {
+        let mut cols = HashMap::new();
+        // "héllo" has a multi-byte char at position 1
+        cols.insert(
+            "s".into(),
+            Arc::new(StringArray::from(vec!["héllo", "日本語テスト"])) as ArrayRef,
+        );
+        // substr(s, 1, 3) should return chars 1..4 (character-based)
+        let result = eval_expr("substr(${s}, 1, 3)", cols);
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "éll");
+        assert_eq!(sa.value(1), "本語テ");
+    }
+
+    #[test]
+    fn coalesce_with_null_literal() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(StringArray::from(vec![None, Some("val")])) as ArrayRef,
+        );
+        let result = eval_expr("coalesce(null, ${x})", cols);
+        let sa = as_str(&result).unwrap();
+        // First row: null coalesces to "val"... wait, both null and x[0] are null
+        // so result should be null for row 0
+        assert!(sa.is_null(0));
+        assert_eq!(sa.value(1), "val");
+    }
+
+    #[test]
+    fn coalesce_boolean() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "a".into(),
+            Arc::new(BooleanArray::from(vec![None, Some(false)])) as ArrayRef,
+        );
+        cols.insert(
+            "b".into(),
+            Arc::new(BooleanArray::from(vec![Some(true), Some(true)])) as ArrayRef,
+        );
+        let result = eval_expr("coalesce(${a}, ${b})", cols);
+        let ba = as_bool(&result).unwrap();
+        assert_eq!(ba.value(0), true);
+        assert_eq!(ba.value(1), false);
+    }
+
+    #[test]
+    fn nullif_boolean() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(BooleanArray::from(vec![true, false, true])) as ArrayRef,
+        );
+        let result = eval_expr("nullif(${x}, true)", cols);
+        let ba = as_bool(&result).unwrap();
+        assert!(ba.is_null(0));
+        assert_eq!(ba.value(1), false);
+        assert!(ba.is_null(2));
+    }
+
+    #[test]
+    fn null_arith_propagation() {
+        let cols = HashMap::new();
+        let ast = parser::parse("null + 1").unwrap();
+        let ctx = EvalContext {
+            columns: &cols,
+            params: &HashMap::new(),
+            row_count: 2,
+        };
+        let result = evaluate(&ast, &ctx).unwrap();
+        let fa = as_f64(&result).unwrap();
+        assert!(fa.is_null(0));
+        assert!(fa.is_null(1));
+    }
+}

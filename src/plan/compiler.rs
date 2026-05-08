@@ -1046,9 +1046,19 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
 /// Extract field names referenced in a derived expression.
 /// Simple heuristic: look for field names from `all_fields` that appear in the expression.
 fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
-    // Strip ${param.*} references before tokenizing — they are not field deps.
+    // Try AST-based extraction first (more accurate)
+    if let Ok(ast) = crate::gen::expr::parser::parse(expr) {
+        let refs = crate::gen::expr::ast::extract_field_refs(&ast);
+        let field_names: std::collections::HashSet<&str> =
+            all_fields.iter().map(|f| f.name.as_str()).collect();
+        return refs
+            .into_iter()
+            .filter(|r| field_names.contains(r.as_str()))
+            .collect();
+    }
+
+    // Fallback: legacy string heuristic
     let stripped = strip_param_refs(expr);
-    // Tokenize on non-alphanumeric/underscore boundaries for whole-word matching
     let tokens: Vec<&str> = stripped
         .split(|c: char| !c.is_alphanumeric() && c != '_')
         .collect();
