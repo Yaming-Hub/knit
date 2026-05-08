@@ -345,7 +345,7 @@ type = "derived"
 expr = "${quantity} * ${unit_price}"
 ```
 
-The expression language supports 34+ built-in functions with SQL-like null
+The expression language supports 60+ built-in functions with SQL-like null
 semantics. Reference other fields with `${field_name}` and parameters with
 `${param.key}`.
 
@@ -360,6 +360,16 @@ expr = "sqrt(pow(${x}, 2) + pow(${y}, 2))"
 # Conditional logic
 expr = "if(${age} >= 18, \"adult\", \"minor\")"
 expr = "case(${score} >= 90, \"A\", ${score} >= 80, \"B\", ${score} >= 70, \"C\", \"F\")"
+
+# Date/time construction and extraction
+expr = "make_date(2024, ${month}, ${day})"
+expr = "year(${created_at})"
+expr = "format_date(${event_time}, \"%Y-%m-%d\")"
+
+# Date/time arithmetic
+expr = "date_add(${start_date}, 30, \"day\")"
+expr = "date_diff(${end_date}, ${start_date}, \"day\")"
+expr = "start_of(${event_time}, \"month\")"
 
 # String predicates
 expr = "if(starts_with(${email}, \"admin\"), \"staff\", \"user\")"
@@ -382,6 +392,10 @@ expr = "row_number()"
 | String | `upper`, `lower`, `trim`, `len`, `concat`, `substr`, `replace`, `left`, `right`, `pad_left`, `pad_right`, `starts_with`, `ends_with`, `contains` |
 | Conditional | `if`, `case`, `coalesce`, `nullif` |
 | Type cast | `cast_int`, `cast_float`, `cast_string` |
+| Date/time construction | `make_date`, `make_time`, `make_datetime`, `make_duration`, `to_date`, `to_datetime`, `epoch_seconds`, `from_epoch` |
+| Date/time extraction | `year`, `month`, `day`, `hour`, `minute`, `second`, `day_of_week`, `day_of_year`, `week_of_year`, `quarter` |
+| Date/time arithmetic | `date_add`, `date_sub`, `date_diff`, `duration_add`, `start_of`, `end_of` |
+| Date/time formatting | `format_date`, `format_duration` |
 | Utility | `hash`, `row_number` |
 
 See the [Weave Specification](../weave-spec.md) for the full expression

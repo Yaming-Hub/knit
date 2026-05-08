@@ -14,12 +14,18 @@ All notable changes to Knit are documented in this file.
 - Modular example schemas in `examples/modular/`
 - **Expression engine** — Full expression language for derived fields with:
   - Pratt parser with proper operator precedence
-  - 33+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
+  - 60+ built-in functions: math (`abs`, `ceil`, `floor`, `round`, `min`,
     `max`, `clamp`, `sqrt`, `pow`, `log`, `ln`, `exp`), string (`upper`,
     `lower`, `trim`, `len`, `concat`, `substr`, `replace`, `left`, `right`,
     `pad_left`, `pad_right`, `starts_with`, `ends_with`, `contains`), type
     casts (`cast_int`, `cast_float`, `cast_string`), conditionals (`if`,
-    `coalesce`, `nullif`), utility (`hash`, `row_number`)
+    `coalesce`, `nullif`, `case`), utility (`hash`, `row_number`),
+    date/time construction (`make_date`, `make_time`, `make_datetime`,
+    `make_duration`, `to_date`, `to_datetime`, `epoch_seconds`, `from_epoch`),
+    date/time extraction (`year`, `month`, `day`, `hour`, `minute`, `second`,
+    `day_of_week`, `day_of_year`, `week_of_year`, `quarter`),
+    date/time arithmetic (`date_add`, `date_sub`, `date_diff`, `duration_add`,
+    `start_of`, `end_of`), date/time formatting (`format_date`, `format_duration`)
   - SQL three-valued null logic for `&&`/`||`
   - Domain-error handling (sqrt of negative → null, ln of non-positive → null)
   - Deterministic SipHash for `hash()` function
