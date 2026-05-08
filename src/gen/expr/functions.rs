@@ -535,6 +535,31 @@ static BUILTINS: &[FuncSig] = &[
         return_type: ExprType::Str,
         null_safe: false,
     },
+    // ─── Random functions ──────────────────────────────────────────────
+    FuncSig {
+        name: "random_int",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[ExprType::Int, ExprType::Int],
+        return_type: ExprType::Int,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "random_float",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[ExprType::Float, ExprType::Float],
+        return_type: ExprType::Float,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "random_duration",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[ExprType::Int, ExprType::Int],
+        return_type: ExprType::Int,
+        null_safe: false,
+    },
 ];
 
 #[cfg(test)]
@@ -566,7 +591,7 @@ mod tests {
     #[test]
     fn available_names_not_empty() {
         let names = available_names();
-        assert!(names.len() >= 60);
+        assert!(names.len() >= 63);
         assert!(names.contains(&"abs"));
         assert!(names.contains(&"concat"));
     }

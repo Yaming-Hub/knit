@@ -39,6 +39,9 @@ pub struct DerivedGenerator {
     ast: Option<Expr>,
     /// Fields this generator depends on (extracted from AST or string heuristics).
     depends_on: Vec<String>,
+    /// Stable hash of the expression, used as base seed for random functions.
+    /// Combined with partition_index at generation time for per-partition isolation.
+    expr_hash: u64,
 }
 
 impl DerivedGenerator {
@@ -58,10 +61,17 @@ impl DerivedGenerator {
         } else {
             depends_on
         };
+        // Stable hash of the expression string — used as base seed for random
+        // functions so that the seed is batch-size independent.
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        expr.hash(&mut hasher);
+        let expr_hash = hasher.finish();
         Self {
             expr,
             ast,
             depends_on,
+            expr_hash,
         }
     }
 
@@ -169,11 +179,17 @@ impl FieldGenerator for DerivedGenerator {
     fn generate(&self, _rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
         // If we have a parsed AST, use the expression engine
         if let Some(ref ast) = self.ast {
+            // Derive a stable per-partition seed for random_* functions.
+            // Uses expr_hash ⊕ partition_index so that the seed is independent
+            // of batch count/size, preserving batch-size determinism.
+            let seed = self.expr_hash ^ (ctx.partition_index as u64);
             let eval_ctx = EvalContext {
                 columns: ctx.batch_columns,
                 params: ctx.params,
                 row_count: count,
                 row_offset: ctx.row_offset,
+                seed,
+                call_counter: std::cell::Cell::new(0),
             };
             match eval::evaluate(ast, &eval_ctx) {
                 Ok(result) => return result,
