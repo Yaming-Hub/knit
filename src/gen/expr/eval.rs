@@ -672,6 +672,10 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
                 .collect();
             Ok(Arc::new(result))
         }
+        "case" => {
+            check_args(name, args, 2, 32)?;
+            eval_case(args, ctx)
+        }
         _ => Err(EvalError {
             message: format!("unknown function: `{name}`"),
         }),
@@ -1098,6 +1102,153 @@ fn resolve_null_pair(a: &ArrayRef, b: &ArrayRef) -> (ArrayRef, ArrayRef) {
 }
 
 // ─── Conditional helpers ────────────────────────────────────────────────────
+
+/// Evaluate `case(cond1, val1, cond2, val2, ..., default)`.
+///
+/// Arguments come in (condition, value) pairs. An optional trailing
+/// argument without a condition pair serves as the default value.
+/// If no branch matches and no default is given, the result is null.
+fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError> {
+    let count = ctx.row_count;
+    let has_default = args.len() % 2 == 1;
+    let pair_count = args.len() / 2;
+
+    // Evaluate all condition/value pairs eagerly, validating conditions are boolean
+    let mut branches: Vec<(ArrayRef, ArrayRef)> = Vec::with_capacity(pair_count);
+    for i in 0..pair_count {
+        let cond = evaluate(&args[i * 2], ctx)?;
+        require_bool(&cond)?;
+        let val = evaluate(&args[i * 2 + 1], ctx)?;
+        branches.push((cond, val));
+    }
+    let default_val = if has_default {
+        Some(evaluate(args.last().unwrap(), ctx)?)
+    } else {
+        None
+    };
+
+    // Determine output type, promoting mixed Int64/Float64 to Float64
+    let all_types: Vec<DataType> = branches
+        .iter()
+        .map(|(_, v)| v.data_type().clone())
+        .chain(default_val.iter().map(|v| v.data_type().clone()))
+        .filter(|dt| dt != &DataType::Null)
+        .collect();
+
+    let mut result_type = all_types
+        .first()
+        .cloned()
+        .unwrap_or(DataType::Int64);
+
+    // Promote to Float64 if any branch is Float64 and result_type is Int64
+    if result_type == DataType::Int64 && all_types.iter().any(|dt| dt == &DataType::Float64) {
+        result_type = DataType::Float64;
+    }
+
+    // Track which rows have been assigned
+    let mut assigned = vec![false; count];
+
+    match result_type {
+        DataType::Float64 => {
+            let mut result: Vec<Option<f64>> = vec![None; count];
+            for (cond, val) in &branches {
+                let ba = as_bool(cond).unwrap();
+                let fv = to_f64_vec(val)?;
+                for i in 0..count {
+                    if !assigned[i] && !ba.is_null(i) && ba.value(i) {
+                        result[i] = fv[i];
+                        assigned[i] = true;
+                    }
+                }
+            }
+            if let Some(ref dv) = default_val {
+                let fv = to_f64_vec(dv)?;
+                for i in 0..count {
+                    if !assigned[i] {
+                        result[i] = fv[i];
+                    }
+                }
+            }
+            Ok(Arc::new(Float64Array::from(result)))
+        }
+        DataType::Int64 => {
+            let mut result: Vec<Option<i64>> = vec![None; count];
+            for (cond, val) in &branches {
+                let ba = as_bool(cond).unwrap();
+                let ia = as_i64(val).ok_or_else(|| EvalError {
+                    message: "case: type mismatch in value branch".into(),
+                })?;
+                for i in 0..count {
+                    if !assigned[i] && !ba.is_null(i) && ba.value(i) {
+                        result[i] = if ia.is_null(i) { None } else { Some(ia.value(i)) };
+                        assigned[i] = true;
+                    }
+                }
+            }
+            if let Some(ref dv) = default_val {
+                let ia = as_i64(dv).ok_or_else(|| EvalError {
+                    message: "case: type mismatch in default".into(),
+                })?;
+                for i in 0..count {
+                    if !assigned[i] {
+                        result[i] = if ia.is_null(i) { None } else { Some(ia.value(i)) };
+                    }
+                }
+            }
+            Ok(Arc::new(Int64Array::from(result)))
+        }
+        DataType::Boolean => {
+            let mut result: Vec<Option<bool>> = vec![None; count];
+            for (cond, val) in &branches {
+                let ba = as_bool(cond).unwrap();
+                let va = as_bool(val).ok_or_else(|| EvalError {
+                    message: "case: type mismatch in value branch".into(),
+                })?;
+                for i in 0..count {
+                    if !assigned[i] && !ba.is_null(i) && ba.value(i) {
+                        result[i] = if va.is_null(i) { None } else { Some(va.value(i)) };
+                        assigned[i] = true;
+                    }
+                }
+            }
+            if let Some(ref dv) = default_val {
+                let va = as_bool(dv).ok_or_else(|| EvalError {
+                    message: "case: type mismatch in default".into(),
+                })?;
+                for i in 0..count {
+                    if !assigned[i] {
+                        result[i] = if va.is_null(i) { None } else { Some(va.value(i)) };
+                    }
+                }
+            }
+            Ok(Arc::new(BooleanArray::from(result)))
+        }
+        _ => {
+            // String output path
+            let mut result: Vec<Option<String>> = vec![None; count];
+            for (cond, val) in &branches {
+                let ba = as_bool(cond).unwrap();
+                let sv = array_to_strings(val)?;
+                for i in 0..count {
+                    if !assigned[i] && !ba.is_null(i) && ba.value(i) {
+                        result[i] = sv[i].clone();
+                        assigned[i] = true;
+                    }
+                }
+            }
+            if let Some(ref dv) = default_val {
+                let sv = array_to_strings(dv)?;
+                for i in 0..count {
+                    if !assigned[i] {
+                        result[i] = sv[i].clone();
+                    }
+                }
+            }
+            let arr: StringArray = result.iter().map(|v| v.as_deref()).collect();
+            Ok(Arc::new(arr))
+        }
+    }
+}
 
 fn eval_if(
     cond: &ArrayRef,
@@ -1951,5 +2102,68 @@ mod tests {
         let result = evaluate(&ast, &ctx).unwrap();
         let ia = as_i64(&result).unwrap();
         assert_eq!(ia.values(), &[100, 101, 102, 103, 104]);
+    }
+
+    #[test]
+    fn case_function_string() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![5, -3, 0])) as ArrayRef,
+        );
+        let result = eval_expr(
+            "case(${x} > 0, \"positive\", ${x} < 0, \"negative\", \"zero\")",
+            cols,
+        );
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "positive");
+        assert_eq!(sa.value(1), "negative");
+        assert_eq!(sa.value(2), "zero");
+    }
+
+    #[test]
+    fn case_function_no_default() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![1, 2, 3])) as ArrayRef,
+        );
+        let result = eval_expr("case(${x} == 1, \"one\", ${x} == 2, \"two\")", cols);
+        let sa = as_str(&result).unwrap();
+        assert_eq!(sa.value(0), "one");
+        assert_eq!(sa.value(1), "two");
+        assert!(sa.is_null(2)); // no match, no default → null
+    }
+
+    #[test]
+    fn case_function_numeric() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "grade".into(),
+            Arc::new(StringArray::from(vec!["A", "B", "C"])) as ArrayRef,
+        );
+        let result = eval_expr(
+            "case(${grade} == \"A\", 4.0, ${grade} == \"B\", 3.0, 2.0)",
+            cols,
+        );
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 4.0).abs() < 1e-10);
+        assert!((fa.value(1) - 3.0).abs() < 1e-10);
+        assert!((fa.value(2) - 2.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn case_mixed_int_float() {
+        // case(false, 1, 2.5) — Int64 then branch, Float64 default
+        // Should promote to Float64
+        let mut cols = HashMap::new();
+        cols.insert(
+            "x".into(),
+            Arc::new(Int64Array::from(vec![0, 1])) as ArrayRef,
+        );
+        let result = eval_expr("case(${x} == 1, 1, 2.5)", cols);
+        let fa = as_f64(&result).unwrap();
+        assert!((fa.value(0) - 2.5).abs() < 1e-10); // default
+        assert!((fa.value(1) - 1.0).abs() < 1e-10); // matched
     }
 }
