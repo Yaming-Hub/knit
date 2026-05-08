@@ -312,7 +312,7 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
                 "→".dimmed(),
             );
         }
-        behavioral_stats = run_behavioral_pipeline(&tables, &mut table_analyses, opts, cli)?;
+        behavioral_stats = run_behavioral_pipeline(&tables, &mut table_analyses, &relationships, opts, cli)?;
     }
 
     // 5. Assemble data model
@@ -376,6 +376,7 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
             summary["actors"] = serde_json::json!(behavioral_stats.actors_profiled);
             summary["personas"] = serde_json::json!(behavioral_stats.personas_discovered);
             summary["actor_graphs"] = serde_json::json!(behavioral_stats.graphs_discovered);
+            summary["actor_namespaces"] = serde_json::json!(behavioral_stats.actor_namespaces);
         }
         println!("{}", summary);
     } else if !cli.quiet {
@@ -391,7 +392,8 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
         );
         if behavioral_stats.actors_profiled > 0 {
             line.push_str(&format!(
-                ", {} actor(s), {} persona(s), {} graph(s)",
+                ", {} namespace(s), {} actor(s), {} persona(s), {} graph(s)",
+                behavioral_stats.actor_namespaces,
                 behavioral_stats.actors_profiled,
                 behavioral_stats.personas_discovered,
                 behavioral_stats.graphs_discovered,
@@ -1861,6 +1863,7 @@ struct BehavioralStats {
     actors_profiled: usize,
     personas_discovered: usize,
     graphs_discovered: usize,
+    actor_namespaces: usize,
 }
 
 /// Run the full behavioral analysis pipeline: actor profiling → persona clustering → relationship graphs.
@@ -1870,10 +1873,12 @@ struct BehavioralStats {
 fn run_behavioral_pipeline(
     tables: &[IngestionResult],
     table_analyses: &mut [TableAnalysis],
+    relationships: &[knit_learn::relationships::RelationshipCandidate],
     opts: &ActorsOpts,
     cli: &crate::Cli,
 ) -> Result<BehavioralStats> {
     use knit_learn::actor_graph::{RelationshipAccumulator, RelationshipDiscoveryConfig};
+    use knit_learn::actor_registry::build_actor_registry;
     use knit_learn::behavioral::ActorProfiler;
     use knit_learn::clustering::{discover_personas, ClusteringConfig};
     use knit_learn::schema_assembly::score_actor_column;
@@ -1902,10 +1907,10 @@ fn run_behavioral_pipeline(
         }
     }
 
-    for (table, analysis) in tables.iter().zip(table_analyses.iter_mut()) {
-        // Determine actor columns for this table
+    // Phase 1: Detect actor columns across all tables (pre-pass for registry)
+    let mut all_actor_cols: Vec<(String, Vec<String>)> = Vec::new();
+    for table in tables.iter() {
         let actor_cols: Vec<String> = if !opts.explicit_columns.is_empty() {
-            // Filter to columns that actually exist in this table
             let schema_cols: HashSet<&str> = table.schema.fields()
                 .iter()
                 .map(|f| f.name().as_str())
@@ -1915,19 +1920,60 @@ fn run_behavioral_pipeline(
                 .cloned()
                 .collect()
         } else {
-            // Auto-detect via name heuristics
             table.schema.fields()
                 .iter()
                 .filter(|f| score_actor_column(f.name()) >= 0.6)
                 .map(|f| f.name().clone())
                 .collect()
         };
+        all_actor_cols.push((table.entity.clone(), actor_cols));
+    }
 
-        if actor_cols.is_empty() {
-            continue;
+    // Phase 1b: Build actor registry for cross-entity unification
+    let registry = build_actor_registry(&all_actor_cols, relationships);
+
+    if !cli.quiet && !registry.namespaces.is_empty() {
+        eprintln!(
+            "    {} {} actor namespace(s) resolved",
+            "→".dimmed(),
+            registry.namespaces.len(),
+        );
+        for ns in registry.namespaces.values() {
+            let col_strs: Vec<String> = ns.columns.iter()
+                .map(|(e, c)| format!("{}.{}", e, c))
+                .collect();
+            eprintln!(
+                "      {} — {}{}",
+                ns.name.cyan(),
+                col_strs.join(", "),
+                if let Some(ref src) = ns.source_entity {
+                    format!(" (source: {})", src)
+                } else {
+                    String::new()
+                },
+            );
         }
+    }
+    for warning in &registry.warnings {
+        if !cli.quiet {
+            eprintln!("    {} {}", "warn:".yellow(), warning);
+        }
+        tracing::warn!(%warning, "actor identity resolution");
+    }
 
-        // Mark explicit actor columns on the analysis so build_entity honors them
+    stats.actor_namespaces = registry.namespaces.len();
+
+    // Build reverse lookup: (entity, column) → namespace name
+    let mut col_to_ns: HashMap<(String, String), String> = HashMap::new();
+    for (ns_name, ns) in &registry.namespaces {
+        for (entity, col) in &ns.columns {
+            col_to_ns.insert((entity.clone(), col.clone()), ns_name.clone());
+        }
+    }
+
+    // Phase 2a: Mark explicit actor columns on analyses
+    for (i, analysis) in table_analyses.iter_mut().enumerate() {
+        let actor_cols = &all_actor_cols[i].1;
         if !opts.explicit_columns.is_empty() {
             for col in &mut analysis.columns {
                 if actor_cols.contains(&col.name) {
@@ -1935,14 +1981,25 @@ fn run_behavioral_pipeline(
                 }
             }
         }
+    }
 
-        // Find temporal columns (Timestamp types) for profiling
+    // Phase 2b: Namespace-driven profiling and clustering.
+    // For each namespace, pick the primary (first) column as the profiling source.
+    // All tables with columns in that namespace share the resulting personas.
+    let mut namespace_personas: HashMap<String, Vec<knit_learn::clustering::PersonaSpec>> = HashMap::new();
+    let mut profiled_namespaces: HashSet<String> = HashSet::new();
+
+    for (i, table) in tables.iter().enumerate() {
+        let actor_cols = &all_actor_cols[i].1;
+        if actor_cols.is_empty() {
+            continue;
+        }
+
         let temporal_col = table.schema.fields()
             .iter()
             .find(|f| matches!(f.data_type(), DataType::Timestamp(_, _)))
             .map(|f| f.name().clone());
 
-        // Identify feature columns (non-actor, non-temporal, non-PK string/numeric)
         let feature_cols: Vec<String> = table.schema.fields()
             .iter()
             .filter(|f| {
@@ -1953,7 +2010,6 @@ fn run_behavioral_pipeline(
                 if temporal_col.as_deref() == Some(name.as_str()) {
                     return false;
                 }
-                // Only profile string and numeric columns
                 matches!(f.data_type(),
                     DataType::Utf8 | DataType::LargeUtf8 |
                     DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64 |
@@ -1964,14 +2020,32 @@ fn run_behavioral_pipeline(
             .map(|f| f.name().clone())
             .collect();
 
-        // Profile each actor column
-        for actor_col in &actor_cols {
+        for actor_col in actor_cols.iter() {
+            // Check if this column's namespace has already been profiled
+            let ns_name = col_to_ns.get(&(table.entity.clone(), actor_col.clone()));
+            if let Some(ns) = ns_name {
+                if profiled_namespaces.contains(ns) {
+                    if !cli.quiet {
+                        eprintln!(
+                            "    {} skipping {}.{} — namespace '{}' already profiled",
+                            "→".dimmed(),
+                            table.entity.cyan(),
+                            actor_col,
+                            ns,
+                        );
+                    }
+                    continue;
+                }
+            }
+
             if !cli.quiet {
+                let ns_label = ns_name.map_or(String::new(), |n| format!(" [namespace: {}]", n));
                 eprintln!(
-                    "    {} profiling actors on {}.{}",
+                    "    {} profiling actors on {}.{}{}",
                     "→".dimmed(),
                     table.entity.cyan(),
                     actor_col,
+                    ns_label,
                 );
             }
 
@@ -2003,18 +2077,15 @@ fn run_behavioral_pipeline(
             // Persona clustering
             let mut cluster_config = ClusteringConfig::default();
             if let Some(max_k) = opts.max_personas {
-                // Limit K range by adjusting min_actors if needed
                 cluster_config.min_actors = cluster_config.min_actors.min(max_k);
             }
 
             if let Some(result) = discover_personas(&profiles, &cluster_config) {
-                // If max_personas specified and result has more, take top-weighted
                 let mut personas = result.personas;
                 if let Some(max_k) = opts.max_personas {
                     if personas.len() > max_k {
                         personas.sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap_or(std::cmp::Ordering::Equal));
                         personas.truncate(max_k);
-                        // Re-normalize weights
                         let total: f64 = personas.iter().map(|p| p.weight).sum();
                         if total > 0.0 {
                             for p in &mut personas {
@@ -2035,19 +2106,49 @@ fn run_behavioral_pipeline(
                     );
                 }
 
-                analysis.personas = personas;
+                // Store personas for this namespace so other columns can inherit
+                if let Some(ns) = ns_name {
+                    profiled_namespaces.insert(ns.clone());
+                    namespace_personas.insert(ns.clone(), personas);
+                } else {
+                    // No namespace — store directly on this table's analysis
+                    table_analyses[i].personas = personas;
+                }
+            }
+
+            // Mark namespace as profiled even without personas
+            if let Some(ns) = ns_name {
+                profiled_namespaces.insert(ns.clone());
             }
         }
+    }
 
-        // Actor-to-actor relationship discovery
-        // Look for pairs of actor columns within the same table
+    // Phase 2c: Distribute namespace personas to all tables that reference them.
+    // The primary profiling table gets the personas directly; other tables in the
+    // same namespace inherit them so the assembled model uses shared personas.
+    for (i, table) in tables.iter().enumerate() {
+        let actor_cols = &all_actor_cols[i].1;
+        for actor_col in actor_cols.iter() {
+            if let Some(ns) = col_to_ns.get(&(table.entity.clone(), actor_col.clone())) {
+                if let Some(personas) = namespace_personas.get(ns) {
+                    if table_analyses[i].personas.is_empty() {
+                        table_analyses[i].personas = personas.clone();
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase 2d: Actor-to-actor relationship discovery (per-table, column pairs)
+    for (i, table) in tables.iter().enumerate() {
+        let actor_cols = &all_actor_cols[i].1;
         if actor_cols.len() >= 2 {
             let graph_config = RelationshipDiscoveryConfig::default();
-            for i in 0..actor_cols.len() {
-                for j in (i + 1)..actor_cols.len() {
+            for ci in 0..actor_cols.len() {
+                for cj in (ci + 1)..actor_cols.len() {
                     let mut accumulator = RelationshipAccumulator::new(
-                        actor_cols[i].clone(),
-                        actor_cols[j].clone(),
+                        actor_cols[ci].clone(),
+                        actor_cols[cj].clone(),
                         table.entity.clone(),
                     );
 
@@ -2061,12 +2162,12 @@ fn run_behavioral_pipeline(
                                 "    {} actor graph discovered: {} ({} → {})",
                                 "→".dimmed(),
                                 spec.name,
-                                actor_cols[i],
-                                actor_cols[j],
+                                actor_cols[ci],
+                                actor_cols[cj],
                             );
                         }
                         stats.graphs_discovered += 1;
-                        analysis.actor_relationships.push(spec);
+                        table_analyses[i].actor_relationships.push(spec);
                     }
                 }
             }
