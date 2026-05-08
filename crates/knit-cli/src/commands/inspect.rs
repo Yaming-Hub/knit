@@ -1,8 +1,9 @@
-//! `knit inspect` — display summary information about a learn state file.
+//! `knit inspect` — display summary information about a learn state file or schema file.
 //!
-//! This command reads a serialized [`LearnState`] file and prints a human-readable
-//! summary: tables, row counts, columns, cardinality estimates, and processing
-//! history. Useful for monitoring incremental learning progress without finalizing.
+//! This command reads a serialized [`LearnState`] file (.json) or a schema file (.toml)
+//! and prints a human-readable summary. For state files: tables, row counts, columns,
+//! cardinality estimates, and processing history. For schema files with `--actors`:
+//! actor entities, personas, and actor relationships.
 
 use std::path::Path;
 
@@ -13,11 +14,337 @@ use knit_learn::streaming::state::LearnState;
 use crate::Cli;
 
 /// Run the inspect command.
-pub fn run(state_path: &str, show_columns: bool, cli: &Cli) -> Result<()> {
+pub fn run(file_path: &str, show_columns: bool, show_actors: bool, cli: &Cli) -> Result<()> {
+    let path = Path::new(file_path);
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    match ext.as_str() {
+        "toml" => run_schema(file_path, show_actors, cli),
+        _ => run_state(file_path, show_columns, show_actors, cli),
+    }
+}
+
+/// Inspect a schema file (.toml) for actor/persona/relationship summary.
+fn run_schema(schema_path: &str, show_actors: bool, cli: &Cli) -> Result<()> {
+    let model = super::load_schema(schema_path)
+        .map_err(|e| anyhow::anyhow!("failed to parse schema: {}", e))?;
+
+    if cli.json {
+        print_schema_json(&model, show_actors);
+    } else {
+        print_schema_human(&model, show_actors);
+    }
+    Ok(())
+}
+
+fn print_schema_human(model: &knit_core::DataModel, show_actors: bool) {
+    println!(
+        "{} — {}",
+        "Schema Summary".bold(),
+        model.name.cyan(),
+    );
+    if let Some(ref desc) = model.description {
+        println!("  {}", desc.dimmed());
+    }
+    println!();
+
+    // Entity overview
+    println!("{}", "Entities:".bold());
+    for entity in &model.entities {
+        let field_count = entity.fields.len();
+        let actor_cols: Vec<&str> = entity
+            .fields
+            .iter()
+            .filter(|f| f.actor_column)
+            .map(|f| f.name.as_str())
+            .collect();
+        let row_desc = if entity.activity_count.is_some() {
+            match &entity.count {
+                knit_core::types::CountSpec::Fixed(n) => format!("~{n} rows (activity-driven)"),
+                _ => "dynamic rows (activity-driven)".to_string(),
+            }
+        } else {
+            match &entity.count {
+                knit_core::types::CountSpec::Fixed(n) => format!("{n} rows"),
+                knit_core::types::CountSpec::Range { min, max } => format!("{min}–{max} rows"),
+                _ => "dynamic rows".to_string(),
+            }
+        };
+
+        if entity.actor {
+            println!(
+                "  {} {} — {} fields, {} {}",
+                entity.name.green(),
+                "(actor)".yellow(),
+                field_count,
+                row_desc,
+                if let Some(ref pd) = entity.persona_distribution {
+                    format!("[persona: {}]", pd)
+                } else {
+                    String::new()
+                },
+            );
+        } else {
+            println!(
+                "  {} — {} fields, {}",
+                entity.name.green(),
+                field_count,
+                row_desc,
+            );
+        }
+
+        if !actor_cols.is_empty() {
+            println!(
+                "    actor columns: {}",
+                actor_cols.join(", ").yellow(),
+            );
+        }
+    }
+
+    if !show_actors {
+        let has_behavioral = !model.personas.is_empty()
+            || !model.actor_relationships.is_empty()
+            || model.entities.iter().any(|e| e.actor);
+        if has_behavioral {
+            println!();
+            println!(
+                "  {} use {} to see actor/persona/relationship details",
+                "hint:".dimmed(),
+                "--actors".cyan(),
+            );
+        }
+        return;
+    }
+
+    // Persona details
+    if !model.personas.is_empty() {
+        println!();
+        println!("{}", "Personas:".bold());
+
+        // Group personas by the entity that references them.
+        // The compiler matches personas to entities by "{entity_name}_" prefix,
+        // so we use the same rule here.
+        let persona_groups: std::collections::BTreeMap<String, Vec<&knit_core::types::Persona>> = {
+            let mut groups = std::collections::BTreeMap::<String, Vec<&knit_core::types::Persona>>::new();
+            for entity in &model.entities {
+                if let Some(ref pd) = entity.persona_distribution {
+                    groups.entry(pd.clone()).or_default();
+                }
+            }
+            for p in &model.personas {
+                let mut placed = false;
+                // Try prefix-based matching (learned schemas use "{entity}_" prefix)
+                for entity in &model.entities {
+                    if let Some(ref pd) = entity.persona_distribution {
+                        let prefix = format!("{}_", entity.name);
+                        if p.name.starts_with(&prefix) {
+                            groups.entry(pd.clone()).or_default().push(p);
+                            placed = true;
+                            break;
+                        }
+                    }
+                }
+                // Fallback: put in first matching group (hand-authored schemas)
+                if !placed {
+                    if let Some(first) = groups.values_mut().next() {
+                        first.push(p);
+                    } else {
+                        groups.entry("default".to_string()).or_default().push(p);
+                    }
+                }
+            }
+            groups
+        };
+
+        for (group, personas) in &persona_groups {
+            println!("  {} ({} persona(s)):", group.cyan(), personas.len());
+            for p in personas {
+                let pct = (p.weight * 100.0).round() as u32;
+                let trait_names: Vec<&str> = p.traits.keys().map(|k| k.as_str()).collect();
+                println!(
+                    "    {} — {}% weight, {} trait(s){}",
+                    p.name.yellow(),
+                    pct,
+                    p.traits.len(),
+                    if trait_names.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" [{}]", trait_names.join(", "))
+                    },
+                );
+            }
+        }
+    }
+
+    // Actor relationships
+    if !model.actor_relationships.is_empty() {
+        println!();
+        println!("{}", "Actor Relationships:".bold());
+        for rel in &model.actor_relationships {
+            let direction = if rel.from_entity == rel.to_entity {
+                format!("{} ↔ {} (self-referential)", rel.from_entity.green(), rel.to_entity.green())
+            } else {
+                format!("{} → {}", rel.from_entity.green(), rel.to_entity.green())
+            };
+            println!(
+                "  {} — {} ({})",
+                rel.name.yellow(),
+                direction,
+                rel.graph_type,
+            );
+            if !rel.params.is_empty() {
+                let params_str: Vec<String> = rel
+                    .params
+                    .iter()
+                    .map(|(k, v)| format!("{}={}", k, v))
+                    .collect();
+                println!("    params: {}", params_str.join(", "));
+            }
+        }
+    }
+
+    // Behavioral generator summary
+    let behavioral_gens: Vec<(&str, &str, &str)> = model
+        .entities
+        .iter()
+        .flat_map(|e| {
+            e.fields.iter().filter_map(move |f| {
+                let gen_type = f.generator.as_ref().and_then(|g| match g {
+                    knit_core::types::GeneratorSpec::ActorRef { .. } => Some("actor_ref"),
+                    knit_core::types::GeneratorSpec::ActorTemporal { .. } => Some("actor_temporal"),
+                    knit_core::types::GeneratorSpec::PersonaField { .. } => Some("persona_field"),
+                    knit_core::types::GeneratorSpec::RelationshipRef { .. } => Some("relationship_ref"),
+                    knit_core::types::GeneratorSpec::ThreadRef { .. } => Some("thread_ref"),
+                    _ => None,
+                });
+                gen_type.map(|gt| (e.name.as_str(), f.name.as_str(), gt))
+            })
+        })
+        .collect();
+
+    if !behavioral_gens.is_empty() {
+        println!();
+        println!("{}", "Behavioral Generators:".bold());
+        for (entity, field, gen_type) in &behavioral_gens {
+            println!(
+                "  {}.{} — {}",
+                entity.green(),
+                field.yellow(),
+                gen_type.cyan(),
+            );
+        }
+    }
+}
+
+fn print_schema_json(model: &knit_core::DataModel, show_actors: bool) {
+    let entities: Vec<serde_json::Value> = model
+        .entities
+        .iter()
+        .map(|e| {
+            let actor_cols: Vec<&str> = e
+                .fields
+                .iter()
+                .filter(|f| f.actor_column)
+                .map(|f| f.name.as_str())
+                .collect();
+            serde_json::json!({
+                "name": e.name,
+                "fields": e.fields.len(),
+                "actor": e.actor,
+                "persona_distribution": e.persona_distribution,
+                "actor_columns": actor_cols,
+            })
+        })
+        .collect();
+
+    let mut result = serde_json::json!({
+        "name": model.name,
+        "description": model.description,
+        "entities": entities,
+    });
+
+    if show_actors {
+        let personas: Vec<serde_json::Value> = model
+            .personas
+            .iter()
+            .map(|p| {
+                serde_json::json!({
+                    "name": p.name,
+                    "weight": p.weight,
+                    "traits": p.traits.keys().collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+
+        let relationships: Vec<serde_json::Value> = model
+            .actor_relationships
+            .iter()
+            .map(|r| {
+                serde_json::json!({
+                    "name": r.name,
+                    "from_entity": r.from_entity,
+                    "to_entity": r.to_entity,
+                    "graph_type": r.graph_type.to_string(),
+                    "params": r.params,
+                })
+            })
+            .collect();
+
+        let behavioral_gens: Vec<serde_json::Value> = model
+            .entities
+            .iter()
+            .flat_map(|e| {
+                e.fields.iter().filter_map(move |f| {
+                    let gen_type = f.generator.as_ref().and_then(|g| match g {
+                        knit_core::types::GeneratorSpec::ActorRef { .. } => Some("actor_ref"),
+                        knit_core::types::GeneratorSpec::ActorTemporal { .. } => Some("actor_temporal"),
+                        knit_core::types::GeneratorSpec::PersonaField { .. } => Some("persona_field"),
+                        knit_core::types::GeneratorSpec::RelationshipRef { .. } => Some("relationship_ref"),
+                        knit_core::types::GeneratorSpec::ThreadRef { .. } => Some("thread_ref"),
+                        _ => None,
+                    });
+                    gen_type.map(|gt| {
+                        serde_json::json!({
+                            "entity": e.name,
+                            "field": f.name,
+                            "generator": gt,
+                        })
+                    })
+                })
+            })
+            .collect();
+
+        result["personas"] = serde_json::Value::Array(personas);
+        result["actor_relationships"] = serde_json::Value::Array(relationships);
+        result["behavioral_generators"] = serde_json::Value::Array(behavioral_gens);
+    }
+
+    println!("{}", serde_json::to_string_pretty(&result).unwrap());
+}
+
+/// Inspect a learn state file (.json).
+fn run_state(state_path: &str, show_columns: bool, show_actors: bool, cli: &Cli) -> Result<()> {
     let path = Path::new(state_path);
     let state = LearnState::load(path)
         .map_err(|e| anyhow::anyhow!("{}", e))?
         .with_context(|| format!("state file not found: {}", state_path))?;
+
+    if show_actors && !cli.json {
+        eprintln!(
+            "  {} behavioral data is stored in the schema file, not the state file",
+            "note:".yellow(),
+        );
+        eprintln!(
+            "  {} run {} on a .weave.toml file to see actor details",
+            "hint:".dimmed(),
+            "knit inspect schema.weave.toml --actors".cyan(),
+        );
+        eprintln!();
+    }
 
     if cli.json {
         print_json(&state, show_columns);
