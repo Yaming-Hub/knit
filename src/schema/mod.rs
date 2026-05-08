@@ -26,10 +26,12 @@
 
 mod error;
 mod extends;
+pub(crate) mod includes;
 mod parser;
 mod validate;
 
 pub use error::SchemaError;
 pub use extends::{merge_models, resolve_extends};
+pub use includes::{merge_main_over_includes, resolve_includes};
 pub use parser::{parse_json, parse_json_file, parse_toml, parse_toml_file};
 pub use validate::validate;

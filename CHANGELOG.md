@@ -4,6 +4,15 @@ All notable changes to Knit are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Schema composition** — `include` directive for composing schemas from
+  reusable fragment files. Supports recursive includes, diamond-safe
+  include-once semantics, cycle detection, and security path restrictions.
+  Fragment validation rejects `[model]` sections and `extends` in included
+  files.
+- Modular example schemas in `examples/modular/`
+
 ## [0.3.0] — 2026-05-08
 
 ### Changed

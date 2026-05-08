@@ -12,6 +12,7 @@ use crate::core::{
 };
 
 use crate::schema::error::SchemaError;
+use crate::schema::includes::StringOrVec;
 
 // ── Intermediate schema representation ──────────────────────────────
 
@@ -21,6 +22,8 @@ struct RawSchema {
     schema_version: Option<String>,
     #[serde(default)]
     extends: Option<String>,
+    #[serde(default)]
+    include: Option<StringOrVec>,
     #[serde(default)]
     model: RawModel,
     #[serde(default)]
@@ -85,13 +88,35 @@ pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
 
 /// Parse a Weave schema from a TOML file.
 ///
-/// If the schema specifies an `extends` field, the parent schema is resolved
-/// and merged automatically.
+/// If the schema specifies `include` directives, the included fragments are
+/// resolved and merged first. If the schema specifies an `extends` field,
+/// the parent schema is resolved and merged on top.
 pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let content = std::fs::read_to_string(path)?;
     let raw: RawSchema = toml::from_str(&content)?;
     let extends = raw.extends.clone();
+    let includes = raw.include.clone();
     let model = raw.into_data_model()?;
+
+    // Step 1: resolve includes (if any)
+    let model = if let Some(inc) = includes {
+        let inc_vec = inc.into_vec();
+        if inc_vec.is_empty() {
+            model
+        } else {
+            let mut visited = std::collections::HashSet::new();
+            let canonical = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+            let mut stack = vec![canonical.clone()];
+            visited.insert(canonical);
+            let included =
+                crate::schema::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
+            crate::schema::includes::merge_main_over_includes(&included, &model)
+        }
+    } else {
+        model
+    };
+
+    // Step 2: resolve extends (if any)
     if let Some(ref parent_ref) = extends {
         crate::schema::resolve_extends(path, &model, parent_ref)
     } else {
@@ -101,13 +126,35 @@ pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError>
 
 /// Parse a Weave schema from a JSON file.
 ///
-/// If the schema specifies an `extends` field, the parent schema is resolved
-/// and merged automatically.
+/// If the schema specifies `include` directives, the included fragments are
+/// resolved and merged first. If the schema specifies an `extends` field,
+/// the parent schema is resolved and merged on top.
 pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let content = std::fs::read_to_string(path)?;
     let raw: RawSchema = serde_json::from_str(&content)?;
     let extends = raw.extends.clone();
+    let includes = raw.include.clone();
     let model = raw.into_data_model()?;
+
+    // Step 1: resolve includes (if any)
+    let model = if let Some(inc) = includes {
+        let inc_vec = inc.into_vec();
+        if inc_vec.is_empty() {
+            model
+        } else {
+            let mut visited = std::collections::HashSet::new();
+            let canonical = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+            let mut stack = vec![canonical.clone()];
+            visited.insert(canonical);
+            let included =
+                crate::schema::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
+            crate::schema::includes::merge_main_over_includes(&included, &model)
+        }
+    } else {
+        model
+    };
+
+    // Step 2: resolve extends (if any)
     if let Some(ref parent_ref) = extends {
         crate::schema::resolve_extends(path, &model, parent_ref)
     } else {

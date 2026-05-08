@@ -30,7 +30,8 @@ cargo build --release
 ## Features
 
 - **Declarative schema language** — Define entities, fields, generators, and
-  relationships in `.weave.toml` files with inheritance via `extends`.
+  relationships in `.weave.toml` files with inheritance via `extends` and
+  modular composition via `include`.
 - **Rich generator library** — Sequences, distributions (normal, uniform,
   Pareto, Zipf, …), patterns, UUIDs, one-of, derived expressions, temporal
   generators, correlated fields, and graph topologies.
@@ -144,6 +145,39 @@ knit generate demo.weave.toml --format csv --seed 123 -o ./data
 knit generate demo.weave.toml --dry-run
 ```
 
+### Schema Composition
+
+Build large schemas from reusable fragments using `include`:
+
+```toml
+# main.weave.toml
+include = ["users.weave.toml", "products.weave.toml"]
+
+[model]
+name = "my_project"
+seed = 42
+
+# Add entities specific to this schema
+[[entities]]
+name = "orders"
+count = 5000
+# ...
+
+[[relationships]]
+name = "orders_to_users"
+from = "orders"
+to = "users"
+kind = "many_to_one"
+```
+
+**Rules:**
+- Fragments define entities, relationships, personas, etc. — but no `[model]` section
+- Name conflicts between included fragments are errors; the main schema silently overrides
+- Includes are recursive and diamond-safe (each file loaded at most once)
+- Security: absolute paths and `..` traversal are rejected
+
+See `examples/modular/` for a working example.
+
 ## Module Structure
 
 Knit is published as a single crate. Internally it is organized into modules:
@@ -174,6 +208,8 @@ The `examples/` directory contains sample schemas:
 - `server_logs.weave.toml` — Servers, HTTP requests, and error logs
 - `social_platform.weave.toml` — Social network with actor graphs, persona-driven
   temporal patterns, burst sessions, and posts/comments/DMs
+- `modular/` — Modular composition example: `users.weave.toml` and
+  `products.weave.toml` fragments composed via `include` in `ecommerce.weave.toml`
 - `cli_test.weave.toml` — Minimal schema for integration testing
 
 Generate all examples:
