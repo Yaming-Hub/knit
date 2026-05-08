@@ -4,6 +4,8 @@ All notable changes to Knit are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-07
+
 ### Added
 
 - **Behavioral modeling** — Full human behavior simulation pipeline:
@@ -36,18 +38,22 @@ All notable changes to Knit are documented in this file.
   summaries
 - **Behavioral examples** — Four example schemas exercising behavioral modeling:
   `social_platform`, `ecommerce_behavioral`, `email_traffic`, `hr_org`
+- **GitHub Actions CI** — Automated check, test, clippy, fmt, and doc jobs
 
 ### Changed
 
 - README updated with behavioral modeling documentation, examples, and CLI
   reference for `--actors` flag
 - Design doc §12.3 example filenames corrected to match actual files
+- Applied `cargo fmt` across entire workspace
 
 ### Fixed
 
-- All clippy warnings resolved across workspace (17 files)
+- All clippy warnings resolved across workspace
 - Ignored doc tests converted to compilable `no_run` examples (graph, plugin,
   pipeline)
+- Fixed 6 broken rustdoc links (types.rs, actor_pool.rs, string_fk.rs,
+  temporal_store.rs, clustering.rs, learn.rs)
 
 ## [0.1.0] — 2026-05-02
 
