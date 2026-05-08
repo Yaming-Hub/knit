@@ -125,6 +125,12 @@ pub struct ThreadRefGenerator {
 }
 
 impl ThreadRefGenerator {
+    /// Create a new thread-ref generator.
+    ///
+    /// * `reply_probability` — chance each row is a reply (vs. thread starter)
+    /// * `max_depth` — maximum reply chain depth
+    /// * `reply_window` — ring buffer capacity for recent PKs
+    /// * `pk_field` — name of the primary key field to read from batch columns
     pub fn new(reply_probability: f64, max_depth: u32, reply_window: usize, pk_field: String) -> Self {
         Self {
             reply_probability,
