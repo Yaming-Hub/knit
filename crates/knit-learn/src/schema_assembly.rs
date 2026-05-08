@@ -397,7 +397,7 @@ pub fn score_actor_column(name: &str) -> f64 {
             "sent", "received", "initiated", "authorized", "verified",
         ];
         let stem = &lower[..lower.len() - 3];
-        if action_verbs.iter().any(|v| stem == *v) {
+        if action_verbs.contains(&stem) {
             return 0.85;
         }
     }
@@ -415,7 +415,7 @@ pub fn score_actor_column(name: &str) -> f64 {
     // Pattern: {actor_prefix}_name
     if lower.ends_with("_name") {
         let stem = &lower[..lower.len() - 5];
-        if ACTOR_PREFIXES.iter().any(|p| stem == *p) {
+        if ACTOR_PREFIXES.contains(&stem) {
             return 0.70;
         }
     }
@@ -424,7 +424,7 @@ pub fn score_actor_column(name: &str) -> f64 {
     if lower.ends_with("_email") || lower.ends_with("_code") {
         let suffix_len = if lower.ends_with("_email") { 6 } else { 5 };
         let stem = &lower[..lower.len() - suffix_len];
-        if ACTOR_PREFIXES.iter().any(|p| stem == *p) {
+        if ACTOR_PREFIXES.contains(&stem) {
             return 0.70;
         }
     }
@@ -462,7 +462,7 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
         "passenger", "patient",
     ];
     // Split on common delimiters and check tokens
-    let tokens: Vec<&str> = lower_name.split(|c: char| c == '_' || c == '-' || c == '.')
+    let tokens: Vec<&str> = lower_name.split(['_', '-', '.'])
         .collect();
     for keyword in &actor_keywords {
         // Check singular or plural form in any token

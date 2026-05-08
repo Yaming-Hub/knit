@@ -433,8 +433,8 @@ impl ColumnState {
         self.top_k.merge(&other.top_k);
 
         // Merge numeric only if both are numeric types
-        if self.numeric.is_some() || other.numeric.is_some() {
-            if matches!(
+        if (self.numeric.is_some() || other.numeric.is_some())
+            && matches!(
                 self.data_type,
                 ColumnDataType::Integer | ColumnDataType::Float | ColumnDataType::Temporal
             ) {
@@ -444,7 +444,6 @@ impl ColumnState {
                     _ => {}
                 }
             }
-        }
     }
 }
 

@@ -178,8 +178,8 @@ pub fn kmeans(
 
         for c in 0..k {
             if counts[c] > 0 {
-                for j in 0..d {
-                    new_centroids[c][j] /= counts[c] as f64;
+                for val in &mut new_centroids[c][..d] {
+                    *val /= counts[c] as f64;
                 }
             } else {
                 // Empty cluster — reinitialize randomly

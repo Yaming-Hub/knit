@@ -408,22 +408,20 @@ fn extract_string_values(array: &dyn Array) -> Option<StringArray> {
                 .map(|i| {
                     if array.is_null(i) {
                         None
+                    } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>() {
+                        let values = dict.values().as_any().downcast_ref::<StringArray>()?;
+                        let key = dict.keys().value(i) as usize;
+                        Some(values.value(key).to_string())
+                    } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int8Type>>() {
+                        let values = dict.values().as_any().downcast_ref::<StringArray>()?;
+                        let key = dict.keys().value(i) as usize;
+                        Some(values.value(key).to_string())
+                    } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int16Type>>() {
+                        let values = dict.values().as_any().downcast_ref::<StringArray>()?;
+                        let key = dict.keys().value(i) as usize;
+                        Some(values.value(key).to_string())
                     } else {
-                    if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>() {
-                            let values = dict.values().as_any().downcast_ref::<StringArray>()?;
-                            let key = dict.keys().value(i) as usize;
-                            Some(values.value(key).to_string())
-                        } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int8Type>>() {
-                            let values = dict.values().as_any().downcast_ref::<StringArray>()?;
-                            let key = dict.keys().value(i) as usize;
-                            Some(values.value(key).to_string())
-                        } else if let Some(dict) = array.as_any().downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int16Type>>() {
-                            let values = dict.values().as_any().downcast_ref::<StringArray>()?;
-                            let key = dict.keys().value(i) as usize;
-                            Some(values.value(key).to_string())
-                        } else {
-                            None
-                        }
+                        None
                     }
                 })
                 .collect();

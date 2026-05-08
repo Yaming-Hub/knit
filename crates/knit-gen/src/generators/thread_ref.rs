@@ -156,8 +156,7 @@ impl FieldGenerator for ThreadRefGenerator {
         let mut state = self.state.lock().unwrap();
         let mut values: Vec<Option<i64>> = Vec::with_capacity(count);
 
-        for i in 0..count {
-            let pk = pks[i];
+        for &pk in &pks[..count] {
             let is_reply = gen_f64(rng) < self.reply_probability;
 
             let parent = if is_reply {

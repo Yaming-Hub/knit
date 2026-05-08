@@ -29,7 +29,7 @@ pub enum ExpansionStrategy {
 
 impl ExpansionStrategy {
     /// Parse expansion strategy from string (case-insensitive).
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "combinatorial" => Self::Combinatorial,
             "suffix" => Self::Suffix,
@@ -55,7 +55,7 @@ pub struct DictionaryGenerator {
 impl DictionaryGenerator {
     /// Create a new dictionary generator from loaded entries and expansion mode.
     pub fn new(entries: Vec<String>, expansion: String) -> Self {
-        let strategy = ExpansionStrategy::from_str(&expansion);
+        let strategy = ExpansionStrategy::parse(&expansion);
         let token_pools = if strategy == ExpansionStrategy::Combinatorial {
             Some(build_token_pools(&entries))
         } else {

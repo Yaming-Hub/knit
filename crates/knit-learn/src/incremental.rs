@@ -110,8 +110,8 @@ pub fn ingest_batches_to_state(
     table.add_rows(total_rows);
 
     // Record chunk (once per source file)
-    let is_duplicate = state.record_chunk(source_path, total_rows);
-    is_duplicate
+    
+    state.record_chunk(source_path, total_rows)
 }
 
 /// Update relationship evidence in the state after ingestion.
@@ -418,7 +418,7 @@ fn finalize_columns(table: &TableState) -> Vec<ColumnAnalysis> {
     table
         .columns
         .iter()
-        .map(|col| finalize_column(col))
+        .map(finalize_column)
         .collect()
 }
 
@@ -509,7 +509,7 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
             ca.has_time_component = col
                 .arrow_type_hint
                 .as_deref()
-                .map_or(false, |h| h.contains("Timestamp"));
+                .is_some_and(|h| h.contains("Timestamp"));
         }
 
         ColumnDataType::String => {
@@ -544,7 +544,6 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
                     ca.string_patterns = inference
                         .patterns
                         .into_iter()
-                        .map(|(pat, rate)| (pat, rate))
                         .collect();
                 }
             }

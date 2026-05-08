@@ -68,6 +68,7 @@ struct RawOutputModel {
 /// `state_path` enables incremental mode when provided.
 /// `finalize` emits schema from existing state without processing new data.
 /// `strict` errors on duplicate source paths (default: warn).
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     source: Option<&str>,
     output: &str,
@@ -406,6 +407,7 @@ fn run_batch(source: &str, output: &str, sample: Option<usize>, entity_filter: &
 }
 
 /// Incremental mode: load/create state, ingest data, optionally finalize.
+#[allow(clippy::too_many_arguments)]
 fn run_incremental(
     source: Option<&str>,
     output: &str,

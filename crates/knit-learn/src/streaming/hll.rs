@@ -67,7 +67,7 @@ impl HyperLogLog {
         let remaining = hash >> self.precision;
         // Count leading zeros in the remaining bits + 1 (ρ function).
         // For a k-bit word of all zeros, ρ = k + 1.
-        let bits = (64 - self.precision) as u8;
+        let bits = 64 - self.precision;
         let rho = if remaining == 0 {
             bits + 1
         } else {
