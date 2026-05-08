@@ -344,6 +344,7 @@ fn format_generator_spec(gen: &knit_core::GeneratorSpec) -> String {
                 max_depth
             )
         }
+        knit_core::GeneratorSpec::Plugin { name, .. } => format!("plugin({})", name),
     }
 }
 

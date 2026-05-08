@@ -265,6 +265,9 @@ fn generator_label(gp: &knit_plan::GeneratorPlan) -> String {
                 max_depth
             )
         }
+        knit_plan::GeneratorPlan::Plugin { name, .. } => {
+            format!("plugin({})", name)
+        }
     }
 }
 

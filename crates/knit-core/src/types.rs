@@ -428,6 +428,17 @@ pub enum GeneratorSpec {
         #[serde(default = "default_reply_window")]
         reply_window: usize,
     },
+    /// Custom generator supplied by a runtime plugin.
+    ///
+    /// The plugin is looked up in the global plugin registry
+    /// by name at generation time. Parameters are passed as typed key-value pairs.
+    Plugin {
+        /// Registered plugin name (must match `GeneratorPlugin::name()`).
+        name: String,
+        /// Arbitrary parameters passed to the plugin's `create()` method.
+        #[serde(default)]
+        params: BTreeMap<String, Value>,
+    },
 }
 
 /// Schema-level specification for cross-entity temporal ordering.

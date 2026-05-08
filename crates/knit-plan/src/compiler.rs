@@ -794,6 +794,10 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     pk_field,
                 }
             }
+            GeneratorSpec::Plugin { name, params } => GeneratorPlan::Plugin {
+                name: name.clone(),
+                params: params.clone(),
+            },
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.

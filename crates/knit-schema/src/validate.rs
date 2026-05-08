@@ -1322,6 +1322,14 @@ fn validate_generator(
                 });
             }
         }
+        GeneratorSpec::Plugin { name, .. } => {
+            if name.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "plugin generator requires a non-empty 'name'".to_string(),
+                });
+            }
+        }
         // Pattern, Derived, Constant — no additional validation needed
         _ => {}
     }

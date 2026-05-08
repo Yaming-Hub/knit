@@ -556,6 +556,11 @@ fn resolve_arrow_type(fp: &knit_plan::FieldPlan) -> ArrowDataType {
         _ => {}
     }
 
+    // Plugins cannot declare their output type at plan time — use the field's declared data_type.
+    if matches!(&fp.generator_plan, knit_plan::GeneratorPlan::Plugin { .. }) {
+        return default_arrow_for_data_type(&fp.data_type);
+    }
+
     let generator_type = infer_arrow_type(&fp.generator_plan);
 
     // If declared type is String/Uuid but generator produces non-string (e.g. FK generator
@@ -987,6 +992,40 @@ fn infer_arrow_type(gp: &knit_plan::GeneratorPlan) -> ArrowDataType {
             ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         }
         knit_plan::GeneratorPlan::ThreadRef { .. } => ArrowDataType::Int64,
+        // Plugin output type unknown at plan time — default to Utf8
+        knit_plan::GeneratorPlan::Plugin { .. } => ArrowDataType::Utf8,
+    }
+}
+
+/// Map a declared field data_type to a reasonable default Arrow type.
+/// Used for plugin generators where we can't infer from the plan.
+fn default_arrow_for_data_type(dt: &knit_core::DataType) -> ArrowDataType {
+    match dt {
+        knit_core::DataType::Int => ArrowDataType::Int64,
+        knit_core::DataType::Int32 => ArrowDataType::Int32,
+        knit_core::DataType::Float => ArrowDataType::Float64,
+        knit_core::DataType::Bool => ArrowDataType::Boolean,
+        knit_core::DataType::String => ArrowDataType::Utf8,
+        knit_core::DataType::Uuid => ArrowDataType::Utf8,
+        knit_core::DataType::Date => ArrowDataType::Date32,
+        knit_core::DataType::Time => ArrowDataType::Time64(arrow::datatypes::TimeUnit::Nanosecond),
+        knit_core::DataType::Datetime => {
+            ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
+        }
+        knit_core::DataType::DatetimeUs => {
+            ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None)
+        }
+        knit_core::DataType::Datetimetz => {
+            ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, Some("UTC".into()))
+        }
+        knit_core::DataType::Duration => {
+            ArrowDataType::Duration(arrow::datatypes::TimeUnit::Millisecond)
+        }
+        knit_core::DataType::Bytes => ArrowDataType::Binary,
+        knit_core::DataType::Array => {
+            ArrowDataType::List(Arc::new(ArrowField::new("element", ArrowDataType::Utf8, true)))
+        }
+        knit_core::DataType::Map => ArrowDataType::Utf8,
     }
 }
 
