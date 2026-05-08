@@ -11,13 +11,17 @@
 //!
 //! # Usage
 //!
-//! ```ignore
+//! ```no_run
+//! use std::collections::HashMap;
 //! use knit_gen::plugin::{registry, GeneratorPlugin};
+//! use knit_gen::traits::FieldGenerator;
 //!
 //! struct MyPlugin;
 //! impl GeneratorPlugin for MyPlugin {
 //!     fn name(&self) -> &str { "my_custom" }
-//!     fn create(&self, params: &HashMap<String, String>) -> Box<dyn FieldGenerator> { ... }
+//!     fn create(&self, _params: &HashMap<String, String>) -> Box<dyn FieldGenerator> {
+//!         unimplemented!("provide your generator here")
+//!     }
 //! }
 //!
 //! registry().register(Box::new(MyPlugin));

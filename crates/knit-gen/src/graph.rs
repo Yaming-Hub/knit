@@ -6,8 +6,12 @@
 //!
 //! ## Usage
 //!
-//! ```ignore
-//! let edges = generate_graph(&graph_plan, &actor_pool, seed);
+//! ```no_run
+//! # use knit_gen::graph::generate_graph;
+//! # fn example(graph_plan: &knit_plan::GraphPlan, actor_pool: &knit_gen::ActorPool) {
+//! let graph = generate_graph(graph_plan, actor_pool, 42);
+//! println!("generated {} edges", graph.edges.len());
+//! # }
 //! ```
 
 use knit_core::GraphType;
