@@ -159,6 +159,15 @@ pub fn create_generator_with_seen(
             crate::plan::TopologyModel::ErdosRenyi => {
                 Box::new(topology::ErdosRenyiGenerator::new(params))
             }
+            crate::plan::TopologyModel::StochasticBlock => {
+                Box::new(topology::StochasticBlockGenerator::new(params))
+            }
+            crate::plan::TopologyModel::Configuration => {
+                Box::new(topology::ConfigurationGenerator::new(params))
+            }
+            crate::plan::TopologyModel::Complete => {
+                Box::new(topology::CompleteGenerator::new(params))
+            }
         },
         GeneratorPlan::Conditional {
             field,
