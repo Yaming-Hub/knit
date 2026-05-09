@@ -283,6 +283,8 @@ mod tests {
                 foreign_key: None,
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
             noise_profiles: vec![],
             correlations: vec![],
@@ -448,6 +450,8 @@ mod tests {
             foreign_key: None,
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         // Add new relationship
         child.relationships.push(Relationship {
@@ -458,6 +462,8 @@ mod tests {
             foreign_key: None,
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.relationships.len(), 2);

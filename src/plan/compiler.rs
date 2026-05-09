@@ -408,7 +408,7 @@ fn compile_field_plans(
                     let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
                     let key_store_kind = select_key_store_kind(target_rows);
                     // Look up degree distribution from the relationship definition.
-                    let degree = model
+                    let rel_match = model
                         .relationships
                         .iter()
                         .find(|r| {
@@ -418,7 +418,8 @@ fn compile_field_plans(
                                     .as_deref()
                                     .unwrap_or(&format!("{}_id", r.to))
                                     == field.name
-                        })
+                        });
+                    let degree = rel_match
                         .and_then(|r| r.degree.as_ref())
                         .map(|spec| {
                             crate::plan::DegreePlan {
@@ -427,11 +428,41 @@ fn compile_field_plans(
                                 parent_count: target_rows,
                             }
                         });
+                    let selection = rel_match
+                        .and_then(|r| r.selection.as_ref())
+                        .and_then(|s| {
+                            use crate::core::{
+                                SelectionStrategy, SimpleSelection, ParameterizedSelection,
+                            };
+                            match s {
+                                SelectionStrategy::Simple(SimpleSelection::Uniform) => None,
+                                SelectionStrategy::Simple(SimpleSelection::Sequential) => {
+                                    Some(SelectionPlan::Sequential)
+                                }
+                                SelectionStrategy::Parameterized(
+                                    ParameterizedSelection::Clustered { cluster_size },
+                                ) => Some(SelectionPlan::Clustered {
+                                    cluster_size: *cluster_size,
+                                }),
+                                SelectionStrategy::Parameterized(
+                                    ParameterizedSelection::Weighted { .. },
+                                ) => {
+                                    // Weighted selection deferred — fall back to uniform
+                                    tracing::warn!(
+                                        entity = %entity.name,
+                                        field = %field.name,
+                                        "weighted selection strategy not yet implemented — falling back to uniform"
+                                    );
+                                    None
+                                }
+                            }
+                        });
                     GeneratorPlan::ForeignKey {
                         target_entity: target_entity.to_string(),
                         target_field: "id".to_string(),
                         key_store_kind,
                         degree,
+                        selection,
                     }
                 } else {
                     compile_generator(field, &entity.fields)
@@ -684,6 +715,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 target_field: field.clone(),
                 key_store_kind: KeyStoreKind::InMemoryVec,
                 degree: None,
+                selection: None,
             },
             GeneratorSpec::Pattern { pattern } => GeneratorPlan::Pattern {
                 pattern: pattern.clone(),
@@ -794,6 +826,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 target_field: "id".to_string(),
                 key_store_kind: KeyStoreKind::InMemoryVec,
                 degree: None,
+                selection: None,
             },
             GeneratorSpec::ActorTemporal {
                 trait_name,
@@ -1509,6 +1542,8 @@ mod tests {
                 foreign_key: Some("user_id".to_string()),
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
 
@@ -1539,6 +1574,8 @@ mod tests {
                     foreign_key: Some("user_id".to_string()),
                     cardinality: None,
                     degree: None,
+
+                    selection: None,
                 },
                 Relationship {
                     name: "line_item_order".to_string(),
@@ -1548,6 +1585,8 @@ mod tests {
                     foreign_key: Some("order_id".to_string()),
                     cardinality: None,
                     degree: None,
+
+                    selection: None,
                 },
             ],
         );
@@ -1611,6 +1650,8 @@ mod tests {
                 foreign_key: Some("manager_id".to_string()),
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
 
@@ -1668,6 +1709,8 @@ mod tests {
                     foreign_key: Some("b_id".to_string()),
                     cardinality: None,
                     degree: None,
+
+                    selection: None,
                 },
                 Relationship {
                     name: "b_to_a".to_string(),
@@ -1677,6 +1720,8 @@ mod tests {
                     foreign_key: Some("a_id".to_string()),
                     cardinality: None,
                     degree: None,
+
+                    selection: None,
                 },
             ],
         );
@@ -2188,6 +2233,8 @@ mod tests {
                 foreign_key: None,
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
         let result = compile(&model);
@@ -2224,6 +2271,8 @@ mod tests {
                 foreign_key: Some("user_id".to_string()),
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
 
@@ -2710,6 +2759,8 @@ mod tests {
                 foreign_key: Some("author_id".to_string()),
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
 
@@ -2776,6 +2827,8 @@ mod tests {
                 foreign_key: Some("author_id".to_string()),
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
 

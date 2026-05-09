@@ -294,6 +294,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             foreign_key: Some(r.from_column.clone()),
             cardinality: None,
             degree: None,
+            selection: None,
         })
         .collect();
 

@@ -1079,8 +1079,56 @@ pub struct Relationship {
     /// across parents. When specified (e.g. Zipf), some parents receive
     /// disproportionately more children than others. If omitted, children
     /// are assigned to parents uniformly at random.
+    ///
+    /// Mutually exclusive with `selection` — specifying both is a validation
+    /// error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub degree: Option<DistributionSpec>,
+    /// Target selection strategy controlling *how* a child picks its parent.
+    ///
+    /// Mutually exclusive with `degree` — specifying both is a validation
+    /// error.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection: Option<SelectionStrategy>,
+}
+
+/// How a child row selects its parent FK target.
+///
+/// Parsed from TOML as either a plain string (`"uniform"`, `"sequential"`) or
+/// a table with a `strategy` key plus strategy-specific parameters.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SelectionStrategy {
+    /// Simple strategies that need no extra parameters.
+    Simple(SimpleSelection),
+    /// Structured strategies with extra parameters.
+    Parameterized(ParameterizedSelection),
+}
+
+/// Simple (no-parameter) selection strategies.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SimpleSelection {
+    /// Uniform random selection (the default behavior).
+    Uniform,
+    /// Round-robin assignment based on child row position.
+    Sequential,
+}
+
+/// Selection strategies that require additional parameters.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "strategy", rename_all = "snake_case")]
+pub enum ParameterizedSelection {
+    /// Children tend to reference nearby parents (locality-based clustering).
+    Clustered {
+        /// Window size controlling locality. Larger values produce more spread.
+        cluster_size: u64,
+    },
+    /// Weighted by a numeric field on the parent entity.
+    Weighted {
+        /// Name of the numeric field on the parent entity used as weight.
+        weight_field: String,
+    },
 }
 
 /// Cardinality of a [`Relationship`].

@@ -830,6 +830,52 @@ exponent = 1.2
 
 Higher `exponent` values produce stronger skew — a few parents attract most children.
 
+### Selection Strategy
+
+Control *how* a child picks its parent. The `selection` field is mutually
+exclusive with `degree` — use one or the other.
+
+**Uniform** (default — no need to specify):
+
+```toml
+selection = "uniform"
+```
+
+**Sequential** — deterministic round-robin assignment:
+
+```toml
+[[relationships]]
+name = "employee_dept"
+from = "employees"
+to = "departments"
+kind = "many_to_one"
+foreign_key = "department_id"
+selection = "sequential"
+```
+
+With 100 employees and 10 departments, each department gets exactly 10
+employees. Assignment is based on child row position, making it fully
+deterministic regardless of parallelism.
+
+**Clustered** — locality-based grouping:
+
+```toml
+[[relationships]]
+name = "task_assignee"
+from = "tasks"
+to = "employees"
+kind = "many_to_one"
+foreign_key = "assignee_id"
+
+[relationships.selection]
+strategy = "clustered"
+cluster_size = 20
+```
+
+Consecutive child rows tend to reference the same window of parents. The
+`cluster_size` controls the window width — smaller values produce tighter
+clustering.
+
 ---
 
 ## Schema Inheritance

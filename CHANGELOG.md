@@ -16,6 +16,17 @@ All notable changes to Knit are documented in this file.
   - Works with `--count` scale override (expression evaluated first, then scaled)
   - Schema validation for expression parse errors and forbidden AST nodes
   - New example: `examples/count_expressions.weave.toml`
+- **Relationship selection strategies** — Control how children pick their parent
+  FK target (spec §7.3). Three strategies available:
+  - `selection = "sequential"` — deterministic round-robin based on child row
+    position; produces perfectly even distribution across parents
+  - `selection = { strategy = "clustered", cluster_size = 20 }` — consecutive
+    children reference nearby parents for locality-based grouping
+  - `selection = "uniform"` — random (default, same as omitting `selection`)
+  - Mutually exclusive with `degree` (validated at schema level)
+  - Works with both integer and string/UUID foreign keys
+  - Schema validation for cluster_size > 0, weight_field existence/type
+  - New example: `examples/selection_strategies.weave.toml`
 - **Relationship degree distribution** — Non-uniform FK assignment using Zipf
   or other distributions (spec §7.2). Some parents receive disproportionately
   more children, producing realistic power-law cardinality patterns.

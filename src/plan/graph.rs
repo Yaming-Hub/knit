@@ -270,6 +270,8 @@ mod tests {
             foreign_key: None,
             cardinality: None,
             degree: None,
+
+            selection: None,
         }
     }
 
@@ -453,6 +455,8 @@ mod tests {
                 foreign_key: Some("manager_id".to_string()),
                 cardinality: None,
                 degree: None,
+
+                selection: None,
             }],
         );
         let result = assign_phases(&model).unwrap();
