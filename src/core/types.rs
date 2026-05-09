@@ -1339,13 +1339,19 @@ fn default_weight() -> f64 {
 /// Specifies inter-field correlations within a single entity.
 ///
 /// Used to generate columns whose values are statistically dependent
-/// (e.g. height and weight). Supports pairwise correlation matrices
-/// and copula-based joint distributions.
+/// (e.g. height and weight). Supports pairwise correlation matrices,
+/// copula-based joint distributions, and conditional distributions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Correlation {
     /// Target entity name.
     pub entity: String,
-    /// Ordered list of correlated field names.
+    /// Correlation type discriminator. When absent, defaults to matrix/copula
+    /// mode. Set to `"conditional_distribution"` for §8.3 conditional
+    /// distribution correlations.
+    #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
+    pub correlation_type: Option<String>,
+    /// Ordered list of correlated field names (matrix/copula mode).
+    #[serde(default)]
     pub fields: Vec<String>,
     /// Correlation matrix (rows/columns correspond to `fields`). Must be
     /// symmetric and positive semi-definite.
@@ -1359,6 +1365,36 @@ pub struct Correlation {
     /// When present, fields are generated jointly via the specified copula.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub copula: Option<CopulaSpec>,
+    /// Dependent field whose distribution changes based on `given` (§8.3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dependent: Option<String>,
+    /// Conditioning field whose value selects the distribution (§8.3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub given: Option<String>,
+    /// Distribution branches for conditional distribution mode (§8.3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub distributions: Vec<ConditionalDistributionBranch>,
+    /// Default distribution for unmatched values in conditional distribution mode.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default: Option<DistributionSpec>,
+}
+
+/// A single branch in a conditional distribution correlation.
+///
+/// Maps a conditioning field value to a specific statistical distribution.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ConditionalDistributionBranch {
+    /// The value of the conditioning field that activates this branch.
+    #[serde(rename = "when")]
+    pub condition: Value,
+    /// Distribution family to sample from.
+    pub distribution: DistributionKind,
+    /// Distribution parameters (distribution-specific).
+    #[serde(default)]
+    pub params: BTreeMap<String, f64>,
+    /// When true, round sampled values to the nearest integer.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub round: bool,
 }
 
 /// Copula family specification for joint distribution modeling.

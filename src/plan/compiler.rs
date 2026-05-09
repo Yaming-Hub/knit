@@ -118,6 +118,15 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
                 model,
             );
 
+            // Apply conditional distribution correlations: override the
+            // dependent field's generator with a Conditional plan that
+            // branches on the given field using per-branch distributions.
+            apply_conditional_distribution_overrides(
+                entity_name,
+                &mut field_plans,
+                &model.correlations,
+            );
+
             // Append edge property fields from relationships where this entity
             // is the FK-holding side (from == entity_name).
             for rel in &model.relationships {
@@ -1506,6 +1515,100 @@ fn cholesky_decompose(matrix: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
         }
     }
     Some(l)
+}
+
+/// Apply conditional distribution correlations by replacing the dependent
+/// field's generator plan with a `Conditional` plan that branches on the
+/// `given` field and samples from per-branch distributions.
+fn apply_conditional_distribution_overrides(
+    entity_name: &str,
+    field_plans: &mut [FieldPlan],
+    correlations: &[crate::core::Correlation],
+) {
+    for corr in correlations {
+        let is_cond_dist = corr
+            .correlation_type
+            .as_deref()
+            .map(|t| t == "conditional_distribution")
+            .unwrap_or(false);
+        if !is_cond_dist || corr.entity != entity_name {
+            continue;
+        }
+        let dependent = match &corr.dependent {
+            Some(d) => d,
+            None => continue,
+        };
+        let given = match &corr.given {
+            Some(g) => g,
+            None => continue,
+        };
+        if corr.distributions.is_empty() {
+            continue;
+        }
+
+        // Build branch plans from each distribution spec
+        let branches: Vec<(Value, Box<GeneratorPlan>)> = corr
+            .distributions
+            .iter()
+            .map(|b| {
+                let plan = GeneratorPlan::Distribution {
+                    kind: b.distribution.clone(),
+                    params: b.params.clone(),
+                    clamp_min: None,
+                    clamp_max: None,
+                    round: b.round,
+                };
+                (b.condition.clone(), Box::new(plan))
+            })
+            .collect();
+
+        // Build default plan: use explicit default, or replicate the first
+        // branch's distribution to ensure type consistency (avoids Constant(Null)
+        // which would cause Arrow type mismatch and string fallback).
+        let default_plan = match &corr.default {
+            Some(spec) => Box::new(GeneratorPlan::Distribution {
+                kind: spec.kind.clone(),
+                params: spec.params.clone(),
+                clamp_min: None,
+                clamp_max: None,
+                round: spec.round,
+            }),
+            None => {
+                let first = &corr.distributions[0];
+                Box::new(GeneratorPlan::Distribution {
+                    kind: first.distribution.clone(),
+                    params: first.params.clone(),
+                    clamp_min: None,
+                    clamp_max: None,
+                    round: first.round,
+                })
+            }
+        };
+
+        let conditional_plan = GeneratorPlan::Conditional {
+            field: given.clone(),
+            branches,
+            default: default_plan,
+        };
+
+        // Find and override the dependent field's generator plan.
+        // Also ensure the dependent field is generated after the given field
+        // by bumping its dependency_order.
+        let given_order = field_plans
+            .iter()
+            .find(|fp| fp.field_name == *given)
+            .map(|fp| fp.dependency_order)
+            .unwrap_or(0);
+        if let Some(fp) = field_plans.iter_mut().find(|fp| fp.field_name == *dependent) {
+            fp.generator_plan = conditional_plan;
+            if fp.dependency_order <= given_order {
+                fp.dependency_order = given_order + 1;
+            }
+        }
+
+        // Re-sort by dependency order after override
+        field_plans.sort_by_key(|fp| fp.dependency_order);
+    }
 }
 
 #[cfg(test)]

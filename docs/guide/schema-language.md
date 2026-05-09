@@ -1048,7 +1048,9 @@ method = "copula"
 
 ### Conditional Distribution
 
-Different distributions for different categories:
+Model how one field's distribution depends on another field's value. When a
+row's `given` field matches a branch condition, the `dependent` field is sampled
+from that branch's distribution instead of its default generator.
 
 ```toml
 [[correlations]]
@@ -1062,6 +1064,22 @@ distributions = [
   { when = "dining",       distribution = "log_normal", params = { mu = 2.8, sigma = 0.5 } },
 ]
 ```
+
+Each branch specifies:
+- **`when`** — the value of the `given` field that activates this branch
+- **`distribution`** — any supported distribution family (normal, log_normal, uniform, etc.)
+- **`params`** — distribution-specific parameters
+- **`round`** (optional) — round to nearest integer when `true`
+
+An optional **`default`** distribution handles rows where no branch matches:
+
+```toml
+[correlations.default]
+kind = "normal"
+params = { mean = 100.0, std_dev = 50.0 }
+```
+
+Rows with unmatched `given` values and no `default` produce null.
 
 ---
 

@@ -315,10 +315,15 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             }
             Some(crate::core::Correlation {
                 entity: table.name.clone(),
+                correlation_type: None,
                 fields,
                 matrix: vec![vec![1.0, c.coefficient], vec![c.coefficient, 1.0]],
                 conditional: Vec::new(),
                 copula: None,
+                dependent: None,
+                given: None,
+                distributions: Vec::new(),
+                default: None,
             })
         })
         .collect();
