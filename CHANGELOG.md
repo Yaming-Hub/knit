@@ -56,6 +56,11 @@ All notable changes to Knit are documented in this file.
     stub-pairing algorithm)
   - `complete` — fully connected graph (uniform random target selection)
   - Total: 7 topology models (was 4)
+- **Avro output format** — Apache Avro Object Container Format (OCF) output
+  via `--format avro`. Supports Null, Deflate, and Snappy compression codecs.
+  Full Arrow-to-Avro type mapping including nullable columns (union types),
+  timestamps, lists, and binary data. Entity names are used as Avro record
+  names.
 
 ## [0.3.0] — 2026-05-08
 

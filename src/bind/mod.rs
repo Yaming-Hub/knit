@@ -1,7 +1,7 @@
 //! knit-bind: Output sinks for serializing Arrow `RecordBatch`es to various formats.
 //!
-//! Supported formats: Parquet, JSON, JSONL, CSV, Arrow IPC (Feather v2), and
-//! MiniJinja templates.
+//! Supported formats: Parquet, JSON, JSONL, CSV, Arrow IPC (Feather v2), Avro,
+//! and MiniJinja templates.
 //!
 //! # Usage
 //!
@@ -11,6 +11,7 @@
 
 #![warn(missing_docs)]
 
+pub mod avro;
 pub mod csv;
 pub mod error;
 pub mod factory;
@@ -21,6 +22,7 @@ pub mod parquet;
 pub mod template;
 pub mod traits;
 
+pub use avro::AvroCodec;
 pub use error::BindError;
 pub use factory::{create_sink, OutputFormat, SinkConfig};
 pub use parquet::Compression;
