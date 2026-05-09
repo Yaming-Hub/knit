@@ -252,6 +252,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         }
     }
 
@@ -283,6 +284,7 @@ mod tests {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         }
     }
 
@@ -497,6 +499,7 @@ mod tests {
                 actor: false,
                 persona_distribution: None,
                 activity_count: None,
+                mixin_refs: None,
             }],
             vec![],
         );
@@ -525,6 +528,7 @@ mod tests {
                 actor: false,
                 persona_distribution: None,
                 activity_count: None,
+                mixin_refs: None,
             }],
             vec![],
         );
@@ -561,6 +565,7 @@ mod tests {
             actor: true,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         };
         let events = Entity {
             name: "events".to_string(),
@@ -584,6 +589,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         };
         // No explicit relationship — only ActorRef generator
         let model = model_with(vec![users, events], vec![]);
@@ -634,6 +640,7 @@ mod tests {
             actor: true,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         };
         let model = model_with(vec![users], vec![]);
         let result = assign_phases(&model).unwrap();

@@ -231,6 +231,7 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         personas,
         actor_relationships,
         custom_types: Vec::new(),
+        mixins: Vec::new(),
     }
 }
 
@@ -350,6 +351,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
         actor: is_actor,
         persona_distribution: None,
         activity_count: None,
+        mixin_refs: None,
     };
 
     (entity, rels, corrs)

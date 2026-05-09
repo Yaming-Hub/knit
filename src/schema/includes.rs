@@ -222,6 +222,19 @@ pub fn merge_main_over_includes(includes: &DataModel, main: &DataModel) -> DataM
         }
     }
 
+    // Mixins: main wins on name collision
+    for main_mixin in &main.mixins {
+        if let Some(existing) = result
+            .mixins
+            .iter_mut()
+            .find(|m| m.name == main_mixin.name)
+        {
+            *existing = main_mixin.clone();
+        } else {
+            result.mixins.push(main_mixin.clone());
+        }
+    }
+
     // Model-level metadata: always use main's values
     result.name = main.name.clone();
     result.description = main.description.clone();
@@ -407,6 +420,19 @@ fn check_conflicts(
         }
     }
 
+    // Mixins
+    for mixin in &fragment.mixins {
+        if existing.mixins.iter().any(|m| m.name == mixin.name) {
+            return Err(SchemaError::Validation {
+                path: "include".to_string(),
+                message: format!(
+                    "mixin '{}' is defined in multiple included files (conflict from '{include_ref}')",
+                    mixin.name
+                ),
+            });
+        }
+    }
+
     Ok(())
 }
 
@@ -419,6 +445,7 @@ fn append_model(target: &mut DataModel, source: DataModel) {
     target.personas.extend(source.personas);
     target.actor_relationships.extend(source.actor_relationships);
     target.custom_types.extend(source.custom_types);
+    target.mixins.extend(source.mixins);
 }
 
 /// Canonicalize a path, falling back to the original if canonicalization fails.

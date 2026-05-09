@@ -40,6 +40,8 @@ struct RawSchema {
     actor_relationships: Vec<ActorRelationship>,
     #[serde(default)]
     types: Vec<crate::core::CustomType>,
+    #[serde(default)]
+    mixins: Vec<crate::core::Mixin>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -70,6 +72,7 @@ impl RawSchema {
             personas: self.personas,
             actor_relationships: self.actor_relationships,
             custom_types: self.types,
+            mixins: self.mixins,
         };
         Ok(model)
     }
@@ -80,11 +83,12 @@ impl RawSchema {
 /// Parse a Weave schema from a TOML string.
 pub fn parse_toml(input: &str) -> Result<DataModel, SchemaError> {
     let mut model = parse_toml_raw(input)?;
+    resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
     Ok(model)
 }
 
-/// Parse TOML into DataModel without resolving custom types.
+/// Parse TOML into DataModel without resolving mixins or custom types.
 /// Used by includes/extends to defer resolution until after merge.
 pub(crate) fn parse_toml_raw(input: &str) -> Result<DataModel, SchemaError> {
     let raw: RawSchema = toml::from_str(input)?;
@@ -94,6 +98,7 @@ pub(crate) fn parse_toml_raw(input: &str) -> Result<DataModel, SchemaError> {
 /// Parse a Weave schema from a JSON string.
 pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
     let mut model = parse_json_raw(input)?;
+    resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
     Ok(model)
 }
@@ -112,6 +117,7 @@ pub(crate) fn parse_json_raw(input: &str) -> Result<DataModel, SchemaError> {
 /// the parent schema is resolved and merged on top.
 pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let mut model = parse_toml_file_raw(path)?;
+    resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
     Ok(model)
 }
@@ -160,6 +166,7 @@ pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, S
 /// the parent schema is resolved and merged on top.
 pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let mut model = parse_json_file_raw(path)?;
+    resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
     Ok(model)
 }
@@ -198,6 +205,104 @@ pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, S
     };
 
     Ok(model)
+}
+
+// ── Mixin Resolution ──────────────────────────────────────────────
+
+use crate::core::Mixin;
+
+/// Resolve mixin references in entities, expanding mixin fields.
+///
+/// For each entity with `mixin_refs = Some(["name1", "name2"])`:
+/// - Look up each mixin name in model.mixins
+/// - Prepend mixin fields to entity fields (in declared order)
+/// - Entity fields with the same name override mixin fields
+/// - Error on mixin-vs-mixin field name collisions
+/// - Clear entity.mixin_refs after resolution
+pub fn resolve_mixins(model: &mut DataModel) -> Result<(), SchemaError> {
+    if model.mixins.is_empty() {
+        // Check for references to undefined mixins
+        for entity in &mut model.entities {
+            if let Some(ref refs) = entity.mixin_refs {
+                for name in refs {
+                    return Err(SchemaError::Validation {
+                        path: format!("entities.{}.mixins", entity.name),
+                        message: format!("references undefined mixin '{}'", name),
+                    });
+                }
+            }
+            // Normalize empty mixin_refs
+            entity.mixin_refs = None;
+        }
+        return Ok(());
+    }
+
+    // Validate mixin definitions
+    let mut seen_names = std::collections::HashSet::new();
+    for mixin in &model.mixins {
+        if mixin.name.is_empty() {
+            return Err(SchemaError::Validation {
+                path: "mixins".to_string(),
+                message: "mixin name cannot be empty".to_string(),
+            });
+        }
+        if !seen_names.insert(&mixin.name) {
+            return Err(SchemaError::Validation {
+                path: format!("mixins.{}", mixin.name),
+                message: "duplicate mixin name".to_string(),
+            });
+        }
+    }
+
+    // Build lookup map
+    let mixin_map: std::collections::HashMap<&str, &Mixin> =
+        model.mixins.iter().map(|m| (m.name.as_str(), m)).collect();
+
+    // Resolve entity mixin references
+    for entity in &mut model.entities {
+        if let Some(ref refs) = entity.mixin_refs {
+            let mut expanded_fields: Vec<Field> = Vec::new();
+            let mut mixin_field_names = std::collections::HashSet::new();
+
+            for mixin_name in refs {
+                let mixin = mixin_map.get(mixin_name.as_str()).ok_or_else(|| {
+                    SchemaError::Validation {
+                        path: format!("entities.{}.mixins", entity.name),
+                        message: format!("references undefined mixin '{}'", mixin_name),
+                    }
+                })?;
+
+                for mixin_field in &mixin.fields {
+                    // Check for mixin-vs-mixin field collision
+                    if !mixin_field_names.insert(mixin_field.name.clone()) {
+                        return Err(SchemaError::Validation {
+                            path: format!("entities.{}", entity.name),
+                            message: format!(
+                                "mixin field '{}' conflicts with field from another mixin",
+                                mixin_field.name
+                            ),
+                        });
+                    }
+                    expanded_fields.push(mixin_field.clone());
+                }
+            }
+
+            // Collect entity field names for override check
+            let entity_field_names: std::collections::HashSet<&str> =
+                entity.fields.iter().map(|f| f.name.as_str()).collect();
+
+            // Filter out mixin fields that the entity overrides
+            expanded_fields.retain(|f| !entity_field_names.contains(f.name.as_str()));
+
+            // Prepend mixin fields before entity fields
+            expanded_fields.append(&mut entity.fields);
+            entity.fields = expanded_fields;
+        }
+        // Clear mixin_refs after resolution
+        entity.mixin_refs = None;
+    }
+
+    Ok(())
 }
 
 // ── Custom Type Resolution ─────────────────────────────────────────
@@ -1028,5 +1133,233 @@ mod tests {
         assert_eq!(model.entities[0].fields[0].precision, Some(2));
         assert_eq!(model.entities[0].fields[1].data_type, DataType::String);
         assert!(model.entities[0].fields[1].generator.is_some());
+    }
+
+    // ── Mixin Tests ────────────────────────────────────────────────────
+
+    #[test]
+    fn mixin_fields_prepended_to_entity() {
+        let input = indoc! {r#"
+            [model]
+            name = "mixin_test"
+
+            [[mixins]]
+            name = "timestamped"
+
+            [[mixins.fields]]
+            name = "created_at"
+            data_type = "datetime"
+
+            [[mixins.fields]]
+            name = "updated_at"
+            data_type = "datetime"
+
+            [[entities]]
+            name = "orders"
+            count = 10
+            mixins = ["timestamped"]
+
+            [[entities.fields]]
+            name = "id"
+            data_type = "int"
+        "#};
+        let model = parse_toml(input).unwrap();
+        let fields = &model.entities[0].fields;
+        assert_eq!(fields.len(), 3);
+        assert_eq!(fields[0].name, "created_at");
+        assert_eq!(fields[1].name, "updated_at");
+        assert_eq!(fields[2].name, "id");
+        assert!(model.entities[0].mixin_refs.is_none());
+    }
+
+    #[test]
+    fn mixin_field_overridden_by_entity() {
+        let input = indoc! {r#"
+            [model]
+            name = "override_test"
+
+            [[mixins]]
+            name = "timestamped"
+
+            [[mixins.fields]]
+            name = "created_at"
+            data_type = "datetime"
+
+            [[entities]]
+            name = "orders"
+            count = 10
+            mixins = ["timestamped"]
+
+            [[entities.fields]]
+            name = "created_at"
+            data_type = "string"
+        "#};
+        let model = parse_toml(input).unwrap();
+        let fields = &model.entities[0].fields;
+        assert_eq!(fields.len(), 1);
+        assert_eq!(fields[0].name, "created_at");
+        assert_eq!(fields[0].data_type, DataType::String);
+    }
+
+    #[test]
+    fn multiple_mixins() {
+        let input = indoc! {r#"
+            [model]
+            name = "multi_mixin"
+
+            [[mixins]]
+            name = "auditable"
+            [[mixins.fields]]
+            name = "created_at"
+            data_type = "datetime"
+
+            [[mixins]]
+            name = "versioned"
+            [[mixins.fields]]
+            name = "version"
+            data_type = "int"
+
+            [[entities]]
+            name = "orders"
+            count = 10
+            mixins = ["auditable", "versioned"]
+
+            [[entities.fields]]
+            name = "id"
+            data_type = "int"
+        "#};
+        let model = parse_toml(input).unwrap();
+        let fields = &model.entities[0].fields;
+        assert_eq!(fields.len(), 3);
+        assert_eq!(fields[0].name, "created_at");
+        assert_eq!(fields[1].name, "version");
+        assert_eq!(fields[2].name, "id");
+    }
+
+    #[test]
+    fn mixin_vs_mixin_field_collision_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "collision_test"
+
+            [[mixins]]
+            name = "mixin_a"
+            [[mixins.fields]]
+            name = "created_at"
+            data_type = "datetime"
+
+            [[mixins]]
+            name = "mixin_b"
+            [[mixins.fields]]
+            name = "created_at"
+            data_type = "string"
+
+            [[entities]]
+            name = "orders"
+            count = 10
+            mixins = ["mixin_a", "mixin_b"]
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("conflicts with field from another mixin"), "got: {err}");
+    }
+
+    #[test]
+    fn mixin_undefined_reference_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "undef_test"
+
+            [[entities]]
+            name = "orders"
+            count = 10
+            mixins = ["nonexistent"]
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("undefined mixin"), "got: {err}");
+    }
+
+    #[test]
+    fn mixin_duplicate_name_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "dup_test"
+
+            [[mixins]]
+            name = "auditable"
+            [[mixins.fields]]
+            name = "created_at"
+            data_type = "datetime"
+
+            [[mixins]]
+            name = "auditable"
+            [[mixins.fields]]
+            name = "version"
+            data_type = "int"
+
+            [[entities]]
+            name = "t"
+            count = 1
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("duplicate mixin name"), "got: {err}");
+    }
+
+    #[test]
+    fn mixin_with_custom_types() {
+        let input = indoc! {r#"
+            [model]
+            name = "combined_test"
+
+            [[types]]
+            name = "money"
+            base = "float"
+            precision = 2
+
+            [[mixins]]
+            name = "priced"
+            [[mixins.fields]]
+            name = "price"
+            data_type = "money"
+
+            [[entities]]
+            name = "products"
+            count = 10
+            mixins = ["priced"]
+
+            [[entities.fields]]
+            name = "id"
+            data_type = "int"
+        "#};
+        let model = parse_toml(input).unwrap();
+        let fields = &model.entities[0].fields;
+        assert_eq!(fields.len(), 2);
+        assert_eq!(fields[0].name, "price");
+        assert_eq!(fields[0].data_type, DataType::Float);
+        assert_eq!(fields[0].precision, Some(2));
+    }
+
+    #[test]
+    fn no_mixins_no_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "no_mixins"
+
+            [[entities]]
+            name = "users"
+            count = 10
+
+            [[entities.fields]]
+            name = "id"
+            data_type = "int"
+        "#};
+        let model = parse_toml(input).unwrap();
+        assert!(model.mixins.is_empty());
+        assert_eq!(model.entities[0].fields.len(), 1);
     }
 }

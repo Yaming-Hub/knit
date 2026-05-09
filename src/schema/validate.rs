@@ -2501,6 +2501,7 @@ mod tests {
                 actor: false,
                 persona_distribution: None,
                 activity_count: None,
+                mixin_refs: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
@@ -2510,6 +2511,7 @@ mod tests {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         }
     }
 
@@ -2600,6 +2602,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -2639,6 +2642,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -2693,6 +2697,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -2747,6 +2752,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -2788,6 +2794,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         // Relationship without explicit foreign_key — implicit FK is "order_id"
         model.relationships.push(Relationship {
@@ -2899,6 +2906,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         let rel = Relationship {
             name: "user_order".to_string(),
@@ -3485,6 +3493,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         model.entities[0].fields.push(Field {
             name: "ref_col".to_string(),
@@ -3709,6 +3718,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.entities[0].fields.push(Field {
             name: "user_id".to_string(),
@@ -3742,6 +3752,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.entities[0].fields.push(Field {
             name: "user_id".to_string(),
@@ -3889,6 +3900,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "friends".to_string(),
@@ -3918,6 +3930,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "knows".to_string(),
@@ -3947,6 +3960,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.personas.push(Persona {
             name: "early_bird".to_string(),
@@ -4015,6 +4029,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "friends".to_string(),
@@ -4053,6 +4068,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "knows".to_string(),
@@ -4123,6 +4139,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.entities[0].fields.push(Field {
             name: "post_id".to_string(),
@@ -4197,6 +4214,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         model.entities[0].fields.push(Field {
             name: "post_id".to_string(),
@@ -4270,6 +4288,7 @@ mod tests {
             activity_count: None,
             constraints: vec![],
             topology: None,
+                mixin_refs: None,
         });
         // Note: no "post_id" field in user entity
         model.entities[0].fields.push(Field {

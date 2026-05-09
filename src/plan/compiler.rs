@@ -1402,6 +1402,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         }
     }
 
@@ -1425,6 +1426,7 @@ mod tests {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         }
     }
 
@@ -2211,6 +2213,7 @@ mod tests {
                 actor: false,
                 persona_distribution: None,
                 activity_count: None,
+                mixin_refs: None,
             }],
             vec![],
         );
