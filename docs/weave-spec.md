@@ -803,9 +803,9 @@ A small, deterministic expression language with explicit scope:
 | **Date / Time Formatting** | | |
 | `format_date(d, fmt)` | Format date/datetime as string | `format_date(${created_at}, "%Y-%m")` |
 | `format_duration(dur, style)` | Format duration as string | `format_duration(${elapsed}, "hms")` |
-| **Timezone** *(planned)* | | |
-| `to_timezone(dt, tz)` | Convert datetimetz to timezone | `to_timezone(${event_time}, "Asia/Tokyo")` |
-| `timezone_offset(dt)` | Get UTC offset as duration | `timezone_offset(${event_time})` → `"-08:00"` |
+| **Timezone** | | |
+| `to_timezone(dt, tz)` | Convert UTC millis to local wall-clock millis | `to_timezone(${event_time}, "Asia/Tokyo")` |
+| `timezone_offset(dt, tz)` | Get UTC offset string for a moment in time | `timezone_offset(${event_time}, "America/New_York")` → `"-05:00"` |
 
 **Date/time unit strings** (used in `date_add`, `date_diff`, `start_of`, etc.):
 `"microsecond"`, `"millisecond"`, `"second"`, `"minute"`, `"hour"`, `"day"`,

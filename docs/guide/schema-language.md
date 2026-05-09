@@ -441,6 +441,7 @@ expr = "row_number()"
 | Date/time extraction | `year`, `month`, `day`, `hour`, `minute`, `second`, `day_of_week`, `day_of_year`, `week_of_year`, `quarter` |
 | Date/time arithmetic | `date_add`, `date_sub`, `date_diff`, `duration_add`, `start_of`, `end_of` |
 | Date/time formatting | `format_date`, `format_duration` |
+| Timezone | `to_timezone`, `timezone_offset` |
 | Utility | `hash`, `row_number` |
 
 See the [Weave Specification](../weave-spec.md) for the full expression

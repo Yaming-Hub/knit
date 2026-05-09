@@ -535,6 +535,23 @@ static BUILTINS: &[FuncSig] = &[
         return_type: ExprType::Str,
         null_safe: false,
     },
+    // Timezone functions
+    FuncSig {
+        name: "to_timezone",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[],
+        return_type: ExprType::Int,
+        null_safe: false,
+    },
+    FuncSig {
+        name: "timezone_offset",
+        min_args: 2,
+        max_args: 2,
+        arg_types: &[],
+        return_type: ExprType::Str,
+        null_safe: false,
+    },
     // ─── Random functions ──────────────────────────────────────────────
     FuncSig {
         name: "random_int",
