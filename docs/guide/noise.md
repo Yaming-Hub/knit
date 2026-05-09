@@ -159,6 +159,63 @@ typo_rate = 0.01          # Controls format corruption rate
 - **Breaks:** `TYPE_SAFETY`
 - **Examples:** `user@example.com` → `user@@example`, `2024-01-15` → `01-2024-15`
 
+### 8. SwapInjector
+
+Swaps values between randomly selected rows within the same column, disrupting
+cross-column relationships while preserving per-column value distributions.
+
+```toml
+[[noise]]
+name = "swap_names"
+entity = "users"
+fields = ["name"]
+swap_rate = 0.1           # 10% of rows participate in swaps
+```
+
+- **Stage:** Clean (no single-column invariants broken)
+- **Use case:** Testing cross-column consistency checks (e.g., name vs. email mismatch)
+- **Note:** The multiset of values (including nulls) is preserved — only row
+  assignment changes.
+
+### 9. FkViolateInjector
+
+Replaces foreign key values with non-existent references, breaking referential
+integrity. For integer FKs, values are replaced with `max + random_offset`.
+For string FKs, values become `"INVALID_FK_..."`.
+
+```toml
+[[noise]]
+name = "bad_user_refs"
+entity = "orders"
+fields = ["user_id"]      # Target specific FK columns
+fk_violate_rate = 0.05    # 5% of FKs become invalid
+```
+
+- **Stage:** Breaking (violates FK integrity)
+- **Breaks:** `FK_INTEGRITY`
+- **Important:** Configure with explicit `fields` targeting — the injector does
+  not auto-detect FK columns. Uses `observed_max + offset` for integer FKs,
+  which is heuristic — in rare cases with very large FK domains, the injected
+  value could still be valid.
+
+### 10. TemporalSpikeInjector
+
+Clusters timestamps around randomly selected spike points, simulating traffic
+bursts, event storms, or temporal anomalies.
+
+```toml
+[[noise]]
+name = "event_spikes"
+entity = "events"
+fields = ["created_at"]
+temporal_spike_rate = 0.2 # 20% of timestamps get spiked
+```
+
+- **Stage:** Constrained (may push timestamps outside original range)
+- **Breaks:** `TYPE_RANGE`
+- **Parameters:** `spike_count` (default 3), `spread_ms` (default 60,000 = 1 minute)
+- **Targets:** Only Arrow `Timestamp` columns — plain `Int64` is not affected.
+
 ---
 
 ## Configuring Noise in a Schema
@@ -278,9 +335,9 @@ typo_rate = 0.02
 The three stages execute sequentially. A value nullified in stage 2 won't
 receive a typo from stage 1 (clean runs first). This means:
 
-1. **Clean perturbators** run first (typos, truncation, drift)
-2. **Constrained perturbators** run next (null injection, outliers, duplicates)
-3. **Breaking perturbators** run last (format corruption)
+1. **Clean perturbators** run first (typos, swaps, truncation, drift)
+2. **Constrained perturbators** run next (null injection, outliers, duplicates, temporal spikes)
+3. **Breaking perturbators** run last (format corruption, FK violation)
 
 ---
 

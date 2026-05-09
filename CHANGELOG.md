@@ -38,6 +38,12 @@ All notable changes to Knit are documented in this file.
   - Vectorized evaluation over Arrow arrays with SQL-like null propagation
   - Backward compatible with legacy string templates
   - AST-based dependency extraction in the plan compiler
+- **Noise pipeline expansion** — 4 new perturbators:
+  - `SwapInjector` — swap values between rows (clean stage, preserves multiset)
+  - `TruncateInjector` — truncate strings at random char boundaries (UTF-8 safe)
+  - `FkViolateInjector` — corrupt FK values with non-existent references
+  - `TemporalSpikeInjector` — cluster timestamps around spike points (Gaussian spread)
+  - Total: 11 built-in perturbators across clean/constrained/breaking stages
 
 ## [0.3.0] — 2026-05-08
 

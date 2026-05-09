@@ -1112,7 +1112,8 @@ fn format_bytes(b: u64) -> String {
 /// same entity with different rates and column sets work correctly.
 fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<String, Pipeline> {
     use crate::noise::{
-        DuplicateInjector, NullInjector, OutlierInjector, PerturbOverrides, TypoInjector,
+        DuplicateInjector, FkViolateInjector, NullInjector, OutlierInjector, PerturbOverrides,
+        SwapInjector, TemporalSpikeInjector, TruncateInjector, TypoInjector,
     };
 
     let mut entity_pipelines: HashMap<String, Pipeline> = HashMap::new();
@@ -1126,7 +1127,11 @@ fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<
         let has_any = profile.null_rate > 0.0
             || profile.typo_rate > 0.0
             || profile.outlier_rate > 0.0
-            || profile.duplicate_rate > 0.0;
+            || profile.duplicate_rate > 0.0
+            || profile.swap_rate > 0.0
+            || profile.truncate_rate > 0.0
+            || profile.fk_violate_rate > 0.0
+            || profile.temporal_spike_rate > 0.0;
 
         if !has_any {
             continue;
@@ -1178,6 +1183,30 @@ fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<
             pipeline.add_with_overrides(
                 Box::new(DuplicateInjector::new()),
                 make_overrides(profile.duplicate_rate),
+            );
+        }
+        if profile.swap_rate > 0.0 {
+            pipeline.add_with_overrides(
+                Box::new(SwapInjector::new()),
+                make_overrides(profile.swap_rate),
+            );
+        }
+        if profile.truncate_rate > 0.0 {
+            pipeline.add_with_overrides(
+                Box::new(TruncateInjector::new()),
+                make_overrides(profile.truncate_rate),
+            );
+        }
+        if profile.fk_violate_rate > 0.0 {
+            pipeline.add_with_overrides(
+                Box::new(FkViolateInjector::new()),
+                make_overrides(profile.fk_violate_rate),
+            );
+        }
+        if profile.temporal_spike_rate > 0.0 {
+            pipeline.add_with_overrides(
+                Box::new(TemporalSpikeInjector::new()),
+                make_overrides(profile.temporal_spike_rate),
             );
         }
     }

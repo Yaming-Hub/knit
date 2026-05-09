@@ -1453,6 +1453,10 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
         validate_rate(&path, "duplicate_rate", noise.duplicate_rate, errors);
         validate_rate(&path, "typo_rate", noise.typo_rate, errors);
         validate_rate(&path, "outlier_rate", noise.outlier_rate, errors);
+        validate_rate(&path, "swap_rate", noise.swap_rate, errors);
+        validate_rate(&path, "truncate_rate", noise.truncate_rate, errors);
+        validate_rate(&path, "fk_violate_rate", noise.fk_violate_rate, errors);
+        validate_rate(&path, "temporal_spike_rate", noise.temporal_spike_rate, errors);
     }
 }
 
@@ -1989,6 +1993,10 @@ mod tests {
             duplicate_rate: 0.0,
             typo_rate: 0.0,
             outlier_rate: 0.0,
+                swap_rate: 0.0,
+                truncate_rate: 0.0,
+                fk_violate_rate: 0.0,
+                temporal_spike_rate: 0.0,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2007,6 +2015,10 @@ mod tests {
             duplicate_rate: -0.1,
             typo_rate: 0.0,
             outlier_rate: 0.0,
+                swap_rate: 0.0,
+                truncate_rate: 0.0,
+                fk_violate_rate: 0.0,
+                temporal_spike_rate: 0.0,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2088,6 +2100,10 @@ mod tests {
             duplicate_rate: 0.0,
             typo_rate: 0.0,
             outlier_rate: 0.0,
+                swap_rate: 0.0,
+                truncate_rate: 0.0,
+                fk_violate_rate: 0.0,
+                temporal_spike_rate: 0.0,
         };
         model.noise_profiles.push(noise.clone());
         model.noise_profiles.push(noise);
