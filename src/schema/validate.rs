@@ -2016,6 +2016,34 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         if let Some(ref count) = rel.cardinality {
             validate_count_spec(&format!("{}.cardinality", path), count, errors);
         }
+
+        // Validate degree distribution parameters
+        if let Some(ref degree) = rel.degree {
+            let dp = format!("{}.degree", path);
+            match degree.kind {
+                crate::core::DistributionKind::Zipf => {
+                    let exponent = degree
+                        .params
+                        .get("exponent")
+                        .or_else(|| degree.params.get("s"));
+                    if let Some(&s) = exponent {
+                        if !s.is_finite() || s <= 0.0 {
+                            errors.push(SchemaError::Validation {
+                                path: dp.clone(),
+                                message: format!(
+                                    "Zipf exponent must be a finite value > 0, got {s}"
+                                ),
+                            });
+                        }
+                    }
+                    // exponent is optional; defaults to 1.0 at runtime
+                }
+                _ => {
+                    // Other distribution kinds are allowed (fall back to uniform at
+                    // runtime for unsupported ones) — no extra validation needed.
+                }
+            }
+        }
     }
 }
 
@@ -2706,6 +2734,7 @@ mod tests {
             kind: RelationshipKind::OneToMany,
             foreign_key: None,
             cardinality: None,
+            degree: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2745,6 +2774,7 @@ mod tests {
             kind: RelationshipKind::ManyToOne,
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
+            degree: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2785,6 +2815,7 @@ mod tests {
             kind: RelationshipKind::OneToMany,
             foreign_key: Some("id".to_string()),
             cardinality: None,
+            degree: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2840,6 +2871,7 @@ mod tests {
             kind: RelationshipKind::ManyToOne,
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
+            degree: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2895,6 +2927,7 @@ mod tests {
             kind: RelationshipKind::ManyToOne,
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
+            degree: None,
         });
         let errors = validate(&model);
         // Should produce no relationship-related errors
@@ -2938,6 +2971,7 @@ mod tests {
             kind: RelationshipKind::OneToMany,
             foreign_key: None,
             cardinality: None,
+            degree: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3051,6 +3085,7 @@ mod tests {
             kind: RelationshipKind::OneToMany,
             foreign_key: None,
             cardinality: None,
+            degree: None,
         };
         model.relationships.push(rel.clone());
         model.relationships.push(rel);

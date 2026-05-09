@@ -265,6 +265,7 @@ mod tests {
             kind: RelationshipKind::OneToMany,
             foreign_key: None,
             cardinality: None,
+            degree: None,
         }
     }
 
@@ -447,6 +448,7 @@ mod tests {
                 kind: RelationshipKind::OneToMany,
                 foreign_key: Some("manager_id".to_string()),
                 cardinality: None,
+                degree: None,
             }],
         );
         let result = assign_phases(&model).unwrap();

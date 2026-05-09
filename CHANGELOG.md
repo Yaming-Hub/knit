@@ -6,6 +6,17 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Relationship degree distribution** — Non-uniform FK assignment using Zipf
+  or other distributions (spec §7.2). Some parents receive disproportionately
+  more children, producing realistic power-law cardinality patterns.
+  - Add `degree = { kind = "zipf", params = { exponent = 1.2 } }` to any
+    `[[relationships]]` block
+  - Supports Zipf distribution (other kinds fall back to uniform)
+  - Works with both integer and string/UUID foreign keys
+  - Direct Zipf sampling via `rand_distr::Zipf` — O(1) per sample
+  - `StringKeyStore` now supports `get_by_index()` for rank-based lookup
+  - Schema validation for degree distribution parameters
+  - New example: `examples/degree_distribution.weave.toml`
 - **Event streams** — Irregular time series with random inter-arrival times
   (spec §9.3). Generates strictly-increasing timestamps using an exponential
   distribution, optionally modulated by rate components.

@@ -722,6 +722,7 @@ impl GenerationEngine {
                 GeneratorPlan::ForeignKey {
                     target_entity,
                     key_store_kind,
+                    degree,
                     ..
                 } => {
                     // Try string key store first (UUID/String FKs), then int key store.
@@ -733,8 +734,39 @@ impl GenerationEngine {
                             store_len = sks.len(),
                             "using string FK generator"
                         );
-                        Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
-                            as Box<dyn FieldGenerator>
+                        if let Some(dp) = degree {
+                            let target_partitions = Self::count_entity_partitions(plan, target_entity);
+                            let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
+
+                            if is_sampled {
+                                tracing::warn!(
+                                    entity = %ep.entity_name,
+                                    field = %fp.field_name,
+                                    target = %target_entity,
+                                    "degree distribution with sampled key store not supported — falling back to uniform FK"
+                                );
+                                Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
+                                    as Box<dyn FieldGenerator>
+                            } else if target_partitions > 1 {
+                                tracing::warn!(
+                                    entity = %ep.entity_name,
+                                    field = %fp.field_name,
+                                    target = %target_entity,
+                                    partitions = target_partitions,
+                                    "degree distribution with multi-partition parent is nondeterministic — falling back to uniform FK"
+                                );
+                                Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
+                                    as Box<dyn FieldGenerator>
+                            } else {
+                                Box::new(crate::gen::generators::weighted_fk::WeightedStringForeignKeyGenerator::new(
+                                    Arc::clone(sks),
+                                    dp.clone(),
+                                )) as Box<dyn FieldGenerator>
+                            }
+                        } else {
+                            Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
+                                as Box<dyn FieldGenerator>
+                        }
                     } else if let Some(ks) = self.key_stores.get(target_entity) {
                         // Use actor-aware FK if conditions are met:
                         // 1. Field is actor_column
@@ -778,7 +810,36 @@ impl GenerationEngine {
                                 }
                             }
                         }
-                        Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                        if let Some(dp) = degree {
+                            let target_partitions = Self::count_entity_partitions(plan, target_entity);
+                            let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
+
+                            if is_sampled {
+                                tracing::warn!(
+                                    entity = %ep.entity_name,
+                                    field = %fp.field_name,
+                                    target = %target_entity,
+                                    "degree distribution with sampled key store not supported — falling back to uniform FK"
+                                );
+                                Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                            } else if target_partitions > 1 {
+                                tracing::warn!(
+                                    entity = %ep.entity_name,
+                                    field = %fp.field_name,
+                                    target = %target_entity,
+                                    partitions = target_partitions,
+                                    "degree distribution with multi-partition parent is nondeterministic — falling back to uniform FK"
+                                );
+                                Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                            } else {
+                                Box::new(crate::gen::generators::weighted_fk::WeightedForeignKeyGenerator::new(
+                                    Arc::clone(ks),
+                                    dp.clone(),
+                                )) as Box<dyn FieldGenerator>
+                            }
+                        } else {
+                            Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                        }
                     } else {
                         tracing::warn!(
                             entity = %ep.entity_name,
@@ -1576,6 +1637,7 @@ mod tests {
                                     target_entity: "parent".into(),
                                     target_field: "id".into(),
                                     key_store_kind: KeyStoreKind::InMemoryVec,
+                                    degree: None,
                                 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
@@ -1757,6 +1819,7 @@ mod tests {
                                 target_entity: "employee".into(),
                                 target_field: "id".into(),
                                 key_store_kind: KeyStoreKind::InMemoryVec,
+                                degree: None,
                             },
                             null_plan: NullPlan::Never,
                             dependency_order: 1,

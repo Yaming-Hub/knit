@@ -401,10 +401,31 @@ fn compile_field_plans(
                 if is_fk_compatible {
                     let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
                     let key_store_kind = select_key_store_kind(target_rows);
+                    // Look up degree distribution from the relationship definition.
+                    let degree = model
+                        .relationships
+                        .iter()
+                        .find(|r| {
+                            r.from == entity.name
+                                && r.to == target_entity
+                                && r.foreign_key
+                                    .as_deref()
+                                    .unwrap_or(&format!("{}_id", r.to))
+                                    == field.name
+                        })
+                        .and_then(|r| r.degree.as_ref())
+                        .map(|spec| {
+                            crate::plan::DegreePlan {
+                                kind: spec.kind.clone(),
+                                params: spec.params.clone(),
+                                parent_count: target_rows,
+                            }
+                        });
                     GeneratorPlan::ForeignKey {
                         target_entity: target_entity.to_string(),
                         target_field: "id".to_string(),
                         key_store_kind,
+                        degree,
                     }
                 } else {
                     compile_generator(field, &entity.fields)
@@ -656,6 +677,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 target_entity: entity.clone(),
                 target_field: field.clone(),
                 key_store_kind: KeyStoreKind::InMemoryVec,
+                degree: None,
             },
             GeneratorSpec::Pattern { pattern } => GeneratorPlan::Pattern {
                 pattern: pattern.clone(),
@@ -765,6 +787,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 target_entity: entity.clone(),
                 target_field: "id".to_string(),
                 key_store_kind: KeyStoreKind::InMemoryVec,
+                degree: None,
             },
             GeneratorSpec::ActorTemporal {
                 trait_name,
@@ -1479,6 +1502,7 @@ mod tests {
                 kind: RelationshipKind::ManyToOne,
                 foreign_key: Some("user_id".to_string()),
                 cardinality: None,
+                degree: None,
             }],
         );
 
@@ -1508,6 +1532,7 @@ mod tests {
                     kind: RelationshipKind::ManyToOne,
                     foreign_key: Some("user_id".to_string()),
                     cardinality: None,
+                    degree: None,
                 },
                 Relationship {
                     name: "line_item_order".to_string(),
@@ -1516,6 +1541,7 @@ mod tests {
                     kind: RelationshipKind::ManyToOne,
                     foreign_key: Some("order_id".to_string()),
                     cardinality: None,
+                    degree: None,
                 },
             ],
         );
@@ -1578,6 +1604,7 @@ mod tests {
                 kind: RelationshipKind::ManyToOne,
                 foreign_key: Some("manager_id".to_string()),
                 cardinality: None,
+                degree: None,
             }],
         );
 
@@ -1634,6 +1661,7 @@ mod tests {
                     kind: RelationshipKind::ManyToOne,
                     foreign_key: Some("b_id".to_string()),
                     cardinality: None,
+                    degree: None,
                 },
                 Relationship {
                     name: "b_to_a".to_string(),
@@ -1642,6 +1670,7 @@ mod tests {
                     kind: RelationshipKind::ManyToOne,
                     foreign_key: Some("a_id".to_string()),
                     cardinality: None,
+                    degree: None,
                 },
             ],
         );
@@ -2152,6 +2181,7 @@ mod tests {
                 kind: RelationshipKind::ManyToOne,
                 foreign_key: None,
                 cardinality: None,
+                degree: None,
             }],
         );
         let result = compile(&model);
@@ -2187,6 +2217,7 @@ mod tests {
                 kind: RelationshipKind::ManyToOne,
                 foreign_key: Some("user_id".to_string()),
                 cardinality: None,
+                degree: None,
             }],
         );
 
@@ -2672,6 +2703,7 @@ mod tests {
                 kind: RelationshipKind::ManyToOne,
                 foreign_key: Some("author_id".to_string()),
                 cardinality: None,
+                degree: None,
             }],
         );
 
@@ -2737,6 +2769,7 @@ mod tests {
                 kind: RelationshipKind::ManyToOne,
                 foreign_key: Some("author_id".to_string()),
                 cardinality: None,
+                degree: None,
             }],
         );
 

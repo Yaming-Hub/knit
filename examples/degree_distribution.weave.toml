@@ -1,0 +1,82 @@
+# Degree Distribution Example
+#
+# Demonstrates how to use the `degree` distribution on relationships
+# to control how children are distributed across parents.
+#
+# Without degree: orders are assigned to users uniformly (each user
+# gets roughly the same number of orders).
+#
+# With Zipf degree: a few "power users" receive disproportionately
+# many orders, following a power-law distribution.
+
+schema_version = "1.0"
+
+[model]
+name = "degree_distribution"
+description = "Orders with Zipf-distributed user assignments"
+seed = 42
+
+# ── Users ────────────────────────────────────────────────────
+[[entities]]
+name = "users"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "name"
+
+# ── Orders ───────────────────────────────────────────────────
+[[entities]]
+name = "orders"
+count = 1000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "amount"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 3.0
+sigma = 1.0
+
+# ── Relationship with Zipf degree ───────────────────────────
+# The `degree` field uses a Zipf distribution (exponent=1.2)
+# so some users get many more orders than others.
+[[relationships]]
+name = "order_user"
+from = "orders"
+to = "users"
+kind = "many_to_one"
+foreign_key = "user_id"
+
+[relationships.degree]
+kind = "zipf"
+
+[relationships.degree.params]
+exponent = 1.2
