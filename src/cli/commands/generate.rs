@@ -1061,6 +1061,9 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
         // Struct output type is built from sub-field plans at runtime
         crate::plan::GeneratorPlan::Struct => ArrowDataType::Utf8,
         crate::plan::GeneratorPlan::NumericTimeSeries { .. } => ArrowDataType::Float64,
+        crate::plan::GeneratorPlan::EventStream { .. } => {
+            ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
+        }
     }
 }
 

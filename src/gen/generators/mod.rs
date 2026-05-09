@@ -29,6 +29,7 @@ pub mod temporal;
 pub mod thread_ref;
 pub mod topology;
 pub mod numeric_time_series;
+pub mod event_stream;
 pub mod unique;
 pub mod uuid_gen;
 
@@ -276,6 +277,15 @@ pub fn create_generator_with_seen(
             *min,
             *max,
             timestamp_field.clone(),
+        )),
+        GeneratorPlan::EventStream {
+            start_ms,
+            lambda_per_ms,
+            components,
+        } => Box::new(event_stream::EventStreamGenerator::new(
+            *start_ms,
+            *lambda_per_ms,
+            components.clone(),
         )),
     }
 }

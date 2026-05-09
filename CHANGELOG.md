@@ -6,6 +6,17 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Event streams** — Irregular time series with random inter-arrival times
+  (spec §9.3). Generates strictly-increasing timestamps using an exponential
+  distribution, optionally modulated by rate components.
+  - Add `type = "event_stream"` generator with `start`, `arrival`, and `components`
+  - Arrival distribution: `exponential` with configurable `lambda` and time unit
+  - Rate modulation via Lewis-Shedler thinning: `seasonality`, `weekend_effect`,
+    `business_hours` components control temporal event density
+  - Stateful across batches — cumulative timestamps remain monotonic
+  - Forces sequential execution to maintain inter-arrival state
+  - Schema validation for start time, distribution, lambda, unit, and components
+  - New example: `examples/event_stream.weave.toml`
 - **Scoped noise** — Conditional noise injection that restricts perturbation
   to rows matching a predicate expression (spec §11.4).
   - Add `scope = { where = '${field} == "value"' }` to any `[[noise]]` profile

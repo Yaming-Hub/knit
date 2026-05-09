@@ -883,6 +883,43 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     needs_sequential,
                 }
             },
+            GeneratorSpec::EventStream {
+                start,
+                arrival,
+                components,
+            } => {
+                // Parse start time to epoch milliseconds.
+                let start_ms = chrono::DateTime::parse_from_rfc3339(start)
+                    .map(|dt| dt.timestamp_millis())
+                    .unwrap_or_else(|_| {
+                        // Try naive datetime (no timezone) — assume UTC.
+                        chrono::NaiveDateTime::parse_from_str(start, "%Y-%m-%dT%H:%M:%S")
+                            .map(|ndt| ndt.and_utc().timestamp_millis())
+                            .unwrap_or(0)
+                    });
+
+                // Convert arrival rate to events per millisecond.
+                let lambda_raw = match arrival.params.get("lambda") {
+                    Some(crate::core::Value::Float(f)) => *f,
+                    Some(crate::core::Value::Int(i)) => *i as f64,
+                    _ => 1.0,
+                };
+                let unit_ms = match arrival.unit.as_str() {
+                    "second" | "seconds" | "s" => 1_000.0,
+                    "minute" | "minutes" | "m" => 60_000.0,
+                    "hour" | "hours" | "h" => 3_600_000.0,
+                    "day" | "days" | "d" => 86_400_000.0,
+                    "millisecond" | "milliseconds" | "ms" => 1.0,
+                    _ => 1_000.0,
+                };
+                let lambda_per_ms = lambda_raw / unit_ms;
+
+                GeneratorPlan::EventStream {
+                    start_ms,
+                    lambda_per_ms,
+                    components: components.clone(),
+                }
+            },
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.

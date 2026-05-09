@@ -562,7 +562,7 @@ impl GenerationEngine {
                 crate::plan::GeneratorPlan::NumericTimeSeries {
                     needs_sequential: true,
                     ..
-                }
+                } | crate::plan::GeneratorPlan::EventStream { .. }
             )
         });
         let force_sequential = has_unique || has_stateful_ts;
