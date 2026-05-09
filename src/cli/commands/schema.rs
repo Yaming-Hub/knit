@@ -350,6 +350,9 @@ fn format_generator_spec(gen: &crate::core::GeneratorSpec) -> String {
         } => {
             format!("external_lookup({}, {}, {})", source, column, format)
         }
+        crate::core::GeneratorSpec::TimeSeries { components, .. } => {
+            format!("time_series({} components)", components.len())
+        }
     }
 }
 

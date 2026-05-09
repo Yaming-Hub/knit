@@ -517,43 +517,74 @@ type = "constant"
 value = "USD"
 ```
 
-### `time_series` — Temporal Data Generation
+### `time_series` — Numeric Time Series
 
-Generate time series data with composable components:
+Generate composable numeric time series with additive components. Produces
+Float64 values by summing a baseline with trend, seasonality, noise, and other
+components. Ideal for generating realistic metrics like CPU usage, temperature,
+and network traffic.
 
 ```toml
+[[entities.fields]]
+name = "temperature"
+data_type = "float"
 [entities.fields.generator]
 type = "time_series"
-baseline = 100.0
+baseline = 20.0
+min = -10.0
+max = 50.0
+timestamp_field = "timestamp"  # optional: enables calendar-aware components
+
 [[entities.fields.generator.components]]
 type = "trend"
-slope = 0.5
+slope = 0.001
+degree = 1
 
 [[entities.fields.generator.components]]
 type = "seasonality"
-period = 24
-amplitude = 10.0
+period = "24h"
+amplitude = 8.0
+phase = -1.57
 
 [[entities.fields.generator.components]]
 type = "noise"
-distribution = "normal"
-std_dev = 2.0
+std_dev = 1.5
+
+[[entities.fields.generator.components]]
+type = "ar"
+coefficients = [0.7]
 ```
 
-Available components:
+**Parameters:**
 
-| Component | Purpose |
-|-----------|---------|
-| `trend` | Linear or polynomial drift |
-| `seasonality` | Periodic patterns (daily, weekly, yearly) |
-| `noise` | Random perturbation |
-| `ar` | Autoregressive (AR) model |
-| `spike` | Anomaly bursts |
-| `level_shift` | Permanent step changes |
-| `mean_reversion` | Converge toward a target value |
-| `weekend_effect` | Day-of-week patterns |
-| `holiday_effect` | Date-specific spikes |
-| `business_hours` | Day/night patterns |
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `baseline` | float | `0.0` | Base value around which the series fluctuates |
+| `components` | array | required | List of additive component specifications |
+| `min` | float | none | Minimum output value (clamp) |
+| `max` | float | none | Maximum output value (clamp) |
+| `timestamp_field` | string | none | Field name for calendar-aware components |
+
+**Available components:**
+
+| Component | Parameters | Description |
+|-----------|-----------|-------------|
+| `trend` | `slope`, `degree` (default 1) | Polynomial drift: `slope × t^degree` |
+| `seasonality` | `period`, `amplitude`, `phase` (default 0) | Sinusoidal: `amplitude × sin(2π×t/period + phase)`. Period can be duration string (`"24h"`, `"7d"`) or number of rows |
+| `noise` | `std_dev` | Gaussian random noise |
+| `ar` | `coefficients` | Autoregressive model. Sum of |coefficients| should be < 1 for stability |
+| `spike` | `probability`, `magnitude`, `duration_steps` (default 1) | Anomalous bursts lasting N steps |
+| `level_shift` | `probability`, `magnitude` | Permanent baseline shift |
+| `mean_reversion` | `target`, `speed` | Pull toward target: `speed × (target - current)` |
+| `weekend_effect` | `multiplier` | Multiply by factor on weekends (requires `timestamp_field`) |
+| `business_hours_effect` | `start_hour`, `end_hour`, `active_multiplier` | Multiply during business hours (requires `timestamp_field`) |
+
+**Notes:**
+- Stateful components (AR, spike, level_shift, mean_reversion) maintain state
+  across batches and force sequential partition execution
+- Calendar-aware components (weekend_effect, business_hours_effect) require
+  `timestamp_field` pointing to a datetime field in the same entity
+- See `examples/time_series_metrics.weave.toml` for a complete example
 
 ### Other Generators
 

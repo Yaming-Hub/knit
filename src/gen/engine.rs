@@ -554,25 +554,53 @@ impl GenerationEngine {
         let shared_seen = Self::build_shared_seen_sets(ep);
         let has_unique = !shared_seen.is_empty();
 
+        // Also force sequential execution when any field has a stateful time series
+        // (AR, level_shift, spike, mean_reversion) that needs deterministic ordering.
+        let has_stateful_ts = ep.field_plans.iter().any(|fp| {
+            matches!(
+                &fp.generator_plan,
+                crate::plan::GeneratorPlan::NumericTimeSeries {
+                    needs_sequential: true,
+                    ..
+                }
+            )
+        });
+        let force_sequential = has_unique || has_stateful_ts;
+
         tracing::info!(
             entity = %ep.entity_name,
             rows = ep.estimated_row_count,
             partitions = ep.partitions.len(),
-            sequential = has_unique,
+            sequential = force_sequential,
             "generating entity"
         );
 
         // When shared seen-sets exist we must generate partitions sequentially
         // so the dedup order is deterministic across runs.
-        let partition_results: Vec<Result<Vec<(String, RecordBatch)>, GenError>> = if has_unique {
+        let partition_results: Vec<Result<Vec<(String, RecordBatch)>, GenError>> = if force_sequential {
+            // Build generators once and reuse across all partitions so that
+            // stateful components (AR, level_shift, spike, mean_reversion)
+            // maintain continuity across partition boundaries.
+            let shared_generators =
+                Some(self.build_field_generators(ep, plan, &shared_seen));
             ep.partitions
                 .iter()
-                .map(|part| self.generate_partition_batches(plan, ep, part, &shared_seen))
+                .map(|part| {
+                    self.generate_partition_batches(
+                        plan,
+                        ep,
+                        part,
+                        &shared_seen,
+                        shared_generators.as_ref(),
+                    )
+                })
                 .collect()
         } else {
             ep.partitions
                 .par_iter()
-                .map(|part| self.generate_partition_batches(plan, ep, part, &shared_seen))
+                .map(|part| {
+                    self.generate_partition_batches(plan, ep, part, &shared_seen, None)
+                })
                 .collect()
         };
 
@@ -584,20 +612,31 @@ impl GenerationEngine {
     }
 
     /// Generate all batches for one partition of an entity.
+    ///
+    /// When `shared_generators` is `Some`, reuses pre-built generators across
+    /// partitions (needed for stateful time series that maintain continuity).
     fn generate_partition_batches(
         &self,
         plan: &ExecutionPlan,
         ep: &EntityPlan,
         part: &PartitionRange,
         shared_seen: &HashMap<usize, Arc<parking_lot::Mutex<HashSet<String>>>>,
+        shared_generators: Option<&Vec<Box<dyn FieldGenerator>>>,
     ) -> Result<Vec<(String, RecordBatch)>, GenError> {
         let total_rows = (part.end_row - part.start_row) as usize;
         let mut rng = ChaCha8Rng::seed_from_u64(part.seed);
         let mut row_offset = part.start_row;
         let mut batches = Vec::new();
 
-        // Build field generators once for this partition.
-        let generators = self.build_field_generators(ep, plan, shared_seen);
+        // Use shared generators if provided (for stateful time series continuity),
+        // otherwise build per-partition.
+        let owned_generators;
+        let generators: &Vec<Box<dyn FieldGenerator>> = if let Some(sg) = shared_generators {
+            sg
+        } else {
+            owned_generators = self.build_field_generators(ep, plan, shared_seen);
+            &owned_generators
+        };
         // Identify the primary-key field index.
         let pk_field_idx = self.find_pk_field_index(ep);
         let key_store = self.key_stores.get(&ep.entity_name).cloned();
@@ -610,7 +649,7 @@ impl GenerationEngine {
 
             let batch = self.generate_single_batch(
                 ep,
-                &generators,
+                generators,
                 &mut rng,
                 batch_rows,
                 row_offset,
