@@ -66,6 +66,15 @@ All notable changes to Knit are documented in this file.
   (JSON/JSONL) to simulate semi-structured data. Controlled via
   `missing_field_rate` in noise profiles. Deterministic per-row RNG for
   reproducibility. Non-document formats (CSV, Parquet, Avro) emit a warning.
+- **Schema validation improvements** — Enhanced semantic validation:
+  - Derived expression validation: parse expressions at schema-check time,
+    verify field references exist on the entity, detect self-references
+  - Legacy template fallback: `"Hello ${name}"` templates pass validation
+    even when they fail expression parsing
+  - Dependency cycle detection via DFS across derived/relative/conditional
+    field references
+  - Learn output validation: `knit learn` now validates assembled schemas
+    and warns about issues before writing output
 
 ## [0.3.0] — 2026-05-08
 

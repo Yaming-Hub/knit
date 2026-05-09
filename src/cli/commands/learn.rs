@@ -338,6 +338,23 @@ fn run_batch(
     let output_dir = Path::new(output).parent().unwrap_or_else(|| Path::new("."));
     let dict_count = extract_dictionaries(&mut data_model, &tables, output_dir, cli.quiet)?;
 
+    // 5c. Validate the assembled schema and warn about issues
+    let validation_errors = crate::schema::validate(&data_model);
+    if !validation_errors.is_empty() && !cli.quiet {
+        eprintln!(
+            "\n{} Learned schema has {} validation warning(s):",
+            "⚠".yellow().bold(),
+            validation_errors.len(),
+        );
+        for err in &validation_errors {
+            eprintln!("  • {}", err);
+        }
+        eprintln!(
+            "  The schema was written but may need manual adjustment \
+             before generating data.\n"
+        );
+    }
+
     // 6. Serialize to TOML and write output
     // Wrap in RawSchema structure for proper TOML output
     let raw = RawOutputSchema {
@@ -674,6 +691,23 @@ fn emit_schema_from_state(
             "  {} Extracted {} dictionary file(s) from reservoir samples",
             "📖".dimmed(),
             dict_count,
+        );
+    }
+
+    // Validate the assembled schema and warn about issues
+    let validation_errors = crate::schema::validate(&data_model);
+    if !validation_errors.is_empty() && !cli.quiet {
+        eprintln!(
+            "\n{} Learned schema has {} validation warning(s):",
+            "⚠".yellow().bold(),
+            validation_errors.len(),
+        );
+        for err in &validation_errors {
+            eprintln!("  • {}", err);
+        }
+        eprintln!(
+            "  The schema was written but may need manual adjustment \
+             before generating data.\n"
         );
     }
 
