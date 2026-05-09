@@ -261,7 +261,8 @@ fn validate_generator_params(
             }
         }
         GeneratorSpec::Faker { method, .. } => {
-            if !KNOWN_FAKER_METHODS.contains(&method.as_str()) {
+            let bare = method.split_once('.').map(|(_, m)| m).unwrap_or(method.as_str());
+            if !KNOWN_FAKER_METHODS.contains(&bare) {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: format!(
@@ -843,38 +844,107 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
 }
 
 const KNOWN_FAKER_METHODS: &[&str] = &[
+    // Person
     "first_name",
     "last_name",
     "full_name",
     "name",
     "username",
+    "prefix",
+    "name_prefix",
+    "suffix",
+    "name_suffix",
+    // Internet
     "email",
-    "word",
-    "sentence",
-    "paragraph",
-    "title",
-    "phone",
-    "address",
-    "city",
-    "state",
-    "country",
-    "zip_code",
-    "zipcode",
-    "postal_code",
-    "company",
-    "product_name",
-    "product",
     "url",
     "domain",
     "ipv4",
     "ip_address",
     "ipv6",
-    "color",
-    "hex_color",
-    "hex_string",
+    "mac_address",
+    "mac",
+    "user_agent",
+    // Address
+    "address",
+    "street_address",
+    "street",
+    "city",
+    "city_name",
+    "state",
+    "country",
+    "country_code",
+    "zip_code",
+    "zipcode",
+    "postal_code",
+    // Company
+    "company",
+    "industry",
+    "catch_phrase",
+    "catchphrase",
+    "bs",
+    "buzzword",
+    // Finance
+    "credit_card",
+    "credit_card_number",
+    "iban",
+    "bic",
+    "swift",
+    "currency_code",
+    "currency",
+    // Phone
+    "phone",
+    // Lorem
+    "word",
+    "sentence",
+    "paragraph",
+    "title",
+    // Datetime
     "date",
     "datetime",
     "timestamp",
+    "time",
+    "month",
+    "day_of_week",
+    "weekday",
+    "timezone",
+    "tz",
+    // Color
+    "color",
+    "hex_color",
+    // File
+    "file_extension",
+    "extension",
+    "mime_type",
+    "content_type",
+    "file_name",
+    "file_path",
+    // Geo
+    "latitude",
+    "lat",
+    "longitude",
+    "lon",
+    "lng",
+    "coordinate",
+    "geo",
+    // Vehicle
+    "license_plate",
+    "plate",
+    "vin",
+    "vehicle_make",
+    "make",
+    "vehicle_model",
+    "model",
+    // Medical
+    "blood_type",
+    // Barcode
+    "ean13",
+    "isbn13",
+    "isbn",
+    // Product
+    "product_name",
+    "product",
+    // Other
+    "hex_string",
 ];
 
 /// Check whether a generator type is compatible with the declared field data type.
@@ -1111,7 +1181,8 @@ fn validate_generator(
             }
         }
         GeneratorSpec::Faker { method, .. } => {
-            if !KNOWN_FAKER_METHODS.contains(&method.as_str()) {
+            let bare = method.split_once('.').map(|(_, m)| m).unwrap_or(method.as_str());
+            if !KNOWN_FAKER_METHODS.contains(&bare) {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: format!(
