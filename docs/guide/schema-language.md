@@ -700,13 +700,35 @@ count = { min = 9000, max = 11000 }
 
 ### Expression Count
 
-Use parameters or expressions:
+Compute entity count from model parameters using expressions:
 
 ```toml
+[model]
+name = "scalable"
+
+[model.params]
+user_count = 10000
+order_scale = 5
+
 [[entities]]
 name = "users"
-count = { expr = "$param.user_count * $param.scale" }
+count = { expr = "${param.user_count}" }
+
+[[entities]]
+name = "orders"
+count = { expr = "${param.user_count} * ${param.order_scale}" }
 ```
+
+Expressions support arithmetic (`+`, `-`, `*`, `/`, `%`), parameter references
+(`${param.name}`), numeric literals, and pure functions like `min()`, `max()`,
+`abs()`, `ceil()`, `floor()`, `round()`, and `clamp()`. Field references,
+`row_number()`, and random functions are not allowed in count expressions.
+
+Float results are rounded to the nearest integer. Zero or negative results
+produce an error.
+
+When used with `--count`, the expression is evaluated first, then the override
+scale is applied. For example, `--count 0.5x` halves the computed count.
 
 ---
 

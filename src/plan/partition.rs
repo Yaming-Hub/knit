@@ -5,7 +5,9 @@
 //! Partition boundaries depend only on entity row count and target size,
 //! ensuring reproducibility regardless of available thread count.
 
-use crate::core::CountSpec;
+use std::collections::{BTreeMap, HashMap};
+
+use crate::core::{CountSpec, Value};
 
 use crate::plan::types::PartitionRange;
 
@@ -17,15 +19,17 @@ const TARGET_PARTITION_SIZE: u64 = 1_048_576;
 ///
 /// - `Fixed(n)` → use `n` directly
 /// - `Range { min, max }` → use `max` (plan for worst case)
+/// - `Expression { expr }` → evaluate expression against model params
 /// - `Distribution(spec)` → use the expected value of the distribution
-pub fn resolve_count(count: &CountSpec) -> u64 {
+pub fn resolve_count(count: &CountSpec, params: &BTreeMap<String, Value>) -> Result<u64, String> {
     match count {
-        CountSpec::Fixed(n) => *n,
-        CountSpec::Range { min: _, max } => *max,
+        CountSpec::Fixed(n) => Ok(*n),
+        CountSpec::Range { min: _, max } => Ok(*max),
+        CountSpec::Expression { expr } => evaluate_count_expr(expr, params),
         CountSpec::Distribution(spec) => {
             // Use expected value based on distribution kind.
             let params = &spec.params;
-            match spec.kind {
+            let v = match spec.kind {
                 crate::core::DistributionKind::Normal => {
                     params.get("mean").copied().unwrap_or(0.0).max(0.0) as u64
                 }
@@ -49,8 +53,103 @@ pub fn resolve_count(count: &CountSpec) -> u64 {
                     // Fallback: use mean if available, otherwise 1000.
                     params.get("mean").copied().unwrap_or(1000.0).max(0.0) as u64
                 }
-            }
+            };
+            Ok(v)
         }
+    }
+}
+
+/// Evaluate a count expression against model parameters.
+///
+/// Only param refs, literals, and pure arithmetic/math functions are allowed.
+/// Field refs and random/row functions are rejected.
+fn evaluate_count_expr(expr: &str, params: &BTreeMap<String, Value>) -> Result<u64, String> {
+    use crate::gen::expr::{eval, parser};
+
+    let ast = parser::parse(expr).map_err(|e| format!("count expression parse error: {}", e.message))?;
+
+    // Validate: reject field refs, random functions, row_number
+    validate_count_ast(&ast)?;
+
+    // Convert model params to string map for the evaluator.
+    let str_params: HashMap<String, String> = params
+        .iter()
+        .map(|(k, v)| (k.clone(), value_to_string(v)))
+        .collect();
+
+    let ctx = eval::EvalContext {
+        columns: &HashMap::new(),
+        params: &str_params,
+        row_count: 1,
+        row_offset: 0,
+        seed: 0,
+        call_counter: std::cell::Cell::new(0),
+    };
+
+    let result = eval::evaluate(&ast, &ctx)
+        .map_err(|e| format!("count expression eval error: {}", e.message))?;
+
+    // Extract scalar from 1-element array.
+    use arrow::array::{Float64Array, Int64Array};
+    if let Some(arr) = result.as_any().downcast_ref::<Int64Array>() {
+        let v = arr.value(0);
+        if v <= 0 {
+            return Err(format!("count expression evaluated to {v}, must be > 0"));
+        }
+        Ok(v as u64)
+    } else if let Some(arr) = result.as_any().downcast_ref::<Float64Array>() {
+        let v = arr.value(0);
+        if !v.is_finite() || v <= 0.0 {
+            return Err(format!("count expression evaluated to {v}, must be a finite value > 0"));
+        }
+        Ok(v.round() as u64)
+    } else {
+        Err("count expression must evaluate to a numeric value".to_string())
+    }
+}
+
+/// Validate that a count expression AST only contains allowed constructs.
+pub fn validate_count_ast(expr: &crate::gen::expr::ast::Expr) -> Result<(), String> {
+    use crate::gen::expr::ast::Expr;
+    match expr {
+        Expr::Literal(_) | Expr::ParamRef(_) => Ok(()),
+        Expr::FieldRef(name) => {
+            Err(format!("field reference '${{{name}}}' is not allowed in count expressions"))
+        }
+        Expr::BinaryOp { left, right, .. } => {
+            validate_count_ast(left)?;
+            validate_count_ast(right)
+        }
+        Expr::UnaryOp { operand, .. } => validate_count_ast(operand),
+        Expr::FuncCall { name, args } => {
+            // Reject non-deterministic / row-dependent functions.
+            let forbidden = [
+                "row_number", "random_int", "random_float", "random_normal",
+                "random_choice", "random_string",
+            ];
+            if forbidden.contains(&name.as_str()) {
+                return Err(format!(
+                    "function '{name}' is not allowed in count expressions (must be deterministic)"
+                ));
+            }
+            for arg in args {
+                validate_count_ast(arg)?;
+            }
+            Ok(())
+        }
+    }
+}
+
+/// Convert a Value to its string representation for expression evaluation.
+fn value_to_string(v: &Value) -> String {
+    match v {
+        Value::String(s) => s.clone(),
+        Value::Int(n) => n.to_string(),
+        Value::Float(f) => f.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => String::new(),
+        Value::Array(arr) => serde_json::to_string(arr).unwrap_or_default(),
+        Value::Map(map) => serde_json::to_string(map).unwrap_or_default(),
     }
 }
 
@@ -105,12 +204,88 @@ mod tests {
 
     #[test]
     fn test_resolve_fixed() {
-        assert_eq!(resolve_count(&CountSpec::Fixed(5000)), 5000);
+        let empty = BTreeMap::new();
+        assert_eq!(resolve_count(&CountSpec::Fixed(5000), &empty).unwrap(), 5000);
     }
 
     #[test]
     fn test_resolve_range() {
-        assert_eq!(resolve_count(&CountSpec::Range { min: 100, max: 500 }), 500);
+        let empty = BTreeMap::new();
+        assert_eq!(resolve_count(&CountSpec::Range { min: 100, max: 500 }, &empty).unwrap(), 500);
+    }
+
+    #[test]
+    fn test_resolve_expression_simple() {
+        let params = BTreeMap::from([
+            ("user_count".to_string(), Value::Int(500)),
+        ]);
+        let count = CountSpec::Expression {
+            expr: "${param.user_count}".to_string(),
+        };
+        assert_eq!(resolve_count(&count, &params).unwrap(), 500);
+    }
+
+    #[test]
+    fn test_resolve_expression_arithmetic() {
+        let params = BTreeMap::from([
+            ("base".to_string(), Value::Int(100)),
+            ("scale".to_string(), Value::Int(5)),
+        ]);
+        let count = CountSpec::Expression {
+            expr: "${param.base} * ${param.scale}".to_string(),
+        };
+        assert_eq!(resolve_count(&count, &params).unwrap(), 500);
+    }
+
+    #[test]
+    fn test_resolve_expression_float_rounds() {
+        let params = BTreeMap::from([
+            ("x".to_string(), Value::Float(3.7)),
+            ("y".to_string(), Value::Float(10.0)),
+        ]);
+        let count = CountSpec::Expression {
+            expr: "${param.x} * ${param.y}".to_string(),
+        };
+        // 3.7 * 10.0 = 37.0 → 37
+        assert_eq!(resolve_count(&count, &params).unwrap(), 37);
+    }
+
+    #[test]
+    fn test_resolve_expression_rejects_negative() {
+        let params = BTreeMap::from([
+            ("x".to_string(), Value::Int(-5)),
+        ]);
+        let count = CountSpec::Expression {
+            expr: "${param.x}".to_string(),
+        };
+        assert!(resolve_count(&count, &params).is_err());
+    }
+
+    #[test]
+    fn test_resolve_expression_rejects_field_ref() {
+        let params = BTreeMap::new();
+        let count = CountSpec::Expression {
+            expr: "${some_field} + 1".to_string(),
+        };
+        assert!(resolve_count(&count, &params).is_err());
+    }
+
+    #[test]
+    fn test_resolve_expression_rejects_random() {
+        let params = BTreeMap::new();
+        let count = CountSpec::Expression {
+            expr: "random_int(1, 100)".to_string(),
+        };
+        assert!(resolve_count(&count, &params).is_err());
+    }
+
+    #[test]
+    fn test_resolve_expression_missing_param() {
+        let params = BTreeMap::new();
+        let count = CountSpec::Expression {
+            expr: "${param.missing}".to_string(),
+        };
+        assert!(resolve_count(&count, &params).is_err());
     }
 
     #[test]

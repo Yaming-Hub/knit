@@ -323,6 +323,32 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaErr
                 });
             }
         }
+        CountSpec::Expression { expr } => {
+            if expr.trim().is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "count expression must not be empty".to_string(),
+                });
+                return;
+            }
+            // Validate that the expression parses and contains only allowed constructs.
+            match crate::gen::expr::parser::parse(expr) {
+                Ok(ast) => {
+                    if let Err(msg) = crate::plan::partition::validate_count_ast(&ast) {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: msg,
+                        });
+                    }
+                }
+                Err(e) => {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!("count expression parse error: {}", e.message),
+                    });
+                }
+            }
+        }
         CountSpec::Distribution(spec) => {
             validate_distribution(path, spec, errors);
         }

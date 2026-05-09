@@ -40,15 +40,15 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     if let Some(seed) = cli.seed {
         model.seed = seed;
     }
-    // Apply --count override (absolute or scale factor)
-    if let Some(ref count_str) = cli.count {
-        apply_count_override(&mut model, count_str)?;
-    }
-    // Store params in the model (for plan metadata) and later pass to engine.
+    // Store params in the model first so count expressions can reference them.
     for (key, value) in &cli.params {
         model
             .params
             .insert(key.clone(), crate::core::Value::String(value.clone()));
+    }
+    // Apply --count override (absolute or scale factor) after params are set.
+    if let Some(ref count_str) = cli.count {
+        apply_count_override(&mut model, count_str)?;
     }
 
     let errors = validate_model(&model);
@@ -1366,6 +1366,11 @@ pub(crate) fn apply_count_override(model: &mut DataModel, count_str: &str) -> Re
                 CountSpec::Fixed(n) => *n,
                 CountSpec::Range { max, .. } => *max,
                 CountSpec::Distribution(_) => 1000,
+                CountSpec::Expression { .. } => {
+                    // Resolve the expression first, then scale.
+                    crate::plan::partition::resolve_count(&entity.count, &model.params)
+                        .unwrap_or(1000)
+                }
             };
             let scaled = (current as f64 * factor).round() as u64;
             entity.count = CountSpec::Fixed(scaled.max(1));

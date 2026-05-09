@@ -223,13 +223,17 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
 ///
 /// Returns a sorted map from entity name to resolved row count. Used by the
 /// compiler to size partitions and estimate output bytes.
-pub fn resolve_row_counts(model: &DataModel) -> BTreeMap<String, u64> {
+///
+/// Returns an error if a count expression fails to evaluate (e.g. missing
+/// parameter or invalid arithmetic).
+pub fn resolve_row_counts(model: &DataModel) -> Result<BTreeMap<String, u64>, String> {
     let mut counts = BTreeMap::new();
     for entity in &model.entities {
-        let row_count = crate::plan::partition::resolve_count(&entity.count);
+        let row_count = crate::plan::partition::resolve_count(&entity.count, &model.params)
+            .map_err(|e| format!("entity '{}': {}", entity.name, e))?;
         counts.insert(entity.name.clone(), row_count);
     }
-    counts
+    Ok(counts)
 }
 
 #[cfg(test)]
@@ -483,7 +487,7 @@ mod tests {
     #[test]
     fn resolve_counts_fixed() {
         let model = model_with(vec![entity("a", 100), entity("b", 200)], vec![]);
-        let counts = resolve_row_counts(&model);
+        let counts = resolve_row_counts(&model).unwrap();
         assert_eq!(counts["a"], 100);
         assert_eq!(counts["b"], 200);
     }
@@ -505,7 +509,7 @@ mod tests {
             }],
             vec![],
         );
-        let counts = resolve_row_counts(&model);
+        let counts = resolve_row_counts(&model).unwrap();
         // Range resolves to max
         assert_eq!(counts["x"], 150);
     }
@@ -534,7 +538,7 @@ mod tests {
             }],
             vec![],
         );
-        let counts = resolve_row_counts(&model);
+        let counts = resolve_row_counts(&model).unwrap();
         // Normal distribution resolves to mean
         assert_eq!(counts["d"], 500);
     }

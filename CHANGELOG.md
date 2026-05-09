@@ -6,6 +6,16 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Parameter expressions in count** — Entity counts can now be computed from
+  model parameters using expressions (spec §3). Enables scalable schemas where
+  all entity sizes are driven by a few top-level parameters.
+  - `count = { expr = "${param.user_count} * ${param.scale}" }` syntax
+  - Supports arithmetic, parameter refs, numeric literals, and pure math functions
+  - Rejects field references, `row_number()`, and random functions in count context
+  - Float results are rounded; zero/negative results produce errors
+  - Works with `--count` scale override (expression evaluated first, then scaled)
+  - Schema validation for expression parse errors and forbidden AST nodes
+  - New example: `examples/count_expressions.weave.toml`
 - **Relationship degree distribution** — Non-uniform FK assignment using Zipf
   or other distributions (spec §7.2). Some parents receive disproportionately
   more children, producing realistic power-law cardinality patterns.

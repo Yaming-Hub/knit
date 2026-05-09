@@ -1,0 +1,77 @@
+# Count Expressions Example
+#
+# Demonstrates parameterized entity counts using expressions.
+# Counts are computed from model parameters at plan time, making
+# schemas reusable across different data sizes.
+#
+# Run with parameter overrides:
+#   knit generate count_expressions.weave.toml --param user_count=5000 --param order_scale=20
+
+schema_version = "1.0"
+
+[model]
+name = "count_expressions"
+description = "Parameterized counts with expressions"
+seed = 42
+
+[model.params]
+user_count = 500
+order_scale = 10
+
+# ── Users ────────────────────────────────────────────────────
+[[entities]]
+name = "users"
+count = { expr = "${param.user_count}" }
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "name"
+
+# ── Orders ───────────────────────────────────────────────────
+# Order count is a multiple of user count.
+[[entities]]
+name = "orders"
+count = { expr = "${param.user_count} * ${param.order_scale}" }
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "user_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "amount"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 3.0
+sigma = 1.0
+
+# ── Relationship ─────────────────────────────────────────────
+[[relationships]]
+name = "order_user"
+from = "orders"
+to = "users"
+kind = "many_to_one"
+foreign_key = "user_id"
