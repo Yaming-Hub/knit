@@ -49,6 +49,13 @@ All notable changes to Knit are documented in this file.
   File loading is deferred to plan resolution time (like dictionary). Supports
   weighted sampling via a weight column, deterministic sequential round-robin
   via row offset, and path traversal protection.
+- **Graph topology expansion** — 3 new topology models for relationship graphs:
+  - `stochastic_block` — community structure with configurable intra/inter
+    edge probabilities (simplified SBM with equal community sizes)
+  - `configuration` — custom degree distribution (Poisson or power-law with
+    stub-pairing algorithm)
+  - `complete` — fully connected graph (uniform random target selection)
+  - Total: 7 topology models (was 4)
 
 ## [0.3.0] — 2026-05-08
 

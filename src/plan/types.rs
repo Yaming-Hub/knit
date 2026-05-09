@@ -492,6 +492,12 @@ pub enum TopologyModel {
     WattsStrogatz,
     /// Erdős–Rényi G(n, p) random graph.
     ErdosRenyi,
+    /// Simplified Stochastic Block Model with equal community sizes.
+    StochasticBlock,
+    /// Configuration model with custom degree distribution.
+    Configuration,
+    /// Fully connected (complete) graph.
+    Complete,
 }
 
 // ── NullPlan ─────────────────────────────────────────────────────────

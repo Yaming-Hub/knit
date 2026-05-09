@@ -1438,8 +1438,8 @@ params = { m = 3 }                 # Each new node connects to 3 existing nodes
 | `erdos_renyi` | `p` (edge probability) | Random graph, uniform degree |
 | `barabasi_albert` | `m` (edges per new node) | Scale-free, power-law degree |
 | `watts_strogatz` | `k` (neighbors), `beta` (rewiring prob) | Small-world, high clustering |
-| `stochastic_block` | `sizes` (community sizes), `p_matrix` (inter/intra probs) | Community structure |
-| `configuration` | `degree_distribution` | Custom degree distribution |
+| `stochastic_block` | `communities`, `p_intra`, `p_inter` | Community structure (simplified SBM) |
+| `configuration` | `mean_degree`, `exponent` (opt), `min_degree` (opt) | Custom degree distribution |
 | `forest` | `branching` (distribution) | Tree/forest structure |
 | `complete` | — | Fully connected |
 
