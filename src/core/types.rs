@@ -192,6 +192,10 @@ pub struct Field {
     /// Used by behavioral modeling to identify actor columns in non-actor entities.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub actor_column: bool,
+    /// Nested sub-fields for `type = "object"` fields.
+    /// Enables hierarchical document structures (JSON, Parquet, Avro).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fields: Vec<Field>,
 }
 
 fn default_data_type() -> DataType {
@@ -239,6 +243,8 @@ pub enum DataType {
     Array,
     /// String-keyed map of values.
     Map,
+    /// Nested object with sub-fields (for document-oriented output).
+    Object,
 }
 
 impl std::fmt::Display for DataType {
@@ -259,6 +265,7 @@ impl std::fmt::Display for DataType {
             DataType::Bytes => write!(f, "bytes"),
             DataType::Array => write!(f, "array"),
             DataType::Map => write!(f, "map"),
+            DataType::Object => write!(f, "object"),
         }
     }
 }
@@ -1385,6 +1392,7 @@ mod tests {
                         primary_key: Some(true),
                         precision: None,
                         actor_column: false,
+                        fields: vec![],
                     },
                     Field {
                         name: "email".into(),
@@ -1398,6 +1406,7 @@ mod tests {
                         primary_key: None,
                         precision: None,
                         actor_column: false,
+                        fields: vec![],
                     },
                 ],
                 constraints: vec![Constraint::Unique {
@@ -1594,6 +1603,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: true,
+            fields: vec![],
         };
         let json = serde_json::to_string(&field).unwrap();
         assert!(json.contains("\"actor_column\":true"));

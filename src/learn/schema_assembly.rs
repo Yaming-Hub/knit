@@ -268,6 +268,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             primary_key: if col.is_primary_key { Some(true) } else { None },
             precision,
             actor_column: false,
+            fields: vec![],
         });
     }
 
@@ -2043,6 +2044,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
             Field {
                 name: "EndDate".into(),
@@ -2056,6 +2058,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -2076,6 +2079,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
             Field {
                 name: "end_balance".into(),
@@ -2086,6 +2090,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -2143,6 +2148,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
             Field {
                 name: "EndDate".into(),
@@ -2156,6 +2162,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
         ];
         rewrite_temporal_pairs(&mut fields, &cols);
@@ -2248,6 +2255,7 @@ mod tests {
             primary_key: Some(true),
             precision: None,
             actor_column: false,
+            fields: vec![],
         }];
         let scores = vec![("user_id".to_string(), 0.95)];
         assert!(is_actor_entity("some_table", &scores, &fields));

@@ -516,6 +516,15 @@ fn compile_field_plans(
         let null_plan = compile_null_plan(&field.nullable);
         let dependency_order = compute_dependency_order(field, &entity.fields);
 
+        // For object fields, recursively compile sub-field plans
+        let (generator_plan, sub_field_plans) = if field.data_type == crate::core::DataType::Object
+        {
+            let sub_plans = compile_object_sub_fields(&field.fields);
+            (GeneratorPlan::Struct, sub_plans)
+        } else {
+            (generator_plan, vec![])
+        };
+
         plans.push(FieldPlan {
             field_name: field.name.clone(),
             data_type: field.data_type.clone(),
@@ -524,12 +533,43 @@ fn compile_field_plans(
             dependency_order,
             precision: field.precision,
             actor_column: field.actor_column,
+            sub_field_plans,
         });
     }
 
     // Sort by dependency_order for correct generation ordering.
     plans.sort_by_key(|fp| fp.dependency_order);
     plans
+}
+
+/// Recursively compile sub-fields for a nested object field.
+fn compile_object_sub_fields(fields: &[Field]) -> Vec<FieldPlan> {
+    fields
+        .iter()
+        .map(|sub| {
+            let generator_plan = if sub.data_type == crate::core::DataType::Object {
+                GeneratorPlan::Struct
+            } else {
+                compile_generator(sub, fields)
+            };
+            let null_plan = compile_null_plan(&sub.nullable);
+            let sub_field_plans = if sub.data_type == crate::core::DataType::Object {
+                compile_object_sub_fields(&sub.fields)
+            } else {
+                vec![]
+            };
+            FieldPlan {
+                field_name: sub.name.clone(),
+                data_type: sub.data_type.clone(),
+                generator_plan,
+                null_plan,
+                dependency_order: 0,
+                precision: sub.precision,
+                actor_column: false,
+                sub_field_plans,
+            }
+        })
+        .collect()
 }
 
 /// Convert a `GeneratorSpec` to a `GeneratorPlan`.
@@ -851,6 +891,7 @@ fn compile_generator_from_spec(
         primary_key: None,
         precision: None,
         actor_column: false,
+        fields: vec![],
     };
     compile_generator(&dummy_field, all_fields)
 }
@@ -927,7 +968,8 @@ fn default_generator_for_type(data_type: &crate::core::DataType) -> GeneratorPla
         | DataType::Duration
         | DataType::Bytes
         | DataType::Array
-        | DataType::Map => GeneratorPlan::Constant(crate::core::Value::Null),
+        | DataType::Map
+        | DataType::Object => GeneratorPlan::Constant(crate::core::Value::Null),
     }
 }
 
@@ -1122,6 +1164,7 @@ fn compute_generator_spec_deps(spec: &GeneratorSpec, all_fields: &[Field]) -> u3
         primary_key: None,
         precision: None,
         actor_column: false,
+        fields: vec![],
     };
     compute_dependency_order(&tmp, all_fields)
 }
@@ -1146,6 +1189,7 @@ fn estimate_byte_size(entity: &Entity, row_count: u64) -> u64 {
             crate::core::DataType::Bytes => 128,
             crate::core::DataType::Array => 128,
             crate::core::DataType::Map => 256,
+            crate::core::DataType::Object => 256,
         })
         .sum();
     bytes_per_row * row_count
@@ -1291,6 +1335,7 @@ mod tests {
                     primary_key: Some(true),
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
                 Field {
                     name: "name".to_string(),
@@ -1304,6 +1349,7 @@ mod tests {
                     primary_key: None,
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
             ],
             constraints: vec![],
@@ -1434,6 +1480,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model(
@@ -1475,6 +1522,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let mut entity_b = simple_entity("b", 1000);
@@ -1487,6 +1535,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model(
@@ -1614,6 +1663,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1655,6 +1705,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("autoround", vec![entity], vec![]);
@@ -1697,6 +1748,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("noround", vec![entity], vec![]);
@@ -1770,6 +1822,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1806,6 +1859,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1833,6 +1887,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1872,6 +1927,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         entity.fields.push(Field {
             name: "tax".to_string(),
@@ -1884,6 +1940,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -1926,6 +1983,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         entity.fields.push(Field {
             name: "label".to_string(),
@@ -1938,6 +1996,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model("params", vec![entity], vec![]);
@@ -2030,6 +2089,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
 
         let model = simple_model(
@@ -2098,6 +2158,7 @@ mod tests {
                     primary_key: None,
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 }],
                 constraints: vec![],
                 topology: None,
@@ -2138,6 +2199,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
             Field {
                 name: "price".to_string(),
@@ -2148,6 +2210,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
         ];
         // "price * 2" should match only "price", not "p"
@@ -2301,6 +2364,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
             Field {
                 name: "start_date".to_string(),
@@ -2317,6 +2381,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             },
         ];
         let order_end = compute_dependency_order(&fields[0], &fields);
@@ -2504,6 +2569,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: true,
+            fields: vec![],
         });
         posts.activity_count = Some(ActivityCount {
             actor_field: "author_id".to_string(),
@@ -2568,6 +2634,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: true,
+            fields: vec![],
         });
         posts.activity_count = Some(ActivityCount {
             actor_field: "author_id".to_string(),

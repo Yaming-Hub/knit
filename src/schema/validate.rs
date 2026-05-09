@@ -101,12 +101,186 @@ fn validate_fields(
                 message: "precision is only valid for float64 fields".to_string(),
             });
         }
+        // Validate nested object fields
+        validate_object_field(
+            &format!("entities.{}.fields.{}", entity.name, field.name),
+            field,
+            errors,
+        );
     }
     if pk_count > 1 {
         errors.push(SchemaError::Validation {
             path: format!("entities.{}", entity.name),
             message: format!("entity has {} primary keys, expected at most 1", pk_count),
         });
+    }
+}
+
+/// Validate nested object field constraints.
+/// Object fields must have sub-fields, must not have their own generator,
+/// and nested fields cannot be primary keys or actor columns.
+fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<SchemaError>) {
+    if field.data_type == DataType::Object {
+        if field.fields.is_empty() {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "object field must have at least one sub-field".to_string(),
+            });
+        }
+        if field.generator.is_some() {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "object field must not have its own generator; \
+                          sub-fields define their own generators"
+                    .to_string(),
+            });
+        }
+        // Validate sub-fields recursively
+        let mut seen = HashSet::new();
+        for sub in &field.fields {
+            if !seen.insert(&sub.name) {
+                errors.push(SchemaError::Validation {
+                    path: format!("{}.fields.{}", path, sub.name),
+                    message: format!("duplicate sub-field name '{}'", sub.name),
+                });
+            }
+            // Disallow primary_key and actor_column in nested fields
+            if sub.primary_key == Some(true) {
+                errors.push(SchemaError::Validation {
+                    path: format!("{}.fields.{}", path, sub.name),
+                    message: "primary_key is not allowed on nested object fields".to_string(),
+                });
+            }
+            if sub.actor_column {
+                errors.push(SchemaError::Validation {
+                    path: format!("{}.fields.{}", path, sub.name),
+                    message: "actor_column is not allowed on nested object fields".to_string(),
+                });
+            }
+            // Restrict nested generator kinds (no FK, graph_target, etc.)
+            if let Some(gen) = &sub.generator {
+                validate_nested_generator(
+                    &format!("{}.fields.{}.generator", path, sub.name),
+                    gen,
+                    errors,
+                );
+                // Also validate generator parameters (distribution params, etc.)
+                validate_generator_params(
+                    &format!("{}.fields.{}.generator", path, sub.name),
+                    gen,
+                    &sub.data_type,
+                    errors,
+                );
+            }
+            // Validate null spec semantics
+            validate_null_spec(
+                &format!("{}.fields.{}.nullable", path, sub.name),
+                &sub.nullable,
+                errors,
+            );
+            // precision is only meaningful for float types
+            if sub.precision.is_some() && sub.data_type != DataType::Float {
+                errors.push(SchemaError::Validation {
+                    path: format!("{}.fields.{}.precision", path, sub.name),
+                    message: "precision is only valid for float64 fields".to_string(),
+                });
+            }
+            // Recurse for deeper nesting
+            validate_object_field(
+                &format!("{}.fields.{}", path, sub.name),
+                sub,
+                errors,
+            );
+        }
+    } else if !field.fields.is_empty() {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: format!(
+                "non-object field '{}' (type={}) must not have sub-fields",
+                field.name, field.data_type
+            ),
+        });
+    }
+}
+
+/// Validate that a nested generator is one of the allowed simple types.
+fn validate_nested_generator(path: &str, gen: &GeneratorSpec, errors: &mut Vec<SchemaError>) {
+    let allowed = matches!(
+        gen,
+        GeneratorSpec::Distribution { .. }
+            | GeneratorSpec::Faker { .. }
+            | GeneratorSpec::Constant { .. }
+            | GeneratorSpec::Sequence { .. }
+            | GeneratorSpec::OneOf { .. }
+            | GeneratorSpec::UuidGen { .. }
+    );
+    if !allowed {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: "nested object fields only support simple generators: \
+                      distribution, faker, constant, sequence, one_of, uuid"
+                .to_string(),
+        });
+    }
+}
+
+/// Validate generator parameter semantics (distribution params, type compatibility, etc.)
+/// for nested object sub-fields. This checks the same parameter rules as `validate_generator`
+/// but without entity-level context (FK, lookup, derived, etc.).
+fn validate_generator_params(
+    path: &str,
+    gen: &GeneratorSpec,
+    data_type: &DataType,
+    errors: &mut Vec<SchemaError>,
+) {
+    // Check generator ↔ field type compatibility
+    if let Some(msg) = check_generator_type_compat(gen, data_type) {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: msg,
+        });
+    }
+    match gen {
+        GeneratorSpec::Distribution { spec } => {
+            validate_distribution(path, spec, errors);
+        }
+        GeneratorSpec::Sequence { step, .. } => {
+            if *step == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "sequence step must not be 0".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::OneOf { choices } => {
+            if choices.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "oneOf requires at least one choice".to_string(),
+                });
+            }
+        }
+        GeneratorSpec::Faker { method, .. } => {
+            if !KNOWN_FAKER_METHODS.contains(&method.as_str()) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "unknown faker method '{}', expected one of: {}",
+                        method,
+                        KNOWN_FAKER_METHODS.join(", ")
+                    ),
+                });
+            }
+        }
+        GeneratorSpec::UuidGen { version } => {
+            if *version != 4 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!("only UUID version 4 is supported, got {}", version),
+                });
+            }
+        }
+        _ => {} // Other generator types are rejected by validate_nested_generator
     }
 }
 
@@ -2130,6 +2304,7 @@ mod tests {
                         primary_key: Some(true),
                         precision: None,
                         actor_column: false,
+                        fields: vec![],
                     },
                     Field {
                         name: "email".to_string(),
@@ -2140,6 +2315,7 @@ mod tests {
                         primary_key: None,
                         precision: None,
                         actor_column: false,
+                        fields: vec![],
                     },
                 ],
                 constraints: vec![],
@@ -2187,6 +2363,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2237,6 +2414,7 @@ mod tests {
                 primary_key: Some(true),
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             constraints: vec![],
             topology: None,
@@ -2275,6 +2453,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             constraints: vec![],
             topology: None,
@@ -2316,6 +2495,7 @@ mod tests {
                     primary_key: Some(true),
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -2326,6 +2506,7 @@ mod tests {
                     primary_key: None,
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
             ],
             constraints: vec![],
@@ -2368,6 +2549,7 @@ mod tests {
                     primary_key: Some(true),
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -2378,6 +2560,7 @@ mod tests {
                     primary_key: None,
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
             ],
             constraints: vec![],
@@ -2419,6 +2602,7 @@ mod tests {
                 primary_key: None,
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             constraints: vec![],
             topology: None,
@@ -2598,6 +2782,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2625,6 +2810,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -2656,6 +2842,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2687,6 +2874,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2714,6 +2902,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2741,6 +2930,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -2772,6 +2962,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2837,6 +3028,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2856,6 +3048,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2878,6 +3071,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2900,6 +3094,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -2923,6 +3118,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2946,6 +3142,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2969,6 +3166,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -2995,6 +3193,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3023,6 +3222,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3045,6 +3245,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3070,6 +3271,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3097,6 +3299,7 @@ mod tests {
                 primary_key: Some(true),
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             constraints: vec![],
             topology: None,
@@ -3119,6 +3322,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3178,6 +3382,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3200,6 +3405,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3219,6 +3425,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3242,6 +3449,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
@@ -3265,6 +3473,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3286,6 +3495,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3313,6 +3523,7 @@ mod tests {
                 primary_key: Some(true),
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             actor: false,
             persona_distribution: None,
@@ -3331,6 +3542,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3363,6 +3575,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3385,6 +3598,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3408,6 +3622,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3697,6 +3912,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3721,6 +3937,7 @@ mod tests {
                 primary_key: Some(true),
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             actor: false,
             persona_distribution: None,
@@ -3737,6 +3954,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         model.entities[0].fields.push(Field {
             name: "created_at".to_string(),
@@ -3755,6 +3973,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3780,6 +3999,7 @@ mod tests {
                     primary_key: Some(true),
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
                 Field {
                     name: "title".to_string(),
@@ -3790,6 +4010,7 @@ mod tests {
                     primary_key: None,
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
             ],
             actor: false,
@@ -3807,6 +4028,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         model.entities[0].fields.push(Field {
             name: "created_at".to_string(),
@@ -3825,6 +4047,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3849,6 +4072,7 @@ mod tests {
                     primary_key: Some(true),
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
                 Field {
                     name: "created_at".to_string(),
@@ -3859,6 +4083,7 @@ mod tests {
                     primary_key: None,
                     precision: None,
                     actor_column: false,
+                    fields: vec![],
                 },
             ],
             actor: false,
@@ -3885,6 +4110,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3912,6 +4138,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3939,6 +4166,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3966,6 +4194,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3989,6 +4218,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -4014,6 +4244,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -4039,6 +4270,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         // Legacy template with valid field should not produce errors
@@ -4066,6 +4298,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -4092,6 +4325,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -4120,6 +4354,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         model.entities[0].fields.push(Field {
             name: "b".to_string(),
@@ -4132,6 +4367,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(
@@ -4167,6 +4403,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         model.entities[0].fields.push(Field {
             name: "b".to_string(),
@@ -4179,6 +4416,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         model.entities[0].fields.push(Field {
             name: "a".to_string(),
@@ -4191,6 +4429,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         });
         let errors = validate(&model);
         assert!(

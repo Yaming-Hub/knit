@@ -438,6 +438,7 @@ fn minimal_data_model_roundtrip() {
                 primary_key: Some(true),
                 precision: None,
                 actor_column: false,
+                fields: vec![],
             }],
             constraints: vec![],
             topology: None,

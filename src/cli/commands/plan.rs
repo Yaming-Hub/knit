@@ -273,6 +273,7 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         } => {
             format!("external_lookup({} entries, {:?})", entries.len(), sampling)
         }
+        crate::plan::GeneratorPlan::Struct => "struct(nested object)".to_string(),
     }
 }
 
