@@ -68,7 +68,7 @@ impl Perturbator for ValueDrifter {
                 continue;
             }
 
-            let drifted = apply_drift(col.as_ref(), self.drift_per_row, config.probability, rng)?;
+            let drifted = apply_drift(col.as_ref(), self.drift_per_row, config, rng)?;
             trace!(
                 column = field.name(),
                 drift = self.drift_per_row,
@@ -95,9 +95,10 @@ fn should_apply(name: &str, filter: &ColumnFilter) -> bool {
 fn apply_drift(
     array: &dyn Array,
     drift_per_row: f64,
-    probability: f64,
+    config: &PerturbConfig,
     rng: &mut dyn RngCore,
 ) -> Result<Arc<dyn Array>, NoiseError> {
+    let probability = config.probability;
     match array.data_type() {
         DataType::Float64 => {
             let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -106,7 +107,7 @@ fn apply_drift(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if rng.gen::<f64>() >= probability {
+                    if !config.in_scope(i) || rng.gen::<f64>() >= probability {
                         return Some(a.value(i));
                     }
                     Some(a.value(i) + drift_per_row * i as f64)
@@ -121,7 +122,7 @@ fn apply_drift(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if rng.gen::<f64>() >= probability {
+                    if !config.in_scope(i) || rng.gen::<f64>() >= probability {
                         return Some(a.value(i));
                     }
                     Some((a.value(i) as f64 + drift_per_row * i as f64).round() as i32)
@@ -136,7 +137,7 @@ fn apply_drift(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if rng.gen::<f64>() >= probability {
+                    if !config.in_scope(i) || rng.gen::<f64>() >= probability {
                         return Some(a.value(i));
                     }
                     Some((a.value(i) as f64 + drift_per_row * i as f64).round() as i64)

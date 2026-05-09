@@ -5,9 +5,11 @@
 //! enabling [`Pipeline`](crate::noise::Pipeline) to order execution into
 //! clean → constrained → breaking stages.
 
+use arrow::array::{Array, BooleanArray};
 use arrow::record_batch::RecordBatch;
 use bitflags::bitflags;
 use rand::RngCore;
+use std::sync::Arc;
 
 use crate::noise::error::NoiseError;
 
@@ -55,6 +57,10 @@ pub struct PerturbConfig {
     pub columns: ColumnFilter,
     /// Optional RNG seed for reproducibility.
     pub seed: Option<u64>,
+    /// Optional row-level scope mask. When set, only rows where the mask
+    /// is `true` are eligible for perturbation. Probability is applied
+    /// *after* scope filtering.
+    pub scope_mask: Option<Arc<BooleanArray>>,
 }
 
 impl Default for PerturbConfig {
@@ -63,6 +69,7 @@ impl Default for PerturbConfig {
             probability: 0.05,
             columns: ColumnFilter::All,
             seed: None,
+            scope_mask: None,
         }
     }
 }
@@ -90,6 +97,25 @@ impl PerturbConfig {
     pub fn with_seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
+    }
+
+    /// Set a scope mask for conditional noise application.
+    pub fn with_scope_mask(mut self, mask: Arc<BooleanArray>) -> Self {
+        self.scope_mask = Some(mask);
+        self
+    }
+
+    /// Returns `true` if row `i` is eligible for perturbation.
+    ///
+    /// When no scope mask is set, all rows are eligible. When a mask is
+    /// present, only rows where the mask value is `true` are eligible
+    /// (null mask values are treated as `false`).
+    #[inline]
+    pub fn in_scope(&self, i: usize) -> bool {
+        match &self.scope_mask {
+            None => true,
+            Some(mask) => mask.is_valid(i) && mask.value(i),
+        }
     }
 }
 

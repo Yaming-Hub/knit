@@ -73,9 +73,9 @@ impl Perturbator for SwapInjector {
                 continue;
             }
 
-            // Select rows to swap
+            // Select rows to swap (only from in-scope rows)
             let mut swap_indices: Vec<usize> = (0..n)
-                .filter(|_| rng.gen_bool(config.probability.clamp(0.0, 1.0)))
+                .filter(|&i| config.in_scope(i) && rng.gen_bool(config.probability.clamp(0.0, 1.0)))
                 .collect();
             swap_indices.shuffle(rng);
             // Pair up — drop last if odd

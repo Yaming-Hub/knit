@@ -64,7 +64,7 @@ impl Perturbator for OutlierInjector {
                 continue;
             }
 
-            let outlied = inject_outliers(col.as_ref(), rng, config.probability, self.multiplier)?;
+            let outlied = inject_outliers(col.as_ref(), rng, config, self.multiplier)?;
             trace!(column = field.name(), "injected outliers");
             columns.push(outlied);
         }
@@ -87,9 +87,10 @@ fn should_apply(name: &str, filter: &ColumnFilter) -> bool {
 fn inject_outliers(
     array: &dyn Array,
     rng: &mut dyn RngCore,
-    probability: f64,
+    config: &PerturbConfig,
     multiplier: f64,
 ) -> Result<Arc<dyn Array>, NoiseError> {
+    let probability = config.probability;
     match array.data_type() {
         DataType::Float64 => {
             let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -100,7 +101,7 @@ fn inject_outliers(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if rng.gen::<f64>() < probability {
+                    if config.in_scope(i) && rng.gen::<f64>() < probability {
                         let sign: f64 = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
                         Some(a.value(i) + sign * range * multiplier)
                     } else {
@@ -119,7 +120,7 @@ fn inject_outliers(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if rng.gen::<f64>() < probability {
+                    if config.in_scope(i) && rng.gen::<f64>() < probability {
                         let sign: f64 = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
                         Some((a.value(i) as f64 + sign * range * multiplier) as i32)
                     } else {
@@ -138,7 +139,7 @@ fn inject_outliers(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if rng.gen::<f64>() < probability {
+                    if config.in_scope(i) && rng.gen::<f64>() < probability {
                         let sign: f64 = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
                         Some((a.value(i) as f64 + sign * range * multiplier) as i64)
                     } else {

@@ -890,6 +890,42 @@ fields = ["amount"]
 outlier_rate = 0.01
 ```
 
+### Scoped Noise
+
+Restrict noise injection to rows matching a predicate expression. Only
+matching rows are eligible for perturbation — probability is applied *after*
+scope filtering (the two filters multiply).
+
+```toml
+# Only inject outliers in refunded orders
+[[noise]]
+name = "refund_outliers"
+entity = "order"
+fields = ["amount"]
+outlier_rate = 0.5
+scope = { where = '${status} == "refunded"' }
+
+# Inject typos only when status is cancelled
+[[noise]]
+name = "cancel_typos"
+entity = "order"
+fields = ["customer_name"]
+typo_rate = 0.3
+scope = { where = '${status} == "cancelled"' }
+```
+
+Scope predicates use the **Knit expression language** (same syntax as derived
+fields): `${field}` references, comparison operators (`==`, `!=`, `<`, `>`,
+`<=`, `>=`), boolean connectives (`&&`, `||`, `!`), and functions.
+
+| Property | Description |
+|----------|-------------|
+| `scope.where` | Predicate expression; rows where it evaluates to `true` are eligible |
+
+Null predicate results are treated as `false` (row excluded from scope).
+
+See `examples/scoped_noise.weave.toml` for a complete working example.
+
 ---
 
 ## Custom Types

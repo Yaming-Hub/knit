@@ -6,6 +6,16 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Scoped noise** — Conditional noise injection that restricts perturbation
+  to rows matching a predicate expression (spec §11.4).
+  - Add `scope = { where = '${field} == "value"' }` to any `[[noise]]` profile
+  - Scope predicates use the Knit expression language (same as derived fields)
+  - Probability is applied *after* scope filtering (the two multiply)
+  - Works with all 11 perturbator types including row-level injectors
+    (DuplicateInjector, SwapInjector)
+  - Scope expressions are parsed once and evaluated per-batch for efficiency
+  - Schema validation checks expression syntax and field references
+  - New example: `examples/scoped_noise.weave.toml`
 - **Mixins** — Reusable field groups that can be included in multiple entities
   via the `[[mixins]]` schema section (spec §5.6).
   - Define named field groups with `[[mixins]]` and reference them with

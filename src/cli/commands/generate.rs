@@ -1225,10 +1225,26 @@ fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<
                 Pipeline::new(cfg)
             });
 
+        // Compile scope expression once (if present).
+        let scope_expr = profile.scope.as_ref().map(|s| {
+            crate::gen::expr::parser::parse(&s.where_expr).unwrap_or_else(|e| {
+                tracing::warn!(
+                    name = %profile.name,
+                    error = %e,
+                    "failed to parse scope expression, ignoring scope"
+                );
+                // Return a constant-true expression as fallback
+                crate::gen::expr::ast::Expr::Literal(
+                    crate::gen::expr::ast::LiteralValue::Bool(true),
+                )
+            })
+        });
+
         // Helper to build overrides with this profile's rate and column filter.
         let make_overrides = |rate: f64| PerturbOverrides {
             probability: Some(rate),
             columns: col_filter.clone(),
+            scope_expr: scope_expr.clone(),
         };
 
         // Add perturbators with their individual rates and column filters

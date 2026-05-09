@@ -73,7 +73,10 @@ impl Perturbator for TruncateInjector {
                     let s = arr.value(i);
                     let char_count = s.chars().count();
                     // Need at least 2 chars to truncate
-                    if char_count < 2 || !rng.gen_bool(config.probability.clamp(0.0, 1.0)) {
+                    if char_count < 2
+                        || !config.in_scope(i)
+                        || !rng.gen_bool(config.probability.clamp(0.0, 1.0))
+                    {
                         return Some(s.to_string());
                     }
                     // Truncate to [1, char_count - 1] characters

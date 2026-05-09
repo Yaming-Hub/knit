@@ -9,11 +9,17 @@
 //!
 //! Within each stage perturbators run in insertion order.
 
+use arrow::array::{AsArray, BooleanArray};
 use arrow::record_batch::RecordBatch;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use std::cell::Cell;
+use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{debug, info, instrument};
 
+use crate::gen::expr::ast::Expr;
+use crate::gen::expr::eval::{EvalContext, evaluate};
 use crate::noise::error::NoiseError;
 use crate::noise::traits::{ColumnFilter, InvariantSet, PerturbConfig, Perturbator};
 
@@ -35,13 +41,53 @@ fn classify(invariants: InvariantSet) -> Stage {
     }
 }
 
-/// Per-perturbator overrides for rate and column filter.
+/// Per-perturbator overrides for rate, column filter, and scope.
 #[derive(Debug, Clone, Default)]
 pub struct PerturbOverrides {
     /// Probability override (clamped to `[0.0, 1.0]`).
     pub probability: Option<f64>,
     /// Column filter override. If `None`, uses the pipeline default.
     pub columns: Option<ColumnFilter>,
+    /// Compiled scope predicate AST. Evaluated per-batch to produce
+    /// a row-level boolean mask restricting which rows are eligible.
+    pub scope_expr: Option<Expr>,
+}
+
+/// Evaluate a compiled scope expression against a `RecordBatch`,
+/// producing a `BooleanArray` mask. Null results are treated as `false`.
+fn evaluate_scope_mask(expr: &Expr, batch: &RecordBatch) -> Result<BooleanArray, NoiseError> {
+    use arrow::array::Array;
+    use arrow::datatypes::DataType;
+
+    let schema = batch.schema();
+    let mut columns: HashMap<String, arrow::array::ArrayRef> = HashMap::new();
+    for (i, field) in schema.fields().iter().enumerate() {
+        columns.insert(field.name().clone(), batch.column(i).clone());
+    }
+    let ctx = EvalContext {
+        columns: &columns,
+        params: &HashMap::new(),
+        row_count: batch.num_rows(),
+        row_offset: 0,
+        seed: 0,
+        call_counter: Cell::new(0),
+    };
+    let result = evaluate(expr, &ctx).map_err(|e| NoiseError::Scope(e.message))?;
+
+    // Coerce to boolean
+    match result.data_type() {
+        DataType::Boolean => {
+            let bool_arr = result.as_boolean().clone();
+            // Replace nulls with false
+            let mask: BooleanArray = (0..bool_arr.len())
+                .map(|i| Some(bool_arr.is_valid(i) && bool_arr.value(i)))
+                .collect();
+            Ok(mask)
+        }
+        other => Err(NoiseError::Scope(format!(
+            "scope predicate must evaluate to Boolean, got {other:?}"
+        ))),
+    }
 }
 
 /// Three-stage perturbation pipeline.
@@ -96,6 +142,7 @@ impl Pipeline {
             PerturbOverrides {
                 probability: Some(rate.clamp(0.0, 1.0)),
                 columns: None,
+                scope_expr: None,
             },
         ));
     }
@@ -150,6 +197,20 @@ impl Pipeline {
             "starting noise pipeline"
         );
 
+        // Pre-compute scope masks once from the original batch so that
+        // perturbators that mutate scoped fields don't shift the target rows.
+        let mut precomputed_scope: std::collections::HashMap<usize, Arc<BooleanArray>> =
+            std::collections::HashMap::new();
+        for &(_, idx) in &order {
+            let (_, overrides) = &self.perturbators[idx];
+            if let Some(ref expr) = overrides.scope_expr {
+                if !precomputed_scope.contains_key(&idx) {
+                    let mask = evaluate_scope_mask(expr, &batch)?;
+                    precomputed_scope.insert(idx, Arc::new(mask));
+                }
+            }
+        }
+
         for (stage, idx) in &order {
             let (p, overrides) = &self.perturbators[*idx];
             // Derive uncorrelated per-perturbator seed using XOR with rotated index
@@ -165,10 +226,16 @@ impl Pipeline {
                 effective_config.columns = cols.clone();
             }
 
+            // Use pre-computed scope mask (evaluated once against original batch).
+            if let Some(mask) = precomputed_scope.get(idx) {
+                effective_config.scope_mask = Some(Arc::clone(mask));
+            }
+
             debug!(
                 perturbator = p.name(),
                 stage = ?stage,
                 probability = effective_config.probability,
+                scoped = effective_config.scope_mask.is_some(),
                 "applying perturbator"
             );
             batch = p.perturb(batch, &mut rng, &effective_config)?;
@@ -183,7 +250,7 @@ impl Pipeline {
 mod tests {
     use super::*;
     use crate::noise::traits::ColumnFilter;
-    use arrow::array::{Float64Array, Int32Array};
+    use arrow::array::{Array, BooleanArray, Float64Array, Int32Array};
     use arrow::datatypes::{DataType, Field, Schema};
     use std::sync::Arc;
 
@@ -231,6 +298,7 @@ mod tests {
             probability: 0.0,
             columns: ColumnFilter::All,
             seed: Some(0),
+            scope_mask: None,
         };
         let mut pipe = Pipeline::new(cfg);
         // Add in reverse order: breaking, constrained, clean
@@ -334,6 +402,204 @@ mod tests {
         assert!(
             total_nulls_a > 200,
             "expected substantial nulls from 0.42-rate pass, got {total_nulls_a}"
+        );
+    }
+
+    #[test]
+    fn scope_mask_restricts_perturbation() {
+        use crate::noise::NullInjector;
+
+        // Create a batch with 100 rows, scope mask only allows rows 0-9
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Int32,
+            true,
+        )]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int32Array::from(
+                (0..100).collect::<Vec<i32>>(),
+            ))],
+        )
+        .unwrap();
+
+        // Scope mask: first 10 rows in scope, rest out
+        let mut mask_vals = vec![false; 100];
+        for v in mask_vals.iter_mut().take(10) {
+            *v = true;
+        }
+        let scope_mask = Arc::new(BooleanArray::from(
+            mask_vals.iter().map(|b| Some(*b)).collect::<Vec<_>>(),
+        ));
+
+        let cfg = PerturbConfig::default()
+            .with_probability(1.0) // perturb ALL in-scope rows
+            .with_seed(42)
+            .with_scope_mask(scope_mask);
+
+        let mut pipe = Pipeline::new(cfg);
+        pipe.add(Box::new(NullInjector::new()));
+        let result = pipe.run(batch).unwrap();
+
+        // All 10 in-scope rows should be null, 90 out-of-scope rows untouched
+        let col = result.column(0);
+        assert_eq!(col.null_count(), 10);
+        // Verify out-of-scope rows still have values
+        let arr = col.as_any().downcast_ref::<Int32Array>().unwrap();
+        for i in 10..100 {
+            assert!(arr.is_valid(i), "row {i} should be untouched");
+        }
+    }
+
+    #[test]
+    fn scope_expr_evaluated_per_batch() {
+        use crate::gen::expr::ast::{BinOp, Expr, LiteralValue};
+        use crate::noise::NullInjector;
+
+        // Build a batch where column "status" has two values
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("val", DataType::Int32, true),
+            Field::new("status", DataType::Utf8, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
+                Arc::new(arrow::array::StringArray::from(vec![
+                    "active",
+                    "refunded",
+                    "active",
+                    "refunded",
+                    "active",
+                ])),
+            ],
+        )
+        .unwrap();
+
+        // Scope: ${status} == "refunded" → rows 1 and 3
+        let scope_ast = Expr::BinaryOp {
+            left: Box::new(Expr::FieldRef("status".into())),
+            op: BinOp::Eq,
+            right: Box::new(Expr::Literal(LiteralValue::Str("refunded".into()))),
+        };
+
+        let cfg = PerturbConfig::default().with_probability(1.0).with_seed(42);
+        let mut pipe = Pipeline::new(cfg);
+        pipe.add_with_overrides(
+            Box::new(NullInjector::new()),
+            PerturbOverrides {
+                probability: Some(1.0),
+                columns: Some(ColumnFilter::ByName(vec!["val".into()])),
+                scope_expr: Some(scope_ast),
+            },
+        );
+
+        let result = pipe.run(batch).unwrap();
+        let val_col = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
+
+        // Rows 0, 2, 4 (active) should be valid
+        assert!(val_col.is_valid(0));
+        assert!(val_col.is_valid(2));
+        assert!(val_col.is_valid(4));
+        // Rows 1, 3 (refunded) should be null
+        assert!(!val_col.is_valid(1));
+        assert!(!val_col.is_valid(3));
+    }
+
+    #[test]
+    fn scope_mask_with_swap_injector() {
+        use crate::noise::SwapInjector;
+
+        // 10 rows, scope only rows 0-4
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Int32,
+            false,
+        )]));
+        let original_vals: Vec<i32> = (0..10).collect();
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int32Array::from(original_vals.clone()))],
+        )
+        .unwrap();
+
+        let mut mask_vals = vec![false; 10];
+        for v in mask_vals.iter_mut().take(5) {
+            *v = true;
+        }
+        let scope_mask = Arc::new(BooleanArray::from(
+            mask_vals.iter().map(|b| Some(*b)).collect::<Vec<_>>(),
+        ));
+
+        let cfg = PerturbConfig::default()
+            .with_probability(1.0)
+            .with_seed(42)
+            .with_scope_mask(scope_mask);
+
+        let mut pipe = Pipeline::new(cfg);
+        pipe.add(Box::new(SwapInjector::new()));
+        let result = pipe.run(batch).unwrap();
+
+        let arr = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
+
+        // Out-of-scope rows 5-9 should be unchanged
+        for i in 5..10 {
+            assert_eq!(
+                arr.value(i),
+                original_vals[i],
+                "row {i} should be unchanged"
+            );
+        }
+    }
+
+    #[test]
+    fn scope_mask_with_duplicate_injector() {
+        use crate::noise::DuplicateInjector;
+
+        // 10 rows, scope only rows 0-2
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "val",
+            DataType::Int32,
+            false,
+        )]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int32Array::from(vec![
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+            ]))],
+        )
+        .unwrap();
+
+        let mut mask_vals = vec![false; 10];
+        for v in mask_vals.iter_mut().take(3) {
+            *v = true;
+        }
+        let scope_mask = Arc::new(BooleanArray::from(
+            mask_vals.iter().map(|b| Some(*b)).collect::<Vec<_>>(),
+        ));
+
+        let cfg = PerturbConfig::default()
+            .with_probability(1.0)
+            .with_seed(42)
+            .with_scope_mask(scope_mask);
+
+        let mut pipe = Pipeline::new(cfg);
+        pipe.add(Box::new(DuplicateInjector::new()));
+        let result = pipe.run(batch).unwrap();
+
+        // Should have duplicated up to 3 rows (in-scope), so 10 + [1..3] rows
+        assert!(
+            result.num_rows() >= 10 && result.num_rows() <= 13,
+            "expected 10-13 rows, got {}",
+            result.num_rows()
         );
     }
 }
