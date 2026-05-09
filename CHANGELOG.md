@@ -62,6 +62,10 @@ All notable changes to Knit are documented in this file.
   Full Arrow-to-Avro type mapping including nullable columns (union types),
   timestamps, lists, and binary data. Entity names are used as Avro record
   names.
+- **`missing_field` noise type** — Randomly omit fields from document output
+  (JSON/JSONL) to simulate semi-structured data. Controlled via
+  `missing_field_rate` in noise profiles. Deterministic per-row RNG for
+  reproducibility. Non-document formats (CSV, Parquet, Avro) emit a warning.
 
 ## [0.3.0] — 2026-05-08
 

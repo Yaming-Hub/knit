@@ -424,6 +424,38 @@ Corrupts string values that follow a known format pattern.
 - **URLs** — malformed schemes, missing TLD (`"htp://example"`)
 - **UUIDs** — wrong length, invalid hex characters
 
+### 5.10 MissingField
+
+Omits fields entirely from document-oriented output (JSON/JSONL) to simulate
+semi-structured data where some records lack optional keys.
+
+Unlike other perturbators, `MissingField` is **not** an Arrow `RecordBatch`
+transform — it operates at the serialization layer. Arrow's fixed schema cannot
+represent per-row field absence, so the JSON sink itself decides omission using
+a deterministic per-row RNG.
+
+| Property | Value |
+|----------|-------|
+| **Stage** | Serialization (not a `Perturbator`) |
+| **Breaks** | Field presence (document formats only) |
+| **Applicable types** | All — any column can be omitted |
+
+**Configuration:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `missing_field_rate` | `f64` | 0.0 | Per-row probability of omitting each targeted field |
+| `fields` | `Vec<String>` | — | Which columns to target (required) |
+
+**Behavior:** For each row and each targeted field, a ChaCha8 RNG seeded from
+`(profile_seed + field_index)` decides whether to include the field. The seed
+incorporates `rows_written` for batch-size independence.
+
+**Format-specific:**
+- **JSON/JSONL** — field key is omitted from the output object
+- **CSV/Parquet/Avro** — warning emitted; field appears as normal (these formats
+  have fixed column schemas and cannot represent missing fields)
+
 ---
 
 ## 6. Scoped Noise

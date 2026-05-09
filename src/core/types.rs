@@ -886,6 +886,13 @@ pub struct NoiseProfile {
     /// Fraction of timestamps to cluster around spike points.
     #[serde(default)]
     pub temporal_spike_rate: f64,
+    /// Fraction of rows where targeted fields are omitted entirely.
+    ///
+    /// Only affects document-oriented sinks (JSON/JSONL). For columnar
+    /// formats (CSV, Parquet, Avro) this degrades to null injection with a
+    /// warning.
+    #[serde(default)]
+    pub missing_field_rate: f64,
 }
 
 // ── Constraint ───────────────────────────────────────────────────────
@@ -1377,6 +1384,7 @@ mod tests {
                 truncate_rate: 0.0,
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
+                missing_field_rate: 0.0,
             }],
             correlations: vec![],
             params: BTreeMap::new(),

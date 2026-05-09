@@ -1491,6 +1491,7 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
         validate_rate(&path, "truncate_rate", noise.truncate_rate, errors);
         validate_rate(&path, "fk_violate_rate", noise.fk_violate_rate, errors);
         validate_rate(&path, "temporal_spike_rate", noise.temporal_spike_rate, errors);
+        validate_rate(&path, "missing_field_rate", noise.missing_field_rate, errors);
     }
 }
 
@@ -2031,6 +2032,7 @@ mod tests {
                 truncate_rate: 0.0,
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
+                missing_field_rate: 0.0,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2053,6 +2055,7 @@ mod tests {
                 truncate_rate: 0.0,
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
+                missing_field_rate: 0.0,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2138,6 +2141,7 @@ mod tests {
                 truncate_rate: 0.0,
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
+                missing_field_rate: 0.0,
         };
         model.noise_profiles.push(noise.clone());
         model.noise_profiles.push(noise);

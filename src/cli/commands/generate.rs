@@ -218,6 +218,13 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
         build_noise_pipelines(&model.noise_profiles, model.seed)
     };
 
+    // ── Collect missing-field specs per entity ───────────────────────
+    let missing_field_specs = if cli.no_noise {
+        HashMap::new()
+    } else {
+        collect_missing_field_specs(&model.noise_profiles, model.seed)
+    };
+
     if !cli.quiet && !noise_pipelines.is_empty() {
         let profile_count: usize = model.noise_profiles.len();
         eprintln!(
@@ -353,11 +360,29 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                     schema
                 };
 
+                let entity_missing = missing_field_specs
+                    .get(entity_name)
+                    .cloned()
+                    .unwrap_or_default();
+
+                // Warn if missing_field noise is used with non-document formats
+                if !entity_missing.is_empty()
+                    && !matches!(format, OutputFormat::Json | OutputFormat::Jsonl)
+                {
+                    tracing::warn!(
+                        entity = entity_name,
+                        "missing_field noise has no effect on {} output; \
+                         only JSON/JSONL can omit fields",
+                        format!("{:?}", format).to_lowercase()
+                    );
+                }
+
                 let sink_config = SinkConfig {
                     format,
                     compression,
                     record_name: entity_name.to_string(),
                     avro_codec,
+                    missing_field_specs: entity_missing,
                     ..SinkConfig::default()
                 };
                 let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
@@ -1235,6 +1260,50 @@ fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<
     }
 
     entity_pipelines
+}
+
+/// Collect [`MissingFieldSpec`]s per entity from noise profiles.
+///
+/// Returns a map from entity name to a list of missing-field specs.
+/// These are passed to JSON/JSONL sinks to omit fields at serialization time.
+fn collect_missing_field_specs(
+    profiles: &[NoiseProfile],
+    model_seed: u64,
+) -> HashMap<String, Vec<crate::bind::MissingFieldSpec>> {
+    let mut result: HashMap<String, Vec<crate::bind::MissingFieldSpec>> = HashMap::new();
+
+    for (prof_idx, profile) in profiles.iter().enumerate() {
+        if profile.entity.is_empty() || profile.missing_field_rate <= 0.0 {
+            continue;
+        }
+
+        let prof_seed = model_seed
+            .wrapping_add(prof_idx as u64 * 1000)
+            .wrapping_add(0xDEAD_BEEF); // distinct from pipeline seeds
+
+        let fields = if profile.fields.is_empty() {
+            // When no fields specified, the specs will be built later
+            // when we know the schema. For now, store an empty marker.
+            tracing::warn!(
+                profile = %profile.name,
+                "missing_field noise with no target fields; specify fields explicitly"
+            );
+            continue;
+        } else {
+            profile.fields.clone()
+        };
+
+        let specs = result.entry(profile.entity.clone()).or_default();
+        for (fi, field) in fields.iter().enumerate() {
+            specs.push(crate::bind::MissingFieldSpec {
+                field: field.clone(),
+                probability: profile.missing_field_rate,
+                seed: prof_seed.wrapping_add(fi as u64 * 7),
+            });
+        }
+    }
+
+    result
 }
 
 /// Apply `--count` override to all entities in the model.

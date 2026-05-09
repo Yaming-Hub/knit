@@ -30,6 +30,9 @@
 //! | [`TruncateInjector`] | `FORMAT`, `UNIQUE` |
 //! | [`FkViolateInjector`] | `FK_INTEGRITY` |
 //! | [`TemporalSpikeInjector`] | `TYPE_RANGE` |
+//!
+//! The `missing_field` noise type is handled at the JSON serialization layer
+//! (see [`crate::bind::json::MissingFieldSpec`]), not as a `Perturbator`.
 
 #![warn(missing_docs)]
 
