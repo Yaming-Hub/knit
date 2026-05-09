@@ -9,7 +9,7 @@ use crate::bind::avro::{AvroCodec, AvroSink};
 use crate::bind::csv::{CsvSink, CsvSinkConfig};
 use crate::bind::error::BindError;
 use crate::bind::ipc::ArrowIpcSink;
-use crate::bind::json::{JsonMode, JsonSink};
+use crate::bind::json::{JsonMode, JsonSink, MissingFieldSpec};
 use crate::bind::parquet::{Compression, ParquetSink};
 use crate::bind::template::{TemplateMode, TemplateSink};
 use crate::bind::traits::Sink;
@@ -54,6 +54,8 @@ pub struct SinkConfig {
     pub avro_codec: AvroCodec,
     /// Record name for Avro output (defaults to "Record").
     pub record_name: String,
+    /// Fields to randomly omit from document output (JSON/JSONL only).
+    pub missing_field_specs: Vec<MissingFieldSpec>,
 }
 
 impl Default for SinkConfig {
@@ -68,6 +70,7 @@ impl Default for SinkConfig {
             template_mode: None,
             avro_codec: AvroCodec::default(),
             record_name: "Record".to_string(),
+            missing_field_specs: Vec::new(),
         }
     }
 }
@@ -86,11 +89,13 @@ pub fn create_sink(
             Ok(Box::new(sink))
         }
         OutputFormat::Json => {
-            let sink = JsonSink::new(writer, JsonMode::JsonArray)?;
+            let sink = JsonSink::new(writer, JsonMode::JsonArray)?
+                .with_missing_fields(config.missing_field_specs.clone());
             Ok(Box::new(sink))
         }
         OutputFormat::Jsonl => {
-            let sink = JsonSink::new(writer, JsonMode::Jsonl)?;
+            let sink = JsonSink::new(writer, JsonMode::Jsonl)?
+                .with_missing_fields(config.missing_field_specs.clone());
             Ok(Box::new(sink))
         }
         OutputFormat::Csv => {
