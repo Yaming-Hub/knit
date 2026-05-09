@@ -858,6 +858,31 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 name: name.clone(),
                 params: params.clone(),
             },
+            GeneratorSpec::TimeSeries {
+                baseline,
+                components,
+                min,
+                max,
+                timestamp_field,
+            } => {
+                let needs_sequential = components.iter().any(|c| {
+                    matches!(
+                        c,
+                        crate::core::TimeSeriesComponent::Autoregressive { .. }
+                            | crate::core::TimeSeriesComponent::LevelShift { .. }
+                            | crate::core::TimeSeriesComponent::Spike { .. }
+                            | crate::core::TimeSeriesComponent::MeanReversion { .. }
+                    )
+                });
+                GeneratorPlan::NumericTimeSeries {
+                    baseline: *baseline,
+                    components: components.clone(),
+                    min: *min,
+                    max: *max,
+                    timestamp_field: timestamp_field.clone(),
+                    needs_sequential,
+                }
+            },
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.
@@ -1100,6 +1125,22 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .map(|f| compute_dependency_order(f, all_fields))
                 .unwrap_or(0);
             pk_order + 1
+        }
+        Some(GeneratorSpec::TimeSeries {
+            timestamp_field, ..
+        }) => {
+            // Depends on the timestamp field if specified (must be generated first
+            // so calendar-aware components can read it from batch_columns).
+            if let Some(ts_name) = timestamp_field {
+                let ts_order = all_fields
+                    .iter()
+                    .find(|f| f.name == *ts_name)
+                    .map(|f| compute_dependency_order(f, all_fields))
+                    .unwrap_or(0);
+                ts_order + 1
+            } else {
+                0
+            }
         }
         _ => 0,
     }

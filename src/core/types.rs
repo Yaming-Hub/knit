@@ -484,6 +484,121 @@ pub enum GeneratorSpec {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         weight_column: Option<String>,
     },
+    /// Composable numeric time series with trend, seasonality, AR, noise, etc.
+    ///
+    /// Produces Float64 values by summing a baseline with multiple additive
+    /// components. Designed for generating realistic metrics (CPU, latency, etc.)
+    /// that evolve over time.
+    TimeSeries {
+        /// Base value around which the time series fluctuates.
+        #[serde(default)]
+        baseline: f64,
+        /// Composable components that modify the baseline value.
+        components: Vec<TimeSeriesComponent>,
+        /// Optional minimum value (output is clamped).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        min: Option<f64>,
+        /// Optional maximum value (output is clamped).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        max: Option<f64>,
+        /// Optional timestamp field to use as time reference for calendar-aware
+        /// components (weekend_effect, business_hours). If omitted, the row index
+        /// is used as the time step.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        timestamp_field: Option<String>,
+    },
+}
+
+/// Composable component for numeric time series generators.
+///
+/// Each component contributes an additive term to the time series value.
+/// Components are evaluated in order and their contributions are summed.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum TimeSeriesComponent {
+    /// Linear or polynomial trend: `slope × t^degree`.
+    Trend {
+        /// Slope (value change per time step).
+        slope: f64,
+        /// Polynomial degree (1 = linear, 2 = quadratic). Default: 1.
+        #[serde(default = "default_trend_degree")]
+        degree: u32,
+    },
+    /// Periodic oscillation: `amplitude × sin(2π × t/period + phase)`.
+    Seasonality {
+        /// Period as a duration string (e.g. `"24h"`, `"7d"`, `"1h"`).
+        /// Interpreted as number of rows when no timestamp_field is set.
+        period: String,
+        /// Peak-to-zero amplitude of the oscillation.
+        amplitude: f64,
+        /// Phase offset in radians (default: 0.0).
+        #[serde(default)]
+        phase: f64,
+    },
+    /// Random noise drawn from a distribution.
+    Noise {
+        /// Standard deviation of Gaussian noise.
+        std_dev: f64,
+    },
+    /// Autoregressive component: `Σ coeff[i] × (x[t-i-1] - baseline)`.
+    ///
+    /// Maintains state across rows within each partition. Forces sequential
+    /// partition execution for determinism.
+    #[serde(rename = "ar")]
+    Autoregressive {
+        /// AR coefficients (lag-1, lag-2, ...). Sum of abs values should be < 1
+        /// for stability.
+        coefficients: Vec<f64>,
+    },
+    /// Occasional anomalous spikes: triggered with `probability` per row,
+    /// adding `magnitude` for `duration_steps` consecutive rows.
+    Spike {
+        /// Probability of a spike starting at any given row.
+        probability: f64,
+        /// Magnitude of the spike (added to the value).
+        magnitude: f64,
+        /// Number of rows the spike lasts (default: 1).
+        #[serde(default = "default_spike_duration")]
+        duration_steps: u32,
+    },
+    /// Permanent level shift: triggered with `probability`, permanently
+    /// shifting the baseline by `magnitude`.
+    LevelShift {
+        /// Probability of a level shift at any given row.
+        probability: f64,
+        /// Magnitude of the shift (can be positive or negative).
+        magnitude: f64,
+    },
+    /// Mean-reverting behavior: `speed × (target - current_value)`.
+    MeanReversion {
+        /// Target value to revert toward.
+        target: f64,
+        /// Speed of reversion (0.0–1.0, higher = faster).
+        speed: f64,
+    },
+    /// Different behavior on weekends (requires `timestamp_field`).
+    WeekendEffect {
+        /// Multiplier applied to the value on weekends (e.g. 0.5 = half).
+        multiplier: f64,
+    },
+    /// Different behavior during active hours (requires `timestamp_field`).
+    BusinessHoursEffect {
+        /// Start hour of the active period (0–23).
+        #[serde(default = "default_start_hour")]
+        start_hour: u8,
+        /// End hour of the active period (1–24).
+        #[serde(default = "default_end_hour")]
+        end_hour: u8,
+        /// Multiplier applied during active hours.
+        active_multiplier: f64,
+    },
+}
+
+fn default_trend_degree() -> u32 {
+    1
+}
+fn default_spike_duration() -> u32 {
+    1
 }
 
 /// File format for external lookup data sources.

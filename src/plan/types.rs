@@ -450,6 +450,25 @@ pub enum GeneratorPlan {
     },
     /// Nested object generator — assembles child field generators into an Arrow StructArray.
     Struct,
+    /// Numeric time series with composable additive components.
+    ///
+    /// Produces Float64 values: `baseline + Σ components`.
+    /// Stateful components (AR, level_shift, spike) force sequential execution.
+    NumericTimeSeries {
+        /// Base value around which the series fluctuates.
+        baseline: f64,
+        /// Resolved time series components.
+        components: Vec<crate::core::TimeSeriesComponent>,
+        /// Optional minimum clamp value.
+        min: Option<f64>,
+        /// Optional maximum clamp value.
+        max: Option<f64>,
+        /// Optional timestamp field name for calendar-aware components.
+        timestamp_field: Option<String>,
+        /// Whether this generator has stateful components (AR, level_shift, spike)
+        /// that require sequential partition execution.
+        needs_sequential: bool,
+    },
 }
 
 /// Cross-entity causal ordering: ensures a timestamp is >= the referenced

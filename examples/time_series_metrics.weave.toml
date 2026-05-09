@@ -1,0 +1,135 @@
+# Time Series Example
+# Demonstrates composable numeric time series with trend, seasonality,
+# noise, AR, and calendar-aware components.
+
+[model]
+name = "sensor_metrics"
+seed = 42
+
+# Timestamp entity provides the time axis
+[[entities]]
+name = "sensor_readings"
+count = 1000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "timestamp"
+data_type = "datetime"
+
+# Temperature with trend, daily seasonality, noise, and AR(1)
+[[entities.fields]]
+name = "temperature"
+data_type = "float"
+[entities.fields.generator]
+type = "time_series"
+baseline = 20.0
+min = -10.0
+max = 50.0
+timestamp_field = "timestamp"
+
+[[entities.fields.generator.components]]
+type = "trend"
+slope = 0.001
+degree = 1
+
+[[entities.fields.generator.components]]
+type = "seasonality"
+period = "24h"
+amplitude = 8.0
+phase = -1.57
+
+[[entities.fields.generator.components]]
+type = "noise"
+std_dev = 1.5
+
+[[entities.fields.generator.components]]
+type = "ar"
+coefficients = [0.7]
+
+# Humidity with mean reversion and weekend effect
+[[entities.fields]]
+name = "humidity"
+data_type = "float"
+[entities.fields.generator]
+type = "time_series"
+baseline = 65.0
+min = 0.0
+max = 100.0
+timestamp_field = "timestamp"
+
+[[entities.fields.generator.components]]
+type = "noise"
+std_dev = 5.0
+
+[[entities.fields.generator.components]]
+type = "mean_reversion"
+target = 65.0
+speed = 0.1
+
+[[entities.fields.generator.components]]
+type = "weekend_effect"
+multiplier = 1.05
+
+# CPU usage with business hours effect and spikes
+[[entities.fields]]
+name = "cpu_usage"
+data_type = "float"
+[entities.fields.generator]
+type = "time_series"
+baseline = 30.0
+min = 0.0
+max = 100.0
+timestamp_field = "timestamp"
+
+[[entities.fields.generator.components]]
+type = "noise"
+std_dev = 3.0
+
+[[entities.fields.generator.components]]
+type = "business_hours_effect"
+start_hour = 9
+end_hour = 17
+active_multiplier = 2.0
+
+[[entities.fields.generator.components]]
+type = "spike"
+probability = 0.005
+magnitude = 40.0
+duration_steps = 5
+
+# Network traffic with level shifts (simulating config changes)
+[[entities.fields]]
+name = "network_mbps"
+data_type = "float"
+[entities.fields.generator]
+type = "time_series"
+baseline = 100.0
+min = 0.0
+max = 10000.0
+
+[[entities.fields.generator.components]]
+type = "trend"
+slope = 0.05
+degree = 1
+
+[[entities.fields.generator.components]]
+type = "seasonality"
+period = "168"
+amplitude = 30.0
+phase = 0.0
+
+[[entities.fields.generator.components]]
+type = "noise"
+std_dev = 10.0
+
+[[entities.fields.generator.components]]
+type = "level_shift"
+probability = 0.002
+magnitude = 50.0

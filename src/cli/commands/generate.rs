@@ -1056,6 +1056,7 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
         crate::plan::GeneratorPlan::ExternalLookup { .. } => ArrowDataType::Utf8,
         // Struct output type is built from sub-field plans at runtime
         crate::plan::GeneratorPlan::Struct => ArrowDataType::Utf8,
+        crate::plan::GeneratorPlan::NumericTimeSeries { .. } => ArrowDataType::Float64,
     }
 }
 

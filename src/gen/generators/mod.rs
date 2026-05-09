@@ -28,6 +28,7 @@ pub mod struct_gen;
 pub mod temporal;
 pub mod thread_ref;
 pub mod topology;
+pub mod numeric_time_series;
 pub mod unique;
 pub mod uuid_gen;
 
@@ -262,6 +263,20 @@ pub fn create_generator_with_seen(
             );
             Box::new(constant::ConstantGenerator::new(crate::core::Value::Null))
         }
+        GeneratorPlan::NumericTimeSeries {
+            baseline,
+            components,
+            min,
+            max,
+            timestamp_field,
+            ..
+        } => Box::new(numeric_time_series::NumericTimeSeriesGenerator::new(
+            *baseline,
+            components.clone(),
+            *min,
+            *max,
+            timestamp_field.clone(),
+        )),
     }
 }
 

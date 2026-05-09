@@ -1647,6 +1647,113 @@ fn validate_generator(
         // Pattern, Constant — no additional validation needed
         _ => {}
     }
+
+    // ─── Time series component validation ──────────────────────────
+    if let GeneratorSpec::TimeSeries {
+        components,
+        min,
+        max,
+        timestamp_field,
+        ..
+    } = gen
+    {
+        // Validate min < max
+        if let (Some(mn), Some(mx)) = (min, max) {
+            if mn >= mx {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!("time_series min ({}) must be less than max ({})", mn, mx),
+                });
+            }
+        }
+
+        // Check that timestamp_field exists in entity if calendar components are used
+        let has_calendar = components.iter().any(|c| {
+            matches!(
+                c,
+                crate::core::TimeSeriesComponent::WeekendEffect { .. }
+                    | crate::core::TimeSeriesComponent::BusinessHoursEffect { .. }
+            )
+        });
+        if has_calendar {
+            if let Some(ts_name) = timestamp_field {
+                if let Some(ts_field) = entity.fields.iter().find(|f| f.name == *ts_name) {
+                    // Validate the referenced field is a temporal type
+                    match &ts_field.data_type {
+                        crate::core::DataType::Datetime
+                        | crate::core::DataType::DatetimeUs
+                        | crate::core::DataType::Datetimetz
+                        | crate::core::DataType::Date => {}
+                        other => {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!(
+                                    "time_series timestamp_field '{}' has type '{:?}', \
+                                     expected a temporal type (datetime, datetime_us, \
+                                     datetimetz, date)",
+                                    ts_name, other
+                                ),
+                            });
+                        }
+                    }
+                } else {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "time_series timestamp_field '{}' not found in entity '{}'",
+                            ts_name, entity.name
+                        ),
+                    });
+                }
+            } else {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "time_series with WeekendEffect or BusinessHoursEffect \
+                              requires a timestamp_field"
+                        .to_string(),
+                });
+            }
+        }
+
+        // Validate AR coefficients
+        for c in components {
+            if let crate::core::TimeSeriesComponent::Autoregressive { coefficients } = c {
+                if coefficients.is_empty() {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "AR coefficients must not be empty".to_string(),
+                    });
+                }
+                let sum_abs: f64 = coefficients.iter().map(|c| c.abs()).sum();
+                if sum_abs >= 1.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "AR coefficients sum(|c|) = {:.3} >= 1.0; \
+                             series may be non-stationary (unstable)",
+                            sum_abs
+                        ),
+                    });
+                }
+            }
+            if let crate::core::TimeSeriesComponent::BusinessHoursEffect {
+                start_hour,
+                end_hour,
+                ..
+            } = c
+            {
+                if start_hour >= end_hour {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "BusinessHoursEffect start_hour ({}) must be < end_hour ({})",
+                            start_hour, end_hour
+                        ),
+                    });
+                }
+            }
+        }
+    }
 }
 
 fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {

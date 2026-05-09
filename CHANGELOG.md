@@ -97,6 +97,20 @@ All notable changes to Knit are documented in this file.
     conditional in nested fields
   - Avro struct support: full Arrow Struct → Avro Record type mapping with
     recursive schema conversion and union-wrapped nullable fields
+- **Numeric time series generator** — Composable additive time series for
+  generating realistic metric data (CPU usage, temperature, network traffic):
+  - 9 component types: trend (polynomial), seasonality (sinusoidal), noise
+    (Gaussian), autoregressive (AR with configurable lag coefficients), spike
+    (anomalous bursts), level_shift (permanent baseline change), mean_reversion,
+    weekend_effect, and business_hours_effect
+  - Calendar-aware components via `timestamp_field` reference
+  - Optional `[min, max]` output clamping
+  - Stateful components use interior mutability with automatic sequential
+    partition execution for deterministic output
+  - Duration string parsing for seasonality periods (`"24h"`, `"7d"`, `"15m"`)
+  - Schema validation: AR coefficient stability, calendar field existence,
+    business hours range, min < max
+  - Example schema: `examples/time_series_metrics.weave.toml`
 
 ## [0.3.0] — 2026-05-08
 
