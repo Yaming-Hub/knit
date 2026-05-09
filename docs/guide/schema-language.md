@@ -167,6 +167,7 @@ max = 180.0
 - JSON/JSONL: native nested objects
 - Parquet/Arrow IPC: native struct columns
 - Avro: real nested record schemas
+- SQL: structs serialized as JSON TEXT
 - CSV: structs serialized as JSON strings
 
 ---
