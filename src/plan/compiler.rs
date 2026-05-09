@@ -34,7 +34,8 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     let assignment = graph::assign_phases(model)?;
 
     // 2. Resolve row counts (static).
-    let mut row_counts = graph::resolve_row_counts(model);
+    let mut row_counts = graph::resolve_row_counts(model)
+        .map_err(PlanError::Other)?;
 
     // 2b. Build actor pool plan early to compute dynamic row counts.
     let actor_pool = compile_actor_pool(model, &row_counts);
@@ -345,6 +346,11 @@ fn resolve_count_estimate(count: &crate::core::CountSpec) -> u64 {
     match count {
         crate::core::CountSpec::Fixed(n) => *n,
         crate::core::CountSpec::Range { min, max } => (min + max) / 2,
+        crate::core::CountSpec::Expression { .. } => {
+            // Expression counts are resolved at plan time with params.
+            // For internal estimation without params, use a reasonable default.
+            1000
+        }
         crate::core::CountSpec::Distribution(spec) => {
             // Try common distribution parameters for mean estimate
             if let Some(&mean) = spec.params.get("mean").or_else(|| spec.params.get("mu")) {

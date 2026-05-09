@@ -1004,7 +1004,8 @@ impl std::fmt::Display for NullSpec {
 /// Specifies how many rows an entity should produce.
 ///
 /// Deserialized from a bare integer (`1000`), an object (`{ min, max }`),
-/// or a distribution spec. The planner resolves this to a concrete count.
+/// a distribution spec, or an expression (`{ expr = "..." }`).
+/// The planner resolves this to a concrete count.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CountSpec {
@@ -1016,6 +1017,12 @@ pub enum CountSpec {
         min: u64,
         /// Maximum count (inclusive).
         max: u64,
+    },
+    /// Row count computed from a parameter expression.
+    /// Only param refs, literals, and pure arithmetic are allowed.
+    Expression {
+        /// Expression string (e.g. `"${param.users} * ${param.scale}"`).
+        expr: String,
     },
     /// Row count sampled from a statistical distribution.
     Distribution(DistributionSpec),

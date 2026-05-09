@@ -287,6 +287,7 @@ fn format_count_spec(count: &crate::core::CountSpec) -> String {
     match count {
         crate::core::CountSpec::Fixed(n) => n.to_string(),
         crate::core::CountSpec::Range { min, max } => format!("{} – {}", min, max),
+        crate::core::CountSpec::Expression { expr } => format!("expr: {}", expr),
         crate::core::CountSpec::Distribution(spec) => format!("{}(…)", spec.kind),
     }
 }
@@ -666,6 +667,10 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
             }
             crate::core::CountSpec::Range { min, max } => {
                 out.push_str(&format!("count = {{ min = {}, max = {} }}\n", min, max));
+            }
+            crate::core::CountSpec::Expression { expr } => {
+                let escaped = expr.replace('\\', "\\\\").replace('"', "\\\"");
+                out.push_str(&format!("count = {{ expr = \"{}\" }}\n", escaped));
             }
             crate::core::CountSpec::Distribution(dist) => {
                 let dist_toml = toml::to_string(dist).unwrap_or_default();
