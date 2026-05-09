@@ -1,0 +1,44 @@
+# Conditional Distributions Example (§8.3)
+#
+# Demonstrates how a field's distribution can depend on another field's value.
+# Here, transaction amounts follow different distributions based on category.
+
+[[entities]]
+name = "transaction"
+count = 1000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+
+[[entities.fields]]
+name = "category"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "groceries", weight = 0.3 },
+    { value = "electronics", weight = 0.25 },
+    { value = "dining", weight = 0.3 },
+    { value = "travel", weight = 0.15 },
+]
+
+[[entities.fields]]
+name = "amount"
+data_type = "float"
+
+[[correlations]]
+entity = "transaction"
+type = "conditional_distribution"
+dependent = "amount"
+given = "category"
+distributions = [
+    { when = "groceries",   distribution = "log_normal", params = { mu = 3.0, sigma = 0.8 } },
+    { when = "electronics", distribution = "log_normal", params = { mu = 5.5, sigma = 1.2 } },
+    { when = "dining",      distribution = "log_normal", params = { mu = 2.8, sigma = 0.5 } },
+    { when = "travel",      distribution = "normal",     params = { mean = 500.0, std_dev = 200.0 } },
+]

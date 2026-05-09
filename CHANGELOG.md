@@ -6,6 +6,15 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Conditional distributions** — Model distribution-dependent correlations
+  between fields (spec §8.3):
+  - `type = "conditional_distribution"` on `[[correlations]]`
+  - Different distributions per condition branch (e.g., log_normal for
+    groceries, normal for travel)
+  - Optional `default` distribution for unmatched values
+  - Compiles into existing conditional generator infrastructure
+  - Validation: field existence, mutual exclusivity, duplicate branches
+  - New example: `examples/conditional_distribution.weave.toml`
 - **Sequence cyclic values** — Cycle through fixed value lists round-robin
   (spec §6.3):
   - `values = ["Mon", "Tue", "Wed", ...]` with `cycle = true`

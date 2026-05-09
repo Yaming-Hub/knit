@@ -2564,6 +2564,25 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
         if let Some(ref copula) = corr.copula {
             validate_copula(&path, copula, corr, model, errors);
         }
+
+        // Conditional distribution validation (§8.3)
+        let is_cond_dist = corr
+            .correlation_type
+            .as_deref()
+            .map(|t| t == "conditional_distribution")
+            .unwrap_or(false);
+        if is_cond_dist {
+            validate_conditional_distribution(&path, corr, model, errors);
+        } else if corr.correlation_type.is_some() {
+            let ct = corr.correlation_type.as_deref().unwrap();
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "unknown correlation type '{}'; expected 'conditional_distribution'",
+                    ct
+                ),
+            });
+        }
     }
 }
 
@@ -2710,6 +2729,134 @@ fn validate_copula(
                 }
             }
         }
+    }
+}
+
+/// Validate a conditional distribution correlation (§8.3).
+fn validate_conditional_distribution(
+    path: &str,
+    corr: &Correlation,
+    model: &DataModel,
+    errors: &mut Vec<SchemaError>,
+) {
+    // Must have dependent and given
+    let dependent = match &corr.dependent {
+        Some(d) => d,
+        None => {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "conditional_distribution requires 'dependent' field".to_string(),
+            });
+            return;
+        }
+    };
+    let given = match &corr.given {
+        Some(g) => g,
+        None => {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "conditional_distribution requires 'given' field".to_string(),
+            });
+            return;
+        }
+    };
+
+    // dependent ≠ given
+    if dependent == given {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: format!(
+                "conditional_distribution 'dependent' and 'given' must differ, both are '{}'",
+                dependent
+            ),
+        });
+    }
+
+    // Both fields must exist in the entity
+    let field_names = entity_field_names(model, &corr.entity);
+    if !field_names.contains(dependent.as_str()) {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: format!(
+                "conditional_distribution dependent field '{}' not found in entity '{}'",
+                dependent, corr.entity
+            ),
+        });
+    }
+    if !field_names.contains(given.as_str()) {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: format!(
+                "conditional_distribution given field '{}' not found in entity '{}'",
+                given, corr.entity
+            ),
+        });
+    }
+
+    // distributions must be non-empty
+    if corr.distributions.is_empty() {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: "conditional_distribution requires at least one distribution branch"
+                .to_string(),
+        });
+    }
+
+    // Check for duplicate when values
+    let mut seen_conditions: Vec<String> = Vec::new();
+    for (bi, branch) in corr.distributions.iter().enumerate() {
+        let key = format!("{:?}", branch.condition);
+        if seen_conditions.contains(&key) {
+            errors.push(SchemaError::Validation {
+                path: format!("{}.distributions[{}]", path, bi),
+                message: format!("duplicate 'when' value: {:?}", branch.condition),
+            });
+        }
+        seen_conditions.push(key);
+    }
+
+    // Mutual exclusivity: conditional_distribution should not use matrix/copula fields
+    if !corr.fields.is_empty() {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: "conditional_distribution cannot use 'fields' (matrix/copula mode)"
+                .to_string(),
+        });
+    }
+    if !corr.matrix.is_empty() {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: "conditional_distribution cannot use 'matrix'".to_string(),
+        });
+    }
+    if corr.copula.is_some() {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: "conditional_distribution cannot use 'copula'".to_string(),
+        });
+    }
+    if !corr.conditional.is_empty() {
+        errors.push(SchemaError::Validation {
+            path: path.to_string(),
+            message: "conditional_distribution cannot use 'conditional'".to_string(),
+        });
+    }
+
+    // Validate distribution parameters for each branch
+    for (bi, branch) in corr.distributions.iter().enumerate() {
+        let branch_path = format!("{}.distributions[{}]", path, bi);
+        let spec = DistributionSpec {
+            kind: branch.distribution.clone(),
+            params: branch.params.clone(),
+            round: branch.round,
+        };
+        validate_distribution(&branch_path, &spec, errors);
+    }
+
+    // Validate default distribution if present
+    if let Some(ref default_spec) = corr.default {
+        let default_path = format!("{}.default", path);
+        validate_distribution(&default_path, default_spec, errors);
     }
 }
 
@@ -3439,10 +3586,15 @@ mod tests {
         let mut model = minimal_model();
         model.correlations.push(Correlation {
             entity: "nonexistent".to_string(),
+            correlation_type: None,
             fields: vec!["a".to_string()],
             matrix: vec![],
             conditional: vec![],
             copula: None,
+            dependent: None,
+            given: None,
+            distributions: vec![],
+            default: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3455,10 +3607,15 @@ mod tests {
         let mut model = minimal_model();
         model.correlations.push(Correlation {
             entity: "user".to_string(),
+            correlation_type: None,
             fields: vec!["id".to_string(), "email".to_string()],
             matrix: vec![vec![1.0, 0.5]], // 1 row but 2 fields
             conditional: vec![],
             copula: None,
+            dependent: None,
+            given: None,
+            distributions: vec![],
+            default: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5843,6 +6000,263 @@ mod tests {
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. }
                 if message.contains("duplicate edge property name"))
+        }));
+    }
+
+    // ── Conditional Distribution Validation Tests ─────────────────────
+
+    fn model_with_category_and_amount() -> DataModel {
+        let mut model = minimal_model();
+        // Add category and amount fields to the user entity
+        model.entities[0].fields.push(Field {
+            name: "category".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::OneOf {
+                choices: vec![
+                    WeightedChoice { value: Value::String("groceries".into()), weight: 1.0 },
+                    WeightedChoice { value: Value::String("electronics".into()), weight: 1.0 },
+                ],
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "amount".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_valid() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: Some("amount".to_string()),
+            given: Some("category".to_string()),
+            distributions: vec![
+                ConditionalDistributionBranch {
+                    condition: Value::String("groceries".into()),
+                    distribution: DistributionKind::LogNormal,
+                    params: [("mu".into(), 3.0), ("sigma".into(), 0.8)].into(),
+                    round: false,
+                },
+                ConditionalDistributionBranch {
+                    condition: Value::String("electronics".into()),
+                    distribution: DistributionKind::LogNormal,
+                    params: [("mu".into(), 5.5), ("sigma".into(), 1.2)].into(),
+                    round: false,
+                },
+            ],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("conditional_distribution"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_missing_dependent() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: None,
+            given: Some("category".to_string()),
+            distributions: vec![ConditionalDistributionBranch {
+                condition: Value::String("groceries".into()),
+                distribution: DistributionKind::Normal,
+                params: [("mean".into(), 50.0), ("std_dev".into(), 20.0)].into(),
+                round: false,
+            }],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("requires 'dependent'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_missing_given() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: Some("amount".to_string()),
+            given: None,
+            distributions: vec![ConditionalDistributionBranch {
+                condition: Value::String("groceries".into()),
+                distribution: DistributionKind::Normal,
+                params: [("mean".into(), 50.0), ("std_dev".into(), 20.0)].into(),
+                round: false,
+            }],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("requires 'given'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_same_dependent_given() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: Some("amount".to_string()),
+            given: Some("amount".to_string()),
+            distributions: vec![ConditionalDistributionBranch {
+                condition: Value::String("x".into()),
+                distribution: DistributionKind::Normal,
+                params: [("mean".into(), 50.0), ("std_dev".into(), 20.0)].into(),
+                round: false,
+            }],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("must differ"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_empty_distributions() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: Some("amount".to_string()),
+            given: Some("category".to_string()),
+            distributions: vec![],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("at least one distribution"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_unknown_type() {
+        let mut model = minimal_model();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("bogus_type".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: None,
+            given: None,
+            distributions: vec![],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("unknown correlation type"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_duplicate_when() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec![],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: Some("amount".to_string()),
+            given: Some("category".to_string()),
+            distributions: vec![
+                ConditionalDistributionBranch {
+                    condition: Value::String("groceries".into()),
+                    distribution: DistributionKind::Normal,
+                    params: [("mean".into(), 50.0), ("std_dev".into(), 20.0)].into(),
+                    round: false,
+                },
+                ConditionalDistributionBranch {
+                    condition: Value::String("groceries".into()),
+                    distribution: DistributionKind::LogNormal,
+                    params: [("mu".into(), 3.0), ("sigma".into(), 0.8)].into(),
+                    round: false,
+                },
+            ],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("duplicate 'when'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_conditional_distribution_with_matrix() {
+        let mut model = model_with_category_and_amount();
+        model.correlations.push(Correlation {
+            entity: "user".to_string(),
+            correlation_type: Some("conditional_distribution".to_string()),
+            fields: vec!["amount".into()],
+            matrix: vec![vec![1.0]],
+            conditional: vec![],
+            copula: None,
+            dependent: Some("amount".to_string()),
+            given: Some("category".to_string()),
+            distributions: vec![ConditionalDistributionBranch {
+                condition: Value::String("groceries".into()),
+                distribution: DistributionKind::Normal,
+                params: [("mean".into(), 50.0), ("std_dev".into(), 20.0)].into(),
+                round: false,
+            }],
+            default: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("cannot use 'fields'") || message.contains("cannot use 'matrix'"))
         }));
     }
 }
