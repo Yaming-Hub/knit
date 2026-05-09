@@ -26,7 +26,8 @@ All notable changes to Knit are documented in this file.
     date/time extraction (`year`, `month`, `day`, `hour`, `minute`, `second`,
     `day_of_week`, `day_of_year`, `week_of_year`, `quarter`),
     date/time arithmetic (`date_add`, `date_sub`, `date_diff`, `duration_add`,
-    `start_of`, `end_of`), date/time formatting (`format_date`, `format_duration`)
+    `start_of`, `end_of`), date/time formatting (`format_date`, `format_duration`),
+    timezone (`to_timezone`, `timezone_offset`)
   - SQL three-valued null logic for `&&`/`||`
   - Domain-error handling (sqrt of negative → null, ln of non-positive → null)
   - Deterministic SipHash for `hash()` function

@@ -21,7 +21,7 @@ use arrow::array::{
     TimestampSecondArray,
 };
 use arrow::datatypes::DataType;
-use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, Timelike};
+use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, Offset, Timelike};
 use siphasher::sip::SipHasher;
 
 use super::ast::{BinOp, Expr, LiteralValue, UnOp};
@@ -878,6 +878,19 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
             let d = evaluate(&args[0], ctx)?;
             let style = evaluate(&args[1], ctx)?;
             eval_format_duration(&d, &style)
+        }
+        // ─── Timezone functions ───────────────────────────────────────────
+        "to_timezone" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let tz = evaluate(&args[1], ctx)?;
+            eval_to_timezone(&d, &tz)
+        }
+        "timezone_offset" => {
+            check_args(name, args, 2, 2)?;
+            let d = evaluate(&args[0], ctx)?;
+            let tz = evaluate(&args[1], ctx)?;
+            eval_timezone_offset(&d, &tz)
         }
         // ─── Random functions ──────────────────────────────────────────
         "random_int" => {
@@ -2237,6 +2250,76 @@ fn eval_format_duration(d: &ArrayRef, style: &ArrayRef) -> Result<ArrayRef, Eval
                 }
                 _ => None,
             }
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+// ─── Timezone helpers ───────────────────────────────────────────────────────
+
+/// Convert a UTC timestamp to the equivalent local time in the target timezone.
+///
+/// The result is the local timestamp (millis since epoch in local time), which
+/// allows downstream formatting/extraction to reflect the target timezone.
+/// Invalid timezone strings produce null.
+fn eval_to_timezone(d: &ArrayRef, tz: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "to_timezone")?;
+    let ta = as_str(tz).ok_or_else(|| EvalError {
+        message: "to_timezone: timezone must be string".into(),
+    })?;
+
+    let result: TimestampMillisecondArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if ta.is_null(i) {
+                return None;
+            }
+            let tz_str = ta.value(i);
+            let tz: chrono_tz::Tz = match tz_str.parse() {
+                Ok(t) => t,
+                Err(_) => return None, // invalid timezone → null
+            };
+            // Convert UTC millis to local wall-clock millis by applying offset
+            let utc_dt = DateTime::from_timestamp_millis(ms)?;
+            let local_dt = utc_dt.with_timezone(&tz);
+            let offset_secs = local_dt.offset().fix().local_minus_utc() as i64;
+            Some(ms + offset_secs * 1000)
+        })
+        .collect();
+    Ok(Arc::new(result))
+}
+
+/// Get the UTC offset string (e.g., "+09:00", "-08:00") for a timestamp in
+/// the given timezone.
+///
+/// Takes a UTC timestamp and a timezone string, returns the offset that applies
+/// at that moment (accounting for DST).
+fn eval_timezone_offset(d: &ArrayRef, tz: &ArrayRef) -> Result<ArrayRef, EvalError> {
+    let dm = require_millis(d, "timezone_offset")?;
+    let ta = as_str(tz).ok_or_else(|| EvalError {
+        message: "timezone_offset: timezone must be string".into(),
+    })?;
+
+    let result: StringArray = (0..dm.len())
+        .map(|i| {
+            let ms = dm[i]?;
+            if ta.is_null(i) {
+                return None;
+            }
+            let tz_str = ta.value(i);
+            let tz: chrono_tz::Tz = match tz_str.parse() {
+                Ok(t) => t,
+                Err(_) => return None,
+            };
+            let utc_dt = DateTime::from_timestamp_millis(ms)?;
+            let local_dt = utc_dt.with_timezone(&tz);
+            let offset = local_dt.offset().fix();
+            let total_secs = offset.local_minus_utc();
+            let sign = if total_secs >= 0 { '+' } else { '-' };
+            let abs_secs = total_secs.unsigned_abs();
+            let hours = abs_secs / 3600;
+            let minutes = (abs_secs % 3600) / 60;
+            Some(format!("{sign}{hours:02}:{minutes:02}"))
         })
         .collect();
     Ok(Arc::new(result))
@@ -3609,5 +3692,133 @@ mod tests {
 
         assert_eq!(val_from_big_batch, val_from_small_batch,
             "same absolute row with same seed should produce same value");
+    }
+
+    // ─── Timezone function tests ────────────────────────────────────────
+
+    #[test]
+    fn to_timezone_basic() {
+        // 2024-01-15 12:00:00 UTC in millis
+        let utc_millis = 1705320000000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "dt".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![utc_millis])) as ArrayRef,
+        );
+        cols.insert(
+            "tz".into(),
+            Arc::new(StringArray::from(vec!["Asia/Tokyo"])) as ArrayRef,
+        );
+        let result = eval_expr("to_timezone(${dt}, ${tz})", cols);
+        let arr = result
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+        // Tokyo is UTC+9, so local millis = utc + 9*3600*1000
+        assert_eq!(arr.value(0), utc_millis + 9 * 3600 * 1000);
+    }
+
+    #[test]
+    fn to_timezone_dst() {
+        // 2024-07-15 12:00:00 UTC — summer (EDT, UTC-4)
+        let summer_millis = 1721044800000i64;
+        // 2024-01-15 12:00:00 UTC — winter (EST, UTC-5)
+        let winter_millis = 1705320000000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "dt".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![
+                summer_millis,
+                winter_millis,
+            ])) as ArrayRef,
+        );
+        cols.insert(
+            "tz".into(),
+            Arc::new(StringArray::from(vec![
+                "America/New_York",
+                "America/New_York",
+            ])) as ArrayRef,
+        );
+        let result = eval_expr("to_timezone(${dt}, ${tz})", cols);
+        let arr = result
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+        // Summer: EDT = UTC-4
+        assert_eq!(arr.value(0), summer_millis - 4 * 3600 * 1000);
+        // Winter: EST = UTC-5
+        assert_eq!(arr.value(1), winter_millis - 5 * 3600 * 1000);
+    }
+
+    #[test]
+    fn to_timezone_invalid_tz_returns_null() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "dt".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![1705320000000i64])) as ArrayRef,
+        );
+        cols.insert(
+            "tz".into(),
+            Arc::new(StringArray::from(vec!["Invalid/Zone"])) as ArrayRef,
+        );
+        let result = eval_expr("to_timezone(${dt}, ${tz})", cols);
+        let arr = result
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+        assert!(arr.is_null(0));
+    }
+
+    #[test]
+    fn timezone_offset_basic() {
+        // 2024-01-15 12:00:00 UTC
+        let utc_millis = 1705320000000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "dt".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![utc_millis, utc_millis])) as ArrayRef,
+        );
+        cols.insert(
+            "tz".into(),
+            Arc::new(StringArray::from(vec!["Asia/Tokyo", "America/New_York"])) as ArrayRef,
+        );
+        let result = eval_expr("timezone_offset(${dt}, ${tz})", cols);
+        let arr = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(arr.value(0), "+09:00");
+        assert_eq!(arr.value(1), "-05:00"); // January = EST
+    }
+
+    #[test]
+    fn timezone_offset_dst_aware() {
+        // 2024-07-15 12:00:00 UTC — summer in NY = EDT (UTC-4)
+        let summer_millis = 1721044800000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "dt".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![summer_millis])) as ArrayRef,
+        );
+        cols.insert(
+            "tz".into(),
+            Arc::new(StringArray::from(vec!["America/New_York"])) as ArrayRef,
+        );
+        let result = eval_expr("timezone_offset(${dt}, ${tz})", cols);
+        let arr = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(arr.value(0), "-04:00"); // EDT in summer
+    }
+
+    #[test]
+    fn timezone_offset_invalid_tz_returns_null() {
+        let mut cols = HashMap::new();
+        cols.insert(
+            "dt".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![1705320000000i64])) as ArrayRef,
+        );
+        cols.insert(
+            "tz".into(),
+            Arc::new(StringArray::from(vec!["Not/A/Timezone"])) as ArrayRef,
+        );
+        let result = eval_expr("timezone_offset(${dt}, ${tz})", cols);
+        let arr = result.as_any().downcast_ref::<StringArray>().unwrap();
+        assert!(arr.is_null(0));
     }
 }
