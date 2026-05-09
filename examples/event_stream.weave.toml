@@ -1,0 +1,49 @@
+# Event Stream Example — Irregular Time Series
+#
+# Generates page view events with exponential inter-arrival times,
+# modulated by daily seasonality, weekend effects, and business hours.
+
+[model]
+name = "event_stream_demo"
+seed = 42
+
+[[entities]]
+name = "page_view"
+count = 10_000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+generator = { type = "sequence", start = 1 }
+
+[[entities.fields]]
+name = "timestamp"
+data_type = "datetime"
+generator = { type = "event_stream", start = "2024-01-01T00:00:00Z", arrival = { distribution = "exponential", params = { lambda = 0.1 }, unit = "second" }, components = [
+    { type = "seasonality", period = "24h", amplitude = 0.6 },
+    { type = "weekend_effect", multiplier = 0.4 },
+    { type = "business_hours", active_hours = [8, 22], active_multiplier = 3.0 },
+] }
+
+[[entities.fields]]
+name = "page"
+data_type = "string"
+generator = { type = "one_of", choices = [
+    { value = "/home", weight = 0.35 },
+    { value = "/products", weight = 0.25 },
+    { value = "/about", weight = 0.10 },
+    { value = "/blog", weight = 0.15 },
+    { value = "/contact", weight = 0.05 },
+    { value = "/pricing", weight = 0.10 },
+] }
+
+[[entities.fields]]
+name = "duration_ms"
+data_type = "int"
+generator = { type = "distribution", kind = "normal", params = { mean = 5000.0, std_dev = 2000.0 } }
+
+[[entities.fields]]
+name = "user_agent"
+data_type = "string"
+generator = { type = "faker", method = "user_agent" }

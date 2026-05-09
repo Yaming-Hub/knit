@@ -551,6 +551,21 @@ pub enum GeneratorSpec {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         weight_column: Option<String>,
     },
+    /// Generate timestamps with random inter-arrival times (event streams).
+    ///
+    /// Produces strictly-increasing `Timestamp(Millisecond)` values using an
+    /// exponential inter-arrival distribution. Optional rate-modulation
+    /// components (seasonality, weekend effect, business hours) thin the base
+    /// rate to produce realistic temporal patterns.
+    EventStream {
+        /// ISO-8601 start time (e.g. `"2024-01-01T00:00:00Z"`).
+        start: String,
+        /// Inter-arrival time specification.
+        arrival: InterArrivalSpec,
+        /// Optional rate-modulation components applied via thinning.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        components: Vec<EventStreamComponent>,
+    },
     /// Composable numeric time series with trend, seasonality, AR, noise, etc.
     ///
     /// Produces Float64 values by summing a baseline with multiple additive
@@ -666,6 +681,55 @@ fn default_trend_degree() -> u32 {
 }
 fn default_spike_duration() -> u32 {
     1
+}
+
+// ── Event Stream Types ──────────────────────────────────────────────
+
+/// Inter-arrival time specification for event stream generators.
+///
+/// Defines how the gap between consecutive events is sampled.
+/// Currently only `exponential` is supported.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct InterArrivalSpec {
+    /// Distribution name for inter-arrival times (e.g. `"exponential"`).
+    pub distribution: String,
+    /// Distribution parameters (e.g. `{ "lambda": 0.1 }`).
+    #[serde(default)]
+    pub params: BTreeMap<String, Value>,
+    /// Time unit for the inter-arrival gap (default: `"second"`).
+    #[serde(default = "default_arrival_unit")]
+    pub unit: String,
+}
+
+fn default_arrival_unit() -> String {
+    "second".into()
+}
+
+/// Rate-modulation component for event stream generators.
+///
+/// Applied via thinning to modulate the base arrival rate over time.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum EventStreamComponent {
+    /// Sinusoidal rate modulation with a given period.
+    Seasonality {
+        /// Period as a duration string (e.g. `"24h"`, `"7d"`).
+        period: String,
+        /// Amplitude of the rate multiplier (0.0–1.0).
+        amplitude: f64,
+    },
+    /// Reduce event rate on weekends.
+    WeekendEffect {
+        /// Rate multiplier for weekends (e.g. 0.4 = 40% of weekday rate).
+        multiplier: f64,
+    },
+    /// Concentrate events during active business hours.
+    BusinessHours {
+        /// Start and end hour of the active period (e.g. `[8, 22]`).
+        active_hours: [u8; 2],
+        /// Rate multiplier during active hours.
+        active_multiplier: f64,
+    },
 }
 
 /// File format for external lookup data sources.

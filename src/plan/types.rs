@@ -469,6 +469,19 @@ pub enum GeneratorPlan {
         /// that require sequential partition execution.
         needs_sequential: bool,
     },
+    /// Event stream — strictly-increasing timestamps with random inter-arrival times.
+    ///
+    /// Uses an exponential distribution for gaps, optionally modulated by
+    /// seasonality, weekend, and business-hour components via thinning.
+    /// Always forces sequential execution to maintain cumulative state.
+    EventStream {
+        /// Epoch-millisecond start time.
+        start_ms: i64,
+        /// Base rate parameter (events per millisecond).
+        lambda_per_ms: f64,
+        /// Rate-modulation components.
+        components: Vec<crate::core::EventStreamComponent>,
+    },
 }
 
 /// Cross-entity causal ordering: ensures a timestamp is >= the referenced

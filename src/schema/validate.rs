@@ -1825,6 +1825,111 @@ fn validate_generator(
             }
         }
     }
+
+    // ─── Event stream validation ────────────────────────────────────
+    if let GeneratorSpec::EventStream {
+        start,
+        arrival,
+        components,
+    } = gen
+    {
+        // Validate start time parses.
+        if chrono::DateTime::parse_from_rfc3339(start).is_err()
+            && chrono::NaiveDateTime::parse_from_str(start, "%Y-%m-%dT%H:%M:%S").is_err()
+        {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: format!(
+                    "event_stream start '{}' is not a valid ISO-8601 datetime",
+                    start
+                ),
+            });
+        }
+
+        // Validate distribution.
+        if arrival.distribution != "exponential" {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: format!(
+                    "event_stream arrival distribution '{}' is not supported; \
+                     only 'exponential' is currently supported",
+                    arrival.distribution
+                ),
+            });
+        }
+
+        // Validate lambda parameter.
+        match arrival.params.get("lambda") {
+            Some(crate::core::Value::Float(f)) if *f > 0.0 => {}
+            Some(crate::core::Value::Int(i)) if *i > 0 => {}
+            _ => {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "event_stream arrival requires a positive 'lambda' parameter"
+                        .to_string(),
+                });
+            }
+        }
+
+        // Validate unit.
+        let valid_units = [
+            "millisecond", "milliseconds", "ms", "second", "seconds", "s", "minute", "minutes",
+            "m", "hour", "hours", "h", "day", "days", "d",
+        ];
+        if !valid_units.contains(&arrival.unit.as_str()) {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: format!(
+                    "event_stream arrival unit '{}' is not valid; use one of: \
+                     second, minute, hour, day, millisecond",
+                    arrival.unit
+                ),
+            });
+        }
+
+        // Validate component parameters.
+        for comp in components {
+            match comp {
+                crate::core::EventStreamComponent::BusinessHours {
+                    active_hours,
+                    ..
+                } => {
+                    if active_hours[0] >= active_hours[1] {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "event_stream business_hours active_hours[0] ({}) must be < active_hours[1] ({})",
+                                active_hours[0], active_hours[1]
+                            ),
+                        });
+                    }
+                }
+                crate::core::EventStreamComponent::Seasonality { amplitude, .. } => {
+                    if *amplitude <= 0.0 || *amplitude >= 1.0 {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "event_stream seasonality amplitude ({}) should be in (0, 1) \
+                                 to keep rate positive",
+                                amplitude
+                            ),
+                        });
+                    }
+                }
+                crate::core::EventStreamComponent::WeekendEffect { multiplier } => {
+                    if *multiplier <= 0.0 {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "event_stream weekend_effect multiplier ({}) must be positive",
+                                multiplier
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {

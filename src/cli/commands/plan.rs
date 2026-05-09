@@ -277,6 +277,9 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         crate::plan::GeneratorPlan::NumericTimeSeries { components, .. } => {
             format!("time_series({} components)", components.len())
         }
+        crate::plan::GeneratorPlan::EventStream { components, .. } => {
+            format!("event_stream({} components)", components.len())
+        }
     }
 }
 

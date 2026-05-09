@@ -353,6 +353,9 @@ fn format_generator_spec(gen: &crate::core::GeneratorSpec) -> String {
         crate::core::GeneratorSpec::TimeSeries { components, .. } => {
             format!("time_series({} components)", components.len())
         }
+        crate::core::GeneratorSpec::EventStream { components, .. } => {
+            format!("event_stream({} components)", components.len())
+        }
     }
 }
 

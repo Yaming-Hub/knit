@@ -589,6 +589,55 @@ coefficients = [0.7]
   `timestamp_field` pointing to a datetime field in the same entity
 - See `examples/time_series_metrics.weave.toml` for a complete example
 
+### `event_stream` — Irregular Time Series (Event Streams)
+
+Generate strictly-increasing timestamps with random inter-arrival times,
+simulating event logs, page views, sensor readings, and other irregular
+time series data (spec §9.3).
+
+```toml
+[[entities.fields]]
+name = "timestamp"
+data_type = "datetime"
+generator = { type = "event_stream",
+    start = "2024-01-01T00:00:00Z",
+    arrival = { distribution = "exponential", params = { lambda = 0.1 }, unit = "second" },
+    components = [
+        { type = "seasonality", period = "24h", amplitude = 0.6 },
+        { type = "weekend_effect", multiplier = 0.4 },
+        { type = "business_hours", active_hours = [8, 22], active_multiplier = 3.0 },
+    ]
+}
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `start` | string | ISO-8601 start time for the event stream |
+| `arrival.distribution` | string | Inter-arrival distribution (currently `"exponential"`) |
+| `arrival.params.lambda` | float | Base arrival rate (events per unit time) |
+| `arrival.unit` | string | Time unit: `"second"`, `"minute"`, `"hour"`, `"day"` |
+| `components` | array | Optional rate-modulation components |
+
+**Rate-modulation components** (applied via Lewis-Shedler thinning):
+
+| Component | Parameters | Effect |
+|-----------|-----------|--------|
+| `seasonality` | `period`, `amplitude` | Sinusoidal rate variation (e.g. daily cycles) |
+| `weekend_effect` | `multiplier` | Scale rate on weekends (e.g. 0.4 = 40% of weekday rate) |
+| `business_hours` | `active_hours`, `active_multiplier` | Concentrate events during active hours |
+
+**Notes:**
+
+- Produces `Timestamp(Millisecond)` values, always strictly increasing
+- Stateful across batches — forces sequential partition execution
+- With no components, generates a pure exponential (Poisson) process
+- Seasonality `amplitude` should be in (0, 1) to keep the rate positive
+- `business_hours` and `weekend_effect` currently evaluate in UTC; timezone-aware
+  modulation is planned for a future release
+- See `examples/event_stream.weave.toml` for a complete example
+
 ### Other Generators
 
 Knit also includes these generators:
