@@ -952,8 +952,8 @@ fn default_weight() -> f64 {
 /// Specifies inter-field correlations within a single entity.
 ///
 /// Used to generate columns whose values are statistically dependent
-/// (e.g. height and weight). The planner converts this into a Cholesky
-/// decomposition for correlated sampling.
+/// (e.g. height and weight). Supports pairwise correlation matrices
+/// and copula-based joint distributions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Correlation {
     /// Target entity name.
@@ -968,6 +968,43 @@ pub struct Correlation {
     /// another field's value.
     #[serde(default)]
     pub conditional: Vec<ConditionalCorrelation>,
+    /// Optional copula specification for joint distribution modeling.
+    /// When present, fields are generated jointly via the specified copula.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub copula: Option<CopulaSpec>,
+}
+
+/// Copula family specification for joint distribution modeling.
+///
+/// The copula separates the marginal distributions from the dependence
+/// structure. Each field keeps its own marginal distribution (from its
+/// generator), while the copula controls how the fields co-vary.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CopulaSpec {
+    /// Copula family to use.
+    pub family: CopulaFamily,
+    /// Family-specific parameters.
+    ///
+    /// - **Gaussian**: uses `matrix` from parent `Correlation` (no params needed)
+    /// - **Clayton**: `theta` > 0 (lower tail dependence)
+    /// - **Frank**: `theta` ≠ 0 (symmetric dependence)
+    /// - **Gumbel**: `theta` ≥ 1 (upper tail dependence, 1 = independence)
+    #[serde(default)]
+    pub params: BTreeMap<String, f64>,
+}
+
+/// Supported copula families for joint distribution modeling.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CopulaFamily {
+    /// Gaussian copula — supports N fields via correlation matrix + Cholesky.
+    Gaussian,
+    /// Clayton copula — lower tail dependence, bivariate only (theta > 0).
+    Clayton,
+    /// Frank copula — symmetric dependence, bivariate only (theta ≠ 0).
+    Frank,
+    /// Gumbel copula — upper tail dependence, bivariate only (theta ≥ 1).
+    Gumbel,
 }
 
 /// Conditional correlation: overrides correlation based on another field's value.

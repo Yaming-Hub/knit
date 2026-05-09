@@ -308,6 +308,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
                 fields,
                 matrix: vec![vec![1.0, c.coefficient], vec![c.coefficient, 1.0]],
                 conditional: Vec::new(),
+                copula: None,
             })
         })
         .collect();

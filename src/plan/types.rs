@@ -138,6 +138,11 @@ pub struct EntityPlan {
     /// Used by the engine to extract PK values into the key store.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub primary_key_field_index: Option<usize>,
+    /// Copula joint-generation plans (entity-level, applied after independent fields).
+    /// Each plan replaces the independently generated columns with jointly
+    /// correlated values via the specified copula.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub copula_plans: Vec<CopulaPlan>,
 }
 
 // ── PartitionRange ───────────────────────────────────────────────────
@@ -702,4 +707,43 @@ pub struct GraphPlan {
     /// Maximum hierarchy depth (for hierarchical graphs).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hierarchy_depth: Option<u32>,
+}
+
+// ── CopulaPlan ──────────────────────────────────────────────────────
+
+/// Entity-level plan for copula-based joint distribution generation.
+///
+/// After fields are independently generated, the copula plan replaces
+/// the specified columns with jointly correlated values. The marginal
+/// distributions of each field are preserved while the copula controls
+/// the dependence structure.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CopulaPlan {
+    /// Field names involved in the joint distribution.
+    pub fields: Vec<String>,
+    /// Which copula family to apply.
+    pub family: crate::core::CopulaFamily,
+    /// Cholesky lower triangle of the correlation matrix (row-major).
+    /// Present only for Gaussian copula.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cholesky_l: Option<Vec<Vec<f64>>>,
+    /// Copula parameter (theta) for Archimedean families.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theta: Option<f64>,
+    /// Marginal distribution info for each field (for inverse CDF transform).
+    /// Order matches `fields`.
+    pub marginals: Vec<MarginalInfo>,
+}
+
+/// Information about a field's marginal distribution, used for
+/// CDF/inverse-CDF transformations in copula generation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MarginalInfo {
+    /// Distribution family.
+    pub kind: DistributionKind,
+    /// Distribution parameters.
+    pub params: BTreeMap<String, f64>,
+    /// Whether to round the final output to integer.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub round: bool,
 }

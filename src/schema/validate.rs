@@ -1655,9 +1655,213 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
                         });
                     }
                 }
+                // Check diagonal is 1.0 and matrix is symmetric
+                for ri in 0..n.min(corr.matrix.len()) {
+                    let row = &corr.matrix[ri];
+                    if row.len() == n {
+                        if (row[ri] - 1.0).abs() > 1e-10 {
+                            errors.push(SchemaError::Validation {
+                                path: path.clone(),
+                                message: format!(
+                                    "correlation matrix diagonal[{}] must be 1.0, got {}",
+                                    ri, row[ri]
+                                ),
+                            });
+                        }
+                        #[allow(clippy::needless_range_loop)]
+                        for ci in (ri + 1)..n {
+                            if (row[ci] - corr.matrix[ci][ri]).abs() > 1e-10 {
+                                errors.push(SchemaError::Validation {
+                                    path: path.clone(),
+                                    message: format!(
+                                        "correlation matrix is not symmetric: [{},{}]={} vs [{},{}]={}",
+                                        ri, ci, row[ci], ci, ri, corr.matrix[ci][ri]
+                                    ),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Copula-specific validation
+        if let Some(ref copula) = corr.copula {
+            validate_copula(&path, copula, corr, model, errors);
+        }
+    }
+}
+
+fn validate_copula(
+    path: &str,
+    copula: &CopulaSpec,
+    corr: &Correlation,
+    model: &DataModel,
+    errors: &mut Vec<SchemaError>,
+) {
+    let n = corr.fields.len();
+
+    match copula.family {
+        CopulaFamily::Gaussian => {
+            // Gaussian copula requires a correlation matrix
+            if corr.matrix.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "Gaussian copula requires a correlation matrix".to_string(),
+                });
+            }
+            // Check positive semi-definiteness via Cholesky attempt
+            if !corr.matrix.is_empty() && corr.matrix.len() == n {
+                let all_correct_size = corr.matrix.iter().all(|r| r.len() == n);
+                if all_correct_size && !is_positive_semidefinite(&corr.matrix) {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "correlation matrix is not positive semi-definite \
+                                  (Cholesky decomposition failed)"
+                            .to_string(),
+                    });
+                }
+            }
+        }
+        CopulaFamily::Clayton => {
+            if n != 2 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "Clayton copula requires exactly 2 fields, got {n}"
+                    ),
+                });
+            }
+            let theta = copula.params.get("theta").copied().unwrap_or(f64::NAN);
+            if theta.is_nan() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "Clayton copula requires 'theta' parameter".to_string(),
+                });
+            } else if theta <= 0.0 || !theta.is_finite() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "Clayton copula theta must be > 0, got {theta}"
+                    ),
+                });
+            }
+        }
+        CopulaFamily::Frank => {
+            if n != 2 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "Frank copula requires exactly 2 fields, got {n}"
+                    ),
+                });
+            }
+            let theta = copula.params.get("theta").copied().unwrap_or(f64::NAN);
+            if theta.is_nan() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "Frank copula requires 'theta' parameter".to_string(),
+                });
+            } else if theta == 0.0 || !theta.is_finite() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "Frank copula theta must be non-zero and finite, got {theta}"
+                    ),
+                });
+            }
+        }
+        CopulaFamily::Gumbel => {
+            if n != 2 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "Gumbel copula requires exactly 2 fields, got {n}"
+                    ),
+                });
+            }
+            let theta = copula.params.get("theta").copied().unwrap_or(f64::NAN);
+            if theta.is_nan() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "Gumbel copula requires 'theta' parameter".to_string(),
+                });
+            } else if theta < 1.0 || !theta.is_finite() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "Gumbel copula theta must be >= 1.0, got {theta}"
+                    ),
+                });
             }
         }
     }
+
+    // All copula fields must have distribution generators (for marginal CDFs)
+    // and the distribution kind must support inverse CDF
+    let supported_marginals = [
+        DistributionKind::Normal,
+        DistributionKind::LogNormal,
+        DistributionKind::Uniform,
+        DistributionKind::Exponential,
+    ];
+    if let Some(entity) = model.entities.iter().find(|e| e.name == corr.entity) {
+        for field_name in &corr.fields {
+            if let Some(field) = entity.fields.iter().find(|f| &f.name == field_name) {
+                match &field.generator {
+                    Some(GeneratorSpec::Distribution { spec, .. }) => {
+                        if !supported_marginals.contains(&spec.kind) {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!(
+                                    "copula field '{}' uses {:?} distribution which does not \
+                                     support inverse CDF transform; supported: Normal, \
+                                     LogNormal, Uniform, Exponential",
+                                    field_name, spec.kind
+                                ),
+                            });
+                        }
+                    }
+                    _ => {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "copula field '{}' must have a distribution generator \
+                                 (for marginal CDF transform)",
+                                field_name
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Check if a matrix is positive semi-definite via Cholesky decomposition
+/// with small diagonal jitter for numerical stability.
+fn is_positive_semidefinite(matrix: &[Vec<f64>]) -> bool {
+    let n = matrix.len();
+    let mut l = vec![vec![0.0f64; n]; n];
+    let jitter = 1e-10;
+
+    for i in 0..n {
+        for j in 0..=i {
+            let sum: f64 = l[i].iter().zip(l[j].iter()).take(j).map(|(a, b)| a * b).sum();
+            if i == j {
+                let diag = matrix[i][i] + jitter - sum;
+                if diag < 0.0 {
+                    return false;
+                }
+                l[i][j] = diag.sqrt();
+            } else if l[j][j].abs() < 1e-15 {
+                return false;
+            } else {
+                l[i][j] = (matrix[i][j] - sum) / l[j][j];
+            }
+        }
+    }
+    true
 }
 
 fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
@@ -2295,6 +2499,7 @@ mod tests {
             fields: vec!["a".to_string()],
             matrix: vec![],
             conditional: vec![],
+            copula: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2310,6 +2515,7 @@ mod tests {
             fields: vec!["id".to_string(), "email".to_string()],
             matrix: vec![vec![1.0, 0.5]], // 1 row but 2 fields
             conditional: vec![],
+            copula: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
