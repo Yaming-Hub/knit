@@ -1493,6 +1493,38 @@ impl GenerationEngine {
             let base_seed: u64 = 0xDEFE_AAED;
             let mut batch_counter = 0usize;
 
+            // For self-referential with acyclic/max_depth, build a global
+            // hierarchical assignment across all batches.
+            // Note: requires InMemoryVec key store (get_by_index support).
+            // SampledSubset stores (100M+ rows) lack indexed access — falls back
+            // to simple probabilistic sampling with a warning.
+            let hierarchy_assignments: Option<HashMap<i64, Option<i64>>> = match &dr.strategy {
+                DeferralStrategy::SelfReference {
+                    nullable_root_probability,
+                    acyclic,
+                    max_depth,
+                } if *acyclic || max_depth.is_some() => {
+                    let assignments = Self::build_hierarchy_assignments(
+                        &target_ks,
+                        *nullable_root_probability,
+                        *max_depth,
+                        base_seed,
+                    );
+                    if assignments.is_empty() && !target_ks.is_empty() {
+                        tracing::warn!(
+                            entity = %dr.from_entity,
+                            "hierarchy assignment empty despite non-empty key store \
+                             (key store may not support indexed access) — \
+                             falling back to simple probabilistic sampling"
+                        );
+                        None
+                    } else {
+                        Some(assignments)
+                    }
+                }
+                _ => None,
+            };
+
             for (entity_name, batch) in batches.iter_mut() {
                 if entity_name != &dr.from_entity {
                     continue;
@@ -1504,28 +1536,53 @@ impl GenerationEngine {
                     Err(_) => continue, // field not in this batch
                 };
 
-                // Per-batch deterministic seed
-                let mut rng = ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
-                batch_counter += 1;
-
                 let count = batch.num_rows();
-                let fk_values: Vec<Option<i64>> = match &dr.strategy {
-                    DeferralStrategy::SelfReference {
-                        nullable_root_probability,
-                    } => {
-                        let p = *nullable_root_probability;
-                        (0..count)
-                            .map(|_| {
-                                let r = (rng.next_u64() as f64) / (u64::MAX as f64);
-                                if r < p {
-                                    None // root node — null FK
-                                } else {
-                                    target_ks.sample(&mut rng)
-                                }
-                            })
-                            .collect()
+                let fk_values: Vec<Option<i64>> = if let Some(ref assignments) = hierarchy_assignments
+                {
+                    // Hierarchical: look up each row's PK and use precomputed assignment
+                    match batch.schema().index_of(&dr.to_field) {
+                        Ok(pk_idx) => {
+                            let pk_array = batch
+                                .column(pk_idx)
+                                .as_any()
+                                .downcast_ref::<Int64Array>();
+                            match pk_array {
+                                Some(pks) => (0..count)
+                                    .map(|i| {
+                                        let pk = pks.value(i);
+                                        assignments.get(&pk).copied().flatten()
+                                    })
+                                    .collect(),
+                                None => vec![None; count],
+                            }
+                        }
+                        Err(_) => vec![None; count],
                     }
-                    _ => (0..count).map(|_| target_ks.sample(&mut rng)).collect(),
+                } else {
+                    // Per-batch deterministic seed
+                    let mut rng =
+                        ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
+                    batch_counter += 1;
+
+                    match &dr.strategy {
+                        DeferralStrategy::SelfReference {
+                            nullable_root_probability,
+                            ..
+                        } => {
+                            let p = *nullable_root_probability;
+                            (0..count)
+                                .map(|_| {
+                                    let r = (rng.next_u64() as f64) / (u64::MAX as f64);
+                                    if r < p {
+                                        None // root node — null FK
+                                    } else {
+                                        target_ks.sample(&mut rng)
+                                    }
+                                })
+                                .collect()
+                        }
+                        _ => (0..count).map(|_| target_ks.sample(&mut rng)).collect(),
+                    }
                 };
 
                 // Replace the FK column in the batch
@@ -1553,6 +1610,90 @@ impl GenerationEngine {
         }
 
         Ok(batches)
+    }
+
+    /// Build hierarchy assignments for self-referential relationships with
+    /// `acyclic` or `max_depth` constraints. Returns a map from PK → parent PK.
+    ///
+    /// Algorithm: collect all PKs, shuffle deterministically, process in order.
+    /// Each node either becomes a root (with `root_probability`) or picks a
+    /// parent from already-processed nodes that satisfy depth constraints.
+    /// Processing in order guarantees acyclicity — a node can only reference
+    /// an earlier node as parent.
+    fn build_hierarchy_assignments(
+        key_store: &Arc<dyn KeyStore>,
+        root_probability: f64,
+        max_depth: Option<u32>,
+        base_seed: u64,
+    ) -> HashMap<i64, Option<i64>> {
+        let n = key_store.len();
+        if n == 0 {
+            return HashMap::new();
+        }
+
+        let mut rng = ChaCha8Rng::seed_from_u64(base_seed ^ 0x48494552); // "HIER"
+
+        // Collect all PKs from key store
+        let mut pks: Vec<i64> = Vec::with_capacity(n);
+        for i in 0..n {
+            if let Some(pk) = key_store.get_by_index(i) {
+                pks.push(pk);
+            }
+        }
+
+        // Fisher-Yates shuffle for deterministic processing order
+        for i in (1..pks.len()).rev() {
+            let j = (rng.next_u64() as usize) % (i + 1);
+            pks.swap(i, j);
+        }
+
+        // Assignments: PK → Option<parent_pk>
+        let mut assignments: HashMap<i64, Option<i64>> = HashMap::with_capacity(n);
+        // Depth tracking: PK → depth (root = 0)
+        let mut depths: HashMap<i64, u32> = HashMap::with_capacity(n);
+        // Eligible parents: nodes whose depth allows children
+        let mut eligible: Vec<i64> = Vec::with_capacity(n);
+
+        let depth_limit = max_depth.map(|d| if d == 0 { 0 } else { d - 1 });
+
+        for (idx, &pk) in pks.iter().enumerate() {
+            // First node is always a root
+            if idx == 0 {
+                assignments.insert(pk, None);
+                depths.insert(pk, 0);
+                if depth_limit.map_or(true, |lim| 0 < lim) {
+                    eligible.push(pk);
+                }
+                continue;
+            }
+
+            // Decide: root or child?
+            let r = (rng.next_u64() as f64) / (u64::MAX as f64);
+            if r < root_probability || eligible.is_empty() {
+                // Make this node a root
+                assignments.insert(pk, None);
+                depths.insert(pk, 0);
+                if depth_limit.map_or(true, |lim| 0 < lim) {
+                    eligible.push(pk);
+                }
+            } else {
+                // Pick a random parent from eligible nodes — O(1)
+                let parent_idx = (rng.next_u64() as usize) % eligible.len();
+                let parent_pk = eligible[parent_idx];
+                let parent_depth = depths[&parent_pk];
+                let child_depth = parent_depth + 1;
+
+                assignments.insert(pk, Some(parent_pk));
+                depths.insert(pk, child_depth);
+
+                // This child is eligible as parent if its depth allows grandchildren
+                if depth_limit.map_or(true, |lim| child_depth < lim) {
+                    eligible.push(pk);
+                }
+            }
+        }
+
+        assignments
     }
 }
 
@@ -1908,6 +2049,8 @@ mod tests {
                     to_field: "id".into(),
                     strategy: DeferralStrategy::SelfReference {
                         nullable_root_probability: 0.2,
+                        acyclic: false,
+                        max_depth: None,
                     },
                 }],
             }],

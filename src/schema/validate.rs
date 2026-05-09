@@ -2162,6 +2162,77 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 }
             }
         }
+
+        // ── Self-referential hierarchy controls ──────────────────────
+        let is_self_ref = rel.from == rel.to;
+
+        if rel.acyclic.is_some() && !is_self_ref {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "relationship '{}': 'acyclic' is only valid on self-referential relationships (from == to)",
+                    rel.name
+                ),
+            });
+        }
+
+        if rel.root_probability.is_some() && !is_self_ref {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "relationship '{}': 'root_probability' is only valid on self-referential relationships (from == to)",
+                    rel.name
+                ),
+            });
+        }
+
+        if rel.max_depth.is_some() && !is_self_ref {
+            errors.push(SchemaError::Validation {
+                path: path.clone(),
+                message: format!(
+                    "relationship '{}': 'max_depth' is only valid on self-referential relationships (from == to)",
+                    rel.name
+                ),
+            });
+        }
+
+        if let Some(p) = rel.root_probability {
+            if p <= 0.0 || p > 1.0 {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "relationship '{}': root_probability must be in (0.0, 1.0], got {}",
+                        rel.name, p
+                    ),
+                });
+            }
+        }
+
+        if let Some(d) = rel.max_depth {
+            if d < 1 {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "relationship '{}': max_depth must be >= 1, got {}",
+                        rel.name, d
+                    ),
+                });
+            }
+        }
+
+        // Self-ref with root nodes requires nullable FK
+        if is_self_ref {
+            let produces_roots = rel.root_probability.map_or(true, |p| p > 0.0);
+            if produces_roots && rel.nullable == Some(false) {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "relationship '{}': self-referential relationship with root nodes requires nullable = true (or omit nullable)",
+                        rel.name
+                    ),
+                });
+            }
+        }
     }
 }
 
@@ -2855,6 +2926,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2897,6 +2972,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2940,6 +3019,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2998,6 +3081,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3056,6 +3143,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let errors = validate(&model);
         // Should produce no relationship-related errors
@@ -3102,6 +3193,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3218,6 +3313,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         };
         model.relationships.push(rel.clone());
         model.relationships.push(rel);
@@ -5045,6 +5144,140 @@ mod tests {
         // Should have no scope-related errors (email is a valid field in minimal model)
         assert!(!errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("scope"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_hierarchy_on_non_self_ref() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            description: None,
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            constraints: vec![],
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+        });
+        model.relationships.push(Relationship {
+            name: "order_user".to_string(),
+            from: "order".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: Some(true),
+            root_probability: Some(0.1),
+            max_depth: Some(3),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("acyclic") && message.contains("self-referential"))
+        }));
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("root_probability") && message.contains("self-referential"))
+        }));
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("max_depth") && message.contains("self-referential"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_hierarchy_root_probability_range() {
+        let mut model = minimal_model();
+        model.relationships.push(Relationship {
+            name: "self_ref".to_string(),
+            from: "user".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("parent_id".to_string()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: Some(0.0),
+            max_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("root_probability") && message.contains("(0.0, 1.0]"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_hierarchy_max_depth_zero() {
+        let mut model = minimal_model();
+        model.relationships.push(Relationship {
+            name: "self_ref".to_string(),
+            from: "user".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("parent_id".to_string()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: Some(0),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("max_depth") && message.contains(">= 1"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_hierarchy_nullable_false_error() {
+        let mut model = minimal_model();
+        model.relationships.push(Relationship {
+            name: "self_ref".to_string(),
+            from: "user".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("parent_id".to_string()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: Some(false),
+            acyclic: Some(true),
+            root_probability: Some(0.05),
+            max_depth: None,
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("nullable = true"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_hierarchy_valid_self_ref() {
+        let mut model = minimal_model();
+        model.relationships.push(Relationship {
+            name: "self_ref".to_string(),
+            from: "user".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("parent_id".to_string()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: Some(true),
+            acyclic: Some(true),
+            root_probability: Some(0.05),
+            max_depth: Some(6),
+        });
+        let errors = validate(&model);
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("acyclic") || message.contains("root_probability") || message.contains("max_depth"))
         }));
     }
 }

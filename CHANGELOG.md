@@ -6,6 +6,16 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Self-referential hierarchy controls** — Configure tree/forest structure for
+  self-referential relationships (spec §7.4):
+  - `acyclic = true` — guarantees no circular reference chains (true tree/forest)
+  - `root_probability = 0.05` — controls fraction of root nodes (null FK)
+  - `max_depth = 6` — limits maximum hierarchy depth
+  - `nullable = true` on relationships — required for hierarchies with root nodes
+  - Hierarchical assignment uses O(N) algorithm with eligible-parents vector
+  - Processing order shuffled deterministically for varied tree shapes
+  - Schema validation: range checks, self-ref-only constraints, nullable enforcement
+  - New example: `examples/hierarchy.weave.toml`
 - **Parameter expressions in count** — Entity counts can now be computed from
   model parameters using expressions (spec §3). Enables scalable schemas where
   all entity sizes are driven by a few top-level parameters.

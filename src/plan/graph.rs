@@ -130,7 +130,9 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
                 to_entity: rel.to.clone(),
                 to_field: "id".to_string(),
                 strategy: DeferralStrategy::SelfReference {
-                    nullable_root_probability: 0.1,
+                    nullable_root_probability: rel.root_probability.unwrap_or(0.1),
+                    acyclic: rel.acyclic.unwrap_or(false),
+                    max_depth: rel.max_depth,
                 },
             });
         }
@@ -272,6 +274,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         }
     }
 
@@ -457,6 +463,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
         let result = assign_phases(&model).unwrap();

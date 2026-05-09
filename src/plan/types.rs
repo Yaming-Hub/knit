@@ -634,6 +634,10 @@ pub enum DeferralStrategy {
     SelfReference {
         /// Fraction of rows left null to serve as hierarchy roots.
         nullable_root_probability: f64,
+        /// When true, build a proper tree/forest — no cycles.
+        acyclic: bool,
+        /// Maximum hierarchy depth (root = depth 0). `None` = unlimited.
+        max_depth: Option<u32>,
     },
 }
 
