@@ -960,6 +960,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "colored",
+ "csv",
  "dirs",
  "indicatif",
  "indoc",

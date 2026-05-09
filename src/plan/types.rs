@@ -415,6 +415,30 @@ pub enum GeneratorPlan {
         /// Typed parameters passed to the plugin factory.
         params: BTreeMap<String, crate::core::Value>,
     },
+    /// External lookup — samples from a column in a CSV/JSON/Parquet file.
+    ///
+    /// Entries are loaded by the CLI layer after compilation (like Dictionary),
+    /// which resolves the file path relative to the schema directory.
+    ExternalLookup {
+        /// Loaded string values from the source column (populated after compilation).
+        entries: Vec<String>,
+        /// Optional weights for weighted sampling (populated after compilation).
+        weights: Option<Vec<f64>>,
+        /// Sampling strategy.
+        sampling: crate::core::SamplingMode,
+        /// Original source file path (used for resolution, cleared after loading).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_file: Option<String>,
+        /// Column name to extract (used during resolution).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_column: Option<String>,
+        /// Weight column name (used during resolution for weighted sampling).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        weight_column: Option<String>,
+        /// File format (used during resolution).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_format: Option<crate::core::LookupFormat>,
+    },
 }
 
 /// Cross-entity causal ordering: ensures a timestamp is >= the referenced

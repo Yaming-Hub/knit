@@ -44,6 +44,11 @@ All notable changes to Knit are documented in this file.
   - `FkViolateInjector` — corrupt FK values with non-existent references
   - `TemporalSpikeInjector` — cluster timestamps around spike points (Gaussian spread)
   - Total: 11 built-in perturbators across clean/constrained/breaking stages
+- **External lookup generator** — Sample values from external CSV, JSON, or
+  Parquet files with three sampling modes (uniform, weighted, sequential).
+  File loading is deferred to plan resolution time (like dictionary). Supports
+  weighted sampling via a weight column, deterministic sequential round-robin
+  via row offset, and path traversal protection.
 
 ## [0.3.0] — 2026-05-08
 

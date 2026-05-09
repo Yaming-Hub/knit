@@ -14,6 +14,7 @@ pub mod correlation;
 pub mod derived;
 pub mod dictionary;
 pub mod distribution;
+pub mod external_lookup;
 pub mod faker;
 pub mod fk;
 pub mod graph_fk;
@@ -231,6 +232,16 @@ pub fn create_generator_with_seen(
                 }
             }
         }
+        GeneratorPlan::ExternalLookup {
+            entries,
+            weights,
+            sampling,
+            ..
+        } => Box::new(external_lookup::ExternalLookupGenerator::new(
+            entries.clone(),
+            weights.clone(),
+            sampling.clone(),
+        )),
     }
 }
 

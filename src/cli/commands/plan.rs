@@ -268,6 +268,11 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         crate::plan::GeneratorPlan::Plugin { name, .. } => {
             format!("plugin({})", name)
         }
+        crate::plan::GeneratorPlan::ExternalLookup {
+            entries, sampling, ..
+        } => {
+            format!("external_lookup({} entries, {:?})", entries.len(), sampling)
+        }
     }
 }
 

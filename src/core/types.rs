@@ -459,6 +459,59 @@ pub enum GeneratorSpec {
         #[serde(default)]
         params: BTreeMap<String, Value>,
     },
+    /// Sample values from an external data file (CSV, JSON, or Parquet).
+    ///
+    /// Loads a named column from a structured file and samples values during
+    /// generation. Supports uniform, weighted, and sequential sampling modes.
+    ExternalLookup {
+        /// Path to the data file (relative to the schema file).
+        source: String,
+        /// Column name to sample values from.
+        column: String,
+        /// File format: `csv`, `json`, or `parquet`.
+        format: LookupFormat,
+        /// Sampling strategy (default: uniform random).
+        #[serde(default)]
+        sampling: SamplingMode,
+        /// Column name containing weights (required when `sampling = "weighted"`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        weight_column: Option<String>,
+    },
+}
+
+/// File format for external lookup data sources.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LookupFormat {
+    /// Comma-separated values with header row.
+    Csv,
+    /// JSON array of objects.
+    Json,
+    /// Apache Parquet columnar format.
+    Parquet,
+}
+
+impl std::fmt::Display for LookupFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Csv => write!(f, "csv"),
+            Self::Json => write!(f, "json"),
+            Self::Parquet => write!(f, "parquet"),
+        }
+    }
+}
+
+/// Sampling strategy for external lookup generators.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum SamplingMode {
+    /// Uniform random sampling with replacement.
+    #[default]
+    Uniform,
+    /// Weighted sampling using a weight column.
+    Weighted,
+    /// Sequential round-robin based on row position.
+    Sequential,
 }
 
 /// Schema-level specification for cross-entity temporal ordering.

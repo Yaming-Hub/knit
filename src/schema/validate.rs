@@ -995,6 +995,40 @@ fn validate_generator(
                 });
             }
         }
+        GeneratorSpec::ExternalLookup {
+            source,
+            sampling,
+            weight_column,
+            ..
+        } => {
+            if nested {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "external_lookup cannot be nested inside Unique, Conditional, or Composite"
+                        .to_string(),
+                });
+            }
+            if source.is_empty() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "external_lookup source path must not be empty".to_string(),
+                });
+            }
+            if *sampling == crate::core::SamplingMode::Weighted && weight_column.is_none() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "external_lookup with weighted sampling requires weight_column"
+                        .to_string(),
+                });
+            }
+            if *sampling != crate::core::SamplingMode::Weighted && weight_column.is_some() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "external_lookup weight_column is only valid with weighted sampling"
+                        .to_string(),
+                });
+            }
+        }
         GeneratorSpec::Conditional {
             field,
             branches,
