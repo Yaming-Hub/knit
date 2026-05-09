@@ -1950,6 +1950,35 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
         validate_rate(&path, "fk_violate_rate", noise.fk_violate_rate, errors);
         validate_rate(&path, "temporal_spike_rate", noise.temporal_spike_rate, errors);
         validate_rate(&path, "missing_field_rate", noise.missing_field_rate, errors);
+
+        // Validate scope expression (if present)
+        if let Some(ref scope) = noise.scope {
+            match crate::gen::expr::parser::parse(&scope.where_expr) {
+                Ok(expr) => {
+                    // Validate field refs exist in the target entity
+                    if names.contains(noise.entity.as_str()) {
+                        let fields = entity_field_names(model, &noise.entity);
+                        for field_ref in crate::gen::expr::ast::extract_field_refs(&expr) {
+                            if !fields.contains(field_ref.as_str()) {
+                                errors.push(SchemaError::Validation {
+                                    path: path.clone(),
+                                    message: format!(
+                                        "scope expression references unknown field '{}' in entity '{}'",
+                                        field_ref, noise.entity
+                                    ),
+                                });
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    errors.push(SchemaError::Validation {
+                        path: path.clone(),
+                        message: format!("invalid scope expression: {}", e),
+                    });
+                }
+            }
+        }
     }
 }
 
@@ -2828,6 +2857,7 @@ mod tests {
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
                 missing_field_rate: 0.0,
+                scope: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2851,6 +2881,7 @@ mod tests {
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
                 missing_field_rate: 0.0,
+                scope: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2940,6 +2971,7 @@ mod tests {
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
                 missing_field_rate: 0.0,
+                scope: None,
         };
         model.noise_profiles.push(noise.clone());
         model.noise_profiles.push(noise);
@@ -4660,5 +4692,87 @@ mod tests {
         let mut deps = Vec::new();
         extract_template_refs("${good} and ${unclosed", &mut deps);
         assert_eq!(deps, vec!["good"]);
+    }
+
+    #[test]
+    fn test_validate_noise_scope_invalid_expression() {
+        use crate::core::types::NoiseScope;
+        let mut model = minimal_model();
+        model.noise_profiles.push(NoiseProfile {
+            name: "scoped".to_string(),
+            entity: "user".to_string(),
+            fields: vec![],
+            null_rate: 0.1,
+            duplicate_rate: 0.0,
+            typo_rate: 0.0,
+            outlier_rate: 0.0,
+            swap_rate: 0.0,
+            truncate_rate: 0.0,
+            fk_violate_rate: 0.0,
+            temporal_spike_rate: 0.0,
+            missing_field_rate: 0.0,
+            scope: Some(NoiseScope {
+                where_expr: "${invalid !!syntax".to_string(),
+            }),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid scope expression"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_noise_scope_unknown_field() {
+        use crate::core::types::NoiseScope;
+        let mut model = minimal_model();
+        model.noise_profiles.push(NoiseProfile {
+            name: "scoped".to_string(),
+            entity: "user".to_string(),
+            fields: vec![],
+            null_rate: 0.1,
+            duplicate_rate: 0.0,
+            typo_rate: 0.0,
+            outlier_rate: 0.0,
+            swap_rate: 0.0,
+            truncate_rate: 0.0,
+            fk_violate_rate: 0.0,
+            temporal_spike_rate: 0.0,
+            missing_field_rate: 0.0,
+            scope: Some(NoiseScope {
+                where_expr: r#"${nonexistent_field} == "test""#.to_string(),
+            }),
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("scope expression references unknown field"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_noise_scope_valid() {
+        use crate::core::types::NoiseScope;
+        let mut model = minimal_model();
+        model.noise_profiles.push(NoiseProfile {
+            name: "scoped".to_string(),
+            entity: "user".to_string(),
+            fields: vec![],
+            null_rate: 0.1,
+            duplicate_rate: 0.0,
+            typo_rate: 0.0,
+            outlier_rate: 0.0,
+            swap_rate: 0.0,
+            truncate_rate: 0.0,
+            fk_violate_rate: 0.0,
+            temporal_spike_rate: 0.0,
+            missing_field_rate: 0.0,
+            scope: Some(NoiseScope {
+                where_expr: r#"${email} == "admin@test.com""#.to_string(),
+            }),
+        });
+        let errors = validate(&model);
+        // Should have no scope-related errors (email is a valid field in minimal model)
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("scope"))
+        }));
     }
 }

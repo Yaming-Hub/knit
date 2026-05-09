@@ -1,0 +1,62 @@
+weave_version = "0.1"
+
+[model]
+name = "scoped_noise_demo"
+description = "Demonstrates conditional noise injection using scope predicates"
+seed = 42
+
+# ── Entity ────────────────────────────────────────────────────────────
+[[entities]]
+name = "order"
+count = 200
+
+[[entities.fields]]
+name = "order_id"
+data_type = "int"
+primary_key = true
+generator = { type = "sequence", start = 1000 }
+
+[[entities.fields]]
+name = "status"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "active", weight = 0.6 },
+    { value = "refunded", weight = 0.25 },
+    { value = "cancelled", weight = 0.15 },
+]
+
+[[entities.fields]]
+name = "amount"
+data_type = "float"
+generator = { type = "distribution", kind = "uniform", params = { min = 10.0, max = 500.0 } }
+
+[[entities.fields]]
+name = "customer_name"
+data_type = "string"
+generator = { type = "faker", method = "name" }
+
+# ── Scoped Noise ──────────────────────────────────────────────────────
+# Only inject outliers in refunded orders (simulating suspicious amounts)
+[[noise]]
+name = "refund_outliers"
+entity = "order"
+fields = ["amount"]
+outlier_rate = 0.5
+scope = { where = '${status} == "refunded"' }
+
+# Only inject typos in cancelled orders (simulating rushed data entry)
+[[noise]]
+name = "cancellation_typos"
+entity = "order"
+fields = ["customer_name"]
+typo_rate = 0.3
+scope = { where = '${status} == "cancelled"' }
+
+# Global light noise on all orders (no scope)
+[[noise]]
+name = "global_nulls"
+entity = "order"
+fields = ["customer_name"]
+null_rate = 0.02

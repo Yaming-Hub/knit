@@ -47,10 +47,10 @@ impl Perturbator for DuplicateInjector {
             return Ok(batch);
         }
 
-        // Select rows to duplicate
+        // Select rows to duplicate (only from in-scope rows)
         let mut dup_indices: Vec<usize> = Vec::new();
         for i in 0..n {
-            if rng.gen::<f64>() < config.probability {
+            if config.in_scope(i) && rng.gen::<f64>() < config.probability {
                 dup_indices.push(i);
             }
         }

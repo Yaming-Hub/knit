@@ -91,7 +91,9 @@ impl Perturbator for FkViolateInjector {
                             if arr.is_null(i) {
                                 return None;
                             }
-                            if !rng.gen_bool(config.probability.clamp(0.0, 1.0)) {
+                            if !config.in_scope(i)
+                                || !rng.gen_bool(config.probability.clamp(0.0, 1.0))
+                            {
                                 return Some(arr.value(i));
                             }
                             let offset = rng.gen_range(1i64..=1_000_000);
@@ -115,7 +117,9 @@ impl Perturbator for FkViolateInjector {
                             if arr.is_null(i) {
                                 return None;
                             }
-                            if !rng.gen_bool(config.probability.clamp(0.0, 1.0)) {
+                            if !config.in_scope(i)
+                                || !rng.gen_bool(config.probability.clamp(0.0, 1.0))
+                            {
                                 return Some(arr.value(i).to_string());
                             }
                             count += 1;

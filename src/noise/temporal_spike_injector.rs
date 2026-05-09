@@ -164,9 +164,10 @@ impl TemporalSpikeInjector {
         // Apply spikes
         let result_millis: Vec<Option<i64>> = millis
             .iter()
-            .map(|v| {
+            .enumerate()
+            .map(|(i, v)| {
                 let ms = (*v)?;
-                if !rng.gen_bool(config.probability.clamp(0.0, 1.0)) {
+                if !config.in_scope(i) || !rng.gen_bool(config.probability.clamp(0.0, 1.0)) {
                     return Some(ms);
                 }
                 // Pick a random spike center

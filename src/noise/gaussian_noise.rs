@@ -84,7 +84,7 @@ impl Perturbator for GaussianNoise {
             let noisy = add_noise(
                 col.as_ref(),
                 rng,
-                config.probability,
+                config,
                 self.stddev,
                 self.relative,
             )?;
@@ -117,10 +117,11 @@ fn should_apply_numeric(name: &str, dt: &DataType, filter: &ColumnFilter) -> boo
 fn add_noise(
     array: &dyn Array,
     rng: &mut dyn RngCore,
-    probability: f64,
+    config: &PerturbConfig,
     stddev: f64,
     relative: bool,
 ) -> Result<Arc<dyn Array>, NoiseError> {
+    let probability = config.probability;
     match array.data_type() {
         DataType::Float64 => {
             let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -130,7 +131,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i);
-                    if rand::Rng::gen::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rand::Rng::gen::<f64>(rng) >= probability {
                         return Some(v);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -148,7 +149,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i) as f64;
-                    if rand::Rng::gen::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rand::Rng::gen::<f64>(rng) >= probability {
                         return Some(v as i32);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -166,7 +167,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i) as f64;
-                    if rand::Rng::gen::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rand::Rng::gen::<f64>(rng) >= probability {
                         return Some(v as i64);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };

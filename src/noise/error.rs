@@ -19,4 +19,8 @@ pub enum NoiseError {
     /// A configuration value is out of its valid range.
     #[error("invalid config: {0}")]
     InvalidConfig(String),
+
+    /// A scope predicate expression failed to evaluate.
+    #[error("scope error: {0}")]
+    Scope(String),
 }

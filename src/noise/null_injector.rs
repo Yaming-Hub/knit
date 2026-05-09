@@ -54,7 +54,7 @@ impl Perturbator for NullInjector {
                 continue;
             }
 
-            let nulls = inject_nulls(col.as_ref(), rng, config.probability)?;
+            let nulls = inject_nulls(col.as_ref(), rng, config)?;
             trace!(column = field.name(), "injected nulls");
             columns.push(nulls);
         }
@@ -67,12 +67,12 @@ impl Perturbator for NullInjector {
 fn inject_nulls(
     array: &dyn Array,
     rng: &mut dyn RngCore,
-    probability: f64,
+    config: &PerturbConfig,
 ) -> Result<Arc<dyn Array>, NoiseError> {
     let len = array.len();
     let mut null_buf = vec![true; len];
-    for item in null_buf.iter_mut() {
-        if rng.gen::<f64>() < probability {
+    for (i, item) in null_buf.iter_mut().enumerate() {
+        if config.in_scope(i) && rng.gen::<f64>() < config.probability {
             *item = false;
         }
     }

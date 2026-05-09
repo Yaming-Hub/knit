@@ -1082,6 +1082,31 @@ pub struct NoiseProfile {
     /// warning.
     #[serde(default)]
     pub missing_field_rate: f64,
+    /// Optional scope predicate restricting noise to matching rows.
+    ///
+    /// When set, only rows where the predicate evaluates to `true` are
+    /// eligible for perturbation. Probability is applied *after* scope
+    /// filtering (the two filters multiply).
+    #[serde(default)]
+    pub scope: Option<NoiseScope>,
+}
+
+/// Scope predicate for conditional noise application.
+///
+/// The `where` expression is parsed as a Knit expression and evaluated
+/// against the generated `RecordBatch` columns. Only rows where the
+/// expression evaluates to `true` are eligible for perturbation.
+///
+/// # Example
+///
+/// ```toml
+/// scope = { where = "${status} == \"refunded\"" }
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NoiseScope {
+    /// Predicate expression using Knit expression syntax.
+    #[serde(rename = "where")]
+    pub where_expr: String,
 }
 
 // ── Constraint ───────────────────────────────────────────────────────
@@ -1614,6 +1639,7 @@ mod tests {
                 fk_violate_rate: 0.0,
                 temporal_spike_rate: 0.0,
                 missing_field_rate: 0.0,
+                scope: None,
             }],
             correlations: vec![],
             params: BTreeMap::new(),

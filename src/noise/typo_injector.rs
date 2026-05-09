@@ -110,7 +110,7 @@ impl Perturbator for TypoInjector {
                         return None;
                     }
                     let v = a.value(i);
-                    if rng.gen::<f64>() < config.probability {
+                    if config.in_scope(i) && rng.gen::<f64>() < config.probability {
                         Some(apply_typo(v, rng))
                     } else {
                         Some(v.to_string())
