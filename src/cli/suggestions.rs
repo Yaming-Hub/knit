@@ -31,7 +31,7 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
             return Some(
                 "Check the generator type spelling. Supported types: distribution, faker, \
                  sequence, one_of, pattern, derived, conditional, composite, lookup, constant, \
-                 uuid, unique, relative, business_hours.",
+                 uuid, unique, relative, business_hours, dictionary, external_lookup.",
             );
         }
     }

@@ -106,11 +106,12 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     let mut plan = crate::plan::compile(&model)
         .map_err(|e| anyhow::anyhow!("plan compilation failed: {}", e))?;
 
-    // ── Resolve dictionary files ────────────────────────────────────
+    // ── Resolve dictionary and external lookup files ──────────────
     let schema_dir = Path::new(schema_path)
         .parent()
         .unwrap_or_else(|| Path::new("."));
     resolve_dictionary_plans(&mut plan, schema_dir)?;
+    resolve_external_lookup_plans(&mut plan, schema_dir)?;
 
     if !cli.quiet {
         eprintln!(
@@ -994,6 +995,7 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
         crate::plan::GeneratorPlan::ThreadRef { .. } => ArrowDataType::Int64,
         // Plugin output type unknown at plan time — default to Utf8
         crate::plan::GeneratorPlan::Plugin { .. } => ArrowDataType::Utf8,
+        crate::plan::GeneratorPlan::ExternalLookup { .. } => ArrowDataType::Utf8,
     }
 }
 
@@ -1541,4 +1543,425 @@ fn resolve_dict_in_generator(plan: &mut crate::plan::GeneratorPlan, schema_dir: 
         _ => {}
     }
     Ok(())
+}
+
+/// Resolve external lookup file references in the compiled plan.
+///
+/// Walks all entity plans and loads external lookup source files from disk,
+/// populating the `entries` and `weights` vecs. File paths are resolved
+/// relative to the schema directory.
+fn resolve_external_lookup_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
+    for phase in &mut plan.phases {
+        for entity_plan in &mut phase.entity_plans {
+            for field_plan in &mut entity_plan.field_plans {
+                resolve_lookup_in_generator(&mut field_plan.generator_plan, schema_dir)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Recursively resolve external lookup generators (handles Unique/Conditional wrapping).
+fn resolve_lookup_in_generator(
+    plan: &mut crate::plan::GeneratorPlan,
+    schema_dir: &Path,
+) -> Result<()> {
+    match plan {
+        crate::plan::GeneratorPlan::ExternalLookup {
+            entries,
+            weights,
+            source_file,
+            source_column,
+            weight_column,
+            source_format,
+            sampling,
+            ..
+        } => {
+            if let (Some(file_path), Some(column), Some(format)) = (
+                source_file.take(),
+                source_column.take(),
+                source_format.take(),
+            ) {
+                // Path traversal protection
+                if Path::new(&file_path).is_absolute() {
+                    bail!(
+                        "external lookup source path must be relative, got absolute path: '{}'",
+                        file_path
+                    );
+                }
+                if file_path.contains("..") {
+                    bail!(
+                        "external lookup source path must not contain '..': '{}'",
+                        file_path
+                    );
+                }
+
+                let full_path = schema_dir.join(&file_path);
+
+                // Canonicalize both paths and verify the resolved file is under schema_dir.
+                // This catches symlink/junction escapes.
+                if let (Ok(canonical_dir), Ok(canonical_file)) = (
+                    std::fs::canonicalize(schema_dir),
+                    std::fs::canonicalize(&full_path),
+                ) {
+                    if !canonical_file.starts_with(&canonical_dir) {
+                        bail!(
+                            "external lookup source '{}' resolves outside schema directory",
+                            file_path
+                        );
+                    }
+                }
+                // If canonicalize fails (e.g. file doesn't exist), the open call
+                // below will produce a clear error message.
+                let wc = weight_column.take();
+                let need_weights = *sampling == crate::core::SamplingMode::Weighted;
+
+                let (loaded_entries, loaded_weights) =
+                    load_lookup_file(&full_path, &column, &format, wc.as_deref(), &file_path)?;
+
+                if loaded_entries.is_empty() {
+                    bail!(
+                        "external lookup source '{}' column '{}' contains no values",
+                        file_path,
+                        column
+                    );
+                }
+
+                if need_weights {
+                    if let Some(ref w) = loaded_weights {
+                        let total: f64 = w.iter().sum();
+                        if total <= 0.0 || !total.is_finite() {
+                            bail!(
+                                "external lookup '{}' weight column has invalid total weight: {}",
+                                file_path,
+                                total
+                            );
+                        }
+                    } else {
+                        bail!(
+                            "external lookup '{}' uses weighted sampling but no weights were loaded",
+                            file_path
+                        );
+                    }
+                }
+
+                *entries = loaded_entries;
+                *weights = loaded_weights;
+
+                tracing::debug!(
+                    source = %file_path,
+                    column = %column,
+                    entries = entries.len(),
+                    "loaded external lookup"
+                );
+            }
+        }
+        crate::plan::GeneratorPlan::Unique { inner, .. } => {
+            resolve_lookup_in_generator(inner, schema_dir)?;
+        }
+        crate::plan::GeneratorPlan::Conditional {
+            branches, default, ..
+        } => {
+            for (_, branch_plan) in branches {
+                resolve_lookup_in_generator(branch_plan, schema_dir)?;
+            }
+            resolve_lookup_in_generator(default, schema_dir)?;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+/// Load values (and optional weights) from a CSV, JSON, or Parquet file.
+fn load_lookup_file(
+    path: &Path,
+    column: &str,
+    format: &crate::core::LookupFormat,
+    weight_column: Option<&str>,
+    display_path: &str,
+) -> Result<(Vec<String>, Option<Vec<f64>>)> {
+    match format {
+        crate::core::LookupFormat::Csv => {
+            load_lookup_csv(path, column, weight_column, display_path)
+        }
+        crate::core::LookupFormat::Json => {
+            load_lookup_json(path, column, weight_column, display_path)
+        }
+        crate::core::LookupFormat::Parquet => {
+            load_lookup_parquet(path, column, weight_column, display_path)
+        }
+    }
+}
+
+/// Load from CSV with header row.
+fn load_lookup_csv(
+    path: &Path,
+    column: &str,
+    weight_column: Option<&str>,
+    display_path: &str,
+) -> Result<(Vec<String>, Option<Vec<f64>>)> {
+    let mut reader = csv::Reader::from_path(path).with_context(|| {
+        format!(
+            "failed to open CSV lookup file '{}' (resolved to '{}')",
+            display_path,
+            path.display()
+        )
+    })?;
+
+    let headers = reader.headers()?.clone();
+    let col_idx = headers.iter().position(|h| h == column).ok_or_else(|| {
+        anyhow::anyhow!(
+            "column '{}' not found in CSV '{}'; available: {:?}",
+            column,
+            display_path,
+            headers.iter().collect::<Vec<_>>()
+        )
+    })?;
+
+    let weight_idx = weight_column
+        .map(|wc| {
+            headers.iter().position(|h| h == wc).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "weight column '{}' not found in CSV '{}'; available: {:?}",
+                    wc,
+                    display_path,
+                    headers.iter().collect::<Vec<_>>()
+                )
+            })
+        })
+        .transpose()?;
+
+    let mut entries = Vec::new();
+    let mut weights: Option<Vec<f64>> = weight_idx.map(|_| Vec::new());
+
+    for result in reader.records() {
+        let record =
+            result.with_context(|| format!("failed to read CSV record from '{}'", display_path))?;
+        if let Some(val) = record.get(col_idx) {
+            let trimmed = val.trim();
+            if !trimmed.is_empty() {
+                entries.push(trimmed.to_string());
+                if let (Some(ref mut w), Some(wi)) = (&mut weights, weight_idx) {
+                    let weight_str = record.get(wi).unwrap_or("");
+                    let weight: f64 = weight_str.trim().parse().map_err(|_| {
+                        anyhow::anyhow!(
+                            "non-numeric weight '{}' in CSV '{}' for column '{}'",
+                            weight_str,
+                            display_path,
+                            weight_column.unwrap_or("?")
+                        )
+                    })?;
+                    if weight < 0.0 || !weight.is_finite() {
+                        bail!(
+                            "invalid weight '{}' in CSV '{}' for column '{}'",
+                            weight_str,
+                            display_path,
+                            weight_column.unwrap_or("?")
+                        );
+                    }
+                    w.push(weight);
+                }
+            }
+        }
+    }
+
+    Ok((entries, weights))
+}
+
+/// Load from JSON (array of objects).
+fn load_lookup_json(
+    path: &Path,
+    column: &str,
+    weight_column: Option<&str>,
+    display_path: &str,
+) -> Result<(Vec<String>, Option<Vec<f64>>)> {
+    let content = std::fs::read_to_string(path).with_context(|| {
+        format!(
+            "failed to read JSON lookup file '{}' (resolved to '{}')",
+            display_path,
+            path.display()
+        )
+    })?;
+
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&content).with_context(|| {
+        format!(
+            "failed to parse JSON array from '{}' — expected array of objects",
+            display_path
+        )
+    })?;
+
+    let mut entries = Vec::with_capacity(arr.len());
+    let mut weights: Option<Vec<f64>> = weight_column.map(|_| Vec::with_capacity(arr.len()));
+
+    for obj in &arr {
+        let val = obj.get(column).ok_or_else(|| {
+            anyhow::anyhow!(
+                "JSON object in '{}' missing column '{}'",
+                display_path,
+                column
+            )
+        })?;
+
+        let s = match val {
+            serde_json::Value::String(s) => s.clone(),
+            serde_json::Value::Number(n) => n.to_string(),
+            serde_json::Value::Bool(b) => b.to_string(),
+            serde_json::Value::Null => continue,
+            _ => val.to_string(),
+        };
+
+        if !s.is_empty() {
+            entries.push(s);
+            if let (Some(ref mut w), Some(wc)) = (&mut weights, weight_column) {
+                let weight_val = obj.get(wc).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "JSON object in '{}' missing weight column '{}'",
+                        display_path,
+                        wc
+                    )
+                })?;
+                let weight = weight_val.as_f64().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "non-numeric weight {:?} in JSON '{}' for column '{}'",
+                        weight_val,
+                        display_path,
+                        wc
+                    )
+                })?;
+                if weight < 0.0 || !weight.is_finite() {
+                    bail!(
+                        "invalid weight in JSON '{}' for column '{}'",
+                        display_path,
+                        wc
+                    );
+                }
+                w.push(weight);
+            }
+        }
+    }
+
+    Ok((entries, weights))
+}
+
+/// Load from Parquet using Arrow readers.
+fn load_lookup_parquet(
+    path: &Path,
+    column: &str,
+    weight_column: Option<&str>,
+    display_path: &str,
+) -> Result<(Vec<String>, Option<Vec<f64>>)> {
+    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+
+    let file = std::fs::File::open(path).with_context(|| {
+        format!(
+            "failed to open Parquet lookup file '{}' (resolved to '{}')",
+            display_path,
+            path.display()
+        )
+    })?;
+
+    let builder = ParquetRecordBatchReaderBuilder::try_new(file).with_context(|| {
+        format!(
+            "failed to read Parquet metadata from '{}'",
+            display_path
+        )
+    })?;
+
+    let reader = builder.build().with_context(|| {
+        format!("failed to build Parquet reader for '{}'", display_path)
+    })?;
+
+    let mut entries = Vec::new();
+    let mut weights: Option<Vec<f64>> = weight_column.map(|_| Vec::new());
+
+    for batch_result in reader {
+        let batch = batch_result.with_context(|| {
+            format!("failed to read Parquet batch from '{}'", display_path)
+        })?;
+
+        let col_idx = batch.schema().index_of(column).map_err(|_| {
+            anyhow::anyhow!(
+                "column '{}' not found in Parquet '{}'; available: {:?}",
+                column,
+                display_path,
+                batch
+                    .schema()
+                    .fields()
+                    .iter()
+                    .map(|f| f.name().as_str())
+                    .collect::<Vec<_>>()
+            )
+        })?;
+
+        let col = batch.column(col_idx);
+
+        // Resolve weight column index (if needed) once per batch
+        let weight_col_idx = if let Some(wc) = weight_column {
+            Some(batch.schema().index_of(wc).map_err(|_| {
+                anyhow::anyhow!(
+                    "weight column '{}' not found in Parquet '{}'; available: {:?}",
+                    wc,
+                    display_path,
+                    batch
+                        .schema()
+                        .fields()
+                        .iter()
+                        .map(|f| f.name().as_str())
+                        .collect::<Vec<_>>()
+                )
+            })?)
+        } else {
+            None
+        };
+
+        // Process rows in lockstep: only keep weights for rows whose value is kept
+        for i in 0..col.len() {
+            if col.is_null(i) {
+                continue;
+            }
+            let val = arrow::util::display::array_value_to_string(col, i)
+                .unwrap_or_default();
+            let trimmed = val.trim().to_string();
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            entries.push(trimmed);
+
+            if let (Some(ref mut w), Some(wi)) = (&mut weights, weight_col_idx) {
+                let weight_col = batch.column(wi);
+                let weight = extract_single_weight(weight_col, i)?;
+                w.push(weight);
+            }
+        }
+    }
+
+    Ok((entries, weights))
+}
+
+/// Extract a single weight value from an Arrow array at a given row index.
+fn extract_single_weight(array: &dyn arrow::array::Array, idx: usize) -> Result<f64> {
+    use arrow::array::{Float64Array, Int32Array, Int64Array};
+
+    if array.is_null(idx) {
+        return Ok(0.0);
+    }
+
+    let w = if let Some(f64_arr) = array.as_any().downcast_ref::<Float64Array>() {
+        f64_arr.value(idx)
+    } else if let Some(i64_arr) = array.as_any().downcast_ref::<Int64Array>() {
+        i64_arr.value(idx) as f64
+    } else if let Some(i32_arr) = array.as_any().downcast_ref::<Int32Array>() {
+        i32_arr.value(idx) as f64
+    } else {
+        bail!(
+            "weight column has unsupported type {:?} — expected numeric",
+            array.data_type()
+        );
+    };
+
+    if w < 0.0 || !w.is_finite() {
+        bail!("invalid weight value: {}", w);
+    }
+    Ok(w)
 }

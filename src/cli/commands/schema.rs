@@ -345,6 +345,11 @@ fn format_generator_spec(gen: &crate::core::GeneratorSpec) -> String {
             )
         }
         crate::core::GeneratorSpec::Plugin { name, .. } => format!("plugin({})", name),
+        crate::core::GeneratorSpec::ExternalLookup {
+            source, column, format, ..
+        } => {
+            format!("external_lookup({}, {}, {})", source, column, format)
+        }
     }
 }
 

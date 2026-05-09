@@ -699,6 +699,25 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     source_file: Some(file.clone()),
                 }
             }
+            GeneratorSpec::ExternalLookup {
+                source,
+                column,
+                format,
+                sampling,
+                weight_column,
+            } => {
+                // Entries are loaded by the CLI layer after compilation,
+                // which resolves the file path relative to the schema.
+                GeneratorPlan::ExternalLookup {
+                    entries: vec![],
+                    weights: None,
+                    sampling: sampling.clone(),
+                    source_file: Some(source.clone()),
+                    source_column: Some(column.clone()),
+                    weight_column: weight_column.clone(),
+                    source_format: Some(format.clone()),
+                }
+            }
             // Behavioral modeling generators — placeholder plans until
             // the generation engine implements persona/graph-based generation.
             GeneratorSpec::ActorRef { entity } => GeneratorPlan::ForeignKey {

@@ -101,6 +101,12 @@ const GENERATORS: &[GeneratorInfo] = &[
         parameters: "file, expansion (\"sample\"|\"combinatorial\"|\"suffix\", default: \"sample\")",
         example: r##"type = "dictionary", file = "dictionaries/cities.txt""##,
     },
+    GeneratorInfo {
+        name: "external_lookup",
+        description: "Sample from a column in an external CSV, JSON, or Parquet file",
+        parameters: "source (file path), column, format (csv|json|parquet), sampling (uniform|weighted|sequential), weight_column (for weighted)",
+        example: r##"type = "external_lookup", source = "data/cities.csv", column = "city_name", format = "csv""##,
+    },
     // Behavioral modeling generators
     GeneratorInfo {
         name: "actor_ref",

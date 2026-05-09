@@ -332,6 +332,50 @@ Values are drawn from the referenced entity's generated values, ensuring
 referential integrity. See [Relationships](#relationships) for defining
 formal FK relationships.
 
+### `external_lookup` — External Data Source Sampling
+
+Sample values from an external CSV, JSON, or Parquet file:
+
+```toml
+[[entities.fields]]
+name = "city"
+data_type = "string"
+[entities.fields.generator]
+type = "external_lookup"
+source = "data/cities.csv"
+column = "city_name"
+format = "csv"
+sampling = "uniform"
+```
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `source` | Yes | Path to data file (relative to schema file) |
+| `column` | Yes | Column name to sample from |
+| `format` | Yes | File format: `csv`, `json`, or `parquet` |
+| `sampling` | No | `uniform` (default), `weighted`, or `sequential` |
+| `weight_column` | When weighted | Column containing sampling weights |
+
+**Weighted sampling example:**
+
+```toml
+[entities.fields.generator]
+type = "external_lookup"
+source = "data/cities.csv"
+column = "city_name"
+format = "csv"
+sampling = "weighted"
+weight_column = "population"
+```
+
+**Portability rules:**
+- Paths must be relative to the schema file (no absolute paths, no `..`)
+- Source files must be included alongside the schema
+- Missing file or column is a validation error
+- Sequential mode uses row offset for deterministic round-robin
+
 ### `expression` / `derived` — Computed Fields
 
 Derive a field's value from other fields in the same entity:
