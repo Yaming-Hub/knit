@@ -1960,6 +1960,11 @@ fn validate_generator(
 
 fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
     let names = entity_names(model);
+    let entity_map: HashMap<&str, &crate::core::Entity> = model
+        .entities
+        .iter()
+        .map(|e| (e.name.as_str(), e))
+        .collect();
     let mut seen = HashSet::new();
     for rel in &model.relationships {
         let path = format!("relationships.{}", rel.name);
@@ -2067,6 +2072,93 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 _ => {
                     // Other distribution kinds are allowed (fall back to uniform at
                     // runtime for unsupported ones) — no extra validation needed.
+                }
+            }
+        }
+
+        // Validate selection strategy
+        if let Some(ref sel) = rel.selection {
+            let sp = format!("{}.selection", path);
+
+            // Mutual exclusivity with degree
+            if rel.degree.is_some() {
+                errors.push(SchemaError::Validation {
+                    path: sp.clone(),
+                    message: format!(
+                        "relationship '{}' specifies both 'degree' and 'selection' — they are mutually exclusive",
+                        rel.name
+                    ),
+                });
+            }
+
+            // Validate strategy-specific parameters
+            match sel {
+                crate::core::SelectionStrategy::Parameterized(
+                    crate::core::ParameterizedSelection::Clustered { cluster_size },
+                ) => {
+                    if *cluster_size == 0 {
+                        errors.push(SchemaError::Validation {
+                            path: sp.clone(),
+                            message: format!(
+                                "relationship '{}': cluster_size must be > 0",
+                                rel.name
+                            ),
+                        });
+                    }
+                }
+                crate::core::SelectionStrategy::Parameterized(
+                    crate::core::ParameterizedSelection::Weighted { weight_field },
+                ) => {
+                    // Weighted selection is not yet implemented
+                    errors.push(SchemaError::Validation {
+                        path: sp.clone(),
+                        message: format!(
+                            "relationship '{}': weighted selection strategy is not yet implemented; use 'degree' with Zipf for non-uniform parent selection",
+                            rel.name
+                        ),
+                    });
+
+                    // Still validate weight_field for forward compatibility
+                    if let Some(parent) = entity_map.get(rel.to.as_str()) {
+                        let has_field = parent
+                            .fields
+                            .iter()
+                            .any(|f| f.name == *weight_field);
+                        if !has_field {
+                            errors.push(SchemaError::Validation {
+                                path: sp.clone(),
+                                message: format!(
+                                    "relationship '{}': weight_field '{}' not found on parent entity '{}'",
+                                    rel.name, weight_field, rel.to
+                                ),
+                            });
+                        } else {
+                            // Check that the field is numeric
+                            let field = parent
+                                .fields
+                                .iter()
+                                .find(|f| f.name == *weight_field)
+                                .unwrap();
+                            let is_numeric = matches!(
+                                field.data_type,
+                                crate::core::DataType::Int
+                                    | crate::core::DataType::Int32
+                                    | crate::core::DataType::Float
+                            );
+                            if !is_numeric {
+                                errors.push(SchemaError::Validation {
+                                    path: sp.clone(),
+                                    message: format!(
+                                        "relationship '{}': weight_field '{}' must be numeric (int, int32, or float), got {:?}",
+                                        rel.name, weight_field, field.data_type
+                                    ),
+                                });
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    // Simple strategies (uniform, sequential) need no extra validation
                 }
             }
         }
@@ -2761,6 +2853,8 @@ mod tests {
             foreign_key: None,
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2801,6 +2895,8 @@ mod tests {
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2842,6 +2938,8 @@ mod tests {
             foreign_key: Some("id".to_string()),
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2898,6 +2996,8 @@ mod tests {
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2954,6 +3054,8 @@ mod tests {
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let errors = validate(&model);
         // Should produce no relationship-related errors
@@ -2998,6 +3100,8 @@ mod tests {
             foreign_key: None,
             cardinality: None,
             degree: None,
+
+            selection: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3112,6 +3216,8 @@ mod tests {
             foreign_key: None,
             cardinality: None,
             degree: None,
+
+            selection: None,
         };
         model.relationships.push(rel.clone());
         model.relationships.push(rel);

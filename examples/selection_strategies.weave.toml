@@ -1,0 +1,108 @@
+# Selection Strategies Example
+#
+# Demonstrates FK target selection strategies: sequential (round-robin)
+# and clustered (locality-based) parent assignment.
+#
+# Run:
+#   knit generate selection_strategies.weave.toml -o output/
+
+schema_version = "1.0"
+
+[model]
+name = "selection_strategies"
+description = "FK selection strategies demo"
+seed = 42
+
+# ── Departments ──────────────────────────────────────────────
+[[entities]]
+name = "departments"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "company"
+
+# ── Employees (sequential assignment) ───────────────────────
+# Round-robin: employee 0 → dept 1, employee 1 → dept 2, etc.
+# Produces perfectly even distribution across departments.
+[[entities]]
+name = "employees"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "name"
+
+[[entities.fields]]
+name = "department_id"
+data_type = "int"
+
+[[relationships]]
+name = "employee_dept"
+from = "employees"
+to = "departments"
+kind = "many_to_one"
+foreign_key = "department_id"
+selection = "sequential"
+
+# ── Tasks (clustered assignment) ────────────────────────────
+# Clustered: consecutive tasks tend to reference the same employees.
+# Simulates locality (e.g., tasks assigned to nearby team members).
+[[entities]]
+name = "tasks"
+count = 500
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "title"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "sentence"
+
+[[entities.fields]]
+name = "assignee_id"
+data_type = "int"
+
+[[relationships]]
+name = "task_assignee"
+from = "tasks"
+to = "employees"
+kind = "many_to_one"
+foreign_key = "assignee_id"
+
+[relationships.selection]
+strategy = "clustered"
+cluster_size = 20

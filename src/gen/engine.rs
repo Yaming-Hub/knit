@@ -723,6 +723,7 @@ impl GenerationEngine {
                     target_entity,
                     key_store_kind,
                     degree,
+                    selection,
                     ..
                 } => {
                     // Try string key store first (UUID/String FKs), then int key store.
@@ -734,10 +735,41 @@ impl GenerationEngine {
                             store_len = sks.len(),
                             "using string FK generator"
                         );
-                        if let Some(dp) = degree {
-                            let target_partitions = Self::count_entity_partitions(plan, target_entity);
-                            let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
+                        let target_partitions = Self::count_entity_partitions(plan, target_entity);
+                        let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
 
+                        // Selection strategy takes priority (mutually exclusive with degree via validation)
+                        if let Some(sp) = selection {
+                            if is_sampled || target_partitions > 1 {
+                                tracing::warn!(
+                                    entity = %ep.entity_name,
+                                    field = %fp.field_name,
+                                    target = %target_entity,
+                                    "selection strategy requires in-memory single-partition parent — falling back to uniform FK"
+                                );
+                                Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
+                                    as Box<dyn FieldGenerator>
+                            } else {
+                                match sp {
+                                    crate::plan::SelectionPlan::Uniform => {
+                                        Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
+                                            as Box<dyn FieldGenerator>
+                                    }
+                                    crate::plan::SelectionPlan::Sequential => {
+                                        Box::new(crate::gen::generators::sequential_fk::SequentialStringForeignKeyGenerator::new(
+                                            Arc::clone(sks),
+                                        )) as Box<dyn FieldGenerator>
+                                    }
+                                    crate::plan::SelectionPlan::Clustered { cluster_size } => {
+                                        Box::new(crate::gen::generators::clustered_fk::ClusteredStringForeignKeyGenerator::new(
+                                            Arc::clone(sks),
+                                            *cluster_size,
+                                            ep.estimated_row_count,
+                                        )) as Box<dyn FieldGenerator>
+                                    }
+                                }
+                            }
+                        } else if let Some(dp) = degree {
                             if is_sampled {
                                 tracing::warn!(
                                     entity = %ep.entity_name,
@@ -810,7 +842,39 @@ impl GenerationEngine {
                                 }
                             }
                         }
-                        if let Some(dp) = degree {
+                        // Selection strategy takes priority (mutually exclusive with degree)
+                        if let Some(sp) = selection {
+                            let target_partitions = Self::count_entity_partitions(plan, target_entity);
+                            let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
+
+                            if is_sampled || target_partitions > 1 {
+                                tracing::warn!(
+                                    entity = %ep.entity_name,
+                                    field = %fp.field_name,
+                                    target = %target_entity,
+                                    "selection strategy requires in-memory single-partition parent — falling back to uniform FK"
+                                );
+                                Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                            } else {
+                                match sp {
+                                    crate::plan::SelectionPlan::Uniform => {
+                                        Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
+                                    }
+                                    crate::plan::SelectionPlan::Sequential => {
+                                        Box::new(crate::gen::generators::sequential_fk::SequentialForeignKeyGenerator::new(
+                                            Arc::clone(ks),
+                                        )) as Box<dyn FieldGenerator>
+                                    }
+                                    crate::plan::SelectionPlan::Clustered { cluster_size } => {
+                                        Box::new(crate::gen::generators::clustered_fk::ClusteredForeignKeyGenerator::new(
+                                            Arc::clone(ks),
+                                            *cluster_size,
+                                            ep.estimated_row_count,
+                                        )) as Box<dyn FieldGenerator>
+                                    }
+                                }
+                            }
+                        } else if let Some(dp) = degree {
                             let target_partitions = Self::count_entity_partitions(plan, target_entity);
                             let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
 
@@ -1638,6 +1702,8 @@ mod tests {
                                     target_field: "id".into(),
                                     key_store_kind: KeyStoreKind::InMemoryVec,
                                     degree: None,
+
+                                    selection: None,
                                 },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
@@ -1820,6 +1886,8 @@ mod tests {
                                 target_field: "id".into(),
                                 key_store_kind: KeyStoreKind::InMemoryVec,
                                 degree: None,
+
+                                selection: None,
                             },
                             null_plan: NullPlan::Never,
                             dependency_order: 1,

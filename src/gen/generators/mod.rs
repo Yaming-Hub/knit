@@ -7,6 +7,7 @@
 
 pub mod actor_fk;
 pub mod actor_temporal;
+pub mod clustered_fk;
 pub mod composite;
 pub mod conditional;
 pub mod constant;
@@ -23,6 +24,7 @@ pub mod one_of;
 pub mod pattern;
 pub mod persona_field;
 pub mod sequence;
+pub mod sequential_fk;
 pub mod string_fk;
 pub mod struct_gen;
 pub mod temporal;

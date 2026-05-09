@@ -274,6 +274,10 @@ pub enum GeneratorPlan {
         /// When set, some parents receive disproportionately more children.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         degree: Option<DegreePlan>,
+        /// Optional selection strategy for FK parent selection.
+        /// Mutually exclusive with `degree`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        selection: Option<SelectionPlan>,
     },
     /// Random UUID v4.
     Uuid,
@@ -527,6 +531,23 @@ pub struct DegreePlan {
     pub params: std::collections::BTreeMap<String, f64>,
     /// Planned parent row count (used as Zipf `n` when not explicitly set).
     pub parent_count: u64,
+}
+
+/// Compiled selection strategy for FK parent selection.
+///
+/// Pre-resolved from the schema-level `SelectionStrategy` so the generator
+/// can select parents without re-parsing the schema.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SelectionPlan {
+    /// Uniform random selection (the default).
+    Uniform,
+    /// Round-robin assignment: child row i → parent `(row_offset + i) % parent_count`.
+    Sequential,
+    /// Locality-based clustering: child rows reference nearby parents.
+    Clustered {
+        /// Window size controlling locality spread.
+        cluster_size: u64,
+    },
 }
 
 /// Temporal generation strategy.
