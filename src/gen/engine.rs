@@ -1240,6 +1240,7 @@ impl GenerationEngine {
         let bh_fallback = || -> Box<dyn FieldGenerator> {
             Box::new(crate::gen::generators::temporal::BusinessHoursGenerator::new(
                 &std::collections::BTreeMap::new(),
+                &std::collections::BTreeMap::new(),
             ))
         };
 

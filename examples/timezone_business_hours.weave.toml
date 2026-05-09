@@ -1,0 +1,97 @@
+# Timezone-aware business hours example
+# Generates meeting timestamps during business hours with timezone support.
+
+schema_version = "1.0"
+
+[model]
+name = "timezone_business_hours"
+description = "Meetings scheduled during business hours with timezone, date range, and holiday support"
+seed = 42
+
+[[entities]]
+name = "office"
+count = 5
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "city"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "New York", weight = 1.0 },
+    { value = "London", weight = 1.0 },
+    { value = "Tokyo", weight = 1.0 },
+    { value = "Sydney", weight = 1.0 },
+    { value = "Berlin", weight = 1.0 },
+]
+
+[[entities.fields]]
+name = "timezone"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "America/New_York", weight = 1.0 },
+    { value = "Europe/London", weight = 1.0 },
+    { value = "Asia/Tokyo", weight = 1.0 },
+    { value = "Australia/Sydney", weight = 1.0 },
+    { value = "Europe/Berlin", weight = 1.0 },
+]
+
+# Meetings with fixed timezone and restricted date range
+[[entities]]
+name = "meeting"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "office_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "title"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "bs"
+
+# Business hours with fixed timezone, custom days, date range, and holidays
+[[entities.fields]]
+name = "scheduled_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "business_hours"
+start_hour = 9
+end_hour = 17
+timezone = "America/New_York"
+days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+exclude_dates = ["2024-12-25", "2024-01-01", "2024-07-04"]
+
+[entities.fields.generator.date_range]
+min = "2024-01-01"
+max = "2024-12-31"
+
+[[relationships]]
+name = "meeting_office"
+from = "meeting"
+to = "office"
+kind = "many_to_one"
+from_field = "office_id"
+to_field = "id"

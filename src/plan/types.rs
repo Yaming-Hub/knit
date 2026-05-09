@@ -300,6 +300,9 @@ pub enum GeneratorPlan {
         params: BTreeMap<String, f64>,
         /// Optional base field for relative timestamps.
         base_field: Option<String>,
+        /// String parameters for timezone, exclude_dates, etc.
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        string_params: BTreeMap<String, String>,
     },
     /// Correlated field — generates values correlated with an existing column.
     Correlated {

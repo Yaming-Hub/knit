@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use arrow::array::{
-    ArrayRef, Float64Array, TimestampMicrosecondArray, TimestampMillisecondArray,
+    Array, ArrayRef, Float64Array, TimestampMicrosecondArray, TimestampMillisecondArray,
     TimestampNanosecondArray, TimestampSecondArray,
 };
 use arrow::datatypes::DataType;
@@ -284,52 +284,130 @@ impl FieldGenerator for TimeSeriesGenerator {
 
 /// Generates timestamps constrained to business hours.
 ///
-/// Each generated timestamp falls between `start_hour` and `end_hour` (UTC).
-/// If `weekdays_only` is true, Saturday and Sunday are skipped.
+/// Each generated timestamp falls between `start_hour` and `end_hour`.
+/// Active days are controlled by a bitmask (bit 0=Mon, bit 6=Sun).
+/// When a `timezone_field` is present, business hours are interpreted in
+/// each row's local timezone and converted to UTC for storage.
 ///
 /// # Output
 ///
-/// `DataType::Timestamp(Millisecond, None)`
+/// `DataType::Timestamp(Millisecond, None)` — always stored as UTC epoch millis.
 pub struct BusinessHoursGenerator {
-    /// Epoch-millis for the first possible date (rows are distributed forward from here).
-    start_date: i64,
+    /// Epoch-millis for the first possible date.
+    start_date_ms: i64,
+    /// Epoch-millis for the last possible date (end of day).
+    end_date_ms: Option<i64>,
     /// Inclusive start hour (0–23).
     start_hour: u8,
-    /// Exclusive end hour (0–23, must be > start_hour).
+    /// Exclusive end hour (1–24, must be > start_hour).
     end_hour: u8,
-    /// If true, skip Saturday (6) and Sunday (7).
-    weekdays_only: bool,
+    /// Bitmask of active days: bit 0=Mon, bit 1=Tue, ..., bit 6=Sun.
+    days_mask: u8,
+    /// Fixed IANA timezone (e.g. "America/New_York").
+    timezone: Option<chrono_tz::Tz>,
+    /// Name of the field containing per-row timezone strings.
+    timezone_field: Option<String>,
+    /// Set of NaiveDate values to exclude (holidays).
+    exclude_dates: std::collections::HashSet<NaiveDate>,
 }
 
 impl BusinessHoursGenerator {
     /// Create from plan parameters.
     ///
-    /// Expected keys: `start_date` (epoch ms), `start_hour`, `end_hour`, `weekdays_only` (0/1).
-    /// Hours are clamped to 0–23 to prevent `and_hms_opt` failures.
-    pub fn new(params: &BTreeMap<String, f64>) -> Self {
-        let start_date = params.get("start_date").copied().unwrap_or(0.0) as i64;
+    /// Numeric keys: `start_hour`, `end_hour`, `days_mask`,
+    /// `date_range_min_ms`, `date_range_max_ms`, `start_date`.
+    /// String keys: `timezone`, `timezone_field`, `exclude_dates`.
+    pub fn new(
+        params: &BTreeMap<String, f64>,
+        string_params: &BTreeMap<String, String>,
+    ) -> Self {
         let start_hour = (params.get("start_hour").copied().unwrap_or(9.0) as u8).min(23);
         let end_hour = (params.get("end_hour").copied().unwrap_or(17.0) as u8).min(24);
-        let weekdays_only = params.get("weekdays_only").copied().unwrap_or(1.0) != 0.0;
+        let end_hour = end_hour.max(start_hour + 1).min(24);
+        let days_mask = params.get("days_mask").copied().unwrap_or(31.0) as u8;
+
+        let start_date_ms = params
+            .get("date_range_min_ms")
+            .or_else(|| params.get("start_date"))
+            .copied()
+            .unwrap_or(0.0) as i64;
+        let end_date_ms = params
+            .get("date_range_max_ms")
+            .map(|v| *v as i64 + 86_400_000 - 1); // end of max day (inclusive)
+
+        let timezone = string_params
+            .get("timezone")
+            .and_then(|s| s.parse::<chrono_tz::Tz>().ok());
+        let timezone_field = string_params.get("timezone_field").cloned();
+
+        let exclude_dates: std::collections::HashSet<NaiveDate> = string_params
+            .get("exclude_dates")
+            .map(|s| {
+                s.split(',')
+                    .filter_map(|d| NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").ok())
+                    .collect()
+            })
+            .unwrap_or_default();
+
         Self {
-            start_date,
+            start_date_ms,
+            end_date_ms,
             start_hour,
-            end_hour: end_hour.max(start_hour + 1).min(24),
-            weekdays_only,
+            end_hour,
+            days_mask,
+            timezone,
+            timezone_field,
+            exclude_dates,
         }
+    }
+
+    /// Check if a weekday (0=Mon, 6=Sun) is active per the days_mask.
+    fn is_active_day(&self, weekday_from_monday: u32) -> bool {
+        // If days_mask is 0 (no active days), treat all days as active to prevent infinite loop
+        if self.days_mask == 0 {
+            return true;
+        }
+        self.days_mask & (1 << weekday_from_monday) != 0
+    }
+
+    /// Check if a date is excluded.
+    fn is_excluded(&self, date: &NaiveDate) -> bool {
+        self.exclude_dates.contains(date)
+    }
+
+    /// Resolve timezone for a given row from batch_columns, falling back to
+    /// the fixed timezone or UTC.
+    fn resolve_tz(
+        &self,
+        row_idx: usize,
+        ctx: &crate::gen::context::GenContext,
+    ) -> chrono_tz::Tz {
+        if let Some(ref tz_field) = self.timezone_field {
+            if let Some(col) = ctx.batch_columns.get(tz_field) {
+                if let Some(arr) = col.as_any().downcast_ref::<arrow::array::StringArray>() {
+                    if row_idx < arr.len() && !arr.is_null(row_idx) {
+                        if let Ok(tz) = arr.value(row_idx).parse::<chrono_tz::Tz>() {
+                            return tz;
+                        }
+                    }
+                }
+            }
+        }
+        self.timezone.unwrap_or(chrono_tz::UTC)
     }
 }
 
 impl FieldGenerator for BusinessHoursGenerator {
     fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        let hour_range_ms = (self.end_hour as i64 - self.start_hour as i64) * 3_600_000;
-        let intra_day = Uniform::new(0i64, hour_range_ms.max(1));
+        let nominal_range_ms = (self.end_hour as i64 - self.start_hour as i64) * 3_600_000;
         let base_offset = ctx.row_offset as i64;
 
+        let has_per_row_tz = self.timezone_field.is_some();
+        let fixed_tz = self.timezone;
+
         let mut values = Vec::with_capacity(count);
-        // Start from start_date and advance day by day, placing rows in valid slots.
         let start_dt = Utc
-            .timestamp_millis_opt(self.start_date)
+            .timestamp_millis_opt(self.start_date_ms)
             .single()
             .unwrap_or_else(|| {
                 Utc.timestamp_millis_opt(0)
@@ -339,31 +417,161 @@ impl FieldGenerator for BusinessHoursGenerator {
 
         let mut day_cursor: NaiveDate = start_dt.date_naive();
 
-        // Advance cursor by row_offset worth of business days to keep partitions distinct.
+        // Helper: compute actual UTC start/end millis for a given day + timezone.
+        // On DST transition days the real interval may differ from the nominal span.
+        let compute_utc_interval =
+            |date: &NaiveDate, tz: chrono_tz::Tz, sh: u8, eh: u8| -> (i64, i64) {
+                let local_start = date.and_hms_opt(sh as u32, 0, 0).unwrap();
+                let local_end = if eh == 24 {
+                    (*date + chrono::Duration::days(1))
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap()
+                } else {
+                    date.and_hms_opt(eh as u32, 0, 0).unwrap()
+                };
+                let utc_start = tz
+                    .from_local_datetime(&local_start)
+                    .earliest()
+                    .unwrap_or_else(|| {
+                        // Nonexistent (DST spring-forward): try +1h
+                        tz.from_local_datetime(
+                            &date
+                                .and_hms_opt((sh as u32 + 1).min(23), 0, 0)
+                                .unwrap(),
+                        )
+                        .earliest()
+                        .unwrap_or_else(|| {
+                            Utc.timestamp_millis_opt(0)
+                                .single()
+                                .unwrap()
+                                .with_timezone(&tz)
+                        })
+                    })
+                    .with_timezone(&Utc)
+                    .timestamp_millis();
+                let utc_end = tz
+                    .from_local_datetime(&local_end)
+                    .earliest()
+                    .unwrap_or_else(|| {
+                        tz.from_local_datetime(
+                            &date
+                                .and_hms_opt((eh as u32).min(23), 0, 0)
+                                .unwrap(),
+                        )
+                        .earliest()
+                        .unwrap_or_else(|| {
+                            Utc.timestamp_millis_opt(0)
+                                .single()
+                                .unwrap()
+                                .with_timezone(&tz)
+                        })
+                    })
+                    .with_timezone(&Utc)
+                    .timestamp_millis();
+                (utc_start, utc_end.max(utc_start + 1))
+            };
+
+        // Max days to search before giving up (prevents infinite loop on impossible configs)
+        let max_search_days: i64 = if self.end_date_ms.is_some() {
+            // If date range is set, one full cycle + 7 should suffice
+            let range_days = (self.end_date_ms.unwrap() - self.start_date_ms) / 86_400_000 + 7;
+            range_days.max(14)
+        } else {
+            // Without date range, 365 days should find at least one valid day
+            365
+        };
+
+        // Advance cursor by row_offset worth of valid days for partition safety.
         let mut skip = base_offset;
+        let mut search_count: i64 = 0;
         while skip > 0 {
-            let wd = day_cursor.weekday().num_days_from_monday(); // 0=Mon
-            if !self.weekdays_only || wd < 5 {
+            if search_count > max_search_days + skip {
+                tracing::warn!("BusinessHoursGenerator: no valid days found after {} searches during offset skip", search_count);
+                break;
+            }
+            let wd = day_cursor.weekday().num_days_from_monday();
+            if self.is_active_day(wd) && !self.is_excluded(&day_cursor) {
+                if let Some(end_ms) = self.end_date_ms {
+                    let day_ms = day_cursor
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap()
+                        .and_utc()
+                        .timestamp_millis();
+                    if day_ms > end_ms {
+                        day_cursor = start_dt.date_naive();
+                        search_count += 1;
+                        continue;
+                    }
+                }
                 skip -= 1;
             }
             day_cursor += chrono::Duration::days(1);
+            search_count += 1;
         }
 
         let mut generated = 0;
+        let mut consecutive_invalid = 0i64;
         while generated < count {
+            if consecutive_invalid > max_search_days {
+                tracing::warn!("BusinessHoursGenerator: no valid days found after {} consecutive searches, stopping generation", consecutive_invalid);
+                break;
+            }
+
             let wd = day_cursor.weekday().num_days_from_monday();
-            if self.weekdays_only && wd >= 5 {
+            if !self.is_active_day(wd) || self.is_excluded(&day_cursor) {
                 day_cursor += chrono::Duration::days(1);
+                if let Some(end_ms) = self.end_date_ms {
+                    let day_ms = day_cursor
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap()
+                        .and_utc()
+                        .timestamp_millis();
+                    if day_ms > end_ms {
+                        day_cursor = start_dt.date_naive();
+                    }
+                }
+                consecutive_invalid += 1;
                 continue;
             }
-            let day_start = day_cursor
-                .and_hms_opt(self.start_hour as u32, 0, 0)
-                .expect("start_hour is clamped to 0–23; and_hms_opt cannot fail");
-            let day_start_ms = day_start.and_utc().timestamp_millis();
-            let offset = intra_day.sample(rng);
-            values.push(day_start_ms + offset);
+            consecutive_invalid = 0;
+
+            if has_per_row_tz {
+                // Per-row timezone: compute real UTC interval for this day
+                let tz = self.resolve_tz(generated, ctx);
+                let (utc_start, utc_end) =
+                    compute_utc_interval(&day_cursor, tz, self.start_hour, self.end_hour);
+                let range = utc_end - utc_start;
+                let offset_ms = Uniform::new(0i64, range.max(1)).sample(rng);
+                values.push(utc_start + offset_ms);
+            } else if let Some(tz) = fixed_tz {
+                // Fixed timezone: compute real UTC interval for this day
+                let (utc_start, utc_end) =
+                    compute_utc_interval(&day_cursor, tz, self.start_hour, self.end_hour);
+                let range = utc_end - utc_start;
+                let offset_ms = Uniform::new(0i64, range.max(1)).sample(rng);
+                values.push(utc_start + offset_ms);
+            } else {
+                // No timezone — interpret as UTC (backward compatible)
+                let day_start = day_cursor
+                    .and_hms_opt(self.start_hour as u32, 0, 0)
+                    .expect("start_hour is clamped to 0–23");
+                let day_start_ms = day_start.and_utc().timestamp_millis();
+                let offset_ms = Uniform::new(0i64, nominal_range_ms.max(1)).sample(rng);
+                values.push(day_start_ms + offset_ms);
+            }
+
             generated += 1;
             day_cursor += chrono::Duration::days(1);
+            if let Some(end_ms) = self.end_date_ms {
+                let day_ms = day_cursor
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_utc()
+                    .timestamp_millis();
+                if day_ms > end_ms {
+                    day_cursor = start_dt.date_naive();
+                }
+            }
         }
 
         Arc::new(TimestampMillisecondArray::from(values))
@@ -443,8 +651,8 @@ mod tests {
         params.insert("start_date".into(), 1_704_067_200_000.0);
         params.insert("start_hour".into(), 9.0);
         params.insert("end_hour".into(), 17.0);
-        params.insert("weekdays_only".into(), 1.0);
-        let gen = BusinessHoursGenerator::new(&params);
+        params.insert("days_mask".into(), 0x1F as f64);
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
@@ -470,8 +678,8 @@ mod tests {
         params.insert("start_date".into(), 1_704_067_200_000.0);
         params.insert("start_hour".into(), 30.0);
         params.insert("end_hour".into(), 50.0);
-        params.insert("weekdays_only".into(), 0.0);
-        let gen = BusinessHoursGenerator::new(&params);
+        params.insert("days_mask".into(), 0x7F as f64);
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         // Should not panic — hours are clamped
         let mut rng = ChaCha8Rng::seed_from_u64(42);
@@ -487,8 +695,8 @@ mod tests {
         params.insert("start_date".into(), 1_704_067_200_000.0);
         params.insert("start_hour".into(), 20.0);
         params.insert("end_hour".into(), 24.0);
-        params.insert("weekdays_only".into(), 0.0);
-        let gen = BusinessHoursGenerator::new(&params);
+        params.insert("days_mask".into(), 0x7F as f64);
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
@@ -732,8 +940,8 @@ mod tests {
         params.insert("start_date".into(), 1_704_499_200_000.0);
         params.insert("start_hour".into(), 0.0);
         params.insert("end_hour".into(), 24.0);
-        params.insert("weekdays_only".into(), 0.0);
-        let gen = BusinessHoursGenerator::new(&params);
+        params.insert("days_mask".into(), 0x7F as f64);
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
@@ -765,8 +973,8 @@ mod tests {
         params.insert("start_date".into(), 1_704_067_200_000.0);
         params.insert("start_hour".into(), 9.0);
         params.insert("end_hour".into(), 17.0);
-        params.insert("weekdays_only".into(), 1.0);
-        let gen = BusinessHoursGenerator::new(&params);
+        params.insert("days_mask".into(), 0x1F as f64);
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let ctx = empty_ctx();
         let mut rng1 = ChaCha8Rng::seed_from_u64(42);
@@ -784,6 +992,150 @@ mod tests {
             .unwrap();
         for i in 0..20 {
             assert_eq!(ts1.value(i), ts2.value(i), "row {i} mismatch");
+        }
+    }
+
+    #[test]
+    fn business_hours_days_mask() {
+        // Only Tuesday and Thursday (bits 1 and 3)
+        let mut params = BTreeMap::new();
+        // 2024-01-01 is Monday
+        params.insert("start_date".into(), 1_704_067_200_000.0);
+        params.insert("start_hour".into(), 9.0);
+        params.insert("end_hour".into(), 17.0);
+        params.insert("days_mask".into(), 10.0); // bits 1 and 3 = Tue + Thu
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 20, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        for i in 0..20 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let wd = dt.weekday().num_days_from_monday();
+            assert!(
+                wd == 1 || wd == 3,
+                "row {i}: expected Tue(1) or Thu(3), got weekday {wd}"
+            );
+        }
+    }
+
+    #[test]
+    fn business_hours_exclude_dates() {
+        let mut params = BTreeMap::new();
+        // 2024-01-01 is Monday
+        params.insert("start_date".into(), 1_704_067_200_000.0);
+        params.insert("start_hour".into(), 9.0);
+        params.insert("end_hour".into(), 17.0);
+        params.insert("days_mask".into(), 127.0); // all days
+        let mut string_params = BTreeMap::new();
+        // Exclude Jan 2 and Jan 3
+        string_params.insert(
+            "exclude_dates".into(),
+            "2024-01-02,2024-01-03".into(),
+        );
+        let gen = BusinessHoursGenerator::new(&params, &string_params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 10, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        for i in 0..10 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let date = dt.date_naive();
+            assert_ne!(
+                date,
+                NaiveDate::from_ymd_opt(2024, 1, 2).unwrap(),
+                "row {i}: should skip Jan 2"
+            );
+            assert_ne!(
+                date,
+                NaiveDate::from_ymd_opt(2024, 1, 3).unwrap(),
+                "row {i}: should skip Jan 3"
+            );
+        }
+    }
+
+    #[test]
+    fn business_hours_date_range_wraps() {
+        let mut params = BTreeMap::new();
+        params.insert("start_hour".into(), 0.0);
+        params.insert("end_hour".into(), 24.0);
+        params.insert("days_mask".into(), 127.0); // all days
+        // 2024-01-01 to 2024-01-05 (5 days)
+        let min_ms = NaiveDate::from_ymd_opt(2024, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_millis() as f64;
+        let max_ms = NaiveDate::from_ymd_opt(2024, 1, 5)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_millis() as f64;
+        params.insert("date_range_min_ms".into(), min_ms);
+        params.insert("date_range_max_ms".into(), max_ms);
+        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        // Generate more rows than days to force wrapping
+        let arr = gen.generate(&mut rng, 15, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        let min_date = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+        let max_date = NaiveDate::from_ymd_opt(2024, 1, 5).unwrap();
+        for i in 0..15 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let date = dt.date_naive();
+            assert!(
+                date >= min_date && date <= max_date,
+                "row {i}: date {date} outside range {min_date}..{max_date}"
+            );
+        }
+    }
+
+    #[test]
+    fn business_hours_fixed_timezone() {
+        let mut params = BTreeMap::new();
+        // 2024-01-15 (Monday) — no DST in January
+        params.insert("start_date".into(), 1_705_276_800_000.0);
+        params.insert("start_hour".into(), 9.0);
+        params.insert("end_hour".into(), 17.0);
+        params.insert("days_mask".into(), 31.0); // weekdays
+        let mut string_params = BTreeMap::new();
+        string_params.insert("timezone".into(), "America/New_York".into());
+        let gen = BusinessHoursGenerator::new(&params, &string_params);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let ctx = empty_ctx();
+        let arr = gen.generate(&mut rng, 10, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        // In January, EST is UTC-5. 9 AM EST = 14 UTC, 5 PM EST = 22 UTC
+        for i in 0..10 {
+            let dt = Utc.timestamp_millis_opt(ts.value(i)).unwrap();
+            let hour = dt.hour();
+            assert!(
+                (14..22).contains(&hour),
+                "row {i}: UTC hour {hour} should be in 14–22 (9-17 EST)"
+            );
         }
     }
 }

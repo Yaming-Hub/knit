@@ -6,6 +6,16 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Timezone-aware business hours** — Full timezone, date range, and holiday
+  support for business hours timestamps (spec §6.13):
+  - `timezone = "America/New_York"` for fixed timezone (local→UTC conversion)
+  - `timezone_field = "tz_col"` for per-row timezone from another field
+  - `days = ["Monday", "Wednesday", "Friday"]` for custom active days
+  - `date_range = { min = "2024-01-01", max = "2024-12-31" }` to constrain dates
+  - `exclude_dates = ["2024-12-25", "2024-07-04"]` for holidays/blackout dates
+  - DST-aware: ambiguous → earliest, nonexistent → shift forward
+  - Validation: timezone/timezone_field mutual exclusivity, day names, date formats
+  - New example: `examples/timezone_business_hours.weave.toml`
 - **Conditional distributions** — Model distribution-dependent correlations
   between fields (spec §8.3):
   - `type = "conditional_distribution"` on `[[correlations]]`

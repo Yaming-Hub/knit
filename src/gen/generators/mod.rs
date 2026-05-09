@@ -127,6 +127,7 @@ pub fn create_generator_with_seen(
             kind,
             params,
             base_field,
+            string_params,
         } => match kind {
             crate::plan::TemporalKind::Relative => {
                 let base = base_field.clone().unwrap_or_default();
@@ -136,7 +137,7 @@ pub fn create_generator_with_seen(
                 Box::new(temporal::TimeSeriesGenerator::new(params))
             }
             crate::plan::TemporalKind::BusinessHours => {
-                Box::new(temporal::BusinessHoursGenerator::new(params))
+                Box::new(temporal::BusinessHoursGenerator::new(params, string_params))
             }
         },
         GeneratorPlan::Correlated {
