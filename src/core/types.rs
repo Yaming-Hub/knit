@@ -99,6 +99,9 @@ pub struct DataModel {
     /// User-defined custom domain types (type + generator + constraint bundles).
     #[serde(default, rename = "types", skip_serializing_if = "Vec::is_empty")]
     pub custom_types: Vec<CustomType>,
+    /// Reusable field groups that can be included in multiple entities.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mixins: Vec<Mixin>,
 }
 
 impl Default for DataModel {
@@ -118,6 +121,7 @@ impl Default for DataModel {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         }
     }
 }
@@ -148,6 +152,26 @@ pub struct CustomType {
     /// Default nullable specification.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nullable: Option<NullSpec>,
+}
+
+// ── Mixins ───────────────────────────────────────────────────────────
+
+/// A reusable group of fields that can be included in multiple entities.
+///
+/// Mixins are defined in the `[[mixins]]` section of a schema and
+/// referenced by entities via `mixins = ["name"]`. During schema
+/// resolution, the mixin's fields are prepended to the entity's fields.
+/// Entity fields with the same name override the mixin's definition.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Mixin {
+    /// Unique name for this mixin (e.g. `"timestamped"`, `"auditable"`).
+    pub name: String,
+    /// Optional free-text description.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// Fields contributed by this mixin.
+    #[serde(default)]
+    pub fields: Vec<Field>,
 }
 
 // ── Entity & Field ───────────────────────────────────────────────────
@@ -189,6 +213,9 @@ pub struct Entity {
     /// fallback estimate for planning when the actor pool is unavailable.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activity_count: Option<ActivityCount>,
+    /// List of mixin names to include (consumed during resolution).
+    #[serde(default, rename = "mixins", skip_serializing_if = "Option::is_none")]
+    pub mixin_refs: Option<Vec<String>>,
 }
 
 /// A single field (column) within an [`Entity`].
@@ -1571,6 +1598,7 @@ mod tests {
                 actor: false,
                 persona_distribution: None,
                 activity_count: None,
+                mixin_refs: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -1593,6 +1621,7 @@ mod tests {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         };
 
         let toml_str = toml::to_string_pretty(&model).unwrap();
@@ -1739,6 +1768,7 @@ mod tests {
             actor: true,
             persona_distribution: Some("personas".into()),
             activity_count: None,
+                mixin_refs: None,
         };
         let json = serde_json::to_string(&entity).unwrap();
         assert!(json.contains("\"actor\":true"));

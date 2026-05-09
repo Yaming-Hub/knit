@@ -21,6 +21,7 @@ grammar and exhaustive reference, see the
 - [Correlations](#correlations)
 - [Noise Profiles](#noise-profiles)
 - [Custom Types](#custom-types)
+- [Mixins](#mixins)
 - [Constraints](#constraints)
 
 ---
@@ -969,6 +970,84 @@ params = { min = 0.0, max = 25.0 }
   `DataType::Custom`
 
 See `examples/custom_types.weave.toml` for a complete working example.
+
+---
+
+## Mixins
+
+Mixins define reusable groups of fields that can be included in multiple
+entities. This eliminates duplication for common patterns like audit trails,
+timestamps, or versioning fields.
+
+### Defining Mixins
+
+```toml
+[[mixins]]
+name = "timestamped"
+description = "Standard audit trail timestamps"
+
+[[mixins.fields]]
+name = "created_at"
+data_type = "datetime"
+
+[[mixins.fields]]
+name = "updated_at"
+data_type = "datetime"
+
+[[mixins]]
+name = "versioned"
+description = "Version tracking"
+
+[[mixins.fields]]
+name = "version"
+data_type = "int"
+[mixins.fields.generator]
+type = "distribution"
+kind = "geometric"
+params = { p = 0.7 }
+```
+
+### Using Mixins
+
+Reference mixins by name in the entity's `mixins` array:
+
+```toml
+[[entities]]
+name = "order"
+count = 500
+mixins = ["timestamped", "versioned"]
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+```
+
+This produces an entity with fields: `created_at`, `updated_at` (from
+`timestamped`), `version` (from `versioned`), then `id` (entity's own field).
+
+### Override Behavior
+
+- **Mixin fields are prepended** — they appear before entity fields in output
+- **Entity fields override mixin fields** — if an entity defines a field with
+  the same name as a mixin field, the entity's definition wins
+- **Mixin-vs-mixin collisions are errors** — if two mixins in the same entity
+  define a field with the same name, resolution fails with a clear error
+- **Mixins work with custom types** — mixin fields can use custom type
+  references (mixins are resolved before custom types)
+
+```toml
+# Entity overrides the mixin's created_at with its own definition
+[[entities]]
+name = "order"
+mixins = ["timestamped"]
+
+[[entities.fields]]
+name = "created_at"
+data_type = "string"  # overrides mixin's datetime
+```
+
+See `examples/mixins.weave.toml` for a complete working example.
 
 ---
 

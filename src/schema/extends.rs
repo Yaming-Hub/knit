@@ -133,6 +133,19 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
         }
     }
 
+    // Merge mixins by name
+    for child_mixin in &child.mixins {
+        if let Some(parent_mixin) = result
+            .mixins
+            .iter_mut()
+            .find(|m| m.name == child_mixin.name)
+        {
+            *parent_mixin = child_mixin.clone();
+        } else {
+            result.mixins.push(child_mixin.clone());
+        }
+    }
+
     result
 }
 
@@ -157,6 +170,10 @@ fn merge_entity(parent: &mut Entity, child: &Entity) {
     }
     if child.activity_count.is_some() {
         parent.activity_count = child.activity_count.clone();
+    }
+    // Child's mixin_refs replace parent's (if specified)
+    if child.mixin_refs.is_some() {
+        parent.mixin_refs = child.mixin_refs.clone();
     }
 
     // Merge fields by name
@@ -256,6 +273,7 @@ mod tests {
                 actor: false,
                 persona_distribution: None,
                 activity_count: None,
+                mixin_refs: None,
             }],
             relationships: vec![Relationship {
                 name: "user_order".to_string(),
@@ -272,6 +290,7 @@ mod tests {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         }
     }
 
@@ -291,6 +310,7 @@ mod tests {
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
+            mixins: Vec::new(),
         }
     }
 
@@ -319,6 +339,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 2);
@@ -339,6 +360,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 1);
@@ -369,6 +391,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities[0].fields.len(), 3);
@@ -399,6 +422,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         let merged = merge_models(&parent, &child);
         let email = merged.entities[0]
@@ -465,6 +489,7 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         });
         let merged = merge_models(&parent, &child);
         // Parent constraints & topology preserved since child has empty/None

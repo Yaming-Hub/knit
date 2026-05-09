@@ -1,0 +1,110 @@
+# Mixins Example
+#
+# Demonstrates reusable field groups that can be included in multiple entities.
+# Mixin fields are prepended; entity fields with the same name override the mixin.
+
+schema_version = "1.0"
+
+[model]
+name = "mixins_demo"
+seed = 42
+
+# ── Custom Types ────────────────────────────────────────────
+
+[[types]]
+name = "money"
+base = "float"
+precision = 2
+[types.generator]
+type = "distribution"
+kind = "log_normal"
+params = { mu = 4.0, sigma = 0.8 }
+
+# ── Mixins ──────────────────────────────────────────────────
+
+[[mixins]]
+name = "timestamped"
+description = "Standard audit trail timestamps"
+
+[[mixins.fields]]
+name = "created_at"
+data_type = "datetime"
+
+[[mixins.fields]]
+name = "updated_at"
+data_type = "datetime"
+
+[[mixins]]
+name = "versioned"
+description = "Version tracking"
+
+[[mixins.fields]]
+name = "version"
+data_type = "int"
+[mixins.fields.generator]
+type = "distribution"
+kind = "geometric"
+params = { p = 0.7 }
+
+# ── Entities ────────────────────────────────────────────────
+
+[[entities]]
+name = "customer"
+count = 100
+mixins = ["timestamped"]
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "name"
+
+[[entities.fields]]
+name = "email"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "email"
+
+# ── Orders use both timestamped and versioned mixins ────────
+
+[[entities]]
+name = "order"
+count = 500
+mixins = ["timestamped", "versioned"]
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "customer_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "total"
+data_type = "money"
+
+# ── Relationships ───────────────────────────────────────────
+
+[[relationships]]
+name = "order_customer"
+from = "order"
+to = "customer"
+kind = "many_to_one"
+foreign_key = "customer_id"

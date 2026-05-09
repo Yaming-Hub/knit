@@ -445,6 +445,7 @@ fn minimal_data_model_roundtrip() {
             actor: false,
             persona_distribution: None,
             activity_count: None,
+                mixin_refs: None,
         }],
         relationships: vec![],
         noise_profiles: vec![],
@@ -454,6 +455,7 @@ fn minimal_data_model_roundtrip() {
         personas: Vec::new(),
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
+            mixins: Vec::new(),
     };
 
     let json = serde_json::to_string_pretty(&model).unwrap();

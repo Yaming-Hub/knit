@@ -6,6 +6,16 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Mixins** — Reusable field groups that can be included in multiple entities
+  via the `[[mixins]]` schema section (spec §5.6).
+  - Define named field groups with `[[mixins]]` and reference them with
+    `mixins = ["name"]` on entities
+  - Mixin fields are prepended to entity fields in declared order
+  - Entity fields with the same name override mixin definitions
+  - Mixin-vs-mixin field name collisions produce clear errors
+  - Works with custom types (mixin fields can use custom type references)
+  - Works with include and extends composition (mixins merge by name)
+  - New example: `examples/mixins.weave.toml`
 - **Custom domain types** — Define reusable type aliases with default generators,
   precision, and nullable settings via the `[[types]]` schema section (spec §4.3).
   - Fields using a custom type inherit `base`, `generator`, `precision`, and
