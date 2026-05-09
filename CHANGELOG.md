@@ -75,6 +75,16 @@ All notable changes to Knit are documented in this file.
     field references
   - Learn output validation: `knit learn` now validates assembled schemas
     and warns about issues before writing output
+- **Copula-based joint distributions** — Multivariate dependency modeling via
+  copula families (spec §8.4):
+  - Gaussian copula: arbitrary n-dimensional with Cholesky decomposition
+  - Clayton copula: bivariate, lower-tail dependence (θ > 0)
+  - Frank copula: bivariate, symmetric dependence (θ ≠ 0)
+  - Gumbel copula: bivariate, upper-tail dependence (θ ≥ 1)
+  - Marginal distribution preservation via inverse CDF transform
+  - Schema validation: family-specific parameter checks, PSD matrix verification,
+    Archimedean family restricted to exactly 2 fields
+  - Entity-level plan compilation with `CopulaPlan` on `EntityPlan`
 
 ## [0.3.0] — 2026-05-08
 

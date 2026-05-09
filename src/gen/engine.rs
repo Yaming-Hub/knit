@@ -1212,6 +1212,7 @@ impl GenerationEngine {
         let mut field_names = Vec::with_capacity(ep.field_plans.len());
         let mut field_arrays = Vec::with_capacity(ep.field_plans.len());
 
+        // Phase 1: Generate raw field values (no post-processing yet)
         for (i, fp) in ep.field_plans.iter().enumerate() {
             let ctx = GenContext::new(
                 &batch_columns,
@@ -1223,13 +1224,37 @@ impl GenerationEngine {
             .with_params(&self.params);
 
             let arr = generators[i].generate(rng, count, &ctx);
-            let arr = apply_precision(arr, fp.precision);
-            let arr = coerce_to_logical_type(arr, &fp.data_type);
-            let arr = apply_null_mask(arr, &fp.null_plan, rng, count)?;
-
             batch_columns.insert(fp.field_name.clone(), Arc::clone(&arr));
             field_names.push(fp.field_name.clone());
             field_arrays.push(arr);
+        }
+
+        // Phase 2: Apply copula plans — replace independently generated columns
+        // with jointly correlated values via the specified copula.
+        if !ep.copula_plans.is_empty() {
+            crate::gen::generators::copula::apply_copula_plans(
+                &ep.copula_plans,
+                &mut batch_columns,
+                rng,
+                count,
+            );
+            // Update field_arrays with the copula-transformed columns
+            for (i, name) in field_names.iter().enumerate() {
+                if let Some(arr) = batch_columns.get(name) {
+                    field_arrays[i] = Arc::clone(arr);
+                }
+            }
+        }
+
+        // Phase 3: Apply post-processing (precision, type coercion, nulls)
+        // after copula so that copula fields get proper null masks and types.
+        for (i, fp) in ep.field_plans.iter().enumerate() {
+            let arr = Arc::clone(&field_arrays[i]);
+            let arr = apply_precision(arr, fp.precision);
+            let arr = coerce_to_logical_type(arr, &fp.data_type);
+            let arr = apply_null_mask(arr, &fp.null_plan, rng, count)?;
+            batch_columns.insert(fp.field_name.clone(), Arc::clone(&arr));
+            field_arrays[i] = arr;
         }
 
         assemble_batch(&field_names, field_arrays)
@@ -1443,6 +1468,7 @@ mod tests {
                         estimated_row_count: 100,
                         estimated_byte_size: 800,
                         primary_key_field_index: Some(0),
+                    copula_plans: vec![],
                     }],
                     deferred_refs: vec![],
                 },
@@ -1483,6 +1509,7 @@ mod tests {
                         estimated_row_count: 500,
                         estimated_byte_size: 4000,
                         primary_key_field_index: Some(0),
+                    copula_plans: vec![],
                     }],
                     deferred_refs: vec![],
                 },
@@ -1661,6 +1688,7 @@ mod tests {
                     estimated_row_count: 50,
                     estimated_byte_size: 400,
                     primary_key_field_index: Some(0),
+                    copula_plans: vec![],
                 }],
                 deferred_refs: vec![DeferredRef {
                     from_entity: "employee".into(),
@@ -1819,6 +1847,7 @@ mod tests {
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
                     primary_key_field_index: Some(0),
+                    copula_plans: vec![],
                 }],
                 deferred_refs: vec![],
             }],
@@ -1903,6 +1932,7 @@ mod tests {
                     estimated_row_count: 25,
                     estimated_byte_size: 200,
                     primary_key_field_index: Some(0),
+                    copula_plans: vec![],
                 }],
                 deferred_refs: vec![],
             }],
@@ -2026,6 +2056,7 @@ mod tests {
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
                     primary_key_field_index: Some(0),
+                    copula_plans: vec![],
                 }],
                 deferred_refs: vec![],
             }],
@@ -2152,3 +2183,4 @@ mod tests {
         assert!(result.as_any().downcast_ref::<Int64Array>().is_some());
     }
 }
+

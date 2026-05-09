@@ -10,6 +10,7 @@ pub mod actor_temporal;
 pub mod composite;
 pub mod conditional;
 pub mod constant;
+pub mod copula;
 pub mod correlation;
 pub mod derived;
 pub mod dictionary;

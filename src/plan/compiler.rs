@@ -139,6 +139,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
                 estimated_row_count: row_count,
                 estimated_byte_size,
                 primary_key_field_index,
+                copula_plans: compile_copula_plans(entity_name, entity, &model.correlations),
             });
         }
 
@@ -1174,6 +1175,95 @@ fn select_key_store_kind(row_count: u64) -> KeyStoreKind {
     } else {
         KeyStoreKind::InMemoryVec
     }
+}
+
+/// Compile copula plans for an entity from the model's correlations.
+fn compile_copula_plans(
+    entity_name: &str,
+    entity: &Entity,
+    correlations: &[crate::core::Correlation],
+) -> Vec<CopulaPlan> {
+    correlations
+        .iter()
+        .filter(|c| c.entity == entity_name && c.copula.is_some())
+        .filter_map(|c| {
+            let copula = c.copula.as_ref().unwrap();
+            let n = c.fields.len();
+
+            // Build marginal info from field distribution generators
+            let marginals: Vec<MarginalInfo> = c
+                .fields
+                .iter()
+                .filter_map(|field_name| {
+                    let field = entity.fields.iter().find(|f| &f.name == field_name)?;
+                    match &field.generator {
+                        Some(GeneratorSpec::Distribution { spec }) => Some(MarginalInfo {
+                            kind: spec.kind.clone(),
+                            params: spec.params.clone(),
+                            round: spec.round,
+                        }),
+                        _ => None,
+                    }
+                })
+                .collect();
+
+            // Skip if not all fields have distribution generators
+            if marginals.len() != n {
+                return None;
+            }
+
+            let cholesky_l = if copula.family == crate::core::CopulaFamily::Gaussian {
+                let result = cholesky_decompose(&c.matrix);
+                if result.is_none() {
+                    tracing::warn!(
+                        entity = %entity.name,
+                        fields = ?c.fields,
+                        "Cholesky decomposition failed for Gaussian copula — \
+                         correlation matrix may be singular; copula will use \
+                         identity (independent) fallback"
+                    );
+                }
+                result
+            } else {
+                None
+            };
+
+            let theta = copula.params.get("theta").copied();
+
+            Some(CopulaPlan {
+                fields: c.fields.clone(),
+                family: copula.family,
+                cholesky_l,
+                theta,
+                marginals,
+            })
+        })
+        .collect()
+}
+
+/// Cholesky decomposition of a symmetric positive-definite matrix.
+/// Returns the lower-triangular matrix L such that A = L·Lᵀ.
+fn cholesky_decompose(matrix: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
+    let n = matrix.len();
+    let mut l = vec![vec![0.0f64; n]; n];
+
+    for i in 0..n {
+        for j in 0..=i {
+            let sum: f64 = l[i].iter().zip(l[j].iter()).take(j).map(|(a, b)| a * b).sum();
+            if i == j {
+                let diag = matrix[i][i] - sum;
+                if diag < -1e-10 {
+                    return None;
+                }
+                l[i][j] = diag.max(0.0).sqrt();
+            } else if l[j][j].abs() < 1e-15 {
+                return None;
+            } else {
+                l[i][j] = (matrix[i][j] - sum) / l[j][j];
+            }
+        }
+    }
+    Some(l)
 }
 
 #[cfg(test)]
