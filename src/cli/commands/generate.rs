@@ -148,6 +148,7 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
 
     let format = map_format(cli.format);
     let compression = map_compression(cli.compression);
+    let avro_codec = map_avro_codec(cli.compression);
     let extension = format_extension(cli.format);
 
     // ── JSON start event ──────────────────────────────────────────
@@ -355,6 +356,8 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                 let sink_config = SinkConfig {
                     format,
                     compression,
+                    record_name: entity_name.to_string(),
+                    avro_codec,
                     ..SinkConfig::default()
                 };
                 let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
@@ -477,6 +480,7 @@ fn map_format(f: Format) -> OutputFormat {
         Format::Json => OutputFormat::Json,
         Format::Jsonl => OutputFormat::Jsonl,
         Format::ArrowIpc => OutputFormat::ArrowIpc,
+        Format::Avro => OutputFormat::Avro,
     }
 }
 
@@ -503,6 +507,23 @@ fn format_extension(f: Format) -> &'static str {
         Format::Json => "json",
         Format::Jsonl => "jsonl",
         Format::ArrowIpc => "arrow",
+        Format::Avro => "avro",
+    }
+}
+
+/// Map CLI compression enum to Avro codec.
+fn map_avro_codec(c: CompressionArg) -> crate::bind::AvroCodec {
+    match c {
+        CompressionArg::Snappy => crate::bind::AvroCodec::Snappy,
+        CompressionArg::Gzip => crate::bind::AvroCodec::Deflate,
+        CompressionArg::None => crate::bind::AvroCodec::Null,
+        other => {
+            tracing::warn!(
+                "{:?} compression not supported for Avro, using null (no compression)",
+                other
+            );
+            crate::bind::AvroCodec::Null
+        }
     }
 }
 

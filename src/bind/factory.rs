@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use arrow::datatypes::Schema;
 
+use crate::bind::avro::{AvroCodec, AvroSink};
 use crate::bind::csv::{CsvSink, CsvSinkConfig};
 use crate::bind::error::BindError;
 use crate::bind::ipc::ArrowIpcSink;
@@ -26,6 +27,8 @@ pub enum OutputFormat {
     Csv,
     /// Arrow IPC / Feather v2 format.
     ArrowIpc,
+    /// Apache Avro Object Container Format.
+    Avro,
     /// Template-based output rendered via MiniJinja.
     Template,
 }
@@ -47,6 +50,10 @@ pub struct SinkConfig {
     pub template_source: String,
     /// Template rendering mode (`None` for auto-detection).
     pub template_mode: Option<TemplateMode>,
+    /// Avro compression codec (used when format is `Avro`).
+    pub avro_codec: AvroCodec,
+    /// Record name for Avro output (defaults to "Record").
+    pub record_name: String,
 }
 
 impl Default for SinkConfig {
@@ -59,6 +66,8 @@ impl Default for SinkConfig {
             null_representation: String::new(),
             template_source: String::new(),
             template_mode: None,
+            avro_codec: AvroCodec::default(),
+            record_name: "Record".to_string(),
         }
     }
 }
@@ -95,6 +104,10 @@ pub fn create_sink(
         }
         OutputFormat::ArrowIpc => {
             let sink = ArrowIpcSink::new(writer, schema)?;
+            Ok(Box::new(sink))
+        }
+        OutputFormat::Avro => {
+            let sink = AvroSink::new(writer, schema, &config.record_name, config.avro_codec)?;
             Ok(Box::new(sink))
         }
         OutputFormat::Template => {

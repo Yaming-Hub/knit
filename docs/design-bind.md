@@ -21,7 +21,7 @@ The crate supports two complementary output modes:
 
 | Mode | Orientation | Use Case | Throughput |
 |------|-------------|----------|------------|
-| **Sink** | Columnar | Parquet, JSON, CSV, Arrow IPC — structured dataset files | High (zero-copy where possible) |
+| **Sink** | Columnar | Parquet, JSON, CSV, Arrow IPC, Avro — structured dataset files | High (zero-copy where possible) |
 | **Template** | Row-oriented | SQL INSERTs, XML, log lines, custom delimited — any text format | Moderate (per-row rendering) |
 
 Sinks operate on entire `RecordBatch` values and are designed for maximum throughput.
@@ -37,6 +37,7 @@ text — trading throughput for complete format flexibility.
 | `knit-core` | `DataModel`, `Entity`, `Field`, `Value` — shared type vocabulary |
 | `arrow` | `RecordBatch`, `ArrayRef`, `Schema` — columnar data representation |
 | `parquet` | `ArrowWriter`, compression codecs — Parquet file writing |
+| `apache-avro` | Avro OCF writing with Null/Deflate/Snappy codecs |
 | `serde_json` | JSON serialization for `JsonSink` |
 | `csv` | CSV writing for `CsvSink` |
 | `minijinja` | Template engine for row-oriented custom formats |
@@ -200,6 +201,31 @@ consume Arrow natively.
 **Use case.** Arrow IPC is the preferred output when the consumer is another Arrow-based
 tool (DuckDB, Polars, DataFusion). It preserves the exact Arrow schema and avoids any
 serialization overhead.
+
+### 4.5 AvroSink
+
+Writes `RecordBatch` values in Apache Avro Object Container Format (OCF). Each Arrow
+schema is converted to an Avro record schema at construction time, using the entity
+name as the top-level record name.
+
+| Codec | Description |
+|-------|-------------|
+| **Null** | No compression (default). |
+| **Deflate** | Deflate compression for balanced size/speed. |
+| **Snappy** | Snappy compression for maximum throughput. |
+
+**Row-by-row conversion.** Each batch is iterated row by row, converting Arrow column
+values to `apache_avro::types::Value` records. Nullable Arrow columns map to Avro
+union types `["null", type]`.
+
+**Type mapping.** Arrow numeric types map to Avro `int`/`long`/`float`/`double`.
+Timestamps are converted to milliseconds (Avro `long`). Lists become Avro arrays.
+Binary data maps to Avro `bytes`. Unsupported complex types fall back to string
+representation.
+
+**Use case.** Avro is the standard format for Kafka-based data pipelines and Schema
+Registry integration. Use `--format avro` when the downstream consumer expects Avro
+(Kafka Connect, Confluent Platform, Apache Spark).
 
 ---
 

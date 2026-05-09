@@ -96,6 +96,7 @@ pub enum Format {
     Jsonl,
     #[value(name = "arrow")]
     ArrowIpc,
+    Avro,
 }
 
 /// Compression algorithms.
