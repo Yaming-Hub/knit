@@ -592,12 +592,35 @@ Knit also includes these generators:
 
 | Generator | Purpose | Status |
 |-----------|---------|--------|
-| `faker` | Locale-aware realistic data (names, addresses, companies) | ✅ Working |
+| `faker` | Locale-aware realistic data (names, addresses, companies, finance, etc.) | ✅ Working |
 | `composite` | Generate arrays of values | ✅ Working |
 | `conditional` | Choose generator based on another field's value | ✅ Working |
 | `unique` | Wrapper enforcing uniqueness on any generator | ✅ Working |
 | `relative` | Datetime offset from another field | ✅ Working |
 | `business_hours` | Constrained to business hours with timezone awareness | ✅ Working |
+
+**Faker method reference** — All supported `method` values for `type = "faker"`:
+
+| Category | Methods |
+|----------|---------|
+| Person | `first_name`, `last_name`, `full_name`/`name`, `username`, `prefix`, `suffix` |
+| Internet | `email`, `url`, `domain`, `ipv4`/`ip_address`, `ipv6`, `mac_address`, `user_agent` |
+| Address | `address`/`street_address`, `city`/`city_name`, `state`, `country`, `country_code`, `zip_code` |
+| Company | `company`, `industry`, `catch_phrase`, `bs` |
+| Finance | `credit_card` (Luhn-valid), `iban` (valid check digits), `bic`/`swift`, `currency_code` |
+| Phone | `phone` |
+| Lorem | `word`, `sentence`, `paragraph`, `title` |
+| Datetime | `date`, `datetime`, `time`, `month`, `day_of_week`, `timezone` |
+| Color | `color`, `hex_color` |
+| File | `file_extension`, `mime_type`, `file_name`, `file_path` |
+| Geo | `latitude`, `longitude`, `coordinate` |
+| Vehicle | `license_plate`, `vin`, `vehicle_make`, `vehicle_model` |
+| Medical | `blood_type` |
+| Barcode | `ean13`, `isbn13` |
+| Product | `product_name`/`product` |
+| Other | `hex_string` |
+
+Dotted provider names are also supported: `internet.email`, `finance.credit_card`, etc.
 
 ---
 

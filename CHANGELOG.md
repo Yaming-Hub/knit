@@ -6,6 +6,22 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Expanded faker generator** — 40+ new faker methods covering spec §6.2
+  provider categories. Dotted provider names (`internet.email`,
+  `finance.credit_card`) are normalized automatically.
+  - Person: `prefix`, `suffix`
+  - Internet: `mac_address`, `user_agent`
+  - Finance: `credit_card` (valid Luhn checksum), `iban` (valid mod-97 check
+    digits), `bic`/`swift`, `currency_code`
+  - Geo: `latitude`, `longitude`, `coordinate` (string output)
+  - Datetime: `time`, `month`, `day_of_week`, `timezone`
+  - File: `file_extension`, `mime_type`, `file_name`, `file_path`
+  - Vehicle: `license_plate`, `vin` (valid 17-char, no I/O/Q), `vehicle_make`,
+    `vehicle_model`
+  - Medical: `blood_type`
+  - Barcode: `ean13` (valid check digit), `isbn13` (978/979 prefix + check)
+  - Company: `industry`, `catch_phrase`, `bs`
+  - Address: `street_address`, `city_name`, `country_code`
 - **Schema composition** — `include` directive for composing schemas from
   reusable fragment files. Supports recursive includes, diamond-safe
   include-once semantics, cycle detection, and security path restrictions.

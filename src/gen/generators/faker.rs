@@ -1205,6 +1205,183 @@ static STREET_SUFFIXES: &[&str] = &[
     "St", "Ave", "Blvd", "Dr", "Ln", "Rd", "Ct", "Pl", "Way", "Cir", "Pkwy", "Ter",
 ];
 
+// ── Person extras ──────────────────────────────────────────────────────
+
+static NAME_PREFIXES: &[&str] = &[
+    "Mr.", "Mrs.", "Ms.", "Dr.", "Prof.", "Rev.", "Hon.", "Sir",
+];
+
+static NAME_SUFFIXES: &[&str] = &[
+    "Jr.", "Sr.", "II", "III", "IV", "MD", "PhD", "Esq.", "DDS", "DVM",
+];
+
+// ── Internet extras ────────────────────────────────────────────────────
+
+static USER_AGENTS: &[&str] = &[
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPad; CPU OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+];
+
+// ── Finance ────────────────────────────────────────────────────────────
+
+static COUNTRY_CODES: &[&str] = &[
+    "US", "GB", "DE", "FR", "JP", "CN", "AU", "CA", "BR", "IN",
+    "IT", "ES", "MX", "KR", "RU", "NL", "SE", "CH", "AT", "BE",
+    "NO", "DK", "FI", "PL", "PT", "IE", "NZ", "SG", "HK", "TW",
+];
+
+static CURRENCY_CODES: &[&str] = &[
+    "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD",
+    "MXN", "SGD", "HKD", "NOK", "KRW", "TRY", "INR", "RUB", "BRL", "ZAR",
+    "DKK", "PLN", "TWD", "THB", "IDR",
+];
+
+// ── Datetime extras ────────────────────────────────────────────────────
+
+static MONTHS: &[&str] = &[
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+];
+
+static WEEKDAYS: &[&str] = &[
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+];
+
+static TIMEZONES: &[&str] = &[
+    "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+    "Europe/London", "Europe/Berlin", "Europe/Paris", "Europe/Moscow",
+    "Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata", "Asia/Dubai",
+    "Australia/Sydney", "Pacific/Auckland", "America/Sao_Paulo", "Africa/Cairo",
+    "America/Toronto", "Europe/Amsterdam", "Asia/Singapore", "Asia/Seoul",
+];
+
+// ── File ───────────────────────────────────────────────────────────────
+
+static FILE_EXTENSIONS: &[&str] = &[
+    "pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "json", "xml",
+    "png", "jpg", "gif", "mp4", "mp3", "zip", "gz", "tar", "html", "css",
+    "js", "ts", "py", "rs", "go", "java", "cpp", "h", "md", "yaml",
+];
+
+static MIME_TYPES: &[&str] = &[
+    "application/pdf", "application/json", "application/xml",
+    "application/zip", "application/octet-stream",
+    "text/plain", "text/html", "text/css", "text/csv",
+    "image/png", "image/jpeg", "image/gif", "image/svg+xml",
+    "audio/mpeg", "video/mp4",
+];
+
+static FILE_DIRS: &[&str] = &[
+    "/home/user/documents", "/var/log", "/tmp", "/opt/data",
+    "/usr/local/share", "/etc/config", "C:/Users/user/Documents",
+    "/home/user/projects", "/data/exports", "/var/www/html",
+];
+
+// ── Vehicle ────────────────────────────────────────────────────────────
+
+static VEHICLE_MAKES: &[&str] = &[
+    "Toyota", "Honda", "Ford", "Chevrolet", "BMW", "Mercedes-Benz",
+    "Audi", "Volkswagen", "Tesla", "Hyundai", "Kia", "Nissan",
+    "Subaru", "Mazda", "Lexus", "Volvo", "Porsche", "Jeep",
+    "Land Rover", "Jaguar",
+];
+
+static VEHICLE_MODELS: &[&str] = &[
+    "Camry", "Civic", "F-150", "Silverado", "3 Series", "C-Class",
+    "A4", "Golf", "Model 3", "Tucson", "Sportage", "Altima",
+    "Outback", "CX-5", "RX", "XC90", "911", "Wrangler",
+    "Range Rover", "F-Type",
+];
+
+// ── Medical ────────────────────────────────────────────────────────────
+
+static BLOOD_TYPES: &[&str] = &[
+    "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-",
+];
+
+// ── Company extras ─────────────────────────────────────────────────────
+
+static INDUSTRIES: &[&str] = &[
+    "Technology", "Healthcare", "Finance", "Education", "Manufacturing",
+    "Retail", "Energy", "Transportation", "Telecommunications", "Agriculture",
+    "Construction", "Entertainment", "Real Estate", "Hospitality", "Legal",
+    "Consulting", "Pharmaceuticals", "Insurance", "Aerospace", "Automotive",
+];
+
+static CATCH_PHRASE_ADJECTIVES: &[&str] = &[
+    "Adaptive", "Advanced", "Automated", "Balanced", "Centralized",
+    "Compatible", "Configurable", "Cross-platform", "Decentralized",
+    "Digitized", "Distributed", "Enhanced", "Ergonomic", "Exclusive",
+    "Extended", "Focused", "Horizontal", "Innovative", "Integrated",
+    "Intuitive", "Managed", "Multi-layered", "Networked", "Open-source",
+    "Optimized", "Persistent", "Proactive", "Programmable", "Progressive",
+    "Reactive", "Realigned", "Reduced", "Robust", "Seamless",
+    "Secured", "Streamlined", "Switchable", "Synchronized", "Universal",
+    "Upgradable", "Versatile", "Virtual",
+];
+
+static CATCH_PHRASE_DESCRIPTORS: &[&str] = &[
+    "24/7", "actuating", "analyzing", "asymmetric", "asynchronous",
+    "attitude-oriented", "background", "bandwidth-monitored", "bi-directional",
+    "bottom-line", "client-driven", "client-server", "coherent", "cohesive",
+    "composite", "context-sensitive", "contextually-based", "content-based",
+    "dedicated", "demand-driven", "didactic", "directional", "discrete",
+    "dynamic", "eco-centric", "empowering", "encompassing", "even-keeled",
+    "executive", "explicit", "exuding", "fault-tolerant", "foreground",
+    "fresh-thinking", "full-range", "global", "grid-enabled", "heuristic",
+    "high-level", "holistic", "homogeneous", "human-resource", "hybrid",
+    "impactful", "incremental", "intangible", "interactive", "intermediate",
+    "leading edge", "local", "logistical", "maximized", "methodical",
+    "mission-critical", "mobile", "modular", "motivating", "multi-state",
+    "multi-tasking", "national", "needs-based", "neutral", "next generation",
+    "non-volatile", "object-oriented", "optimal", "optimizing",
+];
+
+static CATCH_PHRASE_NOUNS: &[&str] = &[
+    "ability", "access", "adapter", "algorithm", "alliance",
+    "analyzer", "application", "approach", "architecture", "archive",
+    "benchmark", "budgetary management", "capability", "capacity", "challenge",
+    "circuit", "collaboration", "complexity", "concept", "conglomeration",
+    "contingency", "core", "customer loyalty", "data-warehouse", "database",
+    "definition", "emulation", "encoding", "encryption", "extranet",
+    "firmware", "flexibility", "focus group", "forecast", "frame",
+    "framework", "function", "graphic interface", "groupware", "hardware",
+    "help-desk", "hierarchy", "hub", "implementation", "infrastructure",
+    "initiative", "installation", "instruction set", "interface", "intranet",
+    "knowledge base", "leverage", "local area network", "matrices", "methodology",
+    "middleware", "migration", "model", "moderator", "monitoring", "moratorium",
+];
+
+static BS_VERBS: &[&str] = &[
+    "implement", "utilize", "integrate", "streamline", "optimize",
+    "evolve", "transform", "embrace", "enable", "orchestrate",
+    "leverage", "reinvent", "aggregate", "architect", "benchmark",
+    "brand", "cultivate", "deliver", "deploy", "disintermediate",
+    "drive", "e-enable", "empower", "engage", "engineer",
+];
+
+static BS_ADJECTIVES: &[&str] = &[
+    "clicks-and-mortar", "value-added", "vertical", "proactive", "robust",
+    "revolutionary", "scalable", "leading-edge", "innovative", "intuitive",
+    "strategic", "e-business", "mission-critical", "sticky", "one-to-one",
+    "24/7", "end-to-end", "global", "B2B", "B2C",
+    "granular", "frictionless", "virtual", "viral", "dynamic",
+];
+
+static BS_NOUNS: &[&str] = &[
+    "synergies", "web-readiness", "paradigms", "markets", "partnerships",
+    "infrastructures", "platforms", "initiatives", "channels", "eyeballs",
+    "communities", "ROI", "solutions", "e-tailers", "e-services",
+    "action-items", "portals", "niches", "technologies", "content",
+    "supply-chains", "convergence", "relationships", "architectures", "interfaces",
+];
+
 // ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
@@ -1214,17 +1391,164 @@ fn pick<'a>(rng: &mut dyn RngCore, list: &'a [&str]) -> &'a str {
     list[rng.next_u32() as usize % list.len()]
 }
 
+/// Generate a credit card number with valid Luhn checksum.
+/// Prefixes: Visa (4), Mastercard (51-55), Amex (34/37).
+fn generate_credit_card(rng: &mut dyn RngCore) -> String {
+    let choice = rng.next_u32() % 3;
+    let (prefix, total_len) = match choice {
+        0 => ("4", 16usize),       // Visa
+        1 => {
+            let mc = 51 + rng.next_u32() % 5;
+            return generate_cc_with_prefix(&mc.to_string(), 16, rng);
+        }
+        _ => {
+            let amex = if rng.next_u32() % 2 == 0 { "34" } else { "37" };
+            return generate_cc_with_prefix(amex, 15, rng);
+        }
+    };
+    generate_cc_with_prefix(prefix, total_len, rng)
+}
+
+fn generate_cc_with_prefix(prefix: &str, total_len: usize, rng: &mut dyn RngCore) -> String {
+    let mut digits: Vec<u8> = prefix.bytes().map(|b| b - b'0').collect();
+    // Fill random digits (leave last for check digit)
+    while digits.len() < total_len - 1 {
+        digits.push((rng.next_u32() % 10) as u8);
+    }
+    // Luhn check digit
+    let check = luhn_check_digit(&digits);
+    digits.push(check);
+    digits.iter().map(|d| (b'0' + d) as char).collect()
+}
+
+fn luhn_check_digit(digits: &[u8]) -> u8 {
+    let mut sum = 0u32;
+    for (i, &d) in digits.iter().rev().enumerate() {
+        let mut v = d as u32;
+        if i % 2 == 0 {
+            v *= 2;
+            if v > 9 {
+                v -= 9;
+            }
+        }
+        sum += v;
+    }
+    ((10 - (sum % 10)) % 10) as u8
+}
+
+/// Generate a simplified IBAN with valid check digits (mod-97).
+/// Only uses countries whose BBAN format is entirely numeric digits,
+/// so the generated IBANs pass standard validators.
+fn generate_iban(rng: &mut dyn RngCore) -> String {
+    // Countries with all-numeric BBANs (no embedded letters)
+    let country = pick(rng, &["DE", "FR", "AT", "ES", "FI", "PT", "NO"]);
+    let bban_len = match country {
+        "DE" => 18,  // 8 bank + 10 account
+        "FR" => 23,  // 5 bank + 5 branch + 11 account + 2 check
+        "AT" => 16,  // 5 bank + 11 account
+        "ES" => 20,  // 4 bank + 4 branch + 2 check + 10 account
+        "FI" => 14,  // 3 bank + 11 account (includes check)
+        "PT" => 21,  // 4 bank + 4 branch + 11 account + 2 check
+        "NO" => 11,  // 4 bank + 6 account + 1 check
+        _ => 16,
+    };
+    let bban: String = (0..bban_len)
+        .map(|_| (b'0' + (rng.next_u32() % 10) as u8) as char)
+        .collect();
+    // Compute check digits: move country + 00 to end, convert letters to numbers
+    let check_str = format!("{}{}{:02}", bban, country_to_digits(country), 0);
+    let remainder = mod97(&check_str);
+    let check = 98 - remainder;
+    format!("{country}{check:02}{bban}")
+}
+
+fn country_to_digits(code: &str) -> String {
+    code.chars()
+        .map(|c| ((c as u32) - ('A' as u32) + 10).to_string())
+        .collect()
+}
+
+fn mod97(s: &str) -> u32 {
+    let mut remainder = 0u32;
+    for c in s.chars() {
+        let digit = c.to_digit(10).unwrap_or(0);
+        remainder = (remainder * 10 + digit) % 97;
+    }
+    remainder
+}
+
+/// Generate a 17-character VIN (no I, O, Q per spec).
+fn generate_vin(rng: &mut dyn RngCore) -> String {
+    const VIN_CHARS: &[u8] = b"ABCDEFGHJKLMNPRSTUVWXYZ0123456789";
+    let mut vin: Vec<u8> = (0..17)
+        .map(|_| VIN_CHARS[rng.next_u32() as usize % VIN_CHARS.len()])
+        .collect();
+    // Position 9 is the check digit (simplified: random digit)
+    vin[8] = b'0' + (rng.next_u32() % 10) as u8;
+    String::from_utf8(vin).unwrap()
+}
+
+/// Generate a valid EAN-13 barcode with check digit.
+fn generate_ean13(rng: &mut dyn RngCore) -> String {
+    let mut digits: Vec<u8> = (0..12).map(|_| (rng.next_u32() % 10) as u8).collect();
+    let check = ean_check_digit(&digits);
+    digits.push(check);
+    digits.iter().map(|d| (b'0' + d) as char).collect()
+}
+
+/// Generate a valid ISBN-13 with 978/979 prefix and check digit.
+fn generate_isbn13(rng: &mut dyn RngCore) -> String {
+    let prefix = if rng.next_u32() % 2 == 0 { [9, 7, 8] } else { [9, 7, 9] };
+    let mut digits: Vec<u8> = prefix.to_vec();
+    for _ in 0..9 {
+        digits.push((rng.next_u32() % 10) as u8);
+    }
+    let check = ean_check_digit(&digits);
+    digits.push(check);
+    digits.iter().map(|d| (b'0' + d) as char).collect()
+}
+
+fn ean_check_digit(digits: &[u8]) -> u8 {
+    let sum: u32 = digits
+        .iter()
+        .enumerate()
+        .map(|(i, &d)| {
+            if i % 2 == 0 {
+                d as u32
+            } else {
+                d as u32 * 3
+            }
+        })
+        .sum();
+    ((10 - (sum % 10)) % 10) as u8
+}
+
 // ---------------------------------------------------------------------------
 // Generator
 // ---------------------------------------------------------------------------
 
 /// Produce realistic synthetic strings for a given faker *category* (method).
 ///
-/// Supported categories: `first_name`, `last_name`, `full_name` / `name`,
-/// `username`, `email`, `word`, `sentence`, `paragraph`, `title`, `phone`,
-/// `address`, `city`, `state`, `country`, `zip_code` / `zipcode` / `postal_code`,
-/// `company`, `product_name` / `product`, `url`, `domain`, `ipv4` / `ip_address`,
-/// `ipv6`, `color`, `hex_color`.
+/// Supports dotted provider names (e.g. `"internet.email"`) which are
+/// normalized to bare method names (e.g. `"email"`).
+///
+/// **Supported categories:**
+/// - Person: `first_name`, `last_name`, `full_name`/`name`, `username`, `prefix`, `suffix`
+/// - Internet: `email`, `url`, `domain`, `ipv4`/`ip_address`, `ipv6`, `mac_address`, `user_agent`
+/// - Address: `address`/`street_address`, `city`, `state`, `country`, `country_code`, `zip_code`
+/// - Company: `company`, `industry`, `catch_phrase`, `bs`
+/// - Finance: `credit_card`, `iban`, `bic`, `currency_code`
+/// - Phone: `phone`
+/// - Lorem: `word`, `sentence`, `paragraph`, `title`
+/// - Datetime: `date`, `datetime`, `time`, `month`, `day_of_week`, `timezone`
+/// - Color: `color`, `hex_color`
+/// - File: `file_extension`, `mime_type`, `file_name`, `file_path`
+/// - Geo: `latitude`, `longitude`, `coordinate`
+/// - Vehicle: `license_plate`, `vin`, `vehicle_make`, `vehicle_model`
+/// - Medical: `blood_type`
+/// - Barcode: `ean13`, `isbn13`
+/// - Product: `product_name`/`product`
+/// - Other: `hex_string`
 ///
 /// Unknown categories emit a `tracing::warn` on first call and produce the
 /// category name as a constant string — this keeps pipelines running while
@@ -1243,9 +1567,18 @@ pub struct FakerGenerator {
 
 impl FakerGenerator {
     /// Create a new faker generator for the given *category* and *locale*.
+    ///
+    /// Dotted provider names (e.g. `"internet.email"`, `"finance.credit_card"`)
+    /// are normalized to their bare method name (`"email"`, `"credit_card"`).
     pub fn new(category: String, locale: String, args: Vec<crate::core::Value>) -> Self {
+        // Normalize dotted provider.method → method
+        let normalized = if let Some((_provider, method)) = category.split_once('.') {
+            method.to_string()
+        } else {
+            category
+        };
         Self {
-            category,
+            category: normalized,
             locale,
             args,
             warned: AtomicBool::new(false),
@@ -1471,6 +1804,118 @@ impl FakerGenerator {
                 }
                 t
             }
+            // ─── Person ────────────────────────────────────────────────
+            "prefix" | "name_prefix" => pick(rng, NAME_PREFIXES).to_string(),
+            "suffix" | "name_suffix" => pick(rng, NAME_SUFFIXES).to_string(),
+            // ─── Internet ──────────────────────────────────────────────
+            "mac_address" | "mac" => {
+                let mut octets = [0u8; 6];
+                rng.fill_bytes(&mut octets);
+                format!(
+                    "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+                    octets[0], octets[1], octets[2], octets[3], octets[4], octets[5]
+                )
+            }
+            "user_agent" => pick(rng, USER_AGENTS).to_string(),
+            // ─── Finance ───────────────────────────────────────────────
+            "credit_card" | "credit_card_number" => generate_credit_card(rng),
+            "iban" => generate_iban(rng),
+            "bic" | "swift" => {
+                // BIC/SWIFT: 8 or 11 chars — BANKCCLL(XXX)
+                let bank: String = (0..4)
+                    .map(|_| (b'A' + (rng.next_u32() % 26) as u8) as char)
+                    .collect();
+                let country = pick(rng, COUNTRY_CODES);
+                let loc: String = (0..2)
+                    .map(|_| {
+                        let c = rng.next_u32() % 36;
+                        if c < 26 {
+                            (b'A' + c as u8) as char
+                        } else {
+                            (b'0' + (c - 26) as u8) as char
+                        }
+                    })
+                    .collect();
+                format!("{bank}{country}{loc}")
+            }
+            "currency_code" | "currency" => pick(rng, CURRENCY_CODES).to_string(),
+            // ─── Geo ───────────────────────────────────────────────────
+            "latitude" | "lat" => {
+                let v = (rng.next_u32() as f64 / u32::MAX as f64) * 180.0 - 90.0;
+                format!("{v:.6}")
+            }
+            "longitude" | "lon" | "lng" => {
+                let v = (rng.next_u32() as f64 / u32::MAX as f64) * 360.0 - 180.0;
+                format!("{v:.6}")
+            }
+            "coordinate" | "geo" => {
+                let lat = (rng.next_u32() as f64 / u32::MAX as f64) * 180.0 - 90.0;
+                let lon = (rng.next_u32() as f64 / u32::MAX as f64) * 360.0 - 180.0;
+                format!("{lat:.6}, {lon:.6}")
+            }
+            // ─── Datetime ──────────────────────────────────────────────
+            "month" => pick(rng, MONTHS).to_string(),
+            "day_of_week" | "weekday" => pick(rng, WEEKDAYS).to_string(),
+            "timezone" | "tz" => pick(rng, TIMEZONES).to_string(),
+            "time" => {
+                let h = rng.next_u32() % 24;
+                let m = rng.next_u32() % 60;
+                let s = rng.next_u32() % 60;
+                format!("{h:02}:{m:02}:{s:02}")
+            }
+            // ─── File ──────────────────────────────────────────────────
+            "file_extension" | "extension" => pick(rng, FILE_EXTENSIONS).to_string(),
+            "mime_type" | "content_type" => pick(rng, MIME_TYPES).to_string(),
+            "file_name" => {
+                let w = pick(rng, WORDS);
+                let ext = pick(rng, FILE_EXTENSIONS);
+                format!("{w}.{ext}")
+            }
+            "file_path" => {
+                let dir = pick(rng, FILE_DIRS);
+                let w = pick(rng, WORDS);
+                let ext = pick(rng, FILE_EXTENSIONS);
+                format!("{dir}/{w}.{ext}")
+            }
+            // ─── Vehicle ───────────────────────────────────────────────
+            "license_plate" | "plate" => {
+                let letters: String = (0..3)
+                    .map(|_| (b'A' + (rng.next_u32() % 26) as u8) as char)
+                    .collect();
+                let nums = rng.next_u32() % 10000;
+                format!("{letters}-{nums:04}")
+            }
+            "vin" => generate_vin(rng),
+            "vehicle_make" | "make" => pick(rng, VEHICLE_MAKES).to_string(),
+            "vehicle_model" | "model" => pick(rng, VEHICLE_MODELS).to_string(),
+            // ─── Medical ───────────────────────────────────────────────
+            "blood_type" => pick(rng, BLOOD_TYPES).to_string(),
+            // ─── Barcode ───────────────────────────────────────────────
+            "ean13" => generate_ean13(rng),
+            "isbn13" | "isbn" => generate_isbn13(rng),
+            // ─── Company extras ────────────────────────────────────────
+            "industry" => pick(rng, INDUSTRIES).to_string(),
+            "catch_phrase" | "catchphrase" => {
+                let adj = pick(rng, CATCH_PHRASE_ADJECTIVES);
+                let descriptor = pick(rng, CATCH_PHRASE_DESCRIPTORS);
+                let noun = pick(rng, CATCH_PHRASE_NOUNS);
+                format!("{adj} {descriptor} {noun}")
+            }
+            "bs" | "buzzword" => {
+                let verb = pick(rng, BS_VERBS);
+                let adj = pick(rng, BS_ADJECTIVES);
+                let noun = pick(rng, BS_NOUNS);
+                format!("{verb} {adj} {noun}")
+            }
+            // ─── Address extras ────────────────────────────────────────
+            "street_address" | "street" => {
+                let house = 1 + rng.next_u32() % 9999;
+                let name = pick(rng, STREET_NAMES);
+                let suffix = pick(rng, STREET_SUFFIXES);
+                format!("{house} {name} {suffix}")
+            }
+            "city_name" => pick(rng, CITIES).to_string(),
+            "country_code" => pick(rng, COUNTRY_CODES).to_string(),
             unknown => {
                 if !self.warned.swap(true, Ordering::Relaxed) {
                     tracing::warn!(
@@ -1976,5 +2421,243 @@ mod tests {
         let arr = g.generate(&mut rng, 10, &ctx);
         assert_eq!(arr.len(), 10);
         assert_eq!(*arr.data_type(), DataType::Date32);
+    }
+
+    // ─── Tests for newly added faker methods ───────────────────────────
+
+    #[test]
+    fn mac_address_format() {
+        let arr = gen("mac_address", 50, 100);
+        for v in strings(&arr) {
+            let parts: Vec<&str> = v.split(':').collect();
+            assert_eq!(parts.len(), 6, "MAC should have 6 octets: {v}");
+            for p in &parts {
+                assert_eq!(p.len(), 2, "MAC octet should be 2 hex chars: {v}");
+                assert!(p.chars().all(|c| c.is_ascii_hexdigit()), "hex octet: {v}");
+            }
+        }
+    }
+
+    #[test]
+    fn credit_card_luhn_valid() {
+        let arr = gen("credit_card", 100, 101);
+        for v in strings(&arr) {
+            let len = v.len();
+            assert!(
+                len == 15 || len == 16,
+                "credit card should be 15 or 16 digits: {v}"
+            );
+            assert!(v.chars().all(|c| c.is_ascii_digit()), "all digits: {v}");
+            // Verify Luhn checksum
+            let digits: Vec<u8> = v.bytes().map(|b| b - b'0').collect();
+            let mut sum = 0u32;
+            for (i, &d) in digits.iter().rev().enumerate() {
+                let mut val = d as u32;
+                if i % 2 == 1 {
+                    val *= 2;
+                    if val > 9 {
+                        val -= 9;
+                    }
+                }
+                sum += val;
+            }
+            assert_eq!(sum % 10, 0, "Luhn check failed for {v}");
+        }
+    }
+
+    #[test]
+    fn iban_format() {
+        let arr = gen("iban", 50, 102);
+        for v in strings(&arr) {
+            assert!(v.len() >= 15, "IBAN should be >= 15 chars: {v}");
+            // First 2 chars are country code (uppercase letters)
+            assert!(
+                v[..2].chars().all(|c| c.is_ascii_uppercase()),
+                "IBAN country code: {v}"
+            );
+            // Next 2 chars are check digits
+            assert!(
+                v[2..4].chars().all(|c| c.is_ascii_digit()),
+                "IBAN check digits: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn bic_format() {
+        let arr = gen("bic", 50, 103);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 8, "BIC should be 8 chars: {v}");
+        }
+    }
+
+    #[test]
+    fn currency_code_valid() {
+        let arr = gen("currency_code", 50, 104);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 3, "currency code should be 3 chars: {v}");
+            assert!(
+                v.chars().all(|c| c.is_ascii_uppercase()),
+                "currency code should be uppercase: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn latitude_in_range() {
+        let arr = gen("latitude", 50, 105);
+        for v in strings(&arr) {
+            let lat: f64 = v.parse().unwrap();
+            assert!(
+                (-90.0..=90.0).contains(&lat),
+                "latitude out of range: {lat}"
+            );
+        }
+    }
+
+    #[test]
+    fn longitude_in_range() {
+        let arr = gen("longitude", 50, 106);
+        for v in strings(&arr) {
+            let lon: f64 = v.parse().unwrap();
+            assert!(
+                (-180.0..=180.0).contains(&lon),
+                "longitude out of range: {lon}"
+            );
+        }
+    }
+
+    #[test]
+    fn vin_format() {
+        let arr = gen("vin", 50, 107);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 17, "VIN should be 17 chars: {v}");
+            assert!(
+                !v.contains('I') && !v.contains('O') && !v.contains('Q'),
+                "VIN should not contain I/O/Q: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn ean13_valid_checksum() {
+        let arr = gen("ean13", 50, 108);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 13, "EAN-13 should be 13 digits: {v}");
+            assert!(v.chars().all(|c| c.is_ascii_digit()), "all digits: {v}");
+            // Verify EAN check digit
+            let digits: Vec<u8> = v.bytes().map(|b| b - b'0').collect();
+            let sum: u32 = digits
+                .iter()
+                .enumerate()
+                .map(|(i, &d)| {
+                    if i % 2 == 0 {
+                        d as u32
+                    } else {
+                        d as u32 * 3
+                    }
+                })
+                .sum();
+            assert_eq!(sum % 10, 0, "EAN-13 check digit failed for {v}");
+        }
+    }
+
+    #[test]
+    fn isbn13_prefix() {
+        let arr = gen("isbn13", 50, 109);
+        for v in strings(&arr) {
+            assert_eq!(v.len(), 13, "ISBN-13 should be 13 digits: {v}");
+            assert!(
+                v.starts_with("978") || v.starts_with("979"),
+                "ISBN-13 should start with 978/979: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn blood_type_valid() {
+        let arr = gen("blood_type", 50, 110);
+        for v in strings(&arr) {
+            assert!(
+                super::BLOOD_TYPES.contains(&v.as_str()),
+                "blood_type should be valid: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn license_plate_format() {
+        let arr = gen("license_plate", 50, 111);
+        for v in strings(&arr) {
+            assert!(v.contains('-'), "license plate should contain dash: {v}");
+        }
+    }
+
+    #[test]
+    fn month_valid() {
+        let arr = gen("month", 50, 112);
+        for v in strings(&arr) {
+            assert!(
+                super::MONTHS.contains(&v.as_str()),
+                "month should be valid: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn day_of_week_valid() {
+        let arr = gen("day_of_week", 50, 113);
+        for v in strings(&arr) {
+            assert!(
+                super::WEEKDAYS.contains(&v.as_str()),
+                "weekday should be valid: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn file_name_has_extension() {
+        let arr = gen("file_name", 50, 114);
+        for v in strings(&arr) {
+            assert!(v.contains('.'), "file_name should have extension: {v}");
+        }
+    }
+
+    #[test]
+    fn dotted_provider_name_normalized() {
+        // Dotted names like "internet.email" should work the same as "email"
+        let a = gen("internet.email", 20, 42);
+        let b = gen("email", 20, 42);
+        let a_strs = strings(&a);
+        let b_strs = strings(&b);
+        assert_eq!(a_strs, b_strs, "dotted name should produce same output");
+    }
+
+    #[test]
+    fn time_format() {
+        let arr = gen("time", 50, 115);
+        for v in strings(&arr) {
+            let parts: Vec<&str> = v.split(':').collect();
+            assert_eq!(parts.len(), 3, "time should have HH:MM:SS: {v}");
+        }
+    }
+
+    #[test]
+    fn industry_from_list() {
+        let arr = gen("industry", 50, 116);
+        for v in strings(&arr) {
+            assert!(
+                super::INDUSTRIES.contains(&v.as_str()),
+                "industry should be from list: {v}"
+            );
+        }
+    }
+
+    #[test]
+    fn user_agent_nonempty() {
+        let arr = gen("user_agent", 50, 117);
+        for v in strings(&arr) {
+            assert!(v.contains("Mozilla") || v.len() > 10, "user_agent should look real: {v}");
+        }
     }
 }
