@@ -687,10 +687,20 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 start,
                 step,
                 prefix: _,
-            } => GeneratorPlan::Sequence {
-                start: *start,
-                step: *step,
-            },
+                values,
+                cycle: _,
+            } => {
+                if let Some(vals) = values {
+                    GeneratorPlan::CyclicValues {
+                        values: vals.clone(),
+                    }
+                } else {
+                    GeneratorPlan::Sequence {
+                        start: *start,
+                        step: *step,
+                    }
+                }
+            }
             GeneratorSpec::OneOf { choices } => {
                 let total_weight: f64 = choices.iter().map(|c| c.weight).sum();
                 // Fall back to uniform weights if total is zero
@@ -1518,6 +1528,8 @@ mod tests {
                         start: 1,
                         step: 1,
                         prefix: None,
+                    values: None,
+                    cycle: None,
                     }),
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
@@ -2483,6 +2495,8 @@ mod tests {
             start: 1,
             step: 1,
             prefix: None,
+        values: None,
+        cycle: None,
         };
         let spec = GeneratorSpec::Unique {
             inner: Box::new(inner_spec),

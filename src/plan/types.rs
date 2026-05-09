@@ -239,6 +239,12 @@ pub enum GeneratorPlan {
         /// Increment between consecutive values.
         step: i64,
     },
+    /// Cycle through a fixed list of string values round-robin.
+    /// Row assignment is deterministic: `values[(row_offset + i) % values.len()]`.
+    CyclicValues {
+        /// The values to cycle through.
+        values: Vec<String>,
+    },
     /// Weighted random choice with pre-computed cumulative weights for O(log n) sampling.
     OneOf {
         /// The set of weighted values to choose from.

@@ -588,6 +588,8 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
             } else {
                 None
             },
+            values: None,
+            cycle: None,
         };
     }
 
@@ -758,6 +760,8 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
         start: 1,
         step: 1,
         prefix: None,
+        values: None,
+        cycle: None,
     }
 }
 

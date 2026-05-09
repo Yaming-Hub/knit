@@ -575,6 +575,8 @@ mod tests {
                     start: 1,
                     step: 1,
                     prefix: None,
+                values: None,
+                cycle: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),

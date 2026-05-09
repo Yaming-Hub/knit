@@ -190,6 +190,9 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         crate::plan::GeneratorPlan::Sequence { start, step } => {
             format!("seq(start={}, step={})", start, step)
         }
+        crate::plan::GeneratorPlan::CyclicValues { values } => {
+            format!("cyclic({} values)", values.len())
+        }
         crate::plan::GeneratorPlan::OneOf { choices, .. } => {
             format!("oneOf({} choices)", choices.len())
         }

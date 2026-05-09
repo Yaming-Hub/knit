@@ -199,6 +199,30 @@ step = 1
 | `start` | int | `1` | Starting value |
 | `step` | int | `1` | Increment between values |
 
+#### Cyclic Value Lists
+
+Instead of incrementing integers, cycle through a fixed list of values
+round-robin:
+
+```toml
+[[entities.fields]]
+name = "day_of_week"
+data_type = "string"
+[entities.fields.generator]
+type = "sequence"
+values = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+cycle = true
+```
+
+Values are assigned deterministically based on row position:
+`values[(row_offset + i) % values.len()]`. This is partition-safe — the
+assignment remains consistent regardless of parallelism.
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `values` | string[] | — | Fixed list to cycle through (mutually exclusive with `start`/`step`) |
+| `cycle` | bool | `true` | Always true when `values` is set |
+
 ### `uuid_gen` — Random UUIDs
 
 Generates universally unique identifiers.

@@ -604,6 +604,7 @@ mod tests {
                 start,
                 step,
                 prefix,
+                ..
             } => {
                 assert_eq!(*start, 1000);
                 assert_eq!(*step, 10);

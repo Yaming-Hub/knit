@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Sequence cyclic values** — Cycle through fixed value lists round-robin
+  (spec §6.3):
+  - `values = ["Mon", "Tue", "Wed", ...]` with `cycle = true`
+  - Deterministic, partition-safe assignment via row position
+  - Validation: empty values, mutual exclusivity with start/step, cycle requires values
+  - New example: `examples/sequence_values.weave.toml`
 - **Graph edge properties** — Attach additional columns to relationship edges via
   `[[relationships.properties]]` (spec §10.2):
   - Edge properties become extra columns on the `from` entity
