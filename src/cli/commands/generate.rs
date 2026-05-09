@@ -1020,6 +1020,7 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
             }
         }
         crate::plan::GeneratorPlan::Sequence { .. } => ArrowDataType::Int64,
+        crate::plan::GeneratorPlan::CyclicValues { .. } => ArrowDataType::Utf8,
         crate::plan::GeneratorPlan::Uuid => ArrowDataType::Utf8,
         crate::plan::GeneratorPlan::Faker { category, .. } => match category.as_str() {
             "datetime" | "timestamp" => {

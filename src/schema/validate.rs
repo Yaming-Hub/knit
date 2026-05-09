@@ -244,13 +244,14 @@ fn validate_generator_params(
         GeneratorSpec::Distribution { spec } => {
             validate_distribution(path, spec, errors);
         }
-        GeneratorSpec::Sequence { step, .. } => {
-            if *step == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "sequence step must not be 0".to_string(),
-                });
-            }
+        GeneratorSpec::Sequence {
+            step,
+            values,
+            cycle,
+            prefix,
+            start,
+        } => {
+            validate_sequence_params(path, *start, *step, values, cycle, prefix, errors);
         }
         GeneratorSpec::OneOf { choices } => {
             if choices.is_empty() {
@@ -469,6 +470,57 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
                     });
                 }
             }
+        }
+    }
+}
+
+fn validate_sequence_params(
+    path: &str,
+    start: i64,
+    step: i64,
+    values: &Option<Vec<String>>,
+    cycle: &Option<bool>,
+    prefix: &Option<String>,
+    errors: &mut Vec<SchemaError>,
+) {
+    if let Some(vals) = values {
+        if vals.is_empty() {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "sequence values must not be empty".to_string(),
+            });
+        }
+        if start != 0 || step != 1 {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "sequence 'values' is mutually exclusive with 'start'/'step'".to_string(),
+            });
+        }
+        if prefix.is_some() {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "sequence 'prefix' is not valid with 'values'".to_string(),
+            });
+        }
+        if *cycle == Some(false) {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "sequence values always cycle; 'cycle = false' is not supported"
+                    .to_string(),
+            });
+        }
+    } else {
+        if step == 0 {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "sequence step must not be 0".to_string(),
+            });
+        }
+        if cycle.is_some() {
+            errors.push(SchemaError::Validation {
+                path: path.to_string(),
+                message: "sequence 'cycle' requires 'values'".to_string(),
+            });
         }
     }
 }
@@ -1035,18 +1087,30 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
                 None
             }
         }
-        GeneratorSpec::Sequence { .. } => {
-            let compatible = matches!(
-                data_type,
-                DataType::Int | DataType::Int32 | DataType::String
-            );
-            if !compatible {
-                Some(format!(
-                    "sequence generator is not compatible with data_type '{}'; expected 'int', 'int32', or 'string'",
-                    data_type
-                ))
+        GeneratorSpec::Sequence { values, .. } => {
+            if values.is_some() {
+                // Cyclic values mode always produces strings
+                if *data_type != DataType::String {
+                    Some(format!(
+                        "sequence with 'values' requires data_type 'string', got '{}'",
+                        data_type
+                    ))
+                } else {
+                    None
+                }
             } else {
-                None
+                let compatible = matches!(
+                    data_type,
+                    DataType::Int | DataType::Int32 | DataType::String
+                );
+                if !compatible {
+                    Some(format!(
+                        "sequence generator is not compatible with data_type '{}'; expected 'int', 'int32', or 'string'",
+                        data_type
+                    ))
+                } else {
+                    None
+                }
             }
         }
         GeneratorSpec::BusinessHours { .. } => {
@@ -1190,13 +1254,14 @@ fn validate_generator(
         GeneratorSpec::Distribution { spec } => {
             validate_distribution(path, spec, errors);
         }
-        GeneratorSpec::Sequence { step, .. } => {
-            if *step == 0 {
-                errors.push(SchemaError::Validation {
-                    path: path.to_string(),
-                    message: "sequence step must not be 0".to_string(),
-                });
-            }
+        GeneratorSpec::Sequence {
+            step,
+            values,
+            cycle,
+            prefix,
+            start,
+        } => {
+            validate_sequence_params(path, *start, *step, values, cycle, prefix, errors);
         }
         GeneratorSpec::OneOf { choices } => {
             if choices.is_empty() {
@@ -3727,6 +3792,8 @@ mod tests {
                 start: 1,
                 step: 0,
                 prefix: None,
+            values: None,
+            cycle: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -3737,6 +3804,137 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence step must not be 0"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_sequence_values_empty() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "day".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: Some(vec![]),
+                cycle: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("values must not be empty"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_sequence_values_with_start_step() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "day".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 5,
+                step: 2,
+                prefix: None,
+                values: Some(vec!["A".into(), "B".into()]),
+                cycle: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("mutually exclusive"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_sequence_cycle_without_values() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "num".to_string(),
+            description: None,
+            data_type: DataType::Int,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: None,
+                cycle: Some(true),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("'cycle' requires 'values'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_sequence_values_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "day".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: Some(vec!["Mon".into(), "Tue".into(), "Wed".into()]),
+                cycle: Some(true),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("values") || message.contains("cycle"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_sequence_values_on_int_field() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "day".to_string(),
+            description: None,
+            data_type: DataType::Int, // values produce strings, not ints
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: Some(vec!["Mon".into(), "Tue".into()]),
+                cycle: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("requires data_type 'string'"))
         }));
     }
 
@@ -3998,6 +4196,8 @@ mod tests {
                     start: 0,
                     step: 1,
                     prefix: None,
+                values: None,
+                cycle: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
@@ -4149,6 +4349,8 @@ mod tests {
                 start: 1,
                 step: 1,
                 prefix: None,
+            values: None,
+            cycle: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4173,6 +4375,8 @@ mod tests {
                 start: 1,
                 step: 1,
                 prefix: None,
+            values: None,
+            cycle: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4223,6 +4427,8 @@ mod tests {
                     start: 1,
                     step: 1,
                     prefix: None,
+                values: None,
+                cycle: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),

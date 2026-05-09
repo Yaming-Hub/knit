@@ -368,16 +368,24 @@ pub enum GeneratorSpec {
         args: Vec<Value>,
     },
     /// Auto-incrementing or stepped sequence, optionally with a string prefix.
+    /// When `values` is provided, cycles through the list round-robin.
     Sequence {
-        /// Initial value of the sequence (default: 0).
+        /// Initial value of the sequence (default: 0). Mutually exclusive with `values`.
         #[serde(default)]
         start: i64,
-        /// Increment between consecutive values (default: 1).
+        /// Increment between consecutive values (default: 1). Mutually exclusive with `values`.
         #[serde(default = "default_step")]
         step: i64,
         /// Optional string prefix prepended to each value.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         prefix: Option<String>,
+        /// Fixed list of values to cycle through round-robin.
+        /// When present, `start`/`step` are ignored and output type is String.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        values: Option<Vec<String>>,
+        /// Whether to cycle through `values` (always true when `values` is set).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cycle: Option<bool>,
     },
     /// Weighted random choice from a fixed set of values.
     OneOf {
@@ -1669,6 +1677,7 @@ mod tests {
                 start,
                 step,
                 prefix,
+                ..
             } => {
                 assert_eq!(start, 1);
                 assert_eq!(step, 1);
@@ -1759,6 +1768,8 @@ mod tests {
                             start: 1,
                             step: 1,
                             prefix: None,
+                        values: None,
+                        cycle: None,
                         }),
                         nullable: NullSpec::Never,
                         primary_key: Some(true),

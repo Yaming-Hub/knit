@@ -81,6 +81,9 @@ pub fn create_generator_with_seen(
         GeneratorPlan::Sequence { start, step } => {
             Box::new(sequence::SequenceGenerator::new(*start, *step))
         }
+        GeneratorPlan::CyclicValues { values } => {
+            Box::new(sequence::CyclicValuesGenerator::new(values.clone()))
+        }
         GeneratorPlan::Constant(value) => Box::new(constant::ConstantGenerator::new(value.clone())),
         GeneratorPlan::Uuid => Box::new(uuid_gen::UuidGenerator),
         GeneratorPlan::OneOf {

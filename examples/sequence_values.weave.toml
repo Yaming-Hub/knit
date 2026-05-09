@@ -1,0 +1,69 @@
+# Sequence Values + Cycle Example
+#
+# Demonstrates cycling through fixed value lists using the sequence generator.
+# Values are assigned round-robin, deterministically, and partition-safe.
+#
+# Run:
+#   knit generate sequence_values.weave.toml -o output/
+
+schema_version = "1.0"
+
+[model]
+name = "sequence_values"
+description = "Cyclic sequence values demo"
+seed = 42
+
+# ── Weekly schedule ──────────────────────────────────────────
+[[entities]]
+name = "schedule"
+count = 28
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+# Cycles through days of the week: Mon, Tue, Wed, ...
+[[entities.fields]]
+name = "day_of_week"
+data_type = "string"
+[entities.fields.generator]
+type = "sequence"
+values = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+cycle = true
+
+# Cycles through shift types
+[[entities.fields]]
+name = "shift"
+data_type = "string"
+[entities.fields.generator]
+type = "sequence"
+values = ["morning", "afternoon", "night"]
+cycle = true
+
+# ── Color rotation ───────────────────────────────────────────
+[[entities]]
+name = "items"
+count = 20
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+# Cycles through a fixed color palette
+[[entities.fields]]
+name = "color"
+data_type = "string"
+[entities.fields.generator]
+type = "sequence"
+values = ["red", "green", "blue", "yellow"]
+cycle = true
