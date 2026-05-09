@@ -6,6 +6,13 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Graph edge properties** — Attach additional columns to relationship edges via
+  `[[relationships.properties]]` (spec §10.2):
+  - Edge properties become extra columns on the `from` entity
+  - Support all generator types (distribution, one_of, faker, etc.)
+  - Nullable specification per edge property
+  - Validation: name conflict detection, many_to_many rejection
+  - New example: `examples/edge_properties.weave.toml`
 - **Self-referential hierarchy controls** — Configure tree/forest structure for
   self-referential relationships (spec §7.4):
   - `acyclic = true` — guarantees no circular reference chains (true tree/forest)

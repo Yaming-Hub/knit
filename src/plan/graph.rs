@@ -278,6 +278,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         }
     }
 
@@ -467,6 +468,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
         let result = assign_phases(&model).unwrap();

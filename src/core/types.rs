@@ -1106,6 +1106,30 @@ pub struct Relationship {
     /// Only valid when `from == to`. Depth 0 = root nodes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_depth: Option<u32>,
+    /// Edge properties — additional columns generated per edge (row) of this
+    /// relationship. Appear as extra fields on the `from` entity.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub properties: Vec<EdgeProperty>,
+}
+
+/// An attribute carried by each edge of a relationship.
+///
+/// Edge properties become additional columns on the `from` entity — each row
+/// of the `from` entity represents one edge, and the edge property values are
+/// generated alongside the FK column.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct EdgeProperty {
+    /// Column name for this edge attribute.
+    pub name: String,
+    /// Data type of the edge attribute.
+    #[serde(rename = "type")]
+    pub data_type: DataType,
+    /// Generator specification (same as entity field generators).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generator: Option<GeneratorSpec>,
+    /// Null probability for this edge attribute.
+    #[serde(default)]
+    pub nullable: NullSpec,
 }
 
 /// How a child row selects its parent FK target.

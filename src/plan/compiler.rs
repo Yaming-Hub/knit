@@ -109,7 +109,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
             let num_partitions = partitions.len() as u32;
 
             let entity_fks = fk_fields.get(entity_name).cloned().unwrap_or_default();
-            let field_plans = compile_field_plans(
+            let mut field_plans = compile_field_plans(
                 entity,
                 &entity_fks,
                 &row_counts,
@@ -118,9 +118,39 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
                 model,
             );
 
+            // Append edge property fields from relationships where this entity
+            // is the FK-holding side (from == entity_name).
+            for rel in &model.relationships {
+                if rel.from == *entity_name && !rel.properties.is_empty() {
+                    for ep in &rel.properties {
+                        let gen_plan = compile_edge_property_generator(ep, &entity.fields);
+                        let null_plan = compile_null_plan(&ep.nullable);
+                        field_plans.push(FieldPlan {
+                            field_name: ep.name.clone(),
+                            data_type: ep.data_type.clone(),
+                            generator_plan: gen_plan,
+                            null_plan,
+                            dependency_order: 0,
+                            precision: None,
+                            actor_column: false,
+                            sub_field_plans: vec![],
+                        });
+                    }
+                }
+            }
+
             let estimated_byte_size = estimate_byte_size(entity, row_count);
 
-            let field_names: Vec<String> = entity.fields.iter().map(|f| f.name.clone()).collect();
+            // Include edge property names in the RNG tree
+            let mut field_names: Vec<String> =
+                entity.fields.iter().map(|f| f.name.clone()).collect();
+            for rel in &model.relationships {
+                if rel.from == *entity_name {
+                    for ep in &rel.properties {
+                        field_names.push(ep.name.clone());
+                    }
+                }
+            }
             rng_entities.push((entity_name.clone(), field_names, num_partitions));
 
             total_partitions += partitions.len();
@@ -1112,6 +1142,20 @@ fn compile_null_plan(null_spec: &NullSpec) -> NullPlan {
     }
 }
 
+/// Compile a generator plan for an edge property.
+/// Uses the same compilation pipeline as regular entity fields.
+fn compile_edge_property_generator(
+    prop: &crate::core::EdgeProperty,
+    entity_fields: &[Field],
+) -> GeneratorPlan {
+    match &prop.generator {
+        Some(spec) => {
+            compile_generator_from_spec(spec, entity_fields, &prop.data_type)
+        }
+        None => default_generator_for_type(&prop.data_type),
+    }
+}
+
 /// Compute dependency order: non-derived fields get 0, derived fields get 1+
 /// based on transitive dependencies.
 fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
@@ -1548,6 +1592,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
 
@@ -1584,6 +1629,7 @@ mod tests {
                     acyclic: None,
                     root_probability: None,
                     max_depth: None,
+                    properties: vec![],
                 },
                 Relationship {
                     name: "line_item_order".to_string(),
@@ -1599,6 +1645,7 @@ mod tests {
                     acyclic: None,
                     root_probability: None,
                     max_depth: None,
+                    properties: vec![],
                 },
             ],
         );
@@ -1668,6 +1715,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
 
@@ -1731,6 +1779,7 @@ mod tests {
                     acyclic: None,
                     root_probability: None,
                     max_depth: None,
+                    properties: vec![],
                 },
                 Relationship {
                     name: "b_to_a".to_string(),
@@ -1746,6 +1795,7 @@ mod tests {
                     acyclic: None,
                     root_probability: None,
                     max_depth: None,
+                    properties: vec![],
                 },
             ],
         );
@@ -2263,6 +2313,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
         let result = compile(&model);
@@ -2305,6 +2356,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
 
@@ -2797,6 +2849,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
 
@@ -2869,6 +2922,7 @@ mod tests {
                 acyclic: None,
                 root_probability: None,
                 max_depth: None,
+                properties: vec![],
             }],
         );
 

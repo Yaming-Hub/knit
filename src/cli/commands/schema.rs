@@ -942,6 +942,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let doc = generate_schema_doc(&model);
         assert!(doc.contains("## Relationships"));

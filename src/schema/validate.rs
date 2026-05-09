@@ -2233,6 +2233,113 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 });
             }
         }
+
+        // ── Edge properties ──────────────────────────────────────────
+        if !rel.properties.is_empty() {
+            // many_to_many with properties not yet supported
+            if rel.kind == crate::core::RelationshipKind::ManyToMany {
+                errors.push(SchemaError::Validation {
+                    path: path.clone(),
+                    message: format!(
+                        "relationship '{}': edge properties on many_to_many relationships are not yet supported; \
+                         model an explicit junction entity instead",
+                        rel.name
+                    ),
+                });
+            }
+
+            // Uniqueness check within this relationship's properties
+            let mut prop_names_seen = HashSet::new();
+            for prop in &rel.properties {
+                let pp = format!("{}.properties.{}", path, prop.name);
+                if !prop_names_seen.insert(&prop.name) {
+                    errors.push(SchemaError::Validation {
+                        path: pp.clone(),
+                        message: format!(
+                            "duplicate edge property name '{}' in relationship '{}'",
+                            prop.name, rel.name
+                        ),
+                    });
+                }
+
+                // Reject unsupported complex types
+                if matches!(prop.data_type, crate::core::DataType::Map) {
+                    errors.push(SchemaError::Validation {
+                        path: pp.clone(),
+                        message: format!(
+                            "edge property '{}': Map type is not supported as an edge property",
+                            prop.name
+                        ),
+                    });
+                }
+
+                // Validate generator spec if present
+                if let Some(ref gen) = prop.generator {
+                    if let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from) {
+                        validate_generator(
+                            &format!("{}.generator", pp),
+                            gen,
+                            &prop.name,
+                            &prop.data_type,
+                            from_entity,
+                            &names,
+                            model,
+                            false,
+                            errors,
+                        );
+                    }
+                }
+            }
+
+            // Check for name conflicts with entity fields and across relationships
+            if let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from) {
+                let entity_field_names: HashSet<&str> =
+                    from_entity.fields.iter().map(|f| f.name.as_str()).collect();
+                for prop in &rel.properties {
+                    let pp = format!("{}.properties.{}", path, prop.name);
+                    if entity_field_names.contains(prop.name.as_str()) {
+                        errors.push(SchemaError::Validation {
+                            path: pp,
+                            message: format!(
+                                "edge property '{}' conflicts with existing field on entity '{}'",
+                                prop.name, rel.from
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // Cross-relationship edge property name collision: two relationships with
+    // the same `from` entity must not have edge properties with the same name.
+    let mut from_edge_props: HashMap<&str, HashSet<(&str, &str)>> = HashMap::new();
+    for rel in &model.relationships {
+        for prop in &rel.properties {
+            let entry = from_edge_props.entry(rel.from.as_str()).or_default();
+            if !entry.insert((prop.name.as_str(), rel.name.as_str())) {
+                // Already caught by within-relationship duplicate check
+            }
+        }
+    }
+    for (entity_name, props) in &from_edge_props {
+        let mut name_to_rel: HashMap<&str, Vec<&str>> = HashMap::new();
+        for (prop_name, rel_name) in props {
+            name_to_rel.entry(prop_name).or_default().push(rel_name);
+        }
+        for (prop_name, rels) in &name_to_rel {
+            if rels.len() > 1 {
+                errors.push(SchemaError::Validation {
+                    path: format!("relationships"),
+                    message: format!(
+                        "edge property '{}' appears in multiple relationships ({}) targeting entity '{}'",
+                        prop_name,
+                        rels.join(", "),
+                        entity_name
+                    ),
+                });
+            }
+        }
     }
 }
 
@@ -2930,6 +3037,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -2976,6 +3084,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3023,6 +3132,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3085,6 +3195,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3147,6 +3258,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         // Should produce no relationship-related errors
@@ -3197,6 +3309,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3317,6 +3430,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         };
         model.relationships.push(rel.clone());
         model.relationships.push(rel);
@@ -5175,6 +5289,7 @@ mod tests {
             acyclic: Some(true),
             root_probability: Some(0.1),
             max_depth: Some(3),
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5204,6 +5319,7 @@ mod tests {
             acyclic: None,
             root_probability: Some(0.0),
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5227,6 +5343,7 @@ mod tests {
             acyclic: None,
             root_probability: None,
             max_depth: Some(0),
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5250,6 +5367,7 @@ mod tests {
             acyclic: Some(true),
             root_probability: Some(0.05),
             max_depth: None,
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5273,11 +5391,252 @@ mod tests {
             acyclic: Some(true),
             root_probability: Some(0.05),
             max_depth: Some(6),
+            properties: vec![],
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. }
                 if message.contains("acyclic") || message.contains("root_probability") || message.contains("max_depth"))
+        }));
+    }
+
+    // ── Edge property validation tests ──────────────────────────────
+
+    #[test]
+    fn test_validate_edge_properties_many_to_many_rejected() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            count: CountSpec::Fixed(10),
+            fields: vec![Field {
+                name: "id".to_string(),
+                data_type: DataType::Int,
+                primary_key: Some(true),
+                nullable: NullSpec::Never,
+                generator: None,
+                description: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+            }],
+            constraints: vec![],
+            description: None,
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+        });
+        model.relationships.push(Relationship {
+            name: "user_order".to_string(),
+            from: "user".to_string(),
+            to: "order".to_string(),
+            kind: RelationshipKind::ManyToMany,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: vec![EdgeProperty {
+                name: "quantity".to_string(),
+                data_type: DataType::Int,
+                generator: None,
+                nullable: NullSpec::Never,
+            }],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("many_to_many") && message.contains("not yet supported"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_edge_property_name_conflict() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            count: CountSpec::Fixed(10),
+            fields: vec![Field {
+                name: "id".to_string(),
+                data_type: DataType::Int,
+                primary_key: Some(true),
+                nullable: NullSpec::Never,
+                generator: None,
+                description: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+            }],
+            constraints: vec![],
+            description: None,
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+        });
+        model.relationships.push(Relationship {
+            name: "order_user".to_string(),
+            from: "order".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: vec![EdgeProperty {
+                name: "id".to_string(), // conflicts with entity field
+                data_type: DataType::Int,
+                generator: None,
+                nullable: NullSpec::Never,
+            }],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("conflicts with existing field"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_edge_properties_valid() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            count: CountSpec::Fixed(10),
+            fields: vec![
+                Field {
+                    name: "id".to_string(),
+                    data_type: DataType::Int,
+                    primary_key: Some(true),
+                    nullable: NullSpec::Never,
+                    generator: None,
+                    description: None,
+                    precision: None,
+                    actor_column: false,
+                    fields: vec![],
+                },
+                Field {
+                    name: "user_id".to_string(),
+                    data_type: DataType::Int,
+                    primary_key: None,
+                    nullable: NullSpec::Never,
+                    generator: None,
+                    description: None,
+                    precision: None,
+                    actor_column: false,
+                    fields: vec![],
+                },
+            ],
+            constraints: vec![],
+            description: None,
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+        });
+        model.relationships.push(Relationship {
+            name: "order_user".to_string(),
+            from: "order".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: Some("user_id".to_string()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: vec![
+                EdgeProperty {
+                    name: "priority".to_string(),
+                    data_type: DataType::String,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                },
+                EdgeProperty {
+                    name: "weight".to_string(),
+                    data_type: DataType::Float,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                },
+            ],
+        });
+        let errors = validate(&model);
+        // No edge-property-related errors
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("edge property"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_edge_property_duplicate_name() {
+        let mut model = minimal_model();
+        model.entities.push(Entity {
+            name: "order".to_string(),
+            count: CountSpec::Fixed(10),
+            fields: vec![Field {
+                name: "id".to_string(),
+                data_type: DataType::Int,
+                primary_key: Some(true),
+                nullable: NullSpec::Never,
+                generator: None,
+                description: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+            }],
+            constraints: vec![],
+            description: None,
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+        });
+        model.relationships.push(Relationship {
+            name: "order_user".to_string(),
+            from: "order".to_string(),
+            to: "user".to_string(),
+            kind: RelationshipKind::ManyToOne,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: vec![
+                EdgeProperty {
+                    name: "weight".to_string(),
+                    data_type: DataType::Float,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                },
+                EdgeProperty {
+                    name: "weight".to_string(), // duplicate
+                    data_type: DataType::Int,
+                    generator: None,
+                    nullable: NullSpec::Never,
+                },
+            ],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("duplicate edge property name"))
         }));
     }
 }

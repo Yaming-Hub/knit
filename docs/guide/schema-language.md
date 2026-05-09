@@ -887,6 +887,40 @@ Consecutive child rows tend to reference the same window of parents. The
 `cluster_size` controls the window width — smaller values produce tighter
 clustering.
 
+### Edge Properties
+
+Relationships can carry additional attributes via `[[relationships.properties]]`.
+Edge properties become extra columns on the **from** entity — since each row of
+the from entity represents one edge, the edge property values are generated
+alongside the FK column.
+
+```toml
+[[relationships]]
+name = "order_customer"
+from = "orders"
+to = "customers"
+kind = "many_to_one"
+foreign_key = "customer_id"
+
+[[relationships.properties]]
+name = "priority"
+type = "string"
+generator = { type = "one_of", choices = [
+    { value = "low", weight = 0.5 },
+    { value = "medium", weight = 0.35 },
+    { value = "high", weight = 0.15 },
+] }
+
+[[relationships.properties]]
+name = "discount_pct"
+type = "float"
+generator = { type = "distribution", kind = "uniform", params = { min = 0.0, max = 0.3 } }
+```
+
+Edge property names must not conflict with existing field names on the from
+entity. Edge properties on `many_to_many` relationships are not supported —
+model an explicit junction entity instead.
+
 ---
 
 ## Schema Inheritance
