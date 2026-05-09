@@ -85,6 +85,18 @@ All notable changes to Knit are documented in this file.
   - Schema validation: family-specific parameter checks, PSD matrix verification,
     Archimedean family restricted to exactly 2 fields
   - Entity-level plan compilation with `CopulaPlan` on `EntityPlan`
+- **Nested objects/structs** — Hierarchical document structures (spec §5.5):
+  - `data_type = "object"` fields with recursive `fields` sub-fields
+  - Arbitrary nesting depth for document-oriented output (JSON, Parquet, Avro)
+  - Precision rounding applied within nested struct fields
+  - All output formats supported: JSON/JSONL (native nesting), Parquet/Arrow IPC
+    (native struct columns), Avro (real nested record schemas), CSV (JSON strings)
+  - Schema validation: restricts nested fields to simple generators only
+    (distribution, faker, constant, sequence, one_of, uuid_gen); disallows
+    primary_key, actor_column, FK, graph_target, persona, derived, relative,
+    conditional in nested fields
+  - Avro struct support: full Arrow Struct → Avro Record type mapping with
+    recursive schema conversion and union-wrapped nullable fields
 
 ## [0.3.0] — 2026-05-08
 

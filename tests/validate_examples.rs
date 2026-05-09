@@ -142,7 +142,8 @@ fn all_schemas_have_relationships() {
     for path in &schemas {
         let stem = path.file_name().unwrap().to_string_lossy();
         // cli_test is a minimal utility schema without relationships
-        if stem.contains("cli_test") {
+        // nested_objects demonstrates struct/object types without relationships
+        if stem.contains("cli_test") || stem.contains("nested_objects") {
             continue;
         }
         let model = parse_toml_file(path).unwrap();

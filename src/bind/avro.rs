@@ -238,6 +238,23 @@ fn avro_schema_to_json(schema: &AvroSchema) -> serde_json::Value {
                 "items": avro_schema_to_json(&inner.items)
             })
         }
+        AvroSchema::Record(record) => {
+            let fields: Vec<serde_json::Value> = record
+                .fields
+                .iter()
+                .map(|f| {
+                    serde_json::json!({
+                        "name": f.name,
+                        "type": avro_schema_to_json(&f.schema)
+                    })
+                })
+                .collect();
+            serde_json::json!({
+                "type": "record",
+                "name": record.name.fullname(None),
+                "fields": fields
+            })
+        }
         _ => serde_json::json!("string"), // fallback
     }
 }
@@ -263,6 +280,43 @@ fn arrow_type_to_avro(dt: &DataType) -> Result<AvroSchema, BindError> {
         DataType::List(inner) => {
             let items = arrow_type_to_avro(inner.data_type())?;
             Ok(AvroSchema::array(items))
+        }
+        DataType::Struct(fields) => {
+            // Build an Avro record schema for the nested struct.
+            // Use a counter-suffixed name to avoid collisions when multiple
+            // struct fields share the same child field names.
+            use std::sync::atomic::{AtomicU32, Ordering};
+            static STRUCT_COUNTER: AtomicU32 = AtomicU32::new(0);
+            let id = STRUCT_COUNTER.fetch_add(1, Ordering::Relaxed);
+            let record_name = format!(
+                "struct_{}_{}",
+                fields
+                    .iter()
+                    .map(|f| f.name().as_str())
+                    .collect::<Vec<_>>()
+                    .join("_"),
+                id
+            );
+            let mut avro_fields = Vec::new();
+            for field in fields.iter() {
+                let base = arrow_type_to_avro(field.data_type())?;
+                let field_schema = if field.is_nullable() {
+                    AvroSchema::Union(
+                        apache_avro::schema::UnionSchema::new(vec![AvroSchema::Null, base])
+                            .map_err(|e| BindError::Other(format!("Avro union error: {e}")))?,
+                    )
+                } else {
+                    base
+                };
+                avro_fields.push(avro_record_field(field.name(), field_schema));
+            }
+            let schema_json = serde_json::json!({
+                "type": "record",
+                "name": record_name,
+                "fields": avro_fields
+            });
+            AvroSchema::parse_str(&schema_json.to_string())
+                .map_err(|e| BindError::Other(format!("Avro nested record parse error: {e}")))
         }
         _ => {
             // Map, Struct, etc. → encode as JSON string
@@ -461,6 +515,19 @@ fn arrow_value_to_avro_inner(array: &ArrayRef, row: usize) -> AvroValue {
                 .map(|i| arrow_value_to_avro_inner(&inner, i))
                 .collect();
             AvroValue::Array(items)
+        }
+        DataType::Struct(fields) => {
+            let struct_arr = array.as_any().downcast_ref::<StructArray>().unwrap();
+            let record_fields: Vec<(String, AvroValue)> = fields
+                .iter()
+                .enumerate()
+                .map(|(i, field)| {
+                    let col = struct_arr.column(i);
+                    let val = arrow_value_to_avro(col, row, field.is_nullable());
+                    (field.name().clone(), val)
+                })
+                .collect();
+            AvroValue::Record(record_fields)
         }
         _ => {
             // Fallback: convert to string representation

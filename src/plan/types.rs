@@ -188,6 +188,10 @@ pub struct FieldPlan {
     /// persona-weighted sampling instead of uniform FK generation.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub actor_column: bool,
+    /// Sub-field plans for nested object fields (`type = "object"`).
+    /// Empty for non-object fields.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sub_field_plans: Vec<FieldPlan>,
 }
 
 fn default_data_type() -> crate::core::DataType {
@@ -444,6 +448,8 @@ pub enum GeneratorPlan {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source_format: Option<crate::core::LookupFormat>,
     },
+    /// Nested object generator — assembles child field generators into an Arrow StructArray.
+    Struct,
 }
 
 /// Cross-entity causal ordering: ensures a timestamp is >= the referenced

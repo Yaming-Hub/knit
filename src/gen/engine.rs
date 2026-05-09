@@ -797,10 +797,45 @@ impl GenerationEngine {
                     // Thread the shared seen-set (if any) through to nested
                     // Unique generators inside Conditional/Composite.
                     let seen = shared_seen.get(&field_idx);
-                    create_generator_with_seen(other, seen)
+                    // For struct generators, build the child generator tree from sub_field_plans
+                    if matches!(other, GeneratorPlan::Struct) && !fp.sub_field_plans.is_empty() {
+                        self.build_struct_generator(&fp.sub_field_plans)
+                    } else {
+                        create_generator_with_seen(other, seen)
+                    }
                 }
             })
             .collect()
+    }
+
+    /// Build a StructGenerator from sub-field plans (recursive for nested objects).
+    fn build_struct_generator(
+        &self,
+        sub_plans: &[crate::plan::FieldPlan],
+    ) -> Box<dyn FieldGenerator> {
+        let mut children: Vec<Box<dyn FieldGenerator>> = Vec::with_capacity(sub_plans.len());
+        let mut names: Vec<String> = Vec::with_capacity(sub_plans.len());
+        let mut post_process: Vec<crate::gen::generators::struct_gen::ChildPostProcess> =
+            Vec::with_capacity(sub_plans.len());
+
+        for sp in sub_plans {
+            names.push(sp.field_name.clone());
+            post_process.push(crate::gen::generators::struct_gen::ChildPostProcess {
+                precision: sp.precision,
+                data_type: sp.data_type.clone(),
+                null_plan: sp.null_plan.clone(),
+            });
+            if matches!(sp.generator_plan, GeneratorPlan::Struct) && !sp.sub_field_plans.is_empty()
+            {
+                children.push(self.build_struct_generator(&sp.sub_field_plans));
+            } else {
+                children.push(create_generator_with_seen(&sp.generator_plan, None));
+            }
+        }
+
+        Box::new(crate::gen::generators::struct_gen::StructGenerator::new(
+            children, names, post_process,
+        ))
     }
 
     /// Build shared seen-sets for any field whose plan contains a `Unique`
@@ -1454,6 +1489,7 @@ mod tests {
                                 dependency_order: 0,
                                 precision: None,
                                 actor_column: false,
+                                sub_field_plans: vec![],
                             },
                             FieldPlan {
                                 field_name: "value".into(),
@@ -1463,6 +1499,7 @@ mod tests {
                                 dependency_order: 1,
                                 precision: None,
                                 actor_column: false,
+                                sub_field_plans: vec![],
                             },
                         ],
                         estimated_row_count: 100,
@@ -1491,6 +1528,7 @@ mod tests {
                                 dependency_order: 0,
                                 precision: None,
                                 actor_column: false,
+                                sub_field_plans: vec![],
                             },
                             FieldPlan {
                                 field_name: "parent_id".into(),
@@ -1504,6 +1542,7 @@ mod tests {
                                 dependency_order: 1,
                                 precision: None,
                                 actor_column: false,
+                                sub_field_plans: vec![],
                             },
                         ],
                         estimated_row_count: 500,
@@ -1670,6 +1709,7 @@ mod tests {
                             dependency_order: 0,
                             precision: None,
                             actor_column: false,
+                            sub_field_plans: vec![],
                         },
                         FieldPlan {
                             field_name: "manager_id".into(),
@@ -1683,6 +1723,7 @@ mod tests {
                             dependency_order: 1,
                             precision: None,
                             actor_column: false,
+                            sub_field_plans: vec![],
                         },
                     ],
                     estimated_row_count: 50,
@@ -1843,6 +1884,7 @@ mod tests {
                         dependency_order: 0,
                         precision: None,
                         actor_column: false,
+                        sub_field_plans: vec![],
                     }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,
@@ -1928,6 +1970,7 @@ mod tests {
                         dependency_order: 0,
                         precision: None,
                         actor_column: false,
+                        sub_field_plans: vec![],
                     }],
                     estimated_row_count: 25,
                     estimated_byte_size: 200,
@@ -2052,6 +2095,7 @@ mod tests {
                         dependency_order: 0,
                         precision: None,
                         actor_column: false,
+                        sub_field_plans: vec![],
                     }],
                     estimated_row_count: 1000,
                     estimated_byte_size: 8000,

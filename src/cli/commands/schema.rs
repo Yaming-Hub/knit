@@ -778,6 +778,7 @@ mod tests {
             primary_key: None,
             precision: None,
             actor_column: false,
+            fields: vec![],
         }
     }
 

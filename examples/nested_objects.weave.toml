@@ -1,0 +1,107 @@
+# Nested Objects Example
+#
+# Demonstrates hierarchical document structures with nested objects,
+# suitable for JSON/document-oriented output.
+
+[model]
+name = "nested_objects_example"
+description = "Products with nested metadata and dimensions"
+seed = 42
+
+[[entities]]
+name = "product"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "uuid"
+primary_key = true
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+generator = { type = "faker", method = "name" }
+
+[[entities.fields]]
+name = "price"
+data_type = "float"
+precision = 2
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 3.0
+sigma = 1.0
+
+# Nested object: product metadata
+[[entities.fields]]
+name = "metadata"
+data_type = "object"
+
+[[entities.fields.fields]]
+name = "weight_kg"
+data_type = "float"
+precision = 2
+[entities.fields.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.fields.generator.params]
+min = 0.1
+max = 50.0
+
+[[entities.fields.fields]]
+name = "color"
+data_type = "string"
+[entities.fields.fields.generator]
+type = "one_of"
+choices = [
+    { value = "red" },
+    { value = "blue" },
+    { value = "green" },
+    { value = "black" },
+    { value = "white" },
+    { value = "silver" },
+]
+
+# Deeply nested object: dimensions inside metadata
+[[entities.fields.fields]]
+name = "dimensions"
+data_type = "object"
+
+[[entities.fields.fields.fields]]
+name = "length_cm"
+data_type = "float"
+precision = 1
+[entities.fields.fields.fields.generator]
+type = "distribution"
+kind = "normal"
+[entities.fields.fields.fields.generator.params]
+mean = 30.0
+std_dev = 10.0
+
+[[entities.fields.fields.fields]]
+name = "width_cm"
+data_type = "float"
+precision = 1
+[entities.fields.fields.fields.generator]
+type = "distribution"
+kind = "normal"
+[entities.fields.fields.fields.generator.params]
+mean = 20.0
+std_dev = 8.0
+
+[[entities.fields.fields.fields]]
+name = "height_cm"
+data_type = "float"
+precision = 1
+[entities.fields.fields.fields.generator]
+type = "distribution"
+kind = "normal"
+[entities.fields.fields.fields.generator.params]
+mean = 15.0
+std_dev = 5.0
+
+[[entities.fields]]
+name = "in_stock"
+data_type = "bool"
+generator = { type = "distribution", kind = "bernoulli", params = { p = 0.85 } }

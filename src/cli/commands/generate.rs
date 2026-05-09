@@ -585,6 +585,18 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
             let elem_type = detect_list_element_type(fp);
             return ArrowDataType::List(Arc::new(ArrowField::new("element", elem_type, true)));
         }
+        crate::core::DataType::Object => {
+            // Build Struct type recursively from sub-field plans
+            let struct_fields: Vec<ArrowField> = fp
+                .sub_field_plans
+                .iter()
+                .map(|sfp| {
+                    let child_type = resolve_arrow_type(sfp);
+                    ArrowField::new(&sfp.field_name, child_type, true)
+                })
+                .collect();
+            return ArrowDataType::Struct(struct_fields.into());
+        }
         crate::core::DataType::Map => {
             let (key_type, val_type) = detect_map_kv_types(fp);
             let entries_field = ArrowField::new(
@@ -1042,6 +1054,8 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
         // Plugin output type unknown at plan time — default to Utf8
         crate::plan::GeneratorPlan::Plugin { .. } => ArrowDataType::Utf8,
         crate::plan::GeneratorPlan::ExternalLookup { .. } => ArrowDataType::Utf8,
+        // Struct output type is built from sub-field plans at runtime
+        crate::plan::GeneratorPlan::Struct => ArrowDataType::Utf8,
     }
 }
 
@@ -1074,6 +1088,7 @@ fn default_arrow_for_data_type(dt: &crate::core::DataType) -> ArrowDataType {
             ArrowDataType::List(Arc::new(ArrowField::new("element", ArrowDataType::Utf8, true)))
         }
         crate::core::DataType::Map => ArrowDataType::Utf8,
+        crate::core::DataType::Object => ArrowDataType::Utf8, // struct handled at plan level
     }
 }
 

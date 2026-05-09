@@ -24,6 +24,7 @@ pub mod pattern;
 pub mod persona_field;
 pub mod sequence;
 pub mod string_fk;
+pub mod struct_gen;
 pub mod temporal;
 pub mod thread_ref;
 pub mod topology;
@@ -252,6 +253,15 @@ pub fn create_generator_with_seen(
             weights.clone(),
             sampling.clone(),
         )),
+        GeneratorPlan::Struct => {
+            // StructGenerator is created by the engine which builds child generators
+            // from sub_field_plans. If we reach here (e.g. nested in Conditional),
+            // fall back to null.
+            tracing::warn!(
+                "Struct inside nested generator: no sub-field plans available, emitting nulls"
+            );
+            Box::new(constant::ConstantGenerator::new(crate::core::Value::Null))
+        }
     }
 }
 

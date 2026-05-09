@@ -109,6 +109,66 @@ Knit supports the following data types:
 | `array<T>` | Array of typed elements | List |
 | `object` | Nested document | Struct |
 
+### Nested Objects (`object`)
+
+Fields with `data_type = "object"` define hierarchical document structures.
+Sub-fields are declared inline using nested `[[entities.fields.fields]]`
+sections. Nesting can be arbitrary depth.
+
+```toml
+[[entities.fields]]
+name = "address"
+data_type = "object"
+
+[[entities.fields.fields]]
+name = "city"
+data_type = "string"
+generator = { type = "faker", method = "city_name" }
+
+[[entities.fields.fields]]
+name = "zip"
+data_type = "string"
+generator = { type = "faker", method = "zip_code" }
+
+# Nested within nested
+[[entities.fields.fields]]
+name = "coordinates"
+data_type = "object"
+
+[[entities.fields.fields.fields]]
+name = "lat"
+data_type = "float"
+[entities.fields.fields.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.fields.fields.generator.params]
+min = -90.0
+max = 90.0
+
+[[entities.fields.fields.fields]]
+name = "lon"
+data_type = "float"
+[entities.fields.fields.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.fields.fields.generator.params]
+min = -180.0
+max = 180.0
+```
+
+**Restrictions on nested fields:**
+- Only simple generators: `distribution`, `faker`, `constant`, `sequence`,
+  `one_of`, `uuid_gen`
+- No `primary_key` or `actor_column` on nested fields
+- No FK, graph_target, persona, derived, relative, or conditional generators
+- Precision (`precision`) works on nested float fields
+
+**Output formats:**
+- JSON/JSONL: native nested objects
+- Parquet/Arrow IPC: native struct columns
+- Avro: real nested record schemas
+- CSV: structs serialized as JSON strings
+
 ---
 
 ## Generators
