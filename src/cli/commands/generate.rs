@@ -1094,6 +1094,9 @@ fn default_arrow_for_data_type(dt: &crate::core::DataType) -> ArrowDataType {
         }
         crate::core::DataType::Map => ArrowDataType::Utf8,
         crate::core::DataType::Object => ArrowDataType::Utf8, // struct handled at plan level
+        crate::core::DataType::Custom(ref name) => {
+            unreachable!("custom type '{}' should be resolved before planning", name)
+        }
     }
 }
 

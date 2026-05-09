@@ -995,6 +995,9 @@ fn default_generator_for_type(data_type: &crate::core::DataType) -> GeneratorPla
         | DataType::Array
         | DataType::Map
         | DataType::Object => GeneratorPlan::Constant(crate::core::Value::Null),
+        DataType::Custom(ref name) => {
+            unreachable!("custom type '{}' should be resolved before planning", name)
+        }
     }
 }
 
@@ -1231,6 +1234,7 @@ fn estimate_byte_size(entity: &Entity, row_count: u64) -> u64 {
             crate::core::DataType::Array => 128,
             crate::core::DataType::Map => 256,
             crate::core::DataType::Object => 256,
+            crate::core::DataType::Custom(_) => 64, // resolved before planning, but estimate conservatively
         })
         .sum();
     bytes_per_row * row_count
@@ -1420,6 +1424,7 @@ mod tests {
             schema_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            custom_types: Vec::new(),
         }
     }
 

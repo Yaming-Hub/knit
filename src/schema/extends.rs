@@ -120,6 +120,19 @@ pub fn merge_models(parent: &DataModel, child: &DataModel) -> DataModel {
         }
     }
 
+    // Merge custom types by name
+    for child_ct in &child.custom_types {
+        if let Some(parent_ct) = result
+            .custom_types
+            .iter_mut()
+            .find(|ct| ct.name == child_ct.name)
+        {
+            *parent_ct = child_ct.clone();
+        } else {
+            result.custom_types.push(child_ct.clone());
+        }
+    }
+
     result
 }
 
@@ -191,7 +204,7 @@ pub fn resolve_extends(
         .parent()
         .unwrap_or(std::path::Path::new("."))
         .join(extends);
-    let parent = crate::schema::parse_toml_file(&parent_path)?;
+    let parent = crate::schema::parser::parse_toml_file_raw(&parent_path)?;
     Ok(merge_models(&parent, child))
 }
 
@@ -258,6 +271,7 @@ mod tests {
             schema_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            custom_types: Vec::new(),
         }
     }
 
@@ -276,6 +290,7 @@ mod tests {
             schema_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            custom_types: Vec::new(),
         }
     }
 

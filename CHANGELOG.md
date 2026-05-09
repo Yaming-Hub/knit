@@ -6,6 +6,15 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Custom domain types** — Define reusable type aliases with default generators,
+  precision, and nullable settings via the `[[types]]` schema section (spec §4.3).
+  - Fields using a custom type inherit `base`, `generator`, `precision`, and
+    `nullable` from the type definition
+  - Field-level overrides take precedence over custom type defaults
+  - Validation: built-in name conflicts, duplicate names, complex base type
+    rejection, undefined type reference errors
+  - Works with include and extends composition (custom types merge by name)
+  - New example: `examples/custom_types.weave.toml`
 - **SQL INSERT output format** — New `--format sql` output that generates
   standard SQL INSERT statements from Arrow data. Features:
   - Multi-row VALUES syntax with configurable batch size (default: 100 rows

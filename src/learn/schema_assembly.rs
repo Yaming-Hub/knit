@@ -230,6 +230,7 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         schema_version: "1.0".to_string(),
         personas,
         actor_relationships,
+        custom_types: Vec::new(),
     }
 }
 
