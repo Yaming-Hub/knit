@@ -821,6 +821,18 @@ pub struct NoiseProfile {
     /// Fraction of numeric values to replace with statistical outliers.
     #[serde(default)]
     pub outlier_rate: f64,
+    /// Fraction of rows to swap within each column.
+    #[serde(default)]
+    pub swap_rate: f64,
+    /// Fraction of string values to truncate at random positions.
+    #[serde(default)]
+    pub truncate_rate: f64,
+    /// Fraction of FK values to replace with non-existent references.
+    #[serde(default)]
+    pub fk_violate_rate: f64,
+    /// Fraction of timestamps to cluster around spike points.
+    #[serde(default)]
+    pub temporal_spike_rate: f64,
 }
 
 // ── Constraint ───────────────────────────────────────────────────────
@@ -1308,6 +1320,10 @@ mod tests {
                 duplicate_rate: 0.0,
                 typo_rate: 0.005,
                 outlier_rate: 0.0,
+                swap_rate: 0.0,
+                truncate_rate: 0.0,
+                fk_violate_rate: 0.0,
+                temporal_spike_rate: 0.0,
             }],
             correlations: vec![],
             params: BTreeMap::new(),
