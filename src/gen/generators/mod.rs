@@ -32,6 +32,7 @@ pub mod numeric_time_series;
 pub mod event_stream;
 pub mod unique;
 pub mod uuid_gen;
+pub mod weighted_fk;
 
 use crate::plan::GeneratorPlan;
 

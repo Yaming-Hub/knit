@@ -930,6 +930,7 @@ mod tests {
             kind: crate::core::RelationshipKind::OneToMany,
             foreign_key: Some("user_id".to_string()),
             cardinality: None,
+            degree: None,
         });
         let doc = generate_schema_doc(&model);
         assert!(doc.contains("## Relationships"));

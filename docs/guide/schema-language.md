@@ -788,17 +788,25 @@ acyclic = true
 
 ### Degree Distribution
 
-Control how many children each parent gets:
+Control how children are distributed across parents. Without `degree`, children
+are assigned uniformly at random. With a Zipf distribution, some parents receive
+disproportionately more children (power-law behavior):
 
 ```toml
 [[relationships]]
 name = "order_customer"
 from = "orders"
 to = "customers"
-kind = "one_to_many"
+kind = "many_to_one"
 foreign_key = "customer_id"
-degree = { distribution = "zipf", params = { n = 100000, exponent = 1.2 } }
+
+[relationships.degree]
+kind = "zipf"
+[relationships.degree.params]
+exponent = 1.2
 ```
+
+Higher `exponent` values produce stronger skew — a few parents attract most children.
 
 ---
 

@@ -270,6 +270,10 @@ pub enum GeneratorPlan {
         target_field: String,
         /// Storage strategy for the parent's key store.
         key_store_kind: KeyStoreKind,
+        /// Optional degree distribution for non-uniform parent selection.
+        /// When set, some parents receive disproportionately more children.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        degree: Option<DegreePlan>,
     },
     /// Random UUID v4.
     Uuid,
@@ -510,6 +514,20 @@ pub struct BurstPlan {
 }
 
 // ── TemporalKind ─────────────────────────────────────────────────────
+
+/// Compiled degree distribution for non-uniform FK sampling.
+///
+/// Pre-resolved from the schema-level `DistributionSpec` so the generator
+/// can sample directly without re-parsing parameters.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DegreePlan {
+    /// Distribution family (e.g. Zipf, Uniform, Normal).
+    pub kind: crate::core::DistributionKind,
+    /// Resolved numeric parameters.
+    pub params: std::collections::BTreeMap<String, f64>,
+    /// Planned parent row count (used as Zipf `n` when not explicitly set).
+    pub parent_count: u64,
+}
 
 /// Temporal generation strategy.
 #[derive(Debug, Clone, Serialize, Deserialize)]

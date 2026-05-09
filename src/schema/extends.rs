@@ -282,6 +282,7 @@ mod tests {
                 kind: RelationshipKind::OneToMany,
                 foreign_key: None,
                 cardinality: None,
+                degree: None,
             }],
             noise_profiles: vec![],
             correlations: vec![],
@@ -446,6 +447,7 @@ mod tests {
             kind: RelationshipKind::ManyToMany,
             foreign_key: None,
             cardinality: None,
+            degree: None,
         });
         // Add new relationship
         child.relationships.push(Relationship {
@@ -455,6 +457,7 @@ mod tests {
             kind: RelationshipKind::OneToMany,
             foreign_key: None,
             cardinality: None,
+            degree: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.relationships.len(), 2);

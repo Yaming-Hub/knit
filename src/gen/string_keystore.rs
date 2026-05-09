@@ -70,6 +70,11 @@ impl StringKeyStore for InMemoryStringKeyStore {
             .expect("string keystore lock poisoned")
             .len()
     }
+
+    fn get_by_index(&self, index: usize) -> Option<String> {
+        let keys = self.keys.read().expect("string keystore lock poisoned");
+        keys.get(index).cloned()
+    }
 }
 
 #[cfg(test)]

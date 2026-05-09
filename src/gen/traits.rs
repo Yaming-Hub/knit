@@ -112,4 +112,12 @@ pub trait StringKeyStore: Send + Sync {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    /// Get a key by its insertion index (0-based).
+    ///
+    /// Returns `None` if the index is out of bounds. Used by degree-weighted FK
+    /// generation to map a Zipf rank to a specific parent key.
+    fn get_by_index(&self, _index: usize) -> Option<String> {
+        None
+    }
 }

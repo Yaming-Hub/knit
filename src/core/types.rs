@@ -1068,6 +1068,12 @@ pub struct Relationship {
     /// Optional cardinality count/distribution per parent row.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cardinality: Option<CountSpec>,
+    /// Optional degree distribution controlling how children are distributed
+    /// across parents. When specified (e.g. Zipf), some parents receive
+    /// disproportionately more children than others. If omitted, children
+    /// are assigned to parents uniformly at random.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub degree: Option<DistributionSpec>,
 }
 
 /// Cardinality of a [`Relationship`].
