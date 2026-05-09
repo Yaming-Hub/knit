@@ -299,6 +299,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             acyclic: None,
             root_probability: None,
             max_depth: None,
+            properties: vec![],
         })
         .collect();
 

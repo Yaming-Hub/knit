@@ -1,0 +1,122 @@
+# Edge Properties Example
+#
+# Demonstrates attaching properties (extra columns) to relationship edges.
+# Edge properties become additional columns on the "from" entity.
+#
+# Run:
+#   knit generate edge_properties.weave.toml -o output/
+
+schema_version = "1.0"
+
+[model]
+name = "edge_properties"
+description = "Edge properties demo"
+seed = 42
+
+# ── Products ─────────────────────────────────────────────────
+[[entities]]
+name = "products"
+count = 50
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "word"
+
+[[entities.fields]]
+name = "unit_price"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"
+[entities.fields.generator.params]
+min = 5.0
+max = 200.0
+
+# ── Customers ────────────────────────────────────────────────
+[[entities]]
+name = "customers"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "name"
+
+# ── Orders ───────────────────────────────────────────────────
+# Each order references a customer. The relationship carries
+# edge properties: priority and discount_pct.
+[[entities]]
+name = "orders"
+count = 500
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "customer_id"
+data_type = "int"
+
+[[entities.fields]]
+name = "product_id"
+data_type = "int"
+
+# ── Relationships with edge properties ───────────────────────
+[[relationships]]
+name = "order_customer"
+from = "orders"
+to = "customers"
+kind = "many_to_one"
+foreign_key = "customer_id"
+
+# Edge properties: additional columns generated on "orders"
+[[relationships.properties]]
+name = "priority"
+type = "string"
+generator = { type = "one_of", choices = [{ value = "low", weight = 0.5 }, { value = "medium", weight = 0.35 }, { value = "high", weight = 0.15 }] }
+
+[[relationships.properties]]
+name = "discount_pct"
+type = "float"
+generator = { type = "distribution", kind = "uniform", params = { min = 0.0, max = 0.3 } }
+
+[[relationships]]
+name = "order_product"
+from = "orders"
+to = "products"
+kind = "many_to_one"
+foreign_key = "product_id"
+
+# Edge property with inline generator
+[[relationships.properties]]
+name = "quantity"
+type = "int"
+generator = { type = "distribution", kind = "poisson", params = { lambda = 3.0 } }

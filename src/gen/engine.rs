@@ -2540,4 +2540,3 @@ mod tests {
         assert!(result.as_any().downcast_ref::<Int64Array>().is_some());
     }
 }
-
