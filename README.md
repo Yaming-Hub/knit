@@ -37,7 +37,7 @@ cargo build --release
   generators, correlated fields, and graph topologies.
 - **Deterministic output** — Seeded RNG tree ensures identical datasets across
   runs for any given seed.
-- **Multiple output formats** — Parquet, CSV, JSON, JSONL, and Arrow IPC with
+- **Multiple output formats** — Parquet, CSV, JSON, JSONL, Arrow IPC, Avro, and SQL with
   configurable compression (Snappy, LZ4, Zstd).
 - **Noise injection** — Post-generation perturbation pipeline with 7 built-in
   perturbators (typos, null injection, outliers, drift, swap, truncation, format
@@ -189,7 +189,7 @@ Knit is published as a single crate. Internally it is organized into modules:
 | `knit::plan` | Compiles a `DataModel` into an `ExecutionPlan` with RNG tree |
 | `knit::gen` | Generation engine: executes plans → Arrow `RecordBatch`es |
 | `knit::noise` | Post-generation perturbation pipeline (7 perturbators) |
-| `knit::bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC |
+| `knit::bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC, Avro, SQL |
 | `knit::learn` | Data ingestion, profiling, distribution fitting, schema inference, behavioral persona discovery |
 | `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `schema`, `init`, `learn`, `inspect`, `completions`, `generators` |
 
@@ -383,7 +383,7 @@ Commands:
 
 Global options:
   --seed <N>            Override schema seed
-  --format <FMT>        Output format (parquet|csv|json|jsonl|arrow)
+  --format <FMT>        Output format (parquet|csv|json|jsonl|arrow|avro|sql)
   --compression <ALG>   Compression (none|snappy|gzip|lz4|zstd)
   --parallel <N>        Worker threads (0 = auto)
   --batch-size <N>      Rows per batch (default: 8192)

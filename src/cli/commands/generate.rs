@@ -383,6 +383,8 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                     record_name: entity_name.to_string(),
                     avro_codec,
                     missing_field_specs: entity_missing,
+                    sql_create_table: cli.sql_create_table,
+                    sql_transaction: cli.sql_transaction,
                     ..SinkConfig::default()
                 };
                 let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
@@ -506,6 +508,7 @@ fn map_format(f: Format) -> OutputFormat {
         Format::Jsonl => OutputFormat::Jsonl,
         Format::ArrowIpc => OutputFormat::ArrowIpc,
         Format::Avro => OutputFormat::Avro,
+        Format::Sql => OutputFormat::Sql,
     }
 }
 
@@ -533,6 +536,7 @@ fn format_extension(f: Format) -> &'static str {
         Format::Jsonl => "jsonl",
         Format::ArrowIpc => "arrow",
         Format::Avro => "avro",
+        Format::Sql => "sql",
     }
 }
 

@@ -85,6 +85,14 @@ pub struct Cli {
     /// Otherwise it's treated as an absolute row count for all entities.
     #[arg(long, global = true)]
     pub count: Option<String>,
+
+    /// Include CREATE TABLE DDL in SQL output.
+    #[arg(long, global = true)]
+    pub sql_create_table: bool,
+
+    /// Wrap SQL output in BEGIN/COMMIT transaction.
+    #[arg(long, global = true)]
+    pub sql_transaction: bool,
 }
 
 /// Supported output formats for generated data.
@@ -97,6 +105,7 @@ pub enum Format {
     #[value(name = "arrow")]
     ArrowIpc,
     Avro,
+    Sql,
 }
 
 /// Compression algorithms.

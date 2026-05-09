@@ -6,6 +6,18 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **SQL INSERT output format** — New `--format sql` output that generates
+  standard SQL INSERT statements from Arrow data. Features:
+  - Multi-row VALUES syntax with configurable batch size (default: 100 rows
+    per INSERT statement)
+  - Optional CREATE TABLE DDL via `--sql-create-table` flag
+  - Optional transaction wrapping via `--sql-transaction` flag
+  - Proper identifier quoting (double-quotes) for reserved words
+  - Complete Arrow-to-SQL type mapping (INTEGER, BIGINT, REAL, DOUBLE
+    PRECISION, TEXT, BOOLEAN, DATE, TIMESTAMP, TIME, NUMERIC)
+  - Correct literal formatting: single-quote escaping, ISO dates/timestamps,
+    NaN/Infinity → NULL, hex-encoded binary
+  - Complex types (struct, list, map) serialized as JSON TEXT
 - **Expanded faker generator** — 40+ new faker methods covering spec §6.2
   provider categories. Dotted provider names (`internet.email`,
   `finance.credit_card`) are normalized automatically.

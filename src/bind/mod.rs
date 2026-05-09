@@ -19,6 +19,7 @@ pub mod helpers;
 pub mod ipc;
 pub mod json;
 pub mod parquet;
+pub mod sql;
 pub mod template;
 pub mod traits;
 
@@ -27,5 +28,6 @@ pub use error::BindError;
 pub use factory::{create_sink, OutputFormat, SinkConfig};
 pub use json::MissingFieldSpec;
 pub use parquet::Compression;
+pub use sql::SqlConfig;
 pub use template::{TemplateMode, TemplateSink};
 pub use traits::{Sink, SinkStats};

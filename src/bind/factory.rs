@@ -11,6 +11,7 @@ use crate::bind::error::BindError;
 use crate::bind::ipc::ArrowIpcSink;
 use crate::bind::json::{JsonMode, JsonSink, MissingFieldSpec};
 use crate::bind::parquet::{Compression, ParquetSink};
+use crate::bind::sql::{SqlConfig, SqlSink};
 use crate::bind::template::{TemplateMode, TemplateSink};
 use crate::bind::traits::Sink;
 
@@ -29,6 +30,8 @@ pub enum OutputFormat {
     ArrowIpc,
     /// Apache Avro Object Container Format.
     Avro,
+    /// SQL INSERT statements.
+    Sql,
     /// Template-based output rendered via MiniJinja.
     Template,
 }
@@ -56,6 +59,12 @@ pub struct SinkConfig {
     pub record_name: String,
     /// Fields to randomly omit from document output (JSON/JSONL only).
     pub missing_field_specs: Vec<MissingFieldSpec>,
+    /// Whether to emit CREATE TABLE DDL (SQL format only).
+    pub sql_create_table: bool,
+    /// Whether to wrap SQL output in BEGIN/COMMIT.
+    pub sql_transaction: bool,
+    /// Number of rows per INSERT statement (SQL format only).
+    pub sql_rows_per_insert: usize,
 }
 
 impl Default for SinkConfig {
@@ -71,6 +80,9 @@ impl Default for SinkConfig {
             avro_codec: AvroCodec::default(),
             record_name: "Record".to_string(),
             missing_field_specs: Vec::new(),
+            sql_create_table: false,
+            sql_transaction: false,
+            sql_rows_per_insert: 100,
         }
     }
 }
@@ -113,6 +125,16 @@ pub fn create_sink(
         }
         OutputFormat::Avro => {
             let sink = AvroSink::new(writer, schema, &config.record_name, config.avro_codec)?;
+            Ok(Box::new(sink))
+        }
+        OutputFormat::Sql => {
+            let sql_config = SqlConfig {
+                table_name: config.record_name.clone(),
+                create_table: config.sql_create_table,
+                transaction: config.sql_transaction,
+                rows_per_insert: config.sql_rows_per_insert,
+            };
+            let sink = SqlSink::new(writer, schema, sql_config);
             Ok(Box::new(sink))
         }
         OutputFormat::Template => {
