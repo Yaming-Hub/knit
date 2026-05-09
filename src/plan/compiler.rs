@@ -791,25 +791,82 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     kind: TemporalKind::Relative,
                     params,
                     base_field: Some(field.clone()),
+                    string_params: BTreeMap::new(),
                 }
             }
             GeneratorSpec::BusinessHours {
                 start_hour,
                 end_hour,
                 exclude_weekends,
+                timezone,
+                timezone_field,
+                date_range,
+                exclude_dates,
+                days,
             } => {
                 let mut params = BTreeMap::new();
                 params.insert("start_hour".into(), *start_hour as f64);
                 params.insert("end_hour".into(), *end_hour as f64);
-                // Generator reads "weekdays_only" (1.0 = true, 0.0 = false)
-                params.insert(
-                    "weekdays_only".into(),
-                    if *exclude_weekends { 1.0 } else { 0.0 },
-                );
+
+                // days bitmask: bit 0=Mon, bit 1=Tue, ..., bit 6=Sun
+                let days_mask = if let Some(day_list) = days {
+                    day_list.iter().fold(0u8, |mask, d| {
+                        mask | match d.to_lowercase().as_str() {
+                            "mon" | "monday" => 0x01,
+                            "tue" | "tuesday" => 0x02,
+                            "wed" | "wednesday" => 0x04,
+                            "thu" | "thursday" => 0x08,
+                            "fri" | "friday" => 0x10,
+                            "sat" | "saturday" => 0x20,
+                            "sun" | "sunday" => 0x40,
+                            _ => 0,
+                        }
+                    })
+                } else if *exclude_weekends {
+                    0x1F // Mon-Fri
+                } else {
+                    0x7F // All days
+                };
+                params.insert("days_mask".into(), days_mask as f64);
+
+                // Date range as epoch-day offsets
+                if let Some(dr) = date_range {
+                    if let Ok(d) = chrono::NaiveDate::parse_from_str(&dr.min, "%Y-%m-%d") {
+                        params.insert(
+                            "date_range_min_ms".into(),
+                            d.and_hms_opt(0, 0, 0)
+                                .unwrap()
+                                .and_utc()
+                                .timestamp_millis() as f64,
+                        );
+                    }
+                    if let Ok(d) = chrono::NaiveDate::parse_from_str(&dr.max, "%Y-%m-%d") {
+                        params.insert(
+                            "date_range_max_ms".into(),
+                            d.and_hms_opt(0, 0, 0)
+                                .unwrap()
+                                .and_utc()
+                                .timestamp_millis() as f64,
+                        );
+                    }
+                }
+
+                let mut string_params = BTreeMap::new();
+                if let Some(tz) = timezone {
+                    string_params.insert("timezone".into(), tz.clone());
+                }
+                if let Some(tz_field) = timezone_field {
+                    string_params.insert("timezone_field".into(), tz_field.clone());
+                }
+                if !exclude_dates.is_empty() {
+                    string_params.insert("exclude_dates".into(), exclude_dates.join(","));
+                }
+
                 GeneratorPlan::Temporal {
                     kind: TemporalKind::BusinessHours,
                     params,
-                    base_field: None,
+                    base_field: timezone_field.clone(),
+                    string_params,
                 }
             }
             GeneratorSpec::Conditional {
@@ -1306,6 +1363,18 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
             } else {
                 0
             }
+        }
+        // BusinessHours with timezone_field depends on the timezone field
+        Some(GeneratorSpec::BusinessHours {
+            timezone_field: Some(ref tz_f),
+            ..
+        }) => {
+            let tz_order = all_fields
+                .iter()
+                .find(|f| f.name == *tz_f)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            tz_order + 1
         }
         _ => 0,
     }
@@ -2624,6 +2693,11 @@ mod tests {
             start_hour: 9,
             end_hour: 17,
             exclude_weekends: true,
+            timezone: None,
+            timezone_field: None,
+            date_range: None,
+            exclude_dates: vec![],
+            days: None,
         };
         let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
@@ -2631,10 +2705,11 @@ mod tests {
                 kind: TemporalKind::BusinessHours,
                 params,
                 base_field,
+                ..
             } => {
                 assert_eq!(params["start_hour"], 9.0);
                 assert_eq!(params["end_hour"], 17.0);
-                assert_eq!(params["weekdays_only"], 1.0);
+                assert_eq!(params["days_mask"], 0x1F as f64); // Mon-Fri
                 assert!(base_field.is_none());
             }
             other => panic!("expected Temporal/BusinessHours, got {other:?}"),
@@ -2647,6 +2722,11 @@ mod tests {
             start_hour: 8,
             end_hour: 20,
             exclude_weekends: false,
+            timezone: None,
+            timezone_field: None,
+            date_range: None,
+            exclude_dates: vec![],
+            days: None,
         };
         let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
@@ -2655,7 +2735,7 @@ mod tests {
                 params,
                 ..
             } => {
-                assert_eq!(params["weekdays_only"], 0.0);
+                assert_eq!(params["days_mask"], 0x7F as f64); // All days
             }
             other => panic!("expected Temporal/BusinessHours, got {other:?}"),
         }
@@ -2673,6 +2753,7 @@ mod tests {
                 kind: TemporalKind::Relative,
                 params,
                 base_field,
+                ..
             } => {
                 assert_eq!(params["offset_mean"], 86400.0);
                 assert!(params["offset_std"] > 0.0);

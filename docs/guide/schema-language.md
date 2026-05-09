@@ -675,6 +675,46 @@ Knit also includes these generators:
 | `relative` | Datetime offset from another field | ✅ Working |
 | `business_hours` | Constrained to business hours with timezone awareness | ✅ Working |
 
+#### Business Hours Generator
+
+Generate timestamps within configurable business hours, with timezone, date
+range, and holiday support:
+
+```toml
+[[entities.fields]]
+name = "scheduled_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "business_hours"
+start_hour = 9
+end_hour = 17
+timezone = "America/New_York"
+days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+exclude_dates = ["2024-12-25", "2024-01-01"]
+
+[entities.fields.generator.date_range]
+min = "2024-01-01"
+max = "2024-12-31"
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `start_hour` | int | 9 | Inclusive start hour (0–23) |
+| `end_hour` | int | 17 | Exclusive end hour (1–24) |
+| `exclude_weekends` | bool | true | Skip Sat/Sun (ignored when `days` is set) |
+| `timezone` | string | — | Fixed IANA timezone for all rows |
+| `timezone_field` | string | — | Field name for per-row timezone strings |
+| `days` | list | — | Explicit active weekdays (overrides `exclude_weekends`) |
+| `date_range` | object | — | `{ min, max }` ISO dates to constrain range |
+| `exclude_dates` | list | — | ISO dates to skip (holidays) |
+
+**Notes:**
+- `timezone` and `timezone_field` are mutually exclusive
+- `days` accepts full names ("Monday") or abbreviations ("Mon")
+- Timestamps are stored as UTC epoch milliseconds
+- DST handling: ambiguous local times → earliest; nonexistent → shift forward
+- See `examples/timezone_business_hours.weave.toml` for a complete example
+
 **Faker method reference** — All supported `method` values for `type = "faker"`:
 
 | Category | Methods |

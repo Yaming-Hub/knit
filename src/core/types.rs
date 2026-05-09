@@ -463,8 +463,27 @@ pub enum GeneratorSpec {
         #[serde(default = "default_end_hour")]
         end_hour: u8,
         /// Whether to exclude Saturday and Sunday.
+        /// Ignored when `days` is specified.
         #[serde(default)]
         exclude_weekends: bool,
+        /// Fixed IANA timezone for all rows (e.g. `"America/New_York"`).
+        /// Mutually exclusive with `timezone_field`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        timezone: Option<String>,
+        /// Name of another field containing per-row IANA timezone strings.
+        /// Mutually exclusive with `timezone`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        timezone_field: Option<String>,
+        /// Constrain generated dates to this range (both inclusive).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        date_range: Option<BusinessDateRange>,
+        /// ISO 8601 dates to skip (holidays, blackout dates).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        exclude_dates: Vec<String>,
+        /// Explicit list of active weekdays (e.g. `["Mon","Tue","Wed","Thu","Fri"]`).
+        /// Overrides `exclude_weekends` when present.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        days: Option<Vec<String>>,
     },
     /// Sample from an external dictionary file (one value per line).
     ///
@@ -1490,6 +1509,18 @@ pub struct DateRange {
     pub start: String,
     /// End date (exclusive).
     pub end: String,
+}
+
+/// A date range for business hours generators with inclusive min/max bounds.
+///
+/// Both boundaries are ISO 8601 dates (e.g. `"2024-01-01"`).
+/// Unlike [`DateRange`], both `min` and `max` are inclusive.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BusinessDateRange {
+    /// Earliest allowed date (inclusive).
+    pub min: String,
+    /// Latest allowed date (inclusive).
+    pub max: String,
 }
 
 // ── Persona ──────────────────────────────────────────────────────────

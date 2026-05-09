@@ -1295,6 +1295,12 @@ fn validate_generator(
         GeneratorSpec::BusinessHours {
             start_hour,
             end_hour,
+            exclude_weekends,
+            timezone,
+            timezone_field,
+            date_range,
+            exclude_dates,
+            days,
             ..
         } => {
             if *start_hour > 23 {
@@ -1314,6 +1320,105 @@ fn validate_generator(
                     path: path.to_string(),
                     message: "business_hours requires start_hour < end_hour".to_string(),
                 });
+            }
+            // timezone and timezone_field are mutually exclusive
+            if timezone.is_some() && timezone_field.is_some() {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "business_hours: 'timezone' and 'timezone_field' are mutually exclusive".to_string(),
+                });
+            }
+            // Validate timezone is a valid IANA timezone
+            if let Some(tz) = timezone {
+                if tz.parse::<chrono_tz::Tz>().is_err() {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!("business_hours: invalid timezone '{}'", tz),
+                    });
+                }
+            }
+            // timezone_field must reference an existing field in the same entity
+            if let Some(ref tz_f) = timezone_field {
+                // Path format: "entities.<entity_name>.fields.<field_name>.generator"
+                // Extract entity name from path
+                if let Some(entity_name) = path.strip_prefix("entities.").and_then(|p| p.split('.').next()) {
+                    if let Some(current_entity) = model.entities.iter().find(|e| e.name == entity_name) {
+                        let field_names: HashSet<&str> = current_entity
+                            .fields.iter().map(|f| f.name.as_str()).collect();
+                        if !field_names.contains(tz_f.as_str()) {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!("business_hours: timezone_field '{}' not found in entity", tz_f),
+                            });
+                        }
+                    }
+                }
+            }
+            // days and exclude_weekends=true are mutually exclusive
+            if let Some(ref d) = days {
+                if *exclude_weekends {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "business_hours: 'days' and 'exclude_weekends=true' are mutually exclusive".to_string(),
+                    });
+                }
+                // Validate day names
+                let valid_days = [
+                    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+                    "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+                ];
+                for day in d {
+                    if !valid_days.contains(&day.to_lowercase().as_str()) {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!("business_hours: invalid day name '{}'", day),
+                        });
+                    }
+                }
+                if d.is_empty() {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "business_hours: 'days' must not be empty".to_string(),
+                    });
+                }
+            }
+            // Validate date_range
+            if let Some(ref dr) = date_range {
+                let min_parsed = chrono::NaiveDate::parse_from_str(&dr.min, "%Y-%m-%d");
+                let max_parsed = chrono::NaiveDate::parse_from_str(&dr.max, "%Y-%m-%d");
+                match (min_parsed, max_parsed) {
+                    (Err(_), _) => {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!("business_hours: invalid date_range.min '{}'", dr.min),
+                        });
+                    }
+                    (_, Err(_)) => {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!("business_hours: invalid date_range.max '{}'", dr.max),
+                        });
+                    }
+                    (Ok(min_d), Ok(max_d)) => {
+                        if min_d > max_d {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: "business_hours: date_range.min must be before date_range.max".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+            // Validate exclude_dates are valid ISO dates
+            if !exclude_dates.is_empty() {
+                for date_str in exclude_dates {
+                    if chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d").is_err() {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!("business_hours: invalid exclude_date '{}'", date_str),
+                        });
+                    }
+                }
             }
         }
         GeneratorSpec::Lookup {
@@ -4196,6 +4301,11 @@ mod tests {
                 start_hour: 20,
                 end_hour: 10,
                 exclude_weekends: false,
+                timezone: None,
+                timezone_field: None,
+                date_range: None,
+                exclude_dates: vec![],
+                days: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4220,6 +4330,11 @@ mod tests {
                 start_hour: 20,
                 end_hour: 24,
                 exclude_weekends: false,
+                timezone: None,
+                timezone_field: None,
+                date_range: None,
+                exclude_dates: vec![],
+                days: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4235,6 +4350,219 @@ mod tests {
             "expected no business_hours errors, got: {:?}",
             errors
         );
+    }
+
+    #[test]
+    fn test_validate_business_hours_timezone_and_field_exclusive() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: false,
+                timezone: Some("America/New_York".to_string()),
+                timezone_field: Some("tz_col".to_string()),
+                date_range: None,
+                exclude_dates: vec![],
+                days: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("mutually exclusive"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_invalid_timezone() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: false,
+                timezone: Some("Not/A/Timezone".to_string()),
+                timezone_field: None,
+                date_range: None,
+                exclude_dates: vec![],
+                days: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid timezone"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_days_with_exclude_weekends() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: true,
+                timezone: None,
+                timezone_field: None,
+                date_range: None,
+                exclude_dates: vec![],
+                days: Some(vec!["Monday".into(), "Wednesday".into()]),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("mutually exclusive"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_invalid_day_name() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: false,
+                timezone: None,
+                timezone_field: None,
+                date_range: None,
+                exclude_dates: vec![],
+                days: Some(vec!["Funday".into()]),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid day name"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_invalid_date_range() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: false,
+                timezone: None,
+                timezone_field: None,
+                date_range: Some(crate::core::types::BusinessDateRange {
+                    min: "2024-12-31".to_string(),
+                    max: "2024-01-01".to_string(),
+                }),
+                exclude_dates: vec![],
+                days: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("date_range.min must be before"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_business_hours_single_day_range_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: false,
+                timezone: None,
+                timezone_field: None,
+                date_range: Some(crate::core::types::BusinessDateRange {
+                    min: "2024-06-15".to_string(),
+                    max: "2024-06-15".to_string(),
+                }),
+                exclude_dates: vec![],
+                days: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("date_range"))
+            }),
+            "single-day date_range should be valid, but got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_validate_business_hours_invalid_exclude_date() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::BusinessHours {
+                start_hour: 9,
+                end_hour: 17,
+                exclude_weekends: false,
+                timezone: None,
+                timezone_field: None,
+                date_range: None,
+                exclude_dates: vec!["not-a-date".to_string()],
+                days: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid exclude_date"))
+        }));
     }
 
     #[test]
