@@ -1544,6 +1544,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
 
@@ -1576,6 +1580,10 @@ mod tests {
                     degree: None,
 
                     selection: None,
+                    nullable: None,
+                    acyclic: None,
+                    root_probability: None,
+                    max_depth: None,
                 },
                 Relationship {
                     name: "line_item_order".to_string(),
@@ -1587,6 +1595,10 @@ mod tests {
                     degree: None,
 
                     selection: None,
+                    nullable: None,
+                    acyclic: None,
+                    root_probability: None,
+                    max_depth: None,
                 },
             ],
         );
@@ -1652,6 +1664,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
 
@@ -1711,6 +1727,10 @@ mod tests {
                     degree: None,
 
                     selection: None,
+                    nullable: None,
+                    acyclic: None,
+                    root_probability: None,
+                    max_depth: None,
                 },
                 Relationship {
                     name: "b_to_a".to_string(),
@@ -1722,6 +1742,10 @@ mod tests {
                     degree: None,
 
                     selection: None,
+                    nullable: None,
+                    acyclic: None,
+                    root_probability: None,
+                    max_depth: None,
                 },
             ],
         );
@@ -2235,6 +2259,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
         let result = compile(&model);
@@ -2273,6 +2301,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
 
@@ -2761,6 +2793,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
 
@@ -2829,6 +2865,10 @@ mod tests {
                 degree: None,
 
                 selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
             }],
         );
 

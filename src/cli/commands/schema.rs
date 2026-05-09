@@ -938,6 +938,10 @@ mod tests {
             degree: None,
 
             selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
         });
         let doc = generate_schema_doc(&model);
         assert!(doc.contains("## Relationships"));

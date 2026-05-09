@@ -1090,6 +1090,22 @@ pub struct Relationship {
     /// error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection: Option<SelectionStrategy>,
+    /// Whether the FK column is nullable. Required for self-referential
+    /// relationships where `root_probability > 0` produces NULL root nodes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nullable: Option<bool>,
+    /// When `true`, prevent circular reference chains in self-referential
+    /// relationships. Only valid when `from == to`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acyclic: Option<bool>,
+    /// Probability that a row is a root node (NULL FK) in self-referential
+    /// hierarchies. Only valid when `from == to`. Defaults to `0.1`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root_probability: Option<f64>,
+    /// Maximum hierarchy depth for self-referential relationships.
+    /// Only valid when `from == to`. Depth 0 = root nodes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_depth: Option<u32>,
 }
 
 /// How a child row selects its parent FK target.

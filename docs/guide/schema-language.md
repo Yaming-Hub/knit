@@ -796,17 +796,28 @@ Entities can reference themselves — useful for org charts, categories, etc.:
 name = "employee_manager"
 from = "employees"
 to = "employees"
-kind = "one_to_many"
+kind = "many_to_one"
 foreign_key = "manager_id"
 nullable = true
+acyclic = true
 root_probability = 0.05
 max_depth = 6
-acyclic = true
 ```
 
-- **`root_probability`** — Chance a record has no parent (top-level nodes)
-- **`max_depth`** — Maximum hierarchy depth
-- **`acyclic`** — Prevent circular references
+- **`nullable`** — Must be `true` for hierarchies (root nodes have `NULL` FK)
+- **`acyclic`** — When `true`, guarantees no circular reference chains. The
+  engine builds a proper tree/forest by processing nodes in shuffled order and
+  only assigning parents from already-placed nodes
+- **`root_probability`** — Probability that a row becomes a root node (null FK).
+  Defaults to `0.1` (10%). This is an *attempt* probability — actual root
+  fraction may be slightly higher due to structural constraints (e.g. when
+  `max_depth` forces nodes to become roots)
+- **`max_depth`** — Maximum hierarchy depth (root = depth 0). Must be ≥ 1.
+  Nodes that would exceed this depth become roots instead
+
+Without `acyclic` or `max_depth`, the engine uses simple probabilistic
+sampling — each row independently decides root/child and picks a random parent.
+This is faster but can produce cycles.
 
 ### Degree Distribution
 

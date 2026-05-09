@@ -1,0 +1,76 @@
+# Hierarchy Example — Self-referential relationships with acyclic + max_depth
+#
+# Demonstrates org chart generation where:
+#   - Employees reference their manager (another employee)
+#   - No circular management chains (acyclic = true)
+#   - 5% of employees are top-level (root_probability = 0.05)
+#   - Maximum 6 levels of management (max_depth = 6)
+
+[metadata]
+name = "hierarchy_example"
+description = "Org chart with self-referential hierarchy"
+version = "1.0"
+seed = 42
+
+[[entities]]
+name = "department"
+count = 5
+
+[[entities.fields]]
+name = "id"
+type = "int"
+primary_key = true
+generator = { type = "sequence" }
+
+[[entities.fields]]
+name = "name"
+type = "string"
+generator = { type = "faker", method = "bs" }
+
+[[entities]]
+name = "employee"
+count = 200
+
+[[entities.fields]]
+name = "id"
+type = "int"
+primary_key = true
+generator = { type = "sequence" }
+
+[[entities.fields]]
+name = "name"
+type = "string"
+generator = { type = "faker", method = "name" }
+
+[[entities.fields]]
+name = "title"
+type = "string"
+generator = { type = "faker", method = "title" }
+
+[[entities.fields]]
+name = "department_id"
+type = "int"
+
+[[entities.fields]]
+name = "manager_id"
+type = "int"
+
+# Department assignment
+[[relationships]]
+name = "employee_department"
+from = "employee"
+to = "department"
+kind = "many_to_one"
+foreign_key = "department_id"
+
+# Self-referential hierarchy: employee → manager
+[[relationships]]
+name = "employee_manager"
+from = "employee"
+to = "employee"
+kind = "many_to_one"
+foreign_key = "manager_id"
+nullable = true
+acyclic = true
+root_probability = 0.05
+max_depth = 6
