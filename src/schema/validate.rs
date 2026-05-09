@@ -2,11 +2,13 @@
 //!
 //! Checks include: duplicate entity/field/relationship names, missing
 //! distribution parameters, invalid count specs, unknown entity references
-//! in relationships, noise profiles, and correlations.
+//! in relationships, noise profiles, and correlations, derived expression
+//! syntax and field references, and dependency cycle detection.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::core::*;
+use crate::gen::expr;
 
 use crate::schema::error::SchemaError;
 
@@ -23,6 +25,7 @@ pub fn validate(model: &DataModel) -> Vec<SchemaError> {
     validate_correlations(model, &mut errors);
     validate_personas(model, &mut errors);
     validate_actor_relationships(model, &mut errors);
+    validate_dependency_cycles(model, &mut errors);
     errors
 }
 
@@ -979,7 +982,7 @@ fn validate_generator(
         }
         GeneratorSpec::Lookup {
             entity: ref lookup_entity,
-            ..
+            field: ref lookup_field,
         } => {
             if nested {
                 errors.push(SchemaError::Validation {
@@ -993,6 +996,28 @@ fn validate_generator(
                     path: path.to_string(),
                     message: format!("lookup references unknown entity '{}'", lookup_entity),
                 });
+            } else {
+                // Entity exists — check field exists on it
+                if let Some(target_entity) = model
+                    .entities
+                    .iter()
+                    .find(|e| e.name == *lookup_entity)
+                {
+                    let target_fields: HashSet<&str> = target_entity
+                        .fields
+                        .iter()
+                        .map(|f| f.name.as_str())
+                        .collect();
+                    if !target_fields.contains(lookup_field.as_str()) {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "lookup references unknown field '{}' on entity '{}'",
+                                lookup_field, lookup_entity
+                            ),
+                        });
+                    }
+                }
             }
         }
         GeneratorSpec::ExternalLookup {
@@ -1364,7 +1389,88 @@ fn validate_generator(
                 });
             }
         }
-        // Pattern, Derived, Constant — no additional validation needed
+        // ─── Derived expression validation ─────────────────────────────
+        GeneratorSpec::Derived { expr: ref expr_str } => {
+            // Try parsing as expression; fall back to legacy template check.
+            match expr::parser::parse(expr_str) {
+                Ok(ast) => {
+                    // Expression parsed successfully — validate field references
+                    let refs = expr::ast::extract_field_refs(&ast);
+                    let field_names: HashSet<&str> =
+                        entity.fields.iter().map(|f| f.name.as_str()).collect();
+
+                    for r in &refs {
+                        // Skip parameter substitutions (e.g. ${param.prefix})
+                        if r.starts_with("param.") {
+                            continue;
+                        }
+                        if !field_names.contains(r.as_str()) {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!(
+                                    "derived expression references unknown field '{}' \
+                                     in entity '{}'",
+                                    r, entity.name
+                                ),
+                            });
+                        }
+                    }
+
+                    // Self-reference check
+                    if refs.iter().any(|r| r == field_name) {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: "derived expression references itself".to_string(),
+                        });
+                    }
+                }
+                Err(_) => {
+                    // Parse failed — check if it's a valid legacy template
+                    if !expr::parser::is_legacy_template(expr_str) {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "derived expression is not a valid expression or \
+                                 legacy template: {}",
+                                expr_str
+                            ),
+                        });
+                    } else {
+                        // Legacy template — still validate field references
+                        let field_names: HashSet<&str> =
+                            entity.fields.iter().map(|f| f.name.as_str()).collect();
+                        let mut template_refs = Vec::new();
+                        extract_template_refs(expr_str, &mut template_refs);
+
+                        for r in &template_refs {
+                            // Skip parameter substitutions (e.g. ${param.prefix})
+                            if r.starts_with("param.") {
+                                continue;
+                            }
+                            if !field_names.contains(*r) {
+                                errors.push(SchemaError::Validation {
+                                    path: path.to_string(),
+                                    message: format!(
+                                        "legacy template references unknown field '{}' \
+                                         in entity '{}'",
+                                        r, entity.name
+                                    ),
+                                });
+                            }
+                        }
+
+                        // Self-reference check for legacy templates
+                        if template_refs.contains(&field_name) {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: "derived expression references itself".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        // Pattern, Constant — no additional validation needed
         _ => {}
     }
 }
@@ -1677,7 +1783,122 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
     }
 }
 
-// ── Tests ───────────────────────────────────────────────────────────
+/// Detect dependency cycles among derived, relative, and conditional fields
+/// within each entity. Reports the cycle path if found.
+fn validate_dependency_cycles(model: &DataModel, errors: &mut Vec<SchemaError>) {
+    for entity in &model.entities {
+        // Build adjacency: field_name → set of field names it depends on (owned)
+        let mut deps: HashMap<String, Vec<String>> = HashMap::new();
+        for field in &entity.fields {
+            if let Some(ref gen) = field.generator {
+                let field_deps = collect_generator_deps_owned(gen);
+                if !field_deps.is_empty() {
+                    deps.insert(field.name.clone(), field_deps);
+                }
+            }
+        }
+
+        // DFS cycle detection
+        let mut visited: HashSet<&str> = HashSet::new();
+        let mut stack: HashSet<&str> = HashSet::new();
+
+        for field in &entity.fields {
+            let name = field.name.as_str();
+            if !visited.contains(name) {
+                let mut path = Vec::new();
+                if has_cycle(name, &deps, &mut visited, &mut stack, &mut path) {
+                    path.reverse();
+                    errors.push(SchemaError::Validation {
+                        path: format!("entities.{}", entity.name),
+                        message: format!(
+                            "dependency cycle detected: {}",
+                            path.join(" → ")
+                        ),
+                    });
+                    break; // report one cycle per entity
+                }
+            }
+        }
+    }
+}
+
+/// Collect field dependencies from a generator spec as owned strings.
+///
+/// For parsed expressions, uses AST-based field ref extraction (ignores
+/// `${...}` inside string literals). Falls back to template scanning
+/// only for legacy templates that fail expression parsing.
+fn collect_generator_deps_owned(gen: &GeneratorSpec) -> Vec<String> {
+    match gen {
+        GeneratorSpec::Derived { expr: ref expr_str } => {
+            // Try parsing as expression first — AST-based extraction is more
+            // accurate (ignores ${...} inside string literals).
+            let refs = if let Ok(ast) = expr::parser::parse(expr_str) {
+                expr::ast::extract_field_refs(&ast)
+            } else {
+                // Legacy template: extract ${field} refs from raw string
+                let mut deps = Vec::new();
+                extract_template_refs(expr_str, &mut deps);
+                deps.into_iter().map(|s| s.to_string()).collect()
+            };
+            // Filter out parameter substitutions (e.g. param.prefix)
+            refs.into_iter()
+                .filter(|r| !r.starts_with("param."))
+                .collect()
+        }
+        GeneratorSpec::Relative { field, .. } => vec![field.clone()],
+        GeneratorSpec::Conditional { field, .. } => vec![field.clone()],
+        _ => Vec::new(),
+    }
+}
+
+/// Extract `${field}` references from a template/expression string.
+fn extract_template_refs<'a>(s: &'a str, deps: &mut Vec<&'a str>) {
+    let mut rest = s;
+    while let Some(start) = rest.find("${") {
+        let after = &rest[start + 2..];
+        if let Some(end) = after.find('}') {
+            let field_name = &after[..end];
+            if !field_name.is_empty() {
+                deps.push(field_name);
+            }
+            rest = &after[end + 1..];
+        } else {
+            break;
+        }
+    }
+}
+
+/// DFS cycle detection. Returns true if a cycle is found.
+fn has_cycle<'a>(
+    node: &'a str,
+    deps: &'a HashMap<String, Vec<String>>,
+    visited: &mut HashSet<&'a str>,
+    stack: &mut HashSet<&'a str>,
+    path: &mut Vec<String>,
+) -> bool {
+    visited.insert(node);
+    stack.insert(node);
+
+    if let Some(neighbors) = deps.get(node) {
+        for dep in neighbors {
+            let dep_str = dep.as_str();
+            if !visited.contains(dep_str) {
+                if has_cycle(dep_str, deps, visited, stack, path) {
+                    path.push(node.to_string());
+                    return true;
+                }
+            } else if stack.contains(dep_str) {
+                // Found a cycle
+                path.push(dep.clone());
+                path.push(node.to_string());
+                return true;
+            }
+        }
+    }
+
+    stack.remove(node);
+    false
+}
 
 #[cfg(test)]
 mod tests {
@@ -3544,5 +3765,257 @@ mod tests {
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
         }));
+    }
+
+    // ─── Derived expression validation tests ────────────────────────
+
+    #[test]
+    fn test_derived_expr_unknown_field() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "full_name".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "concat(${first_name}, \" \", ${last_name})".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(
+            errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("unknown field") && message.contains("first_name"))
+            }),
+            "expected error about unknown field 'first_name', got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn test_derived_expr_self_reference() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "value".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "${value} + 1.0".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(
+            errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("references itself"))
+            }),
+            "expected self-reference error, got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn test_derived_legacy_template_accepted() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "greeting".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "Hello ${email}!".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        // Legacy template with valid field should not produce errors
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("not a valid expression")
+                       || message.contains("unknown field"))
+            }),
+            "legacy template with valid field should be accepted, got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn test_derived_legacy_template_unknown_field() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "greeting".to_string(),
+            description: None,
+            data_type: DataType::String,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "Hello ${naem}!".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(
+            errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("unknown field") && message.contains("naem"))
+            }),
+            "legacy template with typo should be flagged, got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn test_derived_invalid_expression() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "bad".to_string(),
+            description: None,
+            data_type: DataType::String,
+            // Not a valid expression and not a legacy template (no ${...})
+            generator: Some(GeneratorSpec::Derived {
+                expr: "((( unclosed".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(
+            errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("not a valid expression"))
+            }),
+            "expected invalid expression error, got: {errors:?}"
+        );
+    }
+
+    // ─── Dependency cycle detection tests ───────────────────────────
+
+    #[test]
+    fn test_dependency_cycle_detected() {
+        let mut model = minimal_model();
+        // Create a → b → a cycle via Derived expressions
+        model.entities[0].fields.push(Field {
+            name: "a".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "${b} + 1.0".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        model.entities[0].fields.push(Field {
+            name: "b".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "${a} * 2.0".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(
+            errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("dependency cycle"))
+            }),
+            "expected cycle detection error, got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn test_no_false_cycle_for_chain() {
+        let mut model = minimal_model();
+        // a → b → c is a chain, not a cycle
+        model.entities[0].fields.push(Field {
+            name: "c".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Distribution {
+                spec: DistributionSpec {
+                    kind: DistributionKind::Uniform,
+                    params: {
+                        let mut m = BTreeMap::new();
+                        m.insert("min".to_string(), 0.0);
+                        m.insert("max".to_string(), 100.0);
+                        m
+                    },
+                    round: false,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        model.entities[0].fields.push(Field {
+            name: "b".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "${c} + 1.0".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        model.entities[0].fields.push(Field {
+            name: "a".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::Derived {
+                expr: "${b} * 2.0".to_string(),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. }
+                    if message.contains("dependency cycle"))
+            }),
+            "chain should not be flagged as cycle, got: {errors:?}"
+        );
+    }
+
+    // ─── extract_template_refs tests ────────────────────────────────
+
+    #[test]
+    fn test_extract_template_refs_basic() {
+        let mut deps = Vec::new();
+        extract_template_refs("Hello ${name}, your age is ${age}", &mut deps);
+        assert_eq!(deps, vec!["name", "age"]);
+    }
+
+    #[test]
+    fn test_extract_template_refs_no_refs() {
+        let mut deps = Vec::new();
+        extract_template_refs("no refs here", &mut deps);
+        assert!(deps.is_empty());
+    }
+
+    #[test]
+    fn test_extract_template_refs_unclosed() {
+        let mut deps = Vec::new();
+        extract_template_refs("${good} and ${unclosed", &mut deps);
+        assert_eq!(deps, vec!["good"]);
     }
 }
