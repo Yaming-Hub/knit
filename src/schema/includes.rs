@@ -209,6 +209,19 @@ pub fn merge_main_over_includes(includes: &DataModel, main: &DataModel) -> DataM
         }
     }
 
+    // Custom types: main wins on name collision
+    for main_ct in &main.custom_types {
+        if let Some(existing) = result
+            .custom_types
+            .iter_mut()
+            .find(|ct| ct.name == main_ct.name)
+        {
+            *existing = main_ct.clone();
+        } else {
+            result.custom_types.push(main_ct.clone());
+        }
+    }
+
     // Model-level metadata: always use main's values
     result.name = main.name.clone();
     result.description = main.description.clone();
@@ -286,11 +299,12 @@ fn load_fragment(
         resolve_includes(path, &nested_includes, visited, stack)?
     };
 
-    // Parse fragment content into DataModel
+    // Parse fragment content into DataModel (without resolving custom types —
+    // resolution happens once on the fully merged model)
     let fragment = if json {
-        crate::schema::parse_json(&content)?
+        crate::schema::parser::parse_json_raw(&content)?
     } else {
-        crate::schema::parse_toml(&content)?
+        crate::schema::parser::parse_toml_raw(&content)?
     };
 
     // Merge nested includes under fragment (fragment content wins over its own includes)
@@ -404,6 +418,7 @@ fn append_model(target: &mut DataModel, source: DataModel) {
     target.correlations.extend(source.correlations);
     target.personas.extend(source.personas);
     target.actor_relationships.extend(source.actor_relationships);
+    target.custom_types.extend(source.custom_types);
 }
 
 /// Canonicalize a path, falling back to the original if canonicalization fails.

@@ -20,6 +20,7 @@ grammar and exhaustive reference, see the
 - [Schema Inheritance](#schema-inheritance)
 - [Correlations](#correlations)
 - [Noise Profiles](#noise-profiles)
+- [Custom Types](#custom-types)
 - [Constraints](#constraints)
 
 ---
@@ -887,6 +888,87 @@ entity = "orders"
 fields = ["amount"]
 outlier_rate = 0.01
 ```
+
+---
+
+## Custom Types
+
+Define reusable type aliases to avoid repeating the same data type, generator,
+precision, and nullable settings across many fields. Custom types are defined
+in the `[[types]]` section and referenced by name in field `data_type`:
+
+```toml
+# Define a "money" type — float with 2 decimals and a log-normal generator
+[[types]]
+name = "money"
+description = "Monetary amount with 2 decimal places"
+base = "float"
+precision = 2
+[types.generator]
+type = "distribution"
+kind = "log_normal"
+params = { mu = 4.0, sigma = 0.8 }
+
+# Define an "email_address" type — string with faker email generator
+[[types]]
+name = "email_address"
+base = "string"
+[types.generator]
+type = "faker"
+method = "email"
+```
+
+### Using Custom Types
+
+Reference a custom type by name in any field's `data_type`:
+
+```toml
+[[entities.fields]]
+name = "subtotal"
+data_type = "money"       # inherits float, precision=2, log_normal generator
+
+[[entities.fields]]
+name = "contact_email"
+data_type = "email_address"  # inherits string + faker email
+```
+
+### Overriding Inherited Properties
+
+Field-level settings take precedence over the custom type defaults:
+
+```toml
+[[entities.fields]]
+name = "shipping"
+data_type = "money"        # inherits float + precision=2
+precision = 4              # override: 4 decimal places instead of 2
+[entities.fields.generator]
+type = "distribution"
+kind = "uniform"           # override: uniform instead of log_normal
+params = { min = 0.0, max = 25.0 }
+```
+
+### Custom Type Properties
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| `name` | yes | Unique name (must not shadow built-in types) |
+| `base` | yes | Underlying data type (any primitive: `int`, `float`, `string`, etc.) |
+| `description` | no | Documentation string |
+| `generator` | no | Default generator inherited by fields |
+| `precision` | no | Default decimal precision inherited by fields |
+| `nullable` | no | Default null specification inherited by fields |
+
+### Restrictions
+
+- Custom type names must not conflict with built-in types (`int`, `float`,
+  `string`, `bool`, `uuid`, `date`, `datetime`, etc.)
+- The `base` must be a primitive type — `object`, `array`, and `map` are not
+  allowed as custom type bases
+- Custom types cannot reference other custom types (no chaining)
+- Custom types are fully resolved at parse time — downstream code never sees
+  `DataType::Custom`
+
+See `examples/custom_types.weave.toml` for a complete working example.
 
 ---
 

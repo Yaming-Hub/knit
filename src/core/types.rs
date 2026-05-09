@@ -96,6 +96,9 @@ pub struct DataModel {
     /// Actor-to-actor relationship graph specifications.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_relationships: Vec<ActorRelationship>,
+    /// User-defined custom domain types (type + generator + constraint bundles).
+    #[serde(default, rename = "types", skip_serializing_if = "Vec::is_empty")]
+    pub custom_types: Vec<CustomType>,
 }
 
 impl Default for DataModel {
@@ -114,8 +117,37 @@ impl Default for DataModel {
             schema_version: default_schema_version(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            custom_types: Vec::new(),
         }
     }
+}
+
+// ── Custom Domain Types ─────────────────────────────────────────────
+
+/// A reusable domain type definition bundling base type, generator, and constraints.
+///
+/// Custom types are defined in the `[[types]]` section of a schema and
+/// referenced by fields via `data_type = "type_name"`. During schema
+/// resolution, the field inherits the custom type's base type, generator,
+/// and precision (unless the field specifies its own overrides).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CustomType {
+    /// Unique name for this type (e.g. `"money"`, `"email_address"`).
+    pub name: String,
+    /// Optional free-text description.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// The underlying primitive type.
+    pub base: DataType,
+    /// Default generator for fields using this type.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generator: Option<GeneratorSpec>,
+    /// Default decimal precision for float fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub precision: Option<u8>,
+    /// Default nullable specification.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nullable: Option<NullSpec>,
 }
 
 // ── Entity & Field ───────────────────────────────────────────────────
@@ -245,6 +277,13 @@ pub enum DataType {
     Map,
     /// Nested object with sub-fields (for document-oriented output).
     Object,
+    /// Reference to a user-defined custom type (resolved during parsing).
+    ///
+    /// This variant is transient — it is replaced with the custom type's
+    /// `base` type during schema resolution. It should never reach the
+    /// planner or generator.
+    #[serde(untagged)]
+    Custom(std::string::String),
 }
 
 impl std::fmt::Display for DataType {
@@ -266,6 +305,7 @@ impl std::fmt::Display for DataType {
             DataType::Array => write!(f, "array"),
             DataType::Map => write!(f, "map"),
             DataType::Object => write!(f, "object"),
+            DataType::Custom(name) => write!(f, "{}", name),
         }
     }
 }
@@ -1552,6 +1592,7 @@ mod tests {
             schema_version: "1.0".into(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            custom_types: Vec::new(),
         };
 
         let toml_str = toml::to_string_pretty(&model).unwrap();

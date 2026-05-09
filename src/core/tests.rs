@@ -453,6 +453,7 @@ fn minimal_data_model_roundtrip() {
         schema_version: "1.0".into(),
         personas: Vec::new(),
         actor_relationships: Vec::new(),
+        custom_types: Vec::new(),
     };
 
     let json = serde_json::to_string_pretty(&model).unwrap();

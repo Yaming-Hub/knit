@@ -38,6 +38,8 @@ struct RawSchema {
     personas: Vec<Persona>,
     #[serde(default)]
     actor_relationships: Vec<ActorRelationship>,
+    #[serde(default)]
+    types: Vec<crate::core::CustomType>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -67,6 +69,7 @@ impl RawSchema {
             schema_version: self.schema_version.unwrap_or_else(|| "1.0".to_string()),
             personas: self.personas,
             actor_relationships: self.actor_relationships,
+            custom_types: self.types,
         };
         Ok(model)
     }
@@ -76,12 +79,28 @@ impl RawSchema {
 
 /// Parse a Weave schema from a TOML string.
 pub fn parse_toml(input: &str) -> Result<DataModel, SchemaError> {
+    let mut model = parse_toml_raw(input)?;
+    resolve_custom_types(&mut model)?;
+    Ok(model)
+}
+
+/// Parse TOML into DataModel without resolving custom types.
+/// Used by includes/extends to defer resolution until after merge.
+pub(crate) fn parse_toml_raw(input: &str) -> Result<DataModel, SchemaError> {
     let raw: RawSchema = toml::from_str(input)?;
     raw.into_data_model()
 }
 
 /// Parse a Weave schema from a JSON string.
 pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
+    let mut model = parse_json_raw(input)?;
+    resolve_custom_types(&mut model)?;
+    Ok(model)
+}
+
+/// Parse JSON into DataModel without resolving custom types.
+/// Used by includes/extends to defer resolution until after merge.
+pub(crate) fn parse_json_raw(input: &str) -> Result<DataModel, SchemaError> {
     let raw: RawSchema = serde_json::from_str(input)?;
     raw.into_data_model()
 }
@@ -92,6 +111,14 @@ pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
 /// resolved and merged first. If the schema specifies an `extends` field,
 /// the parent schema is resolved and merged on top.
 pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
+    let mut model = parse_toml_file_raw(path)?;
+    resolve_custom_types(&mut model)?;
+    Ok(model)
+}
+
+/// Parse a TOML file into DataModel without resolving custom types.
+/// Handles includes and extends merging but defers type resolution.
+pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let content = std::fs::read_to_string(path)?;
     let raw: RawSchema = toml::from_str(&content)?;
     let extends = raw.extends.clone();
@@ -117,11 +144,13 @@ pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError>
     };
 
     // Step 2: resolve extends (if any)
-    if let Some(ref parent_ref) = extends {
-        crate::schema::resolve_extends(path, &model, parent_ref)
+    let model = if let Some(ref parent_ref) = extends {
+        crate::schema::resolve_extends(path, &model, parent_ref)?
     } else {
-        Ok(model)
-    }
+        model
+    };
+
+    Ok(model)
 }
 
 /// Parse a Weave schema from a JSON file.
@@ -130,6 +159,13 @@ pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError>
 /// resolved and merged first. If the schema specifies an `extends` field,
 /// the parent schema is resolved and merged on top.
 pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
+    let mut model = parse_json_file_raw(path)?;
+    resolve_custom_types(&mut model)?;
+    Ok(model)
+}
+
+/// Parse a JSON file into DataModel without resolving custom types.
+pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, SchemaError> {
     let content = std::fs::read_to_string(path)?;
     let raw: RawSchema = serde_json::from_str(&content)?;
     let extends = raw.extends.clone();
@@ -155,11 +191,148 @@ pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError>
     };
 
     // Step 2: resolve extends (if any)
-    if let Some(ref parent_ref) = extends {
-        crate::schema::resolve_extends(path, &model, parent_ref)
+    let model = if let Some(ref parent_ref) = extends {
+        crate::schema::resolve_extends(path, &model, parent_ref)?
     } else {
-        Ok(model)
+        model
+    };
+
+    Ok(model)
+}
+
+// ── Custom Type Resolution ─────────────────────────────────────────
+
+use crate::core::{CustomType, DataType, Field, NullSpec};
+
+/// Built-in type names that custom types must not shadow.
+const BUILTIN_TYPES: &[&str] = &[
+    "bool", "int", "int32", "float", "string", "uuid", "date", "time",
+    "datetime", "datetime_us", "datetimetz", "duration", "bytes", "array",
+    "map", "object",
+];
+
+/// Resolve all `DataType::Custom(name)` references in the model.
+///
+/// For each field whose `data_type` is `Custom(name)`:
+/// - Replace `data_type` with the custom type's `base` type
+/// - If the field has no generator, inherit the custom type's generator
+/// - If the field has no precision, inherit the custom type's precision
+/// - If the field has default nullable, inherit the custom type's nullable
+///
+/// Errors if a custom type name conflicts with a built-in type, if names
+/// are duplicated, or if a field references an undefined custom type.
+pub fn resolve_custom_types(model: &mut DataModel) -> Result<(), SchemaError> {
+    if model.custom_types.is_empty() {
+        // Check for Custom references (including nested fields) without types defined
+        for entity in &model.entities {
+            check_undefined_custom_refs(&entity.fields, &entity.name)?;
+        }
+        return Ok(());
     }
+
+    // Validate custom type definitions
+    let mut seen_names = std::collections::HashSet::new();
+    for ct in &model.custom_types {
+        // No built-in name conflicts
+        if BUILTIN_TYPES.contains(&ct.name.as_str()) {
+            return Err(SchemaError::Validation {
+                path: format!("types.{}", ct.name),
+                message: "conflicts with built-in type name".to_string(),
+            });
+        }
+        // No duplicate names
+        if !seen_names.insert(&ct.name) {
+            return Err(SchemaError::Validation {
+                path: format!("types.{}", ct.name),
+                message: "duplicate custom type name".to_string(),
+            });
+        }
+        // Base must not be Custom (no chaining in v1)
+        if matches!(ct.base, DataType::Custom(_)) {
+            return Err(SchemaError::Validation {
+                path: format!("types.{}", ct.name),
+                message: "cannot reference another custom type as base".to_string(),
+            });
+        }
+        // Base must not be complex types
+        if matches!(ct.base, DataType::Object | DataType::Array | DataType::Map) {
+            return Err(SchemaError::Validation {
+                path: format!("types.{}", ct.name),
+                message: format!("cannot use complex base type '{}'", ct.base),
+            });
+        }
+    }
+
+    // Build lookup map
+    let type_map: std::collections::HashMap<&str, &CustomType> =
+        model.custom_types.iter().map(|ct| (ct.name.as_str(), ct)).collect();
+
+    // Resolve fields in all entities
+    for entity in &mut model.entities {
+        resolve_fields(&mut entity.fields, &type_map, &entity.name)?;
+    }
+
+    Ok(())
+}
+
+/// Resolve custom type references in a list of fields (recursively for nested objects).
+fn resolve_fields(
+    fields: &mut [Field],
+    type_map: &std::collections::HashMap<&str, &CustomType>,
+    entity_name: &str,
+) -> Result<(), SchemaError> {
+    for field in fields.iter_mut() {
+        if let DataType::Custom(ref name) = field.data_type {
+            let ct = type_map.get(name.as_str()).ok_or_else(|| {
+                SchemaError::Validation {
+                    path: format!("{}.{}", entity_name, field.name),
+                    message: format!("references undefined type '{}'", name),
+                }
+            })?;
+
+            // Replace data_type with the custom type's base
+            field.data_type = ct.base.clone();
+
+            // Inherit generator if field doesn't specify one
+            if field.generator.is_none() {
+                field.generator = ct.generator.clone();
+            }
+
+            // Inherit precision if field doesn't specify one
+            if field.precision.is_none() {
+                field.precision = ct.precision;
+            }
+
+            // Inherit nullable if field has default (Never) and custom type specifies one
+            if field.nullable == NullSpec::default() {
+                if let Some(ref ns) = ct.nullable {
+                    field.nullable = ns.clone();
+                }
+            }
+        }
+
+        // Recurse into nested object sub-fields
+        if !field.fields.is_empty() {
+            resolve_fields(&mut field.fields, type_map, entity_name)?;
+        }
+    }
+    Ok(())
+}
+
+/// Recursively check for `DataType::Custom` references in fields, erroring on the first one found.
+fn check_undefined_custom_refs(fields: &[Field], entity_name: &str) -> Result<(), SchemaError> {
+    for field in fields {
+        if let DataType::Custom(ref name) = field.data_type {
+            return Err(SchemaError::Validation {
+                path: format!("{}.{}", entity_name, field.name),
+                message: format!("references undefined type '{}'", name),
+            });
+        }
+        if !field.fields.is_empty() {
+            check_undefined_custom_refs(&field.fields, entity_name)?;
+        }
+    }
+    Ok(())
 }
 
 // ── Tests ───────────────────────────────────────────────────────────
@@ -602,5 +775,258 @@ mod tests {
             }
             other => panic!("expected Distribution, got {other:?}"),
         }
+    }
+
+    // ── Custom Type Tests ──────────────────────────────────────────────
+
+    #[test]
+    fn custom_type_resolves_base_and_generator() {
+        let input = indoc! {r#"
+            [model]
+            name = "ct_test"
+
+            [[types]]
+            name = "money"
+            base = "float"
+            precision = 2
+            [types.generator]
+            type = "distribution"
+            kind = "normal"
+            params = { mean = 100.0, std_dev = 25.0 }
+
+            [[entities]]
+            name = "orders"
+            count = 10
+
+            [[entities.fields]]
+            name = "id"
+            data_type = "int"
+
+            [[entities.fields]]
+            name = "amount"
+            data_type = "money"
+        "#};
+        let model = parse_toml(input).unwrap();
+        let field = &model.entities[0].fields[1];
+        assert_eq!(field.name, "amount");
+        assert_eq!(field.data_type, DataType::Float);
+        assert_eq!(field.precision, Some(2));
+        assert!(field.generator.is_some());
+        match field.generator.as_ref().unwrap() {
+            GeneratorSpec::Distribution { spec } => {
+                assert_eq!(spec.kind, crate::core::DistributionKind::Normal);
+            }
+            other => panic!("expected Distribution, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn custom_type_field_overrides_generator() {
+        let input = indoc! {r#"
+            [model]
+            name = "override_test"
+
+            [[types]]
+            name = "money"
+            base = "float"
+            precision = 2
+            [types.generator]
+            type = "distribution"
+            kind = "normal"
+            params = { mean = 100.0, std_dev = 25.0 }
+
+            [[entities]]
+            name = "orders"
+            count = 10
+
+            [[entities.fields]]
+            name = "total"
+            data_type = "money"
+            precision = 4
+            [entities.fields.generator]
+            type = "distribution"
+            kind = "uniform"
+            params = { min = 0.0, max = 1000.0 }
+        "#};
+        let model = parse_toml(input).unwrap();
+        let field = &model.entities[0].fields[0];
+        assert_eq!(field.data_type, DataType::Float);
+        // Field overrides precision
+        assert_eq!(field.precision, Some(4));
+        // Field overrides generator
+        match field.generator.as_ref().unwrap() {
+            GeneratorSpec::Distribution { spec } => {
+                assert_eq!(spec.kind, crate::core::DistributionKind::Uniform);
+            }
+            other => panic!("expected Uniform distribution, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn custom_type_inherits_nullable() {
+        let input = indoc! {r#"
+            [model]
+            name = "nullable_test"
+
+            [[types]]
+            name = "optional_email"
+            base = "string"
+            nullable = { probability = 0.1 }
+            [types.generator]
+            type = "faker"
+            method = "email"
+
+            [[entities]]
+            name = "users"
+            count = 10
+
+            [[entities.fields]]
+            name = "email"
+            data_type = "optional_email"
+        "#};
+        let model = parse_toml(input).unwrap();
+        let field = &model.entities[0].fields[0];
+        assert_eq!(field.data_type, DataType::String);
+        assert_eq!(field.nullable, NullSpec::Probability(0.1));
+    }
+
+    #[test]
+    fn custom_type_undefined_reference_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "undef_test"
+
+            [[entities]]
+            name = "orders"
+            count = 10
+
+            [[entities.fields]]
+            name = "price"
+            data_type = "money"
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("undefined type"), "expected undefined type error, got: {err}");
+    }
+
+    #[test]
+    fn custom_type_builtin_name_conflict_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "conflict_test"
+
+            [[types]]
+            name = "string"
+            base = "int"
+
+            [[entities]]
+            name = "t"
+            count = 1
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("built-in"), "expected built-in name conflict error, got: {err}");
+    }
+
+    #[test]
+    fn custom_type_duplicate_name_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "dup_test"
+
+            [[types]]
+            name = "money"
+            base = "float"
+
+            [[types]]
+            name = "money"
+            base = "int"
+
+            [[entities]]
+            name = "t"
+            count = 1
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("duplicate"), "expected duplicate name error, got: {err}");
+    }
+
+    #[test]
+    fn custom_type_complex_base_rejected() {
+        let input = indoc! {r#"
+            [model]
+            name = "complex_base_test"
+
+            [[types]]
+            name = "nested"
+            base = "object"
+
+            [[entities]]
+            name = "t"
+            count = 1
+        "#};
+        let result = parse_toml(input);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("complex base type"), "expected complex base type error, got: {err}");
+    }
+
+    #[test]
+    fn custom_type_no_types_no_error() {
+        let input = indoc! {r#"
+            [model]
+            name = "no_types"
+
+            [[entities]]
+            name = "users"
+            count = 10
+
+            [[entities.fields]]
+            name = "id"
+            data_type = "int"
+        "#};
+        let model = parse_toml(input).unwrap();
+        assert!(model.custom_types.is_empty());
+        assert_eq!(model.entities[0].fields[0].data_type, DataType::Int);
+    }
+
+    #[test]
+    fn custom_type_multiple_types() {
+        let input = indoc! {r#"
+            [model]
+            name = "multi_types"
+
+            [[types]]
+            name = "money"
+            base = "float"
+            precision = 2
+
+            [[types]]
+            name = "email_address"
+            base = "string"
+            [types.generator]
+            type = "faker"
+            method = "email"
+
+            [[entities]]
+            name = "users"
+            count = 10
+
+            [[entities.fields]]
+            name = "balance"
+            data_type = "money"
+
+            [[entities.fields]]
+            name = "email"
+            data_type = "email_address"
+        "#};
+        let model = parse_toml(input).unwrap();
+        assert_eq!(model.entities[0].fields[0].data_type, DataType::Float);
+        assert_eq!(model.entities[0].fields[0].precision, Some(2));
+        assert_eq!(model.entities[0].fields[1].data_type, DataType::String);
+        assert!(model.entities[0].fields[1].generator.is_some());
     }
 }

@@ -2509,6 +2509,7 @@ mod tests {
             schema_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            custom_types: Vec::new(),
         }
     }
 
