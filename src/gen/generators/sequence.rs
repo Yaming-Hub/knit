@@ -9,39 +9,64 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
+use rand::Rng;
 use rand::RngCore;
 
 use crate::gen::context::GenContext;
 use crate::gen::traits::FieldGenerator;
 
-/// Generate a monotonic integer sequence.
+/// Generate a monotonic integer sequence with optional jitter.
 ///
-/// Values follow the formula `start + (row_offset + i) * step`, where
-/// `row_offset` comes from [`GenContext`] to produce globally-unique,
-/// partition-correct sequences in parallel generation.
+/// Values follow the formula `start + (row_offset + i) * step + jitter_offset`,
+/// where `row_offset` comes from [`GenContext`] to produce globally-unique,
+/// partition-correct sequences in parallel generation, and `jitter_offset` is
+/// a random integer drawn uniformly from `[-jitter_ms, +jitter_ms]` (inclusive,
+/// when jitter is configured).
+///
+/// # Jitter and uniqueness
+///
+/// When jitter is enabled, values are no longer guaranteed unique or
+/// partition-disjoint. This is intentional: jitter is designed for temporal
+/// sequences (epoch-ms timestamps) where slight overlap is acceptable,
+/// not for primary keys or unique identifiers.
 ///
 /// # Usage
 ///
-/// Typically used for entity primary keys. The [plan](crate::plan) module
-/// assigns each partition a non-overlapping row-offset range so that keys never
-/// collide across partitions.
+/// Typically used for entity primary keys or temporal sequences. The
+/// [plan](crate::plan) module assigns each partition a non-overlapping
+/// row-offset range so that keys never collide across partitions.
+/// Jitter is useful for temporal fields to create realistic irregular timestamps.
 pub struct SequenceGenerator {
     start: i64,
     step: i64,
+    jitter_ms: Option<i64>,
 }
 
 impl SequenceGenerator {
-    /// Create a new sequence generator with the given start and step.
-    pub fn new(start: i64, step: i64) -> Self {
-        Self { start, step }
+    /// Create a new sequence generator with the given start, step, and optional jitter.
+    pub fn new(start: i64, step: i64, jitter_ms: Option<i64>) -> Self {
+        Self {
+            start,
+            step,
+            jitter_ms,
+        }
     }
 }
 
 impl FieldGenerator for SequenceGenerator {
-    fn generate(&self, _rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
-        let values: Vec<i64> = (0..count)
-            .map(|i| self.start + (ctx.row_offset + i as u64) as i64 * self.step)
-            .collect();
+    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+        let values: Vec<i64> = match self.jitter_ms {
+            Some(j) if j > 0 => (0..count)
+                .map(|i| {
+                    let base = self.start + (ctx.row_offset + i as u64) as i64 * self.step;
+                    let offset = rng.gen_range(-j..=j);
+                    base + offset
+                })
+                .collect(),
+            _ => (0..count)
+                .map(|i| self.start + (ctx.row_offset + i as u64) as i64 * self.step)
+                .collect(),
+        };
         Arc::new(Int64Array::from(values))
     }
 
@@ -95,7 +120,7 @@ mod tests {
     }
 
     fn gen_seq(start: i64, step: i64, count: usize, offset: u64) -> Vec<i64> {
-        let g = SequenceGenerator::new(start, step);
+        let g = SequenceGenerator::new(start, step, None);
         let ctx = ctx_with_offset(offset);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -149,14 +174,14 @@ mod tests {
 
     #[test]
     fn output_type_is_int64() {
-        let g = SequenceGenerator::new(0, 1);
+        let g = SequenceGenerator::new(0, 1, None);
         assert_eq!(g.output_type(), DataType::Int64);
     }
 
     #[test]
     fn deterministic_regardless_of_rng() {
         // Sequence ignores RNG — same params should always produce same output
-        let g = SequenceGenerator::new(1, 1);
+        let g = SequenceGenerator::new(1, 1, None);
         let ctx = ctx_with_offset(0);
         let mut rng1 = ChaCha8Rng::seed_from_u64(42);
         let mut rng2 = ChaCha8Rng::seed_from_u64(999);
@@ -247,5 +272,93 @@ mod tests {
             })
             .collect();
         assert_eq!(va, vb, "cyclic values should be deterministic");
+    }
+
+    // ── Jitter tests ────────────────────────────────────────────────
+
+    fn gen_seq_jitter(
+        start: i64,
+        step: i64,
+        jitter_ms: i64,
+        count: usize,
+        offset: u64,
+        seed: u64,
+    ) -> Vec<i64> {
+        let g = SequenceGenerator::new(start, step, Some(jitter_ms));
+        let ctx = ctx_with_offset(offset);
+        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let arr = g.generate(&mut rng, count, &ctx);
+        let ia = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+        (0..ia.len()).map(|i| ia.value(i)).collect()
+    }
+
+    #[test]
+    fn jitter_values_within_bounds() {
+        let jitter = 1000; // ±1000
+        let start = 0;
+        let step = 10_000;
+        let vals = gen_seq_jitter(start, step, jitter, 100, 0, 42);
+        for (i, &v) in vals.iter().enumerate() {
+            let base = start + (i as i64) * step;
+            assert!(
+                v >= base - jitter && v <= base + jitter,
+                "value {} at index {} outside [{}, {}]",
+                v,
+                i,
+                base - jitter,
+                base + jitter,
+            );
+        }
+    }
+
+    #[test]
+    fn jitter_produces_different_values_than_no_jitter() {
+        let no_jitter = gen_seq(1000, 5000, 10, 0);
+        let with_jitter = gen_seq_jitter(1000, 5000, 500, 10, 0, 42);
+        // At least one value should differ due to jitter
+        assert_ne!(
+            no_jitter, with_jitter,
+            "jitter should modify at least one value"
+        );
+    }
+
+    #[test]
+    fn jitter_deterministic_with_same_seed() {
+        let a = gen_seq_jitter(0, 1000, 100, 20, 0, 42);
+        let b = gen_seq_jitter(0, 1000, 100, 20, 0, 42);
+        assert_eq!(a, b, "same seed should produce same jitter");
+    }
+
+    #[test]
+    fn jitter_different_seeds_differ() {
+        let a = gen_seq_jitter(0, 1000, 100, 20, 0, 42);
+        let b = gen_seq_jitter(0, 1000, 100, 20, 0, 99);
+        assert_ne!(a, b, "different seeds should produce different jitter");
+    }
+
+    #[test]
+    fn jitter_zero_behaves_like_no_jitter() {
+        let no_jitter = gen_seq(0, 100, 10, 0);
+        let zero_jitter = gen_seq_jitter(0, 100, 0, 10, 0, 42);
+        assert_eq!(
+            no_jitter, zero_jitter,
+            "jitter=0 should produce same values as no jitter"
+        );
+    }
+
+    #[test]
+    fn jitter_with_partition_offset() {
+        let jitter = 500;
+        let step = 10_000;
+        let vals = gen_seq_jitter(0, step, jitter, 5, 10, 42);
+        for (i, &v) in vals.iter().enumerate() {
+            let base = (10 + i as i64) * step;
+            assert!(
+                v >= base - jitter && v <= base + jitter,
+                "partition-offset value {} at index {} outside bounds",
+                v,
+                i,
+            );
+        }
     }
 }

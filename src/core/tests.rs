@@ -436,6 +436,7 @@ fn minimal_data_model_roundtrip() {
                     prefix: None,
                 values: None,
                 cycle: None,
+                jitter: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),

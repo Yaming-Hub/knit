@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn test_struct_generator_produces_struct_array() {
         let children: Vec<Box<dyn FieldGenerator>> = vec![
-            Box::new(SequenceGenerator::new(1, 1)),
+            Box::new(SequenceGenerator::new(1, 1, None)),
             Box::new(ConstantGenerator::new(crate::core::Value::Float(2.718))),
         ];
         let names = vec!["id".to_string(), "value".to_string()];
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn test_struct_output_type() {
         let children: Vec<Box<dyn FieldGenerator>> = vec![
-            Box::new(SequenceGenerator::new(0, 1)),
+            Box::new(SequenceGenerator::new(0, 1, None)),
             Box::new(ConstantGenerator::new(crate::core::Value::String(
                 "hello".to_string(),
             ))),

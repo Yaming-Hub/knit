@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn sequence_correctness() {
-        let plan = GeneratorPlan::Sequence { start: 10, step: 3 };
+        let plan = GeneratorPlan::Sequence { start: 10, step: 3, jitter_ms: None };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
         let arr = gen.generate(&mut make_rng(), 5, &ctx);
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn sequence_with_offset() {
-        let plan = GeneratorPlan::Sequence { start: 0, step: 1 };
+        let plan = GeneratorPlan::Sequence { start: 0, step: 1, jitter_ms: None };
         let gen = create_generator(&plan);
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
         let ctx = GenContext::new(map, 100, 1, 2, "test");

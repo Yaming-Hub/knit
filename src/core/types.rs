@@ -389,6 +389,11 @@ pub enum GeneratorSpec {
         /// Whether to cycle through `values` (always true when `values` is set).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         cycle: Option<bool>,
+        /// Random offset applied to each value, drawn uniformly from `[-jitter, +jitter]`.
+        /// Specified as a duration string (e.g. `"30m"`, `"1h"`, `"500ms"`).
+        /// Primarily useful for temporal sequences to create realistic irregular timestamps.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        jitter: Option<String>,
     },
     /// Weighted random choice from a fixed set of values.
     OneOf {
@@ -1788,6 +1793,23 @@ mod tests {
     }
 
     #[test]
+    fn test_generator_spec_sequence_with_jitter() {
+        let json = r#"{"type": "sequence", "start": 0, "step": 86400000, "jitter": "30m"}"#;
+        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match &gen {
+            GeneratorSpec::Sequence { start, step, jitter, .. } => {
+                assert_eq!(*start, 0);
+                assert_eq!(*step, 86_400_000);
+                assert_eq!(jitter, &Some("30m".into()));
+            }
+            _ => panic!("expected Sequence"),
+        }
+        // Roundtrip: jitter should survive serialization
+        let re_json = serde_json::to_string(&gen).unwrap();
+        assert!(re_json.contains("\"jitter\":\"30m\""));
+    }
+
+    #[test]
     fn test_generator_spec_one_of() {
         let json = r#"{
             "type": "one_of",
@@ -1871,6 +1893,7 @@ mod tests {
                             prefix: None,
                         values: None,
                         cycle: None,
+                        jitter: None,
                         }),
                         nullable: NullSpec::Never,
                         primary_key: Some(true),

@@ -582,6 +582,7 @@ mod tests {
                     prefix: None,
                 values: None,
                 cycle: None,
+                jitter: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),

@@ -143,7 +143,7 @@ fn all_schemas_have_relationships() {
         let stem = path.file_name().unwrap().to_string_lossy();
         // cli_test is a minimal utility schema without relationships
         // nested_objects demonstrates struct/object types without relationships
-        if stem.contains("cli_test") || stem.contains("nested_objects") || stem.contains("time_series_metrics") || stem.contains("scoped_noise") || stem.contains("event_stream") || stem.contains("sequence_values") || stem.contains("conditional_distribution") || stem.contains("holiday_effect") || stem.contains("vector_distributions") || stem.contains("pipe_operator") {
+        if stem.contains("cli_test") || stem.contains("nested_objects") || stem.contains("time_series_metrics") || stem.contains("scoped_noise") || stem.contains("event_stream") || stem.contains("sequence_values") || stem.contains("conditional_distribution") || stem.contains("holiday_effect") || stem.contains("vector_distributions") || stem.contains("pipe_operator") || stem.contains("sequence_jitter") {
             continue;
         }
         let model = parse_toml_file(path).unwrap();

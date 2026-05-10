@@ -699,15 +699,20 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 prefix: _,
                 values,
                 cycle: _,
+                jitter,
             } => {
                 if let Some(vals) = values {
                     GeneratorPlan::CyclicValues {
                         values: vals.clone(),
                     }
                 } else {
+                    let jitter_ms = jitter.as_deref().map(|s| {
+                        crate::gen::generators::event_stream::parse_duration_ms(s)
+                    });
                     GeneratorPlan::Sequence {
                         start: *start,
                         step: *step,
+                        jitter_ms,
                     }
                 }
             }
@@ -1095,7 +1100,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
             if field.primary_key.unwrap_or(false) && field.data_type == crate::core::DataType::Uuid {
                 GeneratorPlan::Uuid
             } else if field.primary_key.unwrap_or(false) {
-                GeneratorPlan::Sequence { start: 1, step: 1 }
+                GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None }
             } else {
                 default_generator_for_type(&field.data_type)
             }
@@ -1710,6 +1715,7 @@ mod tests {
                         prefix: None,
                     values: None,
                     cycle: None,
+                    jitter: None,
                     }),
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
@@ -2213,7 +2219,7 @@ mod tests {
             .unwrap();
         assert!(matches!(
             id_plan.generator_plan,
-            GeneratorPlan::Sequence { start: 1, step: 1 }
+            GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None }
         ));
     }
 
@@ -2682,6 +2688,7 @@ mod tests {
             prefix: None,
         values: None,
         cycle: None,
+        jitter: None,
         };
         let spec = GeneratorSpec::Unique {
             inner: Box::new(inner_spec),
@@ -2693,7 +2700,7 @@ mod tests {
                 assert_eq!(max_retries, 50);
                 assert!(matches!(
                     *inner,
-                    GeneratorPlan::Sequence { start: 1, step: 1 }
+                    GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None }
                 ));
             }
             other => panic!("expected GeneratorPlan::Unique, got {other:?}"),

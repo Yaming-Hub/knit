@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Sequence jitter** — Random offset for sequence generators (spec §6.13):
+  - `jitter = "30m"` adds uniform random offset from `[-30m, +30m]` per value
+  - Supports duration strings: `"500ms"`, `"5m"`, `"1h"`, `"1d"`, `"1w"`
+  - Primarily useful for temporal sequences (epoch-ms timestamps)
+  - Deterministic with same seed; partition-safe
 - **`not_null` constraint** — Declare fields that must never contain null (spec §5.4):
   - `type = "not_null"` with `fields = ["id", "email"]`
   - Schema validation checks referenced fields exist and list is non-empty

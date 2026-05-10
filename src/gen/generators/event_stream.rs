@@ -250,7 +250,7 @@ fn rate_multiplier(timestamp_ms: i64, components: &[EventStreamComponent], holid
 }
 
 /// Parse a duration string like "24h", "7d", "1h", "30m" to milliseconds.
-fn parse_duration_ms(s: &str) -> i64 {
+pub(crate) fn parse_duration_ms(s: &str) -> i64 {
     let s = s.trim();
     if s.is_empty() {
         return 0;
