@@ -133,7 +133,7 @@ pub fn create_generator_with_seen(
         } => match kind {
             crate::plan::TemporalKind::Relative => {
                 let base = base_field.clone().unwrap_or_default();
-                Box::new(temporal::RelativeGenerator::new(base, params))
+                Box::new(temporal::RelativeGenerator::new(base, params, string_params))
             }
             crate::plan::TemporalKind::TimeSeries => {
                 Box::new(temporal::TimeSeriesGenerator::new(params))

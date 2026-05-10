@@ -508,11 +508,17 @@ pub enum GeneratorSpec {
         max_retries: u32,
     },
     /// Value relative to another field (e.g. `end_date = start_date + 7 days`).
+    ///
+    /// The `offset` can be a simple numeric value (backward compatible), a
+    /// structured distribution with optional min/max clamping, or a constant
+    /// duration string.
     Relative {
         /// Name of the base field to offset from.
-        field: String,
-        /// Offset value added to the base field.
-        offset: Value,
+        /// Accepts both `anchor` (spec name) and `field` (legacy name).
+        #[serde(alias = "field")]
+        anchor: String,
+        /// Offset specification — simple value, distribution, or constant.
+        offset: RelativeOffset,
     },
     /// Timestamps constrained to business hours (and optionally weekdays).
     BusinessHours {
@@ -921,6 +927,62 @@ fn default_max_depth() -> u32 {
 }
 fn default_reply_window() -> usize {
     100
+}
+
+// ── RelativeOffset ──────────────────────────────────────────────────
+
+/// Offset specification for the `Relative` generator.
+///
+/// Three variants are supported:
+/// - `Simple` — a plain numeric value (backward compatible, uses Normal distribution
+///   with the value as mean and 10% as std-dev).
+/// - `Distribution` — a named distribution with optional min/max clamping and unit.
+/// - `Constant` — a fixed offset (no randomness), specified as a duration string.
+///
+/// The `#[serde(untagged)]` attribute allows transparent deserialization from
+/// either a plain number, `{ type = "constant", value = "365d" }`, or
+/// `{ distribution = "log_normal", params = {...}, min = "1d", max = "14d", unit = "day" }`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RelativeOffset {
+    /// A structured distribution offset with optional bounds and unit.
+    ///
+    /// ```toml
+    /// offset = { distribution = "log_normal", params = { mu = 1.5, sigma = 0.8 }, min = "1d", max = "14d", unit = "day" }
+    /// ```
+    Distribution {
+        /// The distribution family to sample from.
+        distribution: DistributionKind,
+        /// Named numeric parameters for the distribution.
+        #[serde(default)]
+        params: BTreeMap<String, f64>,
+        /// Minimum offset as a duration string (e.g. `"1d"`, `"30m"`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        min: Option<String>,
+        /// Maximum offset as a duration string (e.g. `"14d"`, `"4h"`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        max: Option<String>,
+        /// Temporal unit for the distribution output (e.g. `"day"`, `"hour"`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        unit: Option<String>,
+    },
+    /// A constant (deterministic) offset, specified as a duration string.
+    ///
+    /// ```toml
+    /// offset = { type = "constant", value = "365d" }
+    /// ```
+    Constant {
+        /// Must be `"constant"` to disambiguate from Distribution variant.
+        #[serde(rename = "type")]
+        offset_type: String,
+        /// The fixed offset as a duration string (e.g. `"365d"`, `"1h"`).
+        value: String,
+    },
+    /// A simple numeric offset (backward compatible).
+    ///
+    /// Interpreted as seconds and uses a Normal distribution with 10%
+    /// std-dev by default.
+    Simple(Value),
 }
 
 // ── DistributionSpec & Kind ──────────────────────────────────────────
