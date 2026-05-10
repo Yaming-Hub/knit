@@ -11,6 +11,8 @@
 - [2. Dependencies](#2-dependencies)
 - [3. Command Architecture](#3-command-architecture)
 - [4. Command Details](#4-command-details)
+  - [4.9 `knit scale`](#49-knit-scale-schema--o-dir)
+  - [4.10 `knit tokenize`](#410-knit-tokenize-input--o-dir)
 - [5. Global Flags](#5-global-flags)
 - [6. Progress Reporting](#6-progress-reporting)
 - [7. Error Handling](#7-error-handling)
@@ -363,6 +365,44 @@ Compares two Weave schemas and shows differences.
 
 - **Human-readable** *(default)* — Colored diff with `+`/`-`/`~` markers
 - **JSON** (`--json`) — Structured diff object for programmatic consumption
+
+### 4.9 `knit scale <schema> -o <dir>`
+
+Scales a learned dataset along multiple independent dimensions (people, time,
+custom categorical fields). See [design-scale.md](design-scale.md) for full design.
+
+**Key flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--analyze` | Show discovered scaling dimensions without generating |
+| `--actors <N>` | Scale actor/people entity count |
+| `--time <SPEC>` | Extend time range (`52w`, `6m`, date range) |
+| `--dim <NAME=N>` | Scale a custom categorical dimension |
+| `--dry-run` | Show planned counts without generating |
+
+### 4.10 `knit tokenize <input> -o <dir>`
+
+Replaces sensitive string content with opaque tokens while preserving dataset
+structure, relationships, and statistical properties. Enables safe sharing of
+datasets for troubleshooting. See [design-tokenize.md](design-tokenize.md) for full design.
+
+**Modes:**
+
+| Mode | Description |
+|------|-------------|
+| *(default)* | Tokenize the dataset, emit token dictionary |
+| `--restore` | Restore tokenized data using dictionary |
+| `--verify <original>` | Verify structural equivalence |
+
+**Key flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--dictionary <PATH>` | Token dictionary location (default: `<output>/.knit-tokens.json`) |
+| `--tokenize-numbers` | Also obfuscate numeric values |
+| `--tokenize-dates` | Also obfuscate date/timestamp values |
+| `--seed <N>` | Deterministic token generation |
 
 ---
 
