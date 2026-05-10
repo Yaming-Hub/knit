@@ -771,6 +771,7 @@ mod tests {
         Entity {
             name: name.to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(100),
             fields,
             constraints: vec![],

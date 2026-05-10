@@ -356,6 +356,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
     let entity = Entity {
         name: table.name.clone(),
         description: None,
+        tags: Vec::new(),
         count: CountSpec::Fixed(table.row_count),
         fields,
         constraints: Vec::new(),

@@ -11,6 +11,7 @@ grammar and exhaustive reference, see the
 ## Table of Contents
 
 - [Schema Structure](#schema-structure)
+- [Entity Tags](#entity-tags)
 - [Field Definitions](#field-definitions)
 - [Data Types](#data-types)
 - [Generators](#generators)
@@ -60,6 +61,24 @@ seed = 42
 | `schema_version` | Always `"1.0"` |
 | `[model].name` | Dataset name (used in output file naming) |
 | `[model].seed` | RNG seed for deterministic, reproducible output |
+
+---
+
+## Entity Tags
+
+Entities support freeform semantic tags for filtering and documentation:
+
+```toml
+[[entities]]
+name = "users"
+tags = ["pii", "core"]
+count = 1000
+```
+
+Tags are string arrays — use them to annotate entities with metadata like data
+classification (`pii`, `sensitive`), domain (`core`, `analytics`), or lifecycle
+(`deprecated`, `experimental`). Tags are preserved in the schema but do not
+affect data generation.
 
 ---
 

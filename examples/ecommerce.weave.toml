@@ -9,6 +9,7 @@ seed = 20240101
 
 [[entities]]
 name = "users"
+tags = ["pii", "core"]
 count = 1000
 
 [[entities.fields]]
