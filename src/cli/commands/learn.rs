@@ -16,7 +16,7 @@ use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
 use serde_json;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::learn::correlation::detect_correlations;
 use crate::learn::fitting::{fit_categorical, fit_distribution, FitResult};
@@ -337,6 +337,10 @@ fn run_batch(
     // 5b. Extract dictionaries for high-cardinality string columns
     let output_dir = Path::new(output).parent().unwrap_or_else(|| Path::new("."));
     let dict_count = extract_dictionaries(&mut data_model, &tables, output_dir, cli.quiet)?;
+
+    // 5b2. Copy companion schema dictionary files (if any)
+    let companion_dict_count =
+        copy_companion_dictionaries(&table_analyses, output_dir, cli.quiet)?;
 
     // 5c. Validate the assembled schema and warn about issues
     let validation_errors = crate::schema::validate(&data_model);
@@ -770,6 +774,8 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
             entity,
             schema,
             batches,
+            companion: None,
+            companion_path: None,
         }])
     }
 }
@@ -821,7 +827,10 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         ca.is_primary_key = rc.is_primary_key;
     }
 
-    let analysis = TableAnalysis::new(table.entity.clone(), col_analyses, row_count);
+    let mut analysis = TableAnalysis::new(table.entity.clone(), col_analyses, row_count);
+    // Attach companion schema if available
+    analysis.companion = table.companion.clone();
+    analysis.companion_path = table.companion_path.clone();
 
     let rel_profile = TableProfile {
         name: table.entity.clone(),
@@ -841,6 +850,18 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
 /// Analyse a single column: fit distributions, detect temporal patterns,
 /// run type inference for string columns.
 fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysis {
+    // Short-circuit for always-null or always-empty-string columns.
+    // These need no distribution fitting, pattern detection, or type inference.
+    let effective_empty_rate = profile.null_rate + profile.empty_string_rate;
+    if effective_empty_rate >= 1.0 {
+        let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, 1.0);
+        ca.empty_string_rate = profile.empty_string_rate;
+        ca.source_arrow_type = Some(profile.data_type.clone());
+        debug!(col = %profile.name, null_rate = profile.null_rate,
+               empty_rate = profile.empty_string_rate, "always-null column detected");
+        return ca;
+    }
+
     let mut distribution: Option<FitResult> = None;
     let mut temporal_pattern: Option<TemporalPatternSpec> = None;
     let mut categorical_weights: Option<Vec<(String, f64)>> = None;
@@ -1043,6 +1064,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     }
 
     let mut ca = ColumnAnalysis::new(profile.name.clone(), profile.null_rate, confidence);
+    ca.empty_string_rate = profile.empty_string_rate;
     ca.distribution = distribution;
     ca.temporal_pattern = temporal_pattern;
     ca.categorical_weights = categorical_weights;
@@ -1581,6 +1603,111 @@ fn pick_best_pk(columns: &[RelColumn], table_name: &str) -> usize {
 
     // Priority 3: first candidate by position
     candidates[0]
+}
+
+/// Copy companion schema dictionary files to the output directory.
+///
+/// When a structured dataset includes `Schema/schema.json` with dictionary
+/// definitions, this function copies the referenced dictionary CSV files
+/// to a `Mappings/` subdirectory alongside the generated schema. This
+/// preserves the dictionary encoding pattern so generated data can use
+/// the same ID mappings.
+///
+/// Returns the number of dictionary files copied.
+fn copy_companion_dictionaries(
+    table_analyses: &[TableAnalysis],
+    output_dir: &Path,
+    quiet: bool,
+) -> Result<usize> {
+    use std::collections::HashSet;
+
+    let mut copied: HashSet<String> = HashSet::new();
+    let mut total_copied = 0;
+
+    for ta in table_analyses {
+        let (Some(companion), Some(companion_path)) = (&ta.companion, &ta.companion_path) else {
+            continue;
+        };
+
+        if companion.dictionaries.is_empty() {
+            continue;
+        }
+
+        let dict_dir = companion.resolve_dictionary_dir(companion_path);
+        let Some(source_dict_dir) = dict_dir else {
+            debug!(
+                table = %ta.name,
+                "companion schema has dictionaries but dictionary_path not found"
+            );
+            continue;
+        };
+
+        // Create output Mappings/ directory
+        let out_mappings = output_dir.join("Mappings");
+        if !out_mappings.exists() {
+            std::fs::create_dir_all(&out_mappings)
+                .with_context(|| format!("failed to create {}", out_mappings.display()))?;
+        }
+
+        for dict in &companion.dictionaries {
+            // Avoid copying the same dictionary file twice (shared across entities)
+            if copied.contains(&dict.path) {
+                continue;
+            }
+
+            // Reject unsafe paths (absolute or containing ".." components)
+            let dict_path = std::path::Path::new(&dict.path);
+            if dict_path.is_absolute()
+                || dict_path.components().any(|c| {
+                    matches!(c, std::path::Component::ParentDir)
+                })
+            {
+                warn!(
+                    dict = %dict.name,
+                    path = %dict.path,
+                    "skipping dictionary with unsafe path"
+                );
+                continue;
+            }
+
+            let src = source_dict_dir.join(&dict.path);
+            let dst = out_mappings.join(&dict.path);
+
+            if src.exists() {
+                std::fs::copy(&src, &dst).with_context(|| {
+                    format!(
+                        "failed to copy dictionary {} → {}",
+                        src.display(),
+                        dst.display()
+                    )
+                })?;
+                copied.insert(dict.path.clone());
+                total_copied += 1;
+                debug!(
+                    dict = %dict.name,
+                    src = %src.display(),
+                    dst = %dst.display(),
+                    "copied companion dictionary"
+                );
+            } else {
+                warn!(
+                    dict = %dict.name,
+                    path = %src.display(),
+                    "companion dictionary file not found"
+                );
+            }
+        }
+    }
+
+    if total_copied > 0 && !quiet {
+        eprintln!(
+            "  {} copied {} companion dictionary file(s)",
+            "→".dimmed(),
+            total_copied,
+        );
+    }
+
+    Ok(total_copied)
 }
 
 /// Extract dictionaries for high-cardinality string columns.
@@ -2473,6 +2600,7 @@ mod tests {
             count: 10,
             null_count: 0,
             null_rate: 0.0,
+            empty_string_rate: 0.0,
             distinct_count: Some(10),
             cardinality_ratio: Some(1.0),
             numeric: None,
@@ -2490,6 +2618,7 @@ mod tests {
             count: 5,
             null_count: 0,
             null_rate: 0.0,
+            empty_string_rate: 0.0,
             distinct_count: Some(5),
             cardinality_ratio: Some(1.0),
             numeric: None,
@@ -2510,6 +2639,7 @@ mod tests {
             count: 10,
             null_count: 0,
             null_rate: 0.0,
+            empty_string_rate: 0.0,
             distinct_count: Some(10),
             cardinality_ratio: Some(1.0),
             numeric: None,
@@ -2527,6 +2657,7 @@ mod tests {
             count: 10,
             null_count: 0,
             null_rate: 0.0,
+            empty_string_rate: 0.0,
             distinct_count: Some(10),
             cardinality_ratio: Some(1.0),
             numeric: None,
@@ -2545,6 +2676,7 @@ mod tests {
             count: 10,
             null_count: 0,
             null_rate: 0.0,
+            empty_string_rate: 0.0,
             distinct_count: Some(10),
             cardinality_ratio: Some(1.0),
             numeric: None,

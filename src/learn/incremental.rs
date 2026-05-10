@@ -418,7 +418,9 @@ fn finalize_columns(table: &TableState) -> Vec<ColumnAnalysis> {
 /// Convert a single ColumnState into a ColumnAnalysis for schema assembly.
 fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
     let null_rate = col.null_rate();
+    let empty_string_rate = col.empty_string_rate();
     let mut ca = ColumnAnalysis::new(col.name.clone(), null_rate, 1.0);
+    ca.empty_string_rate = empty_string_rate;
 
     // Restore Arrow type hint
     if let Some(ref hint) = col.arrow_type_hint {

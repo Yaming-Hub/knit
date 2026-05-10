@@ -2,7 +2,15 @@
 //!
 //! Each reader returns `Vec<RecordBatch>` for simplicity.
 //! Multi-file ingestion maps a directory of files to entity-level batches.
+//!
+//! ## Companion Schema Support
+//!
+//! When ingesting a directory, the module detects structured dataset layouts
+//! that include companion `Schema/schema.json` files alongside data files.
+//! This metadata provides richer type information, dictionary encodings,
+//! and row-type discriminator patterns that improve learned schema quality.
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -12,6 +20,7 @@ use arrow::record_batch::RecordBatch;
 use arrow_csv::ReaderBuilder as CsvReaderBuilder;
 use arrow_json::ReaderBuilder as JsonReaderBuilder;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+use serde::{Deserialize, Serialize};
 use serde_json;
 use tracing::{debug, info, warn};
 
@@ -253,15 +262,151 @@ pub fn read_auto_with_limit(path: &Path, max_rows: Option<usize>) -> LearnResult
     }
 }
 
+// ── Companion Schema types ──────────────────────────────────────────
+
+/// Parsed companion schema from a `schema.json` file alongside data files.
+///
+/// Provides richer metadata than Arrow schema inference alone: dictionary
+/// encodings, row-type discriminators, and semantic data types.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanionSchema {
+    /// Schema format version (expected: 1).
+    #[serde(default)]
+    pub schema_format_version: u32,
+    /// Table / entity name from the schema.
+    pub table_name: String,
+    /// Whether the CSV has headers.
+    #[serde(default = "default_true_fn")]
+    pub has_headers: bool,
+    /// Index of the row-type discriminator column (if any).
+    pub row_type_column_index: Option<usize>,
+    /// Column metadata.
+    #[serde(default)]
+    pub columns: Vec<CompanionColumn>,
+    /// Dictionary definitions.
+    #[serde(default)]
+    pub dictionaries: Vec<CompanionDictionary>,
+    /// Additional row types present in the dataset.
+    #[serde(default)]
+    pub additional_row_types: Vec<u32>,
+    /// Relative path to dictionary files from the schema.json location.
+    #[serde(default)]
+    pub dictionary_path: Option<String>,
+}
+
+fn default_true_fn() -> bool {
+    true
+}
+
+/// Column metadata from a companion schema.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanionColumn {
+    /// Column name.
+    pub name: String,
+    /// Column index in the CSV.
+    pub col_number: usize,
+    /// Semantic data type (e.g., "Int64", "UnixDateTime", "OptionalInt64", "Boolean").
+    pub data_type: String,
+    /// Dictionary ID if this column uses dictionary encoding.
+    pub dictionary_id: Option<u32>,
+    /// Row type value: this column is only populated when the discriminator equals this value.
+    pub row_type: Option<u32>,
+}
+
+/// Dictionary definition from a companion schema.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanionDictionary {
+    /// Dictionary name (e.g., "InternalPersonId").
+    pub name: String,
+    /// Dictionary ID (referenced by columns).
+    pub id: u32,
+    /// Relative path to the dictionary CSV file (from `dictionary_path`).
+    pub path: String,
+    /// Maximum encoded ID value.
+    pub max_encoded_id: u64,
+}
+
+impl CompanionSchema {
+    /// Parse a companion schema from a JSON file.
+    pub fn from_file(path: &Path) -> LearnResult<Self> {
+        let file = File::open(path)?;
+        let schema: CompanionSchema = serde_json::from_reader(file).map_err(|e| {
+            LearnError::Io(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("failed to parse companion schema {}: {e}", path.display()),
+            ))
+        })?;
+        debug!(
+            table = %schema.table_name,
+            columns = schema.columns.len(),
+            dictionaries = schema.dictionaries.len(),
+            row_type_col = ?schema.row_type_column_index,
+            "parsed companion schema"
+        );
+        Ok(schema)
+    }
+
+    /// Get dictionary info for a column by name.
+    pub fn dictionary_for_column(&self, col_name: &str) -> Option<&CompanionDictionary> {
+        let col = self.columns.iter().find(|c| c.name == col_name)?;
+        let dict_id = col.dictionary_id?;
+        self.dictionaries.iter().find(|d| d.id == dict_id)
+    }
+
+    /// Get the row-type value for a column, if any.
+    pub fn row_type_for_column(&self, col_name: &str) -> Option<u32> {
+        self.columns
+            .iter()
+            .find(|c| c.name == col_name)
+            .and_then(|c| c.row_type)
+    }
+
+    /// Get the discriminator column name (if `row_type_column_index` is set).
+    pub fn discriminator_column(&self) -> Option<&str> {
+        let idx = self.row_type_column_index?;
+        self.columns
+            .iter()
+            .find(|c| c.col_number == idx)
+            .map(|c| c.name.as_str())
+    }
+
+    /// Resolve the absolute path to dictionary files.
+    pub fn resolve_dictionary_dir(&self, schema_json_path: &Path) -> Option<PathBuf> {
+        let dict_rel = self.dictionary_path.as_deref()?;
+        let schema_dir = schema_json_path.parent()?;
+        let resolved = schema_dir.join(dict_rel);
+        if resolved.is_dir() {
+            Some(resolved)
+        } else {
+            None
+        }
+    }
+
+    /// Build a lookup from column name to CompanionColumn.
+    pub fn column_map(&self) -> HashMap<String, &CompanionColumn> {
+        self.columns
+            .iter()
+            .map(|c| (c.name.clone(), c))
+            .collect()
+    }
+}
+
 /// Result of multi-file ingestion: maps entity name → batches.
 #[derive(Debug)]
 pub struct IngestionResult {
-    /// Entity name derived from the file stem.
+    /// Entity name derived from the file stem or companion schema.
     pub entity: String,
     /// Schema of the ingested data.
     pub schema: Arc<Schema>,
     /// Record batches.
     pub batches: Vec<RecordBatch>,
+    /// Companion schema metadata (if a `Schema/schema.json` was found).
+    pub companion: Option<CompanionSchema>,
+    /// Path to the companion schema.json file (for resolving relative paths).
+    pub companion_path: Option<PathBuf>,
 }
 
 /// Truncate a list of record batches to at most `max_rows` total rows.
@@ -365,6 +510,238 @@ pub fn ingest_directory_with_limit(
 ) -> LearnResult<Vec<IngestionResult>> {
     info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
 
+    // Try structured dataset discovery first (companion schema.json layout)
+    if let Some(results) = try_structured_ingest(dir, max_rows)? {
+        info!(entities = results.len(), "Structured dataset ingestion complete");
+        return Ok(results);
+    }
+
+    // Fall back to flat file discovery
+    ingest_directory_flat(dir, max_rows)
+}
+
+/// Try structured dataset discovery: detect `EntityDir/Schema/schema.json` layout.
+///
+/// Returns `Some(results)` if at least one companion schema was found, `None` otherwise.
+fn try_structured_ingest(
+    dir: &Path,
+    max_rows: Option<usize>,
+) -> LearnResult<Option<Vec<IngestionResult>>> {
+    // Scan immediate subdirectories for Schema/schema.json
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return Ok(None),
+    };
+
+    let mut discovered: Vec<(String, PathBuf, Vec<PathBuf>, CompanionSchema)> = Vec::new();
+
+    for entry in entries.filter_map(|e| e.ok()) {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let schema_json = path.join("Schema").join("schema.json");
+        if !schema_json.exists() {
+            // Also try lowercase
+            let schema_json_lc = path.join("schema").join("schema.json");
+            if !schema_json_lc.exists() {
+                continue;
+            }
+        }
+
+        let schema_path = if path.join("Schema").join("schema.json").exists() {
+            path.join("Schema").join("schema.json")
+        } else {
+            path.join("schema").join("schema.json")
+        };
+
+        match CompanionSchema::from_file(&schema_path) {
+            Ok(companion) => {
+                let entity_name = companion.table_name.clone();
+
+                // Find data files in Results/ subdirectory or entity directory itself
+                let data_dir = if path.join("Results").is_dir() {
+                    path.join("Results")
+                } else if path.join("results").is_dir() {
+                    path.join("results")
+                } else {
+                    path.clone()
+                };
+
+                let mut data_files: Vec<PathBuf> = Vec::new();
+                if let Ok(data_entries) = std::fs::read_dir(&data_dir) {
+                    for de in data_entries.filter_map(|e| e.ok()) {
+                        let dp = de.path();
+                        if dp.is_file() {
+                            let ext = dp
+                                .extension()
+                                .and_then(|e| e.to_str())
+                                .unwrap_or("")
+                                .to_lowercase();
+                            if ["csv", "tsv", "parquet", "json", "jsonl"].contains(&ext.as_str()) {
+                                data_files.push(dp);
+                            }
+                        } else if dp.is_dir() {
+                            // Check partition subdirectories (e.g., PartitionDate=...)
+                            if let Ok(sub_entries) = std::fs::read_dir(&dp) {
+                                for se in sub_entries.filter_map(|e| e.ok()) {
+                                    let sp = se.path();
+                                    if sp.is_file() {
+                                        let ext = sp
+                                            .extension()
+                                            .and_then(|e| e.to_str())
+                                            .unwrap_or("")
+                                            .to_lowercase();
+                                        if ["csv", "tsv", "parquet", "json", "jsonl"]
+                                            .contains(&ext.as_str())
+                                        {
+                                            data_files.push(sp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if data_files.is_empty() {
+                    warn!(entity = %entity_name, "companion schema found but no data files");
+                    continue;
+                }
+
+                data_files.sort();
+                info!(
+                    entity = %entity_name,
+                    files = data_files.len(),
+                    "discovered structured entity"
+                );
+                discovered.push((entity_name, schema_path, data_files, companion));
+            }
+            Err(e) => {
+                warn!(path = %schema_path.display(), error = %e, "failed to parse companion schema");
+            }
+        }
+    }
+
+    if discovered.is_empty() {
+        return Ok(None);
+    }
+
+    // Ingest discovered entities
+    let mut results = Vec::new();
+    for (entity_name, schema_path, data_files, companion) in discovered {
+        let mut all_batches: Vec<RecordBatch> = Vec::new();
+        let mut total_rows: usize = 0;
+        let row_limit = max_rows.unwrap_or(usize::MAX);
+
+        for file in &data_files {
+            if total_rows >= row_limit {
+                break;
+            }
+            let remaining = row_limit - total_rows;
+            let batches = read_auto_with_limit(file, Some(remaining))?;
+            for b in batches {
+                total_rows += b.num_rows();
+                all_batches.push(b);
+            }
+        }
+
+        if all_batches.is_empty() {
+            continue;
+        }
+
+        // Compute a merged schema that picks the most specific type for each column
+        // (e.g., Null → Utf8 if any partition has Utf8 for that column)
+        let schema = merge_schemas(&all_batches);
+        // Re-schema batches if needed (partitioned files may have slightly different schemas)
+        let all_batches = unify_batch_schemas(all_batches, &schema);
+
+        results.push(IngestionResult {
+            entity: entity_name,
+            schema,
+            batches: all_batches,
+            companion: Some(companion),
+            companion_path: Some(schema_path),
+        });
+    }
+
+    Ok(Some(results))
+}
+
+/// Compute a unified schema from multiple batches, picking the most specific
+/// type for each column (e.g., `Null` → `Utf8` when another batch has `Utf8`).
+fn merge_schemas(batches: &[RecordBatch]) -> Arc<Schema> {
+    use arrow::datatypes::{DataType as ArrowDT, Field};
+    if batches.is_empty() {
+        return Arc::new(Schema::empty());
+    }
+    let first = batches[0].schema();
+    let merged_fields: Vec<Field> = first
+        .fields()
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let mut best_dt = f.data_type().clone();
+            for b in batches.iter().skip(1) {
+                if i < b.num_columns() {
+                    let other_dt = b.schema().field(i).data_type().clone();
+                    if best_dt == ArrowDT::Null && other_dt != ArrowDT::Null {
+                        best_dt = other_dt;
+                    }
+                }
+            }
+            Field::new(f.name(), best_dt, true)
+        })
+        .collect();
+    Arc::new(Schema::new(merged_fields))
+}
+
+/// Unify record batch schemas: re-cast columns to match the target schema.
+/// Handles partitions with fewer columns (fills with nulls) and type mismatches
+/// (casts Null → concrete type).
+fn unify_batch_schemas(batches: Vec<RecordBatch>, target: &Arc<Schema>) -> Vec<RecordBatch> {
+    use arrow::array::new_null_array;
+    use arrow::compute::cast;
+    batches
+        .into_iter()
+        .filter_map(|b| {
+            if b.schema() == *target {
+                Some(b)
+            } else {
+                let num_rows = b.num_rows();
+                // Cast each column to the target type
+                let columns: Vec<_> = (0..target.fields().len())
+                    .map(|i| {
+                        let target_dt = target.field(i).data_type();
+                        if i >= b.num_columns() {
+                            // Partition has fewer columns — fill with nulls
+                            new_null_array(target_dt, num_rows)
+                        } else {
+                            let col = b.column(i);
+                            if col.data_type() == target_dt {
+                                col.clone()
+                            } else if *col.data_type() == arrow::datatypes::DataType::Null {
+                                new_null_array(target_dt, col.len())
+                            } else {
+                                cast(col, target_dt)
+                                    .unwrap_or_else(|_| new_null_array(target_dt, col.len()))
+                            }
+                        }
+                    })
+                    .collect();
+                RecordBatch::try_new(target.clone(), columns).ok()
+            }
+        })
+        .collect()
+}
+
+/// Flat file discovery (original behavior, no companion schema).
+fn ingest_directory_flat(
+    dir: &Path,
+    max_rows: Option<usize>,
+) -> LearnResult<Vec<IngestionResult>> {
+    info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
+
     let mut results = Vec::new();
     let mut entries: Vec<PathBuf> = collect_files_recursive(dir)?;
     entries.sort();
@@ -440,6 +817,8 @@ pub fn ingest_directory_with_limit(
             entity,
             schema,
             batches,
+            companion: None,
+            companion_path: None,
         });
     }
 
