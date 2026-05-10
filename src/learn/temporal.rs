@@ -7,7 +7,7 @@
 
 use rustfft::num_complex::Complex;
 use rustfft::FftPlanner;
-use tracing::{debug, warn};
+use tracing::{debug, debug_span, warn};
 
 /// Classification of a temporal pattern.
 #[derive(Debug, Clone, PartialEq)]
@@ -86,9 +86,10 @@ pub struct HodDistribution {
 ///
 /// Returns `None` if fewer than 3 timestamps are provided.
 pub fn detect_temporal_pattern(timestamps_secs: &[f64]) -> Option<TemporalPatternSpec> {
+    let _span = debug_span!("temporal", n = timestamps_secs.len()).entered();
     let ts = filter_sorted(timestamps_secs);
     if ts.len() < 3 {
-        warn!("detect_temporal_pattern: fewer than 3 timestamps");
+        warn!(count = ts.len(), "fewer than 3 timestamps, skipping temporal detection");
         return None;
     }
 
