@@ -44,7 +44,7 @@ fn merge_distribution(
         return false;
     };
 
-    // Map the fit result to a DistributionKind
+    // Map the fit result to a DistributionKind using canonical param names
     let (ref_kind, ref_params) = match &fit.best.distribution {
         Distribution::Normal(mean, std) => (
             DistributionKind::Normal,
@@ -52,7 +52,7 @@ fn merge_distribution(
         ),
         Distribution::LogNormal(mu, sigma) => (
             DistributionKind::LogNormal,
-            BTreeMap::from([("mean".to_string(), *mu), ("std_dev".to_string(), *sigma)]),
+            BTreeMap::from([("mu".to_string(), *mu), ("sigma".to_string(), *sigma)]),
         ),
         Distribution::Exponential(lambda) => (
             DistributionKind::Exponential,
@@ -72,7 +72,7 @@ fn merge_distribution(
         ),
         Distribution::Pareto(xm, alpha) => (
             DistributionKind::Pareto,
-            BTreeMap::from([("x_m".to_string(), *xm), ("alpha".to_string(), *alpha)]),
+            BTreeMap::from([("scale".to_string(), *xm), ("shape".to_string(), *alpha)]),
         ),
         Distribution::Poisson(lambda) => (
             DistributionKind::Poisson,
@@ -101,19 +101,35 @@ fn merge_distribution(
     let ref_weight = (enrichment.sample_size as f64 / ref_row_count.max(1) as f64).min(2.0);
     let total = base_weight + ref_weight;
 
-    for (key, ref_val) in &ref_params {
-        if let Some(base_val) = spec.params.get_mut(key) {
-            // Special handling for std_dev / variance: use pooled variance formula for Normal
-            if spec.kind == DistributionKind::Normal && key == "std_dev" {
-                let base_var = *base_val * *base_val;
-                let ref_var = ref_val * ref_val;
-                let pooled_var = (base_weight * base_var + ref_weight * ref_var) / total;
-                *base_val = pooled_var.sqrt();
-            } else {
-                // Weighted average for other params
-                *base_val = (base_weight * *base_val + ref_weight * ref_val) / total;
+    let mut updated = false;
+
+    // Special case for Normal: use combined variance formula that accounts for mean difference
+    if spec.kind == DistributionKind::Normal {
+        if let (Some(base_mean), Some(base_std)) = (spec.params.get("mean").copied(), spec.params.get("std_dev").copied()) {
+            if let (Some(&ref_mean), Some(&ref_std)) = (ref_params.get("mean"), ref_params.get("std_dev")) {
+                let merged_mean = (base_weight * base_mean + ref_weight * ref_mean) / total;
+                // Combined variance includes between-mean variance
+                let base_var = base_std * base_std;
+                let ref_var = ref_std * ref_std;
+                let combined_var = (base_weight * (base_var + (base_mean - merged_mean).powi(2))
+                    + ref_weight * (ref_var + (ref_mean - merged_mean).powi(2))) / total;
+                spec.params.insert("mean".to_string(), merged_mean);
+                spec.params.insert("std_dev".to_string(), combined_var.sqrt());
+                updated = true;
             }
         }
+    } else {
+        for (key, ref_val) in &ref_params {
+            if let Some(base_val) = spec.params.get_mut(key) {
+                *base_val = (base_weight * *base_val + ref_weight * ref_val) / total;
+                updated = true;
+            }
+        }
+    }
+
+    if !updated {
+        debug!(field = %field_name, "no parameters updated");
+        return false;
     }
 
     info!(
@@ -124,7 +140,7 @@ fn merge_distribution(
     true
 }
 
-/// Merge categorical data into a OneOf generator using Bayesian smoothing.
+/// Merge categorical data into a OneOf generator using weighted averaging.
 fn merge_oneof(
     field_name: &str,
     choices: &mut Vec<WeightedChoice>,
@@ -140,29 +156,33 @@ fn merge_oneof(
         return false;
     }
 
-    // Bayesian merge: update weights for existing values, add new values
-    let prior = 0.1; // Smoothing prior
+    // Normalize base weights to probabilities
     let base_total: f64 = choices.iter().map(|c| c.weight).sum();
-    let ref_total: f64 = cat_fit.weights.values().sum();
+    if base_total <= 0.0 {
+        return false;
+    }
 
-    // Update weights for existing values
+    let ref_total: f64 = cat_fit.weights.values().sum();
+    // Weight base more heavily (prior) to avoid reference overwhelming existing knowledge
+    let base_w = 0.6_f64;
+    let ref_w = 0.4_f64;
+
+    // Update weights for existing values via weighted average of probabilities
     for choice in choices.iter_mut() {
         let val_str = match &choice.value {
             Value::String(s) => s.clone(),
             Value::Int(i) => i.to_string(),
             Value::Float(f) => f.to_string(),
             Value::Bool(b) => b.to_string(),
-            Value::Null => continue,
             _ => continue,
         };
 
-        if let Some(&ref_weight) = cat_fit.weights.get(&val_str) {
-            // Bayesian update: merge base weight with reference frequency
-            let base_frac = choice.weight / base_total.max(1.0);
-            let ref_frac = ref_weight / ref_total.max(1.0);
-            let merged = (base_frac + ref_frac + prior) / (2.0 + prior * cat_fit.cardinality as f64);
-            choice.weight = merged;
-        }
+        let base_frac = choice.weight / base_total;
+        let ref_frac = cat_fit.weights.get(&val_str)
+            .map(|&w| w / ref_total.max(1.0))
+            .unwrap_or(0.0);
+
+        choice.weight = base_w * base_frac + ref_w * ref_frac;
     }
 
     // Add new values from reference that aren't in base
@@ -182,7 +202,7 @@ fn merge_oneof(
             if ref_frac > 0.01 {
                 choices.push(WeightedChoice {
                     value: Value::String(val.clone()),
-                    weight: ref_frac * 0.5, // Discount new values slightly
+                    weight: ref_w * ref_frac,
                 });
                 added += 1;
             }

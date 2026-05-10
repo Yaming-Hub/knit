@@ -92,6 +92,18 @@ fn extract_numeric_values(batches: &[RecordBatch], col_index: usize) -> Vec<f64>
                     values.push(arr.value(i) as f64);
                 }
             }
+        } else if let Some(arr) = col.as_primitive_opt::<arrow::datatypes::Int16Type>() {
+            for i in 0..arr.len() {
+                if !arr.is_null(i) {
+                    values.push(arr.value(i) as f64);
+                }
+            }
+        } else if let Some(arr) = col.as_primitive_opt::<arrow::datatypes::Int8Type>() {
+            for i in 0..arr.len() {
+                if !arr.is_null(i) {
+                    values.push(arr.value(i) as f64);
+                }
+            }
         }
     }
     values
