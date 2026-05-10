@@ -6,6 +6,13 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Temporal sequences** — Sequence generators now accept string date/datetime starts
+  and duration-string steps (spec §6.3):
+  - `start = "2024-01-01"` or `start = "2024-01-01T08:00:00"` (parsed to epoch ms)
+  - `step = "1d"` or `step = "1h"` (parsed to ms duration)
+  - Supports date-only, naive datetime, UTC, and offset-aware formats
+  - Combined with `data_type = "datetime"` for realistic timestamp columns
+  - Integer start/step continue to work unchanged
 - **Sequence jitter** — Random offset for sequence generators (spec §6.13):
   - `jitter = "30m"` adds uniform random offset from `[-30m, +30m]` per value
   - Supports duration strings: `"500ms"`, `"5m"`, `"1h"`, `"1d"`, `"1w"`

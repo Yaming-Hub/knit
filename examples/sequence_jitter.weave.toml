@@ -1,14 +1,14 @@
-# Sequence Jitter Example
+# Sequence Jitter & Temporal Sequences Example
 #
-# Demonstrates the `jitter` parameter on sequence generators to create
-# realistic, slightly-irregular timestamps. Each value gets a random
-# offset drawn uniformly from [-jitter, +jitter].
+# Demonstrates:
+# 1. Temporal sequences with string date/datetime starts and duration steps
+# 2. The `jitter` parameter for realistic irregular timestamps
 
 [model]
 name = "sequence_jitter_demo"
 seed = 42
 
-# ── Daily sensor readings with ±30-minute jitter ──────────────
+# ── Daily sensor readings with temporal sequences ─────────────
 [[entities]]
 name = "sensor_reading"
 count = 30
@@ -18,18 +18,25 @@ name = "id"
 data_type = "int"
 generator = { type = "sequence", start = 1, step = 1 }
 
-# Epoch-millisecond timestamps: start at 2024-01-01 00:00:00 UTC,
-# step by 1 day (86 400 000 ms), jitter ±30 minutes.
+# Temporal sequence: string date start + duration step.
+# Produces epoch-ms timestamps starting 2024-01-01, stepping 1 day,
+# with ±30-minute jitter for realistic irregularity.
 [[entities.fields]]
-name = "timestamp_ms"
+name = "reading_time"
+data_type = "datetime"
+generator = { type = "sequence", start = "2024-01-01", step = "1d", jitter = "30m" }
+
+# Hourly datetime sequence with ±5-minute wobble
+[[entities.fields]]
+name = "hourly_check"
+data_type = "datetime"
+generator = { type = "sequence", start = "2024-06-15T08:00:00", step = "1h", jitter = "5m" }
+
+# Integer sequence with epoch-ms values also works
+[[entities.fields]]
+name = "raw_epoch_ms"
 data_type = "int"
 generator = { type = "sequence", start = 1704067200000, step = 86400000, jitter = "30m" }
-
-# A tighter jitter: hourly readings with ±5-minute wobble.
-[[entities.fields]]
-name = "hourly_ts_ms"
-data_type = "int"
-generator = { type = "sequence", start = 1704067200000, step = 3600000, jitter = "5m" }
 
 [[entities.fields]]
 name = "value"

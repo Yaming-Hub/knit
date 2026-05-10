@@ -277,8 +277,8 @@ fn generator_spec_sequence_serde() {
     let gs: GeneratorSpec = serde_json::from_str(json).unwrap();
     match gs {
         GeneratorSpec::Sequence { start, step, .. } => {
-            assert_eq!(start, 10);
-            assert_eq!(step, 2);
+            assert_eq!(start, IntOrString::Int(10));
+            assert_eq!(step, IntOrString::Int(2));
         }
         _ => panic!("expected Sequence"),
     }
@@ -431,8 +431,8 @@ fn minimal_data_model_roundtrip() {
                 description: None,
                 data_type: DataType::Int,
                 generator: Some(GeneratorSpec::Sequence {
-                    start: 1,
-                    step: 1,
+                    start: IntOrString::Int(1),
+                    step: IntOrString::Int(1),
                     prefix: None,
                 values: None,
                 cycle: None,
