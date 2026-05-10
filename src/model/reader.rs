@@ -182,6 +182,8 @@ struct PartitionEntry {
     #[serde(default)]
     values: Vec<String>,
     #[serde(default)]
+    weights: Vec<f64>,
+    #[serde(default)]
     counts: Vec<u64>,
 }
 
@@ -212,6 +214,8 @@ struct TableMeta {
     activity_count: Option<ActivityCount>,
     #[serde(default)]
     topology: Option<TopologySpec>,
+    #[serde(default)]
+    mixins: Option<Vec<String>>,
 }
 
 /// Relationships file (`relationships.toml`).
@@ -254,9 +258,11 @@ fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
     let output = folder.map(|f| {
         let partition_values = f.partition.as_ref().map(|p| {
             p.values.iter().enumerate().map(|(i, v)| {
-                let weight = if let Some(counts) = p.counts.get(i) {
+                let weight = if let Some(&w) = p.weights.get(i) {
+                    w
+                } else if let Some(&count) = p.counts.get(i) {
                     let total: u64 = p.counts.iter().sum();
-                    if total > 0 { *counts as f64 / total as f64 } else { 1.0 / p.values.len() as f64 }
+                    if total > 0 { count as f64 / total as f64 } else { 1.0 / p.values.len() as f64 }
                 } else {
                     1.0 / p.values.len().max(1) as f64
                 };
@@ -282,7 +288,7 @@ fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
         actor: table.table.actor,
         persona_distribution: table.table.persona_distribution,
         activity_count: table.table.activity_count,
-        mixin_refs: None,
+        mixin_refs: table.table.mixins,
         output,
     }
 }

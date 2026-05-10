@@ -43,7 +43,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
                 partition: o.partition_by.as_ref().map(|by| PartitionOut {
                     by: by.clone(),
                     values: o.partition_values.iter().map(|pv| pv.value.clone()).collect(),
-                    counts: Vec::new(), // Don't store counts; weights are derived
+                    weights: o.partition_values.iter().map(|pv| pv.weight).collect(),
                 }),
             })
         })
@@ -71,6 +71,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
                 persona_distribution: entity.persona_distribution.clone(),
                 activity_count: entity.activity_count.clone(),
                 topology: entity.topology.clone(),
+                mixins: entity.mixin_refs.clone(),
             },
             columns: entity.fields.clone(),
             constraints: if entity.constraints.is_empty() { None } else { Some(entity.constraints.clone()) },
@@ -162,7 +163,7 @@ struct PartitionOut {
     by: String,
     values: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    counts: Vec<u64>,
+    weights: Vec<f64>,
 }
 
 #[derive(Serialize)]
@@ -190,6 +191,8 @@ struct TableMetaOut {
     activity_count: Option<ActivityCount>,
     #[serde(skip_serializing_if = "Option::is_none")]
     topology: Option<TopologySpec>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mixins: Option<Vec<String>>,
 }
 
 #[derive(Serialize)]

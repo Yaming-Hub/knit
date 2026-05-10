@@ -4,9 +4,43 @@ use std::path::Path;
 
 use anyhow::Result;
 use colored::Colorize;
+use serde::Serialize;
 
 use crate::cli::commands::load_schema;
+use crate::core::{ActorRelationship, Correlation, Entity, Persona, Relationship};
 use crate::model::{is_structured_model, reader, writer};
+
+/// Wrapper for proper flat TOML serialization with [model] section.
+#[derive(Serialize)]
+struct FlatSchema {
+    schema_version: String,
+    model: FlatModelMeta,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    entities: Vec<Entity>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    relationships: Vec<Relationship>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    correlations: Vec<Correlation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    personas: Vec<Persona>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    actor_relationships: Vec<ActorRelationship>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    companion_files: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct FlatModelMeta {
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    seed: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    locale: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timezone: Option<String>,
+}
 
 /// Run `knit model convert` — convert between flat and structured formats.
 pub fn run_convert(input: &str, output: &str) -> Result<()> {
@@ -17,7 +51,23 @@ pub fn run_convert(input: &str, output: &str) -> Result<()> {
         // Structured → Flat
         println!("{}", "Converting structured model → flat schema...".bold());
         let model = reader::load_model_directory(input_path)?;
-        let toml_str = toml::to_string_pretty(&model)?;
+        let flat = FlatSchema {
+            schema_version: model.schema_version.clone(),
+            model: FlatModelMeta {
+                name: model.name.clone(),
+                description: model.description.clone(),
+                seed: if model.seed != 0 { Some(model.seed) } else { None },
+                locale: if model.locale != "en" { Some(model.locale.clone()) } else { None },
+                timezone: if model.timezone != "UTC" { Some(model.timezone.clone()) } else { None },
+            },
+            entities: model.entities.clone(),
+            relationships: model.relationships.clone(),
+            correlations: model.correlations.clone(),
+            personas: model.personas.clone(),
+            actor_relationships: model.actor_relationships.clone(),
+            companion_files: model.companion_files.clone(),
+        };
+        let toml_str = toml::to_string_pretty(&flat)?;
         std::fs::write(output_path, toml_str)?;
         println!("  Written to: {}", output.green());
     } else {
