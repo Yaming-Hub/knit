@@ -141,6 +141,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
                             generator_plan: gen_plan,
                             null_plan,
                             dependency_order: 0,
+                            schema_position: field_plans.len(),
                             precision: None,
                             actor_column: false,
                             sub_field_plans: vec![],
@@ -167,11 +168,16 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
             estimated_total_rows += row_count;
             estimated_total_bytes += estimated_byte_size;
 
-            // Find the primary-key field index explicitly from the source schema.
-            let primary_key_field_index = entity
-                .fields
-                .iter()
-                .position(|f| f.primary_key.unwrap_or(false));
+            // Find primary-key field index in the dependency-sorted field_plans,
+            // not the original entity.fields order.
+            let primary_key_field_index = {
+                let pk_name = entity
+                    .fields
+                    .iter()
+                    .find(|f| f.primary_key.unwrap_or(false))
+                    .map(|f| &f.name);
+                pk_name.and_then(|name| field_plans.iter().position(|fp| &fp.field_name == name))
+            };
 
             entity_plans.push(EntityPlan {
                 entity_name: entity_name.clone(),
@@ -424,7 +430,7 @@ fn compile_field_plans(
 
     let mut plans: Vec<FieldPlan> = Vec::new();
 
-    for field in &entity.fields {
+    for (schema_pos, field) in entity.fields.iter().enumerate() {
         // Check if field has an explicit RelationshipRef or ThreadRef generator — if so, it takes
         // precedence over the inferred FK path (graph-aware sampling vs uniform FK).
         let has_relationship_ref = matches!(
@@ -629,6 +635,7 @@ fn compile_field_plans(
             generator_plan,
             null_plan,
             dependency_order,
+            schema_position: schema_pos,
             precision: field.precision,
             actor_column: field.actor_column,
             sub_field_plans,
@@ -662,6 +669,7 @@ fn compile_object_sub_fields(fields: &[Field]) -> Vec<FieldPlan> {
                 generator_plan,
                 null_plan,
                 dependency_order: 0,
+                schema_position: 0,
                 precision: sub.precision,
                 actor_column: false,
                 sub_field_plans,
@@ -1877,6 +1885,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         }
     }
 
@@ -2757,6 +2766,7 @@ mod tests {
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
+        output: None,
             }],
             vec![],
         );

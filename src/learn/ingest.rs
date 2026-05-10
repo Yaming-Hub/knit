@@ -407,6 +407,9 @@ pub struct IngestionResult {
     pub companion: Option<CompanionSchema>,
     /// Path to the companion schema.json file (for resolving relative paths).
     pub companion_path: Option<PathBuf>,
+    /// Relative path from the dataset root to the entity's data directory
+    /// (e.g. `"Collab/Results"`). Used to reproduce folder hierarchy in output.
+    pub source_layout: Option<String>,
 }
 
 /// Truncate a list of record batches to at most `max_rows` total rows.
@@ -656,12 +659,32 @@ fn try_structured_ingest(
         // Re-schema batches if needed (partitioned files may have slightly different schemas)
         let all_batches = unify_batch_schemas(all_batches, &schema);
 
+        // Compute relative path from dataset root to data directory for output layout
+        let source_layout = data_files.first().and_then(|f| {
+            f.parent()
+                .and_then(|p| p.strip_prefix(dir).ok())
+                .map(|rel| {
+                    // For partitioned dirs, go up one level (Results/PartitionDate=... → Results)
+                    // Check if the immediate parent looks like a partition directory
+                    let rel_str = rel.to_string_lossy();
+                    if rel_str.contains('=') {
+                        // It's a partition subdir; use parent
+                        rel.parent()
+                            .map(|pp| pp.to_string_lossy().to_string())
+                            .unwrap_or_else(|| rel_str.to_string())
+                    } else {
+                        rel_str.to_string()
+                    }
+                })
+        });
+
         results.push(IngestionResult {
             entity: entity_name,
             schema,
             batches: all_batches,
             companion: Some(companion),
             companion_path: Some(schema_path),
+            source_layout,
         });
     }
 
@@ -819,6 +842,7 @@ fn ingest_directory_flat(
             batches,
             companion: None,
             companion_path: None,
+            source_layout: None,
         });
     }
 

@@ -1474,6 +1474,19 @@ impl GenerationEngine {
             field_arrays[i] = arr;
         }
 
+        // Phase 4: Reorder columns from dependency order back to schema order
+        // so output matches the declared field order in the schema.
+        let mut indexed: Vec<(usize, String, arrow::array::ArrayRef)> = ep
+            .field_plans
+            .iter()
+            .enumerate()
+            .map(|(i, fp)| (fp.schema_position, field_names[i].clone(), field_arrays[i].clone()))
+            .collect();
+        indexed.sort_by_key(|(pos, _, _)| *pos);
+        let field_names: Vec<String> = indexed.iter().map(|(_, n, _)| n.clone()).collect();
+        let field_arrays: Vec<arrow::array::ArrayRef> =
+            indexed.into_iter().map(|(_, _, a)| a).collect();
+
         assemble_batch(&field_names, field_arrays)
     }
 
@@ -1812,6 +1825,8 @@ mod tests {
                                 dependency_order: 0,
                                 precision: None,
                                 actor_column: false,
+                                schema_position: 0,
+
                                 sub_field_plans: vec![],
                             },
                             FieldPlan {
@@ -1822,6 +1837,8 @@ mod tests {
                                 dependency_order: 1,
                                 precision: None,
                                 actor_column: false,
+                                schema_position: 0,
+
                                 sub_field_plans: vec![],
                             },
                         ],
@@ -1851,6 +1868,8 @@ mod tests {
                                 dependency_order: 0,
                                 precision: None,
                                 actor_column: false,
+                                schema_position: 0,
+
                                 sub_field_plans: vec![],
                             },
                             FieldPlan {
@@ -1868,6 +1887,8 @@ mod tests {
                                 dependency_order: 1,
                                 precision: None,
                                 actor_column: false,
+                                schema_position: 0,
+
                                 sub_field_plans: vec![],
                             },
                         ],
@@ -2035,6 +2056,8 @@ mod tests {
                             dependency_order: 0,
                             precision: None,
                             actor_column: false,
+                            schema_position: 0,
+
                             sub_field_plans: vec![],
                         },
                         FieldPlan {
@@ -2052,6 +2075,8 @@ mod tests {
                             dependency_order: 1,
                             precision: None,
                             actor_column: false,
+                            schema_position: 0,
+
                             sub_field_plans: vec![],
                         },
                     ],
@@ -2215,6 +2240,8 @@ mod tests {
                         dependency_order: 0,
                         precision: None,
                         actor_column: false,
+                        schema_position: 0,
+
                         sub_field_plans: vec![],
                     }],
                     estimated_row_count: 1000,
@@ -2301,6 +2328,8 @@ mod tests {
                         dependency_order: 0,
                         precision: None,
                         actor_column: false,
+                        schema_position: 0,
+
                         sub_field_plans: vec![],
                     }],
                     estimated_row_count: 25,
@@ -2426,6 +2455,8 @@ mod tests {
                         dependency_order: 0,
                         precision: None,
                         actor_column: false,
+                        schema_position: 0,
+
                         sub_field_plans: vec![],
                     }],
                     estimated_row_count: 1000,

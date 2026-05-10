@@ -268,6 +268,20 @@ pub struct Entity {
     /// List of mixin names to include (consumed during resolution).
     #[serde(default, rename = "mixins", skip_serializing_if = "Option::is_none")]
     pub mixin_refs: Option<Vec<String>>,
+    /// Output layout: controls where generated files are written relative to
+    /// the output directory. Learned from source dataset folder structure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output: Option<OutputLayout>,
+}
+
+/// Controls the output file path for a generated entity.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OutputLayout {
+    /// Subdirectory path relative to the output root (e.g. `"Collab/Results"`).
+    /// When set, the generated file is written inside this subdirectory instead
+    /// of directly in the output root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
 }
 
 /// A single field (column) within an [`Entity`].
@@ -2085,6 +2099,7 @@ step = "7d"
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
+        output: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -2257,6 +2272,7 @@ step = "7d"
             persona_distribution: Some("personas".into()),
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         };
         let json = serde_json::to_string(&entity).unwrap();
         assert!(json.contains("\"actor\":true"));

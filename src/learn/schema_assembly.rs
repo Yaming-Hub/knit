@@ -45,6 +45,8 @@ pub struct TableAnalysis {
     pub companion: Option<crate::learn::ingest::CompanionSchema>,
     /// Path to the companion schema.json file (for resolving dictionary paths).
     pub companion_path: Option<std::path::PathBuf>,
+    /// Relative path from dataset root to data directory (for output layout).
+    pub source_layout: Option<String>,
 }
 
 impl TableAnalysis {
@@ -60,6 +62,7 @@ impl TableAnalysis {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }
     }
 }
@@ -442,6 +445,9 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
         persona_distribution: None,
         activity_count: None,
         mixin_refs: None,
+        output: table.source_layout.as_ref().map(|path| crate::core::OutputLayout {
+            path: Some(path.clone()),
+        }),
     };
 
     (entity, rels, corrs)
@@ -1534,6 +1540,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1581,6 +1588,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1616,6 +1624,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1658,6 +1667,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1780,6 +1790,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1815,6 +1826,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1960,6 +1972,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -1994,6 +2007,7 @@ mod tests {
             actor_relationships: Vec::new(),
             companion: None,
             companion_path: None,
+            source_layout: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);

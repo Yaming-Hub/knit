@@ -3712,6 +3712,7 @@ mod tests {
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
+        output: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
@@ -3822,6 +3823,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -3871,6 +3873,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -3935,6 +3938,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -3999,6 +4003,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -4050,6 +4055,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         // Relationship without explicit foreign_key — implicit FK is "order_id"
         model.relationships.push(Relationship {
@@ -4183,6 +4189,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         let rel = Relationship {
             name: "user_order".to_string(),
@@ -5480,6 +5487,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         });
         model.entities[0].fields.push(Field {
             name: "ref_col".to_string(),
@@ -5716,6 +5724,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.entities[0].fields.push(Field {
             name: "user_id".to_string(),
@@ -5751,6 +5760,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.entities[0].fields.push(Field {
             name: "user_id".to_string(),
@@ -5900,6 +5910,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "friends".to_string(),
@@ -5931,6 +5942,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "knows".to_string(),
@@ -5962,6 +5974,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.personas.push(Persona {
             name: "early_bird".to_string(),
@@ -6032,6 +6045,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "friends".to_string(),
@@ -6072,6 +6086,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.actor_relationships.push(ActorRelationship {
             name: "knows".to_string(),
@@ -6144,6 +6159,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.entities[0].fields.push(Field {
             name: "post_id".to_string(),
@@ -6220,6 +6236,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         model.entities[0].fields.push(Field {
             name: "post_id".to_string(),
@@ -6295,6 +6312,7 @@ mod tests {
             constraints: vec![],
             topology: None,
                 mixin_refs: None,
+        output: None,
         });
         // Note: no "post_id" field in user entity
         model.entities[0].fields.push(Field {
@@ -6766,6 +6784,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -6918,6 +6937,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -6971,6 +6991,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -7037,6 +7058,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -7099,6 +7121,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
+        output: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),

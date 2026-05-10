@@ -780,6 +780,7 @@ mod tests {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         }
     }
 

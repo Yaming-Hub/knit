@@ -341,7 +341,38 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
 
             // Lazily create sink
             if !sinks.contains_key(entity_name) {
-                let file_path = out_path.join(format!("{}.{}", entity_name, extension));
+                // Use output.path from schema if available, otherwise flat
+                let file_path = {
+                    let output_subdir = model.entities.iter()
+                        .find(|e| e.name == entity_name)
+                        .and_then(|e| e.output.as_ref())
+                        .and_then(|o| o.path.as_ref());
+                    if let Some(subdir) = output_subdir {
+                        // Reject unsafe paths
+                        let subdir_path = std::path::Path::new(subdir);
+                        if subdir_path.is_absolute()
+                            || subdir_path.components().any(|c| {
+                                matches!(c, std::path::Component::ParentDir)
+                            })
+                        {
+                            return Err(crate::gen::GenError::Generation(format!(
+                                "unsafe output path for entity '{}': {}",
+                                entity_name, subdir
+                            )));
+                        }
+                        let dir = out_path.join(subdir);
+                        fs::create_dir_all(&dir).map_err(|e| {
+                            crate::gen::GenError::Generation(format!(
+                                "failed to create {}: {}",
+                                dir.display(),
+                                e
+                            ))
+                        })?;
+                        dir.join(format!("{}.{}", entity_name, extension))
+                    } else {
+                        out_path.join(format!("{}.{}", entity_name, extension))
+                    }
+                };
                 let file = fs::File::create(&file_path).map_err(|e| {
                     crate::gen::GenError::Generation(format!(
                         "failed to create {}: {}",
@@ -563,8 +594,11 @@ fn map_avro_codec(c: CompressionArg) -> crate::bind::AvroCodec {
 ///
 /// Uses the generator plan to infer the Arrow data type for each field.
 fn build_arrow_schema(ep: &crate::plan::EntityPlan) -> Schema {
-    let fields: Vec<ArrowField> = ep
-        .field_plans
+    // Sort field plans by schema_position so the Arrow schema matches
+    // the declared column order (not dependency order).
+    let mut sorted: Vec<&crate::plan::FieldPlan> = ep.field_plans.iter().collect();
+    sorted.sort_by_key(|fp| fp.schema_position);
+    let fields: Vec<ArrowField> = sorted
         .iter()
         .map(|fp| {
             let dt = resolve_arrow_type(fp);

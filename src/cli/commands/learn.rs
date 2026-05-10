@@ -776,6 +776,7 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
             batches,
             companion: None,
             companion_path: None,
+            source_layout: None,
         }])
     }
 }
@@ -831,6 +832,7 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
     // Attach companion schema if available
     analysis.companion = table.companion.clone();
     analysis.companion_path = table.companion_path.clone();
+    analysis.source_layout = table.source_layout.clone();
 
     let rel_profile = TableProfile {
         name: table.entity.clone(),

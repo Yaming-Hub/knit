@@ -180,6 +180,10 @@ pub struct FieldPlan {
     /// Execution order within the entity. Fields with lower values are generated
     /// first. Derived fields have higher order than their dependencies.
     pub dependency_order: u32,
+    /// Original position in the schema's field list (0-based). Used to restore
+    /// the declared column order in output after dependency-ordered generation.
+    #[serde(default)]
+    pub schema_position: usize,
     /// Number of decimal places for float output. When set, the generated array
     /// is rounded to this precision after generation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
