@@ -362,3 +362,46 @@ semantically meaningful new values instead of indexed placeholders.
 When scaling a dimension that appears in multiple entities, ensure referential
 consistency (e.g., if `Region` appears in both `Orders` and `Inventory`, new
 region values appear in both).
+
+---
+
+## 9. Implementation Status
+
+### v1 (Implemented)
+
+The following features are implemented and available via `knit scale`:
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `--analyze` | ✅ | Discovers actor, time, and custom dimensions |
+| `--actors N` | ✅ | Scales actor entity and proportional dependents |
+| `--time SPEC` | ✅ | Duration (`52w`), relative (`+26w`), explicit range |
+| `--dim NAME=N` | ✅ | Scales OneOf custom dimensions |
+| `--dry-run` | ✅ | Shows planned counts without generating |
+| `--format` | ✅ | Delegates to generate pipeline |
+| `--seed` | ✅ | Deterministic scaling |
+| Combined dimensions | ✅ | Multiplicative interaction |
+| Cadence detection | ✅ | Median gap from sorted partition dates |
+| FK-root actor heuristic | ✅ | Selects entity with most incoming FKs |
+
+**Architecture (as implemented):**
+
+```
+src/scale/mod.rs       — ScalingAnalysis, ScalingPlan, compute_plan(), rewrite()
+src/scale/analyze.rs   — analyze(), detect_actor(), detect_time(), detect_custom_dimensions()
+src/scale/time.rs      — compute_new_partitions(), parse_duration_days()
+src/cli/commands/scale.rs — CLI handler, --analyze formatting, --dry-run display
+```
+
+The `generate::run()` function was refactored into `run()` + `run_from_model()` to
+allow the scale command to inject a modified `DataModel` and reuse the full
+generation pipeline (format selection, partitioning, output writing).
+
+### Deferred to v2
+
+- Cadence confidence threshold and `--cadence` override flag
+- Smart value naming (faker-based) for expanded custom dimensions
+- `--count Nx` uniform multiplier on top of dimensional scaling
+- Constraint propagation for cross-entity dimension fields
+- JSON machine-readable output for `--analyze`
+- Estimated output size in `--dry-run`
