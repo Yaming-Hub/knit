@@ -179,6 +179,14 @@ pub fn compute_partitions(total_rows: u64, entity_seed: u64) -> Vec<PartitionRan
     let rows_per_partition = total_rows / num_partitions as u64;
     let remainder = total_rows % num_partitions as u64;
 
+    tracing::debug!(
+        total_rows,
+        num_partitions,
+        rows_per_partition,
+        partitions_with_extra_row = remainder,
+        "partition plan computed"
+    );
+
     let mut partitions = Vec::with_capacity(num_partitions as usize);
     let mut start = 0u64;
 

@@ -934,6 +934,12 @@ impl GenerationEngine {
                                 )) as Box<dyn FieldGenerator>
                             }
                         } else {
+                            tracing::debug!(
+                                entity = %ep.entity_name,
+                                field = %fp.field_name,
+                                target = %target_entity,
+                                "using uniform FK generator (no degree or selection strategy)"
+                            );
                             Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
                         }
                     } else {
