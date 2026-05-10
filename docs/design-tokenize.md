@@ -208,7 +208,10 @@ looking like paths, etc.
 | `A-Z` | Random `A-Z` |
 | `a-z` | Random `a-z` |
 | `0-9` | Random `0-9` |
-| Other | Preserved as-is |
+| Unicode letter (uppercase) | Random `A-Z` |
+| Unicode letter (lowercase) | Random `a-z` |
+| Unicode digit | Random `0-9` |
+| Other (punctuation, symbols) | Preserved as-is |
 
 ### 5.3 File Organization
 
@@ -310,3 +313,55 @@ Build the token map incrementally with a two-pass approach.
 ### 9.5 Tokenization Report
 Generate an HTML/markdown report showing tokenization coverage, value
 distribution changes, and structural integrity verification.
+
+---
+
+## 10. Implementation Status
+
+### v1 (Implemented)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| String tokenization (CSV) | ✅ | Cell-level replacement via `csv` crate |
+| String tokenization (JSON/JSONL) | ✅ | Value-level replacement, line-by-line JSONL |
+| String tokenization (Parquet) | ✅ | Columnar replacement via Arrow |
+| Shape-preserving tokens | ✅ | Length, case, separators, char class preserved |
+| Unicode letter replacement | ✅ | Non-ASCII letters → random ASCII letters |
+| Global consistency | ✅ | Same value → same token across all files |
+| Schema-aware tokenization | ✅ | Only data payloads, not structural fields |
+| File classification | ✅ | Data, schema, dictionary, companion |
+| Collision avoidance | ✅ | 1000 retries + length-varied fallback |
+| Token dictionary I/O | ✅ | .knit-tokens.json with BTreeMap sorted output |
+| Restore mode (`--restore`) | ✅ | Reverse map from dictionary |
+| Verify mode (`--verify`) | ✅ | Structural equivalence check |
+| Deterministic (`--seed`) | ✅ | Seeded StdRng for reproducibility |
+
+**Architecture (as implemented):**
+
+```
+src/tokenize/mod.rs         — Pipeline orchestration (tokenize, restore entry points)
+src/tokenize/scanner.rs     — Directory walking, file classification, string extraction
+src/tokenize/mapper.rs      — Shape-preserving token generation, collision avoidance
+src/tokenize/apply.rs       — File rewriting (CSV, JSON/JSONL, Parquet, schema-selective)
+src/tokenize/dictionary.rs  — Token dictionary serialization (.knit-tokens.json)
+src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
+```
+
+### Known Limitations (v1)
+
+| Limitation | Impact | Mitigation |
+|-----------|--------|-----------|
+| `--tokenize-numbers` flag accepted but not functional | Numeric values always preserved | Warning emitted at runtime |
+| `--tokenize-dates` flag accepted but not functional | Date values always preserved | Warning emitted at runtime |
+| `--tokenize-headers` flag accepted but not functional | Headers always preserved | Warning emitted at runtime |
+| Restore ambiguity | A generated token may match an untouched literal | Rare in practice; requires field-level metadata to fix fully |
+| Memory usage | All unique strings held in HashMap | Acceptable for datasets < 10M unique strings |
+
+### Deferred to v2
+
+- Implement `--tokenize-numbers` (numeric value obfuscation)
+- Implement `--tokenize-dates` (date/timestamp shifting)
+- Implement `--tokenize-headers` (column name anonymization)
+- Field-level restore metadata (eliminate restore ambiguity)
+- Streaming tokenization for very large datasets
+- Selective column tokenization (`--tokenize-columns`, `--preserve-columns`)

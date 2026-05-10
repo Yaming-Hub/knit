@@ -279,6 +279,38 @@ pub enum Command {
         #[arg(long)]
         cadence: Option<String>,
     },
+    /// Tokenize a dataset for safe sharing (replace strings with opaque tokens).
+    Tokenize {
+        /// Path to dataset directory to tokenize (or restore).
+        input: String,
+        /// Output directory.
+        #[arg(short, long)]
+        output: String,
+        /// Restore tokenized dataset to original using dictionary.
+        #[arg(long)]
+        restore: bool,
+        /// Verify tokenized dataset matches original structure.
+        #[arg(long)]
+        verify: Option<String>,
+        /// Token dictionary path (default: <output>/.knit-tokens.json).
+        #[arg(long)]
+        dictionary: Option<String>,
+        /// Random seed for deterministic token generation.
+        #[arg(long)]
+        seed: Option<u64>,
+        /// Also tokenize numeric values.
+        #[arg(long)]
+        tokenize_numbers: bool,
+        /// Also tokenize date/timestamp values.
+        #[arg(long)]
+        tokenize_dates: bool,
+        /// Also tokenize column headers.
+        #[arg(long)]
+        tokenize_headers: bool,
+        /// Keep partition folder values as-is.
+        #[arg(long)]
+        preserve_partitions: bool,
+    },
 }
 
 /// Schema subcommands.

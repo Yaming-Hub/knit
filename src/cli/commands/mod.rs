@@ -8,6 +8,7 @@ pub mod learn;
 pub mod plan;
 pub mod scale;
 pub mod schema;
+pub mod tokenize;
 pub mod validate;
 
 use std::path::Path;

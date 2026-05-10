@@ -4,7 +4,7 @@ use clap::{CommandFactory, Parser};
 use colored::Colorize;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-use knit::cli::commands::{generate, generators, init, inspect, learn, plan, scale, schema, validate};
+use knit::cli::commands::{generate, generators, init, inspect, learn, plan, scale, schema, tokenize, validate};
 use knit::cli::config::resolve_config;
 use knit::cli::{Cli, Command, LogFormat, SchemaAction};
 
@@ -197,6 +197,29 @@ fn main() -> anyhow::Result<()> {
             *count,
             cadence.as_deref(),
             &cli,
+        ),
+        Command::Tokenize {
+            input,
+            output,
+            restore,
+            verify,
+            dictionary,
+            seed,
+            tokenize_numbers,
+            tokenize_dates,
+            tokenize_headers,
+            preserve_partitions,
+        } => tokenize::run(
+            input,
+            output,
+            dictionary.as_deref(),
+            *restore,
+            verify.as_deref(),
+            *seed,
+            *tokenize_numbers,
+            *tokenize_dates,
+            *tokenize_headers,
+            *preserve_partitions,
         ),
     }
     .inspect_err(|e| {
