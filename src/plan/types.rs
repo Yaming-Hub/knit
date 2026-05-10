@@ -241,6 +241,9 @@ pub enum GeneratorPlan {
         start: i64,
         /// Increment between consecutive values.
         step: i64,
+        /// Optional jitter in milliseconds. When present, each value receives a
+        /// random offset drawn uniformly from `[-jitter_ms, +jitter_ms]`.
+        jitter_ms: Option<i64>,
     },
     /// Cycle through a fixed list of string values round-robin.
     /// Row assignment is deterministic: `values[(row_offset + i) % values.len()]`.

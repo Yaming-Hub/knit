@@ -1,0 +1,42 @@
+# Sequence Jitter Example
+#
+# Demonstrates the `jitter` parameter on sequence generators to create
+# realistic, slightly-irregular timestamps. Each value gets a random
+# offset drawn uniformly from [-jitter, +jitter].
+
+[model]
+name = "sequence_jitter_demo"
+seed = 42
+
+# ── Daily sensor readings with ±30-minute jitter ──────────────
+[[entities]]
+name = "sensor_reading"
+count = 30
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+generator = { type = "sequence", start = 1, step = 1 }
+
+# Epoch-millisecond timestamps: start at 2024-01-01 00:00:00 UTC,
+# step by 1 day (86 400 000 ms), jitter ±30 minutes.
+[[entities.fields]]
+name = "timestamp_ms"
+data_type = "int"
+generator = { type = "sequence", start = 1704067200000, step = 86400000, jitter = "30m" }
+
+# A tighter jitter: hourly readings with ±5-minute wobble.
+[[entities.fields]]
+name = "hourly_ts_ms"
+data_type = "int"
+generator = { type = "sequence", start = 1704067200000, step = 3600000, jitter = "5m" }
+
+[[entities.fields]]
+name = "value"
+data_type = "float"
+[entities.fields.generator]
+type = "distribution"
+kind = "normal"
+[entities.fields.generator.params]
+mean = 22.0
+std_dev = 3.0

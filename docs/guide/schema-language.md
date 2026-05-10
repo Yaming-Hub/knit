@@ -217,6 +217,19 @@ step = 1
 |-------|------|---------|-------------|
 | `start` | int | `1` | Starting value |
 | `step` | int | `1` | Increment between values |
+| `jitter` | string | — | Random offset per value, drawn from `[-jitter, +jitter]` (duration: `"30m"`, `"1h"`, `"500ms"`) |
+
+**Jitter** adds a random offset to each step, useful for temporal sequences
+where values represent epoch milliseconds:
+
+```toml
+# Daily timestamps with ±30-minute wobble
+[entities.fields.generator]
+type = "sequence"
+start = 1704067200000   # 2024-01-01T00:00:00 UTC (epoch ms)
+step = 86400000         # 1 day in milliseconds
+jitter = "30m"          # ±30 minute random offset
+```
 
 #### Cyclic Value Lists
 

@@ -80,8 +80,8 @@ pub fn create_generator_with_seen(
             *clamp_max,
             *round,
         )),
-        GeneratorPlan::Sequence { start, step } => {
-            Box::new(sequence::SequenceGenerator::new(*start, *step))
+        GeneratorPlan::Sequence { start, step, jitter_ms } => {
+            Box::new(sequence::SequenceGenerator::new(*start, *step, *jitter_ms))
         }
         GeneratorPlan::CyclicValues { values } => {
             Box::new(sequence::CyclicValuesGenerator::new(values.clone()))

@@ -292,6 +292,7 @@ fn validate_generator_params(
             cycle,
             prefix,
             start,
+            jitter: _,
         } => {
             validate_sequence_params(path, *start, *step, values, cycle, prefix, errors);
         }
@@ -1406,6 +1407,7 @@ fn validate_generator(
             cycle,
             prefix,
             start,
+            jitter: _,
         } => {
             validate_sequence_params(path, *start, *step, values, cycle, prefix, errors);
         }
@@ -4281,6 +4283,7 @@ mod tests {
                 prefix: None,
             values: None,
             cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4307,6 +4310,7 @@ mod tests {
                 prefix: None,
                 values: Some(vec![]),
                 cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4333,6 +4337,7 @@ mod tests {
                 prefix: None,
                 values: Some(vec!["A".into(), "B".into()]),
                 cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4359,7 +4364,8 @@ mod tests {
                 prefix: None,
                 values: None,
                 cycle: Some(true),
-            }),
+                 jitter: None,
+             }),
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
@@ -4385,7 +4391,8 @@ mod tests {
                 prefix: None,
                 values: Some(vec!["Mon".into(), "Tue".into(), "Wed".into()]),
                 cycle: Some(true),
-            }),
+                 jitter: None,
+             }),
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,
@@ -4411,6 +4418,7 @@ mod tests {
                 prefix: None,
                 values: Some(vec!["Mon".into(), "Tue".into()]),
                 cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -4910,7 +4918,8 @@ mod tests {
                     prefix: None,
                 values: None,
                 cycle: None,
-                }),
+            jitter: None,
+            }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
                 precision: None,
@@ -5064,6 +5073,7 @@ mod tests {
                 prefix: None,
             values: None,
             cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -5090,6 +5100,7 @@ mod tests {
                 prefix: None,
             values: None,
             cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -5143,7 +5154,8 @@ mod tests {
                     prefix: None,
                 values: None,
                 cycle: None,
-                }),
+            jitter: None,
+            }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
                 precision: None,
@@ -6847,6 +6859,7 @@ mod tests {
                 prefix: None,
                 values: None,
                 cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -6893,6 +6906,7 @@ mod tests {
                 prefix: None,
                 values: None,
                 cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -6968,6 +6982,7 @@ mod tests {
                 prefix: None,
                 values: None,
                 cycle: None,
+            jitter: None,
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -7041,3 +7056,5 @@ mod tests {
         }));
     }
 }
+
+

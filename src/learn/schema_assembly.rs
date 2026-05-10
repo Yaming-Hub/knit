@@ -596,6 +596,7 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
             },
             values: None,
             cycle: None,
+            jitter: None,
         };
     }
 
@@ -768,6 +769,7 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
         prefix: None,
         values: None,
         cycle: None,
+        jitter: None,
     }
 }
 

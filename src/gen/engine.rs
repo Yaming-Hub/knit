@@ -1790,7 +1790,7 @@ mod tests {
                             FieldPlan {
                                 field_name: "id".into(),
                                 data_type: crate::core::DataType::Int,
-                                generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                                generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
                                 precision: None,
@@ -1829,7 +1829,7 @@ mod tests {
                             FieldPlan {
                                 field_name: "id".into(),
                                 data_type: crate::core::DataType::Int,
-                                generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                                generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
                                 precision: None,
@@ -2013,7 +2013,7 @@ mod tests {
                         FieldPlan {
                             field_name: "id".into(),
                             data_type: crate::core::DataType::Int,
-                            generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                            generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
                             null_plan: NullPlan::Never,
                             dependency_order: 0,
                             precision: None,
@@ -2193,7 +2193,7 @@ mod tests {
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
                         data_type: crate::core::DataType::Int,
-                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
                         precision: None,
@@ -2279,7 +2279,7 @@ mod tests {
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
                         data_type: crate::core::DataType::Int,
-                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1 },
+                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
                         precision: None,
