@@ -14,4 +14,5 @@ pub mod gen;
 pub mod learn;
 pub mod noise;
 pub mod plan;
+pub mod scale;
 pub mod schema;

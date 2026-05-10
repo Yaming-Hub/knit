@@ -6,6 +6,7 @@ pub mod init;
 pub mod inspect;
 pub mod learn;
 pub mod plan;
+pub mod scale;
 pub mod schema;
 pub mod validate;
 

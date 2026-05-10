@@ -15,6 +15,18 @@ pub fn parse_key_val(s: &str) -> Result<(String, String), String> {
     Ok((s[..pos].to_string(), s[pos + 1..].to_string()))
 }
 
+/// Parse `name=count` for `--dim` (e.g. "location=20").
+pub fn parse_dim_spec(s: &str) -> Result<(String, u64), String> {
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("invalid NAME=COUNT: no `=` found in `{s}`"))?;
+    let name = s[..pos].to_string();
+    let count: u64 = s[pos + 1..]
+        .parse()
+        .map_err(|_| format!("invalid count in `{s}`: expected integer after `=`"))?;
+    Ok((name, count))
+}
+
 /// Knit — deterministic synthetic data generation.
 #[derive(Parser, Debug)]
 #[command(
@@ -241,6 +253,32 @@ pub enum Command {
     },
     /// List available generator types with descriptions and examples.
     Generators,
+    /// Scale a learned schema along discovered dimensions (actors, time, custom).
+    Scale {
+        /// Path to the learned schema file.
+        schema: String,
+        /// Output directory for generated files.
+        #[arg(short, long)]
+        output: Option<String>,
+        /// Show discovered dimensions without generating.
+        #[arg(long)]
+        analyze: bool,
+        /// Target actor count (e.g. 100).
+        #[arg(long)]
+        actors: Option<u64>,
+        /// Target time range (e.g. "52w", "6m", "+26w", "2024-01-01..2025-12-31").
+        #[arg(long)]
+        time: Option<String>,
+        /// Scale custom dimension (repeatable: --dim name=count).
+        #[arg(long = "dim", value_parser = parse_dim_spec)]
+        dims: Vec<(String, u64)>,
+        /// Additional uniform row multiplier (e.g. 2.0).
+        #[arg(long)]
+        count: Option<f64>,
+        /// Override detected time cadence (e.g. "7d", "1w").
+        #[arg(long)]
+        cadence: Option<String>,
+    },
 }
 
 /// Schema subcommands.

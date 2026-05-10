@@ -31,7 +31,6 @@ use crate::cli::{Cli, CompressionArg, Format};
 /// and writes output files to the specified directory.
 pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
     let _gen_span = tracing::info_span!("generate", schema = %schema_path).entered();
-    let start = Instant::now();
 
     // ── Load WASM plugins (if any) ──────────────────────────────────
     load_plugins(cli)?;
@@ -54,6 +53,26 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     if let Some(ref count_str) = cli.count {
         apply_count_override(&mut model, count_str)?;
     }
+
+    let schema_dir = Path::new(schema_path)
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+
+    run_from_model(model, schema_dir, output_dir, entity_filter, cli)
+}
+
+/// Generate data from a pre-loaded and pre-modified DataModel.
+///
+/// This is the shared pipeline used by both `knit generate` and `knit scale`.
+/// `schema_dir` is used to resolve relative paths (dictionaries, external lookups).
+pub fn run_from_model(
+    model: DataModel,
+    schema_dir: &Path,
+    output_dir: &str,
+    entity_filter: &[String],
+    cli: &Cli,
+) -> Result<()> {
+    let start = Instant::now();
 
     let errors = validate_model(&model);
     if !errors.is_empty() {
@@ -88,18 +107,19 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     };
 
     if !cli.quiet {
+        let schema_label = schema_dir.display().to_string();
         if entity_filter.is_empty() {
             eprintln!(
                 "{} schema {} ({} entities)",
                 "✓".green().bold(),
-                schema_path.cyan(),
+                schema_label.cyan(),
                 model.entities.len()
             );
         } else {
             eprintln!(
                 "{} schema {} (generating {} of {} entities)",
                 "✓".green().bold(),
-                schema_path.cyan(),
+                schema_label.cyan(),
                 entity_filter.len(),
                 model.entities.len()
             );
@@ -111,9 +131,6 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
         .map_err(|e| anyhow::anyhow!("plan compilation failed: {}", e))?;
 
     // ── Resolve dictionary and external lookup files ──────────────
-    let schema_dir = Path::new(schema_path)
-        .parent()
-        .unwrap_or_else(|| Path::new("."));
     resolve_dictionary_plans(&mut plan, schema_dir)?;
     resolve_external_lookup_plans(&mut plan, schema_dir)?;
 
@@ -654,9 +671,6 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     // Copy non-data files (schema.json, dictionaries, etc.) from the
     // schema's directory to the output directory.
     if !model.companion_files.is_empty() {
-        let schema_dir = Path::new(schema_path)
-            .parent()
-            .unwrap_or_else(|| Path::new("."));
         let mut companion_copied = 0u64;
         for rel_path_str in &model.companion_files {
             let rel_path = Path::new(rel_path_str);
