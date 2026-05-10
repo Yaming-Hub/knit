@@ -174,6 +174,15 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
         })
         .count();
 
+    tracing::info!(
+        entities = entity_count,
+        total_rows = total_estimated_rows,
+        phases = plan.phases.len(),
+        format = ?cli.format,
+        batch_size = if cli.batch_size > 0 { cli.batch_size } else { 8192 },
+        "generation plan ready"
+    );
+
     if cli.json {
         let start_event = serde_json::json!({
             "event": "start",
@@ -699,6 +708,14 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     } else {
         0.0
     };
+
+    tracing::info!(
+        total_rows,
+        total_bytes,
+        elapsed_ms = elapsed.as_millis() as u64,
+        throughput = throughput as u64,
+        "generation complete"
+    );
 
     if cli.json {
         let complete_event = serde_json::json!({
