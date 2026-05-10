@@ -149,15 +149,22 @@ impl FieldGenerator for ConditionalGenerator {
     fn output_type(&self) -> DataType {
         let dt = self.default.output_type();
         if dt == DataType::Null {
-            // Default is Null — try to find a concrete type from the branches.
+            // Default is Null — try to find a uniform concrete type from branches.
+            let mut concrete: Option<DataType> = None;
             for (_, gen) in &self.branches {
                 let bt = gen.output_type();
                 if bt != DataType::Null {
-                    return bt;
+                    match &concrete {
+                        None => concrete = Some(bt),
+                        Some(prev) if *prev == bt => {}
+                        Some(_) => return DataType::Utf8, // mixed types → fallback
+                    }
                 }
             }
+            concrete.unwrap_or(dt)
+        } else {
+            dt
         }
-        dt
     }
 }
 
@@ -665,5 +672,26 @@ mod tests {
         assert!(result.is_null(2), "null-ref row should be null");
         let int_arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(int_arr.value(0), 42);
+    }
+
+    #[test]
+    fn test_output_type_mixed_branches_with_null_default_returns_utf8() {
+        // When branches have different concrete types and default is Null,
+        // output_type should return Utf8 (the string fallback type).
+        let gen = ConditionalGenerator::new(
+            "key".into(),
+            vec![
+                (
+                    Value::String("a".into()),
+                    GeneratorPlan::Constant(Value::Int(1)),
+                ),
+                (
+                    Value::String("b".into()),
+                    GeneratorPlan::Constant(Value::String("hello".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::Null),
+        );
+        assert_eq!(gen.output_type(), DataType::Utf8);
     }
 }
