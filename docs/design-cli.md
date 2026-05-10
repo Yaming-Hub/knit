@@ -14,6 +14,7 @@
   - [4.9 `knit scale`](#49-knit-scale-schema--o-dir)
   - [4.10 `knit tokenize`](#410-knit-tokenize-input--o-dir)
   - [4.11 `knit enrich`](#411-knit-enrich-model---ref-sample)
+  - [4.12 `knit model`](#412-knit-model-subcommand)
 - [5. Global Flags](#5-global-flags)
 - [6. Progress Reporting](#6-progress-reporting)
 - [7. Error Handling](#7-error-handling)
@@ -421,6 +422,24 @@ See [design-enrich.md](design-enrich.md) for full design.
 | `--interactive` | Confirm each column mapping interactively |
 | `--dry-run` | Preview mappings without modifying model |
 | `--entity <NAME>` | Only enrich specific entity |
+
+---
+
+### 4.12 `knit model <subcommand>`
+
+Manage and convert structured knit models. See [design-model.md](design-model.md)
+for the structured model format design.
+
+**Subcommands:**
+
+| Subcommand | Description |
+|-----------|-------------|
+| `convert <SCHEMA> -o <DIR>` | Convert flat `.weave.toml` to structured model directory |
+| `flatten <DIR> -o <FILE>` | Convert structured model directory back to flat file |
+| `info <MODEL>` | Display model summary (tables, columns, relationships, companions) |
+
+**Logging:** All commands support structured logging and decision reports.
+See [design-logging.md](design-logging.md) for the logging design.
 
 ---
 
