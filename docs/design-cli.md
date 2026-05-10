@@ -13,6 +13,7 @@
 - [4. Command Details](#4-command-details)
   - [4.9 `knit scale`](#49-knit-scale-schema--o-dir)
   - [4.10 `knit tokenize`](#410-knit-tokenize-input--o-dir)
+  - [4.11 `knit enrich`](#411-knit-enrich-model---ref-sample)
 - [5. Global Flags](#5-global-flags)
 - [6. Progress Reporting](#6-progress-reporting)
 - [7. Error Handling](#7-error-handling)
@@ -403,6 +404,23 @@ datasets for troubleshooting. See [design-tokenize.md](design-tokenize.md) for f
 | `--tokenize-numbers` | Also obfuscate numeric values |
 | `--tokenize-dates` | Also obfuscate date/timestamp values |
 | `--seed <N>` | Deterministic token generation |
+
+### 4.11 `knit enrich <model> --ref <sample>`
+
+Enriches a base model with statistical knowledge extracted from reference samples
+that may have a different schema. Performs cross-schema column mapping, extracts
+distribution parameters and correlations, and merges them into the model.
+See [design-enrich.md](design-enrich.md) for full design.
+
+**Key flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--ref <PATH>` | Reference sample path (repeatable) |
+| `--min-confidence <F>` | Minimum mapping confidence threshold (default: 0.7) |
+| `--interactive` | Confirm each column mapping interactively |
+| `--dry-run` | Preview mappings without modifying model |
+| `--entity <NAME>` | Only enrich specific entity |
 
 ---
 
