@@ -24,6 +24,10 @@ These flags can be used with any command:
 | `-q`, `--quiet` | bool | `false` | Suppress all non-error output |
 | `-v`, `--verbose` | bool | `false` | Extra diagnostic logging |
 | `--count <SPEC>` | string | — | Override row count for `plan`/`generate` (e.g. `1000`, `0.1x`, `10x`) |
+| `--log-format <FMT>` | enum | auto | Log format: `text` (terminals), `json` (pipes) |
+| `--log-file <PATH>` | string | — | Write all log events to file (always JSON) |
+| `--log-filter <DIR>` | string | — | Tracing filter (e.g. `learn=debug,gen=info`) |
+| `--decision-report <PATH>` | string | — | Write JSON decision report to file |
 | `--version` | — | — | Print version and exit |
 | `--help` | — | — | Print help and exit |
 

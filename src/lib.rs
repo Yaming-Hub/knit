@@ -10,6 +10,7 @@
 pub mod bind;
 pub mod cli;
 pub mod core;
+pub mod decision;
 pub mod enrich;
 pub mod gen;
 pub mod learn;

@@ -669,6 +669,24 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
         inferred_type = ?col.inferred_type,
         "generator selected"
     );
+    if let Some(logger) = crate::decision::global_logger() {
+        logger
+            .builder(crate::decision::DecisionKind::GeneratorSelection)
+            .phase("learn")
+            .column(&col.name)
+            .chosen(gen.type_name().to_string())
+            .reason(format!(
+                "fk={}, pk={}, temporal={}, distribution={}, categorical={}, type={:?}",
+                fk.is_some(),
+                col.is_primary_key,
+                col.temporal_pattern.is_some(),
+                col.distribution.is_some(),
+                col.categorical_weights.is_some(),
+                col.inferred_type,
+            ))
+            .confidence(crate::decision::Confidence::High)
+            .record();
+    }
     gen
 }
 

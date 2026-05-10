@@ -344,6 +344,34 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         );
     }
 
+    // Record decision if decision report is active.
+    if let Some(logger) = crate::decision::global_logger() {
+        let mut builder = logger
+            .builder(crate::decision::DecisionKind::DistributionFit)
+            .phase("learn")
+            .chosen(format!(
+                "{}(ks={:.4}, aic={:.1})",
+                best.distribution.name(),
+                best.ks_stat,
+                best.aic
+            ))
+            .reason(format!(
+                "lowest AIC among {} candidates, p={:.4}",
+                candidates.len(),
+                best.p_value
+            ))
+            .confidence_score((1.0 - best.ks_stat).clamp(0.0, 1.0));
+
+        for alt in candidates.iter().skip(1).take(3) {
+            builder = builder.alternative(
+                alt.distribution.name(),
+                format!("aic={:.1}, ks={:.4}", alt.aic, alt.ks_stat),
+                Some(1.0 - alt.ks_stat),
+            );
+        }
+        builder.record();
+    }
+
     Some(FitResult {
         best: candidates[0].clone(),
         alternatives: candidates,
