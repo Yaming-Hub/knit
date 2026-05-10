@@ -435,6 +435,11 @@ impl GenerationEngine {
                         );
                         self.ensure_string_key_store(&ep.entity_name, ep.estimated_row_count);
                     } else {
+                        tracing::debug!(
+                            entity = %ep.entity_name,
+                            kind = ?kind,
+                            "creating integer key store"
+                        );
                         self.ensure_key_store(&ep.entity_name, kind, ep.estimated_row_count);
                     }
                 }
@@ -593,6 +598,14 @@ impl GenerationEngine {
             sequential = force_sequential,
             "generating entity"
         );
+        if force_sequential {
+            tracing::debug!(
+                entity = %ep.entity_name,
+                has_unique,
+                has_stateful_ts,
+                "sequential generation forced"
+            );
+        }
 
         // When shared seen-sets exist we must generate partitions sequentially
         // so the dedup order is deterministic across runs.

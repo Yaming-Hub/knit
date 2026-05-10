@@ -3,7 +3,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use tracing::{debug, info, info_span};
+use tracing::{debug, info, info_span, trace};
 
 /// Profile of a table for relationship detection.
 #[derive(Debug, Clone)]
@@ -100,6 +100,11 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
                 // Check name match
                 let name_score = name_match_score(&stripped, &target_table.name);
                 if name_score < 0.3 {
+                    trace!(
+                        from = %table.name, col = %col.name,
+                        target = %target_table.name, name_score,
+                        "FK candidate rejected: name score below threshold"
+                    );
                     continue;
                 }
 
@@ -114,6 +119,12 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
                     let overlap =
                         value_overlap_ratio(&col.distinct_values, &target_pk.distinct_values);
                     if overlap < 0.1 {
+                        trace!(
+                            from = %table.name, col = %col.name,
+                            target = %target_table.name, pk = %target_pk.name,
+                            name_score, overlap,
+                            "FK candidate rejected: value overlap below threshold"
+                        );
                         continue;
                     }
 
@@ -124,7 +135,9 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
                     debug!(
                         from = %table.name, from_col = %col.name,
                         to = %target_table.name, to_col = %target_pk.name,
-                        confidence, "relationship candidate"
+                        name_score, overlap,
+                        kind = ?kind, confidence,
+                        "relationship detected"
                     );
 
                     candidates.push(RelationshipCandidate {

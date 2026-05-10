@@ -1613,6 +1613,13 @@ pub(crate) fn apply_count_override(model: &mut DataModel, count_str: &str) -> Re
                 }
             };
             let scaled = (current as f64 * factor).round() as u64;
+            tracing::debug!(
+                entity = %entity.name,
+                original = current,
+                factor,
+                scaled,
+                "count scaled"
+            );
             entity.count = CountSpec::Fixed(scaled.max(1));
         }
     } else {

@@ -722,6 +722,38 @@ pub enum GeneratorSpec {
     },
 }
 
+impl GeneratorSpec {
+    /// Returns a human-readable name for the generator variant (for logging).
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Self::Distribution { .. } => "distribution",
+            Self::Faker { .. } => "faker",
+            Self::Sequence { .. } => "sequence",
+            Self::OneOf { .. } => "one_of",
+            Self::Pattern { .. } => "pattern",
+            Self::Derived { .. } => "derived",
+            Self::Conditional { .. } => "conditional",
+            Self::Composite { .. } => "composite",
+            Self::Lookup { .. } => "lookup",
+            Self::Constant { .. } => "constant",
+            Self::UuidGen { .. } => "uuid",
+            Self::Unique { .. } => "unique",
+            Self::Relative { .. } => "relative",
+            Self::BusinessHours { .. } => "business_hours",
+            Self::Dictionary { .. } => "dictionary",
+            Self::ActorRef { .. } => "actor_ref",
+            Self::ActorTemporal { .. } => "actor_temporal",
+            Self::RelationshipRef { .. } => "relationship_ref",
+            Self::PersonaField { .. } => "persona_field",
+            Self::ThreadRef { .. } => "thread_ref",
+            Self::Plugin { .. } => "plugin",
+            Self::ExternalLookup { .. } => "external_lookup",
+            Self::EventStream { .. } => "event_stream",
+            Self::TimeSeries { .. } => "time_series",
+        }
+    }
+}
+
 /// Composable component for numeric time series generators.
 ///
 /// Each component contributes an additive term to the time series value.
@@ -2402,5 +2434,57 @@ active_days = "uniform"
         let json = serde_json::to_string(&pv).unwrap();
         let back: PartitionValue = serde_json::from_str(&json).unwrap();
         assert_eq!(back, pv);
+    }
+
+    #[test]
+    fn test_generator_spec_type_name() {
+        let cases: Vec<(GeneratorSpec, &str)> = vec![
+            (
+                GeneratorSpec::Distribution {
+                    spec: DistributionSpec {
+                        kind: DistributionKind::Normal,
+                        params: BTreeMap::new(),
+                        round: false,
+                        array_params: BTreeMap::new(),
+                    },
+                },
+                "distribution",
+            ),
+            (
+                GeneratorSpec::Faker {
+                    method: "name".into(),
+                    args: vec![],
+                },
+                "faker",
+            ),
+            (
+                GeneratorSpec::Sequence {
+                    start: IntOrString::Int(1),
+                    step: IntOrString::Int(1),
+                    prefix: None,
+                    values: None,
+                    cycle: None,
+                    jitter: None,
+                },
+                "sequence",
+            ),
+            (
+                GeneratorSpec::Constant {
+                    value: Value::Int(42),
+                },
+                "constant",
+            ),
+            (GeneratorSpec::UuidGen { version: 4 }, "uuid"),
+            (
+                GeneratorSpec::Lookup {
+                    entity: "t".into(),
+                    field: "f".into(),
+                },
+                "lookup",
+            ),
+        ];
+        for (gen, expected) in cases {
+            assert_eq!(gen.type_name(), expected);
+        }
     }
 }
