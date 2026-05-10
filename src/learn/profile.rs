@@ -30,6 +30,9 @@ pub struct ColumnProfile {
     pub null_count: u64,
     /// Fraction of null values (0.0–1.0).
     pub null_rate: f64,
+    /// Fraction of empty-string values for Utf8 columns (0.0–1.0).
+    /// CSV readers often parse empty cells as empty strings rather than nulls.
+    pub empty_string_rate: f64,
     /// Number of distinct non-null values (if computed).
     pub distinct_count: Option<u64>,
     /// Ratio of distinct values to total non-null values.
@@ -141,7 +144,13 @@ pub fn compute_profiles(batches: &[RecordBatch]) -> LearnResult<Vec<ColumnProfil
 /// Profile a single column array.
 fn profile_column(name: &str, data_type: &DataType, array: &dyn Array) -> ColumnProfile {
     let count = array.len() as u64;
-    let null_count = array.null_count() as u64;
+    // Arrow's NullArray may report null_count as 0 (no bitmap), so treat
+    // DataType::Null as all-null explicitly.
+    let null_count = if *data_type == DataType::Null {
+        count
+    } else {
+        array.null_count() as u64
+    };
     let null_rate = if count > 0 {
         null_count as f64 / count as f64
     } else {
@@ -153,12 +162,16 @@ fn profile_column(name: &str, data_type: &DataType, array: &dyn Array) -> Column
     let string = compute_string(data_type, array);
     let temporal = compute_temporal(data_type, array);
 
+    // Count empty strings for Utf8 columns (CSV readers parse empty cells as "")
+    let empty_string_rate = compute_empty_string_rate(data_type, array, count);
+
     ColumnProfile {
         name: name.to_string(),
         data_type: data_type.clone(),
         count,
         null_count,
         null_rate,
+        empty_string_rate,
         distinct_count,
         cardinality_ratio,
         numeric,
@@ -169,6 +182,34 @@ fn profile_column(name: &str, data_type: &DataType, array: &dyn Array) -> Column
 
 /// Maximum number of distinct values to track before switching to approximate.
 const MAX_DISTINCT_TRACK: usize = 100_000;
+
+/// Compute the fraction of non-null empty-string values for Utf8 columns.
+///
+/// CSV readers often parse empty cells as empty strings rather than Arrow nulls.
+/// This metric lets downstream code treat "all empty string" columns the same
+/// as "all null" columns.
+fn compute_empty_string_rate(data_type: &DataType, array: &dyn Array, count: u64) -> f64 {
+    if count == 0 {
+        return 0.0;
+    }
+    match data_type {
+        DataType::Utf8 => {
+            let arr = array.as_string::<i32>();
+            let empty_count = (0..arr.len())
+                .filter(|&i| !arr.is_null(i) && arr.value(i).is_empty())
+                .count() as u64;
+            empty_count as f64 / count as f64
+        }
+        DataType::LargeUtf8 => {
+            let arr = array.as_string::<i64>();
+            let empty_count = (0..arr.len())
+                .filter(|&i| !arr.is_null(i) && arr.value(i).is_empty())
+                .count() as u64;
+            empty_count as f64 / count as f64
+        }
+        _ => 0.0,
+    }
+}
 
 /// Compute distinct count for supported types.
 ///

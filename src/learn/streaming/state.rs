@@ -308,6 +308,9 @@ pub struct ColumnState {
     pub count: u64,
     /// Total null values observed.
     pub null_count: u64,
+    /// Total empty-string values observed (CSV readers parse empty cells as "").
+    #[serde(default)]
+    pub empty_string_count: u64,
     /// Number of chunks that contained this column.
     pub chunks_present: u64,
 }
@@ -338,6 +341,7 @@ impl ColumnState {
             top_k: TopKTracker::new(DEFAULT_TOPK_CAPACITY),
             count: 0,
             null_count: 0,
+            empty_string_count: 0,
             chunks_present: 0,
         }
     }
@@ -356,6 +360,10 @@ impl ColumnState {
 
     /// Update with a non-null string value.
     pub fn update_string(&mut self, value: &str) {
+        if value.is_empty() {
+            self.empty_string_count += 1;
+            return;
+        }
         self.count += 1;
         self.hll.add(value);
         self.reservoir.add(value.to_string());
@@ -412,7 +420,7 @@ impl ColumnState {
 
     /// Null rate (0.0–1.0).
     pub fn null_rate(&self) -> f64 {
-        let total = self.count + self.null_count;
+        let total = self.count + self.null_count + self.empty_string_count;
         if total == 0 {
             0.0
         } else {
@@ -420,9 +428,21 @@ impl ColumnState {
         }
     }
 
-    /// Total observations (null + non-null).
+    /// Empty-string rate (0.0–1.0).
+    pub fn empty_string_rate(&self) -> f64 {
+        let total = self.count + self.null_count + self.empty_string_count;
+        if total == 0 {
+            0.0
+        } else {
+            self.empty_string_count as f64 / total as f64
+        }
+    }
+
+    /// Total observations (null + non-null + empty-string).
     pub fn total_observations(&self) -> u64 {
-        self.count.saturating_add(self.null_count)
+        self.count
+            .saturating_add(self.null_count)
+            .saturating_add(self.empty_string_count)
     }
 
     /// Merge another column state into this one.
@@ -430,6 +450,9 @@ impl ColumnState {
         self.widen_type(other.data_type);
         self.count = self.count.saturating_add(other.count);
         self.null_count = self.null_count.saturating_add(other.null_count);
+        self.empty_string_count = self
+            .empty_string_count
+            .saturating_add(other.empty_string_count);
         self.chunks_present = self.chunks_present.saturating_add(other.chunks_present);
 
         // Merge sub-structures (only if precisions match to avoid panics)

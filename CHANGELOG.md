@@ -6,6 +6,30 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Companion schema discovery** — `knit learn` detects structured dataset layouts
+  with `Schema/schema.json` alongside data files and uses metadata for richer
+  learning (entity naming, row-type discriminators, dictionary references).
+- **Dictionary file handling** — Dictionary CSV files referenced by companion
+  schemas are automatically copied to the output `Mappings/` directory.
+- **Row-type conditional generation** — Columns with `rowType` metadata in
+  companion schemas produce `conditional` generators keyed on the discriminator
+  column (e.g. `SignalType`), ensuring row-type-specific columns are null when
+  the discriminator doesn't match.
+- **Partitioned CSV merging** — Partitioned data directories (e.g.
+  `PartitionDate=YYYY-MM-DD`) are merged into a single logical table during
+  ingestion, with automatic schema unification across partitions.
+
+### Fixed
+
+- **Always-null column detection** — Columns that are 100% null or empty string
+  in source data now correctly get `NullSpec::Always` instead of being fitted
+  with distribution generators. Handles both Arrow nulls and CSV empty strings.
+- **Partition schema drift** — Partitions with `Null`-typed columns (entirely
+  empty in that partition) are now correctly cast to the concrete type found in
+  other partitions, preventing concatenation errors.
+
+### Added (prior)
+
 - **WASM plugin architecture** — Load custom generator plugins from `.wasm`
   modules at runtime without recompilation (requires `wasm-plugins` feature):
   - CLI flags: `--plugin path/to/gen.wasm` (repeatable) and `--plugin-dir ./plugins/`

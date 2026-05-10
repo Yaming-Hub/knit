@@ -41,6 +41,10 @@ pub struct TableAnalysis {
     pub personas: Vec<PersonaSpec>,
     /// Discovered actor-to-actor relationship specs (from actor_graph analysis).
     pub actor_relationships: Vec<ActorRelationshipSpec>,
+    /// Companion schema metadata (if discovered during ingestion).
+    pub companion: Option<crate::learn::ingest::CompanionSchema>,
+    /// Path to the companion schema.json file (for resolving dictionary paths).
+    pub companion_path: Option<std::path::PathBuf>,
 }
 
 impl TableAnalysis {
@@ -54,6 +58,8 @@ impl TableAnalysis {
             row_count,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }
     }
 }
@@ -74,6 +80,9 @@ pub struct ColumnAnalysis {
     pub categorical_weights: Option<Vec<(String, f64)>>,
     /// Null rate (0.0–1.0).
     pub null_rate: f64,
+    /// Empty-string rate for Utf8 columns (0.0–1.0).
+    /// Combined with null_rate, detects columns that are effectively always-null.
+    pub empty_string_rate: f64,
     /// Confidence score for the overall inference.
     pub confidence: f64,
     /// Semantic type inferred from string content (UUID, date, email, etc.).
@@ -104,6 +113,7 @@ impl ColumnAnalysis {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate,
+            empty_string_rate: 0.0,
             confidence,
             inferred_type: None,
             string_patterns: vec![],
@@ -114,6 +124,11 @@ impl ColumnAnalysis {
             max_decimal_places: None,
             is_actor_column: false,
         }
+    }
+
+    /// Whether this column is effectively always-null (true null or all empty strings).
+    pub fn is_always_empty(&self) -> bool {
+        (self.null_rate + self.empty_string_rate) >= 1.0
     }
 }
 
@@ -240,19 +255,81 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
 fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate::core::Correlation>) {
     let mut fields = Vec::with_capacity(table.columns.len());
 
+    // Pre-compute row-type discriminator info from companion schema
+    let discriminator_col = table
+        .companion
+        .as_ref()
+        .and_then(|cs| cs.discriminator_column())
+        .map(|s| s.to_string());
+
     for col in &table.columns {
         let fk = table
             .relationships
             .iter()
             .find(|r| r.from_column == col.name && r.from_table == table.name);
 
-        let generator = build_generator(col, fk);
+        // Always-null columns: emit NullSpec::Always with no generator
+        if col.is_always_empty() {
+            let data_type = infer_data_type(col, fk);
+            fields.push(Field {
+                name: col.name.clone(),
+                description: None,
+                data_type,
+                generator: None,
+                nullable: NullSpec::Always,
+                primary_key: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+            });
+            continue;
+        }
+
+        let mut generator = build_generator(col, fk);
         let data_type = infer_data_type(col, fk);
         let nullable = if col.null_rate > 0.01 {
             NullSpec::Probability(col.null_rate)
         } else {
             NullSpec::Never
         };
+
+        // Row-type conditional generation: wrap generator with discriminator check
+        if let (Some(ref disc_col), Some(ref companion)) =
+            (&discriminator_col, &table.companion)
+        {
+            if let Some(row_type) = companion.row_type_for_column(&col.name) {
+                // This column should only have values when discriminator == row_type.
+                // Wrap the learned generator in a Conditional.
+                generator = GeneratorSpec::Conditional {
+                    field: disc_col.clone(),
+                    branches: vec![crate::core::ConditionalBranch {
+                        condition: Value::Int(row_type as i64),
+                        generator,
+                    }],
+                    default: None,
+                };
+                // Conditional generator already handles nullability via default: None,
+                // so don't double-count with NullSpec::Probability
+                let field_nullable = NullSpec::Never;
+                let precision = if data_type == crate::core::DataType::Float {
+                    col.max_decimal_places
+                } else {
+                    None
+                };
+                fields.push(Field {
+                    name: col.name.clone(),
+                    description: None,
+                    data_type,
+                    generator: Some(generator),
+                    nullable: field_nullable,
+                    primary_key: if col.is_primary_key { Some(true) } else { None },
+                    precision,
+                    actor_column: false,
+                    fields: vec![],
+                });
+                continue;
+            }
+        }
 
         // Infer precision for float columns from source data
         let precision = if data_type == crate::core::DataType::Float {
@@ -1420,6 +1497,7 @@ mod tests {
                     temporal_pattern: None,
                     categorical_weights: None,
                     null_rate: 0.0,
+                    empty_string_rate: 0.0,
                     confidence: 1.0,
                     inferred_type: None,
                     string_patterns: vec![],
@@ -1437,6 +1515,7 @@ mod tests {
                     temporal_pattern: None,
                     categorical_weights: None,
                     null_rate: 0.02,
+                    empty_string_rate: 0.0,
                     confidence: 0.85,
                     inferred_type: None,
                     string_patterns: vec![],
@@ -1453,6 +1532,8 @@ mod tests {
             row_count: 5000,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1474,6 +1555,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1497,6 +1579,8 @@ mod tests {
             row_count: 1000,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1514,6 +1598,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: Some(vec![("active".into(), 0.7), ("inactive".into(), 0.3)]),
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1529,6 +1614,8 @@ mod tests {
             row_count: 500,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1553,6 +1640,7 @@ mod tests {
                 }),
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1568,6 +1656,8 @@ mod tests {
             row_count: 2000,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1672,6 +1762,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 1.0,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1687,6 +1778,8 @@ mod tests {
             row_count: 50_000,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1704,6 +1797,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
@@ -1719,6 +1813,8 @@ mod tests {
             row_count: 100,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1740,6 +1836,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.95,
             inferred_type: Some(InferredType::Uuid),
             string_patterns: vec![],
@@ -1763,6 +1860,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: Some(InferredType::Boolean),
             string_patterns: vec![],
@@ -1786,6 +1884,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: Some(InferredType::Text),
             string_patterns: vec![(StringPattern::Email, 0.95)],
@@ -1813,6 +1912,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: Some(InferredType::Text),
             string_patterns: vec![(StringPattern::Phone, 0.9)],
@@ -1842,6 +1942,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
@@ -1857,6 +1958,8 @@ mod tests {
             row_count: 100,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -1873,6 +1976,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: Some(InferredType::Text),
                 string_patterns: vec![(StringPattern::Email, 0.95)],
@@ -1888,6 +1992,8 @@ mod tests {
             row_count: 100,
             personas: Vec::new(),
             actor_relationships: Vec::new(),
+            companion: None,
+            companion_path: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
@@ -1933,6 +2039,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -1955,6 +2062,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -1977,6 +2085,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2005,6 +2114,7 @@ mod tests {
             }),
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2036,6 +2146,7 @@ mod tests {
             }),
             categorical_weights: None,
             null_rate: 0.0,
+                    empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2130,6 +2241,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -2147,6 +2259,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
+                    empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -2465,5 +2578,55 @@ mod tests {
         let entity = &model.entities[0];
         assert!(!entity.actor);
         assert_eq!(entity.persona_distribution, None);
+    }
+
+    #[test]
+    fn always_null_column_gets_null_spec_always() {
+        let table = TableAnalysis::new(
+            "test_table".into(),
+            vec![
+                ColumnAnalysis {
+                    name: "id".into(),
+                    is_primary_key: true,
+                    null_rate: 0.0,
+                    empty_string_rate: 0.0,
+                    confidence: 1.0,
+                    ..ColumnAnalysis::new("id".into(), 0.0, 1.0)
+                },
+                // All-null column (Arrow null)
+                ColumnAnalysis {
+                    name: "all_null_col".into(),
+                    null_rate: 1.0,
+                    empty_string_rate: 0.0,
+                    confidence: 1.0,
+                    ..ColumnAnalysis::new("all_null_col".into(), 1.0, 1.0)
+                },
+                // All-empty-string column (CSV empty cells)
+                ColumnAnalysis {
+                    name: "all_empty_col".into(),
+                    null_rate: 0.0,
+                    empty_string_rate: 1.0,
+                    confidence: 1.0,
+                    ..ColumnAnalysis::new("all_empty_col".into(), 0.0, 1.0)
+                },
+            ],
+            10,
+        );
+
+        let (entity, _, _) = build_entity(&table);
+
+        // The all-null column should have NullSpec::Always and no generator
+        let null_field = entity.fields.iter().find(|f| f.name == "all_null_col").unwrap();
+        assert!(matches!(null_field.nullable, NullSpec::Always));
+        assert!(null_field.generator.is_none());
+
+        // The all-empty-string column should also have NullSpec::Always and no generator
+        let empty_field = entity.fields.iter().find(|f| f.name == "all_empty_col").unwrap();
+        assert!(matches!(empty_field.nullable, NullSpec::Always));
+        assert!(empty_field.generator.is_none());
+
+        // Regular column should have a generator
+        let id_field = entity.fields.iter().find(|f| f.name == "id").unwrap();
+        assert!(id_field.generator.is_some());
     }
 }
