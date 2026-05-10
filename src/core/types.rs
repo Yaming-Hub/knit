@@ -701,6 +701,13 @@ pub enum TimeSeriesComponent {
         /// Multiplier applied during active hours.
         active_multiplier: f64,
     },
+    /// Spikes/dips on specific dates (requires `timestamp_field`).
+    HolidayEffect {
+        /// ISO 8601 dates (`YYYY-MM-DD`) on which the effect applies.
+        dates: Vec<String>,
+        /// Multiplicative factor applied on matching dates (e.g. 2.0 = double, 0.5 = half).
+        multiplier: f64,
+    },
 }
 
 fn default_trend_degree() -> u32 {
@@ -756,6 +763,13 @@ pub enum EventStreamComponent {
         active_hours: [u8; 2],
         /// Rate multiplier during active hours.
         active_multiplier: f64,
+    },
+    /// Modulate event rate on specific dates (holidays).
+    HolidayEffect {
+        /// ISO 8601 dates (`YYYY-MM-DD`) on which the effect applies.
+        dates: Vec<String>,
+        /// Rate multiplier on matching dates (e.g. 0.1 = 10% normal rate).
+        multiplier: f64,
     },
 }
 

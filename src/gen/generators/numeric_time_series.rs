@@ -89,6 +89,8 @@ pub struct NumericTimeSeriesGenerator {
     timestamp_field: Option<String>,
     /// Mutable state for AR, level_shift, spike across batches.
     state: Mutex<TimeSeriesState>,
+    /// Pre-compiled holiday dates for each HolidayEffect component (index → dates).
+    holiday_dates: Vec<(usize, std::collections::HashSet<chrono::NaiveDate>, f64)>,
 }
 
 impl NumericTimeSeriesGenerator {
@@ -109,6 +111,25 @@ impl NumericTimeSeriesGenerator {
             .max()
             .unwrap_or(0);
 
+        // Pre-compile holiday dates for O(1) lookup per row
+        let holiday_dates: Vec<(usize, std::collections::HashSet<chrono::NaiveDate>, f64)> =
+            components
+                .iter()
+                .enumerate()
+                .filter_map(|(i, c)| match c {
+                    TimeSeriesComponent::HolidayEffect { dates, multiplier } => {
+                        let set: std::collections::HashSet<chrono::NaiveDate> = dates
+                            .iter()
+                            .filter_map(|d| {
+                                chrono::NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").ok()
+                            })
+                            .collect();
+                        Some((i, set, *multiplier))
+                    }
+                    _ => None,
+                })
+                .collect();
+
         Self {
             baseline,
             components,
@@ -116,6 +137,7 @@ impl NumericTimeSeriesGenerator {
             max,
             timestamp_field,
             state: Mutex::new(TimeSeriesState::new(ar_order)),
+            holiday_dates,
         }
     }
 
@@ -258,6 +280,19 @@ impl FieldGenerator for NumericTimeSeriesGenerator {
                                 value *= active_multiplier;
                             }
                         }
+                    }
+                    TimeSeriesComponent::HolidayEffect { .. } => {
+                        // Handled via pre-compiled holiday_dates below
+                    }
+                }
+            }
+
+            // Apply pre-compiled holiday effects (multiplicative)
+            if let Some(dt) = &datetime {
+                let date = dt.date();
+                for (_, dates_set, mult) in &self.holiday_dates {
+                    if dates_set.contains(&date) {
+                        value *= mult;
                     }
                 }
             }
@@ -442,5 +477,111 @@ mod tests {
         // Row 0: 50 + 1 = 51, Row 1: 50 + 2 = 52, ...
         assert!((arr.value(0) - 51.0).abs() < 0.001);
         assert!((arr.value(9) - 60.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_holiday_effect_multiplies_on_matching_date() {
+        use arrow::array::TimestampMicrosecondArray;
+
+        // Create timestamps: Jan 1 (holiday) and Jan 2 (normal), 2024
+        let ts_jan1 = chrono::NaiveDate::from_ymd_opt(2024, 1, 1)
+            .unwrap()
+            .and_hms_opt(12, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_micros();
+        let ts_jan2 = chrono::NaiveDate::from_ymd_opt(2024, 1, 2)
+            .unwrap()
+            .and_hms_opt(12, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_micros();
+
+        let ts_arr: ArrayRef = Arc::new(TimestampMicrosecondArray::from(vec![ts_jan1, ts_jan2]));
+        let mut cols = HashMap::new();
+        cols.insert("ts".to_string(), ts_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let gen = NumericTimeSeriesGenerator::new(
+            100.0,
+            vec![TimeSeriesComponent::HolidayEffect {
+                dates: vec!["2024-01-01".to_string()],
+                multiplier: 2.0,
+            }],
+            None,
+            None,
+            Some("ts".to_string()),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let result = gen.generate(&mut rng, 2, &ctx);
+        let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
+
+        // Row 0 (Jan 1 = holiday): 100 * 2.0 = 200
+        assert!(
+            (arr.value(0) - 200.0).abs() < 0.01,
+            "holiday row should be 200, got {}",
+            arr.value(0)
+        );
+        // Row 1 (Jan 2 = normal): 100 * 1.0 = 100
+        assert!(
+            (arr.value(1) - 100.0).abs() < 0.01,
+            "normal row should be 100, got {}",
+            arr.value(1)
+        );
+    }
+
+    #[test]
+    fn test_holiday_effect_dip() {
+        use arrow::array::TimestampMicrosecondArray;
+
+        let ts_dec25 = chrono::NaiveDate::from_ymd_opt(2024, 12, 25)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_micros();
+        let ts_dec26 = chrono::NaiveDate::from_ymd_opt(2024, 12, 26)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_micros();
+
+        let ts_arr: ArrayRef =
+            Arc::new(TimestampMicrosecondArray::from(vec![ts_dec25, ts_dec26]));
+        let mut cols = HashMap::new();
+        cols.insert("ts".to_string(), ts_arr);
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let gen = NumericTimeSeriesGenerator::new(
+            100.0,
+            vec![TimeSeriesComponent::HolidayEffect {
+                dates: vec!["2024-12-25".to_string()],
+                multiplier: 0.1, // dip to 10%
+            }],
+            None,
+            None,
+            Some("ts".to_string()),
+        );
+
+        let mut rng = ChaCha8Rng::seed_from_u64(1);
+        let result = gen.generate(&mut rng, 2, &ctx);
+        let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
+
+        // Row 0 (Dec 25 = holiday): 100 * 0.1 = 10
+        assert!(
+            (arr.value(0) - 10.0).abs() < 0.01,
+            "holiday dip should be 10, got {}",
+            arr.value(0)
+        );
+        // Row 1 (Dec 26 = normal): 100
+        assert!(
+            (arr.value(1) - 100.0).abs() < 0.01,
+            "normal should be 100, got {}",
+            arr.value(1)
+        );
     }
 }

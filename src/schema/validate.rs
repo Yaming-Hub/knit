@@ -1940,6 +1940,7 @@ fn validate_generator(
                 c,
                 crate::core::TimeSeriesComponent::WeekendEffect { .. }
                     | crate::core::TimeSeriesComponent::BusinessHoursEffect { .. }
+                    | crate::core::TimeSeriesComponent::HolidayEffect { .. }
             )
         });
         if has_calendar {
@@ -1975,8 +1976,8 @@ fn validate_generator(
             } else {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
-                    message: "time_series with WeekendEffect or BusinessHoursEffect \
-                              requires a timestamp_field"
+                    message: "time_series with WeekendEffect, BusinessHoursEffect, or \
+                              HolidayEffect requires a timestamp_field"
                         .to_string(),
                 });
             }
@@ -2016,6 +2017,35 @@ fn validate_generator(
                             "BusinessHoursEffect start_hour ({}) must be < end_hour ({})",
                             start_hour, end_hour
                         ),
+                    });
+                }
+            }
+            if let crate::core::TimeSeriesComponent::HolidayEffect {
+                dates,
+                multiplier,
+            } = c
+            {
+                if dates.is_empty() {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "HolidayEffect dates must not be empty".to_string(),
+                    });
+                }
+                for d in dates {
+                    if chrono::NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").is_err() {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "HolidayEffect date '{}' is not a valid YYYY-MM-DD date",
+                                d
+                            ),
+                        });
+                    }
+                }
+                if *multiplier == 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "HolidayEffect multiplier must not be zero".to_string(),
                     });
                 }
             }
@@ -2118,6 +2148,39 @@ fn validate_generator(
                             path: path.to_string(),
                             message: format!(
                                 "event_stream weekend_effect multiplier ({}) must be positive",
+                                multiplier
+                            ),
+                        });
+                    }
+                }
+                crate::core::EventStreamComponent::HolidayEffect {
+                    dates,
+                    multiplier,
+                } => {
+                    if dates.is_empty() {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: "event_stream holiday_effect dates must not be empty"
+                                .to_string(),
+                        });
+                    }
+                    for d in dates {
+                        if chrono::NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").is_err() {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!(
+                                    "event_stream holiday_effect date '{}' is not a valid \
+                                     YYYY-MM-DD date",
+                                    d
+                                ),
+                            });
+                        }
+                    }
+                    if *multiplier <= 0.0 {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "event_stream holiday_effect multiplier ({}) must be positive",
                                 multiplier
                             ),
                         });
@@ -6585,6 +6648,175 @@ mod tests {
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. }
                 if message.contains("cannot use 'fields'") || message.contains("cannot use 'matrix'"))
+        }));
+    }
+
+    // ─── Holiday effect validation tests ────────────────────────────
+
+    #[test]
+    fn test_validate_holiday_effect_empty_dates() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: None,
+                cycle: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "metric".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::TimeSeries {
+                baseline: 100.0,
+                components: vec![crate::core::TimeSeriesComponent::HolidayEffect {
+                    dates: vec![],
+                    multiplier: 2.0,
+                }],
+                min: None,
+                max: None,
+                timestamp_field: Some("ts".to_string()),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("dates must not be empty"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_holiday_effect_invalid_date() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: None,
+                cycle: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "metric".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::TimeSeries {
+                baseline: 100.0,
+                components: vec![crate::core::TimeSeriesComponent::HolidayEffect {
+                    dates: vec!["not-a-date".to_string()],
+                    multiplier: 2.0,
+                }],
+                min: None,
+                max: None,
+                timestamp_field: Some("ts".to_string()),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("not a valid YYYY-MM-DD"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_holiday_effect_requires_timestamp_field() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "metric".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::TimeSeries {
+                baseline: 100.0,
+                components: vec![crate::core::TimeSeriesComponent::HolidayEffect {
+                    dates: vec!["2024-12-25".to_string()],
+                    multiplier: 2.0,
+                }],
+                min: None,
+                max: None,
+                timestamp_field: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("requires a timestamp_field"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_holiday_effect_zero_multiplier() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Sequence {
+                start: 0,
+                step: 1,
+                prefix: None,
+                values: None,
+                cycle: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "metric".to_string(),
+            description: None,
+            data_type: DataType::Float,
+            generator: Some(GeneratorSpec::TimeSeries {
+                baseline: 100.0,
+                components: vec![crate::core::TimeSeriesComponent::HolidayEffect {
+                    dates: vec!["2024-12-25".to_string()],
+                    multiplier: 0.0,
+                }],
+                min: None,
+                max: None,
+                timestamp_field: Some("ts".to_string()),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("multiplier must not be zero"))
         }));
     }
 }

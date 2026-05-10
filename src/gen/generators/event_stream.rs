@@ -8,11 +8,12 @@
 //! The generator maintains cumulative state across batches to ensure
 //! monotonic timestamp sequences.
 
+use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 use arrow::array::{ArrayRef, TimestampMillisecondArray};
 use arrow::datatypes::DataType;
-use chrono::{DateTime, Datelike, Timelike, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc};
 use rand::Rng;
 use rand::RngCore;
 use rand_distr::{Distribution, Exp};
@@ -46,6 +47,8 @@ pub struct EventStreamGenerator {
     components: Vec<EventStreamComponent>,
     /// Peak rate for thinning envelope: `lambda_per_ms * max_multiplier`.
     lambda_max: f64,
+    /// Pre-compiled holiday dates: `(HashSet<NaiveDate>, multiplier)` per HolidayEffect component.
+    holiday_dates: Vec<(HashSet<NaiveDate>, f64)>,
     /// Cumulative state shared across partitions (sequential only).
     state: Mutex<EventStreamState>,
 }
@@ -61,10 +64,26 @@ impl EventStreamGenerator {
         let max_multiplier = compute_max_multiplier(&components);
         let lambda_max = lambda_per_ms * max_multiplier;
 
+        // Pre-compile holiday dates for O(1) lookup during generation.
+        let holiday_dates: Vec<(HashSet<NaiveDate>, f64)> = components
+            .iter()
+            .filter_map(|c| match c {
+                EventStreamComponent::HolidayEffect { dates, multiplier } => {
+                    let set: HashSet<NaiveDate> = dates
+                        .iter()
+                        .filter_map(|d| NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").ok())
+                        .collect();
+                    Some((set, *multiplier))
+                }
+                _ => None,
+            })
+            .collect();
+
         Self {
             lambda_per_ms,
             components,
             lambda_max,
+            holiday_dates,
             state: Mutex::new(EventStreamState {
                 last_timestamp_ms: start_ms,
             }),
@@ -105,7 +124,7 @@ impl FieldGenerator for EventStreamGenerator {
                     .last_timestamp_ms
                     .saturating_add(gap_ms.max(1.0) as i64);
 
-                let rate_at_t = self.lambda_per_ms * rate_multiplier(candidate_ms, &self.components);
+                let rate_at_t = self.lambda_per_ms * rate_multiplier(candidate_ms, &self.components, &self.holiday_dates);
                 let accept_prob = rate_at_t / self.lambda_max;
 
                 // Always advance time (for thinning correctness).
@@ -166,6 +185,9 @@ fn compute_max_multiplier(components: &[EventStreamComponent]) -> f64 {
                 // Max is whichever is larger.
                 max *= multiplier.max(1.0);
             }
+            EventStreamComponent::HolidayEffect { multiplier, .. } => {
+                max *= multiplier.max(1.0);
+            }
         }
     }
     max
@@ -174,7 +196,7 @@ fn compute_max_multiplier(components: &[EventStreamComponent]) -> f64 {
 /// Evaluate the instantaneous rate multiplier at a given timestamp.
 ///
 /// Returns a value in (0, max_multiplier] that modulates the base rate.
-fn rate_multiplier(timestamp_ms: i64, components: &[EventStreamComponent]) -> f64 {
+fn rate_multiplier(timestamp_ms: i64, components: &[EventStreamComponent], holiday_dates: &[(HashSet<NaiveDate>, f64)]) -> f64 {
     let dt = DateTime::<Utc>::from_timestamp_millis(timestamp_ms);
 
     let mut multiplier = 1.0;
@@ -207,6 +229,19 @@ fn rate_multiplier(timestamp_ms: i64, components: &[EventStreamComponent]) -> f6
                     }
                     // Outside active hours: multiplier stays at 1.0 (base rate).
                 }
+            }
+            EventStreamComponent::HolidayEffect { .. } => {
+                // Handled via pre-compiled holiday_dates below.
+            }
+        }
+    }
+
+    // Apply pre-compiled holiday effects (O(1) lookup per component).
+    if let Some(dt) = dt {
+        let date = dt.date_naive();
+        for (dates_set, hm) in holiday_dates {
+            if dates_set.contains(&date) {
+                multiplier *= hm;
             }
         }
     }

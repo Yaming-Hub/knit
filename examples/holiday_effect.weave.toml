@@ -1,0 +1,90 @@
+# Holiday Effect Example
+#
+# Demonstrates the HolidayEffect component in both numeric time series
+# and event stream generators. Holiday effects apply a multiplicative
+# factor on specific calendar dates — useful for modeling retail spikes,
+# traffic dips on public holidays, etc.
+
+[model]
+name = "holiday_effect_demo"
+seed = 42
+
+# ── Daily retail metrics ────────────────────────────────────
+
+[[entities]]
+name = "daily_sales"
+count = 365
+
+[[entities.fields]]
+name = "date"
+data_type = "datetime"
+
+[[entities.fields]]
+name = "revenue"
+data_type = "float"
+[entities.fields.generator]
+type = "time_series"
+baseline = 10000.0
+min = 0.0
+timestamp_field = "date"
+components = [
+    # Weekly seasonality
+    { type = "seasonality", period = "7d", amplitude = 2000.0 },
+    # Gaussian noise
+    { type = "noise", std_dev = 500.0 },
+    # Black Friday / holiday spike — revenue doubles on these dates
+    { type = "holiday_effect", dates = [
+        "2024-11-29",
+        "2024-12-24",
+        "2024-12-25",
+        "2024-12-26",
+        "2024-12-31",
+    ], multiplier = 2.0 },
+    # New Year's Day dip — revenue drops to 30%
+    { type = "holiday_effect", dates = ["2025-01-01"], multiplier = 0.3 },
+]
+
+# ── Website traffic event stream ────────────────────────────
+
+[[entities]]
+name = "page_views"
+count = 5000
+
+[[entities.fields]]
+name = "timestamp"
+data_type = "datetime"
+[entities.fields.generator]
+type = "event_stream"
+start = "2024-01-01T00:00:00Z"
+
+[entities.fields.generator.arrival]
+distribution = "exponential"
+unit = "minute"
+
+[entities.fields.generator.arrival.params]
+lambda = 0.5
+
+[[entities.fields.generator.components]]
+type = "seasonality"
+period = "24h"
+amplitude = 0.6
+
+[[entities.fields.generator.components]]
+type = "weekend_effect"
+multiplier = 0.4
+
+# Major holidays see 3x traffic (flash sales)
+[[entities.fields.generator.components]]
+type = "holiday_effect"
+dates = ["2024-11-29", "2024-12-25", "2025-01-01"]
+multiplier = 3.0
+
+# ── Output ──────────────────────────────────────────────────
+
+[[sinks]]
+entity = "daily_sales"
+format = "csv"
+
+[[sinks]]
+entity = "page_views"
+format = "json"
