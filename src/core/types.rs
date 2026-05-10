@@ -151,6 +151,11 @@ pub struct DataModel {
     /// Reusable field groups that can be included in multiple entities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mixins: Vec<Mixin>,
+    /// Non-data companion files to copy during generation (relative paths).
+    /// Includes schema definitions, dictionary files, and other auxiliary files
+    /// discovered during `knit learn`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub companion_files: Vec<String>,
 }
 
 impl Default for DataModel {
@@ -171,6 +176,7 @@ impl Default for DataModel {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
+            companion_files: Vec::new(),
         }
     }
 }
@@ -282,6 +288,24 @@ pub struct OutputLayout {
     /// of directly in the output root.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
+    /// Hive-style partition column name (e.g. `"PartitionDate"`).
+    /// When set, generated output is split into subdirectories named
+    /// `partition_by=value` with one file per partition value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partition_by: Option<String>,
+    /// Observed partition values with row proportions.
+    /// Used to distribute generated rows across partition directories.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub partition_values: Vec<PartitionValue>,
+}
+
+/// A single observed partition value with its row proportion.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PartitionValue {
+    /// The partition directory value (e.g. `"2024-10-13"`).
+    pub value: String,
+    /// Proportion of total rows in this partition (0.0–1.0).
+    pub weight: f64,
 }
 
 /// A single field (column) within an [`Entity`].
@@ -2124,6 +2148,7 @@ step = "7d"
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
+            companion_files: Vec::new(),
         };
 
         let toml_str = toml::to_string_pretty(&model).unwrap();
@@ -2330,5 +2355,52 @@ active_days = "uniform"
         assert_eq!(w.personas[0].weight, 0.3);
         assert_eq!(w.personas[1].name, "night_owl");
         assert_eq!(w.personas[1].weight, 0.7);
+    }
+
+    #[test]
+    fn output_layout_serde_roundtrip() {
+        let layout = OutputLayout {
+            path: Some("Collab/Results".to_string()),
+            partition_by: Some("PartitionDate".to_string()),
+            partition_values: vec![
+                PartitionValue {
+                    value: "2024-10-13".to_string(),
+                    weight: 0.6,
+                },
+                PartitionValue {
+                    value: "2024-10-14".to_string(),
+                    weight: 0.4,
+                },
+            ],
+        };
+        let toml_str = toml::to_string(&layout).unwrap();
+        let back: OutputLayout = toml::from_str(&toml_str).unwrap();
+        assert_eq!(back, layout);
+    }
+
+    #[test]
+    fn output_layout_minimal_serde() {
+        // OutputLayout with only path — partition fields should be absent in TOML
+        let layout = OutputLayout {
+            path: Some("Users/Results".to_string()),
+            partition_by: None,
+            partition_values: Vec::new(),
+        };
+        let toml_str = toml::to_string(&layout).unwrap();
+        assert!(!toml_str.contains("partition_by"));
+        assert!(!toml_str.contains("partition_values"));
+        let back: OutputLayout = toml::from_str(&toml_str).unwrap();
+        assert_eq!(back, layout);
+    }
+
+    #[test]
+    fn partition_value_serde_roundtrip() {
+        let pv = PartitionValue {
+            value: "2024-12-25".to_string(),
+            weight: 0.15,
+        };
+        let json = serde_json::to_string(&pv).unwrap();
+        let back: PartitionValue = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, pv);
     }
 }

@@ -303,6 +303,49 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
     }
     let json_mode = cli.json;
 
+    // ── Build partition config per entity ────────────────────────────
+    // For entities with hive-style partitioning, pre-compute the partition
+    // value list and cumulative weights for round-robin row assignment.
+    struct PartitionConfig {
+        partition_key: String,
+        /// Base directory under output root (e.g. "Collab/Results").
+        base_path: Option<String>,
+        /// Partition values sorted by name, with cumulative weight thresholds.
+        /// Each entry is (value, cumulative_weight).
+        values: Vec<(String, f64)>,
+    }
+    let mut partition_configs: HashMap<String, PartitionConfig> = HashMap::new();
+    for entity in &model.entities {
+        if let Some(output) = &entity.output {
+            if let Some(partition_key) = &output.partition_by {
+                if !output.partition_values.is_empty() {
+                    let mut cumulative = 0.0;
+                    let values: Vec<(String, f64)> = output
+                        .partition_values
+                        .iter()
+                        .map(|pv| {
+                            cumulative += pv.weight;
+                            (pv.value.clone(), cumulative)
+                        })
+                        .collect();
+                    partition_configs.insert(
+                        entity.name.clone(),
+                        PartitionConfig {
+                            partition_key: partition_key.clone(),
+                            base_path: output.path.clone(),
+                            values,
+                        },
+                    );
+                }
+            }
+        }
+    }
+
+    // For partitioned entities, use separate sinks keyed by (entity, partition_value)
+    let mut partition_sinks: HashMap<(String, String), Box<dyn Sink>> = HashMap::new();
+    // Track cumulative row index per entity for deterministic partition assignment
+    let mut partition_row_idx: HashMap<String, usize> = HashMap::new();
+
     // Execute generation
     let mut batch_counters: HashMap<String, u64> = HashMap::new();
     engine
@@ -339,98 +382,6 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                 .or_insert(0);
             *done += row_count;
 
-            // Lazily create sink
-            if !sinks.contains_key(entity_name) {
-                // Use output.path from schema if available, otherwise flat
-                let file_path = {
-                    let output_subdir = model.entities.iter()
-                        .find(|e| e.name == entity_name)
-                        .and_then(|e| e.output.as_ref())
-                        .and_then(|o| o.path.as_ref());
-                    if let Some(subdir) = output_subdir {
-                        // Reject unsafe paths
-                        let subdir_path = std::path::Path::new(subdir);
-                        if subdir_path.is_absolute()
-                            || subdir_path.components().any(|c| {
-                                matches!(
-                                    c,
-                                    std::path::Component::ParentDir
-                                        | std::path::Component::RootDir
-                                )
-                            })
-                        {
-                            return Err(crate::gen::GenError::Generation(format!(
-                                "unsafe output path for entity '{}': {}",
-                                entity_name, subdir
-                            )));
-                        }
-                        let dir = out_path.join(subdir);
-                        fs::create_dir_all(&dir).map_err(|e| {
-                            crate::gen::GenError::Generation(format!(
-                                "failed to create {}: {}",
-                                dir.display(),
-                                e
-                            ))
-                        })?;
-                        dir.join(format!("{}.{}", entity_name, extension))
-                    } else {
-                        out_path.join(format!("{}.{}", entity_name, extension))
-                    }
-                };
-                let file = fs::File::create(&file_path).map_err(|e| {
-                    crate::gen::GenError::Generation(format!(
-                        "failed to create {}: {}",
-                        file_path.display(),
-                        e
-                    ))
-                })?;
-                let writer: Box<dyn std::io::Write + Send> = Box::new(BufWriter::new(file));
-
-                let schema = entity_schemas
-                    .get(entity_name)
-                    .cloned()
-                    .unwrap_or_else(|| batch.schema());
-
-                // For CSV, flatten nested types in the schema to Utf8
-                let schema = if matches!(format, OutputFormat::Csv) {
-                    Arc::new(flatten_schema_for_csv(&schema))
-                } else {
-                    schema
-                };
-
-                let entity_missing = missing_field_specs
-                    .get(entity_name)
-                    .cloned()
-                    .unwrap_or_default();
-
-                // Warn if missing_field noise is used with non-document formats
-                if !entity_missing.is_empty()
-                    && !matches!(format, OutputFormat::Json | OutputFormat::Jsonl)
-                {
-                    tracing::warn!(
-                        entity = entity_name,
-                        "missing_field noise has no effect on {} output; \
-                         only JSON/JSONL can omit fields",
-                        format!("{:?}", format).to_lowercase()
-                    );
-                }
-
-                let sink_config = SinkConfig {
-                    format,
-                    compression,
-                    record_name: entity_name.to_string(),
-                    avro_codec,
-                    missing_field_specs: entity_missing,
-                    sql_create_table: cli.sql_create_table,
-                    sql_transaction: cli.sql_transaction,
-                    ..SinkConfig::default()
-                };
-                let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
-                    crate::gen::GenError::Generation(format!("failed to create sink: {}", e))
-                })?;
-                sinks.insert(entity_name.to_string(), sink);
-            }
-
             // Cast columns to match the declared Arrow schema (e.g. Int64 → Int32)
             let target_schema = entity_schemas
                 .get(entity_name)
@@ -446,15 +397,177 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                 batch
             };
 
-            // Write batch
-            let sink = sinks.get_mut(entity_name).ok_or_else(|| {
-                crate::gen::GenError::Generation(format!(
-                    "sink for entity '{}' not found after creation",
-                    entity_name
-                ))
-            })?;
-            sink.write_batch(&batch)
-                .map_err(|e| crate::gen::GenError::Generation(format!("sink write error: {}", e)))?;
+            // ── Partitioned vs flat output ──────────────────────────────
+            if let Some(pc) = partition_configs.get(entity_name) {
+                // Assign each row to a partition based on cumulative weights
+                let n = batch.num_rows();
+                let base_idx = partition_row_idx.entry(entity_name.to_string()).or_insert(0);
+                let total_entity_rows = entity_total_rows.get(entity_name).copied().unwrap_or(n as u64) as usize;
+
+                // Build per-partition row indices
+                let mut partition_rows: HashMap<&str, Vec<usize>> = HashMap::new();
+                for row in 0..n {
+                    let global_row = *base_idx + row;
+                    // Use fractional position to pick partition by weight
+                    let frac = if total_entity_rows > 0 {
+                        (global_row as f64 + 0.5) / total_entity_rows as f64
+                    } else {
+                        0.0
+                    };
+                    // Find the partition whose cumulative weight covers this fraction
+                    let pval = pc.values.iter()
+                        .find(|(_, cw)| frac < *cw)
+                        .map(|(v, _)| v.as_str())
+                        .unwrap_or_else(|| pc.values.last().map(|(v, _)| v.as_str()).unwrap_or("unknown"));
+                    partition_rows.entry(pval).or_default().push(row);
+                }
+                *base_idx += n;
+
+                // Write each partition's rows
+                for (pval, indices) in &partition_rows {
+                    let key = (entity_name.to_string(), pval.to_string());
+
+                    // Lazily create partition sink
+                    if !partition_sinks.contains_key(&key) {
+                        let base_dir = if let Some(base) = &pc.base_path {
+                            let base_p = std::path::Path::new(base);
+                            if base_p.is_absolute()
+                                || base_p.components().any(|c| {
+                                    matches!(c, std::path::Component::ParentDir | std::path::Component::RootDir)
+                                })
+                            {
+                                return Err(crate::gen::GenError::Generation(format!(
+                                    "unsafe output path for entity '{}': {}", entity_name, base
+                                )));
+                            }
+                            out_path.join(base)
+                        } else {
+                            out_path.to_path_buf()
+                        };
+                        // Sanitize partition value for use as directory name
+                        let safe_pval = pval.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.'], "_");
+                        if safe_pval.is_empty() || safe_pval == ".." || safe_pval.starts_with('/') || safe_pval.starts_with('\\') {
+                            return Err(crate::gen::GenError::Generation(format!(
+                                "unsafe partition value for entity '{}': {}", entity_name, pval
+                            )));
+                        }
+                        let part_dir = base_dir.join(format!("{}={}", pc.partition_key, safe_pval));
+                        fs::create_dir_all(&part_dir).map_err(|e| {
+                            crate::gen::GenError::Generation(format!("failed to create {}: {}", part_dir.display(), e))
+                        })?;
+                        let file_path = part_dir.join(format!("{}.{}", entity_name, extension));
+                        let file = fs::File::create(&file_path).map_err(|e| {
+                            crate::gen::GenError::Generation(format!("failed to create {}: {}", file_path.display(), e))
+                        })?;
+                        let writer: Box<dyn std::io::Write + Send> = Box::new(BufWriter::new(file));
+                        let schema = entity_schemas
+                            .get(entity_name)
+                            .cloned()
+                            .unwrap_or_else(|| batch.schema());
+                        let schema = if matches!(format, OutputFormat::Csv) {
+                            Arc::new(flatten_schema_for_csv(&schema))
+                        } else {
+                            schema
+                        };
+                        let entity_missing = missing_field_specs.get(entity_name).cloned().unwrap_or_default();
+                        let sink_config = SinkConfig {
+                            format,
+                            compression,
+                            record_name: entity_name.to_string(),
+                            avro_codec,
+                            missing_field_specs: entity_missing,
+                            sql_create_table: cli.sql_create_table,
+                            sql_transaction: cli.sql_transaction,
+                            ..SinkConfig::default()
+                        };
+                        let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
+                            crate::gen::GenError::Generation(format!("failed to create sink: {}", e))
+                        })?;
+                        partition_sinks.insert(key.clone(), sink);
+                    }
+
+                    // Slice the batch to only include this partition's rows
+                    let indices_arr = arrow::array::UInt32Array::from(
+                        indices.iter().map(|&i| i as u32).collect::<Vec<_>>()
+                    );
+                    let part_batch = arrow::compute::take_record_batch(&batch, &indices_arr)
+                        .map_err(|e| crate::gen::GenError::Generation(format!("partition split error: {}", e)))?;
+
+                    let sink = partition_sinks.get_mut(&key).unwrap();
+                    sink.write_batch(&part_batch)
+                        .map_err(|e| crate::gen::GenError::Generation(format!("sink write error: {}", e)))?;
+                }
+            } else {
+                // ── Non-partitioned (flat) output ───────────────────────
+                // Lazily create sink
+                if !sinks.contains_key(entity_name) {
+                    let file_path = {
+                        let output_subdir = model.entities.iter()
+                            .find(|e| e.name == entity_name)
+                            .and_then(|e| e.output.as_ref())
+                            .and_then(|o| o.path.as_ref());
+                        if let Some(subdir) = output_subdir {
+                            let subdir_path = std::path::Path::new(subdir);
+                            if subdir_path.is_absolute()
+                                || subdir_path.components().any(|c| {
+                                    matches!(c, std::path::Component::ParentDir | std::path::Component::RootDir)
+                                })
+                            {
+                                return Err(crate::gen::GenError::Generation(format!(
+                                    "unsafe output path for entity '{}': {}", entity_name, subdir
+                                )));
+                            }
+                            let dir = out_path.join(subdir);
+                            fs::create_dir_all(&dir).map_err(|e| {
+                                crate::gen::GenError::Generation(format!("failed to create {}: {}", dir.display(), e))
+                            })?;
+                            dir.join(format!("{}.{}", entity_name, extension))
+                        } else {
+                            out_path.join(format!("{}.{}", entity_name, extension))
+                        }
+                    };
+                    let file = fs::File::create(&file_path).map_err(|e| {
+                        crate::gen::GenError::Generation(format!("failed to create {}: {}", file_path.display(), e))
+                    })?;
+                    let writer: Box<dyn std::io::Write + Send> = Box::new(BufWriter::new(file));
+                    let schema = entity_schemas.get(entity_name).cloned().unwrap_or_else(|| batch.schema());
+                    let schema = if matches!(format, OutputFormat::Csv) {
+                        Arc::new(flatten_schema_for_csv(&schema))
+                    } else {
+                        schema
+                    };
+                    let entity_missing = missing_field_specs.get(entity_name).cloned().unwrap_or_default();
+                    if !entity_missing.is_empty()
+                        && !matches!(format, OutputFormat::Json | OutputFormat::Jsonl)
+                    {
+                        tracing::warn!(
+                            entity = entity_name,
+                            "missing_field noise has no effect on {} output; only JSON/JSONL can omit fields",
+                            format!("{:?}", format).to_lowercase()
+                        );
+                    }
+                    let sink_config = SinkConfig {
+                        format,
+                        compression,
+                        record_name: entity_name.to_string(),
+                        avro_codec,
+                        missing_field_specs: entity_missing,
+                        sql_create_table: cli.sql_create_table,
+                        sql_transaction: cli.sql_transaction,
+                        ..SinkConfig::default()
+                    };
+                    let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
+                        crate::gen::GenError::Generation(format!("failed to create sink: {}", e))
+                    })?;
+                    sinks.insert(entity_name.to_string(), sink);
+                }
+
+                let sink = sinks.get_mut(entity_name).ok_or_else(|| {
+                    crate::gen::GenError::Generation(format!("sink for entity '{}' not found", entity_name))
+                })?;
+                sink.write_batch(&batch)
+                    .map_err(|e| crate::gen::GenError::Generation(format!("sink write error: {}", e)))?;
+            }
 
             // Emit JSON progress event only after successful write
             if json_mode {
@@ -499,6 +612,82 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                     e
                 );
             }
+        }
+    }
+
+    // Finish partition sinks
+    for ((entity_name, pval), sink) in partition_sinks {
+        match sink.finish() {
+            Ok(stats) => {
+                total_bytes += stats.bytes_written;
+                tracing::debug!(
+                    entity = %entity_name,
+                    partition = %pval,
+                    rows = stats.rows_written,
+                    bytes = stats.bytes_written,
+                    "partition sink finalized"
+                );
+            }
+            Err(e) => {
+                eprintln!(
+                    "{} failed to finalize {}[{}]: {}",
+                    "warning:".yellow().bold(),
+                    entity_name,
+                    pval,
+                    e
+                );
+            }
+        }
+    }
+
+    // ── Copy companion files ────────────────────────────────────────
+    // Copy non-data files (schema.json, dictionaries, etc.) from the
+    // schema's directory to the output directory.
+    if !model.companion_files.is_empty() {
+        let schema_dir = Path::new(schema_path)
+            .parent()
+            .unwrap_or_else(|| Path::new("."));
+        let mut companion_copied = 0u64;
+        for rel_path_str in &model.companion_files {
+            let rel_path = Path::new(rel_path_str);
+            // Reject unsafe paths
+            if rel_path.is_absolute()
+                || rel_path.components().any(|c| {
+                    matches!(
+                        c,
+                        std::path::Component::ParentDir | std::path::Component::RootDir
+                    )
+                })
+            {
+                tracing::warn!(path = %rel_path_str, "skipping companion file with unsafe path");
+                continue;
+            }
+            let src = schema_dir.join(rel_path);
+            let dst = out_path.join(rel_path);
+            if src.exists() {
+                if let Some(parent) = dst.parent() {
+                    fs::create_dir_all(parent).ok();
+                }
+                if let Err(e) = fs::copy(&src, &dst) {
+                    tracing::warn!(
+                        src = %src.display(),
+                        dst = %dst.display(),
+                        error = %e,
+                        "failed to copy companion file"
+                    );
+                } else {
+                    companion_copied += 1;
+                }
+            } else {
+                tracing::debug!(path = %src.display(), "companion file not found, skipping");
+            }
+        }
+        if companion_copied > 0 && !cli.quiet {
+            eprintln!(
+                "  {} copied {} companion file(s)",
+                "→".dimmed(),
+                companion_copied,
+            );
         }
     }
 
@@ -1081,14 +1270,14 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
         crate::plan::GeneratorPlan::Pattern { .. } => ArrowDataType::Utf8,
         crate::plan::GeneratorPlan::OneOf { choices, .. } => infer_one_of_type(choices),
         crate::plan::GeneratorPlan::Constant(val) => match val {
-            crate::core::Value::Null => ArrowDataType::Null,
+            crate::core::Value::Null => ArrowDataType::Utf8,
             crate::core::Value::Bool(_) => ArrowDataType::Boolean,
             crate::core::Value::Int(_) => ArrowDataType::Int64,
             crate::core::Value::Float(_) => ArrowDataType::Float64,
             crate::core::Value::String(_) => ArrowDataType::Utf8,
             // Complex types (Array, Map, DateTime, etc.) are not yet supported
             // by ConstantGenerator — it emits NullArray for them.
-            _ => ArrowDataType::Null,
+            _ => ArrowDataType::Utf8,
         },
         crate::plan::GeneratorPlan::Derived { .. } => ArrowDataType::Float64,
         crate::plan::GeneratorPlan::ForeignKey { .. } => ArrowDataType::Int64,

@@ -50,6 +50,8 @@ struct RawOutputSchema {
     personas: Vec<crate::core::Persona>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     actor_relationships: Vec<crate::core::ActorRelationship>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    companion_files: Vec<String>,
 }
 
 /// Model metadata for TOML output.
@@ -339,8 +341,22 @@ fn run_batch(
     let dict_count = extract_dictionaries(&mut data_model, &tables, output_dir, cli.quiet)?;
 
     // 5b2. Copy companion schema dictionary files (if any)
-    let companion_dict_count =
+    let _companion_dict_count =
         copy_companion_dictionaries(&table_analyses, output_dir, cli.quiet)?;
+
+    // 5b3. Copy all non-data companion files (schema.json, etc.) from source
+    //      to sit alongside the learned schema, preserving relative paths.
+    if source_path.is_dir() {
+        let companion_count =
+            copy_companion_files(source_path, output_dir, &mut data_model, cli.quiet)?;
+        if companion_count > 0 && !cli.quiet {
+            eprintln!(
+                "  {} copied {} companion file(s)",
+                "→".dimmed(),
+                companion_count,
+            );
+        }
+    }
 
     // 5c. Validate the assembled schema and warn about issues
     let validation_errors = crate::schema::validate(&data_model);
@@ -372,6 +388,7 @@ fn run_batch(
         correlations: data_model.correlations.clone(),
         personas: data_model.personas.clone(),
         actor_relationships: data_model.actor_relationships.clone(),
+        companion_files: data_model.companion_files.clone(),
     };
     let schema_text = toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
 
@@ -727,6 +744,7 @@ fn emit_schema_from_state(
         correlations: data_model.correlations.clone(),
         personas: data_model.personas.clone(),
         actor_relationships: data_model.actor_relationships.clone(),
+        companion_files: data_model.companion_files.clone(),
     };
     let schema_text = toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
 
@@ -777,6 +795,8 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }])
     }
 }
@@ -833,6 +853,8 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
     analysis.companion = table.companion.clone();
     analysis.companion_path = table.companion_path.clone();
     analysis.source_layout = table.source_layout.clone();
+    analysis.partition_by = table.partition_by.clone();
+    analysis.partition_values = table.partition_values.clone();
 
     let rel_profile = TableProfile {
         name: table.entity.clone(),
@@ -1712,7 +1734,107 @@ fn copy_companion_dictionaries(
     Ok(total_copied)
 }
 
-/// Extract dictionaries for high-cardinality string columns.
+/// Known data file extensions that should NOT be treated as companion files.
+const DATA_EXTENSIONS: &[&str] = &["csv", "tsv", "parquet", "json", "jsonl", "arrow", "avro"];
+
+/// Copy all non-data files from the source directory to `output_dir`, preserving
+/// relative paths. Records each copied file's relative path in
+/// `data_model.companion_files` so the generate command can reproduce them.
+///
+/// "Non-data" means any file whose extension is not a known data format,
+/// OR data-format files inside special directories like `Schema/` or `Mappings/`.
+/// This captures schema definitions, dictionary CSVs, and other auxiliary assets.
+fn copy_companion_files(
+    source_root: &Path,
+    output_dir: &Path,
+    data_model: &mut crate::core::DataModel,
+    quiet: bool,
+) -> Result<usize> {
+    let mut copied = 0;
+    let mut stack: Vec<std::path::PathBuf> = vec![source_root.to_path_buf()];
+
+    while let Some(dir) = stack.pop() {
+        let entries = match std::fs::read_dir(&dir) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for entry in entries.filter_map(|e| e.ok()) {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            if !path.is_file() {
+                continue;
+            }
+
+            let ext = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("")
+                .to_lowercase();
+
+            // Compute relative path from source root
+            let rel = match path.strip_prefix(source_root) {
+                Ok(r) => r,
+                Err(_) => continue,
+            };
+
+            // Determine if this file is inside a special (non-data) directory
+            let in_special_dir = rel.components().any(|c| {
+                let name = c.as_os_str().to_string_lossy().to_lowercase();
+                name == "mappings" || name == "schema"
+            });
+
+            // Skip data files unless they're in a special directory
+            if DATA_EXTENSIONS.contains(&ext.as_str()) && !in_special_dir {
+                continue;
+            }
+
+            // Reject unsafe paths
+            if rel.components().any(|c| {
+                matches!(
+                    c,
+                    std::path::Component::ParentDir | std::path::Component::RootDir
+                )
+            }) {
+                warn!(path = %rel.display(), "skipping companion file with unsafe path");
+                continue;
+            }
+
+            let dst = output_dir.join(rel);
+
+            // Create parent directories
+            if let Some(parent) = dst.parent() {
+                std::fs::create_dir_all(parent).with_context(|| {
+                    format!("failed to create directory {}", parent.display())
+                })?;
+            }
+
+            std::fs::copy(&path, &dst).with_context(|| {
+                format!(
+                    "failed to copy companion file {} → {}",
+                    path.display(),
+                    dst.display()
+                )
+            })?;
+
+            let rel_str = rel.to_string_lossy().to_string();
+            data_model.companion_files.push(rel_str);
+            copied += 1;
+        }
+    }
+
+    // Sort for deterministic output
+    data_model.companion_files.sort();
+    data_model.companion_files.dedup();
+
+    if copied > 0 && !quiet {
+        debug!(count = copied, "copied companion files from source");
+    }
+
+    Ok(copied)
+}
 ///
 /// Walks the assembled data model looking for fields with `Faker { method: "word" }`
 /// generators (the fallback for free-text columns). For each such field, extracts

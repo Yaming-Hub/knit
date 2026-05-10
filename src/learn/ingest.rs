@@ -410,6 +410,11 @@ pub struct IngestionResult {
     /// Relative path from the dataset root to the entity's data directory
     /// (e.g. `"Collab/Results"`). Used to reproduce folder hierarchy in output.
     pub source_layout: Option<String>,
+    /// Hive-style partition key name (e.g. `"PartitionDate"`) detected from
+    /// directory names like `PartitionDate=2024-10-13`.
+    pub partition_by: Option<String>,
+    /// Observed partition values with row proportions.
+    pub partition_values: Vec<crate::core::PartitionValue>,
 }
 
 /// Truncate a list of record batches to at most `max_rows` total rows.
@@ -637,10 +642,40 @@ fn try_structured_ingest(
         let mut total_rows: usize = 0;
         let row_limit = max_rows.unwrap_or(usize::MAX);
 
+        // Track partition key and per-partition row counts
+        let mut partition_key: Option<String> = None;
+        let mut partition_row_counts: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
+
         for file in &data_files {
             if total_rows >= row_limit {
                 break;
             }
+
+            // Detect hive partition from parent directory name (e.g. PartitionDate=2024-10-13)
+            if let Some(parent) = file.parent() {
+                if let Some(dir_name) = parent.file_name().and_then(|n| n.to_str()) {
+                    if let Some(eq_pos) = dir_name.find('=') {
+                        let key = &dir_name[..eq_pos];
+                        let value = &dir_name[eq_pos + 1..];
+                        if partition_key.is_none() {
+                            partition_key = Some(key.to_string());
+                        }
+                        // Count rows per partition value (updated after reading)
+                        let remaining = row_limit - total_rows;
+                        let batches = read_auto_with_limit(file, Some(remaining))?;
+                        let mut file_rows = 0;
+                        for b in batches {
+                            file_rows += b.num_rows();
+                            total_rows += b.num_rows();
+                            all_batches.push(b);
+                        }
+                        *partition_row_counts.entry(value.to_string()).or_insert(0) += file_rows;
+                        continue;
+                    }
+                }
+            }
+
             let remaining = row_limit - total_rows;
             let batches = read_auto_with_limit(file, Some(remaining))?;
             for b in batches {
@@ -681,6 +716,23 @@ fn try_structured_ingest(
                 })
         });
 
+        // Build partition values with weights from row counts
+        let partition_values: Vec<crate::core::PartitionValue> = if !partition_row_counts.is_empty()
+        {
+            let total = partition_row_counts.values().sum::<usize>() as f64;
+            let mut pvs: Vec<crate::core::PartitionValue> = partition_row_counts
+                .iter()
+                .map(|(v, &count)| crate::core::PartitionValue {
+                    value: v.clone(),
+                    weight: count as f64 / total,
+                })
+                .collect();
+            pvs.sort_by(|a, b| a.value.cmp(&b.value));
+            pvs
+        } else {
+            Vec::new()
+        };
+
         results.push(IngestionResult {
             entity: entity_name,
             schema,
@@ -688,6 +740,8 @@ fn try_structured_ingest(
             companion: Some(companion),
             companion_path: Some(schema_path),
             source_layout,
+            partition_by: partition_key,
+            partition_values,
         });
     }
 
@@ -846,6 +900,8 @@ fn ingest_directory_flat(
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         });
     }
 
@@ -1031,5 +1087,91 @@ mod tests {
         assert_eq!(results.len(), 1);
         let total: usize = results[0].batches.iter().map(|b| b.num_rows()).sum();
         assert_eq!(total, 3);
+    }
+
+    #[test]
+    fn structured_ingest_detects_hive_partitions() {
+        // Build a mini structured dataset with hive-partitioned layout:
+        //   Entity/Schema/schema.json
+        //   Entity/Results/Date=2024-01-01/part.csv
+        //   Entity/Results/Date=2024-01-02/part.csv
+        let dir = tempfile::tempdir().unwrap();
+        let entity_dir = dir.path().join("Items");
+        let schema_dir = entity_dir.join("Schema");
+        let results_dir = entity_dir.join("Results");
+        let part1_dir = results_dir.join("Date=2024-01-01");
+        let part2_dir = results_dir.join("Date=2024-01-02");
+
+        std::fs::create_dir_all(&schema_dir).unwrap();
+        std::fs::create_dir_all(&part1_dir).unwrap();
+        std::fs::create_dir_all(&part2_dir).unwrap();
+
+        // Companion schema with camelCase fields matching CompanionSchema struct
+        let schema_json = r#"{
+            "tableName": "Items",
+            "schemaFormatVersion": 1,
+            "columns": [
+                {"name": "id", "colNumber": 0, "dataType": "Int64"},
+                {"name": "value", "colNumber": 1, "dataType": "String"}
+            ]
+        }"#;
+        std::fs::write(schema_dir.join("schema.json"), schema_json).unwrap();
+
+        // Partition 1: 3 rows
+        write_csv(&part1_dir, "part.csv", "id,value\n1,a\n2,b\n3,c\n");
+        // Partition 2: 2 rows
+        write_csv(&part2_dir, "part.csv", "id,value\n4,d\n5,e\n");
+
+        let results = try_structured_ingest(dir.path(), None).unwrap().unwrap();
+        assert_eq!(results.len(), 1);
+        let r = &results[0];
+        assert_eq!(r.entity, "Items");
+
+        // Should detect partition key
+        assert_eq!(r.partition_by.as_deref(), Some("Date"));
+
+        // Should have 2 partition values
+        assert_eq!(r.partition_values.len(), 2);
+        let pv_map: std::collections::HashMap<&str, f64> = r
+            .partition_values
+            .iter()
+            .map(|pv| (pv.value.as_str(), pv.weight))
+            .collect();
+        // 3 out of 5 rows = 0.6, 2 out of 5 = 0.4
+        assert!((pv_map["2024-01-01"] - 0.6).abs() < 0.01);
+        assert!((pv_map["2024-01-02"] - 0.4).abs() < 0.01);
+
+        // Total rows should be 5
+        let total: usize = r.batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total, 5);
+
+        // source_layout should point above partition dirs
+        assert_eq!(r.source_layout.as_deref(), Some("Items\\Results"));
+    }
+
+    #[test]
+    fn structured_ingest_no_partitions_has_none() {
+        // Non-partitioned structured layout
+        let dir = tempfile::tempdir().unwrap();
+        let entity_dir = dir.path().join("Simple");
+        let schema_dir = entity_dir.join("Schema");
+        let results_dir = entity_dir.join("Results");
+
+        std::fs::create_dir_all(&schema_dir).unwrap();
+        std::fs::create_dir_all(&results_dir).unwrap();
+
+        let schema_json = r#"{
+            "tableName": "Simple",
+            "schemaFormatVersion": 1,
+            "columns": [{"name": "x", "colNumber": 0, "dataType": "Int64"}]
+        }"#;
+        std::fs::write(schema_dir.join("schema.json"), schema_json).unwrap();
+        write_csv(&results_dir, "data.csv", "x\n10\n20\n");
+
+        let results = try_structured_ingest(dir.path(), None).unwrap().unwrap();
+        assert_eq!(results.len(), 1);
+        let r = &results[0];
+        assert!(r.partition_by.is_none());
+        assert!(r.partition_values.is_empty());
     }
 }

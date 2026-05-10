@@ -47,6 +47,10 @@ pub struct TableAnalysis {
     pub companion_path: Option<std::path::PathBuf>,
     /// Relative path from dataset root to data directory (for output layout).
     pub source_layout: Option<String>,
+    /// Hive-style partition key name (e.g. `"PartitionDate"`).
+    pub partition_by: Option<String>,
+    /// Observed partition values with row proportions.
+    pub partition_values: Vec<crate::core::PartitionValue>,
 }
 
 impl TableAnalysis {
@@ -63,6 +67,8 @@ impl TableAnalysis {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }
     }
 }
@@ -250,6 +256,7 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         actor_relationships,
         custom_types: Vec::new(),
         mixins: Vec::new(),
+    companion_files: Vec::new(),
     }
 }
 
@@ -445,9 +452,15 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
         persona_distribution: None,
         activity_count: None,
         mixin_refs: None,
-        output: table.source_layout.as_ref().map(|path| crate::core::OutputLayout {
-            path: Some(path.clone()),
-        }),
+        output: if table.source_layout.is_some() || table.partition_by.is_some() {
+            Some(crate::core::OutputLayout {
+                path: table.source_layout.clone(),
+                partition_by: table.partition_by.clone(),
+                partition_values: table.partition_values.clone(),
+            })
+        } else {
+            None
+        },
     };
 
     (entity, rels, corrs)
@@ -1541,6 +1554,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1589,6 +1604,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1625,6 +1642,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1668,6 +1687,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1791,6 +1812,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1827,6 +1850,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1973,6 +1998,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2008,6 +2035,8 @@ mod tests {
             companion: None,
             companion_path: None,
             source_layout: None,
+            partition_by: None,
+            partition_values: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
@@ -2642,5 +2671,65 @@ mod tests {
         // Regular column should have a generator
         let id_field = entity.fields.iter().find(|f| f.name == "id").unwrap();
         assert!(id_field.generator.is_some());
+    }
+
+    #[test]
+    fn build_entity_propagates_partition_metadata() {
+        let mut table = TableAnalysis::new(
+            "events".into(),
+            vec![ColumnAnalysis {
+                name: "id".into(),
+                is_primary_key: true,
+                null_rate: 0.0,
+                empty_string_rate: 0.0,
+                confidence: 1.0,
+                ..ColumnAnalysis::new("id".into(), 0.0, 1.0)
+            }],
+            100,
+        );
+        table.source_layout = Some("Events/Results".to_string());
+        table.partition_by = Some("EventDate".to_string());
+        table.partition_values = vec![
+            crate::core::PartitionValue {
+                value: "2024-01-01".to_string(),
+                weight: 0.7,
+            },
+            crate::core::PartitionValue {
+                value: "2024-01-02".to_string(),
+                weight: 0.3,
+            },
+        ];
+
+        let (entity, _, _) = build_entity(&table);
+
+        let output = entity.output.expect("output should be set");
+        assert_eq!(output.path.as_deref(), Some("Events/Results"));
+        assert_eq!(output.partition_by.as_deref(), Some("EventDate"));
+        assert_eq!(output.partition_values.len(), 2);
+        assert_eq!(output.partition_values[0].value, "2024-01-01");
+        assert!((output.partition_values[0].weight - 0.7).abs() < 0.001);
+        assert_eq!(output.partition_values[1].value, "2024-01-02");
+        assert!((output.partition_values[1].weight - 0.3).abs() < 0.001);
+    }
+
+    #[test]
+    fn build_entity_no_partition_when_absent() {
+        let table = TableAnalysis::new(
+            "users".into(),
+            vec![ColumnAnalysis {
+                name: "id".into(),
+                is_primary_key: true,
+                null_rate: 0.0,
+                empty_string_rate: 0.0,
+                confidence: 1.0,
+                ..ColumnAnalysis::new("id".into(), 0.0, 1.0)
+            }],
+            10,
+        );
+
+        let (entity, _, _) = build_entity(&table);
+
+        // No source_layout and no partition → output should be None
+        assert!(entity.output.is_none());
     }
 }

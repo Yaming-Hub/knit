@@ -1476,11 +1476,21 @@ impl GenerationEngine {
 
         // Phase 4: Reorder columns from dependency order back to schema order
         // so output matches the declared field order in the schema.
+        // Also convert NullArray → typed all-null array (Utf8) since formats
+        // like Parquet cannot represent the Arrow Null data type.
         let mut indexed: Vec<(usize, String, arrow::array::ArrayRef)> = ep
             .field_plans
             .iter()
             .enumerate()
-            .map(|(i, fp)| (fp.schema_position, field_names[i].clone(), field_arrays[i].clone()))
+            .map(|(i, fp)| {
+                let arr = &field_arrays[i];
+                let arr = if *arr.data_type() == arrow::datatypes::DataType::Null {
+                    arrow::array::new_null_array(&arrow::datatypes::DataType::Utf8, arr.len())
+                } else {
+                    arr.clone()
+                };
+                (fp.schema_position, field_names[i].clone(), arr)
+            })
             .collect();
         indexed.sort_by_key(|(pos, _, _)| *pos);
         let field_names: Vec<String> = indexed.iter().map(|(_, n, _)| n.clone()).collect();
@@ -2587,5 +2597,29 @@ mod tests {
         let result = coerce_to_logical_type(arr.clone(), &crate::core::DataType::Int);
         // Should pass through unchanged (still Int64)
         assert!(result.as_any().downcast_ref::<Int64Array>().is_some());
+    }
+
+    #[test]
+    fn null_array_converted_to_utf8_in_reorder() {
+        // Verify that NullArray columns are converted to all-null Utf8
+        // arrays during Phase 4 reorder (Parquet can't write DataType::Null).
+        let null_arr: arrow::array::ArrayRef =
+            Arc::new(arrow::array::NullArray::new(5));
+        assert_eq!(*null_arr.data_type(), arrow::datatypes::DataType::Null);
+
+        // Simulate the Phase 4 conversion logic
+        let converted = if *null_arr.data_type() == arrow::datatypes::DataType::Null {
+            arrow::array::new_null_array(&arrow::datatypes::DataType::Utf8, null_arr.len())
+        } else {
+            null_arr.clone()
+        };
+
+        assert_eq!(*converted.data_type(), arrow::datatypes::DataType::Utf8);
+        assert_eq!(converted.len(), 5);
+        assert_eq!(converted.null_count(), 5);
+        // Every element should be null
+        for i in 0..5 {
+            assert!(converted.is_null(i));
+        }
     }
 }

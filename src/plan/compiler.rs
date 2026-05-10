@@ -1911,6 +1911,7 @@ mod tests {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
+        companion_files: Vec::new(),
         }
     }
 
