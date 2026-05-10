@@ -665,15 +665,18 @@ fn try_structured_ingest(
                 .and_then(|p| p.strip_prefix(dir).ok())
                 .map(|rel| {
                     // For partitioned dirs, go up one level (Results/PartitionDate=... → Results)
-                    // Check if the immediate parent looks like a partition directory
-                    let rel_str = rel.to_string_lossy();
-                    if rel_str.contains('=') {
-                        // It's a partition subdir; use parent
+                    // Check if the immediate parent directory name contains '=' (partition key)
+                    let parent_name = rel
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("");
+                    if parent_name.contains('=') {
+                        // It's a partition subdir; use grandparent
                         rel.parent()
                             .map(|pp| pp.to_string_lossy().to_string())
-                            .unwrap_or_else(|| rel_str.to_string())
+                            .unwrap_or_else(|| rel.to_string_lossy().to_string())
                     } else {
-                        rel_str.to_string()
+                        rel.to_string_lossy().to_string()
                     }
                 })
         });

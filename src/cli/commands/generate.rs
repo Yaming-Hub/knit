@@ -352,7 +352,11 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
                         let subdir_path = std::path::Path::new(subdir);
                         if subdir_path.is_absolute()
                             || subdir_path.components().any(|c| {
-                                matches!(c, std::path::Component::ParentDir)
+                                matches!(
+                                    c,
+                                    std::path::Component::ParentDir
+                                        | std::path::Component::RootDir
+                                )
                             })
                         {
                             return Err(crate::gen::GenError::Generation(format!(

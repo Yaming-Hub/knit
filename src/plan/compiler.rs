@@ -651,7 +651,8 @@ fn compile_field_plans(
 fn compile_object_sub_fields(fields: &[Field]) -> Vec<FieldPlan> {
     fields
         .iter()
-        .map(|sub| {
+        .enumerate()
+        .map(|(idx, sub)| {
             let generator_plan = if sub.data_type == crate::core::DataType::Object {
                 GeneratorPlan::Struct
             } else {
@@ -669,7 +670,7 @@ fn compile_object_sub_fields(fields: &[Field]) -> Vec<FieldPlan> {
                 generator_plan,
                 null_plan,
                 dependency_order: 0,
-                schema_position: 0,
+                schema_position: idx,
                 precision: sub.precision,
                 actor_column: false,
                 sub_field_plans,

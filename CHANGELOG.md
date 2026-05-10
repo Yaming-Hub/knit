@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Output folder hierarchy** — `knit learn` captures the source dataset's
+  directory layout (e.g. `Entity/Results/`) and `knit generate` reproduces
+  the same folder structure in output via the new `[entities.output]` section.
+- **Column order preservation** — Generated output now preserves the original
+  column order from the schema, even when fields have inter-dependencies that
+  require a different generation order internally.
 - **Companion schema discovery** — `knit learn` detects structured dataset layouts
   with `Schema/schema.json` alongside data files and uses metadata for richer
   learning (entity naming, row-type discriminators, dictionary references).
