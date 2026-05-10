@@ -122,8 +122,6 @@ pub struct Decision {
 /// The complete decision report written at end of run.
 #[derive(Debug, Clone, Serialize)]
 pub struct DecisionReport {
-    /// Schema/model name.
-    pub model_name: String,
     /// Pipeline that produced these decisions (e.g., "learn", "generate").
     pub pipeline: String,
     /// Total elapsed time in seconds.
@@ -169,7 +167,7 @@ impl DecisionLogger {
 
     /// Record a decision.
     pub fn record(&self, mut decision: Decision) {
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         inner.counter += 1;
         decision.id = format!("d{:03}", inner.counter);
         inner.decisions.push(decision);
@@ -193,12 +191,12 @@ impl DecisionLogger {
 
     /// Get the number of recorded decisions.
     pub fn count(&self) -> usize {
-        self.inner.lock().unwrap().decisions.len()
+        self.inner.lock().unwrap_or_else(|e| e.into_inner()).decisions.len()
     }
 
     /// Get all low-confidence decisions for summary display.
     pub fn low_confidence_decisions(&self) -> Vec<Decision> {
-        let inner = self.inner.lock().unwrap();
+        let inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         inner
             .decisions
             .iter()
@@ -208,8 +206,8 @@ impl DecisionLogger {
     }
 
     /// Produce the final report.
-    pub fn into_report(self, model_name: &str, pipeline: &str) -> DecisionReport {
-        let inner = self.inner.lock().unwrap();
+    pub fn into_report(self, pipeline: &str) -> DecisionReport {
+        let inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         let elapsed = inner.start.elapsed().as_secs_f64();
 
         let mut high = 0;
@@ -224,7 +222,6 @@ impl DecisionLogger {
         }
 
         DecisionReport {
-            model_name: model_name.to_string(),
             pipeline: pipeline.to_string(),
             elapsed_secs: elapsed,
             summary: ReportSummary {
@@ -356,7 +353,7 @@ mod tests {
         assert_eq!(logger.count(), 2);
         assert_eq!(logger.low_confidence_decisions().len(), 0);
 
-        let report = logger.into_report("test_model", "learn");
+        let report = logger.into_report("learn");
         assert_eq!(report.decisions.len(), 2);
         assert_eq!(report.decisions[0].id, "d001");
         assert_eq!(report.decisions[1].id, "d002");
@@ -416,10 +413,10 @@ mod tests {
             .confidence(Confidence::High)
             .record();
 
-        let report = logger.into_report("my_model", "generate");
+        let report = logger.into_report("generate");
         let json = serde_json::to_string_pretty(&report).unwrap();
         assert!(json.contains("\"primary_key_type\""));
         assert!(json.contains("\"integer sequence\""));
-        assert!(json.contains("\"model_name\": \"my_model\""));
+        assert!(json.contains("\"pipeline\": \"generate\""));
     }
 }

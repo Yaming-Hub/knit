@@ -262,7 +262,7 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
                 effective_threshold,
                 has_strong_pattern
             ))
-            .confidence_score(1.0)
+            .confidence(crate::decision::Confidence::Medium)
             .record();
     }
     TypeInference {

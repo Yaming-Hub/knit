@@ -670,6 +670,11 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
         "generator selected"
     );
     if let Some(logger) = crate::decision::global_logger() {
+        let conf = if col.is_primary_key || fk.is_some() {
+            crate::decision::Confidence::High
+        } else {
+            crate::decision::Confidence::Medium
+        };
         logger
             .builder(crate::decision::DecisionKind::GeneratorSelection)
             .phase("learn")
@@ -684,7 +689,7 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
                 col.categorical_weights.is_some(),
                 col.inferred_type,
             ))
-            .confidence(crate::decision::Confidence::High)
+            .confidence(conf)
             .record();
     }
     gen
