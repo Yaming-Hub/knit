@@ -4,7 +4,7 @@ use clap::{CommandFactory, Parser};
 use colored::Colorize;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-use knit::cli::commands::{generate, generators, init, inspect, learn, plan, schema, validate};
+use knit::cli::commands::{generate, generators, init, inspect, learn, plan, scale, schema, validate};
 use knit::cli::config::resolve_config;
 use knit::cli::{Cli, Command, LogFormat, SchemaAction};
 
@@ -178,6 +178,26 @@ fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Command::Generators => generators::run(cli.json),
+        Command::Scale {
+            schema,
+            output,
+            analyze,
+            actors,
+            time,
+            dims,
+            count,
+            cadence,
+        } => scale::run(
+            schema,
+            output.as_deref(),
+            *analyze,
+            *actors,
+            time.as_deref(),
+            dims,
+            *count,
+            cadence.as_deref(),
+            &cli,
+        ),
     }
     .inspect_err(|e| {
         if let Some(hint) = knit::cli::suggestions::suggest_fix(&e.to_string()) {
