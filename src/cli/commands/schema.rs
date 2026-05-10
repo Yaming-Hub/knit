@@ -310,7 +310,7 @@ fn format_generator_spec(gen: &crate::core::GeneratorSpec) -> String {
         crate::core::GeneratorSpec::Constant { value } => format!("const({:?})", value),
         crate::core::GeneratorSpec::UuidGen { version } => format!("uuid(v{})", version),
         crate::core::GeneratorSpec::Unique { .. } => "unique(…)".to_string(),
-        crate::core::GeneratorSpec::Relative { field, .. } => format!("relative({})", field),
+        crate::core::GeneratorSpec::Relative { anchor, .. } => format!("relative({})", anchor),
         crate::core::GeneratorSpec::BusinessHours { .. } => "business_hours".to_string(),
         crate::core::GeneratorSpec::Dictionary {
             file, expansion, ..

@@ -6,6 +6,17 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Relative generator enhancement** — Structured offset distributions for relative
+  datetime generators (spec §9.5):
+  - **Distribution offsets**: `offset = { distribution = "log_normal", params = { mu = 1.5, sigma = 0.8 }, min = "1d", max = "14d", unit = "day" }`
+  - Supports Normal, LogNormal, Uniform, and Exponential distributions
+  - Duration-based `min`/`max` clamping (e.g. `min = "1d"`, `max = "14d"`)
+  - **Constant offsets**: `offset = { type = "constant", value = "365d" }` for deterministic intervals
+  - **Simple offsets** (backward compatible): `offset = 86400` still works
+  - Renamed `field` to `anchor` (with `field` as alias for backward compatibility)
+  - Schema validation: only scalar continuous distributions allowed, min ≤ max checked,
+    duration strings validated
+  - Int64 base field support for anchoring to temporal sequences
 - **Temporal sequences** — Sequence generators now accept string date/datetime starts
   and duration-string steps (spec §6.3):
   - `start = "2024-01-01"` or `start = "2024-01-01T08:00:00"` (parsed to epoch ms)

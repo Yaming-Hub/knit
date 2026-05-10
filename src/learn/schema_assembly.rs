@@ -11,8 +11,8 @@ use tracing::{debug, info};
 
 use crate::core::{
     ActorRelationship, CountSpec, DataModel, DistributionKind, DistributionSpec, Entity, Field,
-    GeneratorSpec, IntOrString, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind, Value,
-    WeightedChoice,
+    GeneratorSpec, IntOrString, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind,
+    RelativeOffset, Value, WeightedChoice,
 };
 
 use crate::learn::actor_graph::ActorRelationshipSpec;
@@ -943,8 +943,8 @@ fn rewrite_temporal_pairs(fields: &mut [Field], columns: &[ColumnAnalysis]) {
         );
 
         fields[end_idx].generator = Some(GeneratorSpec::Relative {
-            field: start_name,
-            offset: Value::Float(offset_seconds),
+            anchor: start_name,
+            offset: RelativeOffset::Simple(Value::Float(offset_seconds)),
         });
     }
 }
@@ -2192,13 +2192,13 @@ mod tests {
 
         // EndDate should now be Relative
         match &fields[1].generator {
-            Some(GeneratorSpec::Relative { field, offset }) => {
-                assert_eq!(field, "StartDate");
+            Some(GeneratorSpec::Relative { anchor, offset }) => {
+                assert_eq!(anchor, "StartDate");
                 // Midpoint diff: (1_125_000 - 1_050_000) = 75_000
-                if let Value::Float(v) = offset {
+                if let RelativeOffset::Simple(Value::Float(v)) = offset {
                     assert!(*v > 0.0, "offset should be positive");
                 } else {
-                    panic!("expected Float offset");
+                    panic!("expected Simple(Float) offset");
                 }
             }
             other => panic!("expected Relative generator, got {other:?}"),

@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use arrow::array::{
-    Array, ArrayRef, Float64Array, TimestampMicrosecondArray, TimestampMillisecondArray,
-    TimestampNanosecondArray, TimestampSecondArray,
+    Array, ArrayRef, Float64Array, Int64Array, TimestampMicrosecondArray,
+    TimestampMillisecondArray, TimestampNanosecondArray, TimestampSecondArray,
 };
 use arrow::datatypes::DataType;
 use chrono::{Datelike, NaiveDate, TimeZone, Utc};
@@ -74,41 +74,214 @@ pub struct SeasonalityComponent {
 
 // ── RelativeGenerator ───────────────────────────────────────────────
 
+/// Offset mode for relative timestamp generation.
+#[derive(Debug, Clone)]
+pub enum RelativeOffsetMode {
+    /// Legacy mode: Normal distribution with mean and std-dev (backward compatible).
+    Normal {
+        /// Mean offset in the specified unit.
+        mean: f64,
+        /// Standard deviation of the offset.
+        std_dev: f64,
+    },
+    /// Distribution mode: configurable distribution with optional min/max clamping.
+    Distribution {
+        /// The distribution to sample from.
+        kind: RelativeDistKind,
+        /// Minimum offset in milliseconds (clamp lower bound).
+        min_ms: Option<f64>,
+        /// Maximum offset in milliseconds (clamp upper bound).
+        max_ms: Option<f64>,
+    },
+    /// Constant mode: fixed offset with no randomness.
+    Constant {
+        /// Fixed offset in milliseconds.
+        offset_ms: f64,
+    },
+}
+
+/// Supported distribution kinds for relative offsets.
+///
+/// Only a subset of distributions make sense for temporal offsets (continuous,
+/// non-negative). Discrete and probability distributions are excluded.
+#[derive(Debug, Clone)]
+pub enum RelativeDistKind {
+    /// Normal(mean, std_dev) in the specified unit.
+    Normal(f64, f64),
+    /// LogNormal(mu, sigma) in the specified unit.
+    LogNormal(f64, f64),
+    /// Uniform(min, max) in the specified unit.
+    Uniform(f64, f64),
+    /// Exponential(lambda) in the specified unit.
+    Exponential(f64),
+}
+
 /// Generates timestamps relative to an existing column by adding a random offset.
 ///
 /// The base field must already exist in [`GenContext::batch_columns`] and be
-/// castable to `TimestampMillisecond`. The offset is drawn from a normal
-/// distribution parameterised by `offset_mean` and `offset_std` in the chosen
-/// [`TemporalUnit`].
+/// castable to `TimestampMillisecond`. The offset is drawn from a configurable
+/// distribution with optional min/max clamping.
+///
+/// Three offset modes are supported:
+/// - **Normal** (legacy): draws from `Normal(mean, std_dev)`, backward compatible
+/// - **Distribution**: draws from a named distribution (normal, log_normal,
+///   uniform, exponential) with optional duration-based min/max bounds
+/// - **Constant**: fixed offset with no randomness
 ///
 /// # Output
 ///
-/// `DataType::Timestamp(Millisecond, None)` — the resulting timestamps are
-/// always ≥ the base value (offsets are clamped to zero on the low end).
+/// `DataType::Timestamp(Millisecond, None)` — the resulting timestamps
 pub struct RelativeGenerator {
     /// Field name to read base timestamps from.
     base_field: String,
-    /// Mean offset in the specified unit.
-    offset_mean: f64,
-    /// Std-dev of the offset in the specified unit.
-    offset_std: f64,
-    /// Unit for interpreting offset values.
+    /// Offset mode determining how offsets are computed.
+    mode: RelativeOffsetMode,
+    /// Unit for interpreting distribution output values.
     unit: TemporalUnit,
 }
 
 impl RelativeGenerator {
     /// Create a new `RelativeGenerator` from plan parameters.
     ///
-    /// Expected keys in `params`: `offset_mean`, `offset_std`, `unit` (0=s,1=m,2=h,3=d).
-    pub fn new(base_field: String, params: &BTreeMap<String, f64>) -> Self {
-        let offset_mean = params.get("offset_mean").copied().unwrap_or(60.0);
-        let offset_std = params.get("offset_std").copied().unwrap_or(10.0).abs();
+    /// The `offset_mode` parameter selects the variant:
+    /// - `0` (or absent): Legacy Normal mode — uses `offset_mean`, `offset_std`
+    /// - `1`: Distribution mode — uses `distribution` string param, distribution params, `min_ms`, `max_ms`
+    /// - `2`: Constant mode — uses `constant_ms`
+    pub fn new(
+        base_field: String,
+        params: &BTreeMap<String, f64>,
+        string_params: &BTreeMap<String, String>,
+    ) -> Self {
         let unit = TemporalUnit::from_param(params.get("unit").copied().unwrap_or(0.0));
+        let mode_val = params.get("offset_mode").copied().unwrap_or(0.0) as i64;
+
+        let mode = match mode_val {
+            1 => {
+                // Distribution mode
+                let dist_str = string_params
+                    .get("distribution")
+                    .map(|s| s.trim_matches('"').to_lowercase())
+                    .unwrap_or_else(|| "normal".into());
+
+                let kind = match dist_str.as_str() {
+                    "log_normal" => {
+                        let mu = params.get("mu").copied().unwrap_or(1.0);
+                        let sigma = params.get("sigma").copied().unwrap_or(0.5);
+                        RelativeDistKind::LogNormal(mu, sigma)
+                    }
+                    "uniform" => {
+                        let lo = params.get("min").or(params.get("low")).copied().unwrap_or(0.0);
+                        let hi = params
+                            .get("max")
+                            .or(params.get("high"))
+                            .copied()
+                            .unwrap_or(1.0);
+                        RelativeDistKind::Uniform(lo, hi)
+                    }
+                    "exponential" => {
+                        let lambda = params.get("lambda").copied().unwrap_or(1.0);
+                        RelativeDistKind::Exponential(lambda)
+                    }
+                    _ => {
+                        // Default to normal
+                        let mean = params
+                            .get("mean")
+                            .or(params.get("offset_mean"))
+                            .copied()
+                            .unwrap_or(0.0);
+                        let std_dev = params
+                            .get("std_dev")
+                            .or(params.get("offset_std"))
+                            .copied()
+                            .unwrap_or(1.0)
+                            .abs();
+                        RelativeDistKind::Normal(mean, std_dev)
+                    }
+                };
+
+                let min_ms = params.get("min_ms").copied();
+                let max_ms = params.get("max_ms").copied();
+
+                RelativeOffsetMode::Distribution {
+                    kind,
+                    min_ms,
+                    max_ms,
+                }
+            }
+            2 => {
+                // Constant mode
+                let offset_ms = params.get("constant_ms").copied().unwrap_or(0.0);
+                RelativeOffsetMode::Constant { offset_ms }
+            }
+            _ => {
+                // Legacy Normal mode (mode 0)
+                let mean = params.get("offset_mean").copied().unwrap_or(60.0);
+                let std_dev = params.get("offset_std").copied().unwrap_or(10.0).abs();
+                RelativeOffsetMode::Normal { mean, std_dev }
+            }
+        };
+
         Self {
             base_field,
-            offset_mean,
-            offset_std,
+            mode,
             unit,
+        }
+    }
+
+    /// Sample a single offset in milliseconds for the given RNG.
+    fn sample_offset(&self, rng: &mut dyn RngCore) -> i64 {
+        let factor = self.unit.to_millis() as f64;
+
+        match &self.mode {
+            RelativeOffsetMode::Normal { mean, std_dev } => {
+                let dist = Normal::new(*mean, std_dev.max(1e-9)).unwrap_or_else(|_| {
+                    Normal::new(*mean, 1.0).expect("stddev=1.0 is always valid")
+                });
+                let offset = dist.sample(rng).max(0.0);
+                (offset * factor) as i64
+            }
+            RelativeOffsetMode::Distribution {
+                kind,
+                min_ms,
+                max_ms,
+            } => {
+                let raw = match kind {
+                    RelativeDistKind::Normal(mean, std_dev) => {
+                        let d = Normal::new(*mean, std_dev.max(1e-9)).unwrap_or_else(|_| {
+                            Normal::new(*mean, 1.0).expect("stddev=1.0 is always valid")
+                        });
+                        d.sample(rng)
+                    }
+                    RelativeDistKind::LogNormal(mu, sigma) => {
+                        let d =
+                            rand_distr::LogNormal::new(*mu, sigma.max(1e-9)).unwrap_or_else(|_| {
+                                rand_distr::LogNormal::new(*mu, 0.5)
+                                    .expect("sigma=0.5 is always valid")
+                            });
+                        d.sample(rng)
+                    }
+                    RelativeDistKind::Uniform(lo, hi) => {
+                        let d = Uniform::new(*lo, hi.max(lo + 1e-9));
+                        d.sample(rng)
+                    }
+                    RelativeDistKind::Exponential(lambda) => {
+                        let d = rand_distr::Exp::new(lambda.max(1e-9)).unwrap_or_else(|_| {
+                            rand_distr::Exp::new(1.0).expect("lambda=1.0 is always valid")
+                        });
+                        d.sample(rng)
+                    }
+                };
+                let offset_ms = (raw * factor) as i64;
+                // Apply min/max clamping
+                let clamped = match (min_ms, max_ms) {
+                    (Some(lo), Some(hi)) => offset_ms.max(*lo as i64).min(*hi as i64),
+                    (Some(lo), None) => offset_ms.max(*lo as i64),
+                    (None, Some(hi)) => offset_ms.min(*hi as i64),
+                    (None, None) => offset_ms,
+                };
+                clamped
+            }
+            RelativeOffsetMode::Constant { offset_ms } => *offset_ms as i64,
         }
     }
 }
@@ -128,6 +301,9 @@ impl FieldGenerator for RelativeGenerator {
                     (0..ts.len()).map(|i| ts.value(i) * 1_000).collect()
                 } else if let Some(f) = arr.as_any().downcast_ref::<Float64Array>() {
                     (0..f.len()).map(|i| f.value(i) as i64).collect()
+                } else if let Some(int_arr) = arr.as_any().downcast_ref::<Int64Array>() {
+                    // Temporal sequences produce Int64 (epoch ms) before coercion
+                    (0..int_arr.len()).map(|i| int_arr.value(i)).collect()
                 } else {
                     tracing::warn!(
                         field = %self.base_field,
@@ -147,16 +323,11 @@ impl FieldGenerator for RelativeGenerator {
             }
         };
 
-        let dist = Normal::new(self.offset_mean, self.offset_std.max(1e-9)).unwrap_or_else(|_| {
-            Normal::new(self.offset_mean, 1.0).expect("stddev=1.0 is always valid")
-        });
-        let factor = self.unit.to_millis();
-
         let values: Vec<i64> = base_values
             .iter()
             .map(|&b| {
-                let offset = dist.sample(rng).max(0.0);
-                b.saturating_add((offset * factor as f64) as i64)
+                let offset = self.sample_offset(rng);
+                b.saturating_add(offset)
             })
             .collect();
 
@@ -609,7 +780,7 @@ mod tests {
         params.insert("offset_mean".into(), 10.0);
         params.insert("offset_std".into(), 2.0);
         params.insert("unit".into(), 0.0); // seconds
-        let gen = RelativeGenerator::new("created_at".into(), &params);
+        let gen = RelativeGenerator::new("created_at".into(), &params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, 5, &ctx);
@@ -726,7 +897,7 @@ mod tests {
         params.insert("offset_mean".into(), 5.0);
         params.insert("offset_std".into(), 0.0); // deterministic
         params.insert("unit".into(), 0.0); // seconds
-        let gen = RelativeGenerator::new("nonexistent".into(), &params);
+        let gen = RelativeGenerator::new("nonexistent".into(), &params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
@@ -762,7 +933,7 @@ mod tests {
         params.insert("offset_mean".into(), 1.0);
         params.insert("offset_std".into(), 0.0);
         params.insert("unit".into(), 3.0); // days
-        let gen = RelativeGenerator::new("ts".into(), &params);
+        let gen = RelativeGenerator::new("ts".into(), &params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = gen.generate(&mut rng, 5, &ctx);
@@ -785,11 +956,196 @@ mod tests {
     #[test]
     fn relative_output_type() {
         let params = BTreeMap::new();
-        let gen = RelativeGenerator::new("x".into(), &params);
+        let gen = RelativeGenerator::new("x".into(), &params, &BTreeMap::new());
         assert_eq!(
             gen.output_type(),
             DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         );
+    }
+
+    #[test]
+    fn relative_constant_offset() {
+        // Constant mode: offset_mode=2, constant_ms=86400000 (1 day)
+        let mut params = BTreeMap::new();
+        params.insert("offset_mode".into(), 2.0);
+        params.insert("constant_ms".into(), 86_400_000.0); // 1 day in ms
+        let gen = RelativeGenerator::new("ts".into(), &params, &BTreeMap::new());
+
+        let base_ms = 1_700_000_000_000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![base_ms; 5])) as ArrayRef,
+        );
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 5, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        for i in 0..5 {
+            assert_eq!(
+                ts.value(i),
+                base_ms + 86_400_000,
+                "row {i}: expected constant 1-day offset"
+            );
+        }
+    }
+
+    #[test]
+    fn relative_distribution_log_normal() {
+        let mut params = BTreeMap::new();
+        params.insert("offset_mode".into(), 1.0);
+        params.insert("mu".into(), 1.0);
+        params.insert("sigma".into(), 0.5);
+        params.insert("unit".into(), 0.0); // seconds
+        let mut string_params = BTreeMap::new();
+        string_params.insert("distribution".into(), "log_normal".into());
+
+        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+
+        let base_ms = 1_000_000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![base_ms; 100])) as ArrayRef,
+        );
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 100, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        for i in 0..100 {
+            assert!(
+                ts.value(i) > base_ms,
+                "row {i}: log_normal offset should be positive, got {} vs base {}",
+                ts.value(i),
+                base_ms
+            );
+        }
+    }
+
+    #[test]
+    fn relative_distribution_with_min_max_clamping() {
+        let mut params = BTreeMap::new();
+        params.insert("offset_mode".into(), 1.0);
+        params.insert("mean".into(), 5.0);
+        params.insert("std_dev".into(), 100.0);
+        params.insert("unit".into(), 0.0);
+        params.insert("min_ms".into(), 2_000.0);
+        params.insert("max_ms".into(), 10_000.0);
+        let mut string_params = BTreeMap::new();
+        string_params.insert("distribution".into(), "normal".into());
+
+        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+
+        let base_ms = 0i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![base_ms; 200])) as ArrayRef,
+        );
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 200, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        for i in 0..200 {
+            let v = ts.value(i);
+            assert!(
+                v >= 2_000 && v <= 10_000,
+                "row {i}: value {} not in [2000, 10000]",
+                v
+            );
+        }
+    }
+
+    #[test]
+    fn relative_distribution_uniform() {
+        let mut params = BTreeMap::new();
+        params.insert("offset_mode".into(), 1.0);
+        params.insert("low".into(), 1.0);
+        params.insert("high".into(), 5.0);
+        params.insert("unit".into(), 3.0); // days
+        let mut string_params = BTreeMap::new();
+        string_params.insert("distribution".into(), "uniform".into());
+
+        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+
+        let base_ms = 0i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![base_ms; 50])) as ArrayRef,
+        );
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 50, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        let day_ms = 86_400_000i64;
+        for i in 0..50 {
+            let v = ts.value(i);
+            assert!(
+                v >= day_ms && v <= 5 * day_ms,
+                "row {i}: value {} not in [1 day, 5 days]",
+                v
+            );
+        }
+    }
+
+    #[test]
+    fn relative_distribution_exponential() {
+        let mut params = BTreeMap::new();
+        params.insert("offset_mode".into(), 1.0);
+        params.insert("lambda".into(), 0.5);
+        params.insert("unit".into(), 2.0); // hours
+        let mut string_params = BTreeMap::new();
+        string_params.insert("distribution".into(), "exponential".into());
+
+        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+
+        let base_ms = 1_000_000i64;
+        let mut cols = HashMap::new();
+        cols.insert(
+            "ts".into(),
+            Arc::new(TimestampMillisecondArray::from(vec![base_ms; 50])) as ArrayRef,
+        );
+        let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
+        let ctx = GenContext::new(cols, 0, 0, 1, "test");
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = gen.generate(&mut rng, 50, &ctx);
+        let ts = arr
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        for i in 0..50 {
+            assert!(
+                ts.value(i) > base_ms,
+                "row {i}: exponential offset should be positive"
+            );
+        }
     }
 
     #[test]

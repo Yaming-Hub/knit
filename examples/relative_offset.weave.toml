@@ -1,0 +1,119 @@
+# Relative offset generator — advanced offset distributions
+#
+# Demonstrates three offset modes:
+# 1. Distribution-based offset with min/max clamping (log_normal)
+# 2. Constant (deterministic) offset
+# 3. Simple numeric offset (backward compatible)
+
+[model]
+name = "relative_offset_demo"
+seed = 42
+
+# ── Orders with ship date ──────────────────────────────────────────
+
+[[entities]]
+name = "order"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "order_date"
+data_type = "datetime"
+[entities.fields.generator]
+type = "sequence"
+start = "2024-01-01"
+step = "1d"
+
+# Ship date: 1–14 days after order, log-normal distribution
+[[entities.fields]]
+name = "ship_date"
+data_type = "datetime"
+[entities.fields.generator]
+type = "relative"
+anchor = "order_date"
+[entities.fields.generator.offset]
+distribution = "log_normal"
+min = "1d"
+max = "14d"
+unit = "day"
+[entities.fields.generator.offset.params]
+mu = 1.5
+sigma = 0.8
+
+# ── Certificates with expiry ──────────────────────────────────────
+
+[[entities]]
+name = "certificate"
+count = 50
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "issue_date"
+data_type = "datetime"
+[entities.fields.generator]
+type = "sequence"
+start = "2023-01-01"
+step = "7d"
+
+# Expiry: exactly 1 year after issue date (constant)
+[[entities.fields]]
+name = "expiry_date"
+data_type = "datetime"
+[entities.fields.generator]
+type = "relative"
+anchor = "issue_date"
+[entities.fields.generator.offset]
+type = "constant"
+value = "365d"
+
+# ── Sessions with end time ────────────────────────────────────────
+
+[[entities]]
+name = "session"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+[entities.fields.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[[entities.fields]]
+name = "start_time"
+data_type = "datetime"
+[entities.fields.generator]
+type = "sequence"
+start = "2024-06-01T08:00:00"
+step = "30m"
+
+# End time: 1 minute to 4 hours after start, log-normal distribution
+[[entities.fields]]
+name = "end_time"
+data_type = "datetime"
+[entities.fields.generator]
+type = "relative"
+anchor = "start_time"
+[entities.fields.generator.offset]
+distribution = "log_normal"
+min = "1m"
+max = "4h"
+unit = "minute"
+[entities.fields.generator.offset.params]
+mu = 3.0
+sigma = 1.0

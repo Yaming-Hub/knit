@@ -612,6 +612,166 @@ fn is_valid_temporal_start(s: &str) -> bool {
         || NaiveDate::parse_from_str(s, "%Y-%m-%d").is_ok()
 }
 
+/// Validate the offset of a relative generator.
+///
+/// Checks that:
+/// - Distribution offsets use an allowed distribution kind (normal, log_normal,
+///   uniform, exponential)
+/// - Duration strings in min/max/value are valid
+/// - min ≤ max when both are specified
+/// - Constant offsets have a valid duration string
+fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Vec<SchemaError>) {
+    use crate::gen::generators::event_stream::parse_duration_ms;
+
+    /// Check that a duration string uses a known unit suffix.
+    fn is_valid_duration_string(s: &str) -> bool {
+        let s = s.trim();
+        if s.is_empty() {
+            return false;
+        }
+        // Pure numeric is valid (interpreted as ms)
+        if s.chars().all(|c| c.is_ascii_digit() || c == '.') {
+            return true;
+        }
+        // Must have a numeric prefix + known unit suffix
+        let idx = match s.find(|c: char| c.is_alphabetic()) {
+            Some(i) => i,
+            None => return false,
+        };
+        if idx == 0 {
+            return false; // no numeric prefix
+        }
+        let unit = &s[idx..];
+        matches!(
+            unit.to_lowercase().as_str(),
+            "ms" | "millisecond"
+                | "milliseconds"
+                | "s"
+                | "sec"
+                | "second"
+                | "seconds"
+                | "m"
+                | "min"
+                | "minute"
+                | "minutes"
+                | "h"
+                | "hr"
+                | "hour"
+                | "hours"
+                | "d"
+                | "day"
+                | "days"
+                | "w"
+                | "week"
+                | "weeks"
+        )
+    }
+
+    match offset {
+        RelativeOffset::Simple(val) => {
+            // Only numeric values are valid for simple offsets
+            match val {
+                Value::Int(_) | Value::Float(_) => {}
+                _ => {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "relative offset must be numeric (int or float), got {:?}; \
+                             for structured offsets use {{ distribution = \"...\", ... }} \
+                             or {{ type = \"constant\", value = \"...\" }}",
+                            val
+                        ),
+                    });
+                }
+            }
+        }
+        RelativeOffset::Distribution {
+            distribution,
+            min,
+            max,
+            ..
+        } => {
+            // Only allow scalar continuous distributions for offsets
+            match distribution {
+                DistributionKind::Normal
+                | DistributionKind::LogNormal
+                | DistributionKind::Uniform
+                | DistributionKind::Exponential => {}
+                other => {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "relative offset distribution '{:?}' is not supported; \
+                             use normal, log_normal, uniform, or exponential",
+                            other
+                        ),
+                    });
+                }
+            }
+            // Validate duration strings
+            if let Some(min_str) = min {
+                if !is_valid_duration_string(min_str) {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "relative offset min '{}' is not a valid duration \
+                             (use e.g. \"1d\", \"30m\", \"2h\")",
+                            min_str
+                        ),
+                    });
+                }
+            }
+            if let Some(max_str) = max {
+                if !is_valid_duration_string(max_str) {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "relative offset max '{}' is not a valid duration \
+                             (use e.g. \"14d\", \"4h\", \"1000ms\")",
+                            max_str
+                        ),
+                    });
+                }
+            }
+            // Check min <= max
+            if let (Some(min_str), Some(max_str)) = (min, max) {
+                let min_ms = parse_duration_ms(min_str);
+                let max_ms = parse_duration_ms(max_str);
+                if min_ms > max_ms && min_ms > 0 && max_ms > 0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: format!(
+                            "relative offset min '{}' ({}ms) exceeds max '{}' ({}ms)",
+                            min_str, min_ms, max_str, max_ms
+                        ),
+                    });
+                }
+            }
+        }
+        RelativeOffset::Constant { offset_type, value } => {
+            if offset_type != "constant" {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "relative offset type '{}' is not recognized; use 'constant'",
+                        offset_type
+                    ),
+                });
+            }
+            if !is_valid_duration_string(value) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "relative constant offset '{}' is not a valid duration \
+                         (use e.g. \"365d\", \"1h\", \"30m\")",
+                        value
+                    ),
+                });
+            }
+        }
+    }
+}
+
 fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<SchemaError>) {
     let params = &spec.params;
     match spec.kind {
@@ -1753,24 +1913,25 @@ fn validate_generator(
                 );
             }
         }
-        GeneratorSpec::Relative { field, .. } => {
+        GeneratorSpec::Relative { anchor, offset } => {
             let field_names: HashSet<&str> =
                 entity.fields.iter().map(|f| f.name.as_str()).collect();
-            if !field_names.contains(field.as_str()) {
+            if !field_names.contains(anchor.as_str()) {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "relative references unknown field '{}' in entity '{}'",
-                        field, entity.name
+                        anchor, entity.name
                     ),
                 });
             }
-            if field == field_name {
+            if anchor == field_name {
                 errors.push(SchemaError::Validation {
                     path: path.to_string(),
                     message: "relative cannot reference itself".to_string(),
                 });
             }
+            validate_relative_offset(offset, path, errors);
         }
         GeneratorSpec::Unique { inner, .. } => {
             validate_generator(
@@ -3449,7 +3610,7 @@ fn collect_generator_deps_owned(gen: &GeneratorSpec) -> Vec<String> {
                 .filter(|r| !r.starts_with("param."))
                 .collect()
         }
-        GeneratorSpec::Relative { field, .. } => vec![field.clone()],
+        GeneratorSpec::Relative { anchor, .. } => vec![anchor.clone()],
         GeneratorSpec::Conditional { field, .. } => vec![field.clone()],
         _ => Vec::new(),
     }
@@ -5004,8 +5165,8 @@ mod tests {
             description: None,
             data_type: DataType::Int,
             generator: Some(GeneratorSpec::Relative {
-                field: "self_field".to_string(),
-                offset: Value::Int(1),
+                anchor: "self_field".to_string(),
+                offset: RelativeOffset::Simple(Value::Int(1)),
             }),
             nullable: NullSpec::Never,
             primary_key: None,
@@ -5016,6 +5177,248 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("relative cannot reference itself"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relative_distribution_offset() {
+        let mut model = minimal_model();
+        // Add an anchor field
+        model.entities[0].fields.push(Field {
+            name: "start_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "end_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Relative {
+                anchor: "start_date".to_string(),
+                offset: RelativeOffset::Distribution {
+                    distribution: DistributionKind::LogNormal,
+                    params: {
+                        let mut p = std::collections::BTreeMap::new();
+                        p.insert("mu".into(), 1.5);
+                        p.insert("sigma".into(), 0.8);
+                        p
+                    },
+                    min: Some("1d".into()),
+                    max: Some("14d".into()),
+                    unit: Some("day".into()),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        // Should have no errors for valid distribution offset
+        let rel_errors: Vec<_> = errors
+            .iter()
+            .filter(|e| matches!(e, SchemaError::Validation { message, .. } if message.contains("relative")))
+            .collect();
+        assert!(rel_errors.is_empty(), "unexpected errors: {rel_errors:?}");
+    }
+
+    #[test]
+    fn test_validate_relative_bad_distribution() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "start_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "end_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Relative {
+                anchor: "start_date".to_string(),
+                offset: RelativeOffset::Distribution {
+                    distribution: DistributionKind::Bernoulli, // not allowed
+                    params: Default::default(),
+                    min: None,
+                    max: None,
+                    unit: None,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("not supported"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relative_min_exceeds_max() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "start_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "end_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Relative {
+                anchor: "start_date".to_string(),
+                offset: RelativeOffset::Distribution {
+                    distribution: DistributionKind::Normal,
+                    params: Default::default(),
+                    min: Some("14d".into()),
+                    max: Some("1d".into()), // min > max
+                    unit: None,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("exceeds max"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relative_constant_offset() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "start_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "expiry".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Relative {
+                anchor: "start_date".to_string(),
+                offset: RelativeOffset::Constant {
+                    offset_type: "constant".into(),
+                    value: "365d".into(),
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        let rel_errors: Vec<_> = errors
+            .iter()
+            .filter(|e| matches!(e, SchemaError::Validation { message, .. } if message.contains("relative")))
+            .collect();
+        assert!(rel_errors.is_empty(), "unexpected errors: {rel_errors:?}");
+    }
+
+    #[test]
+    fn test_validate_relative_non_numeric_simple_offset() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "start_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "end_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Relative {
+                anchor: "start_date".to_string(),
+                offset: RelativeOffset::Simple(Value::String("not_a_number".into())),
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("must be numeric"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_relative_invalid_duration_unit() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "start_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: None,
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        model.entities[0].fields.push(Field {
+            name: "end_date".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Relative {
+                anchor: "start_date".to_string(),
+                offset: RelativeOffset::Distribution {
+                    distribution: DistributionKind::Normal,
+                    params: Default::default(),
+                    min: Some("10xyz".into()),
+                    max: None,
+                    unit: None,
+                },
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("not a valid duration"))
         }));
     }
 

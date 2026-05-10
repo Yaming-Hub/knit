@@ -7,7 +7,8 @@
 use std::collections::{BTreeMap, HashMap};
 
 use crate::core::{
-    DataModel, DataType, DistributionKind, Entity, Field, GeneratorSpec, NullSpec, Value,
+    DataModel, DataType, DistributionKind, Entity, Field, GeneratorSpec, NullSpec, RelativeOffset,
+    Value,
 };
 
 use crate::plan::error::PlanError;
@@ -784,23 +785,8 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     max_retries: *max_retries,
                 }
             }
-            GeneratorSpec::Relative { field, offset } => {
-                let mut params = BTreeMap::new();
-                // The RelativeGenerator reads offset_mean (seconds) and offset_std
-                let offset_val = match offset {
-                    Value::Int(n) => *n as f64,
-                    Value::Float(f) => *f,
-                    _ => 60.0, // default 60 seconds
-                };
-                params.insert("offset_mean".into(), offset_val);
-                // Default std is 10% of offset or minimum 1.0
-                params.insert("offset_std".into(), (offset_val.abs() * 0.1).max(1.0));
-                GeneratorPlan::Temporal {
-                    kind: TemporalKind::Relative,
-                    params,
-                    base_field: Some(field.clone()),
-                    string_params: BTreeMap::new(),
-                }
+            GeneratorSpec::Relative { anchor, offset } => {
+                compile_relative_offset(anchor, offset)
             }
             GeneratorSpec::BusinessHours {
                 start_hour,
@@ -1110,6 +1096,88 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
     }
 }
 
+/// Compile a `RelativeOffset` into a `GeneratorPlan::Temporal`.
+///
+/// Handles three offset variants:
+/// - `Simple(Value)` — backward compatible, uses Normal distribution
+/// - `Distribution { ... }` — configurable distribution with min/max clamping
+/// - `Constant { value }` — fixed offset, no randomness
+fn compile_relative_offset(anchor: &str, offset: &RelativeOffset) -> GeneratorPlan {
+    use crate::gen::generators::event_stream::parse_duration_ms;
+
+    let mut params = BTreeMap::new();
+    let mut string_params = BTreeMap::new();
+
+    match offset {
+        RelativeOffset::Simple(val) => {
+            let offset_val = match val {
+                Value::Int(n) => *n as f64,
+                Value::Float(f) => *f,
+                _ => 60.0,
+            };
+            params.insert("offset_mean".into(), offset_val);
+            params.insert("offset_std".into(), (offset_val.abs() * 0.1).max(1.0));
+            // mode 0 = legacy Normal
+            params.insert("offset_mode".into(), 0.0);
+        }
+        RelativeOffset::Distribution {
+            distribution,
+            params: dist_params,
+            min,
+            max,
+            unit,
+        } => {
+            // mode 1 = distribution
+            params.insert("offset_mode".into(), 1.0);
+            // Forward distribution params
+            for (k, v) in dist_params {
+                params.insert(k.clone(), *v);
+            }
+            // Encode distribution kind as string
+            string_params.insert(
+                "distribution".into(),
+                serde_json::to_string(distribution).unwrap_or_else(|_| "\"normal\"".into()),
+            );
+            // Parse min/max as durations → milliseconds
+            if let Some(min_str) = min {
+                let min_ms = parse_duration_ms(min_str);
+                params.insert("min_ms".into(), min_ms as f64);
+            }
+            if let Some(max_str) = max {
+                let max_ms = parse_duration_ms(max_str);
+                params.insert("max_ms".into(), max_ms as f64);
+            }
+            // Unit for scaling distribution output
+            if let Some(u) = unit {
+                let unit_val = match u.to_lowercase().as_str() {
+                    "second" | "seconds" | "s" => 0.0,
+                    "minute" | "minutes" | "m" => 1.0,
+                    "hour" | "hours" | "h" => 2.0,
+                    "day" | "days" | "d" => 3.0,
+                    _ => 0.0,
+                };
+                params.insert("unit".into(), unit_val);
+            }
+        }
+        RelativeOffset::Constant {
+            offset_type: _,
+            value,
+        } => {
+            // mode 2 = constant
+            params.insert("offset_mode".into(), 2.0);
+            let constant_ms = parse_duration_ms(value);
+            params.insert("constant_ms".into(), constant_ms as f64);
+        }
+    }
+
+    GeneratorPlan::Temporal {
+        kind: TemporalKind::Relative,
+        params,
+        base_field: Some(anchor.to_string()),
+        string_params,
+    }
+}
+
 /// Convert a `GeneratorSpec` directly (for nested generators).
 ///
 /// `parent_data_type` carries the owning field's declared type so that nested
@@ -1267,7 +1335,7 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
             }
         }
         // Relative depends on its base_field — must come after it
-        Some(GeneratorSpec::Relative { field: base, .. }) => {
+        Some(GeneratorSpec::Relative { anchor: base, .. }) => {
             let base_order = all_fields
                 .iter()
                 .find(|f| f.name == *base)
@@ -2829,8 +2897,8 @@ mod tests {
     #[test]
     fn test_relative_compiles_to_temporal() {
         let spec = GeneratorSpec::Relative {
-            field: "start_date".to_string(),
-            offset: Value::Int(86400),
+            anchor: "start_date".to_string(),
+            offset: RelativeOffset::Simple(Value::Int(86400)),
         };
         let plan = compile_generator_from_spec(&spec, &[], &DataType::String);
         match plan {
@@ -2843,6 +2911,71 @@ mod tests {
                 assert_eq!(params["offset_mean"], 86400.0);
                 assert!(params["offset_std"] > 0.0);
                 assert_eq!(base_field, Some("start_date".to_string()));
+            }
+            other => panic!("expected Temporal/Relative, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_relative_distribution_compiles() {
+        let spec = GeneratorSpec::Relative {
+            anchor: "order_date".to_string(),
+            offset: RelativeOffset::Distribution {
+                distribution: crate::core::DistributionKind::LogNormal,
+                params: {
+                    let mut p = BTreeMap::new();
+                    p.insert("mu".into(), 1.5);
+                    p.insert("sigma".into(), 0.8);
+                    p
+                },
+                min: Some("1d".into()),
+                max: Some("14d".into()),
+                unit: Some("day".into()),
+            },
+        };
+        let plan = compile_generator_from_spec(&spec, &[], &DataType::Datetime);
+        match plan {
+            GeneratorPlan::Temporal {
+                kind: TemporalKind::Relative,
+                params,
+                base_field,
+                string_params,
+            } => {
+                assert_eq!(base_field, Some("order_date".to_string()));
+                assert_eq!(params["offset_mode"], 1.0);
+                assert_eq!(params["mu"], 1.5);
+                assert_eq!(params["sigma"], 0.8);
+                assert_eq!(params["min_ms"], 86_400_000.0); // 1 day
+                assert_eq!(params["max_ms"], 86_400_000.0 * 14.0); // 14 days
+                assert_eq!(params["unit"], 3.0); // days
+                assert!(string_params.contains_key("distribution"));
+            }
+            other => panic!("expected Temporal/Relative, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_relative_constant_compiles() {
+        let spec = GeneratorSpec::Relative {
+            anchor: "issue_date".to_string(),
+            offset: RelativeOffset::Constant {
+                offset_type: "constant".into(),
+                value: "365d".into(),
+            },
+        };
+        let plan = compile_generator_from_spec(&spec, &[], &DataType::Datetime);
+        match plan {
+            GeneratorPlan::Temporal {
+                kind: TemporalKind::Relative,
+                params,
+                base_field,
+                ..
+            } => {
+                assert_eq!(base_field, Some("issue_date".to_string()));
+                assert_eq!(params["offset_mode"], 2.0);
+                // 365 days in ms
+                let expected_ms = 365.0 * 86_400_000.0;
+                assert_eq!(params["constant_ms"], expected_ms);
             }
             other => panic!("expected Temporal/Relative, got {other:?}"),
         }
@@ -2897,8 +3030,8 @@ mod tests {
                 data_type: DataType::Datetime,
                 nullable: NullSpec::default(),
                 generator: Some(GeneratorSpec::Relative {
-                    field: "start_date".to_string(),
-                    offset: Value::Int(3600),
+                    anchor: "start_date".to_string(),
+                    offset: RelativeOffset::Simple(Value::Int(3600)),
                 }),
                 primary_key: None,
                 precision: None,
