@@ -390,3 +390,36 @@ guide contributors on what data to provide.
 When two reference samples provide contradictory evidence (e.g., different
 distribution families for the same field), offer merge policies: newest-wins,
 largest-sample-wins, ensemble (mixture distribution).
+
+---
+
+## 12. Implementation Status (v1)
+
+### 12.1 Implemented Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Column mapping (name similarity) | ✅ | Levenshtein + abbreviation expansion |
+| Column mapping (type compatibility) | ✅ | Core types covered |
+| Distribution merge (same-family) | ✅ | Combined variance for Normal |
+| OneOf merge (weighted average) | ✅ | Normalized probabilities, new value discovery |
+| Entity auto-detection | ✅ | By filename stem or field count fallback |
+| Dry-run mode | ✅ | `--dry-run` shows mappings without changes |
+| CLI integration | ✅ | `--ref`, `--entity`, `--min-confidence`, `--max-rows`, `-o` |
+
+### 12.2 v1 Limitations
+
+- **Single reference file per invocation** — no batch/directory mode yet
+- **No incremental state tracking** — repeated enrichment re-merges from scratch
+- **Cross-family distributions skip** — Normal+Exponential won't merge (by design)
+- **No temporal or complex type enrichment** — only numeric distributions and string categoricals
+- **Greedy mapping only** — no interactive confirmation of column assignments
+
+### 12.3 Deferred Work (v2+)
+
+- Incremental enrichment state file (§10.1)
+- Federated/distributed enrichment (§11.1)
+- Schema suggestion for unmapped columns (§11.2)
+- Quality scoring (§11.3)
+- Active learning guidance (§11.4)
+- Conflict resolution strategies (§11.5)
