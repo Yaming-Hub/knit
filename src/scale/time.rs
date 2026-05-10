@@ -116,7 +116,11 @@ fn parse_duration_days(spec: &str) -> anyhow::Result<i64> {
         ),
     };
 
-    Ok(days.round() as i64)
+    let days_rounded = days.round();
+    if days_rounded > i64::MAX as f64 || days_rounded < 0.0 {
+        anyhow::bail!("duration '{}' is too large", spec);
+    }
+    Ok(days_rounded as i64)
 }
 
 #[cfg(test)]
