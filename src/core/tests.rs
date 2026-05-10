@@ -564,3 +564,49 @@ fn weighted_choice_explicit_weight() {
     assert_eq!(wc.weight, 3.5);
     assert_eq!(wc.value, Value::Int(10));
 }
+
+// ── Constraint serde ────────────────────────────────────────────────
+
+#[test]
+fn constraint_not_null_toml_roundtrip() {
+    let toml_str = r#"
+schema_version = "1.0"
+[model]
+name = "test"
+seed = 1
+
+[[entities]]
+name = "users"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+
+[[entities.fields]]
+name = "email"
+data_type = "string"
+
+[[entities.constraints]]
+type = "not_null"
+fields = ["id", "email"]
+"#;
+    let model = crate::schema::parse_toml(toml_str).unwrap();
+    assert_eq!(model.entities[0].constraints.len(), 1);
+    assert_eq!(
+        model.entities[0].constraints[0],
+        Constraint::NotNull {
+            fields: vec!["id".into(), "email".into()]
+        }
+    );
+}
+
+#[test]
+fn constraint_not_null_json_roundtrip() {
+    let c = Constraint::NotNull {
+        fields: vec!["id".into(), "name".into()],
+    };
+    let json = serde_json::to_string(&c).unwrap();
+    let back: Constraint = serde_json::from_str(&json).unwrap();
+    assert_eq!(back, c);
+}
