@@ -1,5 +1,6 @@
 //! Subcommand implementations for the knit CLI.
 
+pub mod enrich;
 pub mod generate;
 pub mod generators;
 pub mod init;

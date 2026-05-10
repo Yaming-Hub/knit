@@ -4,7 +4,7 @@ use clap::{CommandFactory, Parser};
 use colored::Colorize;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-use knit::cli::commands::{generate, generators, init, inspect, learn, plan, scale, schema, tokenize, validate};
+use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, plan, scale, schema, tokenize, validate};
 use knit::cli::config::resolve_config;
 use knit::cli::{Cli, Command, LogFormat, SchemaAction};
 
@@ -220,6 +220,24 @@ fn main() -> anyhow::Result<()> {
             *tokenize_dates,
             *tokenize_headers,
             *preserve_partitions,
+        ),
+        Command::Enrich {
+            schema,
+            reference,
+            output,
+            entity,
+            min_confidence,
+            max_rows,
+            dry_run,
+        } => enrich::run(
+            schema,
+            reference,
+            output.as_deref(),
+            entity.as_deref(),
+            *min_confidence,
+            *max_rows,
+            *dry_run,
+            &cli,
         ),
     }
     .inspect_err(|e| {
