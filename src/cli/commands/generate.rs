@@ -30,6 +30,7 @@ use crate::cli::{Cli, CompressionArg, Format};
 /// Loads the schema, validates, compiles a plan, generates data in batches,
 /// and writes output files to the specified directory.
 pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
+    let _gen_span = tracing::info_span!("generate", schema = %schema_path).entered();
     let start = Instant::now();
 
     // ── Load WASM plugins (if any) ──────────────────────────────────

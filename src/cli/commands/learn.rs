@@ -16,7 +16,7 @@ use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
 use serde_json;
-use tracing::{debug, info, warn};
+use tracing::{debug, info, info_span, warn};
 
 use crate::learn::correlation::detect_correlations;
 use crate::learn::fitting::{fit_categorical, fit_distribution, FitResult};
@@ -128,6 +128,7 @@ fn run_batch(
     actors_opts: Option<&ActorsOpts>,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
+    let _learn_span = info_span!("learn", source = %source).entered();
     let source_path = Path::new(source);
     anyhow::ensure!(
         source_path.exists(),
@@ -806,6 +807,7 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
 /// Returns a `TableAnalysis` for schema assembly and a `TableProfile` for
 /// cross-table relationship detection.
 fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile)> {
+    let _span = info_span!("table", name = %table.entity).entered();
     let profiles = compute_profiles(&table.batches)
         .map_err(|e| anyhow::anyhow!("{e}"))
         .context("profiling failed")?;

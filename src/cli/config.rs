@@ -55,7 +55,7 @@ pub fn find_config_file() -> Option<PathBuf> {
     // Check cwd
     let local = Path::new("knit.toml");
     if local.is_file() {
-        debug!("found local config: {}", local.display());
+        debug!(path = %local.display(), "local config found");
         return Some(local.to_path_buf());
     }
 
@@ -63,7 +63,7 @@ pub fn find_config_file() -> Option<PathBuf> {
     if let Some(config_dir) = dirs::config_dir() {
         let global = config_dir.join("knit").join("config.toml");
         if global.is_file() {
-            debug!("found global config: {}", global.display());
+            debug!(path = %global.display(), "global config found");
             return Some(global);
         }
     }
@@ -97,7 +97,7 @@ pub fn resolve_config() -> ResolvedConfig {
         .and_then(|p| {
             load_config_file(&p)
                 .map_err(|e| {
-                    debug!("failed to load config file: {}", e);
+                    debug!(error = %e, "config file load failed");
                     e
                 })
                 .ok()

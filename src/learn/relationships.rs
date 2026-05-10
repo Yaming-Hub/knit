@@ -3,7 +3,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use tracing::{debug, info};
+use tracing::{debug, info, info_span};
 
 /// Profile of a table for relationship detection.
 #[derive(Debug, Clone)]
@@ -75,6 +75,7 @@ const FK_SUFFIXES: &[&str] = &["_id", "_key", "_fk", "Id", "ID", "Key", "_ref"];
 ///
 /// A vector of relationship candidates, sorted by confidence descending.
 pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidate> {
+    let _span = info_span!("relationships", tables = tables.len()).entered();
     if tables.is_empty() {
         return Vec::new();
     }

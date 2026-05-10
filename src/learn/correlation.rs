@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use arrow::array::{Array, Float64Array, StringArray};
 use arrow::record_batch::RecordBatch;
-use tracing::debug;
+use tracing::{debug, info_span, trace};
 
 use crate::learn::profile::ColumnProfile;
 
@@ -52,6 +52,7 @@ pub fn detect_correlations(
     profiles: &[ColumnProfile],
     batches: &[RecordBatch],
 ) -> Vec<Correlation> {
+    let _span = info_span!("correlations", columns = profiles.len()).entered();
     if profiles.is_empty() || batches.is_empty() {
         return Vec::new();
     }
@@ -86,6 +87,9 @@ pub fn detect_correlations(
                     coefficient: pearson,
                     p_value: p_val,
                 });
+            } else {
+                trace!(a = %num_names[i], b = %num_names[j], r = pearson, p = p_val,
+                       "Pearson correlation below threshold, skipped");
             }
 
             // Spearman
@@ -100,6 +104,9 @@ pub fn detect_correlations(
                     coefficient: spearman,
                     p_value: sp_p_val,
                 });
+            } else {
+                trace!(a = %num_names[i], b = %num_names[j], rho = spearman, p = sp_p_val,
+                       "Spearman correlation below threshold, skipped");
             }
         }
     }
@@ -134,6 +141,8 @@ pub fn detect_correlations(
                     coefficient: v,
                     p_value: 0.0, // Cramér's V doesn't have a simple p-value
                 });
+            } else {
+                trace!(a = %str_names[i], b = %str_names[j], v, "Cramér's V below threshold, skipped");
             }
         }
     }

@@ -417,6 +417,7 @@ impl GenerationEngine {
         }
 
         for (phase_idx, phase) in plan.phases.iter().enumerate() {
+            let _phase_span = tracing::info_span!("phase", idx = phase_idx, entities = phase.entity_plans.len()).entered();
             tracing::info!(
                 phase = phase_idx,
                 entities = phase.entity_plans.len(),
@@ -566,6 +567,7 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
         ep: &EntityPlan,
     ) -> Result<Vec<(String, RecordBatch)>, GenError> {
+        let _entity_span = tracing::info_span!("entity", name = %ep.entity_name).entered();
         // Pre-build shared seen-sets for any Unique fields so uniqueness is
         // enforced across partitions, not just within each one.
         let shared_seen = Self::build_shared_seen_sets(ep);

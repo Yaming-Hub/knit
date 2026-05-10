@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 use statrs::distribution::{Beta, ContinuousCDF, Exp, Gamma, LogNormal, Normal, Uniform};
-use tracing::{debug, warn};
+use tracing::{debug, debug_span, warn};
 
 /// A named distribution with its fitted parameters.
 #[derive(Debug, Clone)]
@@ -331,12 +331,18 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     });
 
     let best = candidates[0].clone();
-    debug!(
-        best_dist = best.distribution.name(),
-        ks = best.ks_stat,
-        aic = best.aic,
-        "best fit"
-    );
+    if tracing::enabled!(tracing::Level::DEBUG) {
+        let alt_summary: Vec<String> = candidates.iter()
+            .map(|c| format!("{}(ks={:.3},aic={:.1})", c.distribution.name(), c.ks_stat, c.aic))
+            .collect();
+        debug!(
+            best_dist = best.distribution.name(),
+            ks = best.ks_stat,
+            aic = best.aic,
+            candidates = %alt_summary.join(", "),
+            "distribution fitted"
+        );
+    }
 
     Some(FitResult {
         best: candidates[0].clone(),

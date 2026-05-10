@@ -22,7 +22,7 @@ use arrow_json::ReaderBuilder as JsonReaderBuilder;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use tracing::{debug, info, warn};
+use tracing::{debug, info, info_span, warn};
 
 use crate::learn::error::{LearnError, LearnResult};
 
@@ -516,7 +516,8 @@ pub fn ingest_directory_with_limit(
     dir: &Path,
     max_rows: Option<usize>,
 ) -> LearnResult<Vec<IngestionResult>> {
-    info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
+    let _span = info_span!("ingest", dir = %dir.display()).entered();
+    info!(?max_rows, "ingesting directory");
 
     // Try structured dataset discovery first (companion schema.json layout)
     if let Some(results) = try_structured_ingest(dir, max_rows)? {
