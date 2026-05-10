@@ -126,6 +126,11 @@ pub struct Cli {
     /// Cannot be combined with -v/-q; overrides KNIT_LOG/RUST_LOG.
     #[arg(long, global = true, conflicts_with_all = ["quiet", "verbose"])]
     pub log_filter: Option<String>,
+
+    /// Write a JSON decision report to this path.
+    /// Captures all key decisions made during execution with reasoning and alternatives.
+    #[arg(long, global = true)]
+    pub decision_report: Option<String>,
 }
 
 /// Supported output formats for generated data.

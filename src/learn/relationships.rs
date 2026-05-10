@@ -168,6 +168,28 @@ pub fn detect_relationships(tables: &[TableProfile]) -> Vec<RelationshipCandidat
     candidates.truncate(1000);
 
     info!(count = candidates.len(), "detected relationship candidates");
+
+    // Record decisions if decision report is active.
+    if let Some(logger) = crate::decision::global_logger() {
+        for candidate in &candidates {
+            logger
+                .builder(crate::decision::DecisionKind::RelationshipDetection)
+                .phase("learn")
+                .entity(&candidate.from_table)
+                .column(&candidate.from_column)
+                .chosen(format!(
+                    "FK → {}.{} ({:?})",
+                    candidate.to_table, candidate.to_column, candidate.kind
+                ))
+                .reason(format!(
+                    "name match + value overlap, self_ref={}",
+                    candidate.is_self_ref
+                ))
+                .confidence_score(candidate.confidence)
+                .record();
+        }
+    }
+
     candidates
 }
 

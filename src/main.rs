@@ -7,6 +7,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, schema, tokenize, validate};
 use knit::cli::config::resolve_config;
 use knit::cli::{Cli, Command, LogFormat, ModelAction, SchemaAction};
+use knit::decision::{self, DecisionLogger};
 
 /// Guard that must be held for the lifetime of the program to flush async writers.
 struct _TracingGuard {
@@ -103,6 +104,15 @@ fn main() -> anyhow::Result<()> {
     let mut cli = Cli::parse();
     let _tracing_guard = init_tracing(&cli);
 
+    // Initialize decision logger if report path is requested.
+    let decision_logger = if cli.decision_report.is_some() {
+        let logger = DecisionLogger::new();
+        decision::set_global_logger(logger.clone());
+        Some(logger)
+    } else {
+        None
+    };
+
     // Load config (file + env vars); CLI flags take final precedence.
     let config = resolve_config();
 
@@ -121,7 +131,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    match &cli.command {
+    let result: anyhow::Result<()> = match &cli.command {
         Command::Validate { schema } => validate::run(schema, &cli),
         Command::Plan { schema } => plan::run(schema, &cli),
         Command::Generate {
@@ -248,5 +258,32 @@ fn main() -> anyhow::Result<()> {
         if let Some(hint) = knit::cli::suggestions::suggest_fix(&e.to_string()) {
             eprintln!("{} {}", "hint:".cyan().bold(), hint);
         }
-    })
+    });
+
+    // Write decision report if requested (on both success and failure).
+    if let (Some(logger), Some(report_path)) = (decision_logger, &cli.decision_report) {
+        let pipeline = match &cli.command {
+            Command::Learn { .. } => "learn",
+            Command::Generate { .. } => "generate",
+            Command::Scale { .. } => "scale",
+            _ => "other",
+        };
+        let report = logger.into_report(pipeline);
+        if let Err(e) = decision::write_report(&report, std::path::Path::new(report_path)) {
+            eprintln!(
+                "{} Failed to write decision report: {}",
+                "warning:".yellow().bold(),
+                e,
+            );
+        } else {
+            eprintln!(
+                "{} Decision report written to {} ({} decisions)",
+                "info:".cyan().bold(),
+                report_path,
+                report.summary.total_decisions,
+            );
+        }
+    }
+
+    result
 }

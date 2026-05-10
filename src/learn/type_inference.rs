@@ -218,6 +218,21 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
             threshold = effective_threshold,
             "type inferred as Categorical"
         );
+        if let Some(logger) = crate::decision::global_logger() {
+            logger
+                .builder(crate::decision::DecisionKind::TypeInference)
+                .phase("learn")
+                .chosen("Categorical (OneOf)")
+                .reason(format!(
+                    "{} distinct / {} total (ratio={:.3}) ≤ threshold {:.3}",
+                    distinct.len(),
+                    non_null.len(),
+                    cardinality_ratio,
+                    effective_threshold
+                ))
+                .confidence_score(1.0 - cardinality_ratio)
+                .record();
+        }
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,
@@ -234,6 +249,22 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         has_strong_pattern,
         "type inferred as Text (not categorical)"
     );
+    if let Some(logger) = crate::decision::global_logger() {
+        logger
+            .builder(crate::decision::DecisionKind::TypeInference)
+            .phase("learn")
+            .chosen("Text (free-form)")
+            .reason(format!(
+                "{} distinct / {} total (ratio={:.3}) > threshold {:.3}, strong_pattern={}",
+                distinct.len(),
+                non_null.len(),
+                cardinality_ratio,
+                effective_threshold,
+                has_strong_pattern
+            ))
+            .confidence(crate::decision::Confidence::Medium)
+            .record();
+    }
     TypeInference {
         inferred_type: InferredType::Text,
         confidence: 1.0,

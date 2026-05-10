@@ -828,6 +828,30 @@ Instrument the 5 high-priority silent decision points from §2.2.
 
 ---
 
+## 11. Implementation Status
+
+| Phase | Status | PR |
+|-------|--------|-----|
+| Phase 1: Foundation (spans, structured fields) | ✅ Done | #223 |
+| Phase 2: Learn decision logging | ✅ Done | #224 |
+| Phase 3: Generate pipeline decision logging | ✅ Done | #225 |
+| Phase 4: Decision Report & JSON Output | ✅ Done | #231 |
+| Phase 5: Remaining gaps | Planned | — |
+
+### Phase 4 Implementation Details
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| `Decision` struct | `src/decision.rs` | Kind, phase, entity, column, chosen, reason, confidence, alternatives |
+| `DecisionKind` enum | `src/decision.rs` | 12 variants covering all pipeline decision types |
+| `DecisionLogger` | `src/decision.rs` | Thread-safe collector with fluent builder API |
+| `DecisionReport` | `src/decision.rs` | Final JSON report with summary statistics |
+| `--decision-report` flag | `src/cli/mod.rs` | Global CLI flag to enable report output |
+| Global logger | `src/decision.rs` | `OnceLock`-based global accessor for zero-cost when disabled |
+| Learn integration | `fitting.rs`, `relationships.rs`, `type_inference.rs`, `schema_assembly.rs` | Records distribution fits, FK detection, type inference, generator selection |
+
+---
+
 ## Appendix A: Example AI Troubleshooting Session
 
 A user reports that generated Duration values don't match expected distribution.
