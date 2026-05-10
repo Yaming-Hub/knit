@@ -6,7 +6,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
 use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, schema, tokenize, validate};
 use knit::cli::config::resolve_config;
-use knit::cli::{Cli, Command, LogFormat, ModelAction, SchemaAction};
+use knit::cli::{Cli, Command, LogFormat, ModelAction, ModelFormat, SchemaAction};
 use knit::decision::{self, DecisionLogger};
 
 /// Guard that must be held for the lifetime of the program to flush async writers.
@@ -157,6 +157,7 @@ fn main() -> anyhow::Result<()> {
             actors,
             actor_columns,
             personas,
+            model_format,
         } => {
             let actors_opts = if *actors || !actor_columns.is_empty() || personas.is_some() {
                 Some(learn::ActorsOpts {
@@ -175,6 +176,7 @@ fn main() -> anyhow::Result<()> {
                 *strict,
                 entities,
                 actors_opts.as_ref(),
+                *model_format,
                 &cli,
             )
         }
