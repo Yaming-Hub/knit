@@ -706,12 +706,14 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                         values: vals.clone(),
                     }
                 } else {
+                    let start_ms = resolve_int_or_string_to_i64(start);
+                    let step_ms = resolve_step_to_i64(step);
                     let jitter_ms = jitter.as_deref().map(|s| {
                         crate::gen::generators::event_stream::parse_duration_ms(s)
                     });
                     GeneratorPlan::Sequence {
-                        start: *start,
-                        step: *step,
+                        start: start_ms,
+                        step: step_ms,
                         jitter_ms,
                     }
                 }
@@ -1692,6 +1694,69 @@ fn apply_conditional_distribution_overrides(
     }
 }
 
+/// Resolve an `IntOrString` start value to an i64.
+///
+/// - `Int(v)` → returns `v` directly
+/// - `Str(s)` → parses as datetime ("2024-01-01T00:00:00") or date ("2024-01-01")
+///   and returns epoch milliseconds
+fn resolve_int_or_string_to_i64(v: &crate::core::IntOrString) -> i64 {
+    match v {
+        crate::core::IntOrString::Int(n) => *n,
+        crate::core::IntOrString::Str(s) => parse_datetime_to_epoch_ms(s),
+    }
+}
+
+/// Resolve an `IntOrString` step value to an i64.
+///
+/// - `Int(v)` → returns `v` directly
+/// - `Str(s)` → parses as a duration string (e.g. "1d", "1h", "30m")
+///   and returns milliseconds
+fn resolve_step_to_i64(v: &crate::core::IntOrString) -> i64 {
+    match v {
+        crate::core::IntOrString::Int(n) => *n,
+        crate::core::IntOrString::Str(s) => {
+            crate::gen::generators::event_stream::parse_duration_ms(s)
+        }
+    }
+}
+
+/// Parse a date or datetime string to epoch milliseconds.
+///
+/// Supported formats:
+/// - `"2024-01-01"` — date-only, interpreted as midnight UTC
+/// - `"2024-01-01T00:00:00"` — naive datetime, interpreted as UTC
+/// - `"2024-01-01T00:00:00Z"` — explicit UTC
+/// - `"2024-01-01T00:00:00+05:00"` — offset-aware datetime
+fn parse_datetime_to_epoch_ms(s: &str) -> i64 {
+    use chrono::{NaiveDate, NaiveDateTime, DateTime, Utc};
+
+    let s = s.trim();
+
+    // Try RFC 3339 / offset-aware first: "2024-01-01T00:00:00Z" or "2024-01-01T00:00:00+05:00"
+    if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
+        return dt.timestamp_millis();
+    }
+
+    // Try naive datetime: "2024-01-01T00:00:00"
+    if let Ok(ndt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") {
+        return ndt.and_utc().timestamp_millis();
+    }
+
+    // Try naive datetime with fractional seconds: "2024-01-01T00:00:00.000"
+    if let Ok(ndt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f") {
+        return ndt.and_utc().timestamp_millis();
+    }
+
+    // Try date-only: "2024-01-01"
+    if let Ok(nd) = NaiveDate::parse_from_str(s, "%Y-%m-%d") {
+        let ndt = nd.and_hms_opt(0, 0, 0).expect("midnight is always valid");
+        return ndt.and_utc().timestamp_millis();
+    }
+
+    // Fallback: try parsing as plain integer
+    s.parse::<i64>().unwrap_or(0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1710,8 +1775,8 @@ mod tests {
                     description: None,
                     data_type: DataType::Int,
                     generator: Some(GeneratorSpec::Sequence {
-                        start: 1,
-                        step: 1,
+                        start: IntOrString::Int(1),
+                        step: IntOrString::Int(1),
                         prefix: None,
                     values: None,
                     cycle: None,
@@ -2683,8 +2748,8 @@ mod tests {
     #[test]
     fn test_unique_spec_compiles_to_unique_plan() {
         let inner_spec = GeneratorSpec::Sequence {
-            start: 1,
-            step: 1,
+            start: IntOrString::Int(1),
+            step: IntOrString::Int(1),
             prefix: None,
         values: None,
         cycle: None,
@@ -3160,5 +3225,60 @@ mod tests {
             .map(|p| p.end_row - p.start_row)
             .sum();
         assert_eq!(total, 500, "should use static fallback when no actor pool");
+    }
+
+    #[test]
+    fn test_parse_datetime_to_epoch_ms_date_only() {
+        // 2024-01-01 midnight UTC = 1704067200000 ms
+        let ms = parse_datetime_to_epoch_ms("2024-01-01");
+        assert_eq!(ms, 1_704_067_200_000);
+    }
+
+    #[test]
+    fn test_parse_datetime_to_epoch_ms_naive_datetime() {
+        // 2024-01-01T08:00:00 UTC = 1704067200000 + 8*3600*1000
+        let ms = parse_datetime_to_epoch_ms("2024-01-01T08:00:00");
+        assert_eq!(ms, 1_704_096_000_000);
+    }
+
+    #[test]
+    fn test_parse_datetime_to_epoch_ms_rfc3339() {
+        let ms = parse_datetime_to_epoch_ms("2024-01-01T00:00:00Z");
+        assert_eq!(ms, 1_704_067_200_000);
+    }
+
+    #[test]
+    fn test_parse_datetime_to_epoch_ms_with_offset() {
+        // 2024-01-01T00:00:00-05:00 = 2024-01-01T05:00:00Z
+        let ms = parse_datetime_to_epoch_ms("2024-01-01T00:00:00-05:00");
+        assert_eq!(ms, 1_704_067_200_000 + 5 * 3_600_000);
+    }
+
+    #[test]
+    fn test_resolve_temporal_sequence_values() {
+        // Test resolve_int_or_string_to_i64 with temporal strings
+        let start = IntOrString::Str("2024-01-01".into());
+        let start_ms = resolve_int_or_string_to_i64(&start);
+        assert_eq!(start_ms, 1_704_067_200_000); // 2024-01-01 epoch ms
+
+        // Test resolve_step_to_i64 with duration string
+        let step = IntOrString::Str("1d".into());
+        let step_ms = resolve_step_to_i64(&step);
+        assert_eq!(step_ms, 86_400_000); // 1 day in ms
+
+        // Test integer passthrough
+        let start_int = IntOrString::Int(42);
+        assert_eq!(resolve_int_or_string_to_i64(&start_int), 42);
+
+        let step_int = IntOrString::Int(100);
+        assert_eq!(resolve_step_to_i64(&step_int), 100);
+
+        // Test datetime string
+        let dt = IntOrString::Str("2024-01-01T08:00:00".into());
+        assert_eq!(resolve_int_or_string_to_i64(&dt), 1_704_096_000_000);
+
+        // Test hour duration
+        let h = IntOrString::Str("1h".into());
+        assert_eq!(resolve_step_to_i64(&h), 3_600_000);
     }
 }

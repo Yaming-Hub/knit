@@ -11,7 +11,7 @@ use tracing::{debug, info};
 
 use crate::core::{
     ActorRelationship, CountSpec, DataModel, DistributionKind, DistributionSpec, Entity, Field,
-    GeneratorSpec, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind, Value,
+    GeneratorSpec, IntOrString, NullSpec, Persona, Relationship, RelationshipKind as CoreRelKind, Value,
     WeightedChoice,
 };
 
@@ -587,8 +587,8 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
             Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
         );
         return GeneratorSpec::Sequence {
-            start: 1,
-            step: 1,
+            start: IntOrString::Int(1),
+            step: IntOrString::Int(1),
             prefix: if source_is_string {
                 Some(String::new())
             } else {
@@ -764,8 +764,8 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
         };
     }
     GeneratorSpec::Sequence {
-        start: 1,
-        step: 1,
+        start: IntOrString::Int(1),
+        step: IntOrString::Int(1),
         prefix: None,
         values: None,
         cycle: None,

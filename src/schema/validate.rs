@@ -294,7 +294,7 @@ fn validate_generator_params(
             start,
             jitter: _,
         } => {
-            validate_sequence_params(path, *start, *step, values, cycle, prefix, errors);
+            validate_sequence_params(path, start, step, values, cycle, prefix, errors);
         }
         GeneratorSpec::OneOf { choices } => {
             if choices.is_empty() {
@@ -519,13 +519,23 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
 
 fn validate_sequence_params(
     path: &str,
-    start: i64,
-    step: i64,
+    start: &IntOrString,
+    step: &IntOrString,
     values: &Option<Vec<String>>,
     cycle: &Option<bool>,
     prefix: &Option<String>,
     errors: &mut Vec<SchemaError>,
 ) {
+    // Extract i64 values from IntOrString if possible
+    let start_val = match start {
+        IntOrString::Int(n) => Some(*n),
+        IntOrString::Str(_) => None,
+    };
+    let step_val = match step {
+        IntOrString::Int(n) => Some(*n),
+        IntOrString::Str(_) => None,
+    };
+
     if let Some(vals) = values {
         if vals.is_empty() {
             errors.push(SchemaError::Validation {
@@ -533,7 +543,7 @@ fn validate_sequence_params(
                 message: "sequence values must not be empty".to_string(),
             });
         }
-        if start != 0 || step != 1 {
+        if start_val != Some(0) || step_val != Some(1) {
             errors.push(SchemaError::Validation {
                 path: path.to_string(),
                 message: "sequence 'values' is mutually exclusive with 'start'/'step'".to_string(),
@@ -553,11 +563,35 @@ fn validate_sequence_params(
             });
         }
     } else {
-        if step == 0 {
+        if step_val == Some(0) {
             errors.push(SchemaError::Validation {
                 path: path.to_string(),
                 message: "sequence step must not be 0".to_string(),
             });
+        }
+        // Validate temporal string formats
+        if let IntOrString::Str(s) = start {
+            if !is_valid_temporal_start(s) {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "sequence start '{}' is not a valid date or datetime; expected format like '2024-01-01' or '2024-01-01T08:00:00'",
+                        s
+                    ),
+                });
+            }
+        }
+        if let IntOrString::Str(s) = step {
+            let ms = crate::gen::generators::event_stream::parse_duration_ms(s);
+            if ms == 0 {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: format!(
+                        "sequence step '{}' is not a valid duration; expected format like '1d', '1h', '30m', '500ms'",
+                        s
+                    ),
+                });
+            }
         }
         if cycle.is_some() {
             errors.push(SchemaError::Validation {
@@ -566,6 +600,16 @@ fn validate_sequence_params(
             });
         }
     }
+}
+
+/// Check if a string is a valid temporal start value (date, datetime, or RFC3339).
+fn is_valid_temporal_start(s: &str) -> bool {
+    use chrono::{NaiveDate, NaiveDateTime, DateTime};
+    let s = s.trim();
+    DateTime::parse_from_rfc3339(s).is_ok()
+        || NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S").is_ok()
+        || NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f").is_ok()
+        || NaiveDate::parse_from_str(s, "%Y-%m-%d").is_ok()
 }
 
 fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<SchemaError>) {
@@ -1234,7 +1278,7 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
                 None
             }
         }
-        GeneratorSpec::Sequence { values, .. } => {
+        GeneratorSpec::Sequence { values, start, .. } => {
             if values.is_some() {
                 // Cyclic values mode always produces strings
                 if *data_type != DataType::String {
@@ -1245,14 +1289,31 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
                 } else {
                     None
                 }
+            } else if start.as_str().is_some() {
+                // Temporal sequence — must target a temporal type
+                let compatible = matches!(
+                    data_type,
+                    DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz
+                        | DataType::Date | DataType::Time
+                );
+                if !compatible {
+                    Some(format!(
+                        "temporal sequence (string start) is not compatible with data_type '{}'; expected a temporal type",
+                        data_type
+                    ))
+                } else {
+                    None
+                }
             } else {
                 let compatible = matches!(
                     data_type,
                     DataType::Int | DataType::Int32 | DataType::String
+                        | DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz
+                        | DataType::Date | DataType::Time
                 );
                 if !compatible {
                     Some(format!(
-                        "sequence generator is not compatible with data_type '{}'; expected 'int', 'int32', or 'string'",
+                        "sequence generator is not compatible with data_type '{}'; expected 'int', 'int32', 'string', or a temporal type",
                         data_type
                     ))
                 } else {
@@ -1409,7 +1470,7 @@ fn validate_generator(
             start,
             jitter: _,
         } => {
-            validate_sequence_params(path, *start, *step, values, cycle, prefix, errors);
+            validate_sequence_params(path, start, step, values, cycle, prefix, errors);
         }
         GeneratorSpec::OneOf { choices } => {
             if choices.is_empty() {
@@ -4278,8 +4339,8 @@ mod tests {
             description: None,
             data_type: DataType::Int,
             generator: Some(GeneratorSpec::Sequence {
-                start: 1,
-                step: 0,
+                start: IntOrString::Int(1),
+                step: IntOrString::Int(0),
                 prefix: None,
             values: None,
             cycle: None,
@@ -4305,8 +4366,8 @@ mod tests {
             description: None,
             data_type: DataType::String,
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: Some(vec![]),
                 cycle: None,
@@ -4332,8 +4393,8 @@ mod tests {
             description: None,
             data_type: DataType::String,
             generator: Some(GeneratorSpec::Sequence {
-                start: 5,
-                step: 2,
+                start: IntOrString::Int(5),
+                step: IntOrString::Int(2),
                 prefix: None,
                 values: Some(vec!["A".into(), "B".into()]),
                 cycle: None,
@@ -4359,8 +4420,8 @@ mod tests {
             description: None,
             data_type: DataType::Int,
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: None,
                 cycle: Some(true),
@@ -4386,8 +4447,8 @@ mod tests {
             description: None,
             data_type: DataType::String,
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: Some(vec!["Mon".into(), "Tue".into(), "Wed".into()]),
                 cycle: Some(true),
@@ -4413,8 +4474,8 @@ mod tests {
             description: None,
             data_type: DataType::Int, // values produce strings, not ints
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: Some(vec!["Mon".into(), "Tue".into()]),
                 cycle: None,
@@ -4430,6 +4491,90 @@ mod tests {
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. }
                 if message.contains("requires data_type 'string'"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_temporal_sequence_valid() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Sequence {
+                start: IntOrString::Str("2024-01-01".into()),
+                step: IntOrString::Str("1d".into()),
+                prefix: None,
+                values: None,
+                cycle: None,
+                jitter: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(!errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("sequence") && message.contains("compatible"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_temporal_sequence_invalid_start() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetime,
+            generator: Some(GeneratorSpec::Sequence {
+                start: IntOrString::Str("not-a-date".into()),
+                step: IntOrString::Str("1d".into()),
+                prefix: None,
+                values: None,
+                cycle: None,
+                jitter: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("not a valid date"))
+        }));
+    }
+
+    #[test]
+    fn test_validate_temporal_sequence_on_int_field_rejected() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Int, // temporal start on int field
+            generator: Some(GeneratorSpec::Sequence {
+                start: IntOrString::Str("2024-01-01".into()),
+                step: IntOrString::Str("1d".into()),
+                prefix: None,
+                values: None,
+                cycle: None,
+                jitter: None,
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. }
+                if message.contains("temporal sequence"))
         }));
     }
 
@@ -4913,8 +5058,8 @@ mod tests {
                 description: None,
                 data_type: DataType::Int,
                 generator: Some(GeneratorSpec::Sequence {
-                    start: 0,
-                    step: 1,
+                    start: IntOrString::Int(0),
+                    step: IntOrString::Int(1),
                     prefix: None,
                 values: None,
                 cycle: None,
@@ -5068,8 +5213,8 @@ mod tests {
             description: None,
             data_type: DataType::String,
             generator: Some(GeneratorSpec::Sequence {
-                start: 1,
-                step: 1,
+                start: IntOrString::Int(1),
+                step: IntOrString::Int(1),
                 prefix: None,
             values: None,
             cycle: None,
@@ -5095,8 +5240,8 @@ mod tests {
             description: None,
             data_type: DataType::Bool,
             generator: Some(GeneratorSpec::Sequence {
-                start: 1,
-                step: 1,
+                start: IntOrString::Int(1),
+                step: IntOrString::Int(1),
                 prefix: None,
             values: None,
             cycle: None,
@@ -5149,8 +5294,8 @@ mod tests {
                 description: None,
                 data_type: DataType::Int,
                 generator: Some(GeneratorSpec::Sequence {
-                    start: 1,
-                    step: 1,
+                    start: IntOrString::Int(1),
+                    step: IntOrString::Int(1),
                     prefix: None,
                 values: None,
                 cycle: None,
@@ -6854,8 +6999,8 @@ mod tests {
             description: None,
             data_type: DataType::Datetime,
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: None,
                 cycle: None,
@@ -6901,8 +7046,8 @@ mod tests {
             description: None,
             data_type: DataType::Datetime,
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: None,
                 cycle: None,
@@ -6977,8 +7122,8 @@ mod tests {
             description: None,
             data_type: DataType::Datetime,
             generator: Some(GeneratorSpec::Sequence {
-                start: 0,
-                step: 1,
+                start: IntOrString::Int(0),
+                step: IntOrString::Int(1),
                 prefix: None,
                 values: None,
                 cycle: None,
@@ -7056,5 +7201,6 @@ mod tests {
         }));
     }
 }
+
 
 

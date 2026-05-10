@@ -116,6 +116,23 @@ fn coerce_to_logical_type(
             }
             arr
         }
+        crate::core::DataType::Datetime | crate::core::DataType::DatetimeUs => {
+            if arr.as_any().is::<arrow::array::TimestampMillisecondArray>()
+                || arr.as_any().is::<arrow::array::TimestampMicrosecondArray>()
+                || arr.as_any().is::<arrow::array::TimestampNanosecondArray>()
+            {
+                return arr;
+            }
+            // Int64 values are epoch milliseconds — convert to Timestamp(Millisecond)
+            if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
+                let ts: arrow::array::TimestampMillisecondArray = i64_arr
+                    .iter()
+                    .map(|v| v)
+                    .collect();
+                return Arc::new(ts);
+            }
+            arr
+        }
         _ => arr,
     }
 }

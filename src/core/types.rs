@@ -24,6 +24,55 @@ fn default_uuid_version() -> u8 {
     4
 }
 
+// ── IntOrString ───────────────────────────────────────────────────────
+
+/// A value that can be either an integer or a string.
+///
+/// Used for sequence `start` and `step` fields to support both numeric
+/// sequences (`start = 1, step = 1`) and temporal sequences
+/// (`start = "2024-01-01", step = "1d"`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum IntOrString {
+    /// Numeric value (e.g. `1`, `86400000`).
+    Int(i64),
+    /// String value (e.g. `"2024-01-01"`, `"1d"`).
+    Str(String),
+}
+
+impl Default for IntOrString {
+    fn default() -> Self {
+        IntOrString::Int(0)
+    }
+}
+
+impl IntOrString {
+    /// Returns the integer value if this is `Int`, or `None`.
+    pub fn as_int(&self) -> Option<i64> {
+        match self {
+            IntOrString::Int(v) => Some(*v),
+            IntOrString::Str(_) => None,
+        }
+    }
+
+    /// Returns the string value if this is `Str`, or `None`.
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            IntOrString::Str(s) => Some(s),
+            IntOrString::Int(_) => None,
+        }
+    }
+}
+
+impl std::fmt::Display for IntOrString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IntOrString::Int(v) => write!(f, "{}", v),
+            IntOrString::Str(s) => write!(f, "{}", s),
+        }
+    }
+}
+
 // ── Value ────────────────────────────────────────────────────────────
 
 /// A loosely-typed value used in parameters, constants, conditional branches,
@@ -374,11 +423,14 @@ pub enum GeneratorSpec {
     /// When `values` is provided, cycles through the list round-robin.
     Sequence {
         /// Initial value of the sequence (default: 0). Mutually exclusive with `values`.
+        /// Accepts an integer (`start = 1`) or a date/datetime string
+        /// (`start = "2024-01-01"` or `start = "2024-01-01T00:00:00"`).
         #[serde(default)]
-        start: i64,
+        start: IntOrString,
         /// Increment between consecutive values (default: 1). Mutually exclusive with `values`.
+        /// Accepts an integer (`step = 1`) or a duration string (`step = "1d"`, `step = "1h"`).
         #[serde(default = "default_step")]
-        step: i64,
+        step: IntOrString,
         /// Optional string prefix prepended to each value.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         prefix: Option<String>,
@@ -846,8 +898,8 @@ pub struct BurstSpec {
     pub avg_idle_hours: f64,
 }
 
-fn default_step() -> i64 {
-    1
+fn default_step() -> IntOrString {
+    IntOrString::Int(1)
 }
 fn default_expansion() -> String {
     "sample".to_string()
@@ -1784,8 +1836,8 @@ mod tests {
                 prefix,
                 ..
             } => {
-                assert_eq!(start, 1);
-                assert_eq!(step, 1);
+                assert_eq!(start, IntOrString::Int(1));
+                assert_eq!(step, IntOrString::Int(1));
                 assert_eq!(prefix, Some("ORD-".into()));
             }
             _ => panic!("expected Sequence"),
@@ -1798,8 +1850,8 @@ mod tests {
         let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
         match &gen {
             GeneratorSpec::Sequence { start, step, jitter, .. } => {
-                assert_eq!(*start, 0);
-                assert_eq!(*step, 86_400_000);
+                assert_eq!(*start, IntOrString::Int(0));
+                assert_eq!(*step, IntOrString::Int(86_400_000));
                 assert_eq!(jitter, &Some("30m".into()));
             }
             _ => panic!("expected Sequence"),
@@ -1807,6 +1859,53 @@ mod tests {
         // Roundtrip: jitter should survive serialization
         let re_json = serde_json::to_string(&gen).unwrap();
         assert!(re_json.contains("\"jitter\":\"30m\""));
+    }
+
+    #[test]
+    fn test_generator_spec_sequence_string_start() {
+        let json = r#"{"type": "sequence", "start": "2024-01-01", "step": "1d"}"#;
+        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match &gen {
+            GeneratorSpec::Sequence { start, step, .. } => {
+                assert_eq!(start, &IntOrString::Str("2024-01-01".into()));
+                assert_eq!(step, &IntOrString::Str("1d".into()));
+            }
+            _ => panic!("expected Sequence"),
+        }
+        // Roundtrip: strings should survive serialization
+        let re_json = serde_json::to_string(&gen).unwrap();
+        assert!(re_json.contains("\"start\":\"2024-01-01\""));
+        assert!(re_json.contains("\"step\":\"1d\""));
+    }
+
+    #[test]
+    fn test_generator_spec_sequence_datetime_start() {
+        let json = r#"{"type": "sequence", "start": "2024-01-01T08:00:00", "step": "1h"}"#;
+        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match &gen {
+            GeneratorSpec::Sequence { start, step, .. } => {
+                assert_eq!(start, &IntOrString::Str("2024-01-01T08:00:00".into()));
+                assert_eq!(step, &IntOrString::Str("1h".into()));
+            }
+            _ => panic!("expected Sequence"),
+        }
+    }
+
+    #[test]
+    fn test_generator_spec_sequence_toml_string_start() {
+        let toml_str = r#"
+type = "sequence"
+start = "2024-06-15"
+step = "7d"
+"#;
+        let gen: GeneratorSpec = toml::from_str(toml_str).unwrap();
+        match &gen {
+            GeneratorSpec::Sequence { start, step, .. } => {
+                assert_eq!(start, &IntOrString::Str("2024-06-15".into()));
+                assert_eq!(step, &IntOrString::Str("7d".into()));
+            }
+            _ => panic!("expected Sequence"),
+        }
     }
 
     #[test]
@@ -1888,8 +1987,8 @@ mod tests {
                         description: None,
                         data_type: DataType::Int,
                         generator: Some(GeneratorSpec::Sequence {
-                            start: 1,
-                            step: 1,
+                            start: IntOrString::Int(1),
+                            step: IntOrString::Int(1),
                             prefix: None,
                         values: None,
                         cycle: None,

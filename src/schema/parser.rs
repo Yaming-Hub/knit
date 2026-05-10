@@ -446,7 +446,7 @@ fn check_undefined_custom_refs(fields: &[Field], entity_name: &str) -> Result<()
 mod tests {
     use super::*;
     use indoc::indoc;
-    use crate::core::{CountSpec, GeneratorSpec, NullSpec};
+    use crate::core::{CountSpec, GeneratorSpec, NullSpec, IntOrString};
 
     #[test]
     fn test_parse_minimal_schema() {
@@ -606,8 +606,8 @@ mod tests {
                 prefix,
                 ..
             } => {
-                assert_eq!(*start, 1000);
-                assert_eq!(*step, 10);
+                assert_eq!(*start, IntOrString::Int(1000));
+                assert_eq!(*step, IntOrString::Int(10));
                 assert!(prefix.is_none());
             }
             other => panic!("expected Sequence, got {other:?}"),

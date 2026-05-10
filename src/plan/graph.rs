@@ -243,6 +243,7 @@ mod tests {
     use super::*;
     use crate::core::{
         CountSpec, DistributionKind, DistributionSpec, Entity, Relationship, RelationshipKind,
+        IntOrString,
     };
     use std::collections::BTreeMap;
 
@@ -577,8 +578,8 @@ mod tests {
                 description: None,
                 data_type: DataType::Int,
                 generator: Some(GeneratorSpec::Sequence {
-                    start: 1,
-                    step: 1,
+                    start: IntOrString::Int(1),
+                    step: IntOrString::Int(1),
                     prefix: None,
                 values: None,
                 cycle: None,

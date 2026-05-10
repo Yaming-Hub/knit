@@ -215,20 +215,39 @@ step = 1
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| `start` | int | `1` | Starting value |
-| `step` | int | `1` | Increment between values |
+| `start` | int or string | `0` | Starting value. Integer for numeric sequences, date/datetime string for temporal (`"2024-01-01"`, `"2024-01-01T08:00:00"`) |
+| `step` | int or string | `1` | Increment. Integer for numeric sequences, duration string for temporal (`"1d"`, `"1h"`, `"30m"`) |
 | `jitter` | string | — | Random offset per value, drawn from `[-jitter, +jitter]` (duration: `"30m"`, `"1h"`, `"500ms"`) |
 
-**Jitter** adds a random offset to each step, useful for temporal sequences
-where values represent epoch milliseconds:
+#### Temporal Sequences
+
+When `start` is a date or datetime string, the sequence produces epoch-millisecond
+values. Combined with `data_type = "datetime"`, this creates realistic timestamp
+columns:
+
+```toml
+# Daily timestamps starting 2024-01-01
+[[entities.fields]]
+name = "created_at"
+data_type = "datetime"
+[entities.fields.generator]
+type = "sequence"
+start = "2024-01-01"
+step = "1d"
+```
+
+Supported `start` formats: `"2024-01-01"` (date), `"2024-01-01T08:00:00"` (datetime),
+`"2024-01-01T00:00:00Z"` (UTC), `"2024-01-01T00:00:00-05:00"` (offset-aware).
+
+**Jitter** adds a random offset to each step for realistic irregularity:
 
 ```toml
 # Daily timestamps with ±30-minute wobble
 [entities.fields.generator]
 type = "sequence"
-start = 1704067200000   # 2024-01-01T00:00:00 UTC (epoch ms)
-step = 86400000         # 1 day in milliseconds
-jitter = "30m"          # ±30 minute random offset
+start = "2024-01-01T08:00:00"
+step = "1d"
+jitter = "30m"
 ```
 
 #### Cyclic Value Lists
