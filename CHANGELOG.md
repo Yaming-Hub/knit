@@ -6,6 +6,14 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Pipe operator `|>`** — Expression function composition for derived fields
+  (spec §6.6):
+  - `expr |> func(args)` desugars to `func(expr, args)` at parse time
+  - Supports chaining: `${x} |> abs() |> round(2)` → `round(abs(${x}), 2)`
+  - Lowest precedence — all arithmetic/comparison/logical operators bind tighter
+  - Right side must be a function call; invalid usage produces clear parse errors
+  - Expressions containing `|>` never fall back to legacy string template mode
+  - New example: `examples/pipe_operator.weave.toml`
 - **Dirichlet and Multinomial distributions** — Vector-valued distributions
   for generating category proportions and multi-category counts (spec §6.1):
   - `kind = "dirichlet"` with `array_params.alpha` → probability simplex
