@@ -28,6 +28,8 @@ pub mod interaction;
 pub mod keystore;
 pub mod null_mask;
 pub mod plugin;
+#[cfg(feature = "wasm-plugins")]
+pub mod wasm_plugin;
 pub mod sampled_key_store;
 pub mod string_keystore;
 pub mod temporal_sort;

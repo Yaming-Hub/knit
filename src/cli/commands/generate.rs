@@ -32,6 +32,9 @@ use crate::cli::{Cli, CompressionArg, Format};
 pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
     let start = Instant::now();
 
+    // ── Load WASM plugins (if any) ──────────────────────────────────
+    load_plugins(cli)?;
+
     // ── Parse & validate ────────────────────────────────────────────
     let mut model = load_schema(schema_path)
         .with_context(|| format!("failed to parse schema `{}`", schema_path))?;
@@ -2110,4 +2113,41 @@ fn extract_single_weight(array: &dyn arrow::array::Array, idx: usize) -> Result<
         bail!("invalid weight value: {}", w);
     }
     Ok(w)
+}
+
+/// Load WASM plugins from `--plugin` and `--plugin-dir` CLI arguments.
+fn load_plugins(cli: &Cli) -> Result<()> {
+    #[cfg(feature = "wasm-plugins")]
+    {
+        use crate::gen::wasm_plugin;
+        use std::collections::HashSet;
+
+        let mut seen_names = HashSet::new();
+
+        // Load individual plugin files.
+        for path_str in &cli.plugins {
+            let path = std::path::Path::new(path_str);
+            wasm_plugin::load_wasm_plugin(path, &mut seen_names)
+                .with_context(|| format!("failed to load WASM plugin `{}`", path_str))?;
+        }
+
+        // Load all plugins from a directory.
+        if let Some(ref dir_str) = cli.plugin_dir {
+            let dir = std::path::Path::new(dir_str);
+            wasm_plugin::load_wasm_plugins_from_dir(dir)
+                .with_context(|| format!("failed to load plugins from `{}`", dir_str))?;
+        }
+    }
+
+    #[cfg(not(feature = "wasm-plugins"))]
+    {
+        if !cli.plugins.is_empty() || cli.plugin_dir.is_some() {
+            bail!(
+                "--plugin and --plugin-dir require the `wasm-plugins` feature.\n\
+                 Rebuild with: cargo install knit --features wasm-plugins"
+            );
+        }
+    }
+
+    Ok(())
 }
