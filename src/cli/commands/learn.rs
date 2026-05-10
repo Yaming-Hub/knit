@@ -5,7 +5,7 @@
 //! correlations, and assembles a complete Weave schema.
 
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use arrow::array::{Array, AsArray, LargeStringArray, StringArray};
@@ -62,6 +62,73 @@ struct RawOutputModel {
     description: Option<String>,
 }
 
+/// Determine whether the output should use structured format.
+fn resolve_use_structured(output: &str, model_format: Option<crate::cli::ModelFormat>) -> bool {
+    use crate::cli::ModelFormat;
+    match model_format {
+        Some(ModelFormat::Structured) => true,
+        Some(ModelFormat::Flat) => false,
+        None => {
+            let p = Path::new(output);
+            p.extension().is_none() || p.is_dir()
+        }
+    }
+}
+
+/// Compute the directory where asset files (dictionaries, companions) should be written.
+/// For structured format the model directory itself is the root; for flat the parent of the schema file.
+fn resolve_asset_dir(output: &str, use_structured: bool) -> PathBuf {
+    if use_structured {
+        PathBuf::from(output)
+    } else {
+        Path::new(output)
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .to_path_buf()
+    }
+}
+
+/// Write a DataModel to disk in either flat or structured format.
+fn write_model_output(
+    data_model: &crate::core::DataModel,
+    output: &str,
+    use_structured: bool,
+    header_comment: &str,
+) -> Result<()> {
+    if use_structured {
+        let output_path = Path::new(output);
+        // Clean stale table files from a previous run so the reader doesn't pick them up
+        let tables_dir = output_path.join("tables");
+        if tables_dir.is_dir() {
+            std::fs::remove_dir_all(&tables_dir).with_context(|| {
+                format!("failed to clean stale tables directory: {}", tables_dir.display())
+            })?;
+        }
+        crate::model::writer::write_model_directory(data_model, output_path)
+            .with_context(|| format!("failed to write structured model to {output}"))?;
+    } else {
+        let raw = RawOutputSchema {
+            schema_version: data_model.schema_version.clone(),
+            model: RawOutputModel {
+                name: data_model.name.clone(),
+                description: data_model.description.clone(),
+            },
+            entities: data_model.entities.clone(),
+            relationships: data_model.relationships.clone(),
+            correlations: data_model.correlations.clone(),
+            personas: data_model.personas.clone(),
+            actor_relationships: data_model.actor_relationships.clone(),
+            companion_files: data_model.companion_files.clone(),
+        };
+        let schema_text =
+            toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
+        let full_output = format!("{header_comment}{schema_text}");
+        std::fs::write(output, &full_output)
+            .with_context(|| format!("failed to write output to {output}"))?;
+    }
+    Ok(())
+}
+
 /// Run the learn command: ingest data, analyse, and write a Weave schema.
 ///
 /// `source` is a path to a single data file or a directory of files.
@@ -80,6 +147,7 @@ pub fn run(
     strict: bool,
     entities: &[String],
     actors_opts: Option<&ActorsOpts>,
+    model_format: Option<crate::cli::ModelFormat>,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     // Validate argument combinations
@@ -110,13 +178,14 @@ pub fn run(
             finalize,
             strict,
             &entity_filter,
+            model_format,
             cli,
         );
     }
 
     // Batch mode (original behavior)
     let source = source.unwrap();
-    run_batch(source, output, sample, &entity_filter, actors_opts, cli)
+    run_batch(source, output, sample, &entity_filter, actors_opts, model_format, cli)
 }
 
 /// Batch mode: load all data, profile, fit, emit schema (original behavior).
@@ -126,6 +195,7 @@ fn run_batch(
     sample: Option<usize>,
     entity_filter: &HashSet<String>,
     actors_opts: Option<&ActorsOpts>,
+    model_format: Option<crate::cli::ModelFormat>,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     let _learn_span = info_span!("learn", source = %source).entered();
@@ -338,18 +408,19 @@ fn run_batch(
     let mut data_model = assemble_data_model(&model_name, &table_analyses);
 
     // 5b. Extract dictionaries for high-cardinality string columns
-    let output_dir = Path::new(output).parent().unwrap_or_else(|| Path::new("."));
-    let dict_count = extract_dictionaries(&mut data_model, &tables, output_dir, cli.quiet)?;
+    let use_structured = resolve_use_structured(output, model_format);
+    let output_dir = resolve_asset_dir(output, use_structured);
+    let dict_count = extract_dictionaries(&mut data_model, &tables, &output_dir, cli.quiet)?;
 
     // 5b2. Copy companion schema dictionary files (if any)
     let _companion_dict_count =
-        copy_companion_dictionaries(&table_analyses, output_dir, cli.quiet)?;
+        copy_companion_dictionaries(&table_analyses, &output_dir, cli.quiet)?;
 
     // 5b3. Copy all non-data companion files (schema.json, etc.) from source
     //      to sit alongside the learned schema, preserving relative paths.
     if source_path.is_dir() {
         let companion_count =
-            copy_companion_files(source_path, output_dir, &mut data_model, cli.quiet)?;
+            copy_companion_files(source_path, &output_dir, &mut data_model, cli.quiet)?;
         if companion_count > 0 && !cli.quiet {
             eprintln!(
                 "  {} copied {} companion file(s)",
@@ -376,29 +447,13 @@ fn run_batch(
         );
     }
 
-    // 6. Serialize to TOML and write output
-    // Wrap in RawSchema structure for proper TOML output
-    let raw = RawOutputSchema {
-        schema_version: data_model.schema_version.clone(),
-        model: RawOutputModel {
-            name: data_model.name.clone(),
-            description: data_model.description.clone(),
-        },
-        entities: data_model.entities.clone(),
-        relationships: data_model.relationships.clone(),
-        correlations: data_model.correlations.clone(),
-        personas: data_model.personas.clone(),
-        actor_relationships: data_model.actor_relationships.clone(),
-        companion_files: data_model.companion_files.clone(),
-    };
-    let schema_text = toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
-
-    // Add header comment
-    let header = "# Auto-generated Weave schema\n# Generated by knit learn\n\n";
-    let full_output = format!("{header}{schema_text}");
-
-    std::fs::write(output, &full_output)
-        .with_context(|| format!("failed to write output to {output}"))?;
+    // 6. Write output (flat TOML or structured directory)
+    write_model_output(
+        &data_model,
+        output,
+        use_structured,
+        "# Auto-generated Weave schema\n# Generated by knit learn\n\n",
+    )?;
 
     // 7. Summary
     let total_rels = relationships.len();
@@ -457,6 +512,7 @@ fn run_incremental(
     finalize: bool,
     strict: bool,
     entity_filter: &HashSet<String>,
+    model_format: Option<crate::cli::ModelFormat>,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     use crate::learn::incremental::ingest_batches_to_state;
@@ -642,7 +698,7 @@ fn run_incremental(
         // Since output has a default, we always emit when finalize is set
         // or when source is provided with --state (update + finalize in one pass)
         if finalize {
-            emit_schema_from_state(&state, output, entity_filter, cli)?;
+            emit_schema_from_state(&state, output, entity_filter, model_format, cli)?;
         }
     }
 
@@ -654,6 +710,7 @@ fn emit_schema_from_state(
     state: &crate::learn::streaming::LearnState,
     output: &str,
     entity_filter: &HashSet<String>,
+    model_format: Option<crate::cli::ModelFormat>,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     use crate::learn::incremental::finalize_state;
@@ -705,8 +762,9 @@ fn emit_schema_from_state(
     let mut data_model = assemble_data_model(&model_name, &table_analyses);
 
     // Extract dictionaries from reservoir samples for high-cardinality string columns
-    let output_dir = Path::new(output).parent().unwrap_or(Path::new("."));
-    let dict_count = extract_dictionaries_from_state(&mut data_model, state, output_dir)?;
+    let use_structured = resolve_use_structured(output, model_format);
+    let output_dir = resolve_asset_dir(output, use_structured);
+    let dict_count = extract_dictionaries_from_state(&mut data_model, state, &output_dir)?;
 
     if !cli.quiet && dict_count > 0 {
         eprintln!(
@@ -733,27 +791,13 @@ fn emit_schema_from_state(
         );
     }
 
-    // Serialize to TOML
-    let raw = RawOutputSchema {
-        schema_version: data_model.schema_version.clone(),
-        model: RawOutputModel {
-            name: data_model.name.clone(),
-            description: data_model.description.clone(),
-        },
-        entities: data_model.entities.clone(),
-        relationships: data_model.relationships.clone(),
-        correlations: data_model.correlations.clone(),
-        personas: data_model.personas.clone(),
-        actor_relationships: data_model.actor_relationships.clone(),
-        companion_files: data_model.companion_files.clone(),
-    };
-    let schema_text = toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
-
-    let header = "# Auto-generated Weave schema\n# Generated by knit learn (incremental)\n\n";
-    let full_output = format!("{header}{schema_text}");
-
-    std::fs::write(output, &full_output)
-        .with_context(|| format!("failed to write output to {output}"))?;
+    // Write output (flat or structured)
+    write_model_output(
+        &data_model,
+        output,
+        use_structured,
+        "# Auto-generated Weave schema\n# Generated by knit learn (incremental)\n\n",
+    )?;
 
     if !cli.quiet {
         eprintln!(
@@ -2603,6 +2647,7 @@ mod tests {
             false,
             &[],
             None,
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -2653,6 +2698,7 @@ mod tests {
             false,
             &[],
             None,
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -2676,6 +2722,7 @@ mod tests {
             false,
             false,
             &[],
+            None,
             None,
             &quiet_cli(),
         );
@@ -2702,6 +2749,7 @@ mod tests {
             false,
             false,
             &[],
+            None,
             None,
             &quiet_cli(),
         );
@@ -2894,6 +2942,7 @@ mod tests {
             false,
             &[],
             Some(&opts),
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn --actors failed: {result:?}");
@@ -2934,6 +2983,7 @@ mod tests {
             false,
             &[],
             Some(&opts),
+            None,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn --actor-column failed: {result:?}");
@@ -2959,6 +3009,7 @@ mod tests {
                 explicit_columns: vec![],
                 max_personas: None,
             }),
+            None,
             &quiet_cli(),
         );
         assert!(result.is_err());
@@ -2966,6 +3017,39 @@ mod tests {
         assert!(
             msg.contains("not supported with --state"),
             "should error: {msg}"
+        );
+    }
+
+    #[test]
+    fn learn_structured_output_creates_directory() {
+        let dir = tempfile::tempdir().unwrap();
+        let csv_path = dir.path().join("data.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "id,name,age").unwrap();
+        writeln!(f, "1,Alice,30").unwrap();
+        writeln!(f, "2,Bob,25").unwrap();
+        writeln!(f, "3,Carol,35").unwrap();
+        drop(f);
+
+        let output_dir = dir.path().join("my_model");
+        let result = run(
+            Some(csv_path.to_str().unwrap()),
+            output_dir.to_str().unwrap(),
+            None,
+            None,
+            false,
+            false,
+            &[],
+            None,
+            Some(crate::cli::ModelFormat::Structured),
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn --model-format structured failed: {result:?}");
+        assert!(output_dir.join("knit.toml").exists(), "should have knit.toml");
+        assert!(output_dir.join("tables").exists(), "should have tables/");
+        assert!(
+            output_dir.join("tables").join("data.toml").exists(),
+            "should have tables/data.toml"
         );
     }
 }

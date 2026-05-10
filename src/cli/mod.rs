@@ -165,6 +165,15 @@ pub enum LogFormat {
     Json,
 }
 
+/// Model output format for knit learn.
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum ModelFormat {
+    /// Single flat TOML file (default).
+    Flat,
+    /// Structured directory (knit.toml, tables/, etc.).
+    Structured,
+}
+
 /// Top-level subcommands.
 #[derive(Subcommand, Debug)]
 pub enum Command {
@@ -210,7 +219,7 @@ pub enum Command {
     Learn {
         /// Path to data file or directory to learn from.
         source: Option<String>,
-        /// Output schema file path.
+        /// Output schema file path (or directory for structured format).
         #[arg(short, long, default_value = "learned.weave.toml")]
         output: String,
         /// Maximum rows to read per entity (for faster profiling of large files).
@@ -237,6 +246,9 @@ pub enum Command {
         /// Maximum number of personas to discover (default: auto via silhouette score).
         #[arg(long)]
         personas: Option<usize>,
+        /// Output model format: flat (single TOML file) or structured (directory).
+        #[arg(long, value_enum)]
+        model_format: Option<ModelFormat>,
     },
     /// Inspect a learning state file or schema file.
     Inspect {

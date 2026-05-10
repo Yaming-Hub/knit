@@ -263,7 +263,20 @@ knit learn <PATH> [OPTIONS]
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
-| `--output <PATH>` | `-o` | `learned.weave.toml` | Output schema file path |
+| `--output <PATH>` | `-o` | `learned.weave.toml` | Output schema file or directory path |
+| `--model-format <FMT>` | — | auto | Output format: `flat` (single TOML) or `structured` (directory) |
+| `--sample <N>` | — | all rows | Limit rows per entity for faster profiling |
+| `--state <PATH>` | — | — | State file for incremental learning |
+| `--finalize` | — | — | Emit schema from existing state without new data |
+| `--strict` | — | — | Error on duplicate source paths |
+| `--entity <NAME>` | — | all | Learn specific tables only (repeatable) |
+| `--actors` | — | — | Enable behavioral analysis |
+| `--actor-column <COL>` | — | auto | Specify actor columns explicitly (repeatable) |
+| `--personas <N>` | — | auto | Maximum personas to discover |
+
+When `--model-format` is not specified, the format is auto-detected: if the output
+path has no file extension (or is an existing directory), structured format is used;
+otherwise flat TOML is written.
 
 ### Examples
 
@@ -277,8 +290,15 @@ knit learn data/events.parquet -o events.weave.toml
 # Learn from a directory of files (each file → one entity)
 knit learn data/
 
+# Output as structured model directory
+knit learn data/ -o my_model/ --model-format structured
+
 # Verbose logging to see analysis details
 knit learn data/sales.csv -v
+
+# Incremental learning with state file
+knit learn batch1/ --state model.state -o schema.toml
+knit learn batch2/ --state model.state --finalize -o schema.toml
 ```
 
 ### Supported Input Formats
