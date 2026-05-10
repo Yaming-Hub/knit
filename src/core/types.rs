@@ -1344,6 +1344,11 @@ pub enum Constraint {
         /// Column names that must be unique together.
         fields: Vec<String>,
     },
+    /// The specified fields must never contain null values.
+    NotNull {
+        /// Column names that must not be null.
+        fields: Vec<String>,
+    },
     /// A boolean expression that every row must satisfy.
     Check {
         /// Boolean expression that every row must satisfy.

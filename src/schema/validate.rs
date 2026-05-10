@@ -55,6 +55,7 @@ fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
         validate_fields(entity, &names, model, errors);
         validate_entity_count(entity, errors);
         validate_activity_count(entity, model, errors);
+        validate_constraints(entity, errors);
     }
 }
 
@@ -113,6 +114,47 @@ fn validate_fields(
             path: format!("entities.{}", entity.name),
             message: format!("entity has {} primary keys, expected at most 1", pk_count),
         });
+    }
+}
+
+/// Validate entity constraints — check that referenced fields exist.
+fn validate_constraints(entity: &Entity, errors: &mut Vec<SchemaError>) {
+    let field_names: HashSet<&str> = entity.fields.iter().map(|f| f.name.as_str()).collect();
+    for (i, constraint) in entity.constraints.iter().enumerate() {
+        let path = format!("entities.{}.constraints[{}]", entity.name, i);
+        match constraint {
+            Constraint::NotNull { fields } | Constraint::Unique { fields } => {
+                if fields.is_empty() {
+                    errors.push(SchemaError::Validation {
+                        path: path.clone(),
+                        message: "constraint 'fields' must not be empty".to_string(),
+                    });
+                }
+                for f in fields {
+                    if !field_names.contains(f.as_str()) {
+                        errors.push(SchemaError::Validation {
+                            path: path.clone(),
+                            message: format!(
+                                "constraint references unknown field '{f}'"
+                            ),
+                        });
+                    }
+                }
+            }
+            Constraint::Range { field, .. } => {
+                if !field_names.contains(field.as_str()) {
+                    errors.push(SchemaError::Validation {
+                        path: path.clone(),
+                        message: format!(
+                            "constraint references unknown field '{field}'"
+                        ),
+                    });
+                }
+            }
+            Constraint::Check { .. } => {
+                // Check expression validation is handled elsewhere
+            }
+        }
     }
 }
 
@@ -6956,6 +6998,46 @@ mod tests {
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
             matches!(e, SchemaError::Validation { message, .. } if message.contains("multiplier must not be zero"))
+        }));
+    }
+
+    #[test]
+    fn test_not_null_constraint_valid() {
+        let mut model = minimal_model();
+        model.entities[0].constraints.push(Constraint::NotNull {
+            fields: vec!["id".to_string()],
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| {
+                matches!(e, SchemaError::Validation { message, .. } if message.contains("constraint"))
+            }),
+            "expected no constraint errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_not_null_constraint_unknown_field() {
+        let mut model = minimal_model();
+        model.entities[0].constraints.push(Constraint::NotNull {
+            fields: vec!["nonexistent".to_string()],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown field 'nonexistent'"))
+        }));
+    }
+
+    #[test]
+    fn test_not_null_constraint_empty_fields() {
+        let mut model = minimal_model();
+        model.entities[0].constraints.push(Constraint::NotNull {
+            fields: vec![],
+        });
+        let errors = validate(&model);
+        assert!(errors.iter().any(|e| {
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("must not be empty"))
         }));
     }
 }

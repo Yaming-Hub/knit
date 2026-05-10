@@ -6,6 +6,10 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **`not_null` constraint** — Declare fields that must never contain null (spec §5.4):
+  - `type = "not_null"` with `fields = ["id", "email"]`
+  - Schema validation checks referenced fields exist and list is non-empty
+  - Also validates field references in `unique` and `range` constraints
 - **Entity tags** — Freeform semantic annotation on entities (spec §5):
   - `tags = ["pii", "core"]` on any `[[entities]]` section
   - Tags are metadata-only (preserved in schema, do not affect generation)
