@@ -126,6 +126,11 @@ impl FieldGenerator for ConditionalGenerator {
             }
         }
 
+        // Unify types: if some arrays are NullArray while others have a concrete
+        // type, cast the NullArrays to all-null arrays of the concrete type so
+        // that `interleave` can combine them without a type mismatch error.
+        unify_null_arrays(&mut source_arrays);
+
         // Use arrow::compute::interleave to pick values from the right arrays
         let array_refs: Vec<&dyn Array> = source_arrays.iter().map(|a| a.as_ref()).collect();
         match compute::interleave(&array_refs, &indices) {
@@ -142,7 +147,48 @@ impl FieldGenerator for ConditionalGenerator {
     }
 
     fn output_type(&self) -> DataType {
-        self.default.output_type()
+        let dt = self.default.output_type();
+        if dt == DataType::Null {
+            // Default is Null — try to find a uniform concrete type from branches.
+            let mut concrete: Option<DataType> = None;
+            for (_, gen) in &self.branches {
+                let bt = gen.output_type();
+                if bt != DataType::Null {
+                    match &concrete {
+                        None => concrete = Some(bt),
+                        Some(prev) if *prev == bt => {}
+                        Some(_) => return DataType::Utf8, // mixed types → fallback
+                    }
+                }
+            }
+            concrete.unwrap_or(dt)
+        } else {
+            dt
+        }
+    }
+}
+
+/// When some source arrays are `NullArray` (DataType::Null) and others have a
+/// concrete type, replace the NullArrays with typed all-null arrays so that
+/// `interleave` sees uniform types.  This happens when the default branch of a
+/// conditional generator is `NullPlan::Always` (e.g., row-type columns that are
+/// null for non-matching signal types).
+fn unify_null_arrays(arrays: &mut Vec<ArrayRef>) {
+    // Find the first non-Null data type.
+    let concrete = arrays.iter().find_map(|a| {
+        let dt = a.data_type();
+        if *dt == DataType::Null {
+            None
+        } else {
+            Some(dt.clone())
+        }
+    });
+    if let Some(target) = concrete {
+        for arr in arrays.iter_mut() {
+            if *arr.data_type() == DataType::Null {
+                *arr = arrow::array::new_null_array(&target, arr.len());
+            }
+        }
     }
 }
 
@@ -559,5 +605,93 @@ mod tests {
                 "unsupported type should fallback to default"
             );
         }
+    }
+
+    #[test]
+    fn test_unify_null_arrays_casts_null_to_concrete() {
+        let int_arr: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 3]));
+        let null_arr: ArrayRef = Arc::new(arrow::array::NullArray::new(3));
+        let mut arrays = vec![int_arr, null_arr];
+        unify_null_arrays(&mut arrays);
+        assert_eq!(*arrays[0].data_type(), DataType::Int64);
+        assert_eq!(*arrays[1].data_type(), DataType::Int64);
+        assert_eq!(arrays[1].null_count(), 3);
+    }
+
+    #[test]
+    fn test_unify_null_arrays_noop_when_all_concrete() {
+        let a: ArrayRef = Arc::new(Int64Array::from(vec![1, 2]));
+        let b: ArrayRef = Arc::new(Int64Array::from(vec![3, 4]));
+        let mut arrays = vec![a, b];
+        unify_null_arrays(&mut arrays);
+        assert_eq!(*arrays[0].data_type(), DataType::Int64);
+        assert_eq!(*arrays[1].data_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn test_unify_null_arrays_noop_when_all_null() {
+        let a: ArrayRef = Arc::new(arrow::array::NullArray::new(2));
+        let b: ArrayRef = Arc::new(arrow::array::NullArray::new(2));
+        let mut arrays = vec![a, b];
+        unify_null_arrays(&mut arrays);
+        assert_eq!(*arrays[0].data_type(), DataType::Null);
+    }
+
+    #[test]
+    fn test_conditional_int64_branch_with_null_default_produces_int64() {
+        let gen = ConditionalGenerator::new(
+            "signal".into(),
+            vec![(
+                Value::String("Meeting".into()),
+                GeneratorPlan::Constant(Value::Int(42)),
+            )],
+            GeneratorPlan::Constant(Value::Null),
+        );
+
+        assert_eq!(gen.output_type(), DataType::Int64);
+
+        let mut rng = ChaCha8Rng::seed_from_u64(99);
+        let signal_col: ArrayRef = Arc::new(StringArray::from(vec![
+            Some("Meeting"),
+            Some("Email"),
+            None,
+        ]));
+        let mut batch = HashMap::new();
+        batch.insert("signal".to_string(), signal_col);
+        let ctx = GenContext::new(&batch, 0, 0, 1, "test");
+
+        let result = gen.generate(&mut rng, 3, &ctx);
+        assert_eq!(
+            *result.data_type(),
+            DataType::Int64,
+            "result should be Int64, not {:?}",
+            result.data_type()
+        );
+        assert!(!result.is_null(0), "Meeting row should have a value");
+        assert!(result.is_null(1), "non-matching row should be null");
+        assert!(result.is_null(2), "null-ref row should be null");
+        let int_arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
+        assert_eq!(int_arr.value(0), 42);
+    }
+
+    #[test]
+    fn test_output_type_mixed_branches_with_null_default_returns_utf8() {
+        // When branches have different concrete types and default is Null,
+        // output_type should return Utf8 (the string fallback type).
+        let gen = ConditionalGenerator::new(
+            "key".into(),
+            vec![
+                (
+                    Value::String("a".into()),
+                    GeneratorPlan::Constant(Value::Int(1)),
+                ),
+                (
+                    Value::String("b".into()),
+                    GeneratorPlan::Constant(Value::String("hello".into())),
+                ),
+            ],
+            GeneratorPlan::Constant(Value::Null),
+        );
+        assert_eq!(gen.output_type(), DataType::Utf8);
     }
 }
