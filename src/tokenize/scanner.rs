@@ -176,12 +176,24 @@ fn extract_json_strings(
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("reading {}", path.display()))?;
 
-    let value: serde_json::Value = serde_json::from_str(&content)
-        .with_context(|| format!("parsing JSON {}", path.display()))?;
+    // Try parsing as a single JSON document first
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(&content) {
+        if kind == FileKind::Schema {
+            extract_schema_json_strings(&value, mapper);
+        } else {
+            extract_data_json_strings(&value, mapper);
+        }
+        return Ok(());
+    }
 
-    if kind == FileKind::Schema {
-        extract_schema_json_strings(&value, mapper);
-    } else {
+    // Fall back to line-by-line parsing (JSONL)
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let value: serde_json::Value = serde_json::from_str(trimmed)
+            .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
         extract_data_json_strings(&value, mapper);
     }
     Ok(())
@@ -375,5 +387,21 @@ mod tests {
         assert!(mapper.contains("Alice"));
         assert!(mapper.contains("Bob"));
         assert!(!mapper.contains("100"));
+    }
+
+    #[test]
+    fn test_extract_jsonl_strings() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("events.jsonl");
+        let mut f = std::fs::File::create(&path).unwrap();
+        writeln!(f, r#"{{"name": "Alice", "score": 10}}"#).unwrap();
+        writeln!(f, r#"{{"name": "Bob", "score": 20}}"#).unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        extract_json_strings(&path, FileKind::Data, &mut mapper, &TokenizeConfig::default()).unwrap();
+
+        assert!(mapper.contains("Alice"));
+        assert!(mapper.contains("Bob"));
+        assert!(!mapper.contains("10"));
     }
 }

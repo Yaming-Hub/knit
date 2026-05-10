@@ -222,8 +222,9 @@ fn apply_parquet(src: &Path, out: &Path, mapper: &TokenMapper) -> Result<()> {
                     .collect();
                 columns.push(Arc::new(tokenized));
             } else if let Some(str_arr) = col.as_string_opt::<i64>() {
-                // LargeString
-                let tokenized: StringArray = str_arr
+                // LargeString: preserve as LargeStringArray to avoid i32 offset overflow
+                use arrow::array::LargeStringArray;
+                let tokenized: LargeStringArray = str_arr
                     .iter()
                     .map(|opt| {
                         opt.map(|val| {

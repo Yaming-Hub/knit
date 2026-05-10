@@ -33,11 +33,11 @@ impl TokenMapper {
     }
 
     /// Create a mapper from a pre-built reverse map (for restore mode).
+    /// In restore mode, the map stores token→original so that `get(token)` returns the original.
     pub fn from_reverse_map(reverse: HashMap<String, String>) -> Self {
         let used_tokens: HashSet<String> = reverse.values().cloned().collect();
-        let map = reverse; // In restore mode, map IS the reverse map (token → original)
         Self {
-            map,
+            map: reverse,
             used_tokens,
             rng: StdRng::seed_from_u64(0),
         }
@@ -75,14 +75,31 @@ impl TokenMapper {
 
     /// Generate a shape-preserving token for the given value.
     fn generate_token(&mut self, original: &str) -> String {
-        // Try up to 100 times to avoid collisions
-        for _ in 0..100 {
+        // Try up to 1000 times to avoid collisions
+        for _ in 0..1000 {
             let token = self.generate_shape_token(original);
             if !self.used_tokens.contains(&token) && !self.map.contains_key(&token) {
                 return token;
             }
         }
-        // Fallback: append a random suffix to guarantee uniqueness
+        // Fallback for exhausted token space: vary length slightly rather than
+        // appending a hex suffix that would destroy shape.
+        // Add one extra char of the dominant class in the original.
+        let dominant_class = if original.chars().all(|c| c.is_ascii_uppercase()) {
+            'A'
+        } else if original.chars().all(|c| c.is_ascii_lowercase()) {
+            'a'
+        } else {
+            'x'
+        };
+        for extra in 1..=5 {
+            let padded = format!("{}{}", original, std::iter::repeat(dominant_class).take(extra).collect::<String>());
+            let token = self.generate_shape_token(&padded);
+            if !self.used_tokens.contains(&token) && !self.map.contains_key(&token) {
+                return token;
+            }
+        }
+        // Ultimate fallback: append unique suffix
         let base = self.generate_shape_token(original);
         let suffix: u32 = self.rng.gen();
         format!("{}_{:08x}", base, suffix)
@@ -114,8 +131,18 @@ impl TokenMapper {
             (b'a' + self.rng.gen_range(0..26u8)) as char
         } else if ch.is_ascii_digit() {
             (b'0' + self.rng.gen_range(0..10u8)) as char
+        } else if ch.is_alphabetic() {
+            // Non-ASCII letters: replace with random ASCII letter of same case
+            if ch.is_uppercase() {
+                (b'A' + self.rng.gen_range(0..26u8)) as char
+            } else {
+                (b'a' + self.rng.gen_range(0..26u8)) as char
+            }
+        } else if ch.is_numeric() {
+            // Non-ASCII digits
+            (b'0' + self.rng.gen_range(0..10u8)) as char
         } else {
-            // Non-ASCII or special: preserve as-is
+            // Punctuation and other: preserve as-is (structural separators)
             ch
         }
     }

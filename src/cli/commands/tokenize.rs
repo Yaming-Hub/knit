@@ -56,6 +56,17 @@ fn run_tokenize(
     tokenize_headers: bool,
     preserve_partitions: bool,
 ) -> Result<()> {
+    // Warn about unimplemented flags
+    if tokenize_numbers {
+        eprintln!("warning: --tokenize-numbers is not yet implemented; numeric values will be preserved");
+    }
+    if tokenize_dates {
+        eprintln!("warning: --tokenize-dates is not yet implemented; date values will be preserved");
+    }
+    if tokenize_headers {
+        eprintln!("warning: --tokenize-headers is not yet implemented; headers will be preserved");
+    }
+
     let dict_path = dictionary
         .map(PathBuf::from)
         .unwrap_or_else(|| output.join(".knit-tokens.json"));
