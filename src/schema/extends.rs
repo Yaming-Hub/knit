@@ -243,6 +243,7 @@ mod tests {
             entities: vec![Entity {
                 name: "user".to_string(),
                 description: None,
+                tags: Vec::new(),
                 count: CountSpec::Fixed(100),
                 fields: vec![
                     Field {
@@ -340,6 +341,7 @@ mod tests {
         child.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(500),
             fields: vec![],
             constraints: vec![],
@@ -361,6 +363,7 @@ mod tests {
         child.entities.push(Entity {
             name: "user".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(5000),
             fields: vec![],
             constraints: vec![],
@@ -382,6 +385,7 @@ mod tests {
         child.entities.push(Entity {
             name: "user".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::default(), // default => don't override
             fields: vec![Field {
                 name: "age".to_string(),
@@ -413,6 +417,7 @@ mod tests {
         child.entities.push(Entity {
             name: "user".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::default(),
             fields: vec![Field {
                 name: "email".to_string(),
@@ -506,6 +511,7 @@ mod tests {
         child.entities.push(Entity {
             name: "user".to_string(),
             description: Some("updated".to_string()),
+            tags: Vec::new(),
             count: CountSpec::default(),
             fields: vec![],
             constraints: vec![],

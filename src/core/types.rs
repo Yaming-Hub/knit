@@ -187,6 +187,9 @@ pub struct Entity {
     /// Optional free-text description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Freeform semantic tags for filtering and documentation (e.g., `["pii", "core"]`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
     /// How many rows to generate (fixed, range, or distribution).
     #[serde(default)]
     pub count: CountSpec,
@@ -1850,6 +1853,7 @@ mod tests {
             entities: vec![Entity {
                 name: "users".into(),
                 description: None,
+                tags: Vec::new(),
                 count: CountSpec::Fixed(1000),
                 fields: vec![
                     Field {
@@ -2055,6 +2059,7 @@ mod tests {
         let entity = Entity {
             name: "users".into(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(1000),
             fields: vec![],
             constraints: vec![],

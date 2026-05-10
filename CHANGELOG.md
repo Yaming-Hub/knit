@@ -6,6 +6,10 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Entity tags** — Freeform semantic annotation on entities (spec §5):
+  - `tags = ["pii", "core"]` on any `[[entities]]` section
+  - Tags are metadata-only (preserved in schema, do not affect generation)
+  - Defaults to empty; omitted when serializing empty tags
 - **Pipe operator `|>`** — Expression function composition for derived fields
   (spec §6.6):
   - `expr |> func(args)` desugars to `func(expr, args)` at parse time

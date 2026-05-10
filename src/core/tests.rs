@@ -424,6 +424,7 @@ fn minimal_data_model_roundtrip() {
         entities: vec![Entity {
             name: "users".into(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(100),
             fields: vec![Field {
                 name: "id".into(),
@@ -466,6 +467,84 @@ fn minimal_data_model_roundtrip() {
     assert_eq!(back.entities.len(), 1);
     assert_eq!(back.entities[0].name, "users");
     assert_eq!(back.entities[0].count, CountSpec::Fixed(100));
+}
+
+// ── Entity tags ─────────────────────────────────────────────────────
+
+#[test]
+fn entity_tags_toml_roundtrip() {
+    let toml_str = r#"
+schema_version = "1.0"
+[model]
+name = "tags_test"
+seed = 1
+
+[[entities]]
+name = "users"
+tags = ["pii", "core"]
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+"#;
+    let model = crate::schema::parse_toml(toml_str).unwrap();
+    assert_eq!(model.entities[0].tags, vec!["pii", "core"]);
+}
+
+#[test]
+fn entity_tags_default_empty() {
+    let toml_str = r#"
+schema_version = "1.0"
+[model]
+name = "no_tags_test"
+seed = 1
+
+[[entities]]
+name = "users"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+"#;
+    let model = crate::schema::parse_toml(toml_str).unwrap();
+    assert!(model.entities[0].tags.is_empty());
+}
+
+#[test]
+fn entity_tags_skip_serializing_when_empty() {
+    let model = DataModel {
+        name: "test".into(),
+        description: None,
+        seed: 1,
+        locale: "en_US".into(),
+        timezone: "UTC".into(),
+        entities: vec![Entity {
+            name: "users".into(),
+            description: None,
+            tags: Vec::new(),
+            count: CountSpec::Fixed(10),
+            fields: vec![],
+            constraints: vec![],
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+        }],
+        relationships: vec![],
+        noise_profiles: vec![],
+        correlations: vec![],
+        params: BTreeMap::new(),
+        schema_version: "1.0".into(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
+        custom_types: Vec::new(),
+        mixins: Vec::new(),
+    };
+    let json = serde_json::to_string(&model).unwrap();
+    assert!(!json.contains("\"tags\""));
 }
 
 // ── WeightedChoice ──────────────────────────────────────────────────

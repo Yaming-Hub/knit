@@ -1697,6 +1697,7 @@ mod tests {
         Entity {
             name: name.to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(count),
             fields: vec![
                 Field {
@@ -2587,6 +2588,7 @@ mod tests {
             vec![Entity {
                 name: "items".to_string(),
                 description: None,
+                tags: Vec::new(),
                 count: CountSpec::Fixed(10),
                 fields: vec![Field {
                     name: "color".to_string(),

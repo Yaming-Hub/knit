@@ -3414,6 +3414,7 @@ mod tests {
             entities: vec![Entity {
                 name: "user".to_string(),
                 description: None,
+                tags: Vec::new(),
                 count: CountSpec::Fixed(100),
                 fields: vec![
                     Field {
@@ -3536,6 +3537,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(200),
             fields: vec![Field {
                 name: "id".to_string(),
@@ -3584,6 +3586,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(200),
             fields: vec![Field {
                 name: "amount".to_string(),
@@ -3634,6 +3637,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(200),
             fields: vec![
                 Field {
@@ -3697,6 +3701,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(200),
             fields: vec![
                 Field {
@@ -3760,6 +3765,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(200),
             fields: vec![Field {
                 name: "amount".to_string(),
@@ -3902,6 +3908,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![],
             constraints: vec![],
@@ -4849,6 +4856,7 @@ mod tests {
         model.entities.push(Entity {
             name: "other".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![Field {
                 name: "id".to_string(),
@@ -5081,6 +5089,7 @@ mod tests {
         model.entities.push(Entity {
             name: "users".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![Field {
                 name: "id".to_string(),
@@ -5131,6 +5140,7 @@ mod tests {
         model.entities.push(Entity {
             name: "users".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
             actor: true,
@@ -5279,6 +5289,7 @@ mod tests {
         model.entities.push(Entity {
             name: "users".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
             actor: false,
@@ -5309,6 +5320,7 @@ mod tests {
         model.entities.push(Entity {
             name: "people".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
             actor: true,
@@ -5339,6 +5351,7 @@ mod tests {
         model.entities.push(Entity {
             name: "people".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![],
             actor: true,
@@ -5408,6 +5421,7 @@ mod tests {
         model.entities.push(Entity {
             name: "people".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
             actor: true,
@@ -5447,6 +5461,7 @@ mod tests {
         model.entities.push(Entity {
             name: "people".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
             actor: true,
@@ -5508,6 +5523,7 @@ mod tests {
         model.entities.push(Entity {
             name: "posts".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![Field {
                 name: "id".to_string(),
@@ -5570,6 +5586,7 @@ mod tests {
         model.entities.push(Entity {
             name: "posts".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![
                 Field {
@@ -5644,6 +5661,7 @@ mod tests {
         model.entities.push(Entity {
             name: "posts".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![
                 Field {
@@ -6137,6 +6155,7 @@ mod tests {
         model.entities.push(Entity {
             name: "order".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
             constraints: vec![],
@@ -6291,6 +6310,7 @@ mod tests {
             }],
             constraints: vec![],
             description: None,
+            tags: Vec::new(),
             topology: None,
             actor: false,
             persona_distribution: None,
@@ -6343,6 +6363,7 @@ mod tests {
             }],
             constraints: vec![],
             description: None,
+            tags: Vec::new(),
             topology: None,
             actor: false,
             persona_distribution: None,
@@ -6408,6 +6429,7 @@ mod tests {
             ],
             constraints: vec![],
             description: None,
+            tags: Vec::new(),
             topology: None,
             actor: false,
             persona_distribution: None,
@@ -6469,6 +6491,7 @@ mod tests {
             }],
             constraints: vec![],
             description: None,
+            tags: Vec::new(),
             topology: None,
             actor: false,
             persona_distribution: None,

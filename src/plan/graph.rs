@@ -251,6 +251,7 @@ mod tests {
         Entity {
             name: name.to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(count),
             fields: vec![],
             constraints: vec![],
@@ -514,6 +515,7 @@ mod tests {
             vec![Entity {
                 name: "x".to_string(),
                 description: None,
+                tags: Vec::new(),
                 count: CountSpec::Range { min: 50, max: 150 },
                 fields: vec![],
                 constraints: vec![],
@@ -539,6 +541,7 @@ mod tests {
             vec![Entity {
                 name: "d".to_string(),
                 description: None,
+                tags: Vec::new(),
                 count: CountSpec::Distribution(DistributionSpec {
                     kind: DistributionKind::Normal,
                     params,
@@ -567,6 +570,7 @@ mod tests {
         let users = Entity {
             name: "users".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(100),
             fields: vec![Field {
                 name: "id".to_string(),
@@ -595,6 +599,7 @@ mod tests {
         let events = Entity {
             name: "events".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(1000),
             fields: vec![Field {
                 name: "user_id".to_string(),
@@ -646,6 +651,7 @@ mod tests {
         let users = Entity {
             name: "users".to_string(),
             description: None,
+            tags: Vec::new(),
             count: CountSpec::Fixed(100),
             fields: vec![Field {
                 name: "manager_id".to_string(),
