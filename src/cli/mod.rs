@@ -101,6 +101,19 @@ pub struct Cli {
     /// Load all `.wasm` plugins from a directory. Requires `wasm-plugins` feature.
     #[arg(long, global = true)]
     pub plugin_dir: Option<String>,
+
+    /// Log output format.
+    #[arg(long, global = true, value_enum)]
+    pub log_format: Option<LogFormat>,
+
+    /// Write all log events to a file (always JSON format).
+    #[arg(long, global = true)]
+    pub log_file: Option<String>,
+
+    /// Tracing filter directive (e.g. "learn=debug,gen=info").
+    /// Cannot be combined with -v/-q; overrides KNIT_LOG/RUST_LOG.
+    #[arg(long, global = true, conflicts_with_all = ["quiet", "verbose"])]
+    pub log_filter: Option<String>,
 }
 
 /// Supported output formats for generated data.
@@ -124,6 +137,15 @@ pub enum CompressionArg {
     Gzip,
     Lz4,
     Zstd,
+}
+
+/// Log output format.
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum LogFormat {
+    /// Human-readable text (default for terminals).
+    Text,
+    /// Structured JSON (default when output is piped).
+    Json,
 }
 
 /// Top-level subcommands.
