@@ -6,6 +6,14 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Holiday effect time series component** — Date-based multiplicative
+  spikes and dips in both numeric time series and event streams (spec §9.2):
+  - `type = "holiday_effect"` component with `dates` and `multiplier`
+  - Dates in `YYYY-MM-DD` format; `multiplier > 1.0` = spike, `< 1.0` = dip
+  - Pre-compiled `HashSet<NaiveDate>` for O(1) date lookup in numeric time series
+  - Supported in both `time_series` (numeric) and `event_stream` generators
+  - Validation: non-empty dates, valid YYYY-MM-DD, non-zero multiplier (positive for event streams)
+  - New example: `examples/holiday_effect.weave.toml`
 - **Timezone-aware business hours** — Full timezone, date range, and holiday
   support for business hours timestamps (spec §6.13):
   - `timezone = "America/New_York"` for fixed timezone (local→UTC conversion)

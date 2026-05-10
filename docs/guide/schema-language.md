@@ -605,13 +605,17 @@ coefficients = [0.7]
 | `mean_reversion` | `target`, `speed` | Pull toward target: `speed × (target - current)` |
 | `weekend_effect` | `multiplier` | Multiply by factor on weekends (requires `timestamp_field`) |
 | `business_hours_effect` | `start_hour`, `end_hour`, `active_multiplier` | Multiply during business hours (requires `timestamp_field`) |
+| `holiday_effect` | `dates`, `multiplier` | Multiply by factor on specific calendar dates (requires `timestamp_field`) |
 
 **Notes:**
 - Stateful components (AR, spike, level_shift, mean_reversion) maintain state
   across batches and force sequential partition execution
-- Calendar-aware components (weekend_effect, business_hours_effect) require
-  `timestamp_field` pointing to a datetime field in the same entity
-- See `examples/time_series_metrics.weave.toml` for a complete example
+- Calendar-aware components (weekend_effect, business_hours_effect, holiday_effect)
+  require `timestamp_field` pointing to a datetime field in the same entity
+- `holiday_effect` dates must be in `YYYY-MM-DD` format; multiplier > 1.0 creates
+  spikes, < 1.0 creates dips (e.g. `multiplier = 2.0` doubles the value on those dates)
+- See `examples/time_series_metrics.weave.toml` and `examples/holiday_effect.weave.toml`
+  for complete examples
 
 ### `event_stream` — Irregular Time Series (Event Streams)
 
@@ -651,6 +655,7 @@ generator = { type = "event_stream",
 | `seasonality` | `period`, `amplitude` | Sinusoidal rate variation (e.g. daily cycles) |
 | `weekend_effect` | `multiplier` | Scale rate on weekends (e.g. 0.4 = 40% of weekday rate) |
 | `business_hours` | `active_hours`, `active_multiplier` | Concentrate events during active hours |
+| `holiday_effect` | `dates`, `multiplier` | Scale rate on specific calendar dates (e.g. 3.0 = 3× rate) |
 
 **Notes:**
 
@@ -660,7 +665,10 @@ generator = { type = "event_stream",
 - Seasonality `amplitude` should be in (0, 1) to keep the rate positive
 - `business_hours` and `weekend_effect` currently evaluate in UTC; timezone-aware
   modulation is planned for a future release
-- See `examples/event_stream.weave.toml` for a complete example
+- `holiday_effect` dates must be in `YYYY-MM-DD` format; multiplier must be positive
+  for event streams (rate cannot be negative)
+- See `examples/event_stream.weave.toml` and `examples/holiday_effect.weave.toml`
+  for complete examples
 
 ### Other Generators
 
