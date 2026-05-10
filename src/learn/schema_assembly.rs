@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 
 use crate::core::{
     ActorRelationship, CountSpec, DataModel, DistributionKind, DistributionSpec, Entity, Field,
@@ -657,6 +657,22 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
 
 /// Build a [`GeneratorSpec`] for a column based on inferred properties.
 fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> GeneratorSpec {
+    let gen = build_generator_inner(col, fk);
+    debug!(
+        column = %col.name,
+        generator = gen.type_name(),
+        has_fk = fk.is_some(),
+        is_pk = col.is_primary_key,
+        has_temporal = col.temporal_pattern.is_some(),
+        has_distribution = col.distribution.is_some(),
+        has_categorical = col.categorical_weights.is_some(),
+        inferred_type = ?col.inferred_type,
+        "generator selected"
+    );
+    gen
+}
+
+fn build_generator_inner(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> GeneratorSpec {
     // FK → Lookup (only for non-string sources; string FKs use categorical)
     if let Some(rel) = fk {
         let source_is_string = matches!(
@@ -670,6 +686,12 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
             };
         }
         // String FK: fall through to categorical/string handling below
+        trace!(
+            column = %col.name,
+            target = %rel.to_table,
+            target_field = %rel.to_column,
+            "string FK: using categorical instead of lookup"
+        );
     }
 
     // PK → Sequence (or UuidGen for UUID columns)

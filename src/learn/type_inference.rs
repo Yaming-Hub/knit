@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 use regex::Regex;
-use tracing::debug;
+use tracing::{debug, trace};
 
 /// Semantic type inferred from column data.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -211,6 +211,13 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         && cardinality_ratio <= effective_threshold
         && distinct.len() <= max_distinct
     {
+        debug!(
+            distinct = distinct.len(),
+            total = non_null.len(),
+            cardinality_ratio,
+            threshold = effective_threshold,
+            "type inferred as Categorical"
+        );
         return TypeInference {
             inferred_type: InferredType::Categorical,
             confidence: 1.0 - cardinality_ratio,
@@ -219,6 +226,14 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
         };
     }
 
+    trace!(
+        distinct = distinct.len(),
+        total = non_null.len(),
+        cardinality_ratio,
+        threshold = effective_threshold,
+        has_strong_pattern,
+        "type inferred as Text (not categorical)"
+    );
     TypeInference {
         inferred_type: InferredType::Text,
         confidence: 1.0,
