@@ -52,6 +52,8 @@ pub enum Token {
     AmpAmp,
     /// `||`
     PipePipe,
+    /// `|>`
+    PipeGt,
     /// `!`
     Bang,
 
@@ -263,6 +265,7 @@ pub fn tokenize(input: &str) -> Result<Vec<SpannedToken>, LexError> {
                 ">=" => Some(Token::GtEq),
                 "&&" => Some(Token::AmpAmp),
                 "||" => Some(Token::PipePipe),
+                "|>" => Some(Token::PipeGt),
                 _ => None,
             };
             if let Some(t) = tok {
@@ -442,6 +445,39 @@ mod tests {
                 Token::FieldRef("a".into()),
                 Token::Percent,
                 Token::Int(3),
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn pipe_operator() {
+        assert_eq!(
+            tok_types("${x} |> abs()"),
+            vec![
+                Token::FieldRef("x".into()),
+                Token::PipeGt,
+                Token::Ident("abs".into()),
+                Token::LParen,
+                Token::RParen,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn pipe_vs_or() {
+        // |> and || are distinct
+        assert_eq!(
+            tok_types("${a} || ${b} |> f()"),
+            vec![
+                Token::FieldRef("a".into()),
+                Token::PipePipe,
+                Token::FieldRef("b".into()),
+                Token::PipeGt,
+                Token::Ident("f".into()),
+                Token::LParen,
+                Token::RParen,
                 Token::Eof,
             ]
         );

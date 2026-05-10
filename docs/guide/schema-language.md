@@ -578,6 +578,30 @@ expr = "row_number()"
 See the [Weave Specification](../weave-spec.md) for the full expression
 function reference.
 
+#### Pipe Operator `|>`
+
+The pipe operator chains function calls by passing the left-hand result as the
+first argument of the right-hand function:
+
+```toml
+# Without pipe:
+expr = "round(${base_price} * (1.0 + ${tax_rate}), 2)"
+
+# With pipe (equivalent):
+expr = "${base_price} * (1.0 + ${tax_rate}) |> round(2)"
+```
+
+Pipes can be chained for multi-step transformations:
+
+```toml
+# Chained: compute, round, then clamp minimum
+expr = "${base_price} * 0.9 |> round(2) |> max(10.0)"
+# Equivalent to: max(round(${base_price} * 0.9, 2), 10.0)
+```
+
+The pipe operator has the **lowest precedence**, so all arithmetic, comparison,
+and logical operators bind tighter. The right side must be a function call.
+
 ### `constant` — Fixed Values
 
 Every row gets the same value:

@@ -114,13 +114,14 @@ pub enum ExprType {
 impl BinOp {
     /// Binding power (precedence) for Pratt parsing.
     /// Returns `(left_bp, right_bp)` — left-associative when `right_bp > left_bp`.
+    /// Note: pipe operator `|>` has binding power (1, 2) and is handled separately in the parser.
     pub fn binding_power(self) -> (u8, u8) {
         match self {
-            BinOp::Or => (1, 2),
-            BinOp::And => (3, 4),
-            BinOp::Eq | BinOp::Ne | BinOp::Lt | BinOp::Gt | BinOp::Le | BinOp::Ge => (5, 6),
-            BinOp::Add | BinOp::Sub => (7, 8),
-            BinOp::Mul | BinOp::Div | BinOp::Mod => (9, 10),
+            BinOp::Or => (3, 4),
+            BinOp::And => (5, 6),
+            BinOp::Eq | BinOp::Ne | BinOp::Lt | BinOp::Gt | BinOp::Le | BinOp::Ge => (7, 8),
+            BinOp::Add | BinOp::Sub => (9, 10),
+            BinOp::Mul | BinOp::Div | BinOp::Mod => (11, 12),
         }
     }
 }

@@ -66,6 +66,30 @@ impl<'a> Parser<'a> {
         let mut lhs = self.parse_atom()?;
 
         loop {
+            // Pipe operator `|>` — lowest precedence, desugars to function call
+            if *self.peek() == Token::PipeGt {
+                let pipe_bp: u8 = 1; // left binding power (lowest)
+                if pipe_bp < min_bp {
+                    break;
+                }
+                let pipe_pos = self.peek_span_pos();
+                self.advance();
+                let rhs = self.parse_expr(pipe_bp + 1)?; // right_bp = 2, left-associative
+                match rhs {
+                    Expr::FuncCall { name, mut args } => {
+                        args.insert(0, lhs);
+                        lhs = Expr::FuncCall { name, args };
+                    }
+                    _ => {
+                        return Err(ParseError {
+                            message: "right side of `|>` must be a function call".to_string(),
+                            pos: pipe_pos,
+                        });
+                    }
+                }
+                continue;
+            }
+
             let op = match self.peek() {
                 Token::Plus => BinOp::Add,
                 Token::Minus => BinOp::Sub,
@@ -235,6 +259,13 @@ pub fn parse(input: &str) -> Result<Expr, ParseError> {
 pub fn is_legacy_template(input: &str) -> bool {
     // Must contain at least one ${...} reference
     if !input.contains("${") {
+        return false;
+    }
+    // Expressions containing |> are expression syntax, not templates.
+    // This prevents pipe expressions from silently degrading to template mode
+    // on parse failure. The trade-off is that literal "|>" in templates would
+    // be misclassified, but that is not a realistic scenario.
+    if input.contains("|>") {
         return false;
     }
     // Try to parse as expression — if parsing fails, it's a template
@@ -446,5 +477,124 @@ mod tests {
             }
             other => panic!("expected Sub(Sub(a,b),c), got {other:?}"),
         }
+    }
+
+    #[test]
+    fn pipe_simple() {
+        // ${x} |> abs() desugars to abs(${x})
+        let expr = parse("${x} |> abs()").unwrap();
+        assert_eq!(
+            expr,
+            Expr::FuncCall {
+                name: "abs".into(),
+                args: vec![Expr::FieldRef("x".into())],
+            }
+        );
+    }
+
+    #[test]
+    fn pipe_with_args() {
+        // ${x} |> round(2) desugars to round(${x}, 2)
+        let expr = parse("${x} |> round(2)").unwrap();
+        assert_eq!(
+            expr,
+            Expr::FuncCall {
+                name: "round".into(),
+                args: vec![
+                    Expr::FieldRef("x".into()),
+                    Expr::Literal(LiteralValue::Int(2)),
+                ],
+            }
+        );
+    }
+
+    #[test]
+    fn pipe_chained() {
+        // ${x} |> abs() |> round(2) desugars to round(abs(${x}), 2)
+        let expr = parse("${x} |> abs() |> round(2)").unwrap();
+        assert_eq!(
+            expr,
+            Expr::FuncCall {
+                name: "round".into(),
+                args: vec![
+                    Expr::FuncCall {
+                        name: "abs".into(),
+                        args: vec![Expr::FieldRef("x".into())],
+                    },
+                    Expr::Literal(LiteralValue::Int(2)),
+                ],
+            }
+        );
+    }
+
+    #[test]
+    fn pipe_precedence_lower_than_arithmetic() {
+        // ${x} + 1 |> round(0) desugars to round(${x} + 1, 0)
+        let expr = parse("${x} + 1 |> round(0)").unwrap();
+        match expr {
+            Expr::FuncCall { name, args } => {
+                assert_eq!(name, "round");
+                assert_eq!(args.len(), 2);
+                assert!(matches!(&args[0], Expr::BinaryOp { op: BinOp::Add, .. }));
+            }
+            other => panic!("expected FuncCall(round), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn pipe_precedence_lower_than_comparison() {
+        // ${x} > 0 |> if(1, 0) desugars to if(${x} > 0, 1, 0)
+        let expr = parse("${x} > 0 |> if(1, 0)").unwrap();
+        match expr {
+            Expr::FuncCall { name, args } => {
+                assert_eq!(name, "if");
+                assert_eq!(args.len(), 3);
+                assert!(matches!(&args[0], Expr::BinaryOp { op: BinOp::Gt, .. }));
+            }
+            other => panic!("expected FuncCall(if), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn pipe_precedence_lower_than_logical() {
+        // ${a} || ${b} |> f() desugars to f(${a} || ${b})
+        let expr = parse("${a} || ${b} |> f()").unwrap();
+        match expr {
+            Expr::FuncCall { name, args } => {
+                assert_eq!(name, "f");
+                assert_eq!(args.len(), 1);
+                assert!(matches!(&args[0], Expr::BinaryOp { op: BinOp::Or, .. }));
+            }
+            other => panic!("expected FuncCall(f), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn pipe_with_parens() {
+        // (${x} |> abs()) + 1
+        let expr = parse("(${x} |> abs()) + 1").unwrap();
+        match expr {
+            Expr::BinaryOp {
+                op: BinOp::Add,
+                left,
+                ..
+            } => {
+                assert!(matches!(*left, Expr::FuncCall { ref name, .. } if name == "abs"));
+            }
+            other => panic!("expected Add, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn pipe_error_right_not_function() {
+        assert!(parse("${x} |> 42").is_err());
+        assert!(parse("${x} |> ${y}").is_err());
+    }
+
+    #[test]
+    fn pipe_not_legacy_template() {
+        // Expressions with |> should never be treated as legacy templates
+        assert!(!is_legacy_template("${x} |> abs()"));
+        assert!(!is_legacy_template("${x} |> round(2) |> abs()"));
     }
 }
