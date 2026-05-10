@@ -637,8 +637,16 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
     generator_type
 }
 
-/// Detect the element type for a List column by inspecting OneOf choices.
+/// Detect the element type for a List column by inspecting OneOf choices or distribution kind.
 fn detect_list_element_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
+    // Vector-valued distributions have known element types
+    if let crate::plan::GeneratorPlan::Distribution { kind, .. } = &fp.generator_plan {
+        return match kind {
+            crate::core::DistributionKind::Dirichlet => ArrowDataType::Float64,
+            crate::core::DistributionKind::Multinomial => ArrowDataType::Int64,
+            _ => ArrowDataType::Utf8,
+        };
+    }
     if let crate::plan::GeneratorPlan::OneOf { choices, .. } = &fp.generator_plan {
         // Try parsing first non-empty choice as JSON array to detect element type
         for choice in choices {

@@ -542,6 +542,7 @@ mod tests {
                 count: CountSpec::Distribution(DistributionSpec {
                     kind: DistributionKind::Normal,
                     params,
+                    array_params: BTreeMap::new(),
                     round: false,
                 }),
                 fields: vec![],

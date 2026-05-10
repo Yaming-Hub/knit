@@ -1,9 +1,9 @@
-//! Distribution-based generator supporting 17 statistical distributions.
+//! Distribution-based generator supporting 19 statistical distributions.
 //!
 //! Covers continuous (Uniform, Normal, LogNormal, Exponential, etc.), discrete
-//! (Poisson, Bernoulli, Binomial, Geometric, Zipf), and shape-parameterised
-//! (Pareto, Weibull, Gamma, Beta, Cauchy, ChiSquared, StudentT, Triangular)
-//! families.
+//! (Poisson, Bernoulli, Binomial, Geometric, Zipf), shape-parameterised
+//! (Pareto, Weibull, Gamma, Beta, Cauchy, ChiSquared, StudentT, Triangular),
+//! and vector-valued (Dirichlet, Multinomial) families.
 //!
 //! Invalid user-supplied parameters (negative std_dev, zero lambda) are handled
 //! gracefully — the generator logs a warning via `tracing` and falls back to
@@ -12,8 +12,9 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, Float64Array, Int64Array};
-use arrow::datatypes::DataType;
+use arrow::array::{ArrayRef, Float64Array, Int64Array, ListArray};
+use arrow::buffer::OffsetBuffer;
+use arrow::datatypes::{DataType, Field};
 use rand::RngCore;
 use rand_distr::Distribution;
 
@@ -53,6 +54,7 @@ use crate::gen::traits::FieldGenerator;
 pub struct DistributionGenerator {
     kind: DistributionKind,
     params: BTreeMap<String, f64>,
+    array_params: BTreeMap<String, Vec<f64>>,
     clamp_min: Option<f64>,
     clamp_max: Option<f64>,
     round: bool,
@@ -63,6 +65,7 @@ impl DistributionGenerator {
     pub fn new(
         kind: DistributionKind,
         params: BTreeMap<String, f64>,
+        array_params: BTreeMap<String, Vec<f64>>,
         clamp_min: Option<f64>,
         clamp_max: Option<f64>,
         round: bool,
@@ -70,6 +73,7 @@ impl DistributionGenerator {
         Self {
             kind,
             params,
+            array_params,
             clamp_min,
             clamp_max,
             round,
@@ -336,20 +340,105 @@ impl FieldGenerator for DistributionGenerator {
                     .collect();
                 Arc::new(Int64Array::from(values))
             }
+            DistributionKind::Dirichlet => {
+                let alpha = self
+                    .array_params
+                    .get("alpha")
+                    .cloned()
+                    .unwrap_or_else(|| vec![1.0, 1.0]);
+                let k = alpha.len();
+                let dist = rand_distr::Dirichlet::new(&alpha).unwrap_or_else(|_| {
+                    tracing::warn!(
+                        ?alpha,
+                        "invalid Dirichlet alpha, falling back to symmetric(1.0, k={})",
+                        k
+                    );
+                    rand_distr::Dirichlet::new(&vec![1.0; k.max(2)]).unwrap()
+                });
+                // Sample k floats per row, flatten into a single values array.
+                let mut flat_values = Vec::with_capacity(count * k);
+                for _ in 0..count {
+                    let sample: Vec<f64> = dist.sample(rng);
+                    flat_values.extend_from_slice(&sample);
+                }
+                let values_array = Arc::new(Float64Array::from(flat_values));
+                let offsets: Vec<i32> = (0..=count).map(|i| (i * k) as i32).collect();
+                let field = Arc::new(Field::new("item", DataType::Float64, false));
+                Arc::new(ListArray::new(
+                    field,
+                    OffsetBuffer::new(offsets.into()),
+                    values_array,
+                    None,
+                ))
+            }
+            DistributionKind::Multinomial => {
+                let p = self
+                    .array_params
+                    .get("p")
+                    .cloned()
+                    .unwrap_or_else(|| vec![0.5, 0.5]);
+                let n = self.param("n", 10.0).max(0.0) as i64;
+                let k = p.len();
+                // Sequential-binomial method: O(k) per row.
+                let mut flat_values = Vec::with_capacity(count * k);
+                for _ in 0..count {
+                    let mut remaining = n;
+                    let mut p_remaining = 1.0;
+                    for j in 0..k {
+                        if j == k - 1 {
+                            // Last bucket gets the remainder.
+                            flat_values.push(remaining);
+                        } else if p_remaining <= 0.0 || remaining <= 0 {
+                            flat_values.push(0);
+                        } else {
+                            let p_cond = (p[j] / p_remaining).clamp(0.0, 1.0);
+                            let binom = rand_distr::Binomial::new(remaining as u64, p_cond)
+                                .unwrap_or_else(|_| {
+                                    rand_distr::Binomial::new(remaining as u64, 0.5).unwrap()
+                                });
+                            let x = binom.sample(rng) as i64;
+                            flat_values.push(x);
+                            remaining -= x;
+                            p_remaining -= p[j];
+                        }
+                    }
+                }
+                let values_array = Arc::new(Int64Array::from(flat_values));
+                let offsets: Vec<i32> = (0..=count).map(|i| (i * k) as i32).collect();
+                let field = Arc::new(Field::new("item", DataType::Int64, false));
+                Arc::new(ListArray::new(
+                    field,
+                    OffsetBuffer::new(offsets.into()),
+                    values_array,
+                    None,
+                ))
+            }
         }
     }
 
     fn output_type(&self) -> DataType {
-        if self.round {
-            return DataType::Int64;
-        }
         match self.kind {
-            DistributionKind::Poisson
-            | DistributionKind::Bernoulli
-            | DistributionKind::Binomial
-            | DistributionKind::Geometric
-            | DistributionKind::Zipf => DataType::Int64,
-            _ => DataType::Float64,
+            DistributionKind::Dirichlet => {
+                let field = Arc::new(Field::new("item", DataType::Float64, false));
+                DataType::List(field)
+            }
+            DistributionKind::Multinomial => {
+                let field = Arc::new(Field::new("item", DataType::Int64, false));
+                DataType::List(field)
+            }
+            _ => {
+                if self.round {
+                    return DataType::Int64;
+                }
+                match self.kind {
+                    DistributionKind::Poisson
+                    | DistributionKind::Bernoulli
+                    | DistributionKind::Binomial
+                    | DistributionKind::Geometric
+                    | DistributionKind::Zipf => DataType::Int64,
+                    _ => DataType::Float64,
+                }
+            }
         }
     }
 }
@@ -369,7 +458,7 @@ mod tests {
 
     fn gen_f64(kind: DistributionKind, params: &[(&str, f64)], count: usize) -> Vec<f64> {
         let p: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.to_string(), *v)).collect();
-        let g = DistributionGenerator::new(kind, p, None, None, false);
+        let g = DistributionGenerator::new(kind, p, BTreeMap::new(), None, None, false);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -379,7 +468,7 @@ mod tests {
 
     fn gen_i64(kind: DistributionKind, params: &[(&str, f64)], count: usize) -> Vec<i64> {
         let p: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.to_string(), *v)).collect();
-        let g = DistributionGenerator::new(kind, p, None, None, false);
+        let g = DistributionGenerator::new(kind, p, BTreeMap::new(), None, None, false);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -395,7 +484,7 @@ mod tests {
         count: usize,
     ) -> Vec<f64> {
         let p: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.to_string(), *v)).collect();
-        let g = DistributionGenerator::new(kind, p, clamp_min, clamp_max, false);
+        let g = DistributionGenerator::new(kind, p, BTreeMap::new(), clamp_min, clamp_max, false);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let arr = g.generate(&mut rng, count, &ctx);
@@ -653,7 +742,7 @@ mod tests {
             DistributionKind::Triangular,
         ];
         for kind in &continuous {
-            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None, false);
+            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), BTreeMap::new(), None, None, false);
             assert_eq!(
                 g.output_type(),
                 DataType::Float64,
@@ -672,7 +761,7 @@ mod tests {
             DistributionKind::Zipf,
         ];
         for kind in &discrete {
-            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), None, None, false);
+            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), BTreeMap::new(), None, None, false);
             assert_eq!(
                 g.output_type(),
                 DataType::Int64,
@@ -805,6 +894,141 @@ mod tests {
         assert_eq!(vals.len(), 100);
         for v in &vals {
             assert!(*v > 0.0, "lognormal should be positive: {v}");
+        }
+    }
+
+    // ─── Dirichlet tests ────────────────────────────────────────────
+
+    #[test]
+    fn dirichlet_output_is_list_summing_to_one() {
+        let mut array_params = BTreeMap::new();
+        array_params.insert("alpha".to_string(), vec![2.0, 3.0, 5.0]);
+        let g = DistributionGenerator::new(
+            DistributionKind::Dirichlet,
+            BTreeMap::new(),
+            array_params,
+            None,
+            None,
+            false,
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = g.generate(&mut rng, 100, &ctx);
+        let list = arr.as_any().downcast_ref::<ListArray>().unwrap();
+        assert_eq!(list.len(), 100);
+        for i in 0..list.len() {
+            let inner = list.value(i);
+            let floats = inner.as_any().downcast_ref::<Float64Array>().unwrap();
+            assert_eq!(floats.len(), 3);
+            let sum: f64 = (0..3).map(|j| floats.value(j)).sum();
+            assert!(
+                (sum - 1.0).abs() < 1e-9,
+                "row {i}: Dirichlet sample should sum to 1.0, got {sum}"
+            );
+            for j in 0..3 {
+                assert!(
+                    floats.value(j) > 0.0,
+                    "row {i}: all elements must be > 0"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn dirichlet_output_type_is_list() {
+        let mut array_params = BTreeMap::new();
+        array_params.insert("alpha".to_string(), vec![1.0, 1.0]);
+        let g = DistributionGenerator::new(
+            DistributionKind::Dirichlet,
+            BTreeMap::new(),
+            array_params,
+            None,
+            None,
+            false,
+        );
+        assert!(matches!(g.output_type(), DataType::List(_)));
+    }
+
+    // ─── Multinomial tests ──────────────────────────────────────────
+
+    #[test]
+    fn multinomial_counts_sum_to_n() {
+        let mut params = BTreeMap::new();
+        params.insert("n".to_string(), 50.0);
+        let mut array_params = BTreeMap::new();
+        array_params.insert("p".to_string(), vec![0.2, 0.3, 0.5]);
+        let g = DistributionGenerator::new(
+            DistributionKind::Multinomial,
+            params,
+            array_params,
+            None,
+            None,
+            false,
+        );
+        let ctx = make_ctx();
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let arr = g.generate(&mut rng, 100, &ctx);
+        let list = arr.as_any().downcast_ref::<ListArray>().unwrap();
+        assert_eq!(list.len(), 100);
+        for i in 0..list.len() {
+            let inner = list.value(i);
+            let ints = inner.as_any().downcast_ref::<Int64Array>().unwrap();
+            assert_eq!(ints.len(), 3);
+            let sum: i64 = (0..3).map(|j| ints.value(j)).sum();
+            assert_eq!(sum, 50, "row {i}: multinomial counts must sum to n=50, got {sum}");
+            for j in 0..3 {
+                assert!(
+                    ints.value(j) >= 0,
+                    "row {i}: counts must be non-negative"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn multinomial_output_type_is_list() {
+        let mut params = BTreeMap::new();
+        params.insert("n".to_string(), 10.0);
+        let mut array_params = BTreeMap::new();
+        array_params.insert("p".to_string(), vec![0.5, 0.5]);
+        let g = DistributionGenerator::new(
+            DistributionKind::Multinomial,
+            params,
+            array_params,
+            None,
+            None,
+            false,
+        );
+        assert!(matches!(g.output_type(), DataType::List(_)));
+    }
+
+    #[test]
+    fn dirichlet_deterministic_with_seed() {
+        let mut array_params = BTreeMap::new();
+        array_params.insert("alpha".to_string(), vec![1.0, 1.0, 1.0]);
+        let g = DistributionGenerator::new(
+            DistributionKind::Dirichlet,
+            BTreeMap::new(),
+            array_params,
+            None,
+            None,
+            false,
+        );
+        let ctx = make_ctx();
+        let mut rng1 = ChaCha8Rng::seed_from_u64(99);
+        let mut rng2 = ChaCha8Rng::seed_from_u64(99);
+        let a = g.generate(&mut rng1, 10, &ctx);
+        let b = g.generate(&mut rng2, 10, &ctx);
+        let la = a.as_any().downcast_ref::<ListArray>().unwrap();
+        let lb = b.as_any().downcast_ref::<ListArray>().unwrap();
+        for i in 0..10 {
+            let va = la.value(i);
+            let vb = lb.value(i);
+            let fa = va.as_any().downcast_ref::<Float64Array>().unwrap();
+            let fb = vb.as_any().downcast_ref::<Float64Array>().unwrap();
+            for j in 0..3 {
+                assert_eq!(fa.value(j), fb.value(j), "determinism check row {i} col {j}");
+            }
         }
     }
 }

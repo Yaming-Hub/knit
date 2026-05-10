@@ -68,12 +68,14 @@ pub fn create_generator_with_seen(
         GeneratorPlan::Distribution {
             kind,
             params,
+            array_params,
             clamp_min,
             clamp_max,
             round,
         } => Box::new(distribution::DistributionGenerator::new(
             kind.clone(),
             params.clone(),
+            array_params.clone(),
             *clamp_min,
             *clamp_max,
             *round,

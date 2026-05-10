@@ -213,6 +213,9 @@ pub enum GeneratorPlan {
         kind: DistributionKind,
         /// Resolved numeric parameters for the distribution.
         params: BTreeMap<String, f64>,
+        /// Array parameters for vector-valued distributions (Dirichlet alpha, Multinomial p).
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        array_params: BTreeMap<String, Vec<f64>>,
         /// Optional lower bound (values below are clamped).
         clamp_min: Option<f64>,
         /// Optional upper bound (values above are clamped).

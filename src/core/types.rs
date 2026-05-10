@@ -876,6 +876,9 @@ pub struct DistributionSpec {
     /// Named numeric parameters (distribution-specific).
     #[serde(default)]
     pub params: BTreeMap<String, f64>,
+    /// Named array parameters for vector-valued distributions (e.g. Dirichlet alpha, Multinomial p).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub array_params: BTreeMap<String, Vec<f64>>,
     /// When true, round sampled values to the nearest integer.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub round: bool,
@@ -919,6 +922,12 @@ pub enum DistributionKind {
     Triangular,
     /// Zipf (power-law) with exponent `s` and `n` elements.
     Zipf,
+    /// Dirichlet: samples probability simplex from `alpha` (array).
+    /// Output is a list of floats summing to 1.0.
+    Dirichlet,
+    /// Multinomial: `n` trials distributed across categories with probabilities `p` (array).
+    /// Output is a list of integer counts summing to `n`.
+    Multinomial,
 }
 
 impl std::fmt::Display for DistributionKind {
@@ -941,6 +950,8 @@ impl std::fmt::Display for DistributionKind {
             DistributionKind::StudentT => write!(f, "student_t"),
             DistributionKind::Triangular => write!(f, "triangular"),
             DistributionKind::Zipf => write!(f, "zipf"),
+            DistributionKind::Dirichlet => write!(f, "dirichlet"),
+            DistributionKind::Multinomial => write!(f, "multinomial"),
         }
     }
 }

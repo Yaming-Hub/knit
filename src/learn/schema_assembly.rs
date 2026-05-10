@@ -832,6 +832,7 @@ fn build_distribution_generator(dist: &Distribution, round: bool) -> GeneratorSp
         spec: DistributionSpec {
             kind,
             params,
+            array_params: BTreeMap::new(),
             round,
         },
     }
