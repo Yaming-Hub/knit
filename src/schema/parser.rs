@@ -42,6 +42,8 @@ struct RawSchema {
     types: Vec<crate::core::CustomType>,
     #[serde(default)]
     mixins: Vec<crate::core::Mixin>,
+    #[serde(default)]
+    companion_files: Vec<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -73,6 +75,7 @@ impl RawSchema {
             actor_relationships: self.actor_relationships,
             custom_types: self.types,
             mixins: self.mixins,
+            companion_files: self.companion_files,
         };
         Ok(model)
     }

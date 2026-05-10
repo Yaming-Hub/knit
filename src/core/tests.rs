@@ -450,6 +450,7 @@ fn minimal_data_model_roundtrip() {
             persona_distribution: None,
             activity_count: None,
                 mixin_refs: None,
+        output: None,
         }],
         relationships: vec![],
         noise_profiles: vec![],
@@ -460,6 +461,7 @@ fn minimal_data_model_roundtrip() {
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
             mixins: Vec::new(),
+    companion_files: Vec::new(),
     };
 
     let json = serde_json::to_string_pretty(&model).unwrap();
@@ -533,6 +535,7 @@ fn entity_tags_skip_serializing_when_empty() {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
+        output: None,
         }],
         relationships: vec![],
         noise_profiles: vec![],
@@ -543,6 +546,7 @@ fn entity_tags_skip_serializing_when_empty() {
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
         mixins: Vec::new(),
+    companion_files: Vec::new(),
     };
     let json = serde_json::to_string(&model).unwrap();
     assert!(!json.contains("\"tags\""));
