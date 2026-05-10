@@ -144,7 +144,13 @@ pub fn compute_profiles(batches: &[RecordBatch]) -> LearnResult<Vec<ColumnProfil
 /// Profile a single column array.
 fn profile_column(name: &str, data_type: &DataType, array: &dyn Array) -> ColumnProfile {
     let count = array.len() as u64;
-    let null_count = array.null_count() as u64;
+    // Arrow's NullArray may report null_count as 0 (no bitmap), so treat
+    // DataType::Null as all-null explicitly.
+    let null_count = if *data_type == DataType::Null {
+        count
+    } else {
+        array.null_count() as u64
+    };
     let null_rate = if count > 0 {
         null_count as f64 / count as f64
     } else {
