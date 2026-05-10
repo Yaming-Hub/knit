@@ -4,9 +4,9 @@ use clap::{CommandFactory, Parser};
 use colored::Colorize;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, plan, scale, schema, tokenize, validate};
+use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, schema, tokenize, validate};
 use knit::cli::config::resolve_config;
-use knit::cli::{Cli, Command, LogFormat, SchemaAction};
+use knit::cli::{Cli, Command, LogFormat, ModelAction, SchemaAction};
 
 /// Guard that must be held for the lifetime of the program to flush async writers.
 struct _TracingGuard {
@@ -239,6 +239,10 @@ fn main() -> anyhow::Result<()> {
             *dry_run,
             &cli,
         ),
+        Command::Model { action } => match action {
+            ModelAction::Convert { input, output } => model::run_convert(input, output),
+            ModelAction::Info { input } => model::run_info(input),
+        },
     }
     .inspect_err(|e| {
         if let Some(hint) = knit::cli::suggestions::suggest_fix(&e.to_string()) {

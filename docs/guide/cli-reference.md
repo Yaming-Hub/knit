@@ -396,6 +396,140 @@ knit completions powershell >> $PROFILE
 
 ---
 
+## `knit model` Subcommands
+
+Manage and inspect structured model directories.
+
+### `knit model convert`
+
+Convert between flat schema files and structured model directories.
+
+```bash
+knit model convert <input> <output>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<input>` | Path to source (flat `.toml` file or structured directory) |
+| `<output>` | Path to write converted output |
+
+The direction is auto-detected: if `<input>` is a directory containing `knit.toml`, it converts structured → flat; otherwise flat → structured.
+
+#### Examples
+
+```bash
+# Convert flat schema to structured directory
+knit model convert schema.weave.toml my_model/
+
+# Convert structured directory back to flat file
+knit model convert my_model/ schema_flat.toml
+```
+
+### `knit model info`
+
+Display a summary of a model's contents regardless of format.
+
+```bash
+knit model info <input>
+```
+
+#### Examples
+
+```bash
+knit model info my_model/
+knit model info schema.weave.toml
+```
+
+Output includes: model name, seed, locale, entity count with field/row summaries, relationship and correlation counts.
+
+---
+
+## `knit enrich`
+
+Enrich an existing model with statistics and distributions extracted from reference data.
+
+```bash
+knit enrich <schema> --reference <data-path> [--output <path>]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `<schema>` | path | — | Base schema to enrich |
+| `--reference <path>` | path | — | Reference data file or directory |
+| `--output <path>` | path | stdout | Where to write enriched schema |
+| `--sample <N>` | int | all rows | Limit reference data rows for faster profiling |
+
+The enrich command maps reference columns to schema fields by name similarity and type compatibility, then merges extracted distributions into the model using Bayesian update rules.
+
+#### Examples
+
+```bash
+# Enrich schema with real-world sample data
+knit enrich schema.weave.toml --reference samples/ --output enriched.toml
+
+# Enrich with row limit for large datasets
+knit enrich schema.weave.toml --reference big_data.parquet --sample 10000
+```
+
+---
+
+## `knit scale`
+
+Analyze and adjust row counts for scaling a dataset up or down.
+
+```bash
+knit scale <schema> <factor> [--output <path>]
+```
+
+| Argument/Option | Type | Default | Description |
+|-----------------|------|---------|-------------|
+| `<schema>` | path | — | Schema file or structured model directory |
+| `<factor>` | string | — | Scale factor: `2x`, `0.5x`, `1000` (absolute), or `+500` (delta) |
+| `--output <path>` | path | stdout | Where to write scaled schema |
+| `--dimension <dim>` | string | — | Scale along a specific dimension (e.g., `location`, `time`) |
+| `--dry-run` | bool | `false` | Show plan without writing |
+
+#### Examples
+
+```bash
+# Double all entity counts
+knit scale schema.weave.toml 2x --output scaled.toml
+
+# Scale to absolute count
+knit scale schema.weave.toml 10000 --output big.toml
+```
+
+---
+
+## `knit tokenize`
+
+Replace string content with tokens for privacy-safe troubleshooting.
+
+```bash
+knit tokenize <input-dir> --output <output-dir> [--dictionary <path>]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `<input-dir>` | path | — | Directory containing dataset files |
+| `--output <dir>` | path | — | Where to write tokenized dataset |
+| `--dictionary <path>` | path | `<output>/dictionary.json` | Token dictionary output path |
+| `--restore` | bool | `false` | Restore tokenized data using dictionary |
+
+The tokenize command scans all string values, builds a reversible token mapping, and replaces content while preserving dataset structure and relationships. Schema files, dictionary files, and other non-content files are handled appropriately.
+
+#### Examples
+
+```bash
+# Tokenize a dataset for sharing
+knit tokenize my_dataset/ --output tokenized/
+
+# Restore from tokenized data (requires dictionary)
+knit tokenize tokenized/ --output restored/ --restore --dictionary tokenized/dictionary.json
+```
+
+---
+
 ## Common Recipes
 
 ### Generate Multiple Formats
