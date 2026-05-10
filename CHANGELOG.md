@@ -4,6 +4,25 @@ All notable changes to Knit are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **WASM plugin architecture** — Load custom generator plugins from `.wasm`
+  modules at runtime without recompilation (requires `wasm-plugins` feature):
+  - CLI flags: `--plugin path/to/gen.wasm` (repeatable) and `--plugin-dir ./plugins/`
+  - ABI v1 contract: `knit_abi_version`, `knit_name`, `knit_output_type`,
+    `knit_create`, `knit_generate`, `knit_destroy`, `knit_alloc`, `knit_free`
+  - Supports Int64, Float64, Utf8, and Boolean output types
+  - JSON array data exchange between host and guest
+  - Seed-based deterministic RNG (host passes per-call seed to guest)
+  - Graceful fallback: WASM traps produce null arrays + error log
+  - Duplicate plugin name detection for file-loaded plugins
+  - Example plugin: `examples/wasm_plugin/` (random float generator)
+  - Feature-gated: `cargo install knit --features wasm-plugins`
+
+### Fixed
+
+- Removed unused `Utc` import in compiler.rs
+
 ## [0.4.0] — 2026-05-10
 
 ### Added

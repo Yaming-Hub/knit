@@ -93,6 +93,14 @@ pub struct Cli {
     /// Wrap SQL output in BEGIN/COMMIT transaction.
     #[arg(long, global = true)]
     pub sql_transaction: bool,
+
+    /// Load a WASM generator plugin (repeatable). Requires `wasm-plugins` feature.
+    #[arg(long = "plugin", global = true)]
+    pub plugins: Vec<String>,
+
+    /// Load all `.wasm` plugins from a directory. Requires `wasm-plugins` feature.
+    #[arg(long, global = true)]
+    pub plugin_dir: Option<String>,
 }
 
 /// Supported output formats for generated data.

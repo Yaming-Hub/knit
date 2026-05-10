@@ -68,7 +68,8 @@ cargo build --release
 - **Foreign-key integrity** — Automatic topological ordering and key stores
   ensure referential integrity across entities.
 - **Plugin architecture** — Register custom generators at runtime via the
-  `GeneratorPlugin` trait.
+  `GeneratorPlugin` trait, or load WASM modules dynamically with
+  `--plugin path/to/gen.wasm` (requires `wasm-plugins` feature).
 - **Scalable** — Batch-oriented Arrow columnar engine with Rayon parallelism;
   sampled key stores for 100M+ row entities.
 

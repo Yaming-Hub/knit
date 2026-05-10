@@ -1796,7 +1796,7 @@ fn resolve_step_to_i64(v: &crate::core::IntOrString) -> i64 {
 /// - `"2024-01-01T00:00:00Z"` — explicit UTC
 /// - `"2024-01-01T00:00:00+05:00"` — offset-aware datetime
 fn parse_datetime_to_epoch_ms(s: &str) -> i64 {
-    use chrono::{NaiveDate, NaiveDateTime, DateTime, Utc};
+    use chrono::{NaiveDate, NaiveDateTime, DateTime};
 
     let s = s.trim();
 

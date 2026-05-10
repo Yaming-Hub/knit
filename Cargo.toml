@@ -73,6 +73,13 @@ dirs = "5"
 tempfile = "3"
 indoc = "2"
 
+# WASM plugin support (optional)
+wasmtime = { version = "21", optional = true }
+
+[features]
+default = []
+wasm-plugins = ["dep:wasmtime"]
+
 [dev-dependencies]
 assert_cmd = "2.2"
 predicates = "3.1"
