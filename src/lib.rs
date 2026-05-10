@@ -13,6 +13,7 @@ pub mod core;
 pub mod enrich;
 pub mod gen;
 pub mod learn;
+pub mod model;
 pub mod noise;
 pub mod plan;
 pub mod scale;

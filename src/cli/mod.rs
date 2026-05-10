@@ -334,6 +334,11 @@ pub enum Command {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Model directory operations (convert, info).
+    Model {
+        #[command(subcommand)]
+        action: ModelAction,
+    },
 }
 
 /// Schema subcommands.
@@ -363,5 +368,23 @@ pub enum SchemaAction {
         /// Output file path (prints to stdout if omitted).
         #[arg(short, long)]
         output: Option<String>,
+    },
+}
+
+/// Model directory subcommands.
+#[derive(Subcommand, Debug)]
+pub enum ModelAction {
+    /// Convert between flat schema and structured model directory.
+    Convert {
+        /// Input path (flat .toml file or structured directory).
+        input: String,
+        /// Output path (directory for structured, .toml file for flat).
+        #[arg(short, long)]
+        output: String,
+    },
+    /// Show summary information about a model.
+    Info {
+        /// Model path (flat file or structured directory).
+        input: String,
     },
 }
