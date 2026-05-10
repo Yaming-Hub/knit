@@ -84,6 +84,7 @@ pub struct CyclicValuesGenerator {
 }
 
 impl CyclicValuesGenerator {
+    /// Creates a new `CyclicValuesGenerator` from the given string values.
     pub fn new(values: Vec<String>) -> Self {
         Self { values }
     }

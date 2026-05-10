@@ -30,18 +30,32 @@ cargo build --release
 ## Features
 
 - **Declarative schema language** — Define entities, fields, generators, and
-  relationships in `.weave.toml` files with inheritance via `extends` and
-  modular composition via `include`.
-- **Rich generator library** — Sequences, distributions (normal, uniform,
-  Pareto, Zipf, …), patterns, UUIDs, one-of, derived expressions, temporal
-  generators, correlated fields, and graph topologies.
+  relationships in `.weave.toml` files with inheritance via `extends`,
+  modular composition via `include`, reusable field groups via `mixins`,
+  and custom domain types.
+- **Rich generator library** — Sequences (with jitter and cyclic values),
+  distributions (normal, uniform, Pareto, Zipf, Dirichlet, multinomial, …),
+  patterns, UUIDs, one-of, derived expressions (63+ built-in functions with
+  pipe `|>` operator), temporal generators (event streams, relative offsets),
+  conditional distributions, correlated fields (copulas), and graph topologies.
+- **Expression engine** — Full arithmetic, comparison, boolean, math, string,
+  and type-cast functions in derived field expressions with Pratt-parser
+  evaluation and vectorized Arrow execution.
 - **Deterministic output** — Seeded RNG tree ensures identical datasets across
   runs for any given seed.
-- **Multiple output formats** — Parquet, CSV, JSON, JSONL, Arrow IPC, Avro, and SQL with
-  configurable compression (Snappy, LZ4, Zstd).
-- **Noise injection** — Post-generation perturbation pipeline with 7 built-in
-  perturbators (typos, null injection, outliers, drift, swap, truncation, format
-  variation).
+- **Multiple output formats** — Parquet, CSV, JSON, JSONL, Arrow IPC, Avro,
+  and SQL INSERT with configurable compression (Snappy, LZ4, Zstd).
+- **Noise injection** — Post-generation perturbation pipeline with 11 built-in
+  perturbators (null injection, Gaussian noise, typos, outliers, duplicates,
+  value drift, format corruption, swap, truncation, FK violation, temporal
+  spikes) plus scoped/conditional noise with `where` predicates and
+  `missing_field` at the serialization layer.
+- **Time series** — Composable numeric time series (trend, seasonality, AR,
+  mean-reversion, regime-switching, holiday effects) and irregular event
+  streams with exponential arrivals, seasonality, and business-hour filtering.
+- **Graph modeling** — 7 topology models (ER, Barabási–Albert, Watts–Strogatz,
+  lattice, stochastic block, configuration, complete) with edge properties,
+  degree distributions, self-referential hierarchies, and selection strategies.
 - **Reverse engineering** — Ingest existing data, profile distributions, and fit
   schemas automatically (`knit learn`).
 - **Behavioral modeling** — Define actor personas with trait distributions,
@@ -188,14 +202,14 @@ Knit is published as a single crate. Internally it is organized into modules:
 | `knit::schema` | TOML/JSON parsing, validation, schema inheritance (`extends`) |
 | `knit::plan` | Compiles a `DataModel` into an `ExecutionPlan` with RNG tree |
 | `knit::gen` | Generation engine: executes plans → Arrow `RecordBatch`es |
-| `knit::noise` | Post-generation perturbation pipeline (7 perturbators) |
+| `knit::noise` | Post-generation perturbation pipeline (11 perturbators) |
 | `knit::bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC, Avro, SQL |
 | `knit::learn` | Data ingestion, profiling, distribution fitting, schema inference, behavioral persona discovery |
 | `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `schema`, `init`, `learn`, `inspect`, `completions`, `generators` |
 
 ## Examples
 
-The `examples/` directory contains sample schemas:
+The `examples/` directory contains 25+ sample schemas. Highlights:
 
 - `ecommerce.weave.toml` — Users, products, orders, reviews with FK relationships
 - `ecommerce_behavioral.weave.toml` — Persona-driven purchasing: 4 customer
@@ -208,6 +222,26 @@ The `examples/` directory contains sample schemas:
 - `server_logs.weave.toml` — Servers, HTTP requests, and error logs
 - `social_platform.weave.toml` — Social network with actor graphs, persona-driven
   temporal patterns, burst sessions, and posts/comments/DMs
+- `time_series_metrics.weave.toml` — Composable numeric time series with trend,
+  seasonality, AR, mean-reversion, and holiday effects
+- `event_stream.weave.toml` — Irregular time series with exponential arrivals
+- `conditional_distribution.weave.toml` — Distribution-dependent field correlations
+- `vector_distributions.weave.toml` — Dirichlet and multinomial distributions
+- `relative_offset.weave.toml` — Distribution, constant, and simple offset modes
+- `scoped_noise.weave.toml` — Conditional noise injection with scope predicates
+- `pipe_operator.weave.toml` — Expression function composition with `|>`
+- `mixins.weave.toml` — Reusable field groups across entities
+- `custom_types.weave.toml` — Domain type aliases
+- `sequence_jitter.weave.toml` — Temporal randomization with jitter offsets
+- `sequence_values.weave.toml` — Round-robin cyclic value sequences
+- `timezone_business_hours.weave.toml` — Timezone-aware event generation
+- `selection_strategies.weave.toml` — FK selection strategies (sequential, clustered)
+- `edge_properties.weave.toml` — Relationship properties on graph edges
+- `hierarchy.weave.toml` — Self-referential hierarchies with depth control
+- `holiday_effect.weave.toml` — Date-based time series spikes/dips
+- `count_expressions.weave.toml` — Parameterized entity counts
+- `degree_distribution.weave.toml` — Power-law cardinality patterns
+- `nested_objects.weave.toml` — Hierarchical struct fields
 - `modular/` — Modular composition example: `users.weave.toml` and
   `products.weave.toml` fragments composed via `include` in `ecommerce.weave.toml`
 - `cli_test.weave.toml` — Minimal schema for integration testing

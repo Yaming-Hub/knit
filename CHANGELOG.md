@@ -4,6 +4,8 @@ All notable changes to Knit are documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-10
+
 ### Added
 
 - **Relative generator enhancement** — Structured offset distributions for relative

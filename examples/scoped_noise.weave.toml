@@ -1,4 +1,4 @@
-weave_version = "0.1"
+schema_version = "1.0"
 
 [model]
 name = "scoped_noise_demo"

@@ -2,9 +2,9 @@
 //!
 //! [`FkViolateInjector`] replaces values in targeted columns with values that
 //! are guaranteed to be absent from the referenced domain, breaking referential
-//! integrity. Because the noise pipeline operates on Arrow [`RecordBatch`]es
+//! integrity. Because the noise pipeline operates on Arrow `RecordBatch`es
 //! without FK metadata, this injector should be configured with
-//! [`ColumnFilter::ByName`](crate::noise::ColumnFilter::ByName) to target
+//! [`ColumnFilter::ByName`] to target
 //! specific FK columns.
 
 use arrow::array::*;
