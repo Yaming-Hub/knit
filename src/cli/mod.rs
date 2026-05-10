@@ -311,6 +311,29 @@ pub enum Command {
         #[arg(long)]
         preserve_partitions: bool,
     },
+    /// Enrich a model with statistical knowledge from reference samples.
+    Enrich {
+        /// Path to the base schema file to enrich.
+        schema: String,
+        /// Path to reference data file (CSV, Parquet, JSON).
+        #[arg(long = "ref")]
+        reference: String,
+        /// Output schema path (default: overwrite input).
+        #[arg(short, long)]
+        output: Option<String>,
+        /// Only enrich this entity (default: auto-detect from filename).
+        #[arg(long)]
+        entity: Option<String>,
+        /// Minimum confidence for column mapping (0.0–1.0).
+        #[arg(long, default_value = "0.7")]
+        min_confidence: f64,
+        /// Maximum rows to read from reference.
+        #[arg(long)]
+        max_rows: Option<usize>,
+        /// Show mapping plan without modifying the model.
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 /// Schema subcommands.
