@@ -20,6 +20,7 @@
 - [11. Migration & Compatibility](#11-migration--compatibility)
 - [12. How Other Features Benefit](#12-how-other-features-benefit)
 - [13. Implementation Plan](#13-implementation-plan)
+- [14. Implementation Status](#14-implementation-status)
 
 ---
 
@@ -758,6 +759,33 @@ knit model flatten my_model/ -o schema.weave.toml
 - Extend `knit learn` to populate `[columns.stats]` sections
 - Auto-detect traits (`semantic`, `cardinality`, `trend`, `distribution_shape`)
 - Summary statistics in `[table.stats]`
+
+---
+
+## 14. Implementation Status
+
+**Status:** Phase 1–2 complete (PR #230)
+
+### Completed
+
+| Component | Location | Notes |
+|-----------|----------|-------|
+| Format detection | `src/model/mod.rs` | Auto-detects structured directory vs flat file |
+| Directory reader | `src/model/reader.rs` | Loads `knit.toml`, `layout.toml`, `tables/*.toml`, `relationships.toml`, `shared.toml` |
+| Directory writer | `src/model/writer.rs` | Writes full directory structure from `DataModel` |
+| `knit model convert` | `src/cli/commands/model.rs` | Bidirectional flat ↔ structured conversion |
+| `knit model info` | `src/cli/commands/model.rs` | Summary display for either format |
+| Partition weights | reader + writer | Roundtrip-safe via `weights` field |
+| Mixin references | reader + writer | Preserved through `mixins` field |
+| `load_schema` integration | `src/cli/commands/mod.rs` | All commands auto-detect format |
+
+### Remaining (Phase 3–4)
+
+- Direct table-level update operations (edit single table without full rewrite)
+- Integration with `knit enrich`, `knit scale`, `knit tokenize` for structured output
+- `knit learn --format structured` direct structured output
+- Statistics layer (`[columns.stats]`, `[table.stats]`)
+- Auto-detected traits (semantic, cardinality, trend, distribution shape)
 
 ---
 
