@@ -85,6 +85,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Normal,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,
@@ -122,6 +123,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Uniform,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,
@@ -224,6 +226,7 @@ mod tests {
                 m.insert("std_dev".into(), 1.0);
                 m
             },
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,
@@ -320,6 +323,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Normal,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: Some(0.0),
             clamp_max: Some(200.0),
             round: false,
@@ -346,6 +350,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Poisson,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,
@@ -368,6 +373,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Bernoulli,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,
@@ -394,6 +400,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Geometric,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,
@@ -416,6 +423,7 @@ mod tests {
         let plan = GeneratorPlan::Distribution {
             kind: DistributionKind::Zipf,
             params,
+            array_params: BTreeMap::new(),
             clamp_min: None,
             clamp_max: None,
             round: false,

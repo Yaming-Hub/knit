@@ -682,6 +682,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 GeneratorPlan::Distribution {
                     kind: dist_spec.kind.clone(),
                     params: dist_spec.params.clone(),
+                    array_params: dist_spec.array_params.clone(),
                     clamp_min: None,
                     clamp_max: None,
                     round,
@@ -1147,6 +1148,7 @@ fn default_generator_for_type(data_type: &crate::core::DataType) -> GeneratorPla
             GeneratorPlan::Distribution {
                 kind: DistributionKind::Bernoulli,
                 params,
+                array_params: BTreeMap::new(),
                 clamp_min: None,
                 clamp_max: None,
                 round: false,
@@ -1159,6 +1161,7 @@ fn default_generator_for_type(data_type: &crate::core::DataType) -> GeneratorPla
             GeneratorPlan::Distribution {
                 kind: DistributionKind::Uniform,
                 params,
+                array_params: BTreeMap::new(),
                 clamp_min: None,
                 clamp_max: None,
                 round: true,
@@ -1171,6 +1174,7 @@ fn default_generator_for_type(data_type: &crate::core::DataType) -> GeneratorPla
             GeneratorPlan::Distribution {
                 kind: DistributionKind::Uniform,
                 params,
+                array_params: BTreeMap::new(),
                 clamp_min: None,
                 clamp_max: None,
                 round: false,
@@ -1623,6 +1627,7 @@ fn apply_conditional_distribution_overrides(
                 let plan = GeneratorPlan::Distribution {
                     kind: b.distribution.clone(),
                     params: b.params.clone(),
+                    array_params: BTreeMap::new(),
                     clamp_min: None,
                     clamp_max: None,
                     round: b.round,
@@ -1638,6 +1643,7 @@ fn apply_conditional_distribution_overrides(
             Some(spec) => Box::new(GeneratorPlan::Distribution {
                 kind: spec.kind.clone(),
                 params: spec.params.clone(),
+                array_params: spec.array_params.clone(),
                 clamp_min: None,
                 clamp_max: None,
                 round: spec.round,
@@ -1647,6 +1653,7 @@ fn apply_conditional_distribution_overrides(
                 Box::new(GeneratorPlan::Distribution {
                     kind: first.distribution.clone(),
                     params: first.params.clone(),
+                    array_params: BTreeMap::new(),
                     clamp_min: None,
                     clamp_max: None,
                     round: first.round,
@@ -2079,6 +2086,7 @@ mod tests {
                         p.insert("std_dev".to_string(), 10.0);
                         p
                     },
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -2121,6 +2129,7 @@ mod tests {
                         p.insert("std_dev".to_string(), 12.0);
                         p
                     },
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -2164,6 +2173,7 @@ mod tests {
                         p.insert("std_dev".to_string(), 10.0);
                         p
                     },
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -2343,6 +2353,7 @@ mod tests {
                         p.insert("max".to_string(), 100.0);
                         p
                     },
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -2829,6 +2840,7 @@ mod tests {
                     spec: DistributionSpec {
                         kind: DistributionKind::Uniform,
                         params: Default::default(),
+                        array_params: BTreeMap::new(),
                         round: false,
                     },
                 }),

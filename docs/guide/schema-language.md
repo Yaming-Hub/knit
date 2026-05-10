@@ -347,6 +347,50 @@ Knit also supports: `gamma`, `pareto`, `geometric`, `binomial`, `weibull`,
 `cauchy`, `chi_squared`, `student_t`, and more. See the
 [Weave Specification](../weave-spec.md) for the full list.
 
+#### Vector-Valued Distributions
+
+Dirichlet and multinomial distributions produce array/list outputs rather than
+scalar values. Use `data_type = "array"` for these fields.
+
+**Dirichlet** — generates probability vectors (simplex) summing to 1.0:
+
+```toml
+[[entities.fields]]
+name = "market_share"
+data_type = "array"
+[entities.fields.generator]
+type = "distribution"
+kind = "dirichlet"
+[entities.fields.generator.array_params]
+alpha = [5.0, 3.0, 2.0]
+```
+
+- `alpha` — concentration parameters (must have ≥ 2 elements, all > 0)
+- Higher alpha values → more concentrated around the mean proportion
+- Output: list of floats summing to 1.0
+
+**Multinomial** — distributes `n` trials across categories:
+
+```toml
+[[entities.fields]]
+name = "votes"
+data_type = "array"
+[entities.fields.generator]
+type = "distribution"
+kind = "multinomial"
+[entities.fields.generator.params]
+n = 10
+[entities.fields.generator.array_params]
+p = [0.4, 0.3, 0.2, 0.1]
+```
+
+- `n` — number of trials (positive integer, in `params`)
+- `p` — category probabilities (must have ≥ 2 elements, sum to ~1.0, in `array_params`)
+- Output: list of integer counts summing to `n`
+- Uses sequential-binomial method for O(k) sampling per row
+
+See `examples/vector_distributions.weave.toml` for a complete example.
+
 ### `one_of` — Weighted Categorical Choices
 
 Pick from a list of values with optional weights:

@@ -6,6 +6,15 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Dirichlet and Multinomial distributions** — Vector-valued distributions
+  for generating category proportions and multi-category counts (spec §6.1):
+  - `kind = "dirichlet"` with `array_params.alpha` → probability simplex
+  - `kind = "multinomial"` with `params.n` + `array_params.p` → integer counts
+  - `array_params` field on `DistributionSpec` for array-typed parameters
+  - Dirichlet uses `rand_distr::Dirichlet`; Multinomial uses sequential-binomial method
+  - Output as `ListArray` (compatible with JSON, Parquet, Avro sinks)
+  - Validation: alpha ≥ 2 elements all > 0; p ≥ 2 elements summing to ~1.0, n ≥ 1
+  - New example: `examples/vector_distributions.weave.toml`
 - **Holiday effect time series component** — Date-based multiplicative
   spikes and dips in both numeric time series and event streams (spec §9.2):
   - `type = "holiday_effect"` component with `dates` and `multiplier`

@@ -5,7 +5,7 @@
 //! in relationships, noise profiles, and correlations, derived expression
 //! syntax and field references, and dependency cycle detection.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::core::*;
 use crate::gen::expr;
@@ -918,6 +918,100 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
             }
         }
+        DistributionKind::Dirichlet => {
+            let alpha = spec.array_params.get("alpha");
+            match alpha {
+                None => {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "dirichlet distribution requires 'alpha' in array_params"
+                            .to_string(),
+                    });
+                }
+                Some(a) => {
+                    if a.len() < 2 {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: "dirichlet distribution 'alpha' must have at least 2 elements"
+                                .to_string(),
+                        });
+                    }
+                    for (i, &v) in a.iter().enumerate() {
+                        if !v.is_finite() || v <= 0.0 {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!(
+                                    "dirichlet distribution 'alpha[{}]' must be a finite value > 0, got {}",
+                                    i, v
+                                ),
+                            });
+                        }
+                    }
+                }
+            }
+            if spec.round {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "dirichlet distribution does not support 'round'".to_string(),
+                });
+            }
+        }
+        DistributionKind::Multinomial => {
+            if !spec.params.contains_key("n") {
+                errors.push(SchemaError::Validation {
+                    path: path.to_string(),
+                    message: "multinomial distribution requires 'n' param".to_string(),
+                });
+            } else if let Some(&n) = spec.params.get("n") {
+                if !n.is_finite() || n < 1.0 || n.fract() != 0.0 {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "multinomial distribution 'n' must be a positive integer"
+                            .to_string(),
+                    });
+                }
+            }
+            let p = spec.array_params.get("p");
+            match p {
+                None => {
+                    errors.push(SchemaError::Validation {
+                        path: path.to_string(),
+                        message: "multinomial distribution requires 'p' in array_params"
+                            .to_string(),
+                    });
+                }
+                Some(probs) => {
+                    if probs.len() < 2 {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: "multinomial distribution 'p' must have at least 2 elements"
+                                .to_string(),
+                        });
+                    }
+                    for (i, &v) in probs.iter().enumerate() {
+                        if !v.is_finite() || v < 0.0 {
+                            errors.push(SchemaError::Validation {
+                                path: path.to_string(),
+                                message: format!(
+                                    "multinomial distribution 'p[{}]' must be a finite value >= 0, got {}",
+                                    i, v
+                                ),
+                            });
+                        }
+                    }
+                    let sum: f64 = probs.iter().sum();
+                    if (sum - 1.0).abs() > 0.01 {
+                        errors.push(SchemaError::Validation {
+                            path: path.to_string(),
+                            message: format!(
+                                "multinomial distribution 'p' must sum to ~1.0, got {}",
+                                sum
+                            ),
+                        });
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1042,25 +1136,35 @@ const KNOWN_FAKER_METHODS: &[&str] = &[
 /// composite, conditional, unique) are not checked here.
 fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Option<String> {
     match gen {
-        GeneratorSpec::Distribution { .. } => {
-            let compatible = matches!(
-                data_type,
-                DataType::Bool
-                    | DataType::Int
-                    | DataType::Int32
-                    | DataType::Float
-                    | DataType::Date
-                    | DataType::Time
-                    | DataType::Datetime
-                    | DataType::DatetimeUs
-                    | DataType::Datetimetz
-                    | DataType::Duration
-            );
+        GeneratorSpec::Distribution { spec } => {
+            let compatible = match &spec.kind {
+                DistributionKind::Dirichlet | DistributionKind::Multinomial => {
+                    matches!(data_type, DataType::Array)
+                }
+                _ => matches!(
+                    data_type,
+                    DataType::Bool
+                        | DataType::Int
+                        | DataType::Int32
+                        | DataType::Float
+                        | DataType::Date
+                        | DataType::Time
+                        | DataType::Datetime
+                        | DataType::DatetimeUs
+                        | DataType::Datetimetz
+                        | DataType::Duration
+                ),
+            };
             if !compatible {
+                let expected = match &spec.kind {
+                    DistributionKind::Dirichlet | DistributionKind::Multinomial => {
+                        "expected 'array' for vector-valued distribution"
+                    }
+                    _ => "expected a numeric type (int, int32, float), bool, or temporal type",
+                };
                 Some(format!(
-                    "distribution generator is not compatible with data_type '{}'; \
-                     expected a numeric type (int, int32, float), bool, or temporal type",
-                    data_type
+                    "distribution generator ({}) is not compatible with data_type '{}'; {}",
+                    spec.kind, data_type, expected
                 ))
             } else {
                 None
@@ -3016,6 +3120,7 @@ fn validate_conditional_distribution(
         let spec = DistributionSpec {
             kind: branch.distribution.clone(),
             params: branch.params.clone(),
+            array_params: BTreeMap::new(),
             round: branch.round,
         };
         validate_distribution(&branch_path, &spec, errors);
@@ -3869,6 +3974,7 @@ mod tests {
                     params: [("min".to_string(), 100.0), ("max".to_string(), 10.0)]
                         .into_iter()
                         .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -3897,6 +4003,7 @@ mod tests {
                     params: [("n".to_string(), 10.0), ("p".to_string(), 0.5)]
                         .into_iter()
                         .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -3929,6 +4036,7 @@ mod tests {
                     params: [("n".to_string(), 10.0), ("p".to_string(), 1.5)]
                         .into_iter()
                         .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -3961,6 +4069,7 @@ mod tests {
                     ]
                     .into_iter()
                     .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -3989,6 +4098,7 @@ mod tests {
                     params: [("n".to_string(), 0.0), ("s".to_string(), 1.0)]
                         .into_iter()
                         .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -4017,6 +4127,7 @@ mod tests {
                     params: [("alpha".to_string(), 2.0), ("beta".to_string(), 5.0)]
                         .into_iter()
                         .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -4049,6 +4160,7 @@ mod tests {
                     params: [("n".to_string(), 10.5), ("s".to_string(), 1.0)]
                         .into_iter()
                         .collect(),
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -4096,6 +4208,7 @@ mod tests {
         model.entities[0].count = CountSpec::Distribution(DistributionSpec {
             kind: DistributionKind::Normal,
             params: BTreeMap::new(), // missing mean and std_dev
+            array_params: BTreeMap::new(),
             round: false,
         });
         let errors = validate(&model);
@@ -4663,6 +4776,7 @@ mod tests {
                     spec: DistributionSpec {
                         kind: DistributionKind::Normal,
                         params: BTreeMap::new(), // missing mean & std_dev
+                        array_params: BTreeMap::new(),
                         round: false,
                     },
                 }),
@@ -4828,6 +4942,7 @@ mod tests {
                 spec: crate::core::DistributionSpec {
                     kind: crate::core::DistributionKind::Uniform,
                     params: std::collections::BTreeMap::new(),
+                    array_params: std::collections::BTreeMap::new(),
                     round: false,
                 },
             }),
@@ -4839,7 +4954,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("distribution generator is not compatible"))
+            matches!(e, SchemaError::Validation { message, .. } if message.contains("is not compatible with data_type"))
         }));
     }
 
@@ -5865,6 +5980,7 @@ mod tests {
                         m.insert("max".to_string(), 100.0);
                         m
                     },
+                    array_params: BTreeMap::new(),
                     round: false,
                 },
             }),
