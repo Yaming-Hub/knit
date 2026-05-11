@@ -349,6 +349,8 @@ token statistics (unique count, length preservation), and native shift summary.
 | Native Parquet timestamp shifting | ✅ | Date32, Date64, Timestamp(s/ms/us/ns) columns shifted by same offset as string dates |
 | Native Parquet numeric shifting | ✅ | Int8-64, UInt8-64 shifted by deterministic offset; Float32/64 shifted by additive offset |
 | Tokenization report (`--report`) | ✅ | Per-file breakdown, token statistics, native shift summary |
+| Format conversion (`--output-format`) | ✅ | Convert between csv/tsv/json/jsonl/parquet during tokenization |
+| Path tokenization (`--tokenize-paths`) | ✅ | File/folder names tokenized; partition folders preserved with `--preserve-partitions` |
 
 **Architecture (as implemented):**
 

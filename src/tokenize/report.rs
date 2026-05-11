@@ -474,6 +474,7 @@ mod tests {
             column_filter: Default::default(),
             date_shift_days: None,
             numeric_shift: None,
+            tokenized_paths: false,
             tokens: BTreeMap::from([
                 ("Alice".to_string(), "Xkmpq".to_string()),
                 ("Bob".to_string(), "Bvr".to_string()),
@@ -528,6 +529,7 @@ mod tests {
             column_filter: Default::default(),
             date_shift_days: Some(100),
             numeric_shift: Some(5000),
+            tokenized_paths: false,
             tokens: BTreeMap::from([
                 ("Alice".to_string(), "Xkmpq".to_string()),
                 ("Bob".to_string(), "Bvr".to_string()),

@@ -29,6 +29,10 @@ pub struct TokenDictionary {
     /// Used during restore to reverse the shift.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub numeric_shift: Option<i64>,
+    /// Whether file/folder names were tokenized.
+    /// Used during restore to reverse path tokenization.
+    #[serde(default)]
+    pub tokenized_paths: bool,
     /// The token mappings (original → token), sorted for deterministic output.
     pub tokens: BTreeMap<String, String>,
 }
@@ -98,6 +102,7 @@ impl TokenDictionary {
             column_filter,
             date_shift_days,
             numeric_shift,
+            tokenized_paths: config.tokenize_paths,
             tokens,
         }
     }
@@ -142,6 +147,7 @@ mod tests {
             column_filter: ColumnFilter::default(),
             date_shift_days: None,
             numeric_shift: None,
+            tokenized_paths: false,
             tokens,
         };
 
@@ -169,6 +175,7 @@ mod tests {
             },
             date_shift_days: None,
             numeric_shift: None,
+            tokenized_paths: false,
             tokens: BTreeMap::new(),
         };
 
@@ -191,6 +198,7 @@ mod tests {
             column_filter: ColumnFilter::default(),
             date_shift_days: None,
             numeric_shift: None,
+            tokenized_paths: false,
             tokens: BTreeMap::new(),
         };
 

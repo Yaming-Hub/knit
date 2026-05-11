@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Path tokenization** (`--tokenize-paths`) — Tokenize file and folder names in the
+  output dataset. File stems are replaced with shape-preserving tokens while extensions
+  are preserved. Partition folders (`key=value` style) are skipped when
+  `--preserve-partitions` is set. The dictionary records whether paths were tokenized
+  so `--restore` can reverse the renaming automatically.
 - **Format conversion during tokenization** (`--output-format <fmt>`) — Convert data
   files to a different format while tokenizing. Supports csv, tsv, json, jsonl, and
   parquet. Output file extensions are automatically updated. Tokenization (string
