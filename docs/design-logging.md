@@ -820,11 +820,11 @@ Instrument the 5 high-priority silent decision points from §2.2.
 
 ### Phase 5: Remaining Gaps
 
-- `src/plan/compiler.rs` — index and partition strategy logging
-- `src/bind/*.rs` — format auto-detection logging
-- `src/cli/commands/learn.rs` — companion classification, null handling
-- Low-confidence summary in end-of-run report
-- Confidence thresholds per `DecisionKind`
+- `src/plan/compiler.rs` — index and partition strategy logging ✅
+- `src/bind/*.rs` — format auto-detection logging (N/A: format is user-specified, not auto-detected)
+- `src/cli/commands/learn.rs` — companion classification, null handling ✅
+- Low-confidence summary in end-of-run report ✅
+- Confidence thresholds per `DecisionKind` (deferred: current global thresholds are sufficient)
 
 ---
 
@@ -836,7 +836,7 @@ Instrument the 5 high-priority silent decision points from §2.2.
 | Phase 2: Learn decision logging | ✅ Done | #224 |
 | Phase 3: Generate pipeline decision logging | ✅ Done | #225 |
 | Phase 4: Decision Report & JSON Output | ✅ Done | #231 |
-| Phase 5: Remaining gaps | Planned | — |
+| Phase 5: Remaining gaps | ✅ Done | #233 |
 
 ### Phase 4 Implementation Details
 

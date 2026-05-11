@@ -49,6 +49,12 @@ pub enum DecisionKind {
     ForeignKeyGenerator,
     /// Noise injection decision.
     NoiseInjection,
+    /// Index/key storage strategy selection.
+    IndexStrategy,
+    /// Companion file classification (data vs auxiliary).
+    CompanionClassification,
+    /// Null handling (always-null detection).
+    NullHandling,
     /// Other decisions not fitting predefined categories.
     Other,
 }

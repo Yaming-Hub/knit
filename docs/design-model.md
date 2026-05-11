@@ -783,7 +783,6 @@ knit model flatten my_model/ -o schema.weave.toml
 
 - Direct table-level update operations (edit single table without full rewrite)
 - Integration with `knit enrich`, `knit scale`, `knit tokenize` for structured output
-- `knit learn --format structured` direct structured output
 - Statistics layer (`[columns.stats]`, `[table.stats]`)
 - Auto-detected traits (semantic, cardinality, trend, distribution shape)
 

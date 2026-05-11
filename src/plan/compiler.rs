@@ -97,6 +97,19 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
                     .iter()
                     .any(|f| matches!(&f.generator, Some(GeneratorSpec::ThreadRef { .. })));
                 if has_thread_ref && computed.len() > 1 {
+                    if let Some(logger) = crate::decision::global_logger() {
+                        logger
+                            .builder(crate::decision::DecisionKind::PartitionAllocation)
+                            .phase("plan")
+                            .entity(entity_name)
+                            .chosen("single partition")
+                            .reason(format!(
+                                "thread_ref requires ordered generation; overriding {} computed partitions",
+                                computed.len()
+                            ))
+                            .confidence(crate::decision::Confidence::High)
+                            .record();
+                    }
                     vec![PartitionRange {
                         partition_id: 0,
                         start_row: 0,
@@ -1563,7 +1576,34 @@ fn estimate_byte_size(entity: &Entity, row_count: u64) -> u64 {
 fn build_index_strategy(row_counts: &BTreeMap<String, u64>) -> IndexStrategy {
     let per_entity: BTreeMap<String, KeyStoreKind> = row_counts
         .iter()
-        .map(|(name, &count)| (name.clone(), select_key_store_kind(count)))
+        .map(|(name, &count)| {
+            let kind = select_key_store_kind(count);
+            if let Some(logger) = crate::decision::global_logger() {
+                let (chosen, reason) = match &kind {
+                    KeyStoreKind::InMemoryVec => (
+                        "InMemoryVec",
+                        format!("{count} rows < 10M threshold"),
+                    ),
+                    KeyStoreKind::MemoryMapped => (
+                        "MemoryMapped",
+                        format!("{count} rows between 10M and 100M"),
+                    ),
+                    KeyStoreKind::SampledSubset { sample_size } => (
+                        "SampledSubset",
+                        format!("{count} rows >= 100M, sampling {sample_size} keys"),
+                    ),
+                };
+                logger
+                    .builder(crate::decision::DecisionKind::IndexStrategy)
+                    .phase("plan")
+                    .entity(&*name)
+                    .chosen(chosen)
+                    .reason(&reason)
+                    .confidence(crate::decision::Confidence::High)
+                    .record();
+            }
+            (name.clone(), kind)
+        })
         .collect();
     IndexStrategy { per_entity }
 }

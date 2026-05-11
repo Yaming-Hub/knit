@@ -929,6 +929,19 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         ca.source_arrow_type = Some(profile.data_type.clone());
         debug!(col = %profile.name, null_rate = profile.null_rate,
                empty_rate = profile.empty_string_rate, "always-null column detected");
+        if let Some(logger) = crate::decision::global_logger() {
+            logger
+                .builder(crate::decision::DecisionKind::NullHandling)
+                .phase("learn/analyse")
+                .column(&*profile.name)
+                .chosen("always-null")
+                .reason(format!(
+                    "null_rate={:.2} + empty_rate={:.2} >= 1.0, skipping analysis",
+                    profile.null_rate, profile.empty_string_rate
+                ))
+                .confidence(crate::decision::Confidence::High)
+                .record();
+        }
         return ca;
     }
 
@@ -1866,6 +1879,20 @@ fn copy_companion_files(
             })?;
 
             let rel_str = rel.to_string_lossy().to_string();
+            if let Some(logger) = crate::decision::global_logger() {
+                let reason = if in_special_dir {
+                    format!("in special directory, ext={ext}")
+                } else {
+                    format!("ext={ext} not in data formats")
+                };
+                logger
+                    .builder(crate::decision::DecisionKind::CompanionClassification)
+                    .phase("learn/companion")
+                    .chosen("companion")
+                    .reason(reason)
+                    .confidence(crate::decision::Confidence::High)
+                    .record();
+            }
             data_model.companion_files.push(rel_str);
             copied += 1;
         }
