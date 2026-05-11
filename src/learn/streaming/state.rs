@@ -454,6 +454,8 @@ impl ColumnState {
             .empty_string_count
             .saturating_add(other.empty_string_count);
         self.chunks_present = self.chunks_present.saturating_add(other.chunks_present);
+        self.all_integer = self.all_integer && other.all_integer;
+        self.max_decimal_places = self.max_decimal_places.max(other.max_decimal_places);
 
         // Merge sub-structures (only if precisions match to avoid panics)
         if self.hll.precision() == other.hll.precision() {

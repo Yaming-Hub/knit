@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Incremental learning parity tests** — Comprehensive integration test suite
+  verifying batch vs incremental mode parity: single-chunk and multi-chunk
+  structural parity, determinism (same input → same output), finalize-only mode,
+  type drift handling (int→float widening), new-column-in-later-chunk behavior,
+  and state file inspection.
 - **Source data statistics** — `knit learn` now populates `[stats]` sections on
   both fields and entities. Field stats include numeric summaries (min/max/mean/std
   /percentiles), string lengths, temporal ranges, and top values. Entity stats
