@@ -13,8 +13,8 @@ Each PR targets **< 2000 lines** of code changes (excluding generated files, tes
 flowchart LR
     subgraph Phase1[Phase 1 — Foundation]
         PR1[PR 1\nWorkspace +\nknit-core types]
-        PR2[PR 2\nknit-schema\nparsing]
-        PR3[PR 3\nknit-schema\nvalidation +\nextends]
+        PR2[PR 2\nknit-blueprint\nparsing]
+        PR3[PR 3\nknit-blueprint\nvalidation +\nextends]
     end
     subgraph Phase2[Phase 2 — Planning & Core Generation]
         PR4[PR 4\nknit-plan\nexecution planner]
@@ -32,7 +32,7 @@ flowchart LR
     end
     subgraph Phase5[Phase 5 — CLI & Reverse Pipeline]
         PR12[PR 12\nknit-cli\ncore commands]
-        PR13[PR 13\nknit-cli\nschema ops +\ninit]
+        PR13[PR 13\nknit-cli\nblueprint ops +\ninit]
         PR14[PR 14\nknit-learn\ningestion +\nprofiling]
         PR15[PR 15\nknit-learn\nfitting +\nrelationships]
     end
@@ -75,7 +75,7 @@ flowchart LR
 **Deliverables:**
 - `Cargo.toml` (workspace root)
 - `crates/knit-core/` — full implementation
-- `crates/knit-{schema,plan,gen,noise,bind,learn,cli}/` — stub `Cargo.toml` + empty `lib.rs`
+- `crates/knit-{blueprint,plan,gen,noise,bind,learn,cli}/` — stub `Cargo.toml` + empty `lib.rs`
 
 **Acceptance criteria:**
 - `cargo build --workspace` succeeds
@@ -83,45 +83,45 @@ flowchart LR
 
 ---
 
-### PR 2: knit-schema — TOML & JSON Parsing
+### PR 2: knit-blueprint — TOML & JSON Parsing
 
-**Branch:** `feat/schema-parsing`
+**Branch:** `feat/blueprint-parsing`
 **Est. lines:** ~1500
 **Depends on:** PR 1
 
 **Scope:**
-- TOML parser: `.weave.toml` → raw serde `Value` tree → `DataModel`
+- TOML parser: `.knit.toml` → raw serde `Value` tree → `DataModel`
 - JSON parser: `.weave.json` → same path via `serde_json`
 - Generator spec parsing (uniform `{ type, params }` shape → `GeneratorSpec` enum)
 - Distribution parameter parsing and normalization
 - Temporal type parsing (date, time, datetime, datetimetz, duration with shorthand)
-- `SchemaError` type with element paths and source spans
+- `BlueprintError` type with element paths and source spans
 - Human-readable error formatting
-- Unit tests: parse valid schemas, reject malformed schemas, test each generator type
+- Unit tests: parse valid blueprints, reject malformed blueprints, test each generator type
 
 **Key types:**
 ```
-SchemaParser
-├── parse_toml(input: &str) -> Result<DataModel, SchemaError>
-├── parse_json(input: &str) -> Result<DataModel, SchemaError>
-└── (internal) lower_raw(raw: Value) -> Result<DataModel, SchemaError>
+BlueprintParser
+├── parse_toml(input: &str) -> Result<DataModel, BlueprintError>
+├── parse_json(input: &str) -> Result<DataModel, BlueprintError>
+└── (internal) lower_raw(raw: Value) -> Result<DataModel, BlueprintError>
 ```
 
 **Acceptance criteria:**
-- Parse the e-commerce example schema from `design.md`
-- Reject schemas with unknown generator types, missing required fields
-- `cargo test -p knit-schema` passes
+- Parse the e-commerce example blueprint from `design.md`
+- Reject blueprints with unknown generator types, missing required fields
+- `cargo test -p knit-blueprint` passes
 
 ---
 
-### PR 3: knit-schema — Validation + Extends Resolution
+### PR 3: knit-blueprint — Validation + Extends Resolution
 
-**Branch:** `feat/schema-validation`
+**Branch:** `feat/blueprint-validation`
 **Est. lines:** ~1500
 **Depends on:** PR 2
 
 **Scope:**
-- **Validation rules** (all 5 categories from design-schema.md §7):
+- **Validation rules** (all 5 categories from design-blueprint.md §7):
   - Structural: required fields present, valid enum variants, no unknown keys
   - Type consistency: generator output type matches field `DataType`
   - Referential: relationship endpoints exist, FK field types match PK types
@@ -130,13 +130,13 @@ SchemaParser
 - **`extends` resolution**: single inheritance, keyed merge by name, `remove = true`, scalar override, array replacement
 - **`includes` resolution**: type/mixin library imports
 - **`params` substitution**: `${param_name}` → value replacement with defaults
-- Schema operations: `normalize` (canonical form), `expand` (flatten extends)
+- Blueprint operations: `normalize` (canonical form), `expand` (flatten extends)
 - Tests: merge matrix tests, validation error tests, golden file tests
 
 **Acceptance criteria:**
-- Extends chain resolves correctly (base + overlay → merged schema)
+- Extends chain resolves correctly (base + overlay → merged blueprint)
 - All validation checks produce clear error messages with paths
-- `knit schema expand` produces standalone schemas
+- `knit blueprint expand` produces standalone blueprints
 
 ---
 
@@ -162,7 +162,7 @@ SchemaParser
 - Tests: determinism (same input → same plan), cycle detection, RNG isolation
 
 **Acceptance criteria:**
-- E-commerce schema produces correct 2-phase plan (employee self-ref → phase 2)
+- E-commerce blueprint produces correct 2-phase plan (employee self-ref → phase 2)
 - Same DataModel always produces identical ExecutionPlan
 - `cargo test -p knit-plan` passes
 
@@ -251,7 +251,7 @@ SchemaParser
 - Tests: FK integrity (all FK values exist in parent), self-referential generation, reproducibility across thread counts
 
 **Acceptance criteria:**
-- E-commerce schema generates with valid FK relationships
+- E-commerce blueprint generates with valid FK relationships
 - Employee self-referential hierarchy generates correctly
 - Output is identical regardless of `--parallel N` setting
 
@@ -381,7 +381,7 @@ SchemaParser
   - `FormatCorruptor` — string format corruption (invalid emails, dates)
 - Scoped noise: predicate-based filtering (apply only to matching records)
 - Noise composition: multiple perturbators chained with independent probabilities
-- `NoiseProfile` → `Perturbator` resolution from schema config
+- `NoiseProfile` → `Perturbator` resolution from blueprint config
 - Tests: probability accuracy tests, invariant preservation tests, FK violation tests
 
 **Acceptance criteria:**
@@ -401,13 +401,13 @@ SchemaParser
 
 **Scope:**
 - Clap command structure with subcommands
-- **`knit validate <schema>`** — parse → validate → report errors
+- **`knit validate <blueprint>`** — parse → validate → report errors
   - Human-readable output (default) with colored diagnostics
   - JSON output (`--json`) for CI/scripting
-- **`knit plan <schema>`** — show execution plan (dry run)
+- **`knit plan <blueprint>`** — show execution plan (dry run)
   - Phase breakdown, partition counts, estimated sizes
   - Generator assignments, RNG tree summary
-- **`knit generate <schema> -o <dir>`** — full forward pipeline
+- **`knit generate <blueprint> -o <dir>`** — full forward pipeline
   - Orchestrate: parse → plan → generate → noise → bind
   - Progress bars via `indicatif` (per-entity, with ETA)
   - Summary stats on completion (rows, bytes, throughput, elapsed)
@@ -416,28 +416,28 @@ SchemaParser
   - `--param key=value` (repeatable), `--dry-run`, `--json`, `--quiet`/`--verbose`
 - **Error handling:** exit codes (0 success, 1 validation, 2 generation, 3 I/O)
 - **Graceful shutdown:** Ctrl+C → finish current batch → flush → report partial
-- **Configuration precedence:** flags > env vars > `knit.toml` > schema defaults
+- **Configuration precedence:** flags > env vars > `knit.toml` > blueprint defaults
 - Tests: CLI flag parsing, error output formatting, integration smoke test
 
 **Acceptance criteria:**
-- `knit generate examples/ecommerce.weave.toml -o out/` produces valid output
+- `knit generate examples/ecommerce.knit.toml -o out/` produces valid output
 - Progress bars update during generation
 - Ctrl+C produces clean partial output
 
 ---
 
-### PR 13: knit-cli — Schema Operations + Init
+### PR 13: knit-cli — Blueprint Operations + Init
 
-**Branch:** `feat/cli-schema-ops`
+**Branch:** `feat/cli-blueprint-ops`
 **Est. lines:** ~1000
 **Depends on:** PR 12
 
 **Scope:**
-- **`knit schema expand <file>`** — flatten extends chain → standalone schema
-- **`knit schema normalize <file>`** — reformat to canonical style (key ordering, whitespace)
-- **`knit schema diff <a> <b>`** — compare two schemas, show added/removed/changed elements
-- **`knit init`** — scaffold a minimal `.weave.toml` starter schema with documentation comments
-  - The data model schema is the single source of truth; no domain templates needed
+- **`knit blueprint expand <file>`** — flatten extends chain → standalone blueprint
+- **`knit blueprint normalize <file>`** — reformat to canonical style (key ordering, whitespace)
+- **`knit blueprint diff <a> <b>`** — compare two blueprints, show added/removed/changed elements
+- **`knit init`** — scaffold a minimal `.knit.toml` starter blueprint with documentation comments
+  - The data model blueprint is the single source of truth; no domain templates needed
   - Output includes commented examples of all generator types and relationships
 - **`knit learn` command** (wiring only, delegates to knit-learn)
 - **Config file support:** `knit.toml` in cwd or `~/.config/knit/config.toml`
@@ -445,9 +445,9 @@ SchemaParser
 - Tests: expand/normalize golden tests, diff output tests, init scaffold tests
 
 **Acceptance criteria:**
-- `knit schema expand` produces correct flattened output
-- `knit init` creates a valid, parseable schema file
-- `knit schema diff` shows meaningful differences
+- `knit blueprint expand` produces correct flattened output
+- `knit init` creates a valid, parseable blueprint file
+- `knit blueprint diff` shows meaningful differences
 
 ---
 
@@ -508,7 +508,7 @@ SchemaParser
   - Trend detection (linear / exponential regression on event rate)
   - Seasonality decomposition (STL: trend + seasonal + residual)
   - Multi-column temporal ordering constraints and delay distribution fitting
-  - Output: `TemporalPatternSpec` → `time_series` / `schedule` generator in schema
+  - Output: `TemporalPatternSpec` → `time_series` / `schedule` generator in blueprint
 - **Relationship detection (Phase 6):**
   - Column name matching (strip `_id`/`_key`/`_fk`, match entity names)
   - Value overlap ratio computation
@@ -525,10 +525,10 @@ SchemaParser
   - Intra-entity: Pearson, Spearman, Cramér's V
   - Cross-entity: conditional distributions via FK joins
   - Significance filtering (p-value < 0.05, |r| ≥ 0.3)
-- **Schema assembly (Phase 9):**
+- **Blueprint assembly (Phase 9):**
   - Build `DataModel` from all inferred elements
   - Attach confidence scores and alternatives
-  - Output annotated Weave schema with `_confidence` fields
+  - Output annotated knit blueprint with `_confidence` fields
   - Human-readable review report
 - Tests: distribution recovery (generate → learn → compare params), temporal pattern recovery (schedule/periodicity/trend), FK detection accuracy, correlation detection, round-trip tests
 
@@ -537,25 +537,25 @@ SchemaParser
 - Weekly schedule detection identifies day-of-week with confidence > 0.9
 - Trend detection recovers linear slope within 10% tolerance
 - FK detection finds known relationships with confidence > 0.8
-- Output schema is valid Weave that can be used with `knit generate`
+- Output blueprint is valid Weave that can be used with `knit generate`
 
 ---
 
 ## Phase 6 — Integration & Polish
 
-### PR 16: Integration Tests + Example Schemas
+### PR 16: Integration Tests + Example Blueprints
 
 **Branch:** `feat/integration-tests`
 **Est. lines:** ~1500
 **Depends on:** PR 13, PR 15
 
 **Scope:**
-- **Example schemas** (in `examples/` directory):
-  - `ecommerce.weave.toml` — users, orders, products, reviews (FK, Zipf cardinality)
-  - `iot_sensors.weave.toml` — devices, readings, alerts (time series, temporal)
-  - `server_logs.weave.toml` — requests, errors (event stream, business hours)
-  - `financial.weave.toml` — accounts, transactions, holdings (correlations, compliance)
-  - `hr_org.weave.toml` — employees, departments (self-referential hierarchy)
+- **Example blueprints** (in `examples/` directory):
+  - `ecommerce.knit.toml` — users, orders, products, reviews (FK, Zipf cardinality)
+  - `iot_sensors.knit.toml` — devices, readings, alerts (time series, temporal)
+  - `server_logs.knit.toml` — requests, errors (event stream, business hours)
+  - `financial.knit.toml` — accounts, transactions, holdings (correlations, compliance)
+  - `hr_org.knit.toml` — employees, departments (self-referential hierarchy)
 
 ---
 
@@ -581,7 +581,7 @@ persona-driven data generation.
 - Extend `Entity` with optional `actor: bool`, `persona_distribution: Option<String>`
 - Extend `Field` with optional `actor_column: Option<bool>`
 - New generator variants: `ActorRef`, `ActorTemporal`, `RelationshipRef`, `PersonaField`
-- Schema parsing and serialization for new sections
+- Blueprint parsing and serialization for new sections
 - Validation: persona weights sum to 1.0, actor references exist, graph params valid
 
 ### PR 20: Actor Identification in knit-learn
@@ -627,7 +627,7 @@ persona-driven data generation.
 - Relationship classification: hierarchical, peer, broadcast, hub
 - Graph-level metrics: degree distribution, clustering coefficient, community detection
 - Auto-selection of graph model (scale-free vs small-world vs hierarchical)
-- Schema emission of `[[actor_relationships]]` section
+- Blueprint emission of `[[actor_relationships]]` section
 - Unit tests with planted graph structures
 
 ### PR 23: Profile-Driven Generation
@@ -667,27 +667,27 @@ persona-driven data generation.
 **Depends on:** PR 23, PR 24
 
 **Scope:**
-- Example schema: `examples/email-traffic.weave.toml`
-- Example schema: `examples/hr-org.weave.toml`
+- Example blueprint: `examples/email-traffic.knit.toml`
+- Example blueprint: `examples/hr-org.knit.toml`
 - Round-trip test: learn personas → generate → re-learn → compare
 - Scalability test: 100K actors, 10M records
 - Documentation updates: README, CLI help text
 - **End-to-end integration tests:**
-  - `knit validate` on all example schemas → pass
+  - `knit validate` on all example blueprints → pass
   - `knit generate` on each example → valid output files
   - Verify FK integrity in generated Parquet files
   - Verify distribution statistics match spec (KS-test on output)
   - Verify determinism: same seed → byte-identical output
   - Verify reproducibility: same output regardless of `--parallel N`
 - **Round-trip tests:**
-  - Generate from schema → learn from output → compare inferred vs original
+  - Generate from blueprint → learn from output → compare inferred vs original
 - **Performance benchmarks** (criterion):
   - Throughput: rows/sec and bytes/sec for numeric, string, mixed workloads
   - Scaling: throughput vs thread count (1, 2, 4, 8, 16)
   - Memory: peak RSS during generation
 
 **Acceptance criteria:**
-- All example schemas validate and generate successfully
+- All example blueprints validate and generate successfully
 - FK integrity holds in all outputs
 - Determinism: bit-identical output across runs with same seed
 
@@ -732,14 +732,14 @@ persona-driven data generation.
 **Scope:**
 Apply the documentation convention from `agents.md` to all existing code:
 - **knit-core:** Add `///` doc comments to all public types (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `NullSpec`, `CountSpec`, `Relationship`, `NoiseProfile`, `Correlation`, `Constraint`, `Value`, `WeightedChoice`, `TopologySpec`) and `ModelError`. Document each enum variant. Add `//!` crate-level doc.
-- **knit-schema:** Add `///` doc comments to all public functions (`parse_toml`, `parse_json`, `parse_toml_file`, `parse_json_file`, `validate`, `merge_models`, `resolve_extends`) and `SchemaError`. Add `//!` crate-level doc explaining pipeline position.
+- **knit-blueprint:** Add `///` doc comments to all public functions (`parse_toml`, `parse_json`, `parse_toml_file`, `parse_json_file`, `validate`, `merge_models`, `resolve_extends`) and `BlueprintError`. Add `//!` crate-level doc explaining pipeline position.
 - **knit-plan:** Add `///` doc comments to all plan types (`ExecutionPlan`, `Phase`, `EntityPlan`, `FieldPlan`, `GeneratorPlan`, `NullPlan`, `RngTree`, `IndexStrategy`, `KeyStoreKind`, `PlanMetadata`, `DeferredRef`, `DeferralStrategy`), `compile()`, and `PlanError`. Document each type's role and which crate produces/consumes it. Add `//!` crate-level doc.
 - Ensure `cargo doc --workspace --no-deps` produces clean output with no warnings.
 
 **Note:** All new code from PR 5 onward must follow the documentation convention in `agents.md` from the start. This PR retroactively covers PRs 1–4.
 
 **Acceptance criteria:**
-- Every public item in knit-core, knit-schema, and knit-plan has a `///` doc comment
+- Every public item in knit-core, knit-blueprint, and knit-plan has a `///` doc comment
 - Key types document their pipeline role and cross-crate interactions
 - `cargo doc --workspace --no-deps` succeeds with no missing-doc warnings
 
@@ -750,8 +750,8 @@ Apply the documentation convention from `agents.md` to all existing code:
 | PR | Crate | Focus | Est. Lines | Depends On |
 |----|-------|-------|-----------|------------|
 | 1 | knit-core | Workspace scaffold + all model types | ~1200 | — |
-| 2 | knit-schema | TOML/JSON parsing → DataModel | ~1500 | PR 1 |
-| 3 | knit-schema | Validation + extends/includes/params | ~1500 | PR 2 |
+| 2 | knit-blueprint | TOML/JSON parsing → DataModel | ~1500 | PR 1 |
+| 3 | knit-blueprint | Validation + extends/includes/params | ~1500 | PR 2 |
 | 4 | knit-plan | Execution planner + RNG tree | ~1500 | PR 3 |
 | 5 | knit-gen | Engine core + 5 basic generators | ~1800 | PR 4 |
 | 6 | knit-gen | 12 advanced generators + expressions | ~1800 | PR 5 |
@@ -761,10 +761,10 @@ Apply the documentation convention from `agents.md` to all existing code:
 | 10 | knit-bind | MiniJinja template engine | ~800 | PR 9 |
 | 11 | knit-noise | Perturbation pipeline + 9 perturbators | ~1800 | PR 8 |
 | 12 | knit-cli | validate/plan/generate commands | ~1500 | PR 10, 11 |
-| 13 | knit-cli | Schema ops + init wizard | ~1000 | PR 12 |
+| 13 | knit-cli | Blueprint ops + init wizard | ~1000 | PR 12 |
 | 14 | knit-learn | Ingestion + profiling + type inference | ~1500 | PR 3 |
 | 15 | knit-learn | Fitting + relationships + correlations | ~1800 | PR 14 |
-| 16 | — | Integration tests + example schemas | ~1500 | PR 13, 15 |
+| 16 | — | Integration tests + example blueprints | ~1500 | PR 13, 15 |
 | 17 | — | Extensions + docs + polish | ~1200 | PR 16 |
 | 18 | — | Retroactive Rustdoc | ~800 | PR 4 |
 | 19 | knit-core | Persona + actor relationship types | ~800 | PR 3 |
@@ -783,11 +783,11 @@ flowchart LR
     PR1 --> PR2 --> PR3 --> PR4 --> PR5 --> PR6 --> PR7 --> PR8 --> PR9 --> PR10 --> PR12 --> PR13 --> PR16 --> PR17
 ```
 
-The critical path runs through the forward pipeline: core → schema → plan → gen → bind → cli → integration.
+The critical path runs through the forward pipeline: core → blueprint → plan → gen → bind → cli → integration.
 
 `knit-learn` (PR 14–15) and `knit-noise` (PR 11) can be developed in parallel with later forward pipeline PRs once their dependencies are met.
 
-Phase 7 (Human Behavioral Modeling, PR 19–25) depends on PR 3 (schema validation) and can proceed independently of the forward pipeline once core types are in place.
+Phase 7 (Human Behavioral Modeling, PR 19–25) depends on PR 3 (blueprint validation) and can proceed independently of the forward pipeline once core types are in place.
 
 ### Parallelizable Work
 

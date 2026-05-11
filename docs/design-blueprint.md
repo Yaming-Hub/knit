@@ -1,8 +1,8 @@
-# knit-schema — Design Document
+# knit-blueprint — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-schema`
+**Crate:** `knit-blueprint`
 
 ---
 
@@ -16,7 +16,7 @@
 - [6. Lowering Phase](#6-lowering-phase)
 - [7. Validation Rules](#7-validation-rules)
 - [8. Error Reporting](#8-error-reporting)
-- [9. Schema Operations](#9-schema-operations)
+- [9. Blueprint Operations](#9-blueprint-operations)
 - [10. Testing Strategy](#10-testing-strategy)
 - [11. Design Decisions](#11-design-decisions)
 
@@ -24,7 +24,7 @@
 
 ## 1. Overview
 
-`knit-schema` is the bridge between textual Weave documents (`.weave.toml` /
+`knit-blueprint` is the bridge between textual Weave documents (`.knit.toml` /
 `.weave.json`) and the semantic `DataModel` defined in `knit-core`. It owns
 everything from the first byte of input to the fully validated, ready-to-plan
 data model that downstream crates consume.
@@ -36,13 +36,13 @@ The responsibility split is deliberate:
 | Concern | Owner | Rationale |
 |---------|-------|-----------|
 | Type definitions (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, …) | `knit-core` | Shared vocabulary — every crate needs these |
-| Parsing text → `DataModel` | `knit-schema` | Only this crate touches serialization formats |
-| `extends` / `includes` / `params` resolution | `knit-schema` | Composition is a schema-language concept, invisible to downstream |
-| Structural & semantic validation | `knit-schema` | Parse errors and schema errors share context (line numbers, paths) |
+| Parsing text → `DataModel` | `knit-blueprint` | Only this crate touches serialization formats |
+| `extends` / `includes` / `params` resolution | `knit-blueprint` | Composition is a blueprint-language concept, invisible to downstream |
+| Structural & semantic validation | `knit-blueprint` | Parse errors and blueprint errors share context (line numbers, paths) |
 | Execution planning, generation, output | Other crates | They receive a validated `DataModel` — no raw text, no parse state |
 
 This separation means **parse errors and model errors live in the same error
-type** (`SchemaError`), giving users a single diagnostic surface with element
+type** (`BlueprintError`), giving users a single diagnostic surface with element
 paths, line numbers, and severity levels. Downstream crates never need to
 produce parse-level diagnostics; they can assume the `DataModel` is valid.
 
@@ -50,20 +50,20 @@ produce parse-level diagnostics; they can assume the `DataModel` is valid.
 
 ```rust
 // Primary entry points
-pub fn parse_toml(input: &str) -> Result<DataModel, Vec<SchemaError>>;
-pub fn parse_json(input: &str) -> Result<DataModel, Vec<SchemaError>>;
-pub fn parse_file(path: &Path) -> Result<DataModel, Vec<SchemaError>>;
+pub fn parse_toml(input: &str) -> Result<DataModel, Vec<BlueprintError>>;
+pub fn parse_json(input: &str) -> Result<DataModel, Vec<BlueprintError>>;
+pub fn parse_file(path: &Path) -> Result<DataModel, Vec<BlueprintError>>;
 
-// Schema operations
+// Blueprint operations
 pub fn normalize(model: &DataModel) -> String;       // canonical TOML
-pub fn expand(path: &Path) -> Result<DataModel, Vec<SchemaError>>;  // flatten extends
+pub fn expand(path: &Path) -> Result<DataModel, Vec<BlueprintError>>;  // flatten extends
 pub fn generate_json_schema() -> serde_json::Value;  // JSON Schema for IDE
 
 // Selective phases (for tooling)
-pub fn parse_only(input: &str) -> Result<RawSchema, Vec<SchemaError>>;
-pub fn resolve(raw: RawSchema) -> Result<RawSchema, Vec<SchemaError>>;
-pub fn lower(raw: RawSchema) -> Result<DataModel, Vec<SchemaError>>;
-pub fn validate(model: &DataModel) -> Vec<SchemaError>;
+pub fn parse_only(input: &str) -> Result<RawBlueprint, Vec<BlueprintError>>;
+pub fn resolve(raw: RawBlueprint) -> Result<RawBlueprint, Vec<BlueprintError>>;
+pub fn lower(raw: RawBlueprint) -> Result<DataModel, Vec<BlueprintError>>;
+pub fn validate(model: &DataModel) -> Vec<BlueprintError>;
 ```
 
 ---
@@ -75,12 +75,12 @@ pub fn validate(model: &DataModel) -> Vec<SchemaError>;
 | `toml` | TOML deserialization (primary format) | Yes |
 | `serde` / `serde_json` | JSON deserialization + internal serde derives | Yes |
 | `knit-core` | `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value`, and all shared types | Yes |
-| `thiserror` | Structured error types (`SchemaError`) | Yes |
+| `thiserror` | Structured error types (`BlueprintError`) | Yes |
 | `chrono` | Parse temporal literals (`date`, `time`, `datetime`, `duration`) | Yes |
 | `jsonschema` | Validate documents against the Weave JSON Schema | Optional |
 | `url` | Resolve `includes` paths and relative references | Optional |
 
-`knit-schema` intentionally has **no runtime dependencies on generation or
+`knit-blueprint` intentionally has **no runtime dependencies on generation or
 output crates**. It never executes generators, samples distributions, or writes
 files. Its job ends when it hands a validated `DataModel` to `knit-plan`.
 
@@ -88,20 +88,20 @@ files. Its job ends when it hands a validated `DataModel` to `knit-plan`.
 
 ## 3. Pipeline Architecture
 
-The schema pipeline has four sequential phases. Each phase transforms one
+The blueprint pipeline has four sequential phases. Each phase transforms one
 representation into the next, and each phase produces its own category of
 errors. The pipeline short-circuits on the first phase that produces fatal
 errors.
 
 ```mermaid
 flowchart LR
-    input([".weave.toml\n.weave.json"]) --> parse["Phase 1\n**Parse**\nText → Raw AST"]
+    input([".knit.toml\n.weave.json"]) --> parse["Phase 1\n**Parse**\nText → Raw AST"]
     parse --> resolve["Phase 2\n**Resolve**\nextends / includes / params"]
     resolve --> lower["Phase 3\n**Lower**\nRaw AST → DataModel"]
     lower --> validate["Phase 4\n**Validate**\nStructural + Semantic"]
     validate --> output(["Validated\nDataModel"])
 
-    parse -.->|"ParseError"| errors([SchemaError])
+    parse -.->|"ParseError"| errors([BlueprintError])
     resolve -.->|"ResolveError"| errors
     lower -.->|"LowerError"| errors
     validate -.->|"ValidationError"| errors
@@ -128,7 +128,7 @@ pass so the user can fix multiple issues at once.
 ### Format Support
 
 TOML is the primary format for human and AI authoring. JSON is accepted for
-programmatic pipelines and AI-generated schemas. Both formats parse into the
+programmatic pipelines and AI-generated blueprints. Both formats parse into the
 same intermediate representation: a `serde_json::Value` tree.
 
 ```mermaid
@@ -160,7 +160,7 @@ Weave enforces a **restricted canonical TOML subset** for AI reliability:
 - No multi-line basic strings for values (only for readability in comments)
 
 These restrictions are not enforced at parse time (TOML's parser accepts valid
-TOML), but the `normalize` operation rewrites to canonical form, and schema
+TOML), but the `normalize` operation rewrites to canonical form, and blueprint
 linting can warn about non-canonical usage.
 
 ### Error Recovery Strategy
@@ -168,10 +168,10 @@ linting can warn about non-canonical usage.
 Parse-phase errors are **fatal** — the pipeline cannot proceed without a
 syntactically valid document. However, the parser provides helpful context:
 
-1. **TOML parse errors**: The `toml` crate reports line/column numbers. `knit-schema`
+1. **TOML parse errors**: The `toml` crate reports line/column numbers. `knit-blueprint`
    wraps these with file path context and a hint about common mistakes (e.g.,
    "Did you mean to use `[[entities]]` instead of `[entities]`?").
-2. **JSON parse errors**: `serde_json` reports byte offset. `knit-schema` converts
+2. **JSON parse errors**: `serde_json` reports byte offset. `knit-blueprint` converts
    this to a line/column number for consistent error display.
 3. **Format detection**: File extension (`.toml` / `.json`) determines parser. If
    the extension is ambiguous, content sniffing (`{` prefix → JSON, otherwise TOML)
@@ -206,7 +206,7 @@ sequenceDiagram
     end
 
     alt has extends
-        Resolver->>FileSystem: Read parent schema
+        Resolver->>FileSystem: Read parent blueprint
         FileSystem-->>Resolver: Parsed parent AST
         Resolver->>Resolver: 3. Recursively resolve parent
         Resolver->>Resolver: 4. Merge child over parent (keyed merge)
@@ -224,13 +224,13 @@ merged tree).
 
 ### 5.1 `extends` Semantics
 
-`extends` provides **single inheritance** for schema composition. A child schema
+`extends` provides **single inheritance** for blueprint composition. A child blueprint
 specifies a parent file, and the engine merges the child's declarations over
 the parent's.
 
 ```toml
-# child.weave.toml
-extends = "base.weave.toml"
+# child.knit.toml
+extends = "base.knit.toml"
 
 [model]
 name = "stress_test"   # overrides parent's model.name
@@ -281,10 +281,10 @@ merge(parent, child) → result:
 #### Extends Chain Depth
 
 - Extends chains are resolved recursively: if parent also has `extends`, resolve
-  it first. The effective schema is the result of folding: `root → … → parent → child`.
+  it first. The effective blueprint is the result of folding: `root → … → parent → child`.
 - **Circular extends** are detected and reported as a fatal `ResolveError`.
 - Maximum chain depth is 16 (configurable). Exceeding this limit produces an error
-  suggesting the schema hierarchy is too deep.
+  suggesting the blueprint hierarchy is too deep.
 
 ### 5.2 `includes` Semantics
 
@@ -294,8 +294,8 @@ type and mixin definitions into scope.
 
 ```toml
 includes = [
-    "lib/common-types.weave.toml",
-    "lib/audit-mixins.weave.toml",
+    "lib/common-types.knit.toml",
+    "lib/audit-mixins.knit.toml",
 ]
 ```
 
@@ -310,8 +310,8 @@ includes = [
 
 ### 5.3 `params` Substitution
 
-Parameters are compile-time constants that allow schema authors to create
-configurable, reusable schemas.
+Parameters are compile-time constants that allow blueprint authors to create
+configurable, reusable blueprints.
 
 ```toml
 [params]
@@ -322,7 +322,7 @@ start_date = { type = "string", default = "2020-01-01" }
 
 **Substitution rules:**
 
-1. Collect all `[params]` definitions from the resolved schema
+1. Collect all `[params]` definitions from the resolved blueprint
 2. Merge CLI overrides: `--param user_count=500000` replaces the default
 3. Validate types: each param value must match its declared type
 4. Walk the entire raw AST and replace `${param_name}` occurrences in string
@@ -549,12 +549,12 @@ violation before returning.
 
 ## 8. Error Reporting
 
-### SchemaError Type
+### BlueprintError Type
 
-All errors across all phases are represented as `SchemaError`:
+All errors across all phases are represented as `BlueprintError`:
 
 ```rust
-pub struct SchemaError {
+pub struct BlueprintError {
     /// Unique error code (e.g., "S-001", "T-003", "R-005")
     pub code: String,
 
@@ -607,7 +607,7 @@ noise[1].params.multiplier
 
 ```
 error[S-008]: Missing required parameter 'std_dev' for normal distribution
-  --> ecommerce.weave.toml:42:5
+  --> ecommerce.knit.toml:42:5
    |
 42 |     generator = { type = "distribution", distribution = "normal", params = { mean = 35.0 } }
    |     ^^^^^^^^^ required parameter 'std_dev' not found in params
@@ -615,7 +615,7 @@ error[S-008]: Missing required parameter 'std_dev' for normal distribution
    = hint: Add 'std_dev = <value>' to the params table. Example: params = { mean = 35.0, std_dev = 12.0 }
 
 error[R-005]: FK field type mismatch in relationship 'order_user'
-  --> ecommerce.weave.toml:78:1
+  --> ecommerce.knit.toml:78:1
    |
 78 | [[relationships]]
    | ^^^^^^^^^^^^^^^^^ order.user_id (int) does not match user.id (uuid)
@@ -623,7 +623,7 @@ error[R-005]: FK field type mismatch in relationship 'order_user'
    = hint: Change order.user_id to type = "uuid" to match the referenced primary key
 
 warning[M-012]: Uniqueness may be infeasible for field 'user.email'
-  --> ecommerce.weave.toml:35:5
+  --> ecommerce.knit.toml:35:5
    |
 35 |     unique = true
    |     ^^^^^^^^^^^^^ domain of faker(internet.email) may not produce 1,000,000 unique values
@@ -646,7 +646,7 @@ For CI integration and AI pipelines, errors are emitted as JSON when
       "message": "Missing required parameter 'std_dev' for normal distribution",
       "element_path": "entities[user].fields[age].generator",
       "location": {
-        "file": "ecommerce.weave.toml",
+        "file": "ecommerce.knit.toml",
         "line": 42,
         "column": 5
       },
@@ -663,21 +663,21 @@ For CI integration and AI pipelines, errors are emitted as JSON when
 
 | Level | Meaning | Blocks pipeline? |
 |-------|---------|-----------------|
-| **Error** | Schema is invalid; cannot proceed to planning/generation | Yes |
-| **Warning** | Schema is technically valid but may produce unexpected results | No |
+| **Error** | Blueprint is invalid; cannot proceed to planning/generation | Yes |
+| **Warning** | Blueprint is technically valid but may produce unexpected results | No |
 | **Info** | Informational diagnostic (e.g., cycle classification, implicit defaults) | No |
 
 ---
 
-## 9. Schema Operations
+## 9. Blueprint Operations
 
-Beyond parsing and validation, `knit-schema` provides three operations for
-schema tooling.
+Beyond parsing and validation, `knit-blueprint` provides three operations for
+blueprint tooling.
 
 ### 9.1 `normalize` — Canonical Form Rewrite
 
-`knit schema normalize <file>` reads a Weave schema and rewrites it to the
-canonical TOML form. This ensures consistent formatting across schemas,
+`knit blueprint normalize <file>` reads a knit blueprint and rewrites it to the
+canonical TOML form. This ensures consistent formatting across blueprints,
 simplifies diffs, and produces output that is maximally AI-friendly.
 
 **Normalization rules:**
@@ -698,14 +698,14 @@ twice always produces the same output.
 
 ### 9.2 `expand` — Flatten Extends Chain
 
-`knit schema expand <file>` resolves the full `extends` chain and `includes`
-imports, then emits a standalone schema with no external references.
+`knit blueprint expand <file>` resolves the full `extends` chain and `includes`
+imports, then emits a standalone blueprint with no external references.
 
 **Use cases:**
 
-- **Debugging**: See the effective schema after inheritance
-- **Archiving**: Produce a self-contained schema for reproducibility
-- **AI pipelines**: Feed the expanded schema to an LLM that doesn't need to
+- **Debugging**: See the effective blueprint after inheritance
+- **Archiving**: Produce a self-contained blueprint for reproducibility
+- **AI pipelines**: Feed the expanded blueprint to an LLM that doesn't need to
   resolve file references
 
 **Behavior:**
@@ -719,14 +719,14 @@ imports, then emits a standalone schema with no external references.
 
 ### 9.3 JSON Schema Generation
 
-`knit-schema` can generate a JSON Schema document that describes the Weave
-schema language. This schema is used for:
+`knit-blueprint` can generate a JSON Schema document that describes the Weave
+blueprint language. This blueprint is used for:
 
 - **IDE validation**: VS Code, JetBrains, and other editors can validate
-  `.weave.toml` / `.weave.json` files in real time
-- **AI pipeline pre-checks**: Validate AI-generated schemas before running the
+  `.knit.toml` / `.weave.json` files in real time
+- **AI pipeline pre-checks**: Validate AI-generated blueprints before running the
   full `knit validate` pipeline (faster feedback loop)
-- **Documentation**: Auto-generate documentation from the schema
+- **Documentation**: Auto-generate documentation from the blueprint
 
 The JSON Schema is generated from the `knit-core` type definitions using
 serde reflection, with manual annotations for:
@@ -740,7 +740,7 @@ serde reflection, with manual annotations for:
 pub fn generate_json_schema() -> serde_json::Value;
 ```
 
-The generated schema targets **JSON Schema Draft 2020-12** for maximum
+The generated blueprint targets **JSON Schema Draft 2020-12** for maximum
 editor/tooling compatibility.
 
 ---
@@ -758,39 +758,39 @@ editor/tooling compatibility.
 | **Params substitution** | `${param}` replaced, type coercion works, CLI overrides apply | Hand-written |
 | **Lowering** | Each generator type, distribution, temporal literal lowers correctly | One test per generator × type combination |
 | **Validation errors** | Each validation rule triggers on its specific violation | One test per check code (S-001, T-001, …) |
-| **Validation happy path** | Valid schemas pass without errors or warnings | Golden file tests |
+| **Validation happy path** | Valid blueprints pass without errors or warnings | Golden file tests |
 | **Golden files** | `normalize` and `expand` produce exact expected output | Snapshot testing with `.expected` files |
 | **Error messages** | Error output matches expected format (human + JSON) | Snapshot testing |
-| **Edge cases** | Empty schema, minimal schema, deeply nested extends, max params | Hand-written |
+| **Edge cases** | Empty blueprint, minimal blueprint, deeply nested extends, max params | Hand-written |
 
 ### Test File Organization
 
 ```
 tests/
 ├── fixtures/
-│   ├── valid/                    # Valid schemas (should parse + validate cleanly)
-│   │   ├── minimal.weave.toml
-│   │   ├── ecommerce.weave.toml
-│   │   ├── temporal.weave.toml
-│   │   └── all-generators.weave.toml
-│   ├── invalid/                  # Invalid schemas (one violation each)
-│   │   ├── missing-model.weave.toml          # → S-001
-│   │   ├── duplicate-entity.weave.toml       # → S-002
-│   │   ├── type-mismatch.weave.toml          # → T-001
-│   │   └── fk-type-mismatch.weave.toml       # → R-005
+│   ├── valid/                    # Valid blueprints (should parse + validate cleanly)
+│   │   ├── minimal.knit.toml
+│   │   ├── ecommerce.knit.toml
+│   │   ├── temporal.knit.toml
+│   │   └── all-generators.knit.toml
+│   ├── invalid/                  # Invalid blueprints (one violation each)
+│   │   ├── missing-model.knit.toml          # → S-001
+│   │   ├── duplicate-entity.knit.toml       # → S-002
+│   │   ├── type-mismatch.knit.toml          # → T-001
+│   │   └── fk-type-mismatch.knit.toml       # → R-005
 │   ├── extends/                  # Extends merge test pairs
-│   │   ├── base.weave.toml
-│   │   ├── override-count.weave.toml
-│   │   ├── add-field.weave.toml
-│   │   ├── remove-entity.weave.toml
+│   │   ├── base.knit.toml
+│   │   ├── override-count.knit.toml
+│   │   ├── add-field.knit.toml
+│   │   ├── remove-entity.knit.toml
 │   │   └── deep-chain/
-│   │       ├── grandparent.weave.toml
-│   │       ├── parent.weave.toml
-│   │       └── child.weave.toml
+│   │       ├── grandparent.knit.toml
+│   │       ├── parent.knit.toml
+│   │       └── child.knit.toml
 │   ├── includes/                 # Include import tests
-│   │   ├── types-lib.weave.toml
-│   │   ├── mixins-lib.weave.toml
-│   │   └── consumer.weave.toml
+│   │   ├── types-lib.knit.toml
+│   │   ├── mixins-lib.knit.toml
+│   │   └── consumer.knit.toml
 │   └── golden/                   # Expected output for normalize/expand
 │       ├── ecommerce.normalized.toml
 │       └── override-count.expanded.toml
@@ -811,7 +811,7 @@ parse(normalize(T)) == parse(T)
 ```
 
 This ensures that normalization does not change semantics. The test generates
-random valid schemas (via a schema fuzzer) and verifies this property.
+random valid blueprints (via a blueprint fuzzer) and verifies this property.
 
 ### Extends Merge Test Matrix
 
@@ -919,7 +919,7 @@ validation.
   error positions.
 
 **Tradeoff:** Span tracking adds memory overhead (one span per key/value). For
-very large schemas this is negligible (schemas are typically < 1MB).
+very large blueprints this is negligible (blueprints are typically < 1MB).
 
 ### DD-6: Cycles Deferred, Not Rejected
 
@@ -932,12 +932,12 @@ They are not rejected as errors.
   return → order). Rejecting cycles would make Weave less expressive.
 - The constraint is that cyclic FK fields must be `nullable` (so phase 1 can
   leave them NULL and phase 2 can backpatch). This is validated as M-017.
-- The schema crate's job is to detect and classify; the plan crate's job is to
+- The blueprint crate's job is to detect and classify; the plan crate's job is to
   schedule generation phases.
 
-**Tradeoff:** The schema crate must perform cycle detection (DFS on the
+**Tradeoff:** The blueprint crate must perform cycle detection (DFS on the
 relationship graph) even though it doesn't act on cycles. This is a lightweight
-operation on typical schemas (< 100 entities).
+operation on typical blueprints (< 100 entities).
 
 ### DD-7: Normalize is Idempotent and Semantics-Preserving
 
@@ -950,7 +950,7 @@ and never changes semantics. It is idempotent.
 - Semantics preservation means `parse(normalize(x)) == parse(x)` always holds.
   Users can normalize freely without fear of changing behavior.
 - Comments are preserved in their relative positions (between the keys they
-  annotate). This is critical for human-authored schemas.
+  annotate). This is critical for human-authored blueprints.
 
 **Tradeoff:** Comment preservation in TOML is difficult since the `toml` crate
 discards comments during parsing. Implementation requires either a

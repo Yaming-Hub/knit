@@ -80,7 +80,7 @@ flowchart LR
 
 #### Stage 1 — Clean
 
-The clean stage introduces realistic imperfections while preserving **all** schema
+The clean stage introduces realistic imperfections while preserving **all** blueprint
 constraints: types remain valid, uniqueness holds, foreign keys resolve, NOT NULL
 columns stay populated, and values remain within declared ranges.
 
@@ -100,7 +100,7 @@ while preserving structural integrity (types, FK references, primary keys).
 **Examples:**
 - **Null injection** — set values to null with a configured probability. Respects
   NOT NULL annotations on fields that are explicitly marked non-nullable; only injects
-  nulls where the schema allows it (or where the user has explicitly opted in).
+  nulls where the blueprint allows it (or where the user has explicitly opted in).
 - **Soft duplicates** — insert near-duplicate rows with slight variations in non-key
   fields. Primary key uniqueness is preserved; other uniqueness constraints may be
   violated.
@@ -125,7 +125,7 @@ for robustness testing, error-handling validation, and anomaly detection trainin
 
 ### 3.3 User Control
 
-Users control which stages run via the Weave schema and CLI flags:
+Users control which stages run via the knit blueprint and CLI flags:
 
 | Use Case | Stages | Rationale |
 |----------|--------|-----------|
@@ -236,7 +236,7 @@ Randomly sets field values to null.
 | `probability` | `f64` | 0.01 | Per-record probability of nulling the value |
 
 **Behavior:** In the clean stage, NullInjector only targets fields where
-`nullable = true` in the schema. In the constrained stage, it may null any field
+`nullable = true` in the blueprint. In the constrained stage, it may null any field
 regardless of the nullable annotation. The null is applied by flipping the
 corresponding bit in the Arrow null bitmask — no data copy required.
 
@@ -430,7 +430,7 @@ Omits fields entirely from document-oriented output (JSON/JSONL) to simulate
 semi-structured data where some records lack optional keys.
 
 Unlike other perturbators, `MissingField` is **not** an Arrow `RecordBatch`
-transform — it operates at the serialization layer. Arrow's fixed schema cannot
+transform — it operates at the serialization layer. Arrow's fixed blueprint cannot
 represent per-row field absence, so the JSON sink itself decides omission using
 a deterministic per-row RNG.
 
@@ -454,7 +454,7 @@ incorporates `rows_written` for batch-size independence.
 **Format-specific:**
 - **JSON/JSONL** — field key is omitted from the output object
 - **CSV/Parquet/Avro** — warning emitted; field appears as normal (these formats
-  have fixed column schemas and cannot represent missing fields)
+  have fixed column blueprints and cannot represent missing fields)
 
 ---
 
@@ -522,7 +522,7 @@ flowchart LR
     Clean --> Constrained --> Breaking
 ```
 
-Within a stage, perturbators are applied in declaration order from the Weave schema.
+Within a stage, perturbators are applied in declaration order from the knit blueprint.
 
 ### Probability Stacking
 
@@ -542,9 +542,9 @@ reasoning about noise levels straightforward.
 
 ## 8. Configuration
 
-### Weave Schema Mapping
+### knit blueprint Mapping
 
-Noise profiles declared in the Weave schema map directly to perturbator instances:
+Noise profiles declared in the knit blueprint map directly to perturbator instances:
 
 ```toml
 [[noise]]

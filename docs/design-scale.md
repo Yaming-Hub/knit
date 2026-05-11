@@ -9,7 +9,7 @@ want to generate a 52-week, 100-person, 20-location version. Uniform row
 multiplication cannot express this.
 
 `knit scale` introduces dimension-aware scaling: the tool analyzes a learned
-schema, discovers which axes the data varies along, and lets the user scale each
+blueprint, discovers which axes the data varies along, and lets the user scale each
 independently.
 
 ---
@@ -19,7 +19,7 @@ independently.
 ### 2.1 Discover Dimensions
 
 ```bash
-knit scale schema.weave.toml --analyze
+knit scale blueprint.knit.toml --analyze
 ```
 
 Output:
@@ -35,26 +35,26 @@ Output:
   rows          built-in   77 total         Uniform row scaling (--count)
 
 Suggested commands:
-  knit scale schema.weave.toml -o out/ --actors 100
-  knit scale schema.weave.toml -o out/ --time 52w
-  knit scale schema.weave.toml -o out/ --dim location=10
-  knit scale schema.weave.toml -o out/ --actors 100 --time 52w --dim location=10
+  knit scale blueprint.knit.toml -o out/ --actors 100
+  knit scale blueprint.knit.toml -o out/ --time 52w
+  knit scale blueprint.knit.toml -o out/ --dim location=10
+  knit scale blueprint.knit.toml -o out/ --actors 100 --time 52w --dim location=10
 ```
 
 ### 2.2 Generate Scaled Data
 
 ```bash
 # Scale people to 100, extend time to 52 weeks
-knit scale schema.weave.toml -o output/ --actors 100 --time 52w --format csv
+knit scale blueprint.knit.toml -o output/ --actors 100 --time 52w --format csv
 
 # Scale a custom dimension (location) from 3 to 20 values
-knit scale schema.weave.toml -o output/ --dim location=20
+knit scale blueprint.knit.toml -o output/ --dim location=20
 
 # Combine all dimensions
-knit scale schema.weave.toml -o output/ --actors 100 --time 52w --dim location=20
+knit scale blueprint.knit.toml -o output/ --actors 100 --time 52w --dim location=20
 
 # Preview what would be generated without writing files
-knit scale schema.weave.toml --actors 100 --time 52w --dry-run
+knit scale blueprint.knit.toml --actors 100 --time 52w --dry-run
 ```
 
 ---
@@ -63,7 +63,7 @@ knit scale schema.weave.toml --actors 100 --time 52w --dry-run
 
 ### 3.1 Built-in Dimensions
 
-These are auto-detected from schema structure and require no user annotation.
+These are auto-detected from blueprint structure and require no user annotation.
 
 #### Actors (`--actors N`)
 
@@ -112,7 +112,7 @@ Existing mechanism. Multiplies all entity counts by a factor. Can combine with
 ### 3.2 Custom Dimensions (`--dim NAME=N`)
 
 Custom dimensions are categorical fields that the data naturally varies along.
-They are **auto-detected** from the schema but scaled via the generic `--dim`
+They are **auto-detected** from the blueprint but scaled via the generic `--dim`
 flag.
 
 **Detection criteria — a field is a custom dimension candidate when:**
@@ -153,7 +153,7 @@ with `--dim location=20:faker=country_code`.
 **Interaction with conditional generators:** When a dimension field (e.g.,
 `SignalType`) is used as the condition key for other fields' conditional
 generators, scaling that dimension adds new values that route to the default
-branch. This preserves schema consistency — new signal types produce null
+branch. This preserves blueprint consistency — new signal types produce null
 values for signal-specific columns, matching the learned default behavior.
 
 ---
@@ -175,7 +175,7 @@ total_rows ≈ actors × time_periods × density_per_actor_per_period × dim_sca
 The `--dry-run` flag shows computed counts before generating:
 
 ```bash
-knit scale schema.weave.toml --actors 100 --time 52w --dim location=10 --dry-run
+knit scale blueprint.knit.toml --actors 100 --time 52w --dim location=10 --dry-run
 
 # Output:
 # ═══ Scaling Plan (dry run) ═══
@@ -199,7 +199,7 @@ knit scale schema.weave.toml --actors 100 --time 52w --dim location=10 --dry-run
 ### 5.1 Pipeline
 
 ```
-analyze(schema) → ScalingPlan → rewrite(schema, plan) → generate(modified_schema)
+analyze(blueprint) → ScalingPlan → rewrite(blueprint, plan) → generate(modified_blueprint)
 ```
 
 `knit scale` is an orchestration layer over existing `generate`. No changes to
@@ -293,7 +293,7 @@ src/scale/custom.rs          — Custom dimension detection, value generation
 knit scale <SCHEMA> [OPTIONS]
 
 Arguments:
-    <SCHEMA>                  Path to the learned schema (.weave.toml)
+    <SCHEMA>                  Path to the learned blueprint (.knit.toml)
 
 Options:
     --analyze                 Show discovered dimensions without generating
@@ -345,8 +345,8 @@ Separate knob for rows-per-actor-per-period. Scoped per entity:
 When dimensions are correlated (e.g., more locations → more actors per location),
 allow specifying the interaction: `--dim location=20 --actors-per-location 5`.
 
-### 8.4 Schema-Level Dimension Annotations
-Allow users to explicitly mark fields as scaling dimensions in the schema:
+### 8.4 Blueprint-Level Dimension Annotations
+Allow users to explicitly mark fields as scaling dimensions in the blueprint:
 ```toml
 [[entities.fields]]
 name = "Region"

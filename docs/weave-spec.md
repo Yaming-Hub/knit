@@ -1,4 +1,4 @@
-# Weave Schema Language Specification
+# knit blueprint Language Specification
 
 **Version:** 0.1.0
 **Status:** Draft
@@ -10,7 +10,7 @@
 
 ### 1.1 What is Weave?
 
-Weave is a declarative schema language for specifying synthetic datasets. A Weave
+Weave is a declarative blueprint language for specifying synthetic datasets. A Weave
 document describes the shape, statistical properties, relationships, and quality
 characteristics of data to be generated. The Knit engine reads a Weave document and
 produces datasets at arbitrary scale.
@@ -21,7 +21,7 @@ produces datasets at arbitrary scale.
 |------|-----------|
 | **AI-friendly** | LLMs can reliably read, generate, and modify Weave documents. One canonical way to express each concept. |
 | **Statistically expressive** | First-class support for probability distributions, correlations, and temporal patterns. |
-| **Relationally complete** | Multi-table schemas with foreign keys, cardinality distributions, and cyclic references. |
+| **Relationally complete** | Multi-table blueprints with foreign keys, cardinality distributions, and cyclic references. |
 | **Extensible** | Custom types, custom generators, parameterization, and plugin hooks. |
 | **Format-agnostic** | Weave describes *data*, not *output format*. Output binding is a separate concern. |
 | **High-performance** | Language constructs map to efficient columnar generation (100GB+ in hours). |
@@ -139,7 +139,7 @@ Unresolved parameter references are validation errors.
 ### 3.3 CLI Override
 
 ```bash
-knit generate schema.toml --param scale=10.0 --param user_count=1000000
+knit generate blueprint.toml --param scale=10.0 --param user_count=1000000
 ```
 
 ---
@@ -897,8 +897,8 @@ generator = { type = "lookup", params = {
 ```
 
 **Portability rules:**
-- Paths must be relative to the schema file
-- Source files must be included alongside the schema
+- Paths must be relative to the blueprint file
+- Source files must be included alongside the blueprint
 - Supported formats: CSV, JSON (array), Parquet
 - Missing file is a validation error
 - Deterministic sampling (reproducible with same seed)
@@ -1510,7 +1510,7 @@ Each noise type operates at one of three stages:
 
 | Stage | Preserves Constraints? | Description |
 |-------|----------------------|-------------|
-| `clean` | Yes | Noise that preserves all schema constraints (types, uniqueness, FKs) |
+| `clean` | Yes | Noise that preserves all blueprint constraints (types, uniqueness, FKs) |
 | `constrained` | Partially | May violate soft constraints (nullability) but preserves structure |
 | `breaking` | No | Intentionally violates constraints (FK integrity, type safety) |
 
@@ -1531,7 +1531,7 @@ params = { multiplier = { distribution = "uniform", params = { min = 5.0, max = 
 
 ---
 
-## 12. Schema Composition
+## 12. Blueprint Composition
 
 ### 12.1 Extends (Single Inheritance)
 
@@ -1582,13 +1582,13 @@ probability = 0.05
 ```toml
 [[entities]]
 name = "legacy_table"
-remove = true                # Removes this entity from the effective schema
+remove = true                # Removes this entity from the effective blueprint
 ```
 
-**Inspecting effective schema:**
+**Inspecting effective blueprint:**
 
 ```bash
-knit schema expand my_schema.toml     # Outputs fully flattened schema
+knit blueprint expand my_blueprint.toml     # Outputs fully flattened blueprint
 ```
 
 ### 12.2 Includes (Type Libraries)
@@ -2074,7 +2074,7 @@ tools. The following table maps features from popular tools to Weave constructs:
 
 | Feature | Synth | Mockaroo | SDV | Faker | Weave |
 |---------|-------|---------|-----|-------|-------|
-| Declarative schema | JSON | UI/JSON | Python/YAML | Code | TOML/JSON |
+| Declarative blueprint | JSON | UI/JSON | Python/YAML | Code | TOML/JSON |
 | Statistical distributions | Limited | No | Learned | No | 17+ built-in |
 | Weighted choices | `one_of` | Weighted | N/A | N/A | `one_of` with weights |
 | Regex patterns | ✓ | ✓ | No | No | `pattern` generator |
@@ -2095,7 +2095,7 @@ tools. The following table maps features from popular tools to Weave constructs:
 | Noise injection | No | No | No | No | `[[noise]]` profiles |
 | Custom types | No | No | No | No | `[[types]]` |
 | Reusable field groups | No | No | No | No | `[[mixins]]` |
-| Schema composition | No | No | No | No | `extends` / `includes` |
+| Blueprint composition | No | No | No | No | `extends` / `includes` |
 | Parameterization | No | No | No | No | `[params]` |
 | Self-referential relations | No | No | No | No | ✓ with `acyclic`, `max_depth` |
 | Cyclic relations | No | No | No | No | Automatic two-phase gen |
@@ -2118,7 +2118,7 @@ tools. The following table maps features from popular tools to Weave constructs:
 
 ### 18.1 Custom Generators
 
-Users can register custom generators by name. In the schema:
+Users can register custom generators by name. In the blueprint:
 
 ```toml
 generator = { type = "custom", params = { name = "acme::iban", country = "DE" } }
@@ -2160,11 +2160,11 @@ The following names are reserved and cannot be used as entity, field, type, or m
 
 ## 20. File Extension
 
-Weave documents use the `.weave.toml` extension (TOML format) or `.weave.json`
+Weave documents use the `.knit.toml` extension (TOML format) or `.weave.json`
 (JSON format). The engine auto-detects format from the extension.
 
 ```
-my_dataset.weave.toml
+my_dataset.knit.toml
 my_dataset.weave.json
 ```
 
@@ -2223,7 +2223,7 @@ Noise           = "[[noise]]" "target" "=" STRING "type" "=" STRING
 
 ## Appendix B: Versioning Policy
 
-Weave follows semantic versioning for the schema language:
+Weave follows semantic versioning for the blueprint language:
 
 - **Patch** (0.1.x): Bug fixes, clarifications. All valid documents remain valid.
 - **Minor** (0.x.0): New features (additive). Existing documents remain valid.

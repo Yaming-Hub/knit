@@ -1,6 +1,6 @@
 # Examples Walkthrough
 
-Knit ships with five example schemas in the
+Knit ships with five example blueprints in the
 [`examples/`](../../examples/) directory. This guide walks through each one,
 explaining the data model, key generators, and what you'll see in the output.
 
@@ -13,22 +13,22 @@ explaining the data model, key generators, and what you'll see in the output.
 All examples follow the same workflow:
 
 ```bash
-# Validate the schema
-knit validate examples/ecommerce.weave.toml
+# Validate the blueprint
+knit validate examples/ecommerce.knit.toml
 
 # Preview the execution plan
-knit plan examples/ecommerce.weave.toml
+knit plan examples/ecommerce.knit.toml
 
 # Generate data as Parquet (default)
-knit generate examples/ecommerce.weave.toml -o ./output/ecommerce
+knit generate examples/ecommerce.knit.toml -o ./output/ecommerce
 
 # Generate as CSV to inspect easily
-knit generate examples/ecommerce.weave.toml -o ./output/ecommerce --format csv
+knit generate examples/ecommerce.knit.toml -o ./output/ecommerce --format csv
 ```
 
 ---
 
-## 1. E-Commerce — `ecommerce.weave.toml`
+## 1. E-Commerce — `ecommerce.knit.toml`
 
 **What it demonstrates:** A classic multi-table transactional model with
 foreign keys, weighted categories, and realistic value distributions.
@@ -98,7 +98,7 @@ erDiagram
 
 ---
 
-## 2. IoT Sensors — `iot_sensors.weave.toml`
+## 2. IoT Sensors — `iot_sensors.knit.toml`
 
 **What it demonstrates:** Device telemetry with geographic data, sensor
 readings, and alert systems.
@@ -157,7 +157,7 @@ erDiagram
 
 ---
 
-## 3. Server Logs — `server_logs.weave.toml`
+## 3. Server Logs — `server_logs.knit.toml`
 
 **What it demonstrates:** Web server event streams with HTTP request patterns,
 error rates, and multi-region deployment.
@@ -215,7 +215,7 @@ erDiagram
 
 ---
 
-## 4. Financial — `financial.weave.toml`
+## 4. Financial — `financial.knit.toml`
 
 **What it demonstrates:** Banking transactions with correlated fields and
 fraud detection flags.
@@ -283,7 +283,7 @@ customers with large balances are typically lower risk.
 
 ---
 
-## 5. HR Organization — `hr_org.weave.toml`
+## 5. HR Organization — `hr_org.knit.toml`
 
 **What it demonstrates:** Self-referential hierarchies and organizational
 structure.
@@ -370,8 +370,8 @@ a natural organizational hierarchy.
 
 ## What's Next?
 
-- **[Schema Language Tutorial](schema-language.md)** — Learn to build your own
-  schemas using these techniques
+- **[Blueprint Language Tutorial](blueprint-language.md)** — Learn to build your own
+  blueprints using these techniques
 - **[Noise Injection Guide](noise.md)** — Add data quality issues to any of
   these examples
 - **[CLI Reference](cli-reference.md)** — All generation options and formats

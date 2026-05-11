@@ -1,6 +1,6 @@
-# Weave Schema Language Tutorial
+# knit blueprint Language Tutorial
 
-A practical, example-driven tutorial for writing Knit schemas. For the formal
+A practical, example-driven tutorial for writing Knit blueprints. For the formal
 grammar and exhaustive reference, see the
 [Weave Specification](../weave-spec.md).
 
@@ -10,7 +10,7 @@ grammar and exhaustive reference, see the
 
 ## Table of Contents
 
-- [Schema Structure](#schema-structure)
+- [Blueprint Structure](#blueprint-structure)
 - [Entity Tags](#entity-tags)
 - [Field Definitions](#field-definitions)
 - [Data Types](#data-types)
@@ -18,7 +18,7 @@ grammar and exhaustive reference, see the
 - [Count Specifications](#count-specifications)
 - [Null Injection](#null-injection)
 - [Relationships](#relationships)
-- [Schema Inheritance](#schema-inheritance)
+- [Blueprint Inheritance](#blueprint-inheritance)
 - [Correlations](#correlations)
 - [Noise Profiles](#noise-profiles)
 - [Custom Types](#custom-types)
@@ -27,12 +27,12 @@ grammar and exhaustive reference, see the
 
 ---
 
-## Schema Structure
+## Blueprint Structure
 
-Every `.weave.toml` file has this top-level structure:
+Every `.knit.toml` file has this top-level structure:
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "my_dataset"
@@ -58,7 +58,7 @@ seed = 42
 
 | Field | Description |
 |-------|-------------|
-| `schema_version` | Always `"1.0"` |
+| `blueprint_version` | Always `"1.0"` |
 | `[model].name` | Dataset name (used in output file naming) |
 | `[model].seed` | RNG seed for deterministic, reproducible output |
 
@@ -77,7 +77,7 @@ count = 1000
 
 Tags are string arrays — use them to annotate entities with metadata like data
 classification (`pii`, `sensitive`), domain (`core`, `analytics`), or lifecycle
-(`deprecated`, `experimental`). Tags are preserved in the schema but do not
+(`deprecated`, `experimental`). Tags are preserved in the blueprint but do not
 affect data generation.
 
 ---
@@ -440,7 +440,7 @@ p = [0.4, 0.3, 0.2, 0.1]
 - Output: list of integer counts summing to `n`
 - Uses sequential-binomial method for O(k) sampling per row
 
-See `examples/vector_distributions.weave.toml` for a complete example.
+See `examples/vector_distributions.knit.toml` for a complete example.
 
 ### `one_of` — Weighted Categorical Choices
 
@@ -534,7 +534,7 @@ sampling = "uniform"
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `source` | Yes | Path to data file (relative to schema file) |
+| `source` | Yes | Path to data file (relative to blueprint file) |
 | `column` | Yes | Column name to sample from |
 | `format` | Yes | File format: `csv`, `json`, or `parquet` |
 | `sampling` | No | `uniform` (default), `weighted`, or `sequential` |
@@ -553,8 +553,8 @@ weight_column = "population"
 ```
 
 **Portability rules:**
-- Paths must be relative to the schema file (no absolute paths, no `..`)
-- Source files must be included alongside the schema
+- Paths must be relative to the blueprint file (no absolute paths, no `..`)
+- Source files must be included alongside the blueprint
 - Missing file or column is a validation error
 - Sequential mode uses row offset for deterministic round-robin
 
@@ -733,7 +733,7 @@ coefficients = [0.7]
   require `timestamp_field` pointing to a datetime field in the same entity
 - `holiday_effect` dates must be in `YYYY-MM-DD` format; multiplier > 1.0 creates
   spikes, < 1.0 creates dips (e.g. `multiplier = 2.0` doubles the value on those dates)
-- See `examples/time_series_metrics.weave.toml` and `examples/holiday_effect.weave.toml`
+- See `examples/time_series_metrics.knit.toml` and `examples/holiday_effect.knit.toml`
   for complete examples
 
 ### `event_stream` — Irregular Time Series (Event Streams)
@@ -786,7 +786,7 @@ generator = { type = "event_stream",
   modulation is planned for a future release
 - `holiday_effect` dates must be in `YYYY-MM-DD` format; multiplier must be positive
   for event streams (rate cannot be negative)
-- See `examples/event_stream.weave.toml` and `examples/holiday_effect.weave.toml`
+- See `examples/event_stream.knit.toml` and `examples/holiday_effect.knit.toml`
   for complete examples
 
 ### Other Generators
@@ -840,7 +840,7 @@ max = "2024-12-31"
 - `days` accepts full names ("Monday") or abbreviations ("Mon")
 - Timestamps are stored as UTC epoch milliseconds
 - DST handling: ambiguous local times → earliest; nonexistent → shift forward
-- See `examples/timezone_business_hours.weave.toml` for a complete example
+- See `examples/timezone_business_hours.knit.toml` for a complete example
 
 **Faker method reference** — All supported `method` values for `type = "faker"`:
 
@@ -1114,13 +1114,13 @@ model an explicit junction entity instead.
 
 ---
 
-## Schema Inheritance
+## Blueprint Inheritance
 
-Reuse and extend base schemas with `extends`:
+Reuse and extend base blueprints with `extends`:
 
 ```toml
-# stress_test.weave.toml
-extends = "base_ecommerce.weave.toml"
+# stress_test.knit.toml
+extends = "base_ecommerce.knit.toml"
 
 [model]
 name = "ecommerce_stress_test"
@@ -1303,7 +1303,7 @@ fields): `${field}` references, comparison operators (`==`, `!=`, `<`, `>`,
 
 Null predicate results are treated as `false` (row excluded from scope).
 
-See `examples/scoped_noise.weave.toml` for a complete working example.
+See `examples/scoped_noise.knit.toml` for a complete working example.
 
 ---
 
@@ -1384,7 +1384,7 @@ params = { min = 0.0, max = 25.0 }
 - Custom types are fully resolved at parse time — downstream code never sees
   `DataType::Custom`
 
-See `examples/custom_types.weave.toml` for a complete working example.
+See `examples/custom_types.knit.toml` for a complete working example.
 
 ---
 
@@ -1462,7 +1462,7 @@ name = "created_at"
 data_type = "string"  # overrides mixin's datetime
 ```
 
-See `examples/mixins.weave.toml` for a complete working example.
+See `examples/mixins.knit.toml` for a complete working example.
 
 ---
 
@@ -1499,6 +1499,6 @@ fields = ["id", "user_id"]
 ## What's Next?
 
 - **[CLI Reference](cli-reference.md)** — All commands and flags
-- **[Examples Walkthrough](examples.md)** — See these features in real schemas
+- **[Examples Walkthrough](examples.md)** — See these features in real blueprints
 - **[Noise Injection Guide](noise.md)** — Configure data quality testing
 - **[Weave Specification](../weave-spec.md)** — Formal grammar and full reference

@@ -25,15 +25,15 @@
 
 ## 1. Overview
 
-**knit-plan** is the bridge between schema and execution. It takes a validated `DataModel`
-(produced by `knit-schema` from a Weave document) and compiles it into an `ExecutionPlan`
+**knit-plan** is the bridge between blueprint and execution. It takes a validated `DataModel`
+(produced by `knit-blueprint` from a Weave document) and compiles it into an `ExecutionPlan`
 — a complete, self-contained instruction set that tells the generation engine (`knit-gen`)
 exactly what to do, in what order, and with what parameters.
 
 ```mermaid
 flowchart LR
-    weave([Weave Document]) --> schema[knit-schema\nParse & Validate]
-    schema --> model([DataModel])
+    weave([Weave Document]) --> blueprint[knit-blueprint\nParse & Validate]
+    blueprint --> model([DataModel])
     model --> plan[knit-plan\nCompile]
     plan --> exec([ExecutionPlan])
     exec --> gen[knit-gen\nExecute]
@@ -45,10 +45,10 @@ flowchart LR
 The planning phase exists as a distinct stage for three reasons:
 
 1. **Inspectability.** The `ExecutionPlan` is a concrete data structure that can be
-   serialized, printed, and examined before any data is generated. The `knit plan <schema>`
-   command lets users see exactly how the engine will interpret their schema — phase
+   serialized, printed, and examined before any data is generated. The `knit plan <blueprint>`
+   command lets users see exactly how the engine will interpret their blueprint — phase
    ordering, partition counts, generator assignments, seed allocations — without
-   producing a single row. This makes debugging and schema tuning dramatically easier.
+   producing a single row. This makes debugging and blueprint tuning dramatically easier.
 
 2. **Testability.** Because the plan is a pure function of the `DataModel`, it can be
    tested in isolation with simple input/output assertions. No file system, no
@@ -80,16 +80,16 @@ The `ExecutionPlan` is a **pure data structure**:
 | Crate | Role in knit-plan |
 |-------|-------------------|
 | **knit-core** | Provides the `DataModel`, `Entity`, `Field`, `Relationship`, `GeneratorSpec`, `DistributionSpec`, `CountSpec`, `NullSpec`, and `Value` types that the planner consumes as input. |
-| **knit-schema** | Provides the validated `DataModel` — knit-plan does not parse Weave documents directly, it receives the already-parsed and validated model. The schema crate also surfaces relationship and constraint metadata that the planner depends on. |
+| **knit-blueprint** | Provides the validated `DataModel` — knit-plan does not parse Weave documents directly, it receives the already-parsed and validated model. The blueprint crate also surfaces relationship and constraint metadata that the planner depends on. |
 | **petgraph** | Used to build and analyze directed dependency graphs. Provides topological sorting (`toposort`), strongly connected component detection (Tarjan's algorithm via `tarjan_scc`), and general graph traversal utilities. |
 | **serde** | The `ExecutionPlan` and all sub-types derive `Serialize`/`Deserialize` for plan inspection, caching, and JSON/TOML output. |
 
 ```mermaid
 flowchart BT
     core[knit-core\nDataModel, Entity, Field,\nRelationship, GeneratorSpec]
-    schema[knit-schema\nValidated DataModel] --> core
+    blueprint[knit-blueprint\nValidated DataModel] --> core
     plan[knit-plan\nExecutionPlan compiler] --> core
-    plan --> schema
+    plan --> blueprint
     petgraph[petgraph\nGraph algorithms] -.-> plan
     serde[serde\nSerialization] -.-> plan
 ```
@@ -207,7 +207,7 @@ pub struct FieldPlan {
 }
 
 /// A compiled generator — all parameters fully resolved, ready for execution.
-/// This is the plan-time counterpart of the schema-level GeneratorSpec.
+/// This is the plan-time counterpart of the blueprint-level GeneratorSpec.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GeneratorPlan {
     /// Statistical distribution with resolved, validated parameters.
@@ -322,7 +322,7 @@ pub enum KeyStoreKind {
 /// Informational metadata about the plan.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlanMetadata {
-    pub schema_name: String,
+    pub blueprint_name: String,
     pub total_entities: usize,
     pub total_phases: usize,
     pub total_partitions: usize,
@@ -339,7 +339,7 @@ pub struct PlanMetadata {
 
 ### Purpose
 
-Entities in a Weave schema are connected by relationships (foreign keys). Before
+Entities in a knit blueprint are connected by relationships (foreign keys). Before
 generating data, the planner must determine a valid generation order: parent entities
 (those referenced by foreign keys) must be generated before child entities (those
 holding the foreign keys), so that the FK values can be sampled from the parent's
@@ -368,7 +368,7 @@ key store.
 
 ### Example
 
-Consider a schema with four entities:
+Consider a blueprint with four entities:
 
 - `user` — no outgoing FKs
 - `order` — FK to `user`
@@ -535,13 +535,13 @@ flowchart TB
 | > 1B | 1M rows (configurable) | 1000+ | Cap at available cores × 4 for queue depth |
 
 The target partition size (default: 1,048,576 = 2²⁰ rows) is configurable via the
-schema's `model.partition_size` field or the `--partition-size` CLI flag.
+blueprint's `model.partition_size` field or the `--partition-size` CLI flag.
 
 ### Reproducibility Invariant
 
 **Partition boundaries are determined solely by the entity's row count and the target
 partition size.** They do not depend on the number of available threads, the machine's
-core count, or any runtime parameter. This ensures that the same schema produces the
+core count, or any runtime parameter. This ensures that the same blueprint produces the
 same partition boundaries on any machine, which is essential for reproducibility:
 
 - Same partition boundaries → same per-partition seeds → same generated data.
@@ -581,14 +581,14 @@ row). Crucially, the seeding must be **isolated**: adding a field to one entity 
 not change the generated values for any other entity or field.
 
 A flat seeding scheme (e.g., a single RNG advanced sequentially) would fail this
-requirement — any structural change to the schema would shift the RNG state and
+requirement — any structural change to the blueprint would shift the RNG state and
 change all downstream values. The hierarchical RNG tree solves this.
 
 ### Tree Structure
 
 ```mermaid
 flowchart TB
-    root["Global Seed\n(from schema)"]
+    root["Global Seed\n(from blueprint)"]
     root --> user_e["Entity: user\nseed = H(global, 'user')"]
     root --> order_e["Entity: order\nseed = H(global, 'order')"]
     root --> emp_e["Entity: employee\nseed = H(global, 'employee')"]
@@ -651,7 +651,7 @@ The hierarchical structure guarantees isolation:
   for `user` only. All other entities are unaffected.
 - **Removing a field** removes a branch. No sibling or cousin seeds change.
 
-This property is critical for schema evolution: users can iterate on their Weave
+This property is critical for blueprint evolution: users can iterate on their Weave
 document without invalidating previously validated subsets of the generated data.
 
 ---
@@ -711,7 +711,7 @@ The 10M and 100M thresholds are derived from practical memory constraints:
 | 10M | ~80 MB | ~160 MB |
 | 100M | ~800 MB | ~1.6 GB |
 
-These thresholds are configurable via `model.index_thresholds` in the schema.
+These thresholds are configurable via `model.index_thresholds` in the blueprint.
 
 ---
 
@@ -737,7 +737,7 @@ must be generated before the derived field can be evaluated.
 3. **Cycle detection.** If the field DAG contains a cycle (e.g., `a = f(b)` and
    `b = f(a)`), the planner emits a compile error. Unlike entity-level cycles (which
    are handled with two-phase generation), field-level cycles within a single entity
-   are not solvable and indicate a schema error.
+   are not solvable and indicate a blueprint error.
 
 ### Example
 
@@ -781,7 +781,7 @@ When a cycle is detected in the field DAG, the planner reports:
 
 ```
 error[E301]: cyclic field dependency in entity "invoice"
-  ┌─ schema.weave.toml
+  ┌─ blueprint.knit.toml
   │
   │  field "a" depends on "b" (via derived expression)
   │  field "b" depends on "a" (via derived expression)
@@ -793,14 +793,14 @@ error[E301]: cyclic field dependency in entity "invoice"
 
 ## 10. Plan Inspection
 
-The `knit plan <schema>` CLI command compiles a Weave document into an `ExecutionPlan`
-and prints a human-readable summary. This is the primary debugging tool for schema
+The `knit plan <blueprint>` CLI command compiles a Weave document into an `ExecutionPlan`
+and prints a human-readable summary. This is the primary debugging tool for blueprint
 authors.
 
 ### Output Format
 
 ```
-$ knit plan ecommerce.weave.toml
+$ knit plan ecommerce.knit.toml
 
 Execution Plan for "ecommerce"
 ══════════════════════════════════════════════════════════════
@@ -865,14 +865,14 @@ With `--format json` or `--format toml`, the command outputs the full serialized
 `ExecutionPlan` structure for programmatic consumption:
 
 ```bash
-knit plan ecommerce.weave.toml --format json > plan.json
+knit plan ecommerce.knit.toml --format json > plan.json
 ```
 
 This enables:
-- **Diffing** two plans to see the effect of schema changes.
+- **Diffing** two plans to see the effect of blueprint changes.
 - **CI validation** — assert that plan properties (partition count, phase count) match
   expectations.
-- **AI pipelines** — an LLM can read the plan JSON and suggest schema optimizations.
+- **AI pipelines** — an LLM can read the plan JSON and suggest blueprint optimizations.
 
 ---
 
@@ -886,7 +886,7 @@ outputs.
 ```rust
 #[test]
 fn same_model_produces_same_plan() {
-    let model = load_test_model("ecommerce.weave.toml");
+    let model = load_test_model("ecommerce.knit.toml");
     let plan_a = compile_plan(&model);
     let plan_b = compile_plan(&model);
     assert_eq!(plan_a, plan_b);
@@ -894,7 +894,7 @@ fn same_model_produces_same_plan() {
 
 #[test]
 fn plan_is_platform_independent() {
-    let model = load_test_model("ecommerce.weave.toml");
+    let model = load_test_model("ecommerce.knit.toml");
     let plan = compile_plan(&model);
     let snapshot = include_str!("snapshots/ecommerce_plan.json");
     assert_eq!(serde_json::to_string_pretty(&plan).unwrap(), snapshot);
@@ -949,7 +949,7 @@ fn partition_boundaries_are_contiguous() {
 
 #[test]
 fn partition_count_independent_of_thread_count() {
-    let model = load_test_model("large.weave.toml");
+    let model = load_test_model("large.knit.toml");
     // Partition planning is pure — no thread count input
     let plan = compile_plan(&model);
     let partitions = &plan.phases[0].entity_plans[0].partitions;

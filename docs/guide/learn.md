@@ -1,7 +1,7 @@
 # Reverse Engineering Guide
 
 Knit can analyze existing datasets and automatically infer a
-Weave schema — the reverse of data generation. This is useful when you
+knit blueprint — the reverse of data generation. This is useful when you
 have production data and want to generate realistic synthetic equivalents.
 
 **[← Back to User Guide](index.md)**
@@ -12,14 +12,14 @@ have production data and want to generate realistic synthetic equivalents.
 
 The `knit learn` command reads your data, profiles every column, fits
 statistical distributions, detects relationships, and outputs a
-`.weave.toml` schema that can reproduce data with similar characteristics.
+`.knit.toml` blueprint that can reproduce data with similar characteristics.
 
 ```bash
 knit learn data/users.csv
-knit learn data/users.csv -o my_schema.weave.toml
+knit learn data/users.csv -o my_blueprint.knit.toml
 ```
 
-The output schema includes **confidence annotations** on every inferred
+The output blueprint includes **confidence annotations** on every inferred
 element, so you know which decisions are solid and which need manual review.
 
 ---
@@ -55,7 +55,7 @@ graph TD
     E --> F[6. Detect Relationships]
     F --> G[7. Analyze Relationships]
     G --> H[8. Detect Correlations]
-    H --> I[9. Assemble Schema]
+    H --> I[9. Assemble Blueprint]
 ```
 
 ### Phase 1: Ingestion
@@ -124,7 +124,7 @@ For date/time columns, Knit detects:
 - **Event cadence:** Burst patterns and quiet periods
 
 This information maps to `time_series` generator components in the output
-schema.
+blueprint.
 
 ### Phase 6: Relationship Detection
 
@@ -155,12 +155,12 @@ Knit identifies statistical correlations between fields:
 | Spearman | Monotonic correlations | Ranked/ordinal data |
 | Cramér's V | Categorical associations | Categorical ↔ categorical |
 
-Strong correlations (|r| > 0.3) are included in the output schema as
+Strong correlations (|r| > 0.3) are included in the output blueprint as
 `[[correlations]]` entries.
 
-### Phase 9: Schema Assembly
+### Phase 9: Blueprint Assembly
 
-All inferred information is assembled into a complete Weave schema with:
+All inferred information is assembled into a complete knit blueprint with:
 
 - Entity definitions with row counts
 - Field types and generators
@@ -184,29 +184,29 @@ An interactive review mode is planned for low-confidence decisions:
 
 ### Roundtrip Workflow
 
-A common workflow is to learn a schema, tune it, and generate:
+A common workflow is to learn a blueprint, tune it, and generate:
 
 ```bash
-# Step 1: Infer schema from production data
-knit learn prod_export.csv -o schema.weave.toml
+# Step 1: Infer blueprint from production data
+knit learn prod_export.csv -o blueprint.knit.toml
 
-# Step 2: Review and tune the schema (edit in your editor)
+# Step 2: Review and tune the blueprint (edit in your editor)
 # - Adjust distributions
 # - Fix low-confidence inferences
 # - Add noise profiles for testing
 
-# Step 3: Validate your tuned schema
-knit validate schema.weave.toml
+# Step 3: Validate your tuned blueprint
+knit validate blueprint.knit.toml
 
 # Step 4: Generate synthetic data
-knit generate schema.weave.toml -o ./synthetic_data
+knit generate blueprint.knit.toml -o ./synthetic_data
 ```
 
 ---
 
 ## Output: Confidence Annotations
 
-The inferred schema includes confidence scores as comments:
+The inferred blueprint includes confidence scores as comments:
 
 ```toml
 [[entities.fields]]
@@ -273,8 +273,8 @@ knit learn data/chunk1.csv --state learned.state
 knit learn data/chunk2.csv --state learned.state
 knit learn data/chunk3.csv --state learned.state
 
-# Generate schema from accumulated state
-knit learn --finalize --state learned.state -o schema.weave.toml
+# Generate blueprint from accumulated state
+knit learn --finalize --state learned.state -o blueprint.knit.toml
 ```
 
 ### How It Works
@@ -287,8 +287,8 @@ state.
 | Mode | When to Use |
 |------|-------------|
 | `--state` without `-o` | Update state only (accumulate evidence) |
-| `--state` with `-o` | Update state AND emit schema |
-| `--finalize --state` | Emit schema from existing state (no new data) |
+| `--state` with `-o` | Update state AND emit blueprint |
+| `--finalize --state` | Emit blueprint from existing state (no new data) |
 
 ### Limitations vs Batch Mode
 
@@ -307,7 +307,7 @@ full technical details.
 
 ## What's Next?
 
-- **[Schema Language Tutorial](schema-language.md)** — Understand and tune
-  inferred schemas
-- **[Noise Injection Guide](noise.md)** — Add noise to your learned schemas
+- **[Blueprint Language Tutorial](blueprint-language.md)** — Understand and tune
+  inferred blueprints
+- **[Noise Injection Guide](noise.md)** — Add noise to your learned blueprints
 - **[CLI Reference](cli-reference.md)** — All `knit learn` options

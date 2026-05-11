@@ -845,8 +845,8 @@ given batch, the arrays are assembled into an Arrow `RecordBatch`.
    boolean null mask is generated (Bernoulli sampling with probability `p`)
    and applied to the array. This is done post-generation so that generators
    don't need to handle nullability themselves.
-3. **Schema construction:** An Arrow `Schema` is built from the field names
-   and `output_type()` of each generator. The schema is constructed once per
+3. **Blueprint construction:** An Arrow `Schema` is built from the field names
+   and `output_type()` of each generator. The blueprint is constructed once per
    entity and reused for all batches.
 4. **RecordBatch creation:** `RecordBatch::try_new(schema, columns)` assembles
    the batch. This is a zero-copy operation — the arrays are not copied, only
@@ -995,7 +995,7 @@ sequenceDiagram
 - All entities in the current phase are generated with their non-deferred
   fields.
 - Primary key columns are captured into key stores.
-- Deferred FK columns are written as `NULL` (the schema requires these
+- Deferred FK columns are written as `NULL` (the blueprint requires these
   fields to be nullable).
 
 **Phase 2 rules:**
@@ -1050,7 +1050,7 @@ series engine for timezone-aware event streams.
 
 ## 11. Correlation Enforcement
 
-When the schema specifies correlations between fields (e.g., `age` and
+When the blueprint specifies correlations between fields (e.g., `age` and
 `income` have Pearson correlation 0.6), `knit-gen` uses a **Gaussian copula**
 to generate jointly distributed values.
 
@@ -1285,7 +1285,7 @@ benchmark blocks the PR.
 ### Integration Tests
 
 End-to-end tests that generate a complete small dataset and verify:
-- Output schema matches the Weave specification.
+- Output blueprint matches the Weave specification.
 - Row counts match the `count` specification.
 - All FK constraints hold.
 - Output is deterministic across runs.
@@ -1304,7 +1304,7 @@ End-to-end tests that generate a complete small dataset and verify:
 | 6 | **ChaCha8Rng (not ChaCha20)** | ChaCha20Rng, StdRng, Xoshiro | ChaCha8 is cryptographically sufficient for reproducibility (not security), 2.5× faster than ChaCha20, and deterministic across platforms. Xoshiro is faster but has known statistical weaknesses for large-scale generation. |
 | 7 | **Hierarchical RNG tree** | Single global RNG, per-thread RNG | `hash(seed, entity, field, partition)` ensures adding/removing a field or partition doesn't change other fields' output. A single global RNG would make all fields dependent. Per-thread RNG without deterministic seeding is non-reproducible. |
 | 8 | **Tiered key stores (Memory / Mmap / Sampled)** | Always in-memory, database-backed | In-memory is optimal for <10M keys. Mmap handles 10M–100M without heap pressure (OS manages paging). Sampled handles >100M with bounded memory. A database (SQLite, RocksDB) would add dependency weight and I/O overhead for simple random sampling. |
-| 9 | **Two-phase generation for cycles** | Reject cyclic schemas, all-at-once with placeholder | Rejection is too restrictive — self-referential entities are common. Placeholders require tracking and backpatching anyway. Two explicit phases make the contract clear: Phase 1 = NULLs for deferred FKs, Phase 2 = fill them in. |
+| 9 | **Two-phase generation for cycles** | Reject cyclic blueprints, all-at-once with placeholder | Rejection is too restrictive — self-referential entities are common. Placeholders require tracking and backpatching anyway. Two explicit phases make the contract clear: Phase 1 = NULLs for deferred FKs, Phase 2 = fill them in. |
 | 10 | **Gaussian copula for correlations** | Vine copula, direct simulation | Gaussian copula is simple, well-understood, and fast (one Cholesky decomposition + CDF transforms). Vine copulas handle tail dependencies better but are complex to parameterize and slow. For synthetic data generation (not risk modeling), Gaussian copulas are sufficient. |
 | 11 | **Expression interpreter (not JIT)** | Cranelift JIT, WASM compilation | The expression language is small (~40 functions) and expressions are short. JIT compilation adds startup latency and dependency weight. The interpreter operates on Arrow arrays (vectorized), so the per-row interpretation overhead is amortized. JIT is a future optimization if expression complexity grows. |
 | 12 | **`hashbrown::HashSet` for uniqueness** | `std::HashSet`, `BTreeSet`, Bloom filter | `hashbrown` uses SwissTable (SIMD-accelerated probing), ~30% faster than `std::HashSet`. `BTreeSet` has poor cache behavior. Bloom filters give false positives — unacceptable for uniqueness guarantees. |

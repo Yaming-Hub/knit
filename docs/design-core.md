@@ -18,12 +18,12 @@ perturbation, and serialization stages.
 ```mermaid
 flowchart BT
     core[knit-core]
-    schema[knit-schema] --> core
+    blueprint[knit-blueprint] --> core
     plan[knit-plan] --> core
     gen[knit-gen] --> plan
     noise[knit-noise] --> gen
     bind[knit-bind] --> noise
-    learn[knit-learn] --> schema
+    learn[knit-learn] --> blueprint
     cli[knit-cli] --> gen & learn & bind
 ```
 
@@ -43,13 +43,13 @@ crates. The bar for new types or fields is deliberately high.
 
 | Belongs in `knit-core` | Belongs elsewhere |
 |-------------------------|-------------------|
-| `DataModel`, `Entity`, `Field` | Parser logic → `knit-schema` |
+| `DataModel`, `Entity`, `Field` | Parser logic → `knit-blueprint` |
 | `GeneratorSpec`, `DistributionSpec` | `FieldGenerator` trait → `knit-gen` |
 | `Value` enum | Arrow `RecordBatch` operations → `knit-gen` |
 | `Relationship`, `Constraint` | `ExecutionPlan` → `knit-plan` |
 | `NullSpec`, `CountSpec` | `Perturbator` trait → `knit-noise` |
 | `NoiseProfile` | `Sink` trait → `knit-bind` |
-| `ModelError` (validation) | Parse errors (`SchemaError`) → `knit-schema` |
+| `ModelError` (validation) | Parse errors (`BlueprintError`) → `knit-blueprint` |
 
 ---
 
@@ -103,7 +103,7 @@ classDiagram
         +Vec~NoiseProfile~ noise_profiles
         +Vec~Correlation~ correlations
         +BTreeMap~String,Value~ params
-        +String schema_version
+        +String blueprint_version
     }
 
     class Entity {
@@ -179,9 +179,9 @@ classDiagram
 The top-level container — the in-memory representation of a complete Weave document.
 
 ```rust
-/// A complete data model parsed from a Weave schema.
+/// A complete data model parsed from a knit blueprint.
 ///
-/// This is the single artifact that flows from `knit-schema` (parsing)
+/// This is the single artifact that flows from `knit-blueprint` (parsing)
 /// through `knit-plan` (compilation) and into the generation engine.
 /// It is fully self-contained: no file paths, no I/O handles, no
 /// references to external state.
@@ -195,7 +195,7 @@ pub struct DataModel {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
-    /// Global RNG seed. Same seed + same schema = identical output.
+    /// Global RNG seed. Same seed + same blueprint = identical output.
     #[serde(default = "default_seed")]
     pub seed: u64,
 
@@ -223,13 +223,13 @@ pub struct DataModel {
     #[serde(default)]
     pub correlations: Vec<Correlation>,
 
-    /// User-supplied parameters for schema templating.
+    /// User-supplied parameters for blueprint templating.
     #[serde(default)]
     pub params: BTreeMap<String, Value>,
 
-    /// Weave schema version string (e.g., "1.0").
-    #[serde(default = "default_schema_version")]
-    pub schema_version: String,
+    /// knit blueprint version string (e.g., "1.0").
+    #[serde(default = "default_blueprint_version")]
+    pub blueprint_version: String,
 }
 ```
 
@@ -341,7 +341,7 @@ pub enum DataType {
 ```rust
 /// A typed runtime value.
 ///
-/// `Value` is the **API-boundary** type — used in schema params,
+/// `Value` is the **API-boundary** type — used in blueprint params,
 /// constant generators, noise profile params, and test assertions.
 /// It is NOT used for bulk generation (that uses Arrow columnar
 /// buffers). Think of `Value` as "one cell" and `ArrayRef` as
@@ -576,7 +576,7 @@ impl Default for NullSpec {
 /// How many rows to generate for an entity.
 ///
 /// `Fixed` is the common case. `Range` and `Distribution` are for
-/// schemas where the exact count is intentionally variable (e.g.,
+/// blueprints where the exact count is intentionally variable (e.g.,
 /// parameterized stress tests).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -826,13 +826,13 @@ All `knit-core` types must round-trip through both TOML (primary, user-facing) a
 - **Optional fields**: All `Option<T>` fields use `#[serde(skip_serializing_if = "Option::is_none")]`
   to keep serialized output clean.
 - **Defaults**: All `Vec<T>` and `BTreeMap<K,V>` fields use `#[serde(default)]` so
-  that omitting them in the schema produces an empty collection, not a parse error.
+  that omitting them in the blueprint produces an empty collection, not a parse error.
 
 ### JSON Compatibility
 
 JSON uses identical structure. No JSON-specific serde attributes. The same
 `Serialize`/`Deserialize` impls work for both `serde_json` and `toml` crates (used
-by `knit-schema`, not by `knit-core` directly — core has no parser dependency).
+by `knit-blueprint`, not by `knit-core` directly — core has no parser dependency).
 
 ---
 
@@ -847,7 +847,7 @@ Every public type in `knit-core` derives or implements these standard traits:
 | `PartialEq` | Derived | Needed for test assertions (`assert_eq!`) and serde round-trip validation. |
 | `Serialize` | Derived | Via `serde`. Every type must serialize to TOML/JSON. |
 | `Deserialize` | Derived | Via `serde`. Every type must deserialize from TOML/JSON. |
-| `Default` | Selective | `NullSpec` defaults to `Never`. `GeneratorSpec` has no blanket `Default` — the appropriate default depends on `DataType` and is resolved by `knit-schema`. |
+| `Default` | Selective | `NullSpec` defaults to `Never`. `GeneratorSpec` has no blanket `Default` — the appropriate default depends on `DataType` and is resolved by `knit-blueprint`. |
 | `Display` | Manual | Implemented on `DataType`, `DistributionKind`, `RelationshipKind`, `Value`, and `NullSpec` for human-readable output in CLI messages and error diagnostics. |
 | `Send + Sync` | Auto | All types are `Send + Sync` because they contain no `Rc`, `Cell`, or raw pointers. This is essential for `rayon` parallelism in `knit-gen`. |
 
@@ -875,7 +875,7 @@ Engine traits live in their respective crates (`knit-gen`, `knit-noise`, `knit-b
 /// `ModelError` covers structural and semantic errors that can be
 /// detected by inspecting a `DataModel` without parsing context.
 /// Parse errors (syntax, line numbers, file paths) belong in
-/// `knit-schema::SchemaError`.
+/// `knit-blueprint::BlueprintError`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ModelError {
     /// A required field is missing (e.g., entity with no name).
@@ -962,7 +962,7 @@ impl std::error::Error for ModelError {}
 | Error Kind | Owner Crate | Example |
 |------------|-------------|---------|
 | Model validation (semantic) | `knit-core` (`ModelError`) | "entity 'order' references unknown entity 'usr'" |
-| Parse errors (syntax) | `knit-schema` (`SchemaError`) | "line 42: expected string, found integer" |
+| Parse errors (syntax) | `knit-blueprint` (`BlueprintError`) | "line 42: expected string, found integer" |
 | Plan errors (infeasibility) | `knit-plan` (`PlanError`) | "cycle detected: order → user → order" |
 | Generation errors (runtime) | `knit-gen` (`GenError`) | "unique constraint exhausted after 1000 retries" |
 
@@ -1008,16 +1008,16 @@ previously valid input** is breaking. Specifically:
 
 | # | Decision | Rationale | Alternatives Considered |
 |---|----------|-----------|------------------------|
-| 1 | **`Value` enum exists alongside Arrow** | `Value` is needed at API boundaries (schema params, constants, test assertions) where constructing an Arrow array for a single cell is wasteful. Arrow is used for bulk generation. Two representations serve different granularity needs. | Single `Value`-only approach (too slow for generation); Arrow-only (awkward for single-value contexts). |
-| 2 | **`GeneratorSpec` is an enum, not trait objects** | Generator specs are pure data (serialized in schemas). Exhaustive matching ensures compile-time coverage when adding new generators. Trait objects would require a registry and lose serde ergonomics. | `Box<dyn GeneratorSpec>` with `typetag` — adds runtime overhead and dynamic dispatch for what is a static, bounded set. |
-| 3 | **`BTreeMap` over `HashMap`** | Deterministic iteration order is essential for reproducibility. Same schema → same serialized output, always. `HashMap` randomizes iteration, causing diffs in round-tripped schemas. | `IndexMap` — adds a dependency for marginal benefit over `BTreeMap`. |
-| 4 | **No engine traits in core** | Engine traits (`FieldGenerator`, `Perturbator`, `Sink`) depend on `arrow`, `rand`, `rayon`. Putting them here would bloat the dependency tree for all crates, including `knit-schema` and `knit-learn` which never execute generation. | Lightweight trait-only crate — adds workspace complexity for minimal benefit since traits are only consumed by one or two crates each. |
+| 1 | **`Value` enum exists alongside Arrow** | `Value` is needed at API boundaries (blueprint params, constants, test assertions) where constructing an Arrow array for a single cell is wasteful. Arrow is used for bulk generation. Two representations serve different granularity needs. | Single `Value`-only approach (too slow for generation); Arrow-only (awkward for single-value contexts). |
+| 2 | **`GeneratorSpec` is an enum, not trait objects** | Generator specs are pure data (serialized in blueprints). Exhaustive matching ensures compile-time coverage when adding new generators. Trait objects would require a registry and lose serde ergonomics. | `Box<dyn GeneratorSpec>` with `typetag` — adds runtime overhead and dynamic dispatch for what is a static, bounded set. |
+| 3 | **`BTreeMap` over `HashMap`** | Deterministic iteration order is essential for reproducibility. Same blueprint → same serialized output, always. `HashMap` randomizes iteration, causing diffs in round-tripped blueprints. | `IndexMap` — adds a dependency for marginal benefit over `BTreeMap`. |
+| 4 | **No engine traits in core** | Engine traits (`FieldGenerator`, `Perturbator`, `Sink`) depend on `arrow`, `rand`, `rayon`. Putting them here would bloat the dependency tree for all crates, including `knit-blueprint` and `knit-learn` which never execute generation. | Lightweight trait-only crate — adds workspace complexity for minimal benefit since traits are only consumed by one or two crates each. |
 | 5 | **`DistributionKind::Custom` variant** | Forward-compatibility for plugin-provided distributions. Without it, adding a distribution requires a `knit-core` release. With it, plugins can use `Custom` and a string identifier in `params`. | Open-ended string type — loses exhaustive matching benefits for the 17 built-in distributions. |
 | 6 | **`NullSpec` as a separate enum** | Null behavior is orthogonal to generation. Combining it into `GeneratorSpec` would duplicate null logic across 14 generator variants. Separating it allows a single null-wrapping pass after generation. | `nullable: bool` — too limited; real data has varied null patterns (5% probability, every-Nth-row, etc.). |
-| 7 | **`CountSpec::Distribution`** | Some schemas need variable entity sizes (e.g., parameterized stress tests where count follows a distribution). Fixed-only would limit expressiveness. | Always-fixed count — simpler but insufficient for advanced use cases. |
+| 7 | **`CountSpec::Distribution`** | Some blueprints need variable entity sizes (e.g., parameterized stress tests where count follows a distribution). Fixed-only would limit expressiveness. | Always-fixed count — simpler but insufficient for advanced use cases. |
 | 8 | **Temporal types use `chrono`** | `chrono` is the de facto Rust datetime library with comprehensive timezone support, serde integration, and arithmetic. Rolling our own temporal types would be error-prone and poorly tested. | `time` crate — viable but less ecosystem adoption; mixing both causes conversion overhead. |
 | 9 | **`uuid` as a dedicated `DataType`** | UUIDs are extremely common as primary keys in synthetic datasets. A dedicated type (vs. `String` + validation) enables optimized columnar generation and correct Arrow `FixedSizeBinary(16)` mapping. | Treat as `String` with a pattern generator — loses type safety and Arrow optimization. |
-| 10 | **Serde `rename_all = "snake_case"` on enums** | Matches TOML/JSON conventions and the Weave language surface. `ManyToOne` serializes as `"many_to_one"`, which is what users write in schemas. | PascalCase (Rust default) — requires mental translation when reading schemas. |
+| 10 | **Serde `rename_all = "snake_case"` on enums** | Matches TOML/JSON conventions and the Weave language surface. `ManyToOne` serializes as `"many_to_one"`, which is what users write in blueprints. | PascalCase (Rust default) — requires mental translation when reading blueprints. |
 
 ---
 
@@ -1110,13 +1110,13 @@ fn model_error_messages_are_readable() {
 
 | Concern | Tested In |
 |---------|-----------|
-| TOML/JSON parsing from files | `knit-schema` |
-| Validation rules (referential integrity, distribution params) | `knit-schema` |
+| TOML/JSON parsing from files | `knit-blueprint` |
+| Validation rules (referential integrity, distribution params) | `knit-blueprint` |
 | Arrow type mapping | `knit-gen` |
-| Serde compatibility with actual Weave `.toml` files | `knit-schema` integration tests |
+| Serde compatibility with actual Weave `.toml` files | `knit-blueprint` integration tests |
 
 ---
 
 *This document covers `knit-core` only. See [`architecture.md`](architecture.md) for
-the full system design and [`weave-spec.md`](weave-spec.md) for the schema language
+the full system design and [`weave-spec.md`](weave-spec.md) for the blueprint language
 specification.*
