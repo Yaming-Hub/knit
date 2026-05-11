@@ -778,11 +778,12 @@ knit model flatten my_model/ -o schema.weave.toml
 | Partition weights | reader + writer | Roundtrip-safe via `weights` field |
 | Mixin references | reader + writer | Preserved through `mixins` field |
 | `load_schema` integration | `src/cli/commands/mod.rs` | All commands auto-detect format |
+| `save_schema` helper | `src/cli/commands/mod.rs` | Format-aware write (structured or flat TOML) |
+| `knit enrich` integration | `src/cli/commands/enrich.rs` | Preserves structured format on output |
 
 ### Remaining (Phase 3–4)
 
 - Direct table-level update operations (edit single table without full rewrite)
-- Integration with `knit enrich`, `knit scale`, `knit tokenize` for structured output
 - Statistics layer (`[columns.stats]`, `[table.stats]`)
 - Auto-detected traits (semantic, cardinality, trend, distribution shape)
 
