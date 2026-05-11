@@ -9,6 +9,8 @@ use crate::tokenize::scanner::{FileEntry, FileFormat};
 use crate::tokenize::TokenizeConfig;
 
 /// Apply tokenization to a data or dictionary file.
+/// If config.output_format is set and differs from the source format,
+/// the data is converted during tokenization.
 pub fn apply_data_file(
     entry: &FileEntry,
     root: &Path,
@@ -17,22 +19,29 @@ pub fn apply_data_file(
     config: &TokenizeConfig,
 ) -> Result<()> {
     let src = root.join(&entry.rel_path);
+    let target_format = config.output_format.unwrap_or(entry.format);
 
-    match entry.format {
-        FileFormat::Csv | FileFormat::Tsv => {
-            apply_csv(&src, out_path, entry.format, mapper, config)
-        }
-        FileFormat::Json | FileFormat::Jsonl => {
-            apply_json(&src, out_path, entry.format, mapper, config)
-        }
-        FileFormat::Parquet => {
-            apply_parquet(&src, out_path, mapper, config)
-        }
-        FileFormat::Other => {
-            std::fs::copy(&src, out_path)?;
-            Ok(())
-        }
+    // If source and target are the same, use the direct path
+    if target_format == entry.format {
+        return match entry.format {
+            FileFormat::Csv | FileFormat::Tsv => {
+                apply_csv(&src, out_path, entry.format, mapper, config)
+            }
+            FileFormat::Json | FileFormat::Jsonl => {
+                apply_json(&src, out_path, entry.format, mapper, config)
+            }
+            FileFormat::Parquet => {
+                apply_parquet(&src, out_path, mapper, config)
+            }
+            FileFormat::Other => {
+                std::fs::copy(&src, out_path)?;
+                Ok(())
+            }
+        };
     }
+
+    // Format conversion: read source → tokenize → write in target format
+    convert_with_tokenization(&src, out_path, entry.format, target_format, mapper, config)
 }
 
 /// Apply tokenization to a schema JSON file (selective field replacement).
@@ -636,6 +645,352 @@ fn shift_native_numeric(
         }
         _ => None,
     }
+}
+
+/// Convert between formats while tokenizing in one pass.
+///
+/// Strategy: read source into Arrow RecordBatches (universal intermediate),
+/// apply tokenization on the batches, then serialize to target format.
+fn convert_with_tokenization(
+    src: &Path,
+    out: &Path,
+    src_format: FileFormat,
+    target_format: FileFormat,
+    mapper: &TokenMapper,
+    config: &TokenizeConfig,
+) -> Result<()> {
+    use arrow::datatypes::{Field, Schema};
+    use std::sync::Arc;
+
+    // Step 1: Read source into RecordBatches
+    let batches = read_as_batches(src, src_format)?;
+    if batches.is_empty() {
+        // No data — write a valid empty file in the target format.
+        // We still need a schema; re-read just the schema from source.
+        let empty_schema = infer_schema_only(src, src_format)?;
+        let schema = Arc::new(empty_schema);
+        return write_batches(out, target_format, &schema, &[]);
+    }
+
+    let schema = batches[0].schema();
+
+    // Step 2: Build tokenization flags
+    let col_flags: Vec<bool> = schema
+        .fields()
+        .iter()
+        .map(|f| {
+            if config.should_tokenize_column(f.name()) {
+                return true;
+            }
+            if let Some(original) = mapper.get(f.name()) {
+                return config.should_tokenize_column(original);
+            }
+            false
+        })
+        .collect();
+
+    // Step 3: Optionally tokenize column names
+    let output_schema = if config.tokenize_headers {
+        let new_fields: Vec<Arc<Field>> = schema
+            .fields()
+            .iter()
+            .enumerate()
+            .map(|(idx, f)| {
+                if idx < col_flags.len() && col_flags[idx] {
+                    let new_name = mapper
+                        .get(f.name())
+                        .map(|t| t.to_string())
+                        .unwrap_or_else(|| f.name().clone());
+                    Arc::new(f.as_ref().clone().with_name(new_name))
+                } else {
+                    f.clone()
+                }
+            })
+            .collect();
+        Arc::new(Schema::new_with_metadata(new_fields, schema.metadata().clone()))
+    } else {
+        schema.clone()
+    };
+
+    // Step 4: Tokenize batches
+    let tokenized_batches = tokenize_batches(&batches, &output_schema, &col_flags, mapper, config)?;
+
+    // Step 5: Write in target format
+    write_batches(out, target_format, &output_schema, &tokenized_batches)
+}
+
+/// Read any supported format into Arrow RecordBatches.
+fn read_as_batches(
+    src: &Path,
+    format: FileFormat,
+) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    use arrow::array::RecordBatch;
+
+    match format {
+        FileFormat::Csv | FileFormat::Tsv => read_csv_as_batches(src, format),
+        FileFormat::Json => read_json_as_batches(src),
+        FileFormat::Jsonl => read_jsonl_as_batches(src),
+        FileFormat::Parquet => read_parquet_as_batches(src),
+        FileFormat::Other => Ok(vec![]),
+    }
+}
+
+fn read_csv_as_batches(src: &Path, format: FileFormat) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    use arrow_csv::ReaderBuilder;
+    use std::fs::File;
+
+    let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+    let file = File::open(src)?;
+    // Infer schema from all rows to handle mixed-type columns correctly
+    let (schema, _) = arrow_csv::reader::Format::default()
+        .with_delimiter(delimiter)
+        .with_header(true)
+        .infer_schema(std::io::BufReader::new(&file), None)?;
+    let schema = std::sync::Arc::new(schema);
+
+    // Re-open and read with inferred schema
+    let file = File::open(src)?;
+    let reader = ReaderBuilder::new(schema)
+        .with_delimiter(delimiter)
+        .with_header(true)
+        .build(file)?;
+
+    let mut batches = Vec::new();
+    for batch in reader {
+        batches.push(batch?);
+    }
+    Ok(batches)
+}
+
+fn read_json_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    use arrow_json::ReaderBuilder;
+
+    let schema = arrow_json::reader::infer_json_schema_from_seekable(
+        &mut std::io::BufReader::new(std::fs::File::open(src)?),
+        None,
+    )?;
+
+    let schema = std::sync::Arc::new(schema.0);
+    let file = std::fs::File::open(src)?;
+    let reader = ReaderBuilder::new(schema)
+        .build(std::io::BufReader::new(file))?;
+    let mut batches = Vec::new();
+    for batch in reader {
+        batches.push(batch?);
+    }
+    Ok(batches)
+}
+
+fn read_jsonl_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    use arrow_json::ReaderBuilder;
+
+    let schema = arrow_json::reader::infer_json_schema_from_seekable(
+        &mut std::io::BufReader::new(std::fs::File::open(src)?),
+        None,
+    )?;
+    let schema = std::sync::Arc::new(schema.0);
+
+    let file = std::fs::File::open(src)?;
+    let reader = ReaderBuilder::new(schema)
+        .build(std::io::BufReader::new(file))?;
+    let mut batches = Vec::new();
+    for batch in reader {
+        batches.push(batch?);
+    }
+    Ok(batches)
+}
+
+fn read_parquet_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+
+    let file = std::fs::File::open(src)?;
+    let reader = ParquetRecordBatchReaderBuilder::try_new(file)?.build()?;
+    let mut batches = Vec::new();
+    for batch in reader {
+        batches.push(batch?);
+    }
+    Ok(batches)
+}
+
+/// Infer schema from a source file without reading all data.
+/// Used when the source has no data rows but we need a valid schema for the target writer.
+fn infer_schema_only(src: &Path, format: FileFormat) -> Result<arrow::datatypes::Schema> {
+    match format {
+        FileFormat::Csv | FileFormat::Tsv => {
+            let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+            let file = std::fs::File::open(src)?;
+            let (schema, _) = arrow_csv::reader::Format::default()
+                .with_delimiter(delimiter)
+                .with_header(true)
+                .infer_schema(std::io::BufReader::new(&file), None)?;
+            Ok(schema)
+        }
+        FileFormat::Json | FileFormat::Jsonl => {
+            let (schema, _) = arrow_json::reader::infer_json_schema_from_seekable(
+                &mut std::io::BufReader::new(std::fs::File::open(src)?),
+                None,
+            )?;
+            Ok(schema)
+        }
+        FileFormat::Parquet => {
+            use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+            let file = std::fs::File::open(src)?;
+            let builder = ParquetRecordBatchReaderBuilder::try_new(file)?;
+            Ok(builder.schema().as_ref().clone())
+        }
+        FileFormat::Other => Ok(arrow::datatypes::Schema::empty()),
+    }
+}
+
+/// Tokenize record batches (string columns only in conversion path).
+fn tokenize_batches(
+    batches: &[arrow::record_batch::RecordBatch],
+    output_schema: &std::sync::Arc<arrow::datatypes::Schema>,
+    col_flags: &[bool],
+    mapper: &TokenMapper,
+    config: &TokenizeConfig,
+) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    use arrow::array::{Array, AsArray, StringArray};
+    use arrow::record_batch::RecordBatch;
+    use std::sync::Arc;
+
+    let date_shift = if let Some(shift) = config.native_date_shift {
+        Some(shift)
+    } else if config.tokenize_dates {
+        Some(super::scanner::compute_date_shift(config.seed))
+    } else {
+        None
+    };
+
+    let numeric_shift = if let Some(shift) = config.native_numeric_shift {
+        Some(shift)
+    } else if config.tokenize_numbers {
+        Some(super::scanner::compute_numeric_shift(config.seed))
+    } else {
+        None
+    };
+
+    let mut result = Vec::with_capacity(batches.len());
+    for batch in batches {
+        let mut columns: Vec<Arc<dyn arrow::array::Array>> = Vec::with_capacity(batch.num_columns());
+
+        for col_idx in 0..batch.num_columns() {
+            let col = batch.column(col_idx);
+
+            if col_idx < col_flags.len() && !col_flags[col_idx] {
+                columns.push(col.clone());
+                continue;
+            }
+
+            if let Some(str_arr) = col.as_string_opt::<i32>() {
+                let tokenized: StringArray = str_arr
+                    .iter()
+                    .map(|opt| opt.map(|val| mapper.get(val).unwrap_or(val).to_string()))
+                    .collect();
+                columns.push(Arc::new(tokenized));
+            } else if let Some(str_arr) = col.as_string_opt::<i64>() {
+                use arrow::array::LargeStringArray;
+                let tokenized: LargeStringArray = str_arr
+                    .iter()
+                    .map(|opt| opt.map(|val| mapper.get(val).unwrap_or(val).to_string()))
+                    .collect();
+                columns.push(Arc::new(tokenized));
+            } else {
+                let shifted = date_shift
+                    .and_then(|shift| shift_native_temporal(col.as_ref(), shift))
+                    .or_else(|| numeric_shift.and_then(|offset| shift_native_numeric(col.as_ref(), offset)));
+                columns.push(shifted.unwrap_or_else(|| col.clone()));
+            }
+        }
+
+        result.push(RecordBatch::try_new(output_schema.clone(), columns)?);
+    }
+    Ok(result)
+}
+
+/// Write Arrow RecordBatches in the target format.
+fn write_batches(
+    out: &Path,
+    format: FileFormat,
+    schema: &std::sync::Arc<arrow::datatypes::Schema>,
+    batches: &[arrow::record_batch::RecordBatch],
+) -> Result<()> {
+    match format {
+        FileFormat::Csv | FileFormat::Tsv => write_batches_csv(out, format, batches),
+        FileFormat::Json => write_batches_json(out, batches),
+        FileFormat::Jsonl => write_batches_jsonl(out, batches),
+        FileFormat::Parquet => write_batches_parquet(out, schema, batches),
+        FileFormat::Other => Ok(()),
+    }
+}
+
+fn write_batches_csv(
+    out: &Path,
+    format: FileFormat,
+    batches: &[arrow::record_batch::RecordBatch],
+) -> Result<()> {
+    use arrow_csv::WriterBuilder;
+    use std::fs::File;
+
+    let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+    let file = File::create(out)?;
+    let mut writer = WriterBuilder::new()
+        .with_delimiter(delimiter)
+        .with_header(true)
+        .build(file);
+
+    for batch in batches {
+        writer.write(batch)?;
+    }
+    Ok(())
+}
+
+fn write_batches_json(
+    out: &Path,
+    batches: &[arrow::record_batch::RecordBatch],
+) -> Result<()> {
+    use arrow_json::ArrayWriter;
+    use std::fs::File;
+
+    let file = File::create(out)?;
+    let mut writer = ArrayWriter::new(file);
+    for batch in batches {
+        writer.write(batch)?;
+    }
+    writer.finish()?;
+    Ok(())
+}
+
+fn write_batches_jsonl(
+    out: &Path,
+    batches: &[arrow::record_batch::RecordBatch],
+) -> Result<()> {
+    use arrow_json::LineDelimitedWriter;
+    use std::fs::File;
+
+    let file = File::create(out)?;
+    let mut writer = LineDelimitedWriter::new(file);
+    for batch in batches {
+        writer.write(batch)?;
+    }
+    writer.finish()?;
+    Ok(())
+}
+
+fn write_batches_parquet(
+    out: &Path,
+    schema: &std::sync::Arc<arrow::datatypes::Schema>,
+    batches: &[arrow::record_batch::RecordBatch],
+) -> Result<()> {
+    use parquet::arrow::ArrowWriter;
+
+    let file = std::fs::File::create(out)?;
+    let mut writer = ArrowWriter::try_new(file, schema.clone(), None)?;
+    for batch in batches {
+        writer.write(batch)?;
+    }
+    writer.close()?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -1553,5 +1908,230 @@ mod tests {
             assert_ne!(name_col.value(0), "Alice");
             assert_ne!(name_col.value(1), "Bob");
         }
+    }
+
+    #[test]
+    fn test_convert_csv_to_parquet_with_tokenization() {
+        let dir = TempDir::new().unwrap();
+        let csv_path = dir.path().join("data.csv");
+        let out_path = dir.path().join("data.parquet");
+
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,city").unwrap();
+        writeln!(f, "Alice,Seattle").unwrap();
+        writeln!(f, "Bob,Portland").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+        mapper.register("Seattle");
+        mapper.register("Portland");
+
+        let entry = FileEntry {
+            rel_path: "data.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            output_format: Some(FileFormat::Parquet),
+            ..Default::default()
+        };
+
+        apply_data_file(&entry, dir.path(), &out_path, &mapper, &config).unwrap();
+
+        // Read back as Parquet and verify tokenization
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        let file = std::fs::File::open(&out_path).unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+        let batches: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(batches.len(), 1);
+        let batch = &batches[0];
+        assert_eq!(batch.num_rows(), 2);
+        assert_eq!(batch.num_columns(), 2);
+
+        // Values should be tokenized
+        use arrow::array::AsArray;
+        let name_col = batch.column(0).as_string::<i32>();
+        assert_ne!(name_col.value(0), "Alice");
+        assert_ne!(name_col.value(1), "Bob");
+        let city_col = batch.column(1).as_string::<i32>();
+        assert_ne!(city_col.value(0), "Seattle");
+        assert_ne!(city_col.value(1), "Portland");
+    }
+
+    #[test]
+    fn test_convert_parquet_to_csv_with_tokenization() {
+        use arrow::array::StringArray;
+        use arrow::datatypes::{DataType, Field, Schema};
+        use arrow::record_batch::RecordBatch;
+        use parquet::arrow::ArrowWriter;
+        use std::sync::Arc;
+
+        let dir = TempDir::new().unwrap();
+        let pq_path = dir.path().join("data.parquet");
+        let out_path = dir.path().join("data.csv");
+
+        // Write a Parquet file
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, false),
+            Field::new("city", DataType::Utf8, false),
+        ]));
+        let names = StringArray::from(vec!["Alice", "Bob"]);
+        let cities = StringArray::from(vec!["Seattle", "Portland"]);
+        let batch = RecordBatch::try_new(schema.clone(), vec![Arc::new(names), Arc::new(cities)]).unwrap();
+
+        let file = std::fs::File::create(&pq_path).unwrap();
+        let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+        mapper.register("Seattle");
+        mapper.register("Portland");
+
+        let entry = FileEntry {
+            rel_path: "data.parquet".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Parquet,
+        };
+        let config = TokenizeConfig {
+            output_format: Some(FileFormat::Csv),
+            ..Default::default()
+        };
+
+        apply_data_file(&entry, dir.path(), &out_path, &mapper, &config).unwrap();
+
+        // Read CSV and verify tokenization
+        let content = std::fs::read_to_string(&out_path).unwrap();
+        assert!(!content.contains("Alice"));
+        assert!(!content.contains("Bob"));
+        assert!(!content.contains("Seattle"));
+        assert!(!content.contains("Portland"));
+        // Should have header + 2 data rows
+        let lines: Vec<&str> = content.lines().collect();
+        assert_eq!(lines.len(), 3); // header + 2 rows
+    }
+
+    #[test]
+    fn test_convert_csv_to_jsonl_with_tokenization() {
+        let dir = TempDir::new().unwrap();
+        let csv_path = dir.path().join("data.csv");
+        let out_path = dir.path().join("data.jsonl");
+
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,age").unwrap();
+        writeln!(f, "Alice,30").unwrap();
+        writeln!(f, "Bob,25").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+
+        let entry = FileEntry {
+            rel_path: "data.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            output_format: Some(FileFormat::Jsonl),
+            ..Default::default()
+        };
+
+        apply_data_file(&entry, dir.path(), &out_path, &mapper, &config).unwrap();
+
+        // Read JSONL and verify
+        let content = std::fs::read_to_string(&out_path).unwrap();
+        assert!(!content.contains("Alice"));
+        assert!(!content.contains("Bob"));
+        // Each line should be valid JSON
+        for line in content.lines() {
+            let _: serde_json::Value = serde_json::from_str(line).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_same_format_no_conversion() {
+        // When output_format matches source format, should use direct path
+        let dir = TempDir::new().unwrap();
+        let csv_path = dir.path().join("data.csv");
+        let out_path = dir.path().join("out.csv");
+
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,value").unwrap();
+        writeln!(f, "Alice,100").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+
+        let entry = FileEntry {
+            rel_path: "data.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            output_format: Some(FileFormat::Csv), // same as source
+            ..Default::default()
+        };
+
+        apply_data_file(&entry, dir.path(), &out_path, &mapper, &config).unwrap();
+
+        let content = std::fs::read_to_string(&out_path).unwrap();
+        assert!(!content.contains("Alice"));
+    }
+
+    #[test]
+    fn test_change_extension_helper() {
+        use std::path::Path;
+        let p = Path::new("/foo/bar/data.csv");
+        assert_eq!(
+            p.with_extension("parquet"),
+            Path::new("/foo/bar/data.parquet")
+        );
+        assert_eq!(
+            p.with_extension("jsonl"),
+            Path::new("/foo/bar/data.jsonl")
+        );
+    }
+
+    #[test]
+    fn test_convert_header_only_csv_to_parquet() {
+        // Empty CSV (header only) should produce a valid Parquet file
+        let dir = TempDir::new().unwrap();
+        let csv_path = dir.path().join("empty.csv");
+        let out_path = dir.path().join("empty.parquet");
+
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,age,city").unwrap();
+        // No data rows
+
+        let mapper = TokenMapper::new(42);
+        let entry = FileEntry {
+            rel_path: "empty.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            output_format: Some(FileFormat::Parquet),
+            ..Default::default()
+        };
+
+        apply_data_file(&entry, dir.path(), &out_path, &mapper, &config).unwrap();
+
+        // Output should be a valid Parquet file (readable)
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        let file = std::fs::File::open(&out_path).unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+        let batches: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        // Should have 0 rows but valid schema with 3 columns
+        let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total_rows, 0);
     }
 }

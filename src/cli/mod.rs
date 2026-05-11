@@ -336,6 +336,9 @@ pub enum Command {
         /// Generate a detailed tokenization report after processing.
         #[arg(long, conflicts_with = "restore", conflicts_with = "verify")]
         report: bool,
+        /// Convert output files to this format (csv, tsv, json, jsonl, parquet).
+        #[arg(long, conflicts_with = "restore", conflicts_with = "verify")]
+        output_format: Option<String>,
     },
     /// Enrich a model with statistical knowledge from reference samples.
     Enrich {

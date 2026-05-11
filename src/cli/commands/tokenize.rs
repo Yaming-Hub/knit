@@ -22,6 +22,7 @@ pub fn run(
     tokenize_columns: Option<Vec<String>>,
     preserve_columns: Option<Vec<String>>,
     report: bool,
+    output_format: Option<&str>,
     json_output: bool,
 ) -> Result<()> {
     let input_path = Path::new(input);
@@ -30,6 +31,18 @@ pub fn run(
     if !input_path.exists() {
         bail!("input path does not exist: {}", input);
     }
+
+    // Validate --output-format value
+    let fmt = if let Some(fmt_str) = output_format {
+        let parsed = crate::tokenize::scanner::FileFormat::parse(fmt_str)
+            .ok_or_else(|| anyhow::anyhow!(
+                "invalid output format '{}': expected csv, tsv, json, jsonl, or parquet",
+                fmt_str
+            ))?;
+        Some(parsed)
+    } else {
+        None
+    };
 
     // Column filter flags are not valid in restore or verify mode
     if restore_mode && (tokenize_columns.is_some() || preserve_columns.is_some()) {
@@ -64,6 +77,7 @@ pub fn run(
         tokenize_cols,
         preserve_cols,
         report,
+        fmt,
         json_output,
     )
 }
@@ -89,6 +103,7 @@ fn run_tokenize(
     tokenize_columns: Option<HashSet<String>>,
     preserve_columns: Option<HashSet<String>>,
     report: bool,
+    output_format: Option<crate::tokenize::scanner::FileFormat>,
     json_output: bool,
 ) -> Result<()> {
     let dict_path = dictionary
@@ -105,6 +120,7 @@ fn run_tokenize(
         preserve_columns,
         native_date_shift: None,
         native_numeric_shift: None,
+        output_format,
     };
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;

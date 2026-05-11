@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Format conversion during tokenization** (`--output-format <fmt>`) — Convert data
+  files to a different format while tokenizing. Supports csv, tsv, json, jsonl, and
+  parquet. Output file extensions are automatically updated. Tokenization (string
+  replacement, native numeric/temporal shifts) is applied in a single pass during
+  conversion using Arrow as the intermediate representation.
 - **Tokenization report** (`--report`) — Generate a detailed summary after tokenizing
   a dataset. Shows per-file breakdown (rows, columns, format), token statistics
   (unique count, length preservation rate, value length distribution), and native

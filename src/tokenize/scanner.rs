@@ -67,6 +67,18 @@ impl FileFormat {
             Self::Other => "other",
         }
     }
+
+    /// Parse a format string (e.g. from CLI argument).
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "csv" => Some(Self::Csv),
+            "tsv" => Some(Self::Tsv),
+            "parquet" | "pq" => Some(Self::Parquet),
+            "json" => Some(Self::Json),
+            "jsonl" | "ndjson" => Some(Self::Jsonl),
+            _ => None,
+        }
+    }
 }
 
 /// Recursively scan a directory and classify all files.
