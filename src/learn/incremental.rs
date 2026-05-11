@@ -239,6 +239,11 @@ pub fn update_correlation_evidence(
                     let va = extract_f64(arr_a, row);
                     let vb = extract_f64(arr_b, row);
                     if let (Some(a), Some(b)) = (va, vb) {
+                        // Skip NaN/infinity to avoid corrupting accumulators
+                        // (matches batch mode's paired_finite() filtering)
+                        if !a.is_finite() || !b.is_finite() {
+                            continue;
+                        }
                         let (fa, fb) = if swap { (b, a) } else { (a, b) };
                         table.correlations[tracker_idx].update(fa, fb);
                     }
