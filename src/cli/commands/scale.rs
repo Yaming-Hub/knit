@@ -55,6 +55,16 @@ pub fn run(
         return Ok(());
     }
 
+    // Parse and validate --cadence
+    let cadence_days = if let Some(spec) = cadence {
+        if time.is_none() {
+            bail!("--cadence requires --time (cadence override only applies to time scaling)");
+        }
+        Some(parse_cadence_days(spec)?)
+    } else {
+        None
+    };
+
     // Need output directory for generation
     let output = output_dir.ok_or_else(|| {
         anyhow::anyhow!("--output is required when generating scaled data")
@@ -66,6 +76,7 @@ pub fn run(
         time: time.map(String::from),
         dims: dims.to_vec(),
         count,
+        cadence_days,
     };
 
     // Compute plan
@@ -189,14 +200,19 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
                 .cloned()
                 .unwrap_or_default()
         };
+        let confidence_hint = if t.cadence_confidence < 1.0 {
+            format!(" (confidence: {:.0}%)", t.cadence_confidence * 100.0)
+        } else {
+            String::new()
+        };
         println!(
             "  {:<16}{:<12}{:<20}{}",
             "time",
             "built-in",
             format!("{} partitions", t.partition_values.len()),
             format!(
-                "{}.{}, cadence ≈ {}, {}",
-                t.entity_name, t.partition_field, cadence_str, range
+                "{}.{}, cadence ≈ {}{}, {}",
+                t.entity_name, t.partition_field, cadence_str, confidence_hint, range
             )
         );
     }
@@ -345,4 +361,60 @@ fn print_dry_run(
         );
     }
     println!();
+}
+
+/// Parse a cadence spec (e.g. "7d", "1w", "14d") into days.
+///
+/// Only supports `d` (days) and `w` (weeks) — month-based cadence is not
+/// supported because fixed-day stepping drifts off calendar month boundaries.
+fn parse_cadence_days(spec: &str) -> Result<u32> {
+    let spec = spec.trim();
+    if spec.is_empty() {
+        bail!("empty cadence spec");
+    }
+
+    let (num_str, unit) = spec.split_at(spec.len() - 1);
+    let num: u32 = num_str
+        .parse()
+        .map_err(|_| anyhow::anyhow!("invalid cadence number in '{spec}'"))?;
+
+    if num == 0 {
+        bail!("cadence must be at least 1 day");
+    }
+
+    match unit {
+        "d" => Ok(num),
+        "w" => Ok(num * 7),
+        _ => bail!(
+            "unsupported cadence unit '{unit}' in '{spec}'; use d (days) or w (weeks)"
+        ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_cadence_days() {
+        assert_eq!(parse_cadence_days("7d").unwrap(), 7);
+        assert_eq!(parse_cadence_days("1w").unwrap(), 7);
+        assert_eq!(parse_cadence_days("2w").unwrap(), 14);
+        assert_eq!(parse_cadence_days("30d").unwrap(), 30);
+    }
+
+    #[test]
+    fn test_parse_cadence_rejects_months() {
+        assert!(parse_cadence_days("1m").is_err());
+    }
+
+    #[test]
+    fn test_parse_cadence_rejects_zero() {
+        assert!(parse_cadence_days("0d").is_err());
+    }
+
+    #[test]
+    fn test_parse_cadence_rejects_empty() {
+        assert!(parse_cadence_days("").is_err());
+    }
 }

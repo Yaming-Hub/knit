@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **`--cadence` override for `knit scale`** — Users can now specify `--cadence 7d`
+  or `--cadence 1w` to override auto-detected time cadence when scaling datasets.
+  Low-confidence cadence detections (< 50%) emit a warning suggesting the override.
+  Only day (`d`) and week (`w`) units are supported; the analysis display now shows
+  confidence percentage when cadence detection is uncertain. Also adds `YYYYMMDD`
+  date format support for partition parsing.
 - **Incremental correlation finalize** — Incremental learning now detects and emits
   Pearson correlations between numeric column pairs. Correlations are tracked per-table
   using streaming Welford covariance during ingestion, stored in the state file, and

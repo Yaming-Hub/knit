@@ -101,8 +101,11 @@ values parse as dates.
 - Per-partition row count = learned average, scaled by actor ratio if combined
 - Partition weights rebalanced to be uniform across new values
 
-**Cadence detection:** If gap variance exceeds 50% of median, warn user and
-require confirmation or explicit `--cadence 7d`.
+**Cadence detection:** If gap variance exceeds 50% of median, a warning is
+emitted suggesting `--cadence` override. The user can specify `--cadence 7d` or
+`--cadence 1w` to override the detected cadence. Only `d` (days) and `w` (weeks)
+units are supported — month-based cadence (`1m`) is not available because
+fixed-day stepping drifts off calendar month boundaries.
 
 #### Uniform (`--count Nx`)
 
@@ -303,7 +306,7 @@ Options:
     --time <SPEC>             Scale time dimension (52w, 6m, 365d, 2024-01-01..2025-12-31)
     --dim <NAME=N>            Scale custom dimension (repeatable)
     --count <N|Nx>            Additional uniform row scaling
-    --cadence <DURATION>      Override detected time cadence (7d, 1w, 1m)
+    --cadence <DURATION>      Override detected time cadence (e.g. 7d, 1w, 14d)
     --format <FMT>            Output format (csv, parquet, json, etc.)
     --seed <N>                Random seed
     --quiet                   Suppress progress output
@@ -319,7 +322,8 @@ Options:
 | No actor entity detected | Error: "No actor entity found. Mark an entity with `actor = true` or ensure FK relationships exist." |
 | Multiple actor candidates | List candidates with confidence, require `--actors "Name=N"` |
 | No partitions for `--time` | Error: "No time dimension detected (no partitioned entities with date values)." |
-| Irregular cadence (>50% variance) | Warning + require `--cadence` override or confirmation |
+| Irregular cadence (>50% variance) | Warning with detected confidence; suggests `--cadence` override |
+| `--cadence` without `--time` | Error: "--cadence requires --time" |
 | `--dim` for non-existent field | Error: "Dimension 'X' not found. Run `--analyze` to see available dimensions." |
 | `--dim` on FK field | Error: "Cannot scale FK field 'X'. Scale the parent entity with `--actors` instead." |
 | `--dim` on partition field | Error: "Cannot scale partition field 'X'. Use `--time` instead." |
@@ -399,9 +403,9 @@ generation pipeline (format selection, partitioning, output writing).
 
 ### Deferred to v2
 
-- Cadence confidence threshold and `--cadence` override flag
 - Smart value naming (faker-based) for expanded custom dimensions
 - `--count Nx` uniform multiplier on top of dimensional scaling
 - Constraint propagation for cross-entity dimension fields
 - JSON machine-readable output for `--analyze`
 - Estimated output size in `--dry-run`
+- Calendar-aware monthly cadence stepping (`--cadence 1m`)
