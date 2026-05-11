@@ -389,6 +389,16 @@ fn apply_parquet(
         None
     };
 
+    // Compute numeric shift for native numeric columns.
+    // Use explicit override during restore, otherwise compute from seed.
+    let numeric_shift = if let Some(shift) = config.native_numeric_shift {
+        Some(shift)
+    } else if config.tokenize_numbers {
+        Some(super::scanner::compute_numeric_shift(config.seed))
+    } else {
+        None
+    };
+
     let out_file = std::fs::File::create(out)?;
     let mut writer = ArrowWriter::try_new(out_file, output_schema.clone(), None)?;
 
@@ -427,16 +437,15 @@ fn apply_parquet(
                     })
                     .collect();
                 columns.push(Arc::new(tokenized));
-            } else if let Some(shift) = date_shift {
-                // Attempt native timestamp/date shifting
-                if let Some(shifted) = shift_native_temporal(col, shift) {
-                    columns.push(shifted);
-                } else {
-                    columns.push(col.clone());
-                }
             } else {
-                // Non-string, non-temporal columns: pass through unchanged
-                columns.push(col.clone());
+                // Try native temporal shifting, then numeric shifting, then pass through
+                let shifted = date_shift
+                    .and_then(|shift| shift_native_temporal(col, shift))
+                    .or_else(|| {
+                        numeric_shift
+                            .and_then(|offset| shift_native_numeric(col, offset))
+                    });
+                columns.push(shifted.unwrap_or_else(|| col.clone()));
             }
         }
 
@@ -528,9 +537,111 @@ fn shift_native_temporal(
     }
 }
 
+/// Shift native Arrow numeric columns for tokenization.
+///
+/// Integers use wrapping arithmetic (always exactly reversible).
+/// Floats use additive offset (v + offset as f64/f32).
+/// Returns `Some(shifted_array)` if the column is a supported numeric type.
+fn shift_native_numeric(
+    col: &dyn arrow::array::Array,
+    offset: i64,
+) -> Option<std::sync::Arc<dyn arrow::array::Array>> {
+    use arrow::array::{
+        Float32Array, Float64Array, Int8Array, Int16Array, Int32Array, Int64Array,
+        UInt8Array, UInt16Array, UInt32Array, UInt64Array,
+    };
+    use arrow::datatypes::DataType;
+    use std::sync::Arc;
+
+    match col.data_type() {
+        DataType::Int8 => {
+            let arr = col.as_any().downcast_ref::<Int8Array>()?;
+            let shifted: Int8Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as i8)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Int16 => {
+            let arr = col.as_any().downcast_ref::<Int16Array>()?;
+            let shifted: Int16Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as i16)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Int32 => {
+            let arr = col.as_any().downcast_ref::<Int32Array>()?;
+            let shifted: Int32Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as i32)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Int64 => {
+            let arr = col.as_any().downcast_ref::<Int64Array>()?;
+            let shifted: Int64Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::UInt8 => {
+            let arr = col.as_any().downcast_ref::<UInt8Array>()?;
+            let shifted: UInt8Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u8)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::UInt16 => {
+            let arr = col.as_any().downcast_ref::<UInt16Array>()?;
+            let shifted: UInt16Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u16)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::UInt32 => {
+            let arr = col.as_any().downcast_ref::<UInt32Array>()?;
+            let shifted: UInt32Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u32)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::UInt64 => {
+            let arr = col.as_any().downcast_ref::<UInt64Array>()?;
+            let shifted: UInt64Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u64)))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Float32 => {
+            let arr = col.as_any().downcast_ref::<Float32Array>()?;
+            let shifted: Float32Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v + offset as f32))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Float64 => {
+            let arr = col.as_any().downcast_ref::<Float64Array>()?;
+            let shifted: Float64Array = arr
+                .iter()
+                .map(|opt| opt.map(|v| v + offset as f64))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arrow::array::Array as _;
     use crate::tokenize::mapper::TokenMapper;
     use std::io::Write;
     use tempfile::TempDir;
@@ -1281,6 +1392,159 @@ mod tests {
             assert_eq!(ts_col.value(1), 200 * us_per_day + shift * 86_400_000_000);
 
             // String column should be tokenized (not original values)
+            let name_col = batch
+                .column(0)
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap();
+            assert_ne!(name_col.value(0), "Alice");
+            assert_ne!(name_col.value(1), "Bob");
+        }
+    }
+
+    #[test]
+    fn test_shift_native_int32() {
+        use arrow::array::Int32Array;
+        let arr = Int32Array::from(vec![Some(100), None, Some(-50)]);
+        let shifted = shift_native_numeric(&arr, 42).unwrap();
+        let result = shifted.as_any().downcast_ref::<Int32Array>().unwrap();
+        assert_eq!(result.value(0), 142);
+        assert!(result.is_null(1));
+        assert_eq!(result.value(2), -8);
+    }
+
+    #[test]
+    fn test_shift_native_int64() {
+        use arrow::array::Int64Array;
+        let arr = Int64Array::from(vec![Some(1000), Some(-500)]);
+        let shifted = shift_native_numeric(&arr, -200).unwrap();
+        let result = shifted.as_any().downcast_ref::<Int64Array>().unwrap();
+        assert_eq!(result.value(0), 800);
+        assert_eq!(result.value(1), -700);
+    }
+
+    #[test]
+    fn test_shift_native_uint32() {
+        use arrow::array::UInt32Array;
+        let arr = UInt32Array::from(vec![Some(100), Some(0)]);
+        let shifted = shift_native_numeric(&arr, 50).unwrap();
+        let result = shifted.as_any().downcast_ref::<UInt32Array>().unwrap();
+        assert_eq!(result.value(0), 150);
+        assert_eq!(result.value(1), 50);
+    }
+
+    #[test]
+    fn test_shift_native_float64() {
+        use arrow::array::Float64Array;
+        let arr = Float64Array::from(vec![Some(100.0), Some(-50.0), None]);
+        let shifted = shift_native_numeric(&arr, 42).unwrap();
+        let result = shifted.as_any().downcast_ref::<Float64Array>().unwrap();
+        assert!((result.value(0) - 142.0).abs() < 0.001);
+        assert!((result.value(1) - (-8.0)).abs() < 0.001);
+        assert!(result.is_null(2));
+    }
+
+    #[test]
+    fn test_shift_native_numeric_passthrough_string() {
+        use arrow::array::StringArray;
+        let arr = StringArray::from(vec!["hello", "world"]);
+        assert!(shift_native_numeric(&arr, 42).is_none());
+    }
+
+    #[test]
+    fn test_shift_native_numeric_wrapping() {
+        use arrow::array::Int8Array;
+        // Wrapping: 120 + 42 wraps around in i8
+        let arr = Int8Array::from(vec![Some(120i8)]);
+        let shifted = shift_native_numeric(&arr, 42).unwrap();
+        let result = shifted.as_any().downcast_ref::<Int8Array>().unwrap();
+        let expected = 120i8.wrapping_add(42);
+        assert_eq!(result.value(0), expected);
+        // Verify roundtrip: shift back by -42
+        let restored = shift_native_numeric(&*shifted, -42).unwrap();
+        let result2 = restored.as_any().downcast_ref::<Int8Array>().unwrap();
+        assert_eq!(result2.value(0), 120);
+    }
+
+    #[test]
+    fn test_shift_native_uint_wrapping_roundtrip() {
+        use arrow::array::UInt8Array;
+        let arr = UInt8Array::from(vec![Some(10u8), Some(250u8)]);
+        let shifted = shift_native_numeric(&arr, 100).unwrap();
+        // Verify roundtrip
+        let restored = shift_native_numeric(&*shifted, -100).unwrap();
+        let result = restored.as_any().downcast_ref::<UInt8Array>().unwrap();
+        assert_eq!(result.value(0), 10);
+        assert_eq!(result.value(1), 250);
+    }
+
+    #[test]
+    fn test_apply_parquet_native_numeric_shift() {
+        use arrow::array::{Int32Array, Float64Array, StringArray};
+        use arrow::datatypes::{Field, Schema};
+        use arrow::record_batch::RecordBatch;
+        use parquet::arrow::ArrowWriter;
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        use std::sync::Arc;
+
+        let dir = TempDir::new().unwrap();
+        let input = dir.path().join("data.parquet");
+        let output = dir.path().join("tokenized.parquet");
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("name", arrow::datatypes::DataType::Utf8, false),
+            Field::new("score", arrow::datatypes::DataType::Int32, false),
+            Field::new("value", arrow::datatypes::DataType::Float64, false),
+        ]));
+
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                Arc::new(StringArray::from(vec!["Alice", "Bob"])),
+                Arc::new(Int32Array::from(vec![100, 200])),
+                Arc::new(Float64Array::from(vec![1.5, 2.5])),
+            ],
+        ).unwrap();
+
+        let file = std::fs::File::create(&input).unwrap();
+        let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+
+        let config = TokenizeConfig {
+            tokenize_numbers: true,
+            seed: 42,
+            ..TokenizeConfig::default()
+        };
+        apply_parquet(&input, &output, &mapper, &config).unwrap();
+
+        let file = std::fs::File::open(&output).unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+
+        let offset = super::super::scanner::compute_numeric_shift(42);
+
+        for batch in reader {
+            let batch = batch.unwrap();
+            let score_col = batch
+                .column(1)
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .unwrap();
+            assert_eq!(score_col.value(0), (100i32).wrapping_add(offset as i32));
+            assert_eq!(score_col.value(1), (200i32).wrapping_add(offset as i32));
+
+            let value_col = batch
+                .column(2)
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .unwrap();
+            assert!((value_col.value(0) - (1.5 + offset as f64)).abs() < 0.001);
+            assert!((value_col.value(1) - (2.5 + offset as f64)).abs() < 0.001);
+
             let name_col = batch
                 .column(0)
                 .as_any()

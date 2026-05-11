@@ -101,6 +101,7 @@ fn run_tokenize(
         tokenize_columns,
         preserve_columns,
         native_date_shift: None,
+        native_numeric_shift: None,
     };
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;

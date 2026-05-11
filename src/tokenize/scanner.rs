@@ -369,7 +369,6 @@ fn extract_parquet_strings(
         None
     };
 
-    let mut warned_native_numerics = false;
     for batch_result in reader {
         let batch = batch_result?;
 
@@ -408,21 +407,9 @@ fn extract_parquet_strings(
                         }
                     }
                 }
-            } else if config.tokenize_numbers && !warned_native_numerics {
-                use arrow::datatypes::DataType;
-                let dt = col.data_type();
-                if matches!(dt, DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64
-                    | DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64
-                    | DataType::Float16 | DataType::Float32 | DataType::Float64)
-                {
-                    tracing::warn!(
-                        file = %path.display(),
-                        "native numeric Parquet columns are not yet tokenized by --tokenize-numbers; \
-                         only string-encoded numbers are replaced"
-                    );
-                    warned_native_numerics = true;
-                }
             }
+            // Native numeric and temporal columns are handled in the apply phase
+            // (shift_native_temporal and shift_native_numeric in apply.rs)
         }
     }
     Ok(())
@@ -654,6 +641,17 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
     let offset: i64 = rng.gen_range(-1825..=1825);
+    if offset == 0 { 1 } else { offset }
+}
+
+/// Compute a deterministic numeric shift for native numeric tokenization.
+/// Returns an offset between -10000 and +10000, never zero.
+/// Used for both integer (wrapping add) and float (additive shift) columns.
+pub(crate) fn compute_numeric_shift(seed: u64) -> i64 {
+    use rand::rngs::StdRng;
+    use rand::{Rng, SeedableRng};
+    let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
+    let offset: i64 = rng.gen_range(-10_000..=10_000);
     if offset == 0 { 1 } else { offset }
 }
 
@@ -1025,5 +1023,20 @@ mod tests {
         assert!(config.should_tokenize_column("name"));
         assert!(!config.should_tokenize_column("country"));
         assert!(!config.should_tokenize_column("Country")); // case-insensitive
+    }
+
+    #[test]
+    fn test_compute_numeric_shift_deterministic() {
+        let s1 = compute_numeric_shift(42);
+        let s2 = compute_numeric_shift(42);
+        assert_eq!(s1, s2);
+        assert_ne!(s1, 0);
+    }
+
+    #[test]
+    fn test_compute_numeric_shift_different_seeds() {
+        let s1 = compute_numeric_shift(42);
+        let s2 = compute_numeric_shift(99);
+        assert_ne!(s1, s2);
     }
 }
