@@ -384,7 +384,9 @@ fn parse_cadence_days(spec: &str) -> Result<u32> {
 
     match unit {
         "d" => Ok(num),
-        "w" => Ok(num * 7),
+        "w" => num
+            .checked_mul(7)
+            .ok_or_else(|| anyhow::anyhow!("cadence overflow: '{spec}' is too large")),
         _ => bail!(
             "unsupported cadence unit '{unit}' in '{spec}'; use d (days) or w (weeks)"
         ),
