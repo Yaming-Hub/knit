@@ -240,6 +240,16 @@ pub fn compute_plan(
                 analysis.entity_counts.keys().cloned().collect::<Vec<_>>().join(", ")
             );
         }
+        // Reject density on the actor entity — use --actors instead
+        if let Some(ref actor) = analysis.actor {
+            if actor.entity_name == *entity_name {
+                anyhow::bail!(
+                    "'{}' is the actor entity; use --actors to scale it (--density \
+                     is for non-actor entities)",
+                    entity_name
+                );
+            }
+        }
         let current = analysis.entity_counts.get(entity_name).copied().unwrap_or(1);
         let base = entity_overrides.get(entity_name).copied().unwrap_or(current);
         let new_count = (base as f64 * factor).round().max(1.0) as u64;
@@ -850,5 +860,23 @@ mod tests {
         };
         let plan = compute_plan(&analysis, &targets).unwrap();
         assert_eq!(plan.entity_overrides.get("Users"), Some(&1));
+    }
+
+    #[test]
+    fn density_rejected_on_actor_entity() {
+        let mut analysis = make_test_analysis();
+        analysis.actor = Some(ActorDimension {
+            entity_name: "Users".into(),
+            current_count: 10,
+            confidence: 1.0,
+            dependents: vec![],
+        });
+        let targets = ScaleTargets {
+            density: vec![("Users".into(), 2.0)],
+            ..Default::default()
+        };
+        let err = compute_plan(&analysis, &targets).unwrap_err();
+        assert!(err.to_string().contains("actor entity"));
+        assert!(err.to_string().contains("--actors"));
     }
 }

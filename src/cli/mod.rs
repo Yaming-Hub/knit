@@ -25,8 +25,10 @@ pub fn parse_density_spec(s: &str) -> Result<(String, f64), String> {
         .trim_end_matches('x')
         .parse()
         .map_err(|_| format!("invalid factor in `{s}`: expected number after `=`"))?;
-    if factor <= 0.0 {
-        return Err(format!("density factor must be positive, got {factor}"));
+    if factor <= 0.0 || !factor.is_finite() {
+        return Err(format!(
+            "density factor must be a positive finite number, got {factor}"
+        ));
     }
     Ok((name, factor))
 }
@@ -479,5 +481,15 @@ mod tests {
     #[test]
     fn parse_density_spec_negative_rejected() {
         assert!(parse_density_spec("X=-1").is_err());
+    }
+
+    #[test]
+    fn parse_density_spec_nan_rejected() {
+        assert!(parse_density_spec("X=NaN").is_err());
+    }
+
+    #[test]
+    fn parse_density_spec_inf_rejected() {
+        assert!(parse_density_spec("X=inf").is_err());
     }
 }
