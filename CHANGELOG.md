@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Calendar-aware monthly cadence** (`--cadence 1m`) — The `--cadence` flag for
+  `knit scale` now supports month-based cadence (`1m`, `3m`, `6m`) in addition to
+  days (`7d`) and weeks (`2w`). Monthly cadence uses proper calendar month stepping
+  with end-of-month clamping (e.g., Jan 31 → Feb 29 → Mar 31 → Apr 30), avoiding
+  the day-drift problem of fixed-day stepping. Auto-detection also recognizes
+  monthly partition patterns (28–31 day gaps) and reports `Cadence::Months(1)`.
 - **`--json` output for `knit tokenize`** — The global `--json` flag now produces
   machine-readable JSON output for all three tokenize modes: tokenize, restore,
   and verify. Output includes event type, file counts, token statistics, column

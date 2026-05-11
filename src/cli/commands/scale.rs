@@ -56,11 +56,11 @@ pub fn run(
     }
 
     // Parse and validate --cadence
-    let cadence_days = if let Some(spec) = cadence {
+    let cadence = if let Some(spec) = cadence {
         if time.is_none() {
             bail!("--cadence requires --time (cadence override only applies to time scaling)");
         }
-        Some(parse_cadence_days(spec)?)
+        Some(parse_cadence(spec)?)
     } else {
         None
     };
@@ -76,7 +76,7 @@ pub fn run(
         time: time.map(String::from),
         dims: dims.to_vec(),
         count,
-        cadence_days,
+        cadence,
     };
 
     // Compute plan
@@ -114,13 +114,18 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
             }));
         }
         if let Some(ref t) = analysis.time {
+            let cadence_json = match t.cadence {
+                Some(scale::Cadence::Days(d)) => serde_json::json!({"unit": "days", "value": d}),
+                Some(scale::Cadence::Months(m)) => serde_json::json!({"unit": "months", "value": m}),
+                None => serde_json::json!(null),
+            };
             dims.push(serde_json::json!({
                 "name": "time",
                 "type": "built-in",
                 "entity": t.entity_name,
                 "field": t.partition_field,
                 "partitions": t.partition_values.len(),
-                "cadence_days": t.cadence_days,
+                "cadence": cadence_json,
                 "cadence_confidence": t.cadence_confidence,
             }));
         }
@@ -181,11 +186,13 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
     }
 
     if let Some(ref t) = analysis.time {
-        let cadence_str = match t.cadence_days {
-            Some(1) => "daily".to_string(),
-            Some(7) => "weekly".to_string(),
-            Some(30) | Some(31) => "monthly".to_string(),
-            Some(d) => format!("{}d", d),
+        let cadence_str = match t.cadence {
+            Some(scale::Cadence::Days(1)) => "daily".to_string(),
+            Some(scale::Cadence::Days(7)) => "weekly".to_string(),
+            Some(scale::Cadence::Days(d)) => format!("{}d", d),
+            Some(scale::Cadence::Months(1)) => "monthly".to_string(),
+            Some(scale::Cadence::Months(3)) => "quarterly".to_string(),
+            Some(scale::Cadence::Months(m)) => format!("{}m", m),
             None => "unknown".to_string(),
         };
         let range = if t.partition_values.len() >= 2 {
@@ -363,11 +370,8 @@ fn print_dry_run(
     println!();
 }
 
-/// Parse a cadence spec (e.g. "7d", "1w", "14d") into days.
-///
-/// Only supports `d` (days) and `w` (weeks) — month-based cadence is not
-/// supported because fixed-day stepping drifts off calendar month boundaries.
-fn parse_cadence_days(spec: &str) -> Result<u32> {
+/// Parse a cadence spec (e.g. "7d", "1w", "14d", "1m", "3m") into a Cadence.
+fn parse_cadence(spec: &str) -> Result<scale::Cadence> {
     let spec = spec.trim();
     if spec.is_empty() {
         bail!("empty cadence spec");
@@ -379,16 +383,18 @@ fn parse_cadence_days(spec: &str) -> Result<u32> {
         .map_err(|_| anyhow::anyhow!("invalid cadence number in '{spec}'"))?;
 
     if num == 0 {
-        bail!("cadence must be at least 1 day");
+        bail!("cadence must be at least 1");
     }
 
     match unit {
-        "d" => Ok(num),
-        "w" => num
-            .checked_mul(7)
-            .ok_or_else(|| anyhow::anyhow!("cadence overflow: '{spec}' is too large")),
+        "d" => Ok(scale::Cadence::Days(num)),
+        "w" => Ok(scale::Cadence::Days(
+            num.checked_mul(7)
+                .ok_or_else(|| anyhow::anyhow!("cadence overflow: '{spec}' is too large"))?,
+        )),
+        "m" => Ok(scale::Cadence::Months(num)),
         _ => bail!(
-            "unsupported cadence unit '{unit}' in '{spec}'; use d (days) or w (weeks)"
+            "unsupported cadence unit '{unit}' in '{spec}'; use d (days), w (weeks), or m (months)"
         ),
     }
 }
@@ -399,24 +405,32 @@ mod tests {
 
     #[test]
     fn test_parse_cadence_days() {
-        assert_eq!(parse_cadence_days("7d").unwrap(), 7);
-        assert_eq!(parse_cadence_days("1w").unwrap(), 7);
-        assert_eq!(parse_cadence_days("2w").unwrap(), 14);
-        assert_eq!(parse_cadence_days("30d").unwrap(), 30);
+        assert_eq!(parse_cadence("7d").unwrap(), scale::Cadence::Days(7));
+        assert_eq!(parse_cadence("1w").unwrap(), scale::Cadence::Days(7));
+        assert_eq!(parse_cadence("2w").unwrap(), scale::Cadence::Days(14));
+        assert_eq!(parse_cadence("30d").unwrap(), scale::Cadence::Days(30));
     }
 
     #[test]
-    fn test_parse_cadence_rejects_months() {
-        assert!(parse_cadence_days("1m").is_err());
+    fn test_parse_cadence_months() {
+        assert_eq!(parse_cadence("1m").unwrap(), scale::Cadence::Months(1));
+        assert_eq!(parse_cadence("3m").unwrap(), scale::Cadence::Months(3));
+        assert_eq!(parse_cadence("6m").unwrap(), scale::Cadence::Months(6));
     }
 
     #[test]
     fn test_parse_cadence_rejects_zero() {
-        assert!(parse_cadence_days("0d").is_err());
+        assert!(parse_cadence("0d").is_err());
+        assert!(parse_cadence("0m").is_err());
     }
 
     #[test]
     fn test_parse_cadence_rejects_empty() {
-        assert!(parse_cadence_days("").is_err());
+        assert!(parse_cadence("").is_err());
+    }
+
+    #[test]
+    fn test_parse_cadence_rejects_unknown_unit() {
+        assert!(parse_cadence("5x").is_err());
     }
 }
