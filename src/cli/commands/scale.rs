@@ -83,7 +83,7 @@ pub fn run(
     let plan = scale::compute_plan(&analysis, &targets)?;
 
     if cli.dry_run {
-        print_dry_run(&analysis, &plan, cli);
+        print_dry_run(&model, &analysis, &plan, cli);
         return Ok(());
     }
 
@@ -282,10 +282,22 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
 
 /// Display dry-run scaling plan.
 fn print_dry_run(
+    model: &crate::core::types::DataModel,
     analysis: &scale::ScalingAnalysis,
     plan: &scale::ScalingPlan,
     cli: &Cli,
 ) {
+    let (entity_estimates, total_csv_bytes) =
+        scale::estimate_output_size(model, analysis, plan);
+    let total_parquet_bytes = (total_csv_bytes as f64 * 0.4) as u64;
+
+    let format_estimate = match cli.format {
+        crate::cli::Format::Csv | crate::cli::Format::Json | crate::cli::Format::Jsonl => {
+            total_csv_bytes
+        }
+        _ => total_parquet_bytes, // Parquet, Avro
+    };
+
     if cli.json {
         let entities: Vec<_> = analysis
             .entity_counts
@@ -293,11 +305,17 @@ fn print_dry_run(
             .map(|(name, &current)| {
                 let scaled = plan.entity_overrides.get(name).copied().unwrap_or(current);
                 let factor = scaled as f64 / current.max(1) as f64;
+                let est = entity_estimates
+                    .iter()
+                    .find(|e| e.entity_name == *name)
+                    .map(|e| e.estimated_bytes)
+                    .unwrap_or(0);
                 serde_json::json!({
                     "entity": name,
                     "current": current,
                     "scaled": scaled,
                     "factor": format!("{:.1}×", factor),
+                    "estimated_bytes": est,
                 })
             })
             .collect();
@@ -311,6 +329,13 @@ fn print_dry_run(
                     "new_count": d.new_values.len(),
                 })
             }).collect::<Vec<_>>(),
+            "estimated_size": {
+                "csv_bytes": total_csv_bytes,
+                "parquet_bytes": total_parquet_bytes,
+                "format": format!("{:?}", cli.format).to_lowercase(),
+                "format_bytes": format_estimate,
+                "display": scale::format_bytes(format_estimate),
+            },
         }));
         return;
     }
@@ -319,23 +344,29 @@ fn print_dry_run(
     println!("{}", "═══ Scaling Plan (dry run) ═══".green().bold());
     println!();
     println!(
-        "  {:<20}{:<12}{:<12}{}",
+        "  {:<20}{:<12}{:<12}{:<10}{}",
         "Entity".bold(),
         "Current".bold(),
         "Scaled".bold(),
-        "Factor".bold()
+        "Factor".bold(),
+        "Est. Size".bold(),
     );
     println!(
-        "  {:<20}{:<12}{:<12}{}",
-        "──────", "───────", "──────", "──────"
+        "  {:<20}{:<12}{:<12}{:<10}{}",
+        "──────", "───────", "──────", "──────", "─────────"
     );
 
     for (name, &current) in &analysis.entity_counts {
         let scaled = plan.entity_overrides.get(name).copied().unwrap_or(current);
         let factor = scaled as f64 / current.max(1) as f64;
+        let est = entity_estimates
+            .iter()
+            .find(|e| e.entity_name == *name)
+            .map(|e| scale::format_bytes(e.estimated_bytes))
+            .unwrap_or_else(|| "—".to_string());
         println!(
-            "  {:<20}{:<12}{:<12}{:.1}×",
-            name, current, scaled, factor
+            "  {:<20}{:<12}{:<12}{:<10}{}",
+            name, current, scaled, format!("{:.1}×", factor), est
         );
     }
 
@@ -367,6 +398,16 @@ fn print_dry_run(
             d.field_name, old_count, d.new_values.len()
         );
     }
+
+    println!();
+    let format_name = format!("{:?}", cli.format).to_lowercase();
+    println!(
+        "  {} ~{} ({}), ~{} (parquet)",
+        "Estimated output:".bold(),
+        scale::format_bytes(format_estimate),
+        format_name,
+        scale::format_bytes(total_parquet_bytes),
+    );
     println!();
 }
 
