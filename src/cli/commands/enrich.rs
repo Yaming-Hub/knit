@@ -2,10 +2,10 @@
 
 use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::Colorize;
 
-use crate::cli::commands::load_schema;
+use crate::cli::commands::{load_schema, save_schema};
 use crate::cli::Cli;
 use crate::enrich::{enrich, EnrichConfig};
 
@@ -63,11 +63,9 @@ pub fn run(
     println!("  Fields enriched:    {}", result.enriched_fields);
     println!("  Fields skipped:     {}", result.skipped_fields);
 
-    // Write updated schema
+    // Write updated schema (format-aware: preserves structured directory if input was structured)
     let out_path = output.unwrap_or(schema_path);
-    let toml_str = toml::to_string_pretty(&model)
-        .context("serializing enriched model to TOML")?;
-    std::fs::write(out_path, toml_str)?;
+    save_schema(&model, out_path)?;
     println!("\n  Written to: {}", out_path.green());
 
     Ok(())
