@@ -264,6 +264,30 @@ fn main() -> anyhow::Result<()> {
 
     // Write decision report if requested (on both success and failure).
     if let (Some(logger), Some(report_path)) = (decision_logger, &cli.decision_report) {
+        // Print low-confidence summary to stderr before writing full report
+        let low_conf = logger.low_confidence_decisions();
+        if !low_conf.is_empty() && !cli.quiet {
+            eprintln!(
+                "\n{} {} low-confidence decision(s) — review in report:",
+                "⚠".yellow().bold(),
+                low_conf.len(),
+            );
+            for d in low_conf.iter().take(5) {
+                let loc = match (&d.entity, &d.column) {
+                    (Some(e), Some(c)) => format!("{e}.{c}"),
+                    (Some(e), None) => e.clone(),
+                    _ => "—".to_string(),
+                };
+                eprintln!(
+                    "  • [{loc}] {}: {}",
+                    d.chosen, d.reason,
+                );
+            }
+            if low_conf.len() > 5 {
+                eprintln!("  … and {} more", low_conf.len() - 5);
+            }
+        }
+
         let pipeline = match &cli.command {
             Command::Learn { .. } => "learn",
             Command::Generate { .. } => "generate",
