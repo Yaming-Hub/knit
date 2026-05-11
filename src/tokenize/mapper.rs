@@ -53,6 +53,15 @@ impl TokenMapper {
         self.map.insert(original.to_string(), token);
     }
 
+    /// Register a value with a specific replacement (e.g., shifted dates).
+    pub fn register_with_value(&mut self, original: &str, replacement: &str) {
+        if self.map.contains_key(original) {
+            return;
+        }
+        self.used_tokens.insert(replacement.to_string());
+        self.map.insert(original.to_string(), replacement.to_string());
+    }
+
     /// Look up the token for an original value.
     pub fn get(&self, original: &str) -> Option<&str> {
         self.map.get(original).map(|s| s.as_str())

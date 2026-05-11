@@ -6,6 +6,14 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **`--tokenize-dates` implementation** — The `--tokenize-dates` flag now shifts
+  date and timestamp values by a consistent random offset (±5 years, seeded).
+  This preserves relative ordering and intervals between dates while obfuscating
+  absolute values. Supports ISO 8601 formats (YYYY-MM-DD, YYYY-MM-DDThh:mm:ss,
+  with Z/offset), space-separated datetime, and compact YYYYMMDD. Date strings
+  are now preserved by default (skipped by tokenizer) to match the design spec;
+  use `--tokenize-dates` for explicit date shifting. Native Parquet timestamp
+  columns are not yet supported.
 - **`--tokenize-numbers` implementation** — The `--tokenize-numbers` flag now
   tokenizes numeric values in CSV cells and JSON scalars. Numbers are registered
   during the scan phase and replaced with shape-preserving random values (same

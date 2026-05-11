@@ -706,4 +706,71 @@ mod tests {
         // But strings should be
         assert!(!lines[1].contains("Alice"));
     }
+
+    #[test]
+    fn test_apply_csv_with_shifted_dates() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.csv");
+        let out = dir.path().join("output.csv");
+
+        let mut f = std::fs::File::create(&src).unwrap();
+        writeln!(f, "name,event_date").unwrap();
+        writeln!(f, "Alice,2024-01-15").unwrap();
+        writeln!(f, "Bob,2024-03-20").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+        // Register shifted dates (shift = +100 days for this test)
+        mapper.register_with_value("2024-01-15", "2024-04-24");
+        mapper.register_with_value("2024-03-20", "2024-06-28");
+
+        let entry = FileEntry {
+            rel_path: "input.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            tokenize_dates: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let result = std::fs::read_to_string(&out).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        // Dates should be replaced with shifted values
+        assert!(lines[1].contains("2024-04-24"));
+        assert!(lines[2].contains("2024-06-28"));
+        // Original dates should not appear
+        assert!(!lines[1].contains("2024-01-15"));
+        assert!(!lines[2].contains("2024-03-20"));
+    }
+
+    #[test]
+    fn test_dates_preserved_without_flag() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.csv");
+        let out = dir.path().join("output.csv");
+
+        let mut f = std::fs::File::create(&src).unwrap();
+        writeln!(f, "name,date").unwrap();
+        writeln!(f, "Alice,2024-01-15").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        // Don't register date — it should be preserved
+
+        let entry = FileEntry {
+            rel_path: "input.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig::default(); // tokenize_dates = false
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let result = std::fs::read_to_string(&out).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        // Date should be preserved (not in mapper)
+        assert!(lines[1].contains("2024-01-15"));
+    }
 }

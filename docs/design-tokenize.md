@@ -76,7 +76,7 @@ knit tokenize --verify Q:\data\my_dataset Q:\data\tokenized
 | File names and paths | **Preserved** | `--tokenize-paths` |
 | Integer values | **Preserved** | `--tokenize-numbers` (tokenize) |
 | Float values | **Preserved** | `--tokenize-numbers` (tokenize) |
-| Date/timestamp values | **Preserved** | `--tokenize-dates` |
+| Date/timestamp values | **Preserved** | `--tokenize-dates` (shift by random offset) |
 | Boolean values | **Preserved** | — (no useful info) |
 | Null values | **Preserved** | — (structural) |
 | Partition folder names | **Tokenized** (if string) | `--preserve-partitions` |
@@ -176,11 +176,16 @@ scan(dataset) → build_token_map → apply_tokens → write_output + dictionary
 **Phase 1: Scan** — Walk the dataset directory, classify files (data, schema,
 dictionary, companion), detect formats, read all string values. When
 `--tokenize-headers` is enabled, also registers CSV column headers, JSON object
-keys, and Parquet column names in the token map.
+keys, and Parquet column names in the token map. When `--tokenize-numbers` is
+enabled, numeric cell values are registered. When `--tokenize-dates` is enabled,
+date/timestamp strings are detected and registered with shifted values (using a
+consistent random offset derived from the seed). Date strings are preserved
+(skipped) by default — only shifted when the flag is explicitly set.
 
 **Phase 2: Build Token Map** — For each unique string value, generate a token
 preserving shape (length, word count, case pattern). Use a seeded RNG for
-deterministic token generation. Headers share the same token map as values.
+deterministic token generation. Headers and numbers share the same token map.
+Dates use consistent shifting (same offset for all dates) to preserve ordering.
 
 **Phase 3: Apply** — Re-read each file, replace string values using the token
 map, write to output directory preserving folder structure. When
@@ -356,14 +361,14 @@ src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
 
 | Limitation | Impact | Mitigation |
 |-----------|--------|-----------|
-| `--tokenize-dates` flag accepted but not functional | Date values always preserved | Warning emitted at runtime |
+| Native Parquet timestamp columns not shifted | Only string-encoded dates shifted | Warning could be added |
 | Native Parquet numeric columns not tokenized | Only string-encoded numbers replaced | Warning emitted at runtime |
 | Restore ambiguity | A generated token may match an untouched literal | Rare in practice; requires field-level metadata to fix fully |
 | Memory usage | All unique strings held in HashMap | Acceptable for datasets < 10M unique strings |
 
 ### Deferred to v2
 
-- Implement `--tokenize-dates` (date/timestamp shifting)
+- Native Parquet timestamp column shifting (typed Date32/Date64/Timestamp replacement)
 - Native Parquet numeric column tokenization (typed i32/i64/f32/f64 replacement)
 - Field-level restore metadata (eliminate restore ambiguity)
 - Streaming tokenization for very large datasets
