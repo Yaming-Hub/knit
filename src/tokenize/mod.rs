@@ -44,6 +44,8 @@ pub struct TokenizeConfig {
     /// Set during restore to the inverse of the original shift.
     /// When `None` and `tokenize_numbers` is true, computed from seed.
     pub native_numeric_shift: Option<i64>,
+    /// Convert output data files to this format (None = preserve original format).
+    pub output_format: Option<scanner::FileFormat>,
 }
 
 impl Default for TokenizeConfig {
@@ -58,6 +60,7 @@ impl Default for TokenizeConfig {
             preserve_columns: None,
             native_date_shift: None,
             native_numeric_shift: None,
+            output_format: None,
         }
     }
 }
@@ -144,7 +147,15 @@ pub fn tokenize(
     let mut companion_files = 0;
 
     for entry in &entries {
-        let out_path = output_dir.join(&entry.rel_path);
+        let out_path = if let Some(target_fmt) = config.output_format {
+            if entry.kind == FileKind::Data || entry.kind == FileKind::Dictionary {
+                change_extension(&output_dir.join(&entry.rel_path), target_fmt)
+            } else {
+                output_dir.join(&entry.rel_path)
+            }
+        } else {
+            output_dir.join(&entry.rel_path)
+        };
         if let Some(parent) = out_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -182,6 +193,19 @@ pub fn tokenize(
         companion_files,
         unique_tokens: mapper.len(),
     })
+}
+
+/// Change the file extension to match the target format.
+fn change_extension(path: &Path, format: scanner::FileFormat) -> std::path::PathBuf {
+    let ext = match format {
+        scanner::FileFormat::Csv => "csv",
+        scanner::FileFormat::Tsv => "tsv",
+        scanner::FileFormat::Json => "json",
+        scanner::FileFormat::Jsonl => "jsonl",
+        scanner::FileFormat::Parquet => "parquet",
+        scanner::FileFormat::Other => return path.to_path_buf(),
+    };
+    path.with_extension(ext)
 }
 
 /// Restore a tokenized dataset using a token dictionary.
@@ -356,5 +380,64 @@ mod tests {
         // Same original "US" → same token in both files
         assert_eq!(us_token_1, us_token_2);
         assert_ne!(us_token_1, "US");
+    }
+
+    #[test]
+    fn test_change_extension() {
+        use std::path::Path;
+        assert_eq!(
+            change_extension(Path::new("data.csv"), scanner::FileFormat::Parquet),
+            std::path::PathBuf::from("data.parquet")
+        );
+        assert_eq!(
+            change_extension(Path::new("sub/dir/file.parquet"), scanner::FileFormat::Csv),
+            std::path::PathBuf::from("sub/dir/file.csv")
+        );
+        assert_eq!(
+            change_extension(Path::new("file.json"), scanner::FileFormat::Jsonl),
+            std::path::PathBuf::from("file.jsonl")
+        );
+        // Other format returns original path
+        assert_eq!(
+            change_extension(Path::new("file.csv"), scanner::FileFormat::Other),
+            std::path::PathBuf::from("file.csv")
+        );
+    }
+
+    #[test]
+    fn test_tokenize_with_format_conversion_csv_to_parquet() {
+        let input = TempDir::new().unwrap();
+        let output = TempDir::new().unwrap();
+
+        let csv_path = input.path().join("data.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,city").unwrap();
+        writeln!(f, "Alice,Seattle").unwrap();
+        writeln!(f, "Bob,Portland").unwrap();
+
+        let config = TokenizeConfig {
+            output_format: Some(scanner::FileFormat::Parquet),
+            ..Default::default()
+        };
+        let dict_path = output.path().join(".knit-tokens.json");
+        let result = tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
+        assert_eq!(result.data_files, 1);
+
+        // Output should be .parquet, not .csv
+        let parquet_out = output.path().join("data.parquet");
+        assert!(parquet_out.exists(), "Expected data.parquet to exist");
+        assert!(!output.path().join("data.csv").exists(), "data.csv should NOT exist");
+
+        // Read and verify content is tokenized
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        let file = std::fs::File::open(&parquet_out).unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+        let batches: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(batches[0].num_rows(), 2);
+
+        use arrow::array::AsArray;
+        let name_col = batches[0].column(0).as_string::<i32>();
+        assert_ne!(name_col.value(0), "Alice");
+        assert_ne!(name_col.value(1), "Bob");
     }
 }
