@@ -172,7 +172,7 @@ fn tokenize_json_value(
         }
         serde_json::Value::Object(map) => {
             if tokenize_keys {
-                // Must rebuild map since keys need renaming
+                let mut seen = std::collections::HashSet::new();
                 let entries: Vec<(String, serde_json::Value)> = map
                     .into_iter()
                     .map(|(k, v)| {
@@ -183,7 +183,15 @@ fn tokenize_json_value(
                         (new_key, v.clone())
                     })
                     .collect();
-                *map = serde_json::Map::from_iter(entries);
+                // Check for duplicate keys after tokenization
+                let mut deduped = serde_json::Map::new();
+                for (key, val) in entries {
+                    if !seen.insert(key.clone()) {
+                        tracing::warn!(key = %key, "duplicate JSON key after tokenization; last value wins");
+                    }
+                    deduped.insert(key, val);
+                }
+                *map = deduped;
             }
             for val in map.values_mut() {
                 tokenize_json_value(val, mapper, tokenize_keys);
@@ -255,7 +263,7 @@ fn apply_parquet(
                     .get(f.name())
                     .map(|t| t.to_string())
                     .unwrap_or_else(|| f.name().clone());
-                Arc::new(Field::new(new_name, f.data_type().clone(), f.is_nullable()))
+                Arc::new(f.as_ref().clone().with_name(new_name))
             })
             .collect();
         Arc::new(Schema::new_with_metadata(new_fields, schema.metadata().clone()))

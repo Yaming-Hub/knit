@@ -280,22 +280,21 @@ fn extract_parquet_strings(
 
     let file = std::fs::File::open(path)
         .with_context(|| format!("opening parquet {}", path.display()))?;
-    let reader = ParquetRecordBatchReaderBuilder::try_new(file)?
-        .build()?;
+    let builder = ParquetRecordBatchReaderBuilder::try_new(file)?;
 
-    let mut schema_registered = false;
+    // Register column names from file schema (works even for empty files)
+    if config.tokenize_headers {
+        for field in builder.schema().fields() {
+            if should_tokenize_value(field.name()) {
+                mapper.register(field.name());
+            }
+        }
+    }
+
+    let reader = builder.build()?;
+
     for batch_result in reader {
         let batch = batch_result?;
-
-        // Register column names (once per file)
-        if config.tokenize_headers && !schema_registered {
-            for field in batch.schema().fields() {
-                if should_tokenize_value(field.name()) {
-                    mapper.register(field.name());
-                }
-            }
-            schema_registered = true;
-        }
 
         for col_idx in 0..batch.num_columns() {
             let col = batch.column(col_idx);
