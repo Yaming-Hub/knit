@@ -151,7 +151,7 @@ fn social_platform_path() -> std::path::PathBuf {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.contains("social_platform"))
         })
-        .expect("social_platform.weave.toml not found in examples/")
+        .expect("social_platform.knit.toml not found in examples/")
 }
 
 #[test]

@@ -12,7 +12,7 @@ properties**. The result is a structurally identical dataset that is safe to sha
 for debugging, with an optional token dictionary that can restore the original data.
 
 **Key properties:**
-- A tokenized dataset produces the same schema when learned by knit
+- A tokenized dataset produces the same blueprint when learned by knit
 - All foreign-key relationships, null patterns, and cardinalities are preserved
 - No original string content is recoverable without the dictionary
 - Numeric values, dates, and booleans are optionally preserved or tokenized
@@ -54,7 +54,7 @@ knit tokenize --verify Q:\data\my_dataset Q:\data\tokenized
 
 # Output:
 # ═══ Verification ═══
-#   schema match:      ✓ (same entities, fields, types)
+#   blueprint match:      ✓ (same entities, fields, types)
 #   row counts:        ✓ (identical)
 #   null patterns:     ✓ (identical)
 #   relationships:     ✓ (FK integrity preserved)

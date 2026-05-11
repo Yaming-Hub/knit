@@ -1,14 +1,14 @@
-//! # knit-schema — Parser and Validator for the Weave Schema Language
+//! # knit-blueprint — Parser and Validator for the Knit Blueprint Language
 //!
 #![warn(missing_docs)]
-//! This crate converts TOML or JSON schema files into a validated
+//! This crate converts TOML or JSON blueprint files into a validated
 //! [`DataModel`](crate::core::DataModel), the canonical in-memory representation
 //! consumed by the rest of the knit pipeline.
 //!
 //! ## Pipeline Position
 //!
 //! ```text
-//! Weave Schema (TOML/JSON) → knit-schema → DataModel → knit-plan → knit-gen
+//! Knit Blueprint (TOML/JSON) → knit-blueprint → DataModel → knit-plan → knit-gen
 //! ```
 //!
 //! ## Key Entry Points
@@ -21,7 +21,7 @@
 //!
 //! ## Error Handling
 //!
-//! All functions return [`SchemaError`], which wraps TOML/JSON parse errors,
+//! All functions return [`BlueprintError`], which wraps TOML/JSON parse errors,
 //! I/O errors, and semantic validation issues.
 
 mod error;
@@ -30,7 +30,7 @@ pub(crate) mod includes;
 mod parser;
 mod validate;
 
-pub use error::SchemaError;
+pub use error::BlueprintError;
 pub use extends::{merge_models, resolve_extends};
 pub use includes::{merge_main_over_includes, resolve_includes};
 pub use parser::{parse_json, parse_json_file, parse_toml, parse_toml_file};

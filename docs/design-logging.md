@@ -78,7 +78,7 @@ this before adding or modifying log statements.
 | What | Rule |
 |------|------|
 | **File paths** | OK at info for I/O operations, but use relative paths (not absolute) to avoid leaking system layout |
-| **Column names** | OK at all levels — these are schema-level, not data-level |
+| **Column names** | OK at all levels — these are blueprint-level, not data-level |
 | **Entity/table names** | OK at all levels — structural metadata |
 | **Distribution parameters** | OK at debug — these are model parameters, not raw data |
 | **Counts and rates** | OK at all levels — aggregate statistics don't reveal individual records |
@@ -235,7 +235,7 @@ insufficient detail). Ordered by impact.
 | `temporal.rs:88–300` | **Temporal pattern classification** — cadence, periodicity, FFT | Only logs when <3 timestamps; pattern detection is completely silent |
 | `correlation.rs:51–130` | **Correlation filtering** — which pairs kept, which dropped | Logs accepted correlations but not rejected ones or threshold rationale |
 | `type_inference.rs:200–250` | **Categorical vs Text boundary** — distinct/total ratio | No logging of the ratio evaluation or threshold |
-| `schema_assembly.rs` | **Generator selection per column** — why sequence vs uuid vs one_of | Partial; missing selection reasoning |
+| `blueprint_assembly.rs` | **Generator selection per column** — why sequence vs uuid vs one_of | Partial; missing selection reasoning |
 
 #### Generate Phase (High)
 
@@ -321,8 +321,8 @@ INFO  learn: discovered 3 tables (AnalyzedUser, Collab, PeopleHistorical)
 INFO  learn: AnalyzedUser — 8 rows, 19 columns
 INFO  learn: Collab — 60 rows, 166 columns, partitioned by PartitionDate (13 partitions)
 INFO  learn: detected 2 relationships (Collab→AnalyzedUser, PeopleHistorical→AnalyzedUser)
-INFO  learn: found 30 companion files (3 schemas, 27 dictionaries)
-INFO  learn: model written to schema.weave.toml (11,905 lines)
+INFO  learn: found 30 companion files (3 blueprints, 27 dictionaries)
+INFO  learn: model written to blueprint.knit.toml (11,905 lines)
 ```
 
 **`debug`** — A user running with `-v` or an AI diagnosing issues sees
@@ -664,9 +664,9 @@ At the end of each pipeline run, knit prints a structured summary to stderr:
   Total rows:      77
   Relationships:   2 foreign keys
   Correlations:    12 significant pairs
-  Companions:      30 files (3 schemas, 27 dictionaries)
+  Companions:      30 files (3 blueprints, 27 dictionaries)
   Decisions:       215 total (4 low-confidence)
-  Output:          schema.weave.toml (11,905 lines)
+  Output:          blueprint.knit.toml (11,905 lines)
   Duration:        2.3s
 ══════════════════════════════════════════════
 ```
@@ -790,7 +790,7 @@ Instrument the 6 critical silent decision points from §2.2.
   with threshold rationale
 - `src/learn/type_inference.rs:200–250` — log categorical vs text boundary
   decision (distinct/total ratio, threshold)
-- `src/learn/schema_assembly.rs` — log generator selection reasoning
+- `src/learn/blueprint_assembly.rs` — log generator selection reasoning
   (why sequence vs uuid vs one_of vs distribution)
 - Add low-confidence promotion (§1.3 Rule 6) for all learn decisions
 - Add end-of-learn summary report
@@ -848,7 +848,7 @@ Instrument the 5 high-priority silent decision points from §2.2.
 | `DecisionReport` | `src/decision.rs` | Final JSON report with summary statistics |
 | `--decision-report` flag | `src/cli/mod.rs` | Global CLI flag to enable report output |
 | Global logger | `src/decision.rs` | `OnceLock`-based global accessor for zero-cost when disabled |
-| Learn integration | `fitting.rs`, `relationships.rs`, `type_inference.rs`, `schema_assembly.rs` | Records distribution fits, FK detection, type inference, generator selection |
+| Learn integration | `fitting.rs`, `relationships.rs`, `type_inference.rs`, `blueprint_assembly.rs` | Records distribution fits, FK detection, type inference, generator selection |
 
 ---
 

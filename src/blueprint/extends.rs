@@ -7,7 +7,7 @@
 
 use crate::core::{CountSpec, DataModel, Entity};
 
-use crate::schema::error::SchemaError;
+use crate::blueprint::error::BlueprintError;
 
 /// Merge a child model on top of a parent model.
 ///
@@ -198,11 +198,11 @@ pub fn resolve_extends(
     schema_path: &std::path::Path,
     child: &DataModel,
     extends: &str,
-) -> Result<DataModel, SchemaError> {
+) -> Result<DataModel, BlueprintError> {
     // Reject absolute paths and path traversal
     let extends_path = std::path::Path::new(extends);
     if extends_path.is_absolute() {
-        return Err(SchemaError::Validation {
+        return Err(BlueprintError::Validation {
             path: "extends".to_string(),
             message: "absolute paths are not allowed in extends".to_string(),
         });
@@ -211,7 +211,7 @@ pub fn resolve_extends(
         .components()
         .any(|c| matches!(c, std::path::Component::ParentDir))
     {
-        return Err(SchemaError::Validation {
+        return Err(BlueprintError::Validation {
             path: "extends".to_string(),
             message: "path traversal ('..') is not allowed in extends".to_string(),
         });
@@ -221,7 +221,7 @@ pub fn resolve_extends(
         .parent()
         .unwrap_or(std::path::Path::new("."))
         .join(extends);
-    let parent = crate::schema::parser::parse_toml_file_raw(&parent_path)?;
+    let parent = crate::blueprint::parser::parse_toml_file_raw(&parent_path)?;
     Ok(merge_models(&parent, child))
 }
 
@@ -296,7 +296,7 @@ mod tests {
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
-            schema_version: "1.0".to_string(),
+            blueprint_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
@@ -317,7 +317,7 @@ mod tests {
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
-            schema_version: "1.0".to_string(),
+            blueprint_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
@@ -538,7 +538,7 @@ mod tests {
 
     #[test]
     fn test_resolve_extends_rejects_path_traversal() {
-        let result = crate::schema::resolve_extends(
+        let result = crate::blueprint::resolve_extends(
             std::path::Path::new("schema.toml"),
             &child_model(),
             "../../../etc/passwd",
@@ -560,7 +560,7 @@ mod tests {
         } else {
             "/etc/passwd"
         };
-        let result = crate::schema::resolve_extends(
+        let result = crate::blueprint::resolve_extends(
             std::path::Path::new("schema.toml"),
             &child_model(),
             abs_path,

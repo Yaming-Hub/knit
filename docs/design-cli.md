@@ -11,7 +11,7 @@
 - [2. Dependencies](#2-dependencies)
 - [3. Command Architecture](#3-command-architecture)
 - [4. Command Details](#4-command-details)
-  - [4.9 `knit scale`](#49-knit-scale-schema--o-dir)
+  - [4.9 `knit scale`](#49-knit-scale-blueprint--o-dir)
   - [4.10 `knit tokenize`](#410-knit-tokenize-input--o-dir)
   - [4.11 `knit enrich`](#411-knit-enrich-model---ref-sample)
   - [4.12 `knit model`](#412-knit-model-subcommand)
@@ -28,21 +28,21 @@
 ## 1. Overview
 
 `knit-cli` is the single binary entry point for all Knit operations. It
-orchestrates the full pipeline — from schema authoring through validation,
+orchestrates the full pipeline — from blueprint authoring through validation,
 planning, generation, and learning — while providing consistent progress
 reporting, error handling, and configuration across every command.
 
 ```mermaid
 flowchart LR
     user([User / CI]) --> cli[knit-cli]
-    cli --> schema[knit-schema]
+    cli --> blueprint[knit-blueprint]
     cli --> plan[knit-plan]
     cli --> gen[knit-gen]
     cli --> noise[knit-noise]
     cli --> bind[knit-bind]
     cli --> learn[knit-learn]
     gen --> output([Output Files])
-    learn --> inferred([Inferred Schema])
+    learn --> inferred([Inferred Blueprint])
 ```
 
 **Responsibilities:**
@@ -52,7 +52,7 @@ flowchart LR
 - Present human-readable (default) or machine-readable (`--json`) output
 - Report progress via terminal progress bars or JSON events
 - Handle signals for graceful shutdown
-- Layer configuration from flags, environment, config files, and schema defaults
+- Layer configuration from flags, environment, config files, and blueprint defaults
 
 ---
 
@@ -63,12 +63,12 @@ flowchart LR
 | Crate | Role |
 |-------|------|
 | `knit-core` | Shared types (`DataModel`, `Value`, `DataType`, etc.) |
-| `knit-schema` | Parse and validate Weave schemas |
+| `knit-blueprint` | Parse and validate knit blueprints |
 | `knit-plan` | Compile `DataModel` into `ExecutionPlan` |
 | `knit-gen` | Execute plan, produce Arrow batches |
 | `knit-noise` | Apply perturbation pipeline |
 | `knit-bind` | Serialize batches to output formats |
-| `knit-learn` | Reverse pipeline (data → inferred schema) |
+| `knit-learn` | Reverse pipeline (data → inferred blueprint) |
 
 ### External Crates
 
@@ -96,20 +96,20 @@ flowchart TD
     knit --> plan[plan]
     knit --> generate[generate]
     knit --> learn[learn]
-    knit --> schema_cmd[schema]
+    knit --> blueprint_cmd[blueprint]
 
-    schema_cmd --> expand[expand]
-    schema_cmd --> normalize[normalize]
-    schema_cmd --> diff[diff]
+    blueprint_cmd --> expand[expand]
+    blueprint_cmd --> normalize[normalize]
+    blueprint_cmd --> diff[diff]
 
-    init -.- desc_init["Create starter Weave schema"]
-    validate -.- desc_val["Parse and validate schema"]
+    init -.- desc_init["Create starter knit blueprint"]
+    validate -.- desc_val["Parse and validate blueprint"]
     plan -.- desc_plan["Show execution plan (dry run)"]
     generate -.- desc_gen["Full forward pipeline"]
-    learn -.- desc_learn["Reverse pipeline (data → schema)"]
+    learn -.- desc_learn["Reverse pipeline (data → blueprint)"]
     expand -.- desc_exp["Flatten extends chain"]
     normalize -.- desc_norm["Reformat to canonical style"]
-    diff -.- desc_diff["Compare two schemas"]
+    diff -.- desc_diff["Compare two blueprints"]
 
     style desc_init fill:none,stroke:none
     style desc_val fill:none,stroke:none
@@ -124,14 +124,14 @@ flowchart TD
 **Usage summary:**
 
 ```
-knit init                           Create starter Weave schema (interactive wizard)
-knit validate <schema>              Parse and validate, report errors
-knit plan <schema>                  Show execution plan (dry run)
-knit generate <schema> -o <dir>     Full forward pipeline
-knit learn <data> -o <schema>       Reverse pipeline (data → inferred schema)
-knit schema expand <file>           Flatten extends chain
-knit schema normalize <file>        Reformat to canonical style
-knit schema diff <a> <b>            Compare two schemas
+knit init                           Create starter knit blueprint (interactive wizard)
+knit validate <blueprint>              Parse and validate, report errors
+knit plan <blueprint>                  Show execution plan (dry run)
+knit generate <blueprint> -o <dir>     Full forward pipeline
+knit learn <data> -o <blueprint>       Reverse pipeline (data → inferred blueprint)
+knit blueprint expand <file>           Flatten extends chain
+knit blueprint normalize <file>        Reformat to canonical style
+knit blueprint diff <a> <b>            Compare two blueprints
 ```
 
 ---
@@ -140,35 +140,35 @@ knit schema diff <a> <b>            Compare two schemas
 
 ### 4.1 `knit init`
 
-Scaffolds a new `schema.weave.toml` starter schema with documentation comments.
+Scaffolds a new `blueprint.knit.toml` starter blueprint with documentation comments.
 
-The data model schema language is the single source of truth for all data
-definitions. The `init` command creates a minimal, well-commented schema file
+The data model blueprint language is the single source of truth for all data
+definitions. The `init` command creates a minimal, well-commented blueprint file
 that demonstrates available generator types and relationship patterns, which
 the user then edits to define their specific data model.
 
 **Usage:**
 
 ```bash
-knit init                    # creates schema.weave.toml in cwd
-knit init -o my_schema.toml  # custom output path
+knit init                    # creates blueprint.knit.toml in cwd
+knit init -o my_blueprint.toml  # custom output path
 ```
 
 **Details:**
 
-- **Scaffold content** — A valid schema with one example entity showing common
+- **Scaffold content** — A valid blueprint with one example entity showing common
   generator types (sequence, pattern, distribution, temporal) plus commented
   examples of foreign keys and relationships.
 - **Self-documenting** — The generated file lists all available generator types
   and configuration options as comments.
-- **Output** — Writes a `schema.weave.toml` file to the current directory (or path
+- **Output** — Writes a `blueprint.knit.toml` file to the current directory (or path
   specified with `-o`). Refuses to overwrite existing files.
 
 ---
 
-### 4.2 `knit validate <schema>`
+### 4.2 `knit validate <blueprint>`
 
-Parses and validates a Weave schema, reporting all errors.
+Parses and validates a knit blueprint, reporting all errors.
 
 **Pipeline stages used:** Parse → Resolve extends → Validate
 
@@ -183,15 +183,15 @@ Parses and validates a Weave schema, reporting all errors.
 
 | Level | Meaning | Example |
 |-------|---------|---------|
-| `error` | Schema is invalid, cannot generate | Missing referenced entity in relationship |
-| `warning` | Schema is valid but may produce surprising results | Uniqueness on field with small domain |
+| `error` | Blueprint is invalid, cannot generate | Missing referenced entity in relationship |
+| `warning` | Blueprint is valid but may produce surprising results | Uniqueness on field with small domain |
 | `info` | Suggestion for improvement | Missing `description` on entity |
 
 **Exit codes:**
 
 | Code | Meaning |
 |------|---------|
-| `0` | Schema is valid (no errors; warnings/info allowed) |
+| `0` | Blueprint is valid (no errors; warnings/info allowed) |
 | `1` | One or more validation errors |
 
 **JSON output structure:**
@@ -205,7 +205,7 @@ Parses and validates a Weave schema, reporting all errors.
       "code": "E001",
       "message": "Relationship 'order_user' references unknown entity 'usr'",
       "path": "relationships[0].to",
-      "file": "schema.weave.toml",
+      "file": "blueprint.knit.toml",
       "line": 42,
       "suggestion": "Did you mean 'user'?"
     }
@@ -215,7 +215,7 @@ Parses and validates a Weave schema, reporting all errors.
 
 ---
 
-### 4.3 `knit plan <schema>`
+### 4.3 `knit plan <blueprint>`
 
 Shows the execution plan without generating data (dry run).
 
@@ -243,15 +243,15 @@ Shows the execution plan without generating data (dry run).
 
 ---
 
-### 4.4 `knit generate <schema> -o <dir>`
+### 4.4 `knit generate <blueprint> -o <dir>`
 
-Full forward pipeline: schema → data files.
+Full forward pipeline: blueprint → data files.
 
 **Pipeline stages used:** Parse → Plan → Generate → Noise → Bind
 
 ```mermaid
 flowchart LR
-    parse["Parse\nschema"] --> plan["Build\nplan"]
+    parse["Parse\nblueprint"] --> plan["Build\nplan"]
     plan --> gen["Generate\nbatches"]
     gen --> noise["Apply\nnoise"]
     noise --> bind["Write\noutput"]
@@ -287,18 +287,18 @@ flowchart LR
 
 ---
 
-### 4.5 `knit learn <data> -o <schema>`
+### 4.5 `knit learn <data> -o <blueprint>`
 
-Reverse pipeline: read existing data and infer a Weave schema.
+Reverse pipeline: read existing data and infer a knit blueprint.
 
-**Pipeline stages used:** Read data → Profile → Infer generators → Output schema
+**Pipeline stages used:** Read data → Profile → Infer generators → Output blueprint
 
 ```mermaid
 flowchart LR
     data([Input Data]) --> read["Read &\nsample"]
     read --> profile["Statistical\nprofiling"]
     profile --> infer["Infer\ngenerators"]
-    infer --> schema([Weave Schema])
+    infer --> blueprint([knit blueprint])
 ```
 
 **Features:**
@@ -319,10 +319,10 @@ flowchart LR
 
 ---
 
-### 4.6 `knit schema expand <file>`
+### 4.6 `knit blueprint expand <file>`
 
-Reads a schema with `extends` chains and outputs the fully flattened,
-standalone schema.
+Reads a blueprint with `extends` chains and outputs the fully flattened,
+standalone blueprint.
 
 **Behavior:**
 
@@ -334,9 +334,9 @@ standalone schema.
 
 ---
 
-### 4.7 `knit schema normalize <file>`
+### 4.7 `knit blueprint normalize <file>`
 
-Reads a schema and outputs it in canonical form.
+Reads a blueprint and outputs it in canonical form.
 
 **Canonical rules:**
 
@@ -346,14 +346,14 @@ Reads a schema and outputs it in canonical form.
 - No dotted keys
 - Sorted entity fields by declaration order
 
-Useful for diffing schemas and ensuring AI-generated schemas conform to the
+Useful for diffing blueprints and ensuring AI-generated blueprints conform to the
 expected style.
 
 ---
 
-### 4.8 `knit schema diff <a> <b>`
+### 4.8 `knit blueprint diff <a> <b>`
 
-Compares two Weave schemas and shows differences.
+Compares two knit blueprints and shows differences.
 
 **Output categories:**
 
@@ -368,7 +368,7 @@ Compares two Weave schemas and shows differences.
 - **Human-readable** *(default)* — Colored diff with `+`/`-`/`~` markers
 - **JSON** (`--json`) — Structured diff object for programmatic consumption
 
-### 4.9 `knit scale <schema> -o <dir>`
+### 4.9 `knit scale <blueprint> -o <dir>`
 
 Scales a learned dataset along multiple independent dimensions (people, time,
 custom categorical fields). See [design-scale.md](design-scale.md) for full design.
@@ -409,7 +409,7 @@ datasets for troubleshooting. See [design-tokenize.md](design-tokenize.md) for f
 ### 4.11 `knit enrich <model> --ref <sample>`
 
 Enriches a base model with statistical knowledge extracted from reference samples
-that may have a different schema. Performs cross-schema column mapping, extracts
+that may have a different blueprint. Performs cross-blueprint column mapping, extracts
 distribution parameters and correlations, and merges them into the model.
 See [design-enrich.md](design-enrich.md) for full design.
 
@@ -434,7 +434,7 @@ for the structured model format design.
 
 | Subcommand | Description |
 |-----------|-------------|
-| `convert <SCHEMA> -o <DIR>` | Convert flat `.weave.toml` to structured model directory |
+| `convert <SCHEMA> -o <DIR>` | Convert flat `.knit.toml` to structured model directory |
 | `flatten <DIR> -o <FILE>` | Convert structured model directory back to flat file |
 | `info <MODEL>` | Display model summary (tables, columns, relationships, companions) |
 
@@ -447,12 +447,12 @@ See [design-logging.md](design-logging.md) for the logging design.
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--seed <N>` | `u64` | Schema's `model.seed` | Override global RNG seed |
+| `--seed <N>` | `u64` | Blueprint's `model.seed` | Override global RNG seed |
 | `--format parquet\|json\|csv\|arrow` | `enum` | `parquet` | Output file format |
 | `--compression zstd\|lz4\|snappy\|none` | `enum` | `zstd` | Parquet compression codec |
 | `--parallel <N>` | `usize` | `num_cpus` | Thread count for generation |
 | `--batch-size <N>` | `usize` | `65536` | Rows per batch |
-| `--param key=value` | `String` | — | Override schema parameters (repeatable) |
+| `--param key=value` | `String` | — | Override blueprint parameters (repeatable) |
 | `--dry-run` | `bool` | `false` | Show plan without generating |
 | `--json` | `bool` | `false` | JSON output for CI/scripting |
 | `--quiet` | `bool` | `false` | Suppress all non-error output |
@@ -509,7 +509,7 @@ Emits newline-delimited JSON progress events to stdout:
 | Code | Meaning | When |
 |------|---------|------|
 | `0` | Success | Command completed normally |
-| `1` | Validation error | Schema failed validation |
+| `1` | Validation error | Blueprint failed validation |
 | `2` | Generation error | Runtime failure during generation |
 | `3` | I/O error | File not found, permission denied, disk full |
 
@@ -520,7 +520,7 @@ users locate and fix problems quickly:
 
 ```
 error[E001]: unknown entity reference
-  --> schema.weave.toml:42:6
+  --> blueprint.knit.toml:42:6
    |
 42 | to = "usr"
    |      ^^^^^ relationship 'order_user' references entity 'usr'
@@ -535,7 +535,7 @@ error[E001]: unknown entity reference
   "error": {
     "code": "E001",
     "message": "unknown entity reference",
-    "file": "schema.weave.toml",
+    "file": "blueprint.knit.toml",
     "line": 42,
     "path": "relationships[0].to",
     "suggestion": "Did you mean 'user'?"
@@ -565,15 +565,15 @@ Common mistakes are matched to helpful fix suggestions:
 flowchart LR
     flags["CLI flags"] --> env["Environment\nvariables"]
     env --> config["Config file"]
-    config --> schema["Schema defaults"]
+    config --> blueprint["Blueprint defaults"]
 
     style flags fill:#4a9,stroke:#333,color:#fff
     style env fill:#5ab,stroke:#333,color:#fff
     style config fill:#78b,stroke:#333,color:#fff
-    style schema fill:#99b,stroke:#333,color:#fff
+    style blueprint fill:#99b,stroke:#333,color:#fff
 ```
 
-**Higher priority on the left.** CLI flags override everything; schema defaults
+**Higher priority on the left.** CLI flags override everything; blueprint defaults
 are the fallback.
 
 ### Config File
@@ -648,12 +648,12 @@ flowchart TD
 
 | Category | Description |
 |----------|-------------|
-| **End-to-end generation** | Run `knit generate` on example schemas in `tests/fixtures/`, verify output files exist with correct row counts |
-| **Validation error messages** | Feed invalid schemas, assert expected error codes and messages |
+| **End-to-end generation** | Run `knit generate` on example blueprints in `tests/fixtures/`, verify output files exist with correct row counts |
+| **Validation error messages** | Feed invalid blueprints, assert expected error codes and messages |
 | **CLI flag parsing** | Verify all flag combinations are accepted and correctly override defaults |
 | **Exit codes** | Assert correct exit code for each error category |
 | **Signal handling** | Send SIGINT during generation, verify partial manifest is written |
-| **Config file loading** | Test precedence: flag > env > config file > schema default |
+| **Config file loading** | Test precedence: flag > env > config file > blueprint default |
 | **JSON output mode** | Verify `--json` produces parseable JSON for all commands |
 
 ### Snapshot Tests
@@ -662,12 +662,12 @@ Output formatting tests use `insta` (or similar) for snapshot testing:
 
 - `knit plan` table output
 - `knit validate` error messages
-- `knit schema diff` output
-- `knit schema normalize` canonical formatting
+- `knit blueprint diff` output
+- `knit blueprint normalize` canonical formatting
 
 ### Determinism Tests
 
-- Same seed + same schema → byte-identical output across runs
+- Same seed + same blueprint → byte-identical output across runs
 - `--seed` override produces different (but deterministic) output
 
 ---
@@ -684,6 +684,6 @@ Output formatting tests use `insta` (or similar) for snapshot testing:
 | Default batch size | 65,536 rows | Balances Arrow vectorization efficiency (wants large batches) against memory usage and progress granularity. |
 | Default format | Parquet | Columnar format matches Arrow internals (zero-copy write path). Supports compression. Industry standard for analytics. |
 | Default compression | zstd | Best compression ratio at reasonable speed. Widely supported by query engines. |
-| Config precedence | flag > env > file > schema | Standard layering used by tools like `git`, `cargo`, and `docker`. Users expect CLI flags to win. |
+| Config precedence | flag > env > file > blueprint | Standard layering used by tools like `git`, `cargo`, and `docker`. Users expect CLI flags to win. |
 | Interactive prompts | `dialoguer` | Lightweight, terminal-native prompt library. Supports selections, confirmations, and multi-select. |
 | Graceful shutdown | `ctrlc` + `AtomicBool` | Cooperative cancellation is safer than hard-kill. Ensures partial output is valid. Two-Ctrl+C escape hatch for stuck processes. |

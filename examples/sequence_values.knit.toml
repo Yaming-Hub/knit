@@ -4,9 +4,9 @@
 # Values are assigned round-robin, deterministically, and partition-safe.
 #
 # Run:
-#   knit generate sequence_values.weave.toml -o output/
+#   knit generate sequence_values.knit.toml -o output/
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "sequence_values"

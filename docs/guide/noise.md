@@ -218,12 +218,12 @@ temporal_spike_rate = 0.2 # 20% of timestamps get spiked
 
 ---
 
-## Configuring Noise in a Schema
+## Configuring Noise in a Blueprint
 
-Add `[[noise]]` sections to your `.weave.toml`:
+Add `[[noise]]` sections to your `.knit.toml`:
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "noisy_ecommerce"
@@ -343,6 +343,6 @@ receive a typo from stage 1 (clean runs first). This means:
 
 ## What's Next?
 
-- **[Schema Language Tutorial](schema-language.md)** — Full schema reference
+- **[Blueprint Language Tutorial](blueprint-language.md)** — Full blueprint reference
 - **[Examples Walkthrough](examples.md)** — See noise in context
-- **[Weave Specification](../weave-spec.md)** — Formal noise profile grammar
+- **[Knit Specification](../knit-spec.md)** — Formal noise profile grammar

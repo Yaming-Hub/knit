@@ -29,16 +29,16 @@ where individuals contribute their data patterns without exposing their data.
 
 ```bash
 # Start with a base model learned from a small dataset
-knit learn base_dataset/ -o model.weave.toml
+knit learn base_dataset/ -o model.knit.toml
 
 # Enrich the model with a reference sample (possibly different schema)
-knit enrich model.weave.toml --ref sample_data.csv -o enriched.weave.toml
+knit enrich model.knit.toml --ref sample_data.csv -o enriched.knit.toml
 
 # Output:
 # ═══ Enrichment Report ═══
 #
 #   Reference:  sample_data.csv (1,200 rows, 45 columns)
-#   Base model: model.weave.toml (3 entities, 185 columns)
+#   Base model: model.knit.toml (3 entities, 185 columns)
 #
 #   Mappings found:
 #     sample.UserName     → AnalyzedUser.PersonId    (string, 92% confidence)
@@ -56,20 +56,20 @@ knit enrich model.weave.toml --ref sample_data.csv -o enriched.weave.toml
 #     sample.CustomField1    — no match found (threshold: 70%)
 #     sample.InternalCode    — ambiguous match (2 candidates, both <60%)
 #
-#   Written: enriched.weave.toml
+#   Written: enriched.knit.toml
 ```
 
 ### 2.2 Incremental Enrichment (Multiple Samples Over Time)
 
 ```bash
 # Person A enriches with their data
-knit enrich model.weave.toml --ref alice_data/ -o model.weave.toml
+knit enrich model.knit.toml --ref alice_data/ -o model.knit.toml
 
 # Person B enriches with their data (different format, different columns)
-knit enrich model.weave.toml --ref bob_export.parquet -o model.weave.toml
+knit enrich model.knit.toml --ref bob_export.parquet -o model.knit.toml
 
 # Person C enriches with their data
-knit enrich model.weave.toml --ref carol_data.json -o model.weave.toml
+knit enrich model.knit.toml --ref carol_data.json -o model.knit.toml
 
 # Each enrichment refines distributions, adds correlation evidence, and
 # improves value variety — without storing any individual's data
@@ -79,31 +79,31 @@ knit enrich model.weave.toml --ref carol_data.json -o model.weave.toml
 
 ```bash
 # Preview what would be enriched without modifying the model
-knit enrich model.weave.toml --ref sample.csv --dry-run
+knit enrich model.knit.toml --ref sample.csv --dry-run
 
 # Only enrich specific entities
-knit enrich model.weave.toml --ref sample.csv --entity Collab -o enriched.weave.toml
+knit enrich model.knit.toml --ref sample.csv --entity Collab -o enriched.knit.toml
 
 # Set confidence threshold for automatic mapping
-knit enrich model.weave.toml --ref sample.csv --min-confidence 0.8 -o enriched.weave.toml
+knit enrich model.knit.toml --ref sample.csv --min-confidence 0.8 -o enriched.knit.toml
 
 # Interactive mode: confirm each mapping
-knit enrich model.weave.toml --ref sample.csv --interactive -o enriched.weave.toml
+knit enrich model.knit.toml --ref sample.csv --interactive -o enriched.knit.toml
 ```
 
 ### 2.4 Publish Base + Collect Enrichments
 
 ```bash
 # Publisher: create and distribute base model
-knit learn base_dataset/ -o shared_model.weave.toml
+knit learn base_dataset/ -o shared_model.knit.toml
 
 # Contributors: each person enriches with private data
 # (could be automated via CI, script, or shared tool)
-knit enrich shared_model.weave.toml --ref my_private_data/ -o shared_model.weave.toml
+knit enrich shared_model.knit.toml --ref my_private_data/ -o shared_model.knit.toml
 
 # The model accumulates knowledge from all contributors.
 # Generate realistic data from the community-enriched model:
-knit generate shared_model.weave.toml -o synthetic/ --count 10000
+knit generate shared_model.knit.toml -o synthetic/ --count 10000
 ```
 
 ---
@@ -192,7 +192,7 @@ sample and merges it into the base model.
 - **Actual data values** — Individual row data is never stored in the model
 - **Identifying patterns** — Unique identifiers, personal names, etc. are not
   transferred (only distribution shape and cardinality)
-- **Schema structure** — The base model's entity/field structure is not changed;
+- **Blueprint structure** — The base model's entity/field structure is not changed;
   reference data is mapped into the existing structure
 
 ### 4.3 Merge Strategies
@@ -262,7 +262,7 @@ This state allows:
 load_model → load_reference → map_columns → extract_knowledge → merge → write_model
 ```
 
-**Phase 1: Load** — Parse the base model (`.weave.toml`) and ingest the
+**Phase 1: Load** — Parse the base model (`.knit.toml`) and ingest the
 reference sample (CSV/Parquet/JSON, using existing ingestion pipeline).
 
 **Phase 2: Map** — Score all reference columns against base model fields
@@ -275,7 +275,7 @@ parameters, correlations, null rates, and cardinality from the reference data.
 **Phase 4: Merge** — Combine extracted knowledge with existing model parameters
 using weighted merge strategies. Update enrichment state counters.
 
-**Phase 5: Write** — Serialize the enriched model back to `.weave.toml`.
+**Phase 5: Write** — Serialize the enriched model back to `.knit.toml`.
 
 ### 6.2 File Organization
 
@@ -296,7 +296,7 @@ src/enrich/state.rs              — Enrichment state tracking, serialization
 knit enrich <MODEL> [OPTIONS]
 
 Arguments:
-    <MODEL>                   Path to the base model (.weave.toml)
+    <MODEL>                   Path to the base model (.knit.toml)
 
 Options:
     --ref <PATH>              Reference sample path (file or directory, repeatable)
@@ -374,7 +374,7 @@ Distributed enrichment where contributors run extraction locally and submit
 only the statistical summaries (not data) to a central model. Requires a
 defined summary exchange format.
 
-### 11.2 Schema Suggestion
+### 11.2 Blueprint Suggestion
 When reference samples have unmapped columns that appear valuable, suggest
 adding new fields to the base model (opt-in schema evolution).
 
@@ -419,7 +419,7 @@ largest-sample-wins, ensemble (mixture distribution).
 
 - Incremental enrichment state file (§10.1)
 - Federated/distributed enrichment (§11.1)
-- Schema suggestion for unmapped columns (§11.2)
+- Blueprint suggestion for unmapped columns (§11.2)
 - Quality scoring (§11.3)
 - Active learning guidance (§11.4)
 - Conflict resolution strategies (§11.5)

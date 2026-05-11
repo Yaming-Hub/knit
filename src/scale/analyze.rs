@@ -299,7 +299,7 @@ mod tests {
             seed: 42,
             locale: "en_US".into(),
             timezone: "UTC".into(),
-            schema_version: "1.0".into(),
+            blueprint_version: "1.0".into(),
             params: BTreeMap::new(),
             noise_profiles: vec![],
             correlations: vec![],

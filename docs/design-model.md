@@ -26,14 +26,14 @@
 
 ## 1. Motivation
 
-Today the knit model is a single flat TOML file (`schema.weave.toml`). For a
+Today the knit model is a single flat TOML file (`blueprint.knit.toml`). For a
 real-world dataset with 48 tables and hundreds of columns, this file grows to
 **12,000+ lines** (160 KB). Problems include:
 
 | Problem | Impact |
 |---------|--------|
 | **Single-file monolith** | Hard to navigate; one entity change requires scrolling past thousands of unrelated lines |
-| **Mixed concerns** | Schema, statistics, output layout, relationships, and noise all interleaved |
+| **Mixed concerns** | Blueprint, statistics, output layout, relationships, and noise all interleaved |
 | **Difficult to diff** | A single-column tweak shows as a small edit in a massive file, obscuring meaningful changes in version control |
 | **Not modular** | Cannot share or version individual table models independently |
 | **Editing friction** | Both humans and AI tools struggle with very long context; 12K-line TOML is impractical to edit by hand |
@@ -86,7 +86,7 @@ and optionally lists user-defined parameters.
 
 ```toml
 # knit.toml — Root manifest for the structured model
-schema_version = "2.0"
+blueprint_version = "2.0"
 
 [model]
 name = "tc_multiple_weeks"
@@ -112,7 +112,7 @@ total_rows = 77
 
 **Design notes:**
 
-- `schema_version = "2.0"` distinguishes structured from flat format
+- `blueprint_version = "2.0"` distinguishes structured from flat format
 - `metadata` section is informational only — not used during generation
 - The manifest is ~20 lines, always fits on one screen
 
@@ -198,7 +198,7 @@ files = [
 
 ## 5. Table Models (`tables/*.toml`)
 
-Each table gets its own file with three clear sections: **schema** (what columns
+Each table gets its own file with three clear sections: **blueprint** (what columns
 exist), **generators** (how to produce values), and **statistics** (what was
 observed in source data).
 
@@ -213,7 +213,7 @@ tags = ["activity", "temporal"]
 actor = false
 
 # ─────────────────────────────────────────────────
-# COLUMNS — Schema + Generator + Statistics per field
+# COLUMNS — Blueprint + Generator + Statistics per field
 # ─────────────────────────────────────────────────
 
 [[columns]]
@@ -651,7 +651,7 @@ are *passed through* verbatim.
 
 - `knit enrich` can update a single table file without touching others
 - `knit scale` can modify `layout.toml` (partition values) and `knit.toml`
-  (entity counts) without touching table schemas
+  (entity counts) without touching table blueprints
 - `knit tokenize` can process table files independently
 - Version control shows per-table diffs cleanly
 
@@ -665,7 +665,7 @@ Knit detects the model format by the path argument:
 
 | Input | Detection |
 |-------|-----------|
-| `path/to/schema.weave.toml` | Flat format (v1) — single file |
+| `path/to/blueprint.knit.toml` | Flat format (v1) — single file |
 | `path/to/my_model/` | Structured format (v2) — directory with `knit.toml` |
 | `path/to/my_model/knit.toml` | Structured format (v2) — explicit manifest |
 
@@ -673,10 +673,10 @@ Knit detects the model format by the path argument:
 
 ```bash
 # Convert flat → structured
-knit model convert schema.weave.toml -o my_model/
+knit model convert blueprint.knit.toml -o my_model/
 
 # Convert structured → flat (for compatibility or sharing as single file)
-knit model flatten my_model/ -o schema.weave.toml
+knit model flatten my_model/ -o blueprint.knit.toml
 ```
 
 **Conversion rules (flat → structured):**
@@ -694,7 +694,7 @@ knit model flatten my_model/ -o schema.weave.toml
 
 ### 11.3 Full Backward Compatibility
 
-- `knit generate schema.weave.toml` continues to work unchanged
+- `knit generate blueprint.knit.toml` continues to work unchanged
 - `knit generate my_model/` works with the new structured format
 - `knit learn` gains a `--format structured` flag (default remains flat for now)
 - Internal `DataModel` struct is unchanged — both formats deserialize to the
@@ -777,8 +777,8 @@ knit model flatten my_model/ -o schema.weave.toml
 | `knit model info` | `src/cli/commands/model.rs` | Summary display for either format |
 | Partition weights | reader + writer | Roundtrip-safe via `weights` field |
 | Mixin references | reader + writer | Preserved through `mixins` field |
-| `load_schema` integration | `src/cli/commands/mod.rs` | All commands auto-detect format |
-| `save_schema` helper | `src/cli/commands/mod.rs` | Format-aware write (structured or flat TOML) |
+| `load_blueprint` integration | `src/cli/commands/mod.rs` | All commands auto-detect format |
+| `save_blueprint` helper | `src/cli/commands/mod.rs` | Format-aware write (structured or flat TOML) |
 | `knit enrich` integration | `src/cli/commands/enrich.rs` | Preserves structured format on output |
 
 ### Remaining (Phase 3–4)
@@ -806,7 +806,7 @@ The largest single file in structured format would be `tables/Collab.toml`
 | DataModel field | Structured location | Section |
 |----------------|--------------------|---------| 
 | `name`, `description`, `seed`, `locale`, `timezone` | `knit.toml` | `[model]` |
-| `schema_version` | `knit.toml` | top-level |
+| `blueprint_version` | `knit.toml` | top-level |
 | `params` | `knit.toml` | `[model.params]` |
 | `entities[].name`, `count`, `tags`, `actor` | `tables/{Name}.toml` | `[table]` |
 | `entities[].fields[]` | `tables/{Name}.toml` | `[[columns]]` |

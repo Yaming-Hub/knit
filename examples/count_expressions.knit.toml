@@ -5,9 +5,9 @@
 # schemas reusable across different data sizes.
 #
 # Run with parameter overrides:
-#   knit generate count_expressions.weave.toml --param user_count=5000 --param order_scale=20
+#   knit generate count_expressions.knit.toml --param user_count=5000 --param order_scale=20
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "count_expressions"

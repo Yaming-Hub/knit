@@ -8,16 +8,16 @@
 ## 1. Overview
 
 Knit is a high-performance Rust toolset for generating large synthetic datasets
-(100GB+ in hours). It combines a declarative schema language (**Weave**) with a
+(100GB+ in hours). It combines a declarative blueprint language (**Weave**) with a
 multi-stage pipeline that compiles, generates, perturbs, and serializes data.
 
 ```mermaid
 flowchart TB
-    user([User / AI Agent]) --> schema([Weave Schema\n.weave.toml / .weave.json])
-    schema --> learn[knit learn\nReverse engineer]
-    schema --> generate[knit generate\nForward pipeline]
-    schema --> validate[knit validate\nSchema checking]
-    learn --> inferred([Weave Schema\ninferred])
+    user([User / AI Agent]) --> blueprint([knit blueprint\n.knit.toml / .weave.json])
+    blueprint --> learn[knit learn\nReverse engineer]
+    blueprint --> generate[knit generate\nForward pipeline]
+    blueprint --> validate[knit validate\nBlueprint checking]
+    learn --> inferred([knit blueprint\ninferred])
     generate --> output([Output Dataset\nParquet / JSON / CSV / custom])
 ```
 
@@ -25,11 +25,11 @@ flowchart TB
 
 ## 2. The Weave Language
 
-Weave is the declarative schema language at the center of Knit. A Weave document
+Weave is the declarative blueprint language at the center of Knit. A Weave document
 describes **what** data looks like — its structure, statistical properties,
 relationships, and quality characteristics — without specifying **how** to generate it.
 
-**Specification:** [`docs/weave-spec.md`](weave-spec.md)
+**Specification:** [`docs/knit-spec.md`](knit-spec.md)
 
 ### Role in the Architecture
 
@@ -39,8 +39,8 @@ flowchart LR
 ```
 
 Weave serves as:
-- **Input** to the forward pipeline (schema → data)
-- **Output** of the reverse pipeline (data → schema)
+- **Input** to the forward pipeline (blueprint → data)
+- **Output** of the reverse pipeline (data → blueprint)
 - **Contract** between the user/AI and the engine
 - **Portable artifact** that can be versioned, shared, and composed
 
@@ -65,13 +65,13 @@ Weave serves as:
 
 ## 3. Pipeline Architecture
 
-### 3.1 Forward Pipeline (Schema → Data)
+### 3.1 Forward Pipeline (Blueprint → Data)
 
 The forward pipeline transforms a Weave document into output files through five stages:
 
 ```mermaid
 flowchart LR
-    schema([.weave.toml]) --> parse[Parse]
+    blueprint([.knit.toml]) --> parse[Parse]
     parse --> validate[Validate]
     validate --> plan[Plan]
     plan --> gen[Generate]
@@ -82,14 +82,14 @@ flowchart LR
 
 | Stage | Input | Output | Crate |
 |-------|-------|--------|-------|
-| **Parse** | `.weave.toml` / `.weave.json` | `DataModel` (AST) | `knit-schema` |
-| **Validate** | `DataModel` | Validated `DataModel` + diagnostics | `knit-schema` |
+| **Parse** | `.knit.toml` / `.weave.json` | `DataModel` (AST) | `knit-blueprint` |
+| **Validate** | `DataModel` | Validated `DataModel` + diagnostics | `knit-blueprint` |
 | **Plan** | Validated `DataModel` | `ExecutionPlan` | `knit-plan` |
 | **Generate** | `ExecutionPlan` | `RecordBatch` stream | `knit-gen` |
 | **Perturb** | `RecordBatch` stream | Perturbed `RecordBatch` stream | `knit-noise` |
 | **Bind** | `RecordBatch` stream | Output files (Parquet, JSON, CSV, etc.) | `knit-bind` |
 
-### 3.2 Reverse Pipeline (Data → Schema)
+### 3.2 Reverse Pipeline (Data → Blueprint)
 
 The reverse pipeline infers a Weave document from an existing dataset:
 
@@ -99,7 +99,7 @@ flowchart LR
     ingest --> infer[Infer]
     infer --> score[Score]
     score --> emit[Emit]
-    emit --> schema([Candidate Schema])
+    emit --> blueprint([Candidate Blueprint])
 ```
 
 | Stage | Description | Crate |
@@ -117,15 +117,15 @@ flowchart LR
 knit/
 ├── crates/
 │   ├── knit-core/       Semantic data model types (Value, DataModel, Entity, Field, …)
-│   ├── knit-schema/     Weave parser (TOML + JSON) and validator
+│   ├── knit-blueprint/     Weave parser (TOML + JSON) and validator
 │   ├── knit-plan/       Execution planner / compiler
 │   ├── knit-gen/        Data generation engine
 │   ├── knit-noise/      Perturbation pipeline
 │   ├── knit-bind/       Output serialization (sinks + templates)
-│   ├── knit-learn/      Schema extraction from existing data
+│   ├── knit-learn/      Blueprint extraction from existing data
 │   └── knit-cli/        CLI binary
 ├── docs/                Design documents and language spec
-├── examples/            Example Weave schemas
+├── examples/            Example knit blueprints
 └── tests/               Integration tests
 ```
 
@@ -134,12 +134,12 @@ knit/
 ```mermaid
 flowchart BT
     core[knit-core]
-    schema[knit-schema] --> core
-    plan[knit-plan] --> core & schema
+    blueprint[knit-blueprint] --> core
+    plan[knit-plan] --> core & blueprint
     gen[knit-gen] --> plan
     noise[knit-noise] --> gen
     bind[knit-bind] --> noise
-    learn[knit-learn] --> schema
+    learn[knit-learn] --> blueprint
     cli[knit-cli] --> gen & learn & bind
 ```
 
@@ -172,7 +172,7 @@ crates, so the bar for additions is high.
 
 ---
 
-### 5.2 knit-schema — Parser & Validator
+### 5.2 knit-blueprint — Parser & Validator
 
 **Role:** Transform Weave text into a validated `DataModel`.
 
@@ -185,10 +185,10 @@ crates, so the bar for additions is high.
 - Report machine-readable errors with element paths and line numbers
 
 **Key design points:**
-- Schema normalization (`knit schema normalize`) — rewrite to canonical form
-- Schema expansion (`knit schema expand`) — flatten inheritance
+- Blueprint normalization (`knit blueprint normalize`) — rewrite to canonical form
+- Blueprint expansion (`knit blueprint expand`) — flatten inheritance
 - Separate parse → resolve → validate phases for clear error reporting
-- JSON Schema generation for external validation (IDE, AI pipelines)
+- JSON Blueprint generation for external validation (IDE, AI pipelines)
 
 ---
 
@@ -211,7 +211,7 @@ engine can execute efficiently.
 **Key design points:**
 - The plan is a **pure data structure** — no I/O, no randomness, fully deterministic
 - Same `DataModel` always produces the same `ExecutionPlan`
-- Plan can be inspected (`knit plan <schema>`) for debugging before generation
+- Plan can be inspected (`knit plan <blueprint>`) for debugging before generation
 
 **Key types:**
 ```
@@ -296,9 +296,9 @@ ExecutionPlan
 
 ---
 
-### 5.7 knit-learn — Schema Extraction
+### 5.7 knit-learn — Blueprint Extraction
 
-**Role:** Reverse-engineer a Weave schema from an existing dataset.
+**Role:** Reverse-engineer a knit blueprint from an existing dataset.
 
 **Responsibilities:**
 - Ingest existing data via Arrow readers (CSV, Parquet, JSON)
@@ -313,7 +313,7 @@ ExecutionPlan
 - Statistical approach only (no heavy ML dependencies in v1)
 - Output is a **candidate** — confidence scores indicate certainty
 - Candidate relationships are marked for human/AI review
-- Reproducible: same input data → same inferred schema
+- Reproducible: same input data → same inferred blueprint
 
 ---
 
@@ -325,13 +325,13 @@ ExecutionPlan
 
 | Command | Tools Used | Description |
 |---------|-----------|-------------|
-| `knit init` | schema | Create a starter Weave schema (interactive) |
-| `knit validate <schema>` | schema | Parse and validate, report errors |
-| `knit plan <schema>` | schema, plan | Show execution plan (dry run) |
-| `knit generate <schema> -o <dir>` | schema, plan, gen, noise, bind | Full forward pipeline |
-| `knit learn <data> -o <schema>` | learn | Reverse pipeline |
-| `knit schema expand <file>` | schema | Flatten `extends` chain |
-| `knit schema normalize <file>` | schema | Reformat to canonical style |
+| `knit init` | blueprint | Create a starter knit blueprint (interactive) |
+| `knit validate <blueprint>` | blueprint | Parse and validate, report errors |
+| `knit plan <blueprint>` | blueprint, plan | Show execution plan (dry run) |
+| `knit generate <blueprint> -o <dir>` | blueprint, plan, gen, noise, bind | Full forward pipeline |
+| `knit learn <data> -o <blueprint>` | learn | Reverse pipeline |
+| `knit blueprint expand <file>` | blueprint | Flatten `extends` chain |
+| `knit blueprint normalize <file>` | blueprint | Reformat to canonical style |
 
 **Key flags:**
 
@@ -342,7 +342,7 @@ ExecutionPlan
 | `--compression zstd\|lz4\|snappy\|none` | Parquet compression |
 | `--parallel <N>` | Thread count (default: num_cpus) |
 | `--batch-size <N>` | Rows per batch (default: 65536) |
-| `--param key=value` | Override schema parameters |
+| `--param key=value` | Override blueprint parameters |
 | `--dry-run` | Show plan without generating |
 
 **Key design points:**
@@ -482,10 +482,10 @@ loaded at runtime from a plugin directory.
 
 | Document | Path | Status |
 |----------|------|--------|
-| Weave Language Specification | [`docs/weave-spec.md`](weave-spec.md) | Draft |
+| Knit Language Specification | [`docs/knit-spec.md`](knit-spec.md) | Draft |
 | Architecture (this document) | [`docs/architecture.md`](architecture.md) | Draft |
 | knit-core Design | [`docs/design-core.md`](design-core.md) | Draft |
-| knit-schema Design | [`docs/design-schema.md`](design-schema.md) | Draft |
+| knit-blueprint Design | [`docs/design-blueprint.md`](design-blueprint.md) | Draft |
 | knit-plan Design | [`docs/design-plan.md`](design-plan.md) | Draft |
 | knit-gen Design | [`docs/design-gen.md`](design-gen.md) | Draft |
 | knit-noise Design | [`docs/design-noise.md`](design-noise.md) | Draft |

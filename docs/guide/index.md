@@ -13,23 +13,23 @@ pipelines. No prior experience with Knit is required.
 
 - **Rust 1.75+** and Cargo (for building from source), _or_ a pre-built `knit` binary
 - A terminal / command line
-- A text editor for writing `.weave.toml` schema files
+- A text editor for writing `.knit.toml` blueprint files
 
 ## Guide Contents
 
 | Page | Description |
 |------|-------------|
-| [Getting Started](getting-started.md) | Install Knit, create your first schema, generate data |
-| [Weave Schema Language](schema-language.md) | Practical tutorial on entities, fields, generators, relationships |
+| [Getting Started](getting-started.md) | Install Knit, create your first blueprint, generate data |
+| [knit blueprint Language](blueprint-language.md) | Practical tutorial on entities, fields, generators, relationships |
 | [CLI Reference](cli-reference.md) | Every command, flag, and option with examples |
-| [Examples Walkthrough](examples.md) | Guided tour of the five bundled example schemas |
+| [Examples Walkthrough](examples.md) | Guided tour of the five bundled example blueprints |
 | [Noise Injection](noise.md) | Add realistic data quality issues for pipeline testing |
-| [Reverse Engineering](learn.md) | Infer schemas from existing datasets with `knit learn` |
+| [Reverse Engineering](learn.md) | Infer blueprints from existing datasets with `knit learn` |
 
 ## Other Resources
 
 - [README](../../README.md) — Project overview and quick start
-- [Weave Language Specification](../weave-spec.md) — Formal grammar and semantics
+- [Knit Language Specification](../knit-spec.md) — Formal grammar and semantics
 - [Architecture](../architecture.md) — Internal system design
 - [Contributing](../../CONTRIBUTING.md) — Developer guide and PR process
 
@@ -38,9 +38,9 @@ pipelines. No prior experience with Knit is required.
 **"I want to…"**
 
 - **…generate data for the first time** → [Getting Started](getting-started.md)
-- **…understand how schemas work** → [Schema Language Tutorial](schema-language.md)
+- **…understand how blueprints work** → [Blueprint Language Tutorial](blueprint-language.md)
 - **…look up a CLI flag** → [CLI Reference](cli-reference.md)
 - **…see real-world examples** → [Examples Walkthrough](examples.md)
 - **…inject noise into my data** → [Noise Injection Guide](noise.md)
-- **…create a schema from existing data** → [Reverse Engineering Guide](learn.md)
-- **…read the formal language spec** → [Weave Specification](../weave-spec.md)
+- **…create a blueprint from existing data** → [Reverse Engineering Guide](learn.md)
+- **…read the formal language spec** → [Knit Specification](../knit-spec.md)

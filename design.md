@@ -23,7 +23,7 @@ synthetic datasets. The pipeline flows through five stages:
 
 ```mermaid
 flowchart LR
-    schema([Weave Schema]) --> plan[Plan]
+    schema([knit blueprint]) --> plan[Plan]
     plan --> gen[Generate]
     gen --> perturb[Perturb]
     perturb --> bind[Bind]
@@ -48,7 +48,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    schema[knit-schema\nParse DSL] --> plan[knit-plan\nCompile to\nexec plan]
+    schema[knit-blueprint\nParse DSL] --> plan[knit-plan\nCompile to\nexec plan]
     plan --> gen[knit-gen\nExecute\ngeneration]
     gen --> noise[knit-noise\nPerturbate]
     gen --> bind[knit-bind\nSerialize]
@@ -63,7 +63,7 @@ flowchart LR
 ```mermaid
 flowchart BT
     core[knit-core]
-    schema[knit-schema] --> core
+    schema[knit-blueprint] --> core
     plan[knit-plan] --> core
     plan --> schema
     gen[knit-gen] --> plan
@@ -91,16 +91,16 @@ specifications. Key principles:
 4. **Semantic annotations** — optional `description` and `tags` fields on every element
    for AI to communicate intent (ignored by execution).
 5. **Composable via `extends`** — base model + overlay pattern for incremental AI edits.
-6. **Machine-validatable** — JSON Schema provided; `knit schema validate` gives
+6. **Machine-validatable** — JSON Schema provided; `knit blueprint validate` gives
    machine-readable errors with line numbers.
-7. **Inspectable** — `knit schema expand` flattens inheritance and shows the effective
-   schema. `knit schema normalize` reformats to canonical style.
-8. **Version field** — `schema_version` for forward compatibility.
+7. **Inspectable** — `knit blueprint expand` flattens inheritance and shows the effective
+   schema. `knit blueprint normalize` reformats to canonical style.
+8. **Version field** — `blueprint_version` for forward compatibility.
 
 ### Schema Example
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "ecommerce"
@@ -279,7 +279,7 @@ Every generator follows the same shape: `{ type, params, ... }`.
 For AI-driven workflows where a base model is customized:
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 extends = "base_ecommerce.toml"
 
 [model]
@@ -312,7 +312,7 @@ probability = 0.05
 - Scalar properties: child overrides parent
 - Array properties (e.g., `choices`): child replaces parent entirely
 - To remove a parent element: set `remove = true` on the override
-- `knit schema expand <file>` produces the fully flattened schema
+- `knit blueprint expand <file>` produces the fully flattened schema
 
 ---
 
@@ -413,7 +413,7 @@ struct Relationship {
 enum RelationshipKind { OneToOne, OneToMany, ManyToMany }
 ```
 
-### `knit-schema` — Parser & Validation
+### `knit-blueprint` — Parser & Validation
 
 - Parses TOML (primary) and JSON (for AI pipelines) into `DataModel`
 - Resolves `extends` chains and flattens to expanded model
@@ -651,8 +651,8 @@ Built with `clap`. All commands support `--help`.
 | `knit plan <schema>` | Show execution plan (dry run, entity order, partitions) |
 | `knit generate <schema> -o <dir>` | Generate dataset |
 | `knit learn <input> -o <schema>` | Infer schema from existing data |
-| `knit schema expand <schema>` | Flatten `extends` chain, print effective schema |
-| `knit schema normalize <schema>` | Reformat to canonical style |
+| `knit blueprint expand <schema>` | Flatten `extends` chain, print effective schema |
+| `knit blueprint normalize <schema>` | Reformat to canonical style |
 
 **Key flags:**
 - `--seed <N>` — override global seed
@@ -669,7 +669,7 @@ Built with `clap`. All commands support `--help`.
 ### Phase 1: Foundation
 1. Initialize Cargo workspace with all crate stubs
 2. Implement `knit-core` types (Value, DataModel, Entity, Field, GeneratorSpec, etc.)
-3. Implement TOML parser in `knit-schema` (parse → DataModel)
+3. Implement TOML parser in `knit-blueprint` (parse → DataModel)
 4. Implement schema validation (types, refs, distribution params, cycles)
 
 ### Phase 2: Generation Pipeline

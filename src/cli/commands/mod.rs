@@ -9,7 +9,7 @@ pub mod learn;
 pub mod model;
 pub mod plan;
 pub mod scale;
-pub mod schema;
+pub mod blueprint;
 pub mod tokenize;
 pub mod validate;
 
@@ -20,7 +20,7 @@ use serde::Serialize;
 
 use crate::core::DataModel;
 use crate::model as model_dir;
-use crate::schema::SchemaError;
+use crate::blueprint::BlueprintError;
 
 /// Load and parse a schema file or structured model directory.
 ///
@@ -30,13 +30,13 @@ use crate::schema::SchemaError;
 /// - Otherwise → TOML flat schema
 ///
 /// Returns the parsed [`DataModel`] or an error.
-pub fn load_schema(path: &str) -> Result<DataModel, SchemaError> {
+pub fn load_blueprint(path: &str) -> Result<DataModel, BlueprintError> {
     let p = Path::new(path);
 
     // Check for structured model directory
     if model_dir::is_structured_model(p) {
         return model_dir::reader::load_model_directory(p)
-            .map_err(|e| SchemaError::Other(e.to_string()));
+            .map_err(|e| BlueprintError::Other(e.to_string()));
     }
 
     let ext = p
@@ -45,8 +45,8 @@ pub fn load_schema(path: &str) -> Result<DataModel, SchemaError> {
         .unwrap_or("")
         .to_lowercase();
     match ext.as_str() {
-        "json" => crate::schema::parse_json_file(p),
-        _ => crate::schema::parse_toml_file(p),
+        "json" => crate::blueprint::parse_json_file(p),
+        _ => crate::blueprint::parse_toml_file(p),
     }
 }
 
@@ -56,8 +56,8 @@ pub fn load_schema(path: &str) -> Result<DataModel, SchemaError> {
 ///   or has no extension, writes as structured directory.
 /// - Otherwise writes as flat TOML.
 ///
-/// This is the write counterpart to [`load_schema`].
-pub fn save_schema(model: &DataModel, path: &str) -> Result<()> {
+/// This is the write counterpart to [`load_blueprint`].
+pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
     let p = Path::new(path);
 
     // Normalize: if path points to knit.toml directly, use its parent as the model root
@@ -83,7 +83,7 @@ pub fn save_schema(model: &DataModel, path: &str) -> Result<()> {
             .with_context(|| format!("failed to write structured model to {path}"))?;
     } else {
         let raw = FlatSchemaOutput {
-            schema_version: model.schema_version.clone(),
+            blueprint_version: model.blueprint_version.clone(),
             model: FlatModelMeta {
                 name: model.name.clone(),
                 description: model.description.clone(),
@@ -117,7 +117,7 @@ pub fn save_schema(model: &DataModel, path: &str) -> Result<()> {
 /// Wrapper for proper flat TOML serialization of a DataModel.
 #[derive(Serialize)]
 struct FlatSchemaOutput {
-    schema_version: String,
+    blueprint_version: String,
     model: FlatModelMeta,
     #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     params: std::collections::BTreeMap<String, crate::core::Value>,
@@ -155,6 +155,6 @@ struct FlatModelMeta {
 }
 
 /// Validate a parsed model and return collected errors.
-pub fn validate_model(model: &DataModel) -> Vec<SchemaError> {
-    crate::schema::validate(model)
+pub fn validate_model(model: &DataModel) -> Vec<BlueprintError> {
+    crate::blueprint::validate(model)
 }

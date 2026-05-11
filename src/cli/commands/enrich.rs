@@ -5,13 +5,13 @@ use std::path::Path;
 use anyhow::Result;
 use colored::Colorize;
 
-use crate::cli::commands::{load_schema, save_schema};
+use crate::cli::commands::{load_blueprint, save_blueprint};
 use crate::cli::Cli;
 use crate::enrich::{enrich, EnrichConfig};
 
 /// Run the enrich subcommand.
 pub fn run(
-    schema_path: &str,
+    blueprint_path: &str,
     ref_path: &str,
     output: Option<&str>,
     entity: Option<&str>,
@@ -21,7 +21,7 @@ pub fn run(
     _cli: &Cli,
 ) -> Result<()> {
     // Load model
-    let mut model = load_schema(schema_path)?;
+    let mut model = load_blueprint(blueprint_path)?;
 
     let config = EnrichConfig {
         min_confidence,
@@ -64,8 +64,8 @@ pub fn run(
     println!("  Fields skipped:     {}", result.skipped_fields);
 
     // Write updated schema (format-aware: preserves structured directory if input was structured)
-    let out_path = output.unwrap_or(schema_path);
-    save_schema(&model, out_path)?;
+    let out_path = output.unwrap_or(blueprint_path);
+    save_blueprint(&model, out_path)?;
     println!("\n  Written to: {}", out_path.green());
 
     Ok(())

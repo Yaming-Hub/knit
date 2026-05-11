@@ -1946,7 +1946,7 @@ mod tests {
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
-            schema_version: "1.0".to_string(),
+            blueprint_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),

@@ -40,7 +40,7 @@ fn std_dev(vals: &[f64]) -> f64 {
 #[test]
 fn normal_distribution_mean_and_stddev() {
     let schema = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "stats_test_normal"
@@ -84,7 +84,7 @@ std_dev = 10.0
 #[test]
 fn uniform_distribution_bounds() {
     let schema = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "stats_test_uniform"
@@ -129,7 +129,7 @@ max = 50.0
 #[test]
 fn bernoulli_distribution_proportion() {
     let schema = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "stats_test_bernoulli"
@@ -182,7 +182,7 @@ p = 0.3
 #[test]
 fn exponential_distribution_is_positive() {
     let schema = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "stats_test_exp"
@@ -223,7 +223,7 @@ lambda = 2.0
 #[test]
 fn one_of_distribution_covers_all_choices() {
     let schema = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "stats_test_oneof"

@@ -10,14 +10,14 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use crate::core::*;
 use crate::gen::expr;
 
-use crate::schema::error::SchemaError;
+use crate::blueprint::error::BlueprintError;
 
 /// Validate a [`DataModel`] and return all semantic errors found.
 ///
 /// This performs a full pass over entities, relationships, noise profiles,
 /// and correlations. It does **not** short-circuit — all errors are collected
 /// so the user can fix them in one go.
-pub fn validate(model: &DataModel) -> Vec<SchemaError> {
+pub fn validate(model: &DataModel) -> Vec<BlueprintError> {
     let mut errors = Vec::new();
     validate_entities(model, &mut errors);
     validate_relationships(model, &mut errors);
@@ -42,12 +42,12 @@ fn entity_field_names<'a>(model: &'a DataModel, entity_name: &str) -> HashSet<&'
         .unwrap_or_default()
 }
 
-fn validate_entities(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_entities(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let names = entity_names(model);
     let mut seen = HashSet::new();
     for entity in &model.entities {
         if !seen.insert(&entity.name) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: format!("entities.{}", entity.name),
                 message: format!("duplicate entity name '{}'", entity.name),
             });
@@ -63,13 +63,13 @@ fn validate_fields(
     entity: &Entity,
     entity_names: &HashSet<&str>,
     model: &DataModel,
-    errors: &mut Vec<SchemaError>,
+    errors: &mut Vec<BlueprintError>,
 ) {
     let mut seen = HashSet::new();
     let mut pk_count = 0u32;
     for field in &entity.fields {
         if !seen.insert(&field.name) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: format!("entities.{}.fields.{}", entity.name, field.name),
                 message: format!("duplicate field name '{}'", field.name),
             });
@@ -97,7 +97,7 @@ fn validate_fields(
         );
         // precision is only meaningful for float types
         if field.precision.is_some() && field.data_type != DataType::Float {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: format!("entities.{}.fields.{}.precision", entity.name, field.name),
                 message: "precision is only valid for float64 fields".to_string(),
             });
@@ -110,7 +110,7 @@ fn validate_fields(
         );
     }
     if pk_count > 1 {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: format!("entities.{}", entity.name),
             message: format!("entity has {} primary keys, expected at most 1", pk_count),
         });
@@ -118,21 +118,21 @@ fn validate_fields(
 }
 
 /// Validate entity constraints — check that referenced fields exist.
-fn validate_constraints(entity: &Entity, errors: &mut Vec<SchemaError>) {
+fn validate_constraints(entity: &Entity, errors: &mut Vec<BlueprintError>) {
     let field_names: HashSet<&str> = entity.fields.iter().map(|f| f.name.as_str()).collect();
     for (i, constraint) in entity.constraints.iter().enumerate() {
         let path = format!("entities.{}.constraints[{}]", entity.name, i);
         match constraint {
             Constraint::NotNull { fields } | Constraint::Unique { fields } => {
                 if fields.is_empty() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: "constraint 'fields' must not be empty".to_string(),
                     });
                 }
                 for f in fields {
                     if !field_names.contains(f.as_str()) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.clone(),
                             message: format!(
                                 "constraint references unknown field '{f}'"
@@ -143,7 +143,7 @@ fn validate_constraints(entity: &Entity, errors: &mut Vec<SchemaError>) {
             }
             Constraint::Range { field, .. } => {
                 if !field_names.contains(field.as_str()) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!(
                             "constraint references unknown field '{field}'"
@@ -161,16 +161,16 @@ fn validate_constraints(entity: &Entity, errors: &mut Vec<SchemaError>) {
 /// Validate nested object field constraints.
 /// Object fields must have sub-fields, must not have their own generator,
 /// and nested fields cannot be primary keys or actor columns.
-fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<SchemaError>) {
+fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<BlueprintError>) {
     if field.data_type == DataType::Object {
         if field.fields.is_empty() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "object field must have at least one sub-field".to_string(),
             });
         }
         if field.generator.is_some() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "object field must not have its own generator; \
                           sub-fields define their own generators"
@@ -181,20 +181,20 @@ fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<SchemaError
         let mut seen = HashSet::new();
         for sub in &field.fields {
             if !seen.insert(&sub.name) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: format!("{}.fields.{}", path, sub.name),
                     message: format!("duplicate sub-field name '{}'", sub.name),
                 });
             }
             // Disallow primary_key and actor_column in nested fields
             if sub.primary_key == Some(true) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: format!("{}.fields.{}", path, sub.name),
                     message: "primary_key is not allowed on nested object fields".to_string(),
                 });
             }
             if sub.actor_column {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: format!("{}.fields.{}", path, sub.name),
                     message: "actor_column is not allowed on nested object fields".to_string(),
                 });
@@ -222,7 +222,7 @@ fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<SchemaError
             );
             // precision is only meaningful for float types
             if sub.precision.is_some() && sub.data_type != DataType::Float {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: format!("{}.fields.{}.precision", path, sub.name),
                     message: "precision is only valid for float64 fields".to_string(),
                 });
@@ -235,7 +235,7 @@ fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<SchemaError
             );
         }
     } else if !field.fields.is_empty() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: format!(
                 "non-object field '{}' (type={}) must not have sub-fields",
@@ -246,7 +246,7 @@ fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<SchemaError
 }
 
 /// Validate that a nested generator is one of the allowed simple types.
-fn validate_nested_generator(path: &str, gen: &GeneratorSpec, errors: &mut Vec<SchemaError>) {
+fn validate_nested_generator(path: &str, gen: &GeneratorSpec, errors: &mut Vec<BlueprintError>) {
     let allowed = matches!(
         gen,
         GeneratorSpec::Distribution { .. }
@@ -257,7 +257,7 @@ fn validate_nested_generator(path: &str, gen: &GeneratorSpec, errors: &mut Vec<S
             | GeneratorSpec::UuidGen { .. }
     );
     if !allowed {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: "nested object fields only support simple generators: \
                       distribution, faker, constant, sequence, one_of, uuid"
@@ -273,11 +273,11 @@ fn validate_generator_params(
     path: &str,
     gen: &GeneratorSpec,
     data_type: &DataType,
-    errors: &mut Vec<SchemaError>,
+    errors: &mut Vec<BlueprintError>,
 ) {
     // Check generator ↔ field type compatibility
     if let Some(msg) = check_generator_type_compat(gen, data_type) {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: msg,
         });
@@ -298,7 +298,7 @@ fn validate_generator_params(
         }
         GeneratorSpec::OneOf { choices } => {
             if choices.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "oneOf requires at least one choice".to_string(),
                 });
@@ -307,7 +307,7 @@ fn validate_generator_params(
         GeneratorSpec::Faker { method, .. } => {
             let bare = method.split_once('.').map(|(_, m)| m).unwrap_or(method.as_str());
             if !KNOWN_FAKER_METHODS.contains(&bare) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "unknown faker method '{}', expected one of: {}",
@@ -319,7 +319,7 @@ fn validate_generator_params(
         }
         GeneratorSpec::UuidGen { version } => {
             if *version != 4 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("only UUID version 4 is supported, got {}", version),
                 });
@@ -329,11 +329,11 @@ fn validate_generator_params(
     }
 }
 
-fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<SchemaError>) {
+fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<BlueprintError>) {
     match spec {
         NullSpec::Probability(p) => {
             if !(*p >= 0.0 && *p <= 1.0) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("null probability must be in [0, 1], got {}", p),
                 });
@@ -341,7 +341,7 @@ fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<SchemaError>
         }
         NullSpec::Pattern { every_n } => {
             if *every_n == 0 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "null pattern every_n must be > 0".to_string(),
                 });
@@ -351,17 +351,17 @@ fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<SchemaError>
     }
 }
 
-fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaError>) {
+fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<BlueprintError>) {
     match count {
         CountSpec::Fixed(0) => {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "count must be > 0".to_string(),
             });
         }
         CountSpec::Range { min, max } => {
             if min > max {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("range requires min <= max, got min={}, max={}", min, max),
                 });
@@ -369,7 +369,7 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaErr
         }
         CountSpec::Expression { expr } => {
             if expr.trim().is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "count expression must not be empty".to_string(),
                 });
@@ -379,14 +379,14 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaErr
             match crate::gen::expr::parser::parse(expr) {
                 Ok(ast) => {
                     if let Err(msg) = crate::plan::partition::validate_count_ast(&ast) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: msg,
                         });
                     }
                 }
                 Err(e) => {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!("count expression parse error: {}", e.message),
                     });
@@ -400,7 +400,7 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<SchemaErr
     }
 }
 
-fn validate_entity_count(entity: &Entity, errors: &mut Vec<SchemaError>) {
+fn validate_entity_count(entity: &Entity, errors: &mut Vec<BlueprintError>) {
     validate_count_spec(
         &format!("entities.{}.count", entity.name),
         &entity.count,
@@ -408,7 +408,7 @@ fn validate_entity_count(entity: &Entity, errors: &mut Vec<SchemaError>) {
     );
 }
 
-fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let ac = match &entity.activity_count {
         Some(ac) => ac,
         None => return,
@@ -419,7 +419,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
     // Cannot use activity_count on actor entities themselves (would cause
     // stale actor-pool counts since pools are built before row overrides).
     if entity.actor {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.clone(),
             message: "activity_count cannot be used on actor entities".to_string(),
         });
@@ -428,7 +428,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
 
     // actor_field must reference an existing field in this entity
     if !entity.fields.iter().any(|f| f.name == ac.actor_field) {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.clone(),
             message: format!(
                 "actor_field '{}' not found in entity '{}'",
@@ -439,7 +439,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
 
     // trait_name must not be empty
     if ac.trait_name.is_empty() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.clone(),
             message: "trait name must not be empty".to_string(),
         });
@@ -453,7 +453,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
 
     match target_rel {
         None => {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "actor_field '{}' does not match any FK relationship from '{}'",
@@ -466,7 +466,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
             let target_entity = model.entities.iter().find(|e| e.name == rel.to);
             if let Some(target) = target_entity {
                 if !target.actor {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!(
                             "actor_field '{}' references '{}' which is not an actor entity",
@@ -503,7 +503,7 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
                     .collect();
 
                 if !missing_trait.is_empty() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!(
                             "trait '{}' missing or non-numeric in persona(s): {}",
@@ -524,7 +524,7 @@ fn validate_sequence_params(
     values: &Option<Vec<String>>,
     cycle: &Option<bool>,
     prefix: &Option<String>,
-    errors: &mut Vec<SchemaError>,
+    errors: &mut Vec<BlueprintError>,
 ) {
     // Extract i64 values from IntOrString if possible
     let start_val = match start {
@@ -538,25 +538,25 @@ fn validate_sequence_params(
 
     if let Some(vals) = values {
         if vals.is_empty() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "sequence values must not be empty".to_string(),
             });
         }
         if start_val != Some(0) || step_val != Some(1) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "sequence 'values' is mutually exclusive with 'start'/'step'".to_string(),
             });
         }
         if prefix.is_some() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "sequence 'prefix' is not valid with 'values'".to_string(),
             });
         }
         if *cycle == Some(false) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "sequence values always cycle; 'cycle = false' is not supported"
                     .to_string(),
@@ -564,7 +564,7 @@ fn validate_sequence_params(
         }
     } else {
         if step_val == Some(0) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "sequence step must not be 0".to_string(),
             });
@@ -572,7 +572,7 @@ fn validate_sequence_params(
         // Validate temporal string formats
         if let IntOrString::Str(s) = start {
             if !is_valid_temporal_start(s) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "sequence start '{}' is not a valid date or datetime; expected format like '2024-01-01' or '2024-01-01T08:00:00'",
@@ -584,7 +584,7 @@ fn validate_sequence_params(
         if let IntOrString::Str(s) = step {
             let ms = crate::gen::generators::event_stream::parse_duration_ms(s);
             if ms == 0 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "sequence step '{}' is not a valid duration; expected format like '1d', '1h', '30m', '500ms'",
@@ -594,7 +594,7 @@ fn validate_sequence_params(
             }
         }
         if cycle.is_some() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "sequence 'cycle' requires 'values'".to_string(),
             });
@@ -620,7 +620,7 @@ fn is_valid_temporal_start(s: &str) -> bool {
 /// - Duration strings in min/max/value are valid
 /// - min ≤ max when both are specified
 /// - Constant offsets have a valid duration string
-fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Vec<SchemaError>) {
+fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Vec<BlueprintError>) {
     use crate::gen::generators::event_stream::parse_duration_ms;
 
     /// Check that a duration string uses a known unit suffix.
@@ -673,7 +673,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
             match val {
                 Value::Int(_) | Value::Float(_) => {}
                 _ => {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "relative offset must be numeric (int or float), got {:?}; \
@@ -698,7 +698,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
                 | DistributionKind::Uniform
                 | DistributionKind::Exponential => {}
                 other => {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "relative offset distribution '{:?}' is not supported; \
@@ -711,7 +711,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
             // Validate duration strings
             if let Some(min_str) = min {
                 if !is_valid_duration_string(min_str) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "relative offset min '{}' is not a valid duration \
@@ -723,7 +723,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
             }
             if let Some(max_str) = max {
                 if !is_valid_duration_string(max_str) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "relative offset max '{}' is not a valid duration \
@@ -738,7 +738,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
                 let min_ms = parse_duration_ms(min_str);
                 let max_ms = parse_duration_ms(max_str);
                 if min_ms > max_ms && min_ms > 0 && max_ms > 0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "relative offset min '{}' ({}ms) exceeds max '{}' ({}ms)",
@@ -750,7 +750,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
         }
         RelativeOffset::Constant { offset_type, value } => {
             if offset_type != "constant" {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "relative offset type '{}' is not recognized; use 'constant'",
@@ -759,7 +759,7 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
                 });
             }
             if !is_valid_duration_string(value) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "relative constant offset '{}' is not a valid duration \
@@ -772,24 +772,24 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
     }
 }
 
-fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<SchemaError>) {
+fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<BlueprintError>) {
     let params = &spec.params;
     match spec.kind {
         DistributionKind::Normal => {
             if !params.contains_key("mean") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "normal distribution requires 'mean' param".to_string(),
                 });
             }
             if !params.contains_key("std_dev") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "normal distribution requires 'std_dev' param".to_string(),
                 });
             } else if let Some(&sd) = params.get("std_dev") {
                 if sd <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "normal distribution 'std_dev' must be > 0".to_string(),
                     });
@@ -798,20 +798,20 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Uniform => {
             if !params.contains_key("min") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "uniform distribution requires 'min' param".to_string(),
                 });
             }
             if !params.contains_key("max") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "uniform distribution requires 'max' param".to_string(),
                 });
             }
             if let (Some(&min), Some(&max)) = (params.get("min"), params.get("max")) {
                 if min >= max {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "uniform distribution requires min < max, got min={}, max={}",
@@ -823,13 +823,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Exponential => {
             if !params.contains_key("lambda") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "exponential distribution requires 'lambda' param".to_string(),
                 });
             } else if let Some(&l) = params.get("lambda") {
                 if l <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "exponential distribution 'lambda' must be > 0".to_string(),
                     });
@@ -838,13 +838,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Poisson => {
             if !params.contains_key("lambda") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "poisson distribution requires 'lambda' param".to_string(),
                 });
             } else if let Some(&l) = params.get("lambda") {
                 if l <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "poisson distribution 'lambda' must be > 0".to_string(),
                     });
@@ -853,13 +853,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Bernoulli => {
             if !params.contains_key("p") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "bernoulli distribution requires 'p' param".to_string(),
                 });
             } else if let Some(&p) = params.get("p") {
                 if !(0.0..=1.0).contains(&p) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "bernoulli distribution 'p' must be in [0, 1]".to_string(),
                     });
@@ -868,19 +868,19 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::LogNormal => {
             if !params.contains_key("mu") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "lognormal distribution requires 'mu' param".to_string(),
                 });
             }
             if !params.contains_key("sigma") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "lognormal distribution requires 'sigma' param".to_string(),
                 });
             } else if let Some(&s) = params.get("sigma") {
                 if s <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "lognormal distribution 'sigma' must be > 0".to_string(),
                     });
@@ -889,13 +889,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Binomial => {
             if !params.contains_key("n") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "binomial distribution requires 'n' param".to_string(),
                 });
             } else if let Some(&n) = params.get("n") {
                 if n < 0.0 || n.fract() != 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "binomial distribution 'n' must be >= 0 and integer-valued"
                             .to_string(),
@@ -903,13 +903,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
             }
             if !params.contains_key("p") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "binomial distribution requires 'p' param".to_string(),
                 });
             } else if let Some(&p) = params.get("p") {
                 if !(0.0..=1.0).contains(&p) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "binomial distribution 'p' must be in [0, 1]".to_string(),
                     });
@@ -918,13 +918,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Geometric => {
             if !params.contains_key("p") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "geometric distribution requires 'p' param".to_string(),
                 });
             } else if let Some(&p) = params.get("p") {
                 if p <= 0.0 || p > 1.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "geometric distribution 'p' must be in (0, 1]".to_string(),
                     });
@@ -933,26 +933,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Pareto => {
             if !params.contains_key("scale") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "pareto distribution requires 'scale' param".to_string(),
                 });
             } else if let Some(&v) = params.get("scale") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "pareto distribution 'scale' must be > 0".to_string(),
                     });
                 }
             }
             if !params.contains_key("shape") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "pareto distribution requires 'shape' param".to_string(),
                 });
             } else if let Some(&v) = params.get("shape") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "pareto distribution 'shape' must be > 0".to_string(),
                     });
@@ -961,26 +961,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Weibull => {
             if !params.contains_key("scale") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "weibull distribution requires 'scale' param".to_string(),
                 });
             } else if let Some(&v) = params.get("scale") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "weibull distribution 'scale' must be > 0".to_string(),
                     });
                 }
             }
             if !params.contains_key("shape") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "weibull distribution requires 'shape' param".to_string(),
                 });
             } else if let Some(&v) = params.get("shape") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "weibull distribution 'shape' must be > 0".to_string(),
                     });
@@ -989,26 +989,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Gamma => {
             if !params.contains_key("shape") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "gamma distribution requires 'shape' param".to_string(),
                 });
             } else if let Some(&v) = params.get("shape") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "gamma distribution 'shape' must be > 0".to_string(),
                     });
                 }
             }
             if !params.contains_key("scale") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "gamma distribution requires 'scale' param".to_string(),
                 });
             } else if let Some(&v) = params.get("scale") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "gamma distribution 'scale' must be > 0".to_string(),
                     });
@@ -1017,26 +1017,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Beta => {
             if !params.contains_key("alpha") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "beta distribution requires 'alpha' param".to_string(),
                 });
             } else if let Some(&v) = params.get("alpha") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "beta distribution 'alpha' must be > 0".to_string(),
                     });
                 }
             }
             if !params.contains_key("beta") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "beta distribution requires 'beta' param".to_string(),
                 });
             } else if let Some(&v) = params.get("beta") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "beta distribution 'beta' must be > 0".to_string(),
                     });
@@ -1045,19 +1045,19 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Cauchy => {
             if !params.contains_key("median") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "cauchy distribution requires 'median' param".to_string(),
                 });
             }
             if !params.contains_key("scale") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "cauchy distribution requires 'scale' param".to_string(),
                 });
             } else if let Some(&v) = params.get("scale") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "cauchy distribution 'scale' must be > 0".to_string(),
                     });
@@ -1066,13 +1066,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::ChiSquared => {
             if !params.contains_key("k") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "chi-squared distribution requires 'k' param".to_string(),
                 });
             } else if let Some(&v) = params.get("k") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "chi-squared distribution 'k' must be > 0".to_string(),
                     });
@@ -1081,13 +1081,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::StudentT => {
             if !params.contains_key("n") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "student-t distribution requires 'n' param".to_string(),
                 });
             } else if let Some(&v) = params.get("n") {
                 if v <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "student-t distribution 'n' must be > 0".to_string(),
                     });
@@ -1096,26 +1096,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Triangular => {
             if !params.contains_key("min") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "triangular distribution requires 'min' param".to_string(),
                 });
             }
             if !params.contains_key("max") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "triangular distribution requires 'max' param".to_string(),
                 });
             }
             if !params.contains_key("mode") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "triangular distribution requires 'mode' param".to_string(),
                 });
             }
             if let (Some(&min), Some(&max)) = (params.get("min"), params.get("max")) {
                 if min >= max {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "triangular distribution requires min < max, got min={}, max={}",
@@ -1125,7 +1125,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
                 if let Some(&mode) = params.get("mode") {
                     if mode < min || mode > max {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "triangular distribution requires min <= mode <= max, got min={}, mode={}, max={}",
@@ -1138,13 +1138,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Zipf => {
             if !params.contains_key("n") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "zipf distribution requires 'n' param".to_string(),
                 });
             } else if let Some(&n) = params.get("n") {
                 if n < 1.0 || n.fract() != 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "zipf distribution 'n' must be >= 1 and integer-valued"
                             .to_string(),
@@ -1152,13 +1152,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
             }
             if !params.contains_key("s") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "zipf distribution requires 's' param".to_string(),
                 });
             } else if let Some(&s) = params.get("s") {
                 if s <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "zipf distribution 's' must be > 0".to_string(),
                     });
@@ -1169,7 +1169,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
             let alpha = spec.array_params.get("alpha");
             match alpha {
                 None => {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "dirichlet distribution requires 'alpha' in array_params"
                             .to_string(),
@@ -1177,7 +1177,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
                 Some(a) => {
                     if a.len() < 2 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: "dirichlet distribution 'alpha' must have at least 2 elements"
                                 .to_string(),
@@ -1185,7 +1185,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                     }
                     for (i, &v) in a.iter().enumerate() {
                         if !v.is_finite() || v <= 0.0 {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
                                     "dirichlet distribution 'alpha[{}]' must be a finite value > 0, got {}",
@@ -1197,7 +1197,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
             }
             if spec.round {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "dirichlet distribution does not support 'round'".to_string(),
                 });
@@ -1205,13 +1205,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
         }
         DistributionKind::Multinomial => {
             if !spec.params.contains_key("n") {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "multinomial distribution requires 'n' param".to_string(),
                 });
             } else if let Some(&n) = spec.params.get("n") {
                 if !n.is_finite() || n < 1.0 || n.fract() != 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "multinomial distribution 'n' must be a positive integer"
                             .to_string(),
@@ -1221,7 +1221,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
             let p = spec.array_params.get("p");
             match p {
                 None => {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "multinomial distribution requires 'p' in array_params"
                             .to_string(),
@@ -1229,7 +1229,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                 }
                 Some(probs) => {
                     if probs.len() < 2 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: "multinomial distribution 'p' must have at least 2 elements"
                                 .to_string(),
@@ -1237,7 +1237,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                     }
                     for (i, &v) in probs.iter().enumerate() {
                         if !v.is_finite() || v < 0.0 {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
                                     "multinomial distribution 'p[{}]' must be a finite value >= 0, got {}",
@@ -1248,7 +1248,7 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<S
                     }
                     let sum: f64 = probs.iter().sum();
                     if (sum - 1.0).abs() > 0.01 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "multinomial distribution 'p' must sum to ~1.0, got {}",
@@ -1608,11 +1608,11 @@ fn validate_generator(
     entity_names: &HashSet<&str>,
     model: &DataModel,
     nested: bool,
-    errors: &mut Vec<SchemaError>,
+    errors: &mut Vec<BlueprintError>,
 ) {
     // Check generator ↔ field type compatibility
     if let Some(msg) = check_generator_type_compat(gen, data_type) {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: msg,
         });
@@ -1634,7 +1634,7 @@ fn validate_generator(
         }
         GeneratorSpec::OneOf { choices } => {
             if choices.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "oneOf requires at least one choice".to_string(),
                 });
@@ -1643,7 +1643,7 @@ fn validate_generator(
         GeneratorSpec::Faker { method, .. } => {
             let bare = method.split_once('.').map(|(_, m)| m).unwrap_or(method.as_str());
             if !KNOWN_FAKER_METHODS.contains(&bare) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "unknown faker method '{}', expected one of: {}",
@@ -1655,7 +1655,7 @@ fn validate_generator(
         }
         GeneratorSpec::UuidGen { version } => {
             if *version != 4 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("only UUID version 4 is supported, got {}", version),
                 });
@@ -1673,26 +1673,26 @@ fn validate_generator(
             ..
         } => {
             if *start_hour > 23 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "business_hours start_hour must be in [0, 23]".to_string(),
                 });
             }
             if *end_hour < 1 || *end_hour > 24 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "business_hours end_hour must be in [1, 24]".to_string(),
                 });
             }
             if *start_hour >= *end_hour {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "business_hours requires start_hour < end_hour".to_string(),
                 });
             }
             // timezone and timezone_field are mutually exclusive
             if timezone.is_some() && timezone_field.is_some() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "business_hours: 'timezone' and 'timezone_field' are mutually exclusive".to_string(),
                 });
@@ -1700,7 +1700,7 @@ fn validate_generator(
             // Validate timezone is a valid IANA timezone
             if let Some(tz) = timezone {
                 if tz.parse::<chrono_tz::Tz>().is_err() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!("business_hours: invalid timezone '{}'", tz),
                     });
@@ -1715,7 +1715,7 @@ fn validate_generator(
                         let field_names: HashSet<&str> = current_entity
                             .fields.iter().map(|f| f.name.as_str()).collect();
                         if !field_names.contains(tz_f.as_str()) {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!("business_hours: timezone_field '{}' not found in entity", tz_f),
                             });
@@ -1726,7 +1726,7 @@ fn validate_generator(
             // days and exclude_weekends=true are mutually exclusive
             if let Some(ref d) = days {
                 if *exclude_weekends {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "business_hours: 'days' and 'exclude_weekends=true' are mutually exclusive".to_string(),
                     });
@@ -1738,14 +1738,14 @@ fn validate_generator(
                 ];
                 for day in d {
                     if !valid_days.contains(&day.to_lowercase().as_str()) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!("business_hours: invalid day name '{}'", day),
                         });
                     }
                 }
                 if d.is_empty() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "business_hours: 'days' must not be empty".to_string(),
                     });
@@ -1757,20 +1757,20 @@ fn validate_generator(
                 let max_parsed = chrono::NaiveDate::parse_from_str(&dr.max, "%Y-%m-%d");
                 match (min_parsed, max_parsed) {
                     (Err(_), _) => {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!("business_hours: invalid date_range.min '{}'", dr.min),
                         });
                     }
                     (_, Err(_)) => {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!("business_hours: invalid date_range.max '{}'", dr.max),
                         });
                     }
                     (Ok(min_d), Ok(max_d)) => {
                         if min_d > max_d {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: "business_hours: date_range.min must be before date_range.max".to_string(),
                             });
@@ -1782,7 +1782,7 @@ fn validate_generator(
             if !exclude_dates.is_empty() {
                 for date_str in exclude_dates {
                     if chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d").is_err() {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!("business_hours: invalid exclude_date '{}'", date_str),
                         });
@@ -1795,14 +1795,14 @@ fn validate_generator(
             field: ref lookup_field,
         } => {
             if nested {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "lookup cannot be nested inside Unique, Conditional, or Composite"
                         .to_string(),
                 });
             }
             if !entity_names.contains(lookup_entity.as_str()) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("lookup references unknown entity '{}'", lookup_entity),
                 });
@@ -1819,7 +1819,7 @@ fn validate_generator(
                         .map(|f| f.name.as_str())
                         .collect();
                     if !target_fields.contains(lookup_field.as_str()) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "lookup references unknown field '{}' on entity '{}'",
@@ -1837,27 +1837,27 @@ fn validate_generator(
             ..
         } => {
             if nested {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "external_lookup cannot be nested inside Unique, Conditional, or Composite"
                         .to_string(),
                 });
             }
             if source.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "external_lookup source path must not be empty".to_string(),
                 });
             }
             if *sampling == crate::core::SamplingMode::Weighted && weight_column.is_none() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "external_lookup with weighted sampling requires weight_column"
                         .to_string(),
                 });
             }
             if *sampling != crate::core::SamplingMode::Weighted && weight_column.is_some() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "external_lookup weight_column is only valid with weighted sampling"
                         .to_string(),
@@ -1872,7 +1872,7 @@ fn validate_generator(
             let field_names: HashSet<&str> =
                 entity.fields.iter().map(|f| f.name.as_str()).collect();
             if !field_names.contains(field.as_str()) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "conditional references unknown field '{}' in entity '{}'",
@@ -1881,7 +1881,7 @@ fn validate_generator(
                 });
             }
             if field == field_name {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "conditional cannot reference its own field".to_string(),
                 });
@@ -1917,7 +1917,7 @@ fn validate_generator(
             let field_names: HashSet<&str> =
                 entity.fields.iter().map(|f| f.name.as_str()).collect();
             if !field_names.contains(anchor.as_str()) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "relative references unknown field '{}' in entity '{}'",
@@ -1926,7 +1926,7 @@ fn validate_generator(
                 });
             }
             if anchor == field_name {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "relative cannot reference itself".to_string(),
                 });
@@ -1967,14 +1967,14 @@ fn validate_generator(
             file, expansion, ..
         } => {
             if file.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "dictionary generator requires a non-empty 'file' path".to_string(),
                 });
             }
             let valid_expansions = ["sample", "combinatorial", "suffix"];
             if !valid_expansions.contains(&expansion.as_str()) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "unknown dictionary expansion '{}', expected one of: {}",
@@ -1988,13 +1988,13 @@ fn validate_generator(
             entity: ref actor_entity,
         } => {
             if !entity_names.contains(actor_entity.as_str()) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("actor_ref references unknown entity '{}'", actor_entity),
                 });
             } else if let Some(target) = model.entities.iter().find(|e| e.name == *actor_entity) {
                 if !target.actor {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "actor_ref references entity '{}' which is not marked as actor = true",
@@ -2009,7 +2009,7 @@ fn validate_generator(
             source_field,
         } => {
             if relationship.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "relationship_ref requires a non-empty 'relationship' name"
                         .to_string(),
@@ -2019,7 +2019,7 @@ fn validate_generator(
                 .iter()
                 .any(|ar| ar.name == *relationship)
             {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "relationship_ref references unknown actor_relationship '{}'",
@@ -2029,7 +2029,7 @@ fn validate_generator(
             }
             if let Some(src) = source_field {
                 if src.is_empty() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "relationship_ref source_field must not be empty when specified"
                             .to_string(),
@@ -2044,7 +2044,7 @@ fn validate_generator(
             ..
         } => {
             if trait_name.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "actor_temporal requires a non-empty 'trait' name".to_string(),
                 });
@@ -2052,7 +2052,7 @@ fn validate_generator(
             if let Some(ta) = temporal_after {
                 // Validate referenced entity exists
                 if !entity_names.contains(ta.entity.as_str()) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "temporal_after references unknown entity '{}'",
@@ -2065,7 +2065,7 @@ fn validate_generator(
                     if let Some(ref_ent) = ref_entity {
                         match ref_ent.fields.iter().find(|f| f.name == ta.field) {
                             None => {
-                                errors.push(SchemaError::Validation {
+                                errors.push(BlueprintError::Validation {
                                     path: path.to_string(),
                                     message: format!(
                                         "temporal_after.field '{}' not found in entity '{}'",
@@ -2081,7 +2081,7 @@ fn validate_generator(
                                         | DataType::Datetimetz
                                         | DataType::Date
                                 ) {
-                                    errors.push(SchemaError::Validation {
+                                    errors.push(BlueprintError::Validation {
                                         path: path.to_string(),
                                         message: format!(
                                             "temporal_after.field '{}' must be a temporal type, found '{}'",
@@ -2095,7 +2095,7 @@ fn validate_generator(
                 }
                 // Validate FK field exists in the current entity
                 if !entity.fields.iter().any(|f| f.name == ta.fk) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "temporal_after.fk '{}' not found in entity '{}'",
@@ -2106,19 +2106,19 @@ fn validate_generator(
             }
             if let Some(b) = burst {
                 if !b.avg_events.is_finite() || b.avg_events <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "burst.avg_events must be a finite number > 0".to_string(),
                     });
                 }
                 if !b.avg_gap_minutes.is_finite() || b.avg_gap_minutes <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "burst.avg_gap_minutes must be a finite number > 0".to_string(),
                     });
                 }
                 if !b.avg_idle_hours.is_finite() || b.avg_idle_hours <= 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "burst.avg_idle_hours must be a finite number > 0".to_string(),
                     });
@@ -2127,7 +2127,7 @@ fn validate_generator(
         }
         GeneratorSpec::PersonaField { trait_name } => {
             if trait_name.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "persona_field requires a non-empty 'trait' name".to_string(),
                 });
@@ -2140,14 +2140,14 @@ fn validate_generator(
             ..
         } => {
             if nested {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "thread_ref cannot be nested inside Unique, Conditional, or Composite"
                         .to_string(),
                 });
             }
             if *reply_window == 0 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "thread_ref reply_window must be at least 1".to_string(),
                 });
@@ -2156,7 +2156,7 @@ fn validate_generator(
                 || *reply_probability < 0.0
                 || *reply_probability > 1.0
             {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "thread_ref reply_probability must be in [0.0, 1.0], got {reply_probability}"
@@ -2164,7 +2164,7 @@ fn validate_generator(
                 });
             }
             if *max_depth == 0 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "thread_ref max_depth must be at least 1".to_string(),
                 });
@@ -2176,7 +2176,7 @@ fn validate_generator(
                 .find(|f| f.primary_key.unwrap_or(false));
             if let Some(pk) = pk_field {
                 if pk.data_type != DataType::Int {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "thread_ref requires entity PK to be 'int' (Int64), but '{}' has data_type '{:?}'",
@@ -2186,7 +2186,7 @@ fn validate_generator(
                     });
                 }
             } else {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "thread_ref requires entity to have a primary_key field".to_string(),
                 });
@@ -2194,7 +2194,7 @@ fn validate_generator(
         }
         GeneratorSpec::Plugin { name, .. } => {
             if name.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "plugin generator requires a non-empty 'name'".to_string(),
                 });
@@ -2216,7 +2216,7 @@ fn validate_generator(
                             continue;
                         }
                         if !field_names.contains(r.as_str()) {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
                                     "derived expression references unknown field '{}' \
@@ -2229,7 +2229,7 @@ fn validate_generator(
 
                     // Self-reference check
                     if refs.iter().any(|r| r == field_name) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: "derived expression references itself".to_string(),
                         });
@@ -2238,7 +2238,7 @@ fn validate_generator(
                 Err(_) => {
                     // Parse failed — check if it's a valid legacy template
                     if !expr::parser::is_legacy_template(expr_str) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "derived expression is not a valid expression or \
@@ -2259,7 +2259,7 @@ fn validate_generator(
                                 continue;
                             }
                             if !field_names.contains(*r) {
-                                errors.push(SchemaError::Validation {
+                                errors.push(BlueprintError::Validation {
                                     path: path.to_string(),
                                     message: format!(
                                         "legacy template references unknown field '{}' \
@@ -2272,7 +2272,7 @@ fn validate_generator(
 
                         // Self-reference check for legacy templates
                         if template_refs.contains(&field_name) {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: "derived expression references itself".to_string(),
                             });
@@ -2297,7 +2297,7 @@ fn validate_generator(
         // Validate min < max
         if let (Some(mn), Some(mx)) = (min, max) {
             if mn >= mx {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("time_series min ({}) must be less than max ({})", mn, mx),
                 });
@@ -2323,7 +2323,7 @@ fn validate_generator(
                         | crate::core::DataType::Datetimetz
                         | crate::core::DataType::Date => {}
                         other => {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
                                     "time_series timestamp_field '{}' has type '{:?}', \
@@ -2335,7 +2335,7 @@ fn validate_generator(
                         }
                     }
                 } else {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "time_series timestamp_field '{}' not found in entity '{}'",
@@ -2344,7 +2344,7 @@ fn validate_generator(
                     });
                 }
             } else {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "time_series with WeekendEffect, BusinessHoursEffect, or \
                               HolidayEffect requires a timestamp_field"
@@ -2357,14 +2357,14 @@ fn validate_generator(
         for c in components {
             if let crate::core::TimeSeriesComponent::Autoregressive { coefficients } = c {
                 if coefficients.is_empty() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "AR coefficients must not be empty".to_string(),
                     });
                 }
                 let sum_abs: f64 = coefficients.iter().map(|c| c.abs()).sum();
                 if sum_abs >= 1.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "AR coefficients sum(|c|) = {:.3} >= 1.0; \
@@ -2381,7 +2381,7 @@ fn validate_generator(
             } = c
             {
                 if start_hour >= end_hour {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
                             "BusinessHoursEffect start_hour ({}) must be < end_hour ({})",
@@ -2396,14 +2396,14 @@ fn validate_generator(
             } = c
             {
                 if dates.is_empty() {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "HolidayEffect dates must not be empty".to_string(),
                     });
                 }
                 for d in dates {
                     if chrono::NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").is_err() {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "HolidayEffect date '{}' is not a valid YYYY-MM-DD date",
@@ -2413,7 +2413,7 @@ fn validate_generator(
                     }
                 }
                 if *multiplier == 0.0 {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "HolidayEffect multiplier must not be zero".to_string(),
                     });
@@ -2433,7 +2433,7 @@ fn validate_generator(
         if chrono::DateTime::parse_from_rfc3339(start).is_err()
             && chrono::NaiveDateTime::parse_from_str(start, "%Y-%m-%dT%H:%M:%S").is_err()
         {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: format!(
                     "event_stream start '{}' is not a valid ISO-8601 datetime",
@@ -2444,7 +2444,7 @@ fn validate_generator(
 
         // Validate distribution.
         if arrival.distribution != "exponential" {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: format!(
                     "event_stream arrival distribution '{}' is not supported; \
@@ -2459,7 +2459,7 @@ fn validate_generator(
             Some(crate::core::Value::Float(f)) if *f > 0.0 => {}
             Some(crate::core::Value::Int(i)) if *i > 0 => {}
             _ => {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "event_stream arrival requires a positive 'lambda' parameter"
                         .to_string(),
@@ -2473,7 +2473,7 @@ fn validate_generator(
             "m", "hour", "hours", "h", "day", "days", "d",
         ];
         if !valid_units.contains(&arrival.unit.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: format!(
                     "event_stream arrival unit '{}' is not valid; use one of: \
@@ -2491,7 +2491,7 @@ fn validate_generator(
                     ..
                 } => {
                     if active_hours[0] >= active_hours[1] {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "event_stream business_hours active_hours[0] ({}) must be < active_hours[1] ({})",
@@ -2502,7 +2502,7 @@ fn validate_generator(
                 }
                 crate::core::EventStreamComponent::Seasonality { amplitude, .. } => {
                     if *amplitude <= 0.0 || *amplitude >= 1.0 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "event_stream seasonality amplitude ({}) should be in (0, 1) \
@@ -2514,7 +2514,7 @@ fn validate_generator(
                 }
                 crate::core::EventStreamComponent::WeekendEffect { multiplier } => {
                     if *multiplier <= 0.0 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "event_stream weekend_effect multiplier ({}) must be positive",
@@ -2528,7 +2528,7 @@ fn validate_generator(
                     multiplier,
                 } => {
                     if dates.is_empty() {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: "event_stream holiday_effect dates must not be empty"
                                 .to_string(),
@@ -2536,7 +2536,7 @@ fn validate_generator(
                     }
                     for d in dates {
                         if chrono::NaiveDate::parse_from_str(d.trim(), "%Y-%m-%d").is_err() {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
                                     "event_stream holiday_effect date '{}' is not a valid \
@@ -2547,7 +2547,7 @@ fn validate_generator(
                         }
                     }
                     if *multiplier <= 0.0 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "event_stream holiday_effect multiplier ({}) must be positive",
@@ -2561,7 +2561,7 @@ fn validate_generator(
     }
 }
 
-fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let names = entity_names(model);
     let entity_map: HashMap<&str, &crate::core::Entity> = model
         .entities
@@ -2572,19 +2572,19 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
     for rel in &model.relationships {
         let path = format!("relationships.{}", rel.name);
         if !seen.insert(&rel.name) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("duplicate relationship name '{}'", rel.name),
             });
         }
         if !names.contains(rel.from.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("'from' references unknown entity '{}'", rel.from),
             });
         }
         if !names.contains(rel.to.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("'to' references unknown entity '{}'", rel.to),
             });
@@ -2601,7 +2601,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
             // Only report if the FK was explicitly specified — implicit FKs
             // might simply not exist yet (the planner handles that separately)
             if rel.foreign_key.is_some() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "foreign_key '{}' not found in entity '{}'",
@@ -2618,7 +2618,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 .iter()
                 .find(|f| f.primary_key == Some(true));
             if pk_field.is_none() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "entity '{}' referenced as relationship target has no primary key",
@@ -2634,7 +2634,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                         from_entity.fields.iter().find(|f| f.name == effective_fk)
                     {
                         if fk_field.data_type != pk.data_type {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.clone(),
                                 message: format!(
                                     "foreign_key '{}' type ({:?}) does not match target entity '{}' primary key type ({:?})",
@@ -2662,7 +2662,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                         .or_else(|| degree.params.get("s"));
                     if let Some(&s) = exponent {
                         if !s.is_finite() || s <= 0.0 {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: dp.clone(),
                                 message: format!(
                                     "Zipf exponent must be a finite value > 0, got {s}"
@@ -2685,7 +2685,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
             // Mutual exclusivity with degree
             if rel.degree.is_some() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: sp.clone(),
                     message: format!(
                         "relationship '{}' specifies both 'degree' and 'selection' — they are mutually exclusive",
@@ -2700,7 +2700,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                     crate::core::ParameterizedSelection::Clustered { cluster_size },
                 ) => {
                     if *cluster_size == 0 {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: sp.clone(),
                             message: format!(
                                 "relationship '{}': cluster_size must be > 0",
@@ -2713,7 +2713,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                     crate::core::ParameterizedSelection::Weighted { weight_field },
                 ) => {
                     // Weighted selection is not yet implemented
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: sp.clone(),
                         message: format!(
                             "relationship '{}': weighted selection strategy is not yet implemented; use 'degree' with Zipf for non-uniform parent selection",
@@ -2728,7 +2728,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                             .iter()
                             .any(|f| f.name == *weight_field);
                         if !has_field {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: sp.clone(),
                                 message: format!(
                                     "relationship '{}': weight_field '{}' not found on parent entity '{}'",
@@ -2749,7 +2749,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                                     | crate::core::DataType::Float
                             );
                             if !is_numeric {
-                                errors.push(SchemaError::Validation {
+                                errors.push(BlueprintError::Validation {
                                     path: sp.clone(),
                                     message: format!(
                                         "relationship '{}': weight_field '{}' must be numeric (int, int32, or float), got {:?}",
@@ -2770,7 +2770,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         let is_self_ref = rel.from == rel.to;
 
         if rel.acyclic.is_some() && !is_self_ref {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "relationship '{}': 'acyclic' is only valid on self-referential relationships (from == to)",
@@ -2780,7 +2780,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         }
 
         if rel.root_probability.is_some() && !is_self_ref {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "relationship '{}': 'root_probability' is only valid on self-referential relationships (from == to)",
@@ -2790,7 +2790,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         }
 
         if rel.max_depth.is_some() && !is_self_ref {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "relationship '{}': 'max_depth' is only valid on self-referential relationships (from == to)",
@@ -2801,7 +2801,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
         if let Some(p) = rel.root_probability {
             if p <= 0.0 || p > 1.0 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "relationship '{}': root_probability must be in (0.0, 1.0], got {}",
@@ -2813,7 +2813,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
         if let Some(d) = rel.max_depth {
             if d < 1 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "relationship '{}': max_depth must be >= 1, got {}",
@@ -2827,7 +2827,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         if is_self_ref {
             let produces_roots = rel.root_probability.map_or(true, |p| p > 0.0);
             if produces_roots && rel.nullable == Some(false) {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "relationship '{}': self-referential relationship with root nodes requires nullable = true (or omit nullable)",
@@ -2841,7 +2841,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         if !rel.properties.is_empty() {
             // many_to_many with properties not yet supported
             if rel.kind == crate::core::RelationshipKind::ManyToMany {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "relationship '{}': edge properties on many_to_many relationships are not yet supported; \
@@ -2856,7 +2856,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
             for prop in &rel.properties {
                 let pp = format!("{}.properties.{}", path, prop.name);
                 if !prop_names_seen.insert(&prop.name) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: pp.clone(),
                         message: format!(
                             "duplicate edge property name '{}' in relationship '{}'",
@@ -2867,7 +2867,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
                 // Reject unsupported complex types
                 if matches!(prop.data_type, crate::core::DataType::Map) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: pp.clone(),
                         message: format!(
                             "edge property '{}': Map type is not supported as an edge property",
@@ -2901,7 +2901,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
                 for prop in &rel.properties {
                     let pp = format!("{}.properties.{}", path, prop.name);
                     if entity_field_names.contains(prop.name.as_str()) {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: pp,
                             message: format!(
                                 "edge property '{}' conflicts with existing field on entity '{}'",
@@ -2932,7 +2932,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
         }
         for (prop_name, rels) in &name_to_rel {
             if rels.len() > 1 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: format!("relationships"),
                     message: format!(
                         "edge property '{}' appears in multiple relationships ({}) targeting entity '{}'",
@@ -2946,19 +2946,19 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
     }
 }
 
-fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let names = entity_names(model);
     let mut seen = HashSet::new();
     for noise in &model.noise_profiles {
         let path = format!("noise.{}", noise.name);
         if !seen.insert(&noise.name) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("duplicate noise profile name '{}'", noise.name),
             });
         }
         if !names.contains(noise.entity.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("references unknown entity '{}'", noise.entity),
             });
@@ -2966,7 +2966,7 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
             let fields = entity_field_names(model, &noise.entity);
             for f in &noise.fields {
                 if !fields.contains(f.as_str()) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!("field '{}' not found in entity '{}'", f, noise.entity),
                     });
@@ -2992,7 +2992,7 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
                         let fields = entity_field_names(model, &noise.entity);
                         for field_ref in crate::gen::expr::ast::extract_field_refs(&expr) {
                             if !fields.contains(field_ref.as_str()) {
-                                errors.push(SchemaError::Validation {
+                                errors.push(BlueprintError::Validation {
                                     path: path.clone(),
                                     message: format!(
                                         "scope expression references unknown field '{}' in entity '{}'",
@@ -3004,7 +3004,7 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
                     }
                 }
                 Err(e) => {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!("invalid scope expression: {}", e),
                     });
@@ -3014,21 +3014,21 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<SchemaError>) {
     }
 }
 
-fn validate_rate(path: &str, name: &str, value: f64, errors: &mut Vec<SchemaError>) {
+fn validate_rate(path: &str, name: &str, value: f64, errors: &mut Vec<BlueprintError>) {
     if !(0.0..=1.0).contains(&value) {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: format!("{} must be in [0.0, 1.0], got {}", name, value),
         });
     }
 }
 
-fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_correlations(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let names = entity_names(model);
     for (i, corr) in model.correlations.iter().enumerate() {
         let path = format!("correlations[{}]", i);
         if !names.contains(corr.entity.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("references unknown entity '{}'", corr.entity),
             });
@@ -3036,7 +3036,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
             let fields = entity_field_names(model, &corr.entity);
             for f in &corr.fields {
                 if !fields.contains(f.as_str()) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!("field '{}' not found in entity '{}'", f, corr.entity),
                     });
@@ -3046,7 +3046,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
         if !corr.matrix.is_empty() {
             let n = corr.fields.len();
             if corr.matrix.len() != n {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "correlation matrix has {} rows but {} fields",
@@ -3057,7 +3057,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
             } else {
                 for (ri, row) in corr.matrix.iter().enumerate() {
                     if row.len() != n {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.clone(),
                             message: format!(
                                 "correlation matrix row {} has {} columns, expected {}",
@@ -3073,7 +3073,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
                     let row = &corr.matrix[ri];
                     if row.len() == n {
                         if (row[ri] - 1.0).abs() > 1e-10 {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.clone(),
                                 message: format!(
                                     "correlation matrix diagonal[{}] must be 1.0, got {}",
@@ -3084,7 +3084,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
                         #[allow(clippy::needless_range_loop)]
                         for ci in (ri + 1)..n {
                             if (row[ci] - corr.matrix[ci][ri]).abs() > 1e-10 {
-                                errors.push(SchemaError::Validation {
+                                errors.push(BlueprintError::Validation {
                                     path: path.clone(),
                                     message: format!(
                                         "correlation matrix is not symmetric: [{},{}]={} vs [{},{}]={}",
@@ -3113,7 +3113,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<SchemaError>) {
             validate_conditional_distribution(&path, corr, model, errors);
         } else if corr.correlation_type.is_some() {
             let ct = corr.correlation_type.as_deref().unwrap();
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "unknown correlation type '{}'; expected 'conditional_distribution'",
@@ -3129,7 +3129,7 @@ fn validate_copula(
     copula: &CopulaSpec,
     corr: &Correlation,
     model: &DataModel,
-    errors: &mut Vec<SchemaError>,
+    errors: &mut Vec<BlueprintError>,
 ) {
     let n = corr.fields.len();
 
@@ -3137,7 +3137,7 @@ fn validate_copula(
         CopulaFamily::Gaussian => {
             // Gaussian copula requires a correlation matrix
             if corr.matrix.is_empty() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "Gaussian copula requires a correlation matrix".to_string(),
                 });
@@ -3146,7 +3146,7 @@ fn validate_copula(
             if !corr.matrix.is_empty() && corr.matrix.len() == n {
                 let all_correct_size = corr.matrix.iter().all(|r| r.len() == n);
                 if all_correct_size && !is_positive_semidefinite(&corr.matrix) {
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "correlation matrix is not positive semi-definite \
                                   (Cholesky decomposition failed)"
@@ -3157,7 +3157,7 @@ fn validate_copula(
         }
         CopulaFamily::Clayton => {
             if n != 2 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "Clayton copula requires exactly 2 fields, got {n}"
@@ -3166,12 +3166,12 @@ fn validate_copula(
             }
             let theta = copula.params.get("theta").copied().unwrap_or(f64::NAN);
             if theta.is_nan() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "Clayton copula requires 'theta' parameter".to_string(),
                 });
             } else if theta <= 0.0 || !theta.is_finite() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "Clayton copula theta must be > 0, got {theta}"
@@ -3181,7 +3181,7 @@ fn validate_copula(
         }
         CopulaFamily::Frank => {
             if n != 2 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "Frank copula requires exactly 2 fields, got {n}"
@@ -3190,12 +3190,12 @@ fn validate_copula(
             }
             let theta = copula.params.get("theta").copied().unwrap_or(f64::NAN);
             if theta.is_nan() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "Frank copula requires 'theta' parameter".to_string(),
                 });
             } else if theta == 0.0 || !theta.is_finite() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "Frank copula theta must be non-zero and finite, got {theta}"
@@ -3205,7 +3205,7 @@ fn validate_copula(
         }
         CopulaFamily::Gumbel => {
             if n != 2 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "Gumbel copula requires exactly 2 fields, got {n}"
@@ -3214,12 +3214,12 @@ fn validate_copula(
             }
             let theta = copula.params.get("theta").copied().unwrap_or(f64::NAN);
             if theta.is_nan() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "Gumbel copula requires 'theta' parameter".to_string(),
                 });
             } else if theta < 1.0 || !theta.is_finite() {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
                         "Gumbel copula theta must be >= 1.0, got {theta}"
@@ -3243,7 +3243,7 @@ fn validate_copula(
                 match &field.generator {
                     Some(GeneratorSpec::Distribution { spec, .. }) => {
                         if !supported_marginals.contains(&spec.kind) {
-                            errors.push(SchemaError::Validation {
+                            errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
                                     "copula field '{}' uses {:?} distribution which does not \
@@ -3255,7 +3255,7 @@ fn validate_copula(
                         }
                     }
                     _ => {
-                        errors.push(SchemaError::Validation {
+                        errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
                                 "copula field '{}' must have a distribution generator \
@@ -3275,13 +3275,13 @@ fn validate_conditional_distribution(
     path: &str,
     corr: &Correlation,
     model: &DataModel,
-    errors: &mut Vec<SchemaError>,
+    errors: &mut Vec<BlueprintError>,
 ) {
     // Must have dependent and given
     let dependent = match &corr.dependent {
         Some(d) => d,
         None => {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "conditional_distribution requires 'dependent' field".to_string(),
             });
@@ -3291,7 +3291,7 @@ fn validate_conditional_distribution(
     let given = match &corr.given {
         Some(g) => g,
         None => {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.to_string(),
                 message: "conditional_distribution requires 'given' field".to_string(),
             });
@@ -3301,7 +3301,7 @@ fn validate_conditional_distribution(
 
     // dependent ≠ given
     if dependent == given {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: format!(
                 "conditional_distribution 'dependent' and 'given' must differ, both are '{}'",
@@ -3313,7 +3313,7 @@ fn validate_conditional_distribution(
     // Both fields must exist in the entity
     let field_names = entity_field_names(model, &corr.entity);
     if !field_names.contains(dependent.as_str()) {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: format!(
                 "conditional_distribution dependent field '{}' not found in entity '{}'",
@@ -3322,7 +3322,7 @@ fn validate_conditional_distribution(
         });
     }
     if !field_names.contains(given.as_str()) {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: format!(
                 "conditional_distribution given field '{}' not found in entity '{}'",
@@ -3333,7 +3333,7 @@ fn validate_conditional_distribution(
 
     // distributions must be non-empty
     if corr.distributions.is_empty() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: "conditional_distribution requires at least one distribution branch"
                 .to_string(),
@@ -3345,7 +3345,7 @@ fn validate_conditional_distribution(
     for (bi, branch) in corr.distributions.iter().enumerate() {
         let key = format!("{:?}", branch.condition);
         if seen_conditions.contains(&key) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: format!("{}.distributions[{}]", path, bi),
                 message: format!("duplicate 'when' value: {:?}", branch.condition),
             });
@@ -3355,26 +3355,26 @@ fn validate_conditional_distribution(
 
     // Mutual exclusivity: conditional_distribution should not use matrix/copula fields
     if !corr.fields.is_empty() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: "conditional_distribution cannot use 'fields' (matrix/copula mode)"
                 .to_string(),
         });
     }
     if !corr.matrix.is_empty() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: "conditional_distribution cannot use 'matrix'".to_string(),
         });
     }
     if corr.copula.is_some() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: "conditional_distribution cannot use 'copula'".to_string(),
         });
     }
     if !corr.conditional.is_empty() {
-        errors.push(SchemaError::Validation {
+        errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: "conditional_distribution cannot use 'conditional'".to_string(),
         });
@@ -3425,14 +3425,14 @@ fn is_positive_semidefinite(matrix: &[Vec<f64>]) -> bool {
     true
 }
 
-fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_personas(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let mut seen = HashSet::new();
     for (i, persona) in model.personas.iter().enumerate() {
         let path = format!("personas[{}]", i);
 
         // Duplicate name check
         if !seen.insert(&persona.name) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("duplicate persona name '{}'", persona.name),
             });
@@ -3440,7 +3440,7 @@ fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
         // Name must be non-empty
         if persona.name.is_empty() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: "persona name must not be empty".to_string(),
             });
@@ -3448,7 +3448,7 @@ fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
         // Weight must be positive
         if persona.weight <= 0.0 {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "persona '{}' has weight {} which must be > 0",
@@ -3459,7 +3459,7 @@ fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
         // Weight must be finite
         if !persona.weight.is_finite() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("persona '{}' has non-finite weight", persona.name),
             });
@@ -3467,7 +3467,7 @@ fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
 
         // Traits should not be empty
         if persona.traits.is_empty() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(
                     "persona '{}' has empty traits; at least one trait is required",
@@ -3478,7 +3478,7 @@ fn validate_personas(model: &DataModel, errors: &mut Vec<SchemaError>) {
     }
 }
 
-fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     let names = entity_names(model);
     let mut seen = HashSet::new();
     for (i, ar) in model.actor_relationships.iter().enumerate() {
@@ -3486,7 +3486,7 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
 
         // Duplicate name check
         if !seen.insert(&ar.name) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("duplicate actor_relationship name '{}'", ar.name),
             });
@@ -3494,7 +3494,7 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
 
         // Name must be non-empty
         if ar.name.is_empty() {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: "actor_relationship name must not be empty".to_string(),
             });
@@ -3502,13 +3502,13 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
 
         // from_entity must exist and be an actor
         if !names.contains(ar.from_entity.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("from_entity '{}' references unknown entity", ar.from_entity),
             });
         } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.from_entity) {
             if !entity.actor {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "from_entity '{}' is not marked as actor = true",
@@ -3520,13 +3520,13 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
 
         // to_entity must exist and be an actor
         if !names.contains(ar.to_entity.as_str()) {
-            errors.push(SchemaError::Validation {
+            errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!("to_entity '{}' references unknown entity", ar.to_entity),
             });
         } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.to_entity) {
             if !entity.actor {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!("to_entity '{}' is not marked as actor = true", ar.to_entity),
                 });
@@ -3536,7 +3536,7 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
         // avg_degree param (if present) must be positive and finite
         if let Some(&avg_degree) = ar.params.get("avg_degree") {
             if !avg_degree.is_finite() || avg_degree <= 0.0 {
-                errors.push(SchemaError::Validation {
+                errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
                         "actor_relationship '{}' has avg_degree {} which must be a finite value > 0",
@@ -3550,7 +3550,7 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<SchemaError>
 
 /// Detect dependency cycles among derived, relative, and conditional fields
 /// within each entity. Reports the cycle path if found.
-fn validate_dependency_cycles(model: &DataModel, errors: &mut Vec<SchemaError>) {
+fn validate_dependency_cycles(model: &DataModel, errors: &mut Vec<BlueprintError>) {
     for entity in &model.entities {
         // Build adjacency: field_name → set of field names it depends on (owned)
         let mut deps: HashMap<String, Vec<String>> = HashMap::new();
@@ -3573,7 +3573,7 @@ fn validate_dependency_cycles(model: &DataModel, errors: &mut Vec<SchemaError>) 
                 let mut path = Vec::new();
                 if has_cycle(name, &deps, &mut visited, &mut stack, &mut path) {
                     path.reverse();
-                    errors.push(SchemaError::Validation {
+                    errors.push(BlueprintError::Validation {
                         path: format!("entities.{}", entity.name),
                         message: format!(
                             "dependency cycle detected: {}",
@@ -3718,7 +3718,7 @@ mod tests {
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
-            schema_version: "1.0".to_string(),
+            blueprint_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
@@ -3740,7 +3740,7 @@ mod tests {
         model.entities.push(model.entities[0].clone());
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate entity"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate entity"))
         }));
     }
 
@@ -3760,7 +3760,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate field"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate field"))
         }));
     }
 
@@ -3770,7 +3770,7 @@ mod tests {
         model.entities[0].fields[1].primary_key = Some(true);
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("primary keys"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("primary keys"))
         }));
     }
 
@@ -3795,7 +3795,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown entity 'order'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("unknown entity 'order'"))
         }));
     }
 
@@ -3844,7 +3844,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("foreign_key 'user_id'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("foreign_key 'user_id'"))
         }));
     }
 
@@ -3894,7 +3894,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("has no primary key"))
         }));
     }
@@ -3959,7 +3959,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("does not match target entity"))
         }));
     }
@@ -4025,7 +4025,7 @@ mod tests {
         let errors = validate(&model);
         // Should produce no relationship-related errors
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("does not match target entity") || message.contains("has no primary key"))
         }));
     }
@@ -4077,7 +4077,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("has no primary key"))
         }));
     }
@@ -4102,7 +4102,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown entity 'nonexistent'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("unknown entity 'nonexistent'"))
         }));
     }
 
@@ -4126,10 +4126,10 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("null_rate"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("null_rate"))
         }));
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate_rate"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate_rate"))
         }));
     }
 
@@ -4150,7 +4150,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown entity 'nonexistent'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("unknown entity 'nonexistent'"))
         }));
     }
 
@@ -4171,7 +4171,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("matrix"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("matrix"))
         }));
     }
 
@@ -4212,7 +4212,7 @@ mod tests {
         model.relationships.push(rel);
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate relationship"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate relationship"))
         }));
     }
 
@@ -4238,7 +4238,7 @@ mod tests {
         model.noise_profiles.push(noise);
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate noise profile"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate noise profile"))
         }));
     }
 
@@ -4267,7 +4267,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("min < max"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("min < max"))
         }));
     }
 
@@ -4297,7 +4297,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("binomial"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("binomial"))
             }),
             "expected no binomial errors, got: {:?}",
             errors
@@ -4329,7 +4329,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("binomial") && message.contains("'p'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("binomial") && message.contains("'p'"))
         }));
     }
 
@@ -4362,7 +4362,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("triangular") && message.contains("min < max"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("triangular") && message.contains("min < max"))
         }));
     }
 
@@ -4391,7 +4391,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("zipf") && message.contains("'n'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("zipf") && message.contains("'n'"))
         }));
     }
 
@@ -4421,7 +4421,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("beta"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("beta"))
             }),
             "expected no beta errors, got: {:?}",
             errors
@@ -4453,7 +4453,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("zipf") && message.contains("integer"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("zipf") && message.contains("integer"))
         }));
     }
 
@@ -4465,7 +4465,7 @@ mod tests {
         model.entities[0].count = CountSpec::Range { min: 100, max: 10 };
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("min <= max"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("min <= max"))
         }));
     }
 
@@ -4476,7 +4476,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("range"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("range"))
             }),
             "Range min=0 should be valid, got: {:?}",
             errors
@@ -4494,7 +4494,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("normal") && message.contains("mean"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("normal") && message.contains("mean"))
         }));
     }
 
@@ -4523,7 +4523,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence step must not be 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("sequence step must not be 0"))
         }));
     }
 
@@ -4550,7 +4550,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("values must not be empty"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("values must not be empty"))
         }));
     }
 
@@ -4577,7 +4577,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("mutually exclusive"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("mutually exclusive"))
         }));
     }
 
@@ -4604,7 +4604,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("'cycle' requires 'values'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("'cycle' requires 'values'"))
         }));
     }
 
@@ -4631,7 +4631,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("values") || message.contains("cycle"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("values") || message.contains("cycle"))
         }));
     }
 
@@ -4658,7 +4658,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("requires data_type 'string'"))
         }));
     }
@@ -4686,7 +4686,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("sequence") && message.contains("compatible"))
         }));
     }
@@ -4714,7 +4714,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("not a valid date"))
         }));
     }
@@ -4742,7 +4742,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("temporal sequence"))
         }));
     }
@@ -4763,7 +4763,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("oneOf requires at least one choice"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("oneOf requires at least one choice"))
         }));
     }
 
@@ -4786,7 +4786,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown faker method 'bogus'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("unknown faker method 'bogus'"))
         }));
     }
 
@@ -4810,7 +4810,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("faker"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("faker"))
             }),
             "expected no faker errors, got: {:?}",
             errors
@@ -4833,7 +4833,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("only UUID version 4 is supported"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("only UUID version 4 is supported"))
         }));
     }
 
@@ -4862,7 +4862,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("start_hour < end_hour"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("start_hour < end_hour"))
         }));
     }
 
@@ -4892,7 +4892,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("business_hours"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("business_hours"))
             }),
             "expected no business_hours errors, got: {:?}",
             errors
@@ -4924,7 +4924,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("mutually exclusive"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("mutually exclusive"))
         }));
     }
 
@@ -4953,7 +4953,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid timezone"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("invalid timezone"))
         }));
     }
 
@@ -4982,7 +4982,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("mutually exclusive"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("mutually exclusive"))
         }));
     }
 
@@ -5011,7 +5011,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid day name"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("invalid day name"))
         }));
     }
 
@@ -5043,7 +5043,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("date_range.min must be before"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("date_range.min must be before"))
         }));
     }
 
@@ -5076,7 +5076,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("date_range"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("date_range"))
             }),
             "single-day date_range should be valid, but got: {:?}",
             errors
@@ -5108,7 +5108,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid exclude_date"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("invalid exclude_date"))
         }));
     }
 
@@ -5131,7 +5131,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("lookup references unknown entity 'nonexistent'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("lookup references unknown entity 'nonexistent'"))
         }));
     }
 
@@ -5161,7 +5161,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("normal") && message.contains("mean"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("normal") && message.contains("mean"))
         }));
     }
 
@@ -5184,7 +5184,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("relative cannot reference itself"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("relative cannot reference itself"))
         }));
     }
 
@@ -5232,7 +5232,7 @@ mod tests {
         // Should have no errors for valid distribution offset
         let rel_errors: Vec<_> = errors
             .iter()
-            .filter(|e| matches!(e, SchemaError::Validation { message, .. } if message.contains("relative")))
+            .filter(|e| matches!(e, BlueprintError::Validation { message, .. } if message.contains("relative")))
             .collect();
         assert!(rel_errors.is_empty(), "unexpected errors: {rel_errors:?}");
     }
@@ -5273,7 +5273,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("not supported"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("not supported"))
         }));
     }
 
@@ -5313,7 +5313,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("exceeds max"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("exceeds max"))
         }));
     }
 
@@ -5351,7 +5351,7 @@ mod tests {
         let errors = validate(&model);
         let rel_errors: Vec<_> = errors
             .iter()
-            .filter(|e| matches!(e, SchemaError::Validation { message, .. } if message.contains("relative")))
+            .filter(|e| matches!(e, BlueprintError::Validation { message, .. } if message.contains("relative")))
             .collect();
         assert!(rel_errors.is_empty(), "unexpected errors: {rel_errors:?}");
     }
@@ -5386,7 +5386,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("must be numeric"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("must be numeric"))
         }));
     }
 
@@ -5426,7 +5426,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("not a valid duration"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("not a valid duration"))
         }));
     }
 
@@ -5452,7 +5452,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("conditional cannot reference its own field"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("conditional cannot reference its own field"))
         }));
     }
 
@@ -5509,7 +5509,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("lookup cannot be nested"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("lookup cannot be nested"))
         }));
     }
 
@@ -5519,7 +5519,7 @@ mod tests {
         model.entities[0].fields[0].nullable = NullSpec::Probability(1.5);
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("null probability"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("null probability"))
         }));
     }
 
@@ -5530,7 +5530,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("null"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("null"))
             }),
             "expected no null errors, got: {:?}",
             errors
@@ -5543,7 +5543,7 @@ mod tests {
         model.entities[0].fields[0].nullable = NullSpec::Pattern { every_n: 0 };
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("every_n must be > 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("every_n must be > 0"))
         }));
     }
 
@@ -5570,7 +5570,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("is not compatible with data_type"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("is not compatible with data_type"))
         }));
     }
 
@@ -5593,7 +5593,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("faker generator produces strings"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("faker generator produces strings"))
         }));
     }
 
@@ -5613,7 +5613,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("uuid generator is not compatible"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("uuid generator is not compatible"))
         }));
     }
 
@@ -5640,7 +5640,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence generator is not compatible"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("sequence generator is not compatible"))
         }));
     }
 
@@ -5667,7 +5667,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("sequence generator is not compatible"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("sequence generator is not compatible"))
         }));
     }
 
@@ -5689,7 +5689,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("pattern generator produces strings"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("pattern generator produces strings"))
         }));
     }
 
@@ -5742,7 +5742,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("not marked as actor"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("not marked as actor"))
         }));
     }
 
@@ -5778,7 +5778,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("actor_ref generator produces key values"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("actor_ref generator produces key values"))
         }));
     }
 
@@ -5801,7 +5801,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown actor_relationship"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("unknown actor_relationship"))
         }));
     }
 
@@ -5825,7 +5825,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("actor_temporal generator produces temporal values"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("actor_temporal generator produces temporal values"))
         }));
     }
 
@@ -5846,7 +5846,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate persona name"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate persona name"))
         }));
     }
 
@@ -5860,7 +5860,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("weight") && message.contains("must be > 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("weight") && message.contains("must be > 0"))
         }));
     }
 
@@ -5874,7 +5874,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("empty traits"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("empty traits"))
         }));
     }
 
@@ -5892,7 +5892,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("from_entity") && message.contains("unknown entity"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("from_entity") && message.contains("unknown entity"))
         }));
     }
 
@@ -5924,7 +5924,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("not marked as actor"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("not marked as actor"))
         }));
     }
 
@@ -5956,7 +5956,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("avg_degree") && message.contains("must be a finite value > 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("avg_degree") && message.contains("must be a finite value > 0"))
         }));
     }
 
@@ -5998,7 +5998,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("persona") || message.contains("actor_relationship"))
         }));
     }
@@ -6013,7 +6013,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("name must not be empty"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("name must not be empty"))
         }));
     }
 
@@ -6027,7 +6027,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("non-finite weight"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("non-finite weight"))
         }));
     }
 
@@ -6068,7 +6068,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("duplicate actor_relationship name"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("duplicate actor_relationship name"))
         }));
     }
 
@@ -6100,7 +6100,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("avg_degree") && message.contains("finite"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("avg_degree") && message.contains("finite"))
         }));
     }
 
@@ -6130,7 +6130,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after references unknown entity"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("temporal_after references unknown entity"))
         }));
     }
 
@@ -6194,7 +6194,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.field") && message.contains("not found"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("temporal_after.field") && message.contains("not found"))
         }));
     }
 
@@ -6271,7 +6271,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.field") && message.contains("must be a temporal type"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("temporal_after.field") && message.contains("must be a temporal type"))
         }));
     }
 
@@ -6337,7 +6337,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("temporal_after.fk") && message.contains("not found"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("temporal_after.fk") && message.contains("not found"))
         }));
     }
 
@@ -6365,7 +6365,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
         }));
     }
 
@@ -6393,7 +6393,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_gap_minutes must be a finite number > 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("burst.avg_gap_minutes must be a finite number > 0"))
         }));
     }
 
@@ -6421,7 +6421,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("burst.avg_events must be a finite number > 0"))
         }));
     }
 
@@ -6446,7 +6446,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("unknown field") && message.contains("first_name"))
             }),
             "expected error about unknown field 'first_name', got: {errors:?}"
@@ -6472,7 +6472,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("references itself"))
             }),
             "expected self-reference error, got: {errors:?}"
@@ -6499,7 +6499,7 @@ mod tests {
         // Legacy template with valid field should not produce errors
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("not a valid expression")
                        || message.contains("unknown field"))
             }),
@@ -6526,7 +6526,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("unknown field") && message.contains("naem"))
             }),
             "legacy template with typo should be flagged, got: {errors:?}"
@@ -6553,7 +6553,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("not a valid expression"))
             }),
             "expected invalid expression error, got: {errors:?}"
@@ -6595,7 +6595,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("dependency cycle"))
             }),
             "expected cycle detection error, got: {errors:?}"
@@ -6658,7 +6658,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. }
+                matches!(e, BlueprintError::Validation { message, .. }
                     if message.contains("dependency cycle"))
             }),
             "chain should not be flagged as cycle, got: {errors:?}"
@@ -6711,7 +6711,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("invalid scope expression"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("invalid scope expression"))
         }));
     }
 
@@ -6738,7 +6738,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("scope expression references unknown field"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("scope expression references unknown field"))
         }));
     }
 
@@ -6766,7 +6766,7 @@ mod tests {
         let errors = validate(&model);
         // Should have no scope-related errors (email is a valid field in minimal model)
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("scope"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("scope"))
         }));
     }
 
@@ -6804,13 +6804,13 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("acyclic") && message.contains("self-referential"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("acyclic") && message.contains("self-referential"))
         }));
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("root_probability") && message.contains("self-referential"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("root_probability") && message.contains("self-referential"))
         }));
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("max_depth") && message.contains("self-referential"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("max_depth") && message.contains("self-referential"))
         }));
     }
 
@@ -6834,7 +6834,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("root_probability") && message.contains("(0.0, 1.0]"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("root_probability") && message.contains("(0.0, 1.0]"))
         }));
     }
 
@@ -6858,7 +6858,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("max_depth") && message.contains(">= 1"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("max_depth") && message.contains(">= 1"))
         }));
     }
 
@@ -6882,7 +6882,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("nullable = true"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("nullable = true"))
         }));
     }
 
@@ -6906,7 +6906,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("acyclic") || message.contains("root_probability") || message.contains("max_depth"))
         }));
     }
@@ -6962,7 +6962,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("many_to_many") && message.contains("not yet supported"))
         }));
     }
@@ -7016,7 +7016,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("conflicts with existing field"))
         }));
     }
@@ -7092,7 +7092,7 @@ mod tests {
         let errors = validate(&model);
         // No edge-property-related errors
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("edge property"))
         }));
     }
@@ -7154,7 +7154,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("duplicate edge property name"))
         }));
     }
@@ -7224,7 +7224,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("conditional_distribution"))
         }));
     }
@@ -7251,7 +7251,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("requires 'dependent'"))
         }));
     }
@@ -7278,7 +7278,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("requires 'given'"))
         }));
     }
@@ -7305,7 +7305,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("must differ"))
         }));
     }
@@ -7327,7 +7327,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("at least one distribution"))
         }));
     }
@@ -7349,7 +7349,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("unknown correlation type"))
         }));
     }
@@ -7384,7 +7384,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("duplicate 'when'"))
         }));
     }
@@ -7411,7 +7411,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. }
+            matches!(e, BlueprintError::Validation { message, .. }
                 if message.contains("cannot use 'fields'") || message.contains("cannot use 'matrix'"))
         }));
     }
@@ -7461,7 +7461,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("dates must not be empty"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("dates must not be empty"))
         }));
     }
 
@@ -7508,7 +7508,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("not a valid YYYY-MM-DD"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("not a valid YYYY-MM-DD"))
         }));
     }
 
@@ -7537,7 +7537,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("requires a timestamp_field"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("requires a timestamp_field"))
         }));
     }
 
@@ -7584,7 +7584,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("multiplier must not be zero"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("multiplier must not be zero"))
         }));
     }
 
@@ -7597,7 +7597,7 @@ mod tests {
         let errors = validate(&model);
         assert!(
             !errors.iter().any(|e| {
-                matches!(e, SchemaError::Validation { message, .. } if message.contains("constraint"))
+                matches!(e, BlueprintError::Validation { message, .. } if message.contains("constraint"))
             }),
             "expected no constraint errors, got: {:?}",
             errors
@@ -7612,7 +7612,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("unknown field 'nonexistent'"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("unknown field 'nonexistent'"))
         }));
     }
 
@@ -7624,7 +7624,7 @@ mod tests {
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
-            matches!(e, SchemaError::Validation { message, .. } if message.contains("must not be empty"))
+            matches!(e, BlueprintError::Validation { message, .. } if message.contains("must not be empty"))
         }));
     }
 }

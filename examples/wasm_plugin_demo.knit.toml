@@ -7,10 +7,10 @@
 #   cd examples/wasm_plugin && cargo build --target wasm32-wasip1 --release
 #
 # Then generate:
-#   knit generate examples/wasm_plugin_demo.weave.toml -o output \
+#   knit generate examples/wasm_plugin_demo.knit.toml -o output \
 #     --plugin examples/wasm_plugin/target/wasm32-wasip1/release/knit_example_wasm_plugin.wasm
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "wasm_plugin_demo"

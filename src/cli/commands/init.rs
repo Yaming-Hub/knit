@@ -1,6 +1,6 @@
-//! `knit init` — scaffold a new `schema.weave.toml` schema file.
+//! `knit init` — scaffold a new `schema.knit.toml` blueprint file.
 //!
-//! Creates a minimal, well-commented starter schema that the user can
+//! Creates a minimal, well-commented Starter blueprint that the user can
 //! populate with their own data model. Optionally copies from a template
 //! path (file or directory) provided by the user.
 
@@ -59,8 +59,8 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
                 let file_name_str = file_name.to_string_lossy();
 
                 if entry.file_type()?.is_file() {
-                    let dest_file = if file_name_str.ends_with(".weave.toml") && !found_schema {
-                        // First .weave.toml becomes the output schema
+                    let dest_file = if file_name_str.ends_with(".knit.toml") && !found_schema {
+                        // First .knit.toml becomes the output schema
                         found_schema = true;
                         dest.to_path_buf()
                     } else {
@@ -73,7 +73,7 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
             }
             if !found_schema {
                 bail!(
-                    "template directory '{}' contains no .weave.toml schema file",
+                    "template directory '{}' contains no .knit.toml blueprint file",
                     src.display()
                 );
             }
@@ -139,7 +139,7 @@ fn generate_scaffold() -> String {
     r#"# Knit Schema — Data Model Definition
 # See: https://github.com/Yaming-Hub/knit/blob/main/docs/weave-spec.md
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "my_dataset"
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn scaffold_contains_required_fields() {
         let schema = generate_scaffold();
-        assert!(schema.contains("schema_version"));
+        assert!(schema.contains("blueprint_version"));
         assert!(schema.contains("[model]"));
         assert!(schema.contains("[[entities]]"));
         assert!(schema.contains("[[entities.fields]]"));
@@ -247,12 +247,12 @@ mod tests {
     #[test]
     fn run_creates_scaffold() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("test.weave.toml");
+        let path = dir.path().join("test.knit.toml");
         let path_str = path.to_str().unwrap();
         run(path_str, None).unwrap();
         assert!(path.exists());
         let content = fs::read_to_string(&path).unwrap();
-        assert!(content.contains("schema_version"));
+        assert!(content.contains("blueprint_version"));
     }
 
     #[test]
@@ -260,14 +260,14 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         // Create a fake template file
         let template_dir = tempfile::tempdir().unwrap();
-        let template_file = template_dir.path().join("my.weave.toml");
+        let template_file = template_dir.path().join("my.knit.toml");
         fs::write(
             &template_file,
-            "schema_version = \"1.0\"\n[model]\nname = \"test\"",
+            "blueprint_version = \"1.0\"\n[model]\nname = \"test\"",
         )
         .unwrap();
 
-        let dest = dir.path().join("output.weave.toml");
+        let dest = dir.path().join("output.knit.toml");
         run(
             dest.to_str().unwrap(),
             Some(template_file.to_str().unwrap()),
@@ -284,13 +284,13 @@ mod tests {
         // Create a template directory with schema + sidecar
         let template_dir = tempfile::tempdir().unwrap();
         fs::write(
-            template_dir.path().join("schema.weave.toml"),
-            "schema_version = \"1.0\"\n[model]\nname = \"from_dir\"",
+            template_dir.path().join("schema.knit.toml"),
+            "blueprint_version = \"1.0\"\n[model]\nname = \"from_dir\"",
         )
         .unwrap();
         fs::write(template_dir.path().join("words.dict.txt"), "hello\nworld").unwrap();
 
-        let dest = dir.path().join("out.weave.toml");
+        let dest = dir.path().join("out.knit.toml");
         run(
             dest.to_str().unwrap(),
             Some(template_dir.path().to_str().unwrap()),
@@ -306,8 +306,8 @@ mod tests {
     #[test]
     fn run_template_path_not_found() {
         let dir = tempfile::tempdir().unwrap();
-        let dest = dir.path().join("out.weave.toml");
-        let result = run(dest.to_str().unwrap(), Some("/nonexistent/path.weave.toml"));
+        let dest = dir.path().join("out.knit.toml");
+        let result = run(dest.to_str().unwrap(), Some("/nonexistent/path.knit.toml"));
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("does not exist"));
@@ -325,15 +325,15 @@ mod tests {
     #[test]
     fn run_file_template_copies_sidecars() {
         let template_dir = tempfile::tempdir().unwrap();
-        let template_file = template_dir.path().join("app.weave.toml");
-        fs::write(&template_file, "schema_version = \"1.0\"").unwrap();
+        let template_file = template_dir.path().join("app.knit.toml");
+        fs::write(&template_file, "blueprint_version = \"1.0\"").unwrap();
         fs::write(template_dir.path().join("names.dict.txt"), "alice\nbob").unwrap();
         fs::write(template_dir.path().join("data.csv"), "a,b\n1,2").unwrap();
         // Non-sidecar files should NOT be copied
         fs::write(template_dir.path().join("readme.md"), "# docs").unwrap();
 
         let dest_dir = tempfile::tempdir().unwrap();
-        let dest = dest_dir.path().join("schema.weave.toml");
+        let dest = dest_dir.path().join("schema.knit.toml");
         run(
             dest.to_str().unwrap(),
             Some(template_file.to_str().unwrap()),
@@ -351,13 +351,13 @@ mod tests {
         fs::write(template_dir.path().join("words.dict.txt"), "hello").unwrap();
 
         let dest_dir = tempfile::tempdir().unwrap();
-        let dest = dest_dir.path().join("out.weave.toml");
+        let dest = dest_dir.path().join("out.knit.toml");
         let result = run(
             dest.to_str().unwrap(),
             Some(template_dir.path().to_str().unwrap()),
         );
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("no .weave.toml"));
+        assert!(err.contains("no .knit.toml"));
     }
 }

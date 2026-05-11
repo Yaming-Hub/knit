@@ -3,7 +3,7 @@
 
 mod common;
 use common::{example_schemas, generate_from_file, total_rows};
-use knit::schema::parse_toml_file;
+use knit::blueprint::parse_toml_file;
 
 #[test]
 fn generate_ecommerce_schema() {
@@ -14,7 +14,7 @@ fn generate_ecommerce_schema() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("ecommerce"))
         })
-        .expect("ecommerce.weave.toml not found");
+        .expect("ecommerce.knit.toml not found");
 
     let model = parse_toml_file(&path).unwrap();
     let batches = generate_from_file(&path);
@@ -66,7 +66,7 @@ fn generate_iot_sensors_schema() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("iot"))
         })
-        .expect("iot_sensors.weave.toml not found");
+        .expect("iot_sensors.knit.toml not found");
 
     let model = parse_toml_file(&path).unwrap();
     let batches = generate_from_file(&path);
@@ -106,7 +106,7 @@ fn generate_server_logs_schema() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("server_logs"))
         })
-        .expect("server_logs.weave.toml not found");
+        .expect("server_logs.knit.toml not found");
 
     let model = parse_toml_file(&path).unwrap();
     let batches = generate_from_file(&path);
@@ -136,7 +136,7 @@ fn generate_financial_schema() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("financial"))
         })
-        .expect("financial.weave.toml not found");
+        .expect("financial.knit.toml not found");
 
     let model = parse_toml_file(&path).unwrap();
     let batches = generate_from_file(&path);
@@ -166,7 +166,7 @@ fn generate_hr_org_schema() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("hr_org"))
         })
-        .expect("hr_org.weave.toml not found");
+        .expect("hr_org.knit.toml not found");
 
     let model = parse_toml_file(&path).unwrap();
     let batches = generate_from_file(&path);

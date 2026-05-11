@@ -9,7 +9,7 @@
 # With Zipf degree: a few "power users" receive disproportionately
 # many orders, following a power-law distribution.
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "degree_distribution"

@@ -15,7 +15,7 @@
 - [5. Phase 1b: Actor Identity Resolution (Learn)](#5-phase-1b-actor-identity-resolution-learn)
 - [6. Phase 2: Behavioral Profiling (Learn)](#6-phase-2-behavioral-profiling-learn)
 - [7. Phase 3: Relationship Discovery (Learn)](#7-phase-3-relationship-discovery-learn)
-- [8. Phase 4: Schema Modeling (Core/Schema)](#8-phase-4-schema-modeling-coreschema)
+- [8. Phase 4: Blueprint Modeling (Core/Blueprint)](#8-phase-4-blueprint-modeling-coreblueprint)
 - [9. Phase 5: Profile-Driven Generation (Gen)](#9-phase-5-profile-driven-generation-gen)
 - [10. Phase 6: Relationship-Driven Generation (Gen)](#10-phase-6-relationship-driven-generation-gen)
 - [11. Data Model Extensions](#11-data-model-extensions)
@@ -92,7 +92,7 @@ flowchart TB
         relgraph[Phase: Relationship\nGraph Discovery]
     end
 
-    subgraph Model["Weave Schema (extended)"]
+    subgraph Model["knit blueprint (extended)"]
         personas[Persona\nDefinitions]
         actorspec[Actor Entity\nSpecification]
         relmodel[Relationship\nGraph Model]
@@ -241,7 +241,7 @@ a full actor×feature pivot in memory:
   - Running count + min/max timestamp for temporal span
 
 **Memory budget:** `O(num_actors × feature_size)` where feature_size is bounded
-(~500 bytes per actor for typical schemas). For 100K actors ≈ 50MB.
+(~500 bytes per actor for typical blueprints). For 100K actors ≈ 50MB.
 
 **Incremental compatibility:** Actor accumulators serialize into the state file.
 New data chunks update existing accumulators. Persona clustering runs only at
@@ -359,11 +359,11 @@ Beyond pairwise relationships, analyze graph-level properties:
 - **Community detection** — identify sub-groups (departments, teams) using Louvain/modularity
 - **Hierarchy depth** — longest path in directed acyclic sub-graphs
 
-These properties become parameters for the relationship model in the schema.
+These properties become parameters for the relationship model in the blueprint.
 
 ---
 
-## 7. Phase 4: Schema Modeling (Core/Schema)
+## 7. Phase 4: Blueprint Modeling (Core/Blueprint)
 
 ### 7.1 New Weave Language Constructs
 
@@ -590,7 +590,7 @@ pub struct Field {
 
 ```bash
 # Learn with human behavior analysis enabled
-knit learn data/ --actors --output schema.weave.toml
+knit learn data/ --actors --output blueprint.knit.toml
 
 # Specify actor columns explicitly (skip auto-detection)
 knit learn data/ --actor-column sender_id --actor-column receiver_id
@@ -601,7 +601,7 @@ knit learn data/ --actors --personas 5
 
 ### 11.2 Generate Command
 
-No new flags needed — if the schema contains persona/actor definitions,
+No new flags needed — if the blueprint contains persona/actor definitions,
 the generator automatically uses profile-driven generation.
 
 ### 11.3 Inspect Command Extensions
@@ -644,10 +644,10 @@ knit inspect state.json --actors
 ### 12.3 Example Datasets
 
 Example datasets that exercise human behavioral modeling:
-- `examples/email_traffic.weave.toml` — messaging with sender/receiver personas
-- `examples/hr_org.weave.toml` — hierarchical org with manager relationships and activity-driven tasks
-- `examples/ecommerce_behavioral.weave.toml` — customer behavioral segments with persona-driven purchasing
-- `examples/social_platform.weave.toml` — social network with graphs, actor_temporal patterns, and burst sessions
+- `examples/email_traffic.knit.toml` — messaging with sender/receiver personas
+- `examples/hr_org.knit.toml` — hierarchical org with manager relationships and activity-driven tasks
+- `examples/ecommerce_behavioral.knit.toml` — customer behavioral segments with persona-driven purchasing
+- `examples/social_platform.knit.toml` — social network with graphs, actor_temporal patterns, and burst sessions
 
 ---
 
@@ -667,7 +667,7 @@ deep learning.
 
 ### 13.2 Persona Granularity
 
-**Decision:** Personas are per-schema, not per-entity.
+**Decision:** Personas are per-blueprint, not per-entity.
 
 **Rationale:**
 - A "power user" should behave consistently across all entities they appear in
@@ -688,13 +688,13 @@ selected based on learned graph properties.
 
 ### 13.4 Backward Compatibility
 
-**Decision:** All new schema fields are optional. Existing schemas continue to work
+**Decision:** All new blueprint fields are optional. Existing blueprints continue to work
 without modification.
 
 **Rationale:**
 - No breaking changes to existing users
 - Human behavioral modeling is an opt-in enhancement
-- Schemas without personas generate data the same way as before
+- Blueprints without personas generate data the same way as before
 
 ### 13.5 Incremental Learning Compatibility
 

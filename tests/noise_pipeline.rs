@@ -10,7 +10,7 @@ use knit::noise::{NullInjector, PerturbConfig, Pipeline};
 
 /// Schema with a noise profile that injects nulls into the `value` column.
 const NOISY_SCHEMA: &str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "noise_test"
@@ -58,7 +58,7 @@ null_rate = 0.10
 
 /// Same schema without noise for comparison.
 const CLEAN_SCHEMA: &str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "noise_test_clean"
@@ -122,8 +122,8 @@ fn clean_schema_produces_no_nulls_in_value_column() {
 
 #[test]
 fn noise_profile_parsed_correctly() {
-    let model = knit::schema::parse_toml(NOISY_SCHEMA).expect("parse failed");
-    let errors = knit::schema::validate(&model);
+    let model = knit::blueprint::parse_toml(NOISY_SCHEMA).expect("parse failed");
+    let errors = knit::blueprint::validate(&model);
     assert!(errors.is_empty(), "validation errors: {errors:?}");
 
     assert_eq!(model.noise_profiles.len(), 1);

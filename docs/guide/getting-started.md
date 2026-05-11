@@ -1,6 +1,6 @@
 # Getting Started with Knit
 
-This tutorial walks you through installing Knit, writing your first schema,
+This tutorial walks you through installing Knit, writing your first blueprint,
 and generating synthetic data — all in under 10 minutes.
 
 **[← Back to User Guide](index.md)**
@@ -35,17 +35,17 @@ knit --version
 
 ---
 
-## Your First Schema
+## Your First Blueprint
 
-A Knit schema is a `.weave.toml` file that declares your data model: entities
+A knit blueprint is a `.knit.toml` file that declares your data model: entities
 (tables), fields (columns), and how to generate values for each field.
 
-### Step 1: Create the Schema File
+### Step 1: Create the Blueprint File
 
-Create a file called `my_first.weave.toml`:
+Create a file called `my_first.knit.toml`:
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "my_first_dataset"
@@ -90,31 +90,31 @@ std_dev = 10.0
 
 Let's break down what each section does:
 
-- **`schema_version`** — Declares the schema format version.
+- **`blueprint_version`** — Declares the blueprint format version.
 - **`[model]`** — Names your dataset and sets a seed for deterministic output.
 - **`[[entities]]`** — Defines a table called `customers` with 100 rows.
 - **`[[entities.fields]]`** — Defines columns. Each field has a `name`,
   `data_type`, and a `[generator]` that controls how values are produced.
 
-### Step 2: Validate the Schema
+### Step 2: Validate the Blueprint
 
-Before generating, check that your schema is well-formed:
+Before generating, check that your blueprint is well-formed:
 
 ```bash
-knit validate my_first.weave.toml
+knit validate my_first.knit.toml
 ```
 
-Expected output for a valid schema:
+Expected output for a valid blueprint:
 
 ```
-✓ Schema is valid (1 entity, 3 fields)
+✓ Blueprint is valid (1 entity, 3 fields)
 ```
 
 If there are errors, Knit reports the exact location and a suggestion:
 
 ```
 error[E0301]: unknown generator type "sequnce"
-  --> my_first.weave.toml:12:8
+  --> my_first.knit.toml:12:8
    |
    = help: did you mean "sequence"?
 ```
@@ -124,7 +124,7 @@ error[E0301]: unknown generator type "sequnce"
 See what Knit will do without generating any data:
 
 ```bash
-knit plan my_first.weave.toml
+knit plan my_first.knit.toml
 ```
 
 This shows the entity ordering, row counts, generator assignments, and
@@ -135,7 +135,7 @@ estimated output size.
 Generate the data in Parquet format (the default):
 
 ```bash
-knit generate my_first.weave.toml --output ./output
+knit generate my_first.knit.toml --output ./output
 ```
 
 You'll see a progress bar:
@@ -157,23 +157,23 @@ output/
 To generate CSV instead:
 
 ```bash
-knit generate my_first.weave.toml --output ./output --format csv
+knit generate my_first.knit.toml --output ./output --format csv
 ```
 
 Or JSON:
 
 ```bash
-knit generate my_first.weave.toml --output ./output --format json
+knit generate my_first.knit.toml --output ./output --format json
 ```
 
 ### Step 6: Change the Seed
 
-The `seed` in the schema ensures deterministic output — the same seed always
+The `seed` in the blueprint ensures deterministic output — the same seed always
 produces identical data. Override it from the command line to get different data:
 
 ```bash
 # Different seed → different data
-knit generate my_first.weave.toml --output ./output --seed 123
+knit generate my_first.knit.toml --output ./output --seed 123
 ```
 
 ---
@@ -184,7 +184,7 @@ Real datasets have multiple related tables. Let's add an `orders` entity that
 references `customers`:
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "my_first_dataset"
@@ -283,7 +283,7 @@ foreign_key = "customer_id"
 Generate the two-table dataset:
 
 ```bash
-knit generate my_first.weave.toml --output ./output --format csv
+knit generate my_first.knit.toml --output ./output --format csv
 ```
 
 Output:
@@ -301,8 +301,8 @@ Every `customer_id` in `orders.csv` points to a valid `id` in `customers.csv`
 
 ## What's Next?
 
-- **[Schema Language Tutorial](schema-language.md)** — Deep dive into all
+- **[Blueprint Language Tutorial](blueprint-language.md)** — Deep dive into all
   generators, data types, relationships, and advanced features
 - **[CLI Reference](cli-reference.md)** — Every command and flag
-- **[Examples Walkthrough](examples.md)** — Learn from the five bundled schemas
+- **[Examples Walkthrough](examples.md)** — Learn from the five bundled blueprints
 - **[Noise Injection Guide](noise.md)** — Add realistic data quality issues

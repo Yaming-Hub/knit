@@ -22,8 +22,10 @@ target
 
 # Generated data output
 data/
+*.knit.toml
 *.weave.toml
-!examples/*.weave.toml
+!examples/*.knit.toml
+*.weave.toml
 e2e_test/
 test_full_e2e.toml
 
@@ -34,7 +36,7 @@ e2e_jsonl/
 e2e_parquet/
 e2e_audit/
 roundtrip_out/
-roundtrip.weave.toml
+roundtrip.knit.toml
 test_e2e_output/
 test_schema.toml
 test_e2e.toml

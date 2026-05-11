@@ -2,8 +2,8 @@
 
 **High-performance synthetic data generation toolkit.**
 
-Knit generates realistic, schema-driven synthetic datasets at scale. Define your
-data model in a declarative TOML or JSON schema, and Knit handles execution
+Knit generates realistic, blueprint-driven synthetic datasets at scale. Define your
+data model in a declarative TOML or JSON blueprint, and Knit handles execution
 planning, deterministic generation, output formatting, and optional noise
 injection — all from a single CLI command.
 
@@ -29,8 +29,8 @@ cargo build --release
 
 ## Features
 
-- **Declarative schema language** — Define entities, fields, generators, and
-  relationships in `.weave.toml` files with inheritance via `extends`,
+- **Declarative blueprint language** — Define entities, fields, generators, and
+  relationships in `.knit.toml` files with inheritance via `extends`,
   modular composition via `include`, reusable field groups via `mixins`,
   and custom domain types.
 - **Rich generator library** — Sequences (with jitter and cyclic values),
@@ -57,7 +57,7 @@ cargo build --release
   lattice, stochastic block, configuration, complete) with edge properties,
   degree distributions, self-referential hierarchies, and selection strategies.
 - **Reverse engineering** — Ingest existing data, profile distributions, and fit
-  schemas automatically (`knit learn`).
+  blueprints automatically (`knit learn`).
 - **Behavioral modeling** — Define actor personas with trait distributions,
   activity-driven row counts, temporal biases, social graphs, and conversation
   threading. Learn behavioral patterns from existing data with `knit learn --actors`.
@@ -77,7 +77,7 @@ cargo build --release
 
 ```mermaid
 graph LR
-    A[Schema TOML/JSON] -->|schema| B[DataModel]
+    A[Blueprint TOML/JSON] -->|blueprint| B[DataModel]
     B -->|plan| C[ExecutionPlan]
     C -->|gen| D[RecordBatches]
     D -->|noise| E[Perturbed Batches]
@@ -99,12 +99,12 @@ cargo build --release
 # The binary is at target/release/knit
 ```
 
-### Create a Schema
+### Create a Blueprint
 
-Create a file called `demo.weave.toml`:
+Create a file called `demo.knit.toml`:
 
 ```toml
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "demo"
@@ -144,35 +144,35 @@ std_dev = 12.0
 ### Generate
 
 ```bash
-# Validate schema
-knit validate demo.weave.toml
+# Validate blueprint
+knit validate demo.knit.toml
 
 # Preview execution plan
-knit plan demo.weave.toml
+knit plan demo.knit.toml
 
 # Generate data (default: Parquet)
-knit generate demo.weave.toml -o ./data
+knit generate demo.knit.toml -o ./data
 
 # Generate as CSV with a specific seed
-knit generate demo.weave.toml --format csv --seed 123 -o ./data
+knit generate demo.knit.toml --format csv --seed 123 -o ./data
 
 # Dry run — validate and plan without generating
-knit generate demo.weave.toml --dry-run
+knit generate demo.knit.toml --dry-run
 ```
 
-### Schema Composition
+### Blueprint Composition
 
-Build large schemas from reusable fragments using `include`:
+Build large blueprints from reusable fragments using `include`:
 
 ```toml
-# main.weave.toml
-include = ["users.weave.toml", "products.weave.toml"]
+# main.knit.toml
+include = ["users.knit.toml", "products.knit.toml"]
 
 [model]
 name = "my_project"
 seed = 42
 
-# Add entities specific to this schema
+# Add entities specific to this blueprint
 [[entities]]
 name = "orders"
 count = 5000
@@ -187,7 +187,7 @@ kind = "many_to_one"
 
 **Rules:**
 - Fragments define entities, relationships, personas, etc. — but no `[model]` section
-- Name conflicts between included fragments are errors; the main schema silently overrides
+- Name conflicts between included fragments are errors; the main blueprint silently overrides
 - Includes are recursive and diamond-safe (each file loaded at most once)
 - Security: absolute paths and `..` traversal are rejected
 
@@ -200,74 +200,74 @@ Knit is published as a single crate. Internally it is organized into modules:
 | Module | Description |
 |---|---|
 | `knit::core` | Shared types: `DataModel`, `Entity`, `Field`, `Value`, `GeneratorSpec` |
-| `knit::schema` | TOML/JSON parsing, validation, schema inheritance (`extends`) |
+| `knit::blueprint` | TOML/JSON parsing, validation, blueprint inheritance (`extends`) |
 | `knit::plan` | Compiles a `DataModel` into an `ExecutionPlan` with RNG tree |
 | `knit::gen` | Generation engine: executes plans → Arrow `RecordBatch`es |
 | `knit::noise` | Post-generation perturbation pipeline (11 perturbators) |
 | `knit::bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC, Avro, SQL |
-| `knit::learn` | Data ingestion, profiling, distribution fitting, schema inference, behavioral persona discovery |
-| `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `schema`, `init`, `learn`, `inspect`, `completions`, `generators` |
+| `knit::learn` | Data ingestion, profiling, distribution fitting, blueprint inference, behavioral persona discovery |
+| `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `blueprint`, `init`, `learn`, `inspect`, `completions`, `generators` |
 
 ## Examples
 
-The `examples/` directory contains 25+ sample schemas. Highlights:
+The `examples/` directory contains 25+ sample blueprints. Highlights:
 
-- `ecommerce.weave.toml` — Users, products, orders, reviews with FK relationships
-- `ecommerce_behavioral.weave.toml` — Persona-driven purchasing: 4 customer
+- `ecommerce.knit.toml` — Users, products, orders, reviews with FK relationships
+- `ecommerce_behavioral.knit.toml` — Persona-driven purchasing: 4 customer
   segments, activity-driven orders, temporal shopping biases, review threading
-- `email_traffic.weave.toml` — Email messaging with sender/receiver personas
-- `financial.weave.toml` — Accounts and transactions with risk scoring
-- `hr_org.weave.toml` — Employees with behavioral personas, activity-driven tasks,
+- `email_traffic.knit.toml` — Email messaging with sender/receiver personas
+- `financial.knit.toml` — Accounts and transactions with risk scoring
+- `hr_org.knit.toml` — Employees with behavioral personas, activity-driven tasks,
   manager hierarchy, and work-hour temporal biases
-- `iot_sensors.weave.toml` — Devices, sensor readings, and alerts with FK chains
-- `server_logs.weave.toml` — Servers, HTTP requests, and error logs
-- `social_platform.weave.toml` — Social network with actor graphs, persona-driven
+- `iot_sensors.knit.toml` — Devices, sensor readings, and alerts with FK chains
+- `server_logs.knit.toml` — Servers, HTTP requests, and error logs
+- `social_platform.knit.toml` — Social network with actor graphs, persona-driven
   temporal patterns, burst sessions, and posts/comments/DMs
-- `time_series_metrics.weave.toml` — Composable numeric time series with trend,
+- `time_series_metrics.knit.toml` — Composable numeric time series with trend,
   seasonality, AR, mean-reversion, and holiday effects
-- `event_stream.weave.toml` — Irregular time series with exponential arrivals
-- `conditional_distribution.weave.toml` — Distribution-dependent field correlations
-- `vector_distributions.weave.toml` — Dirichlet and multinomial distributions
-- `relative_offset.weave.toml` — Distribution, constant, and simple offset modes
-- `scoped_noise.weave.toml` — Conditional noise injection with scope predicates
-- `pipe_operator.weave.toml` — Expression function composition with `|>`
-- `mixins.weave.toml` — Reusable field groups across entities
-- `custom_types.weave.toml` — Domain type aliases
-- `sequence_jitter.weave.toml` — Temporal randomization with jitter offsets
-- `sequence_values.weave.toml` — Round-robin cyclic value sequences
-- `timezone_business_hours.weave.toml` — Timezone-aware event generation
-- `selection_strategies.weave.toml` — FK selection strategies (sequential, clustered)
-- `edge_properties.weave.toml` — Relationship properties on graph edges
-- `hierarchy.weave.toml` — Self-referential hierarchies with depth control
-- `holiday_effect.weave.toml` — Date-based time series spikes/dips
-- `count_expressions.weave.toml` — Parameterized entity counts
-- `degree_distribution.weave.toml` — Power-law cardinality patterns
-- `nested_objects.weave.toml` — Hierarchical struct fields
-- `modular/` — Modular composition example: `users.weave.toml` and
-  `products.weave.toml` fragments composed via `include` in `ecommerce.weave.toml`
-- `cli_test.weave.toml` — Minimal schema for integration testing
+- `event_stream.knit.toml` — Irregular time series with exponential arrivals
+- `conditional_distribution.knit.toml` — Distribution-dependent field correlations
+- `vector_distributions.knit.toml` — Dirichlet and multinomial distributions
+- `relative_offset.knit.toml` — Distribution, constant, and simple offset modes
+- `scoped_noise.knit.toml` — Conditional noise injection with scope predicates
+- `pipe_operator.knit.toml` — Expression function composition with `|>`
+- `mixins.knit.toml` — Reusable field groups across entities
+- `custom_types.knit.toml` — Domain type aliases
+- `sequence_jitter.knit.toml` — Temporal randomization with jitter offsets
+- `sequence_values.knit.toml` — Round-robin cyclic value sequences
+- `timezone_business_hours.knit.toml` — Timezone-aware event generation
+- `selection_strategies.knit.toml` — FK selection strategies (sequential, clustered)
+- `edge_properties.knit.toml` — Relationship properties on graph edges
+- `hierarchy.knit.toml` — Self-referential hierarchies with depth control
+- `holiday_effect.knit.toml` — Date-based time series spikes/dips
+- `count_expressions.knit.toml` — Parameterized entity counts
+- `degree_distribution.knit.toml` — Power-law cardinality patterns
+- `nested_objects.knit.toml` — Hierarchical struct fields
+- `modular/` — Modular composition example: `users.knit.toml` and
+  `products.knit.toml` fragments composed via `include` in `ecommerce.knit.toml`
+- `cli_test.knit.toml` — Minimal blueprint for integration testing
 
 Generate all examples:
 
 ```bash
-for schema in examples/*.weave.toml; do
-  knit generate "$schema" -o data/$(basename "$schema" .weave.toml) --format csv
+for schema in examples/*.knit.toml; do
+  knit generate "$schema" -o data/$(basename "$schema" .knit.toml) --format csv
 done
 ```
 
 ### Reverse Engineering
 
-Infer a schema from existing data and re-generate:
+Infer a blueprint from existing data and re-generate:
 
 ```bash
-# Learn a schema from CSV files
-knit learn ./my-data/ -o inferred.weave.toml
+# Learn a blueprint from CSV files
+knit learn ./my-data/ -o inferred.knit.toml
 
 # Learn from a large dataset (sample first 10k rows per table)
-knit learn ./big-data/ -o inferred.weave.toml --sample 10000
+knit learn ./big-data/ -o inferred.knit.toml --sample 10000
 
-# Review and customize the inferred schema, then generate
-knit generate inferred.weave.toml -o ./synthetic-data --format parquet
+# Review and customize the inferred blueprint, then generate
+knit generate inferred.knit.toml -o ./synthetic-data --format parquet
 ```
 
 ### Incremental Learning
@@ -281,8 +281,8 @@ knit learn ./chunk1/ --state learn.state
 knit learn ./chunk2/ --state learn.state
 knit learn ./chunk3/ --state learn.state
 
-# Finalize: emit schema from accumulated statistics
-knit learn --state learn.state --finalize -o schema.weave.toml
+# Finalize: emit blueprint from accumulated statistics
+knit learn --state learn.state --finalize -o schema.knit.toml
 ```
 
 Incremental mode uses streaming algorithms (Welford for mean/variance,
@@ -296,11 +296,11 @@ dictionaries for eligible high-cardinality string columns (e.g., product names,
 person names) that don't match a standard faker pattern:
 
 ```bash
-knit learn ./products/ -o schema.weave.toml
-# Creates: schema.weave.toml + products_name.dict.txt (alongside the schema)
+knit learn ./products/ -o schema.knit.toml
+# Creates: schema.knit.toml + products_name.dict.txt (alongside the schema)
 ```
 
-The learned schema references the dictionary file, and generation draws values
+The learned blueprint references the dictionary file, and generation draws values
 from it — producing output that matches the domain vocabulary of the original
 data. Dictionary extraction works in both batch and incremental modes.
 Extracted dictionaries are capped at ~10,000 entries for large vocabularies.
@@ -368,19 +368,19 @@ Learn behavioral patterns from existing data:
 
 ```bash
 # Infer personas and actor relationships from data
-knit learn ./my-data/ --actors -o behavioral.weave.toml
+knit learn ./my-data/ --actors -o behavioral.knit.toml
 
 # Inspect discovered behavioral structure
-knit inspect behavioral.weave.toml --actors
+knit inspect behavioral.knit.toml --actors
 
 # Generate with persona-driven realism
-knit generate behavioral.weave.toml -o ./synthetic
+knit generate behavioral.knit.toml -o ./synthetic
 ```
 
-See `examples/social_platform.weave.toml` and `examples/ecommerce_behavioral.weave.toml`
-for complete behavioral schemas.
+See `examples/social_platform.knit.toml` and `examples/ecommerce_behavioral.knit.toml`
+for complete behavioral blueprints.
 
-### Parameterized Schemas
+### Parameterized Blueprints
 
 Derived expressions can reference `--param` values using `${param.key}` syntax:
 
@@ -395,7 +395,7 @@ depends_on = ["name"]
 ```
 
 ```bash
-knit generate schema.weave.toml -o out/ --param domain=example.com
+knit generate schema.knit.toml -o out/ --param domain=example.com
 ```
 
 Unresolved params stay as literal `${param.key}` in the output.
@@ -406,24 +406,24 @@ Unresolved params stay as literal `${param.key}` in the output.
 knit [OPTIONS] <COMMAND>
 
 Commands:
-  validate     Parse and validate a schema file
+  validate     Parse and validate a blueprint file
   plan         Show execution plan (dry run)
   generate     Generate synthetic data
-  schema       Schema manipulation (expand, normalize, diff)
-  init         Create a starter schema
-  learn        Infer schema from data
-  inspect      Inspect state files or schema summaries
+  blueprint    Blueprint manipulation (expand, normalize, diff)
+  init         Create a starter blueprint
+  learn        Infer blueprint from data
+  inspect      Inspect state files or blueprint summaries
   generators   List available generator types
   completions  Generate shell completions
 
 Global options:
-  --seed <N>            Override schema seed
+  --seed <N>            Override blueprint seed
   --format <FMT>        Output format (parquet|csv|json|jsonl|arrow|avro|sql)
   --compression <ALG>   Compression (none|snappy|gzip|lz4|zstd)
   --parallel <N>        Worker threads (0 = auto)
   --batch-size <N>      Rows per batch (default: 8192)
   --count <N|Nx>        Override row count (absolute or multiplier, e.g. 100, 0.1x, 10x)
-  --param key=value     Override schema parameter (repeatable)
+  --param key=value     Override blueprint parameter (repeatable)
   --json                Machine-readable JSON output
   --dry-run             Validate and plan only
   --no-noise            Skip noise injection
@@ -434,7 +434,7 @@ Global options:
 Learn-specific options:
   --sample <N>          Limit rows per table (faster profiling on large data)
   --state <PATH>        Incremental mode: persist statistics to a state file
-  --finalize            Emit schema from state without processing new data
+  --finalize            Emit blueprint from state without processing new data
   --strict              Error on reprocessing same source into same state (default: warn)
   --actors              Enable behavioral modeling (persona discovery, actor graphs)
 

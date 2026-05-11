@@ -456,7 +456,7 @@ fn minimal_data_model_roundtrip() {
         noise_profiles: vec![],
         correlations: vec![],
         params: BTreeMap::new(),
-        schema_version: "1.0".into(),
+        blueprint_version: "1.0".into(),
         personas: Vec::new(),
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
@@ -477,7 +477,7 @@ fn minimal_data_model_roundtrip() {
 #[test]
 fn entity_tags_toml_roundtrip() {
     let toml_str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 [model]
 name = "tags_test"
 seed = 1
@@ -491,14 +491,14 @@ count = 10
 name = "id"
 data_type = "int"
 "#;
-    let model = crate::schema::parse_toml(toml_str).unwrap();
+    let model = crate::blueprint::parse_toml(toml_str).unwrap();
     assert_eq!(model.entities[0].tags, vec!["pii", "core"]);
 }
 
 #[test]
 fn entity_tags_default_empty() {
     let toml_str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 [model]
 name = "no_tags_test"
 seed = 1
@@ -511,7 +511,7 @@ count = 10
 name = "id"
 data_type = "int"
 "#;
-    let model = crate::schema::parse_toml(toml_str).unwrap();
+    let model = crate::blueprint::parse_toml(toml_str).unwrap();
     assert!(model.entities[0].tags.is_empty());
 }
 
@@ -541,7 +541,7 @@ fn entity_tags_skip_serializing_when_empty() {
         noise_profiles: vec![],
         correlations: vec![],
         params: BTreeMap::new(),
-        schema_version: "1.0".into(),
+        blueprint_version: "1.0".into(),
         personas: Vec::new(),
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
@@ -575,7 +575,7 @@ fn weighted_choice_explicit_weight() {
 #[test]
 fn constraint_not_null_toml_roundtrip() {
     let toml_str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 [model]
 name = "test"
 seed = 1
@@ -596,7 +596,7 @@ data_type = "string"
 type = "not_null"
 fields = ["id", "email"]
 "#;
-    let model = crate::schema::parse_toml(toml_str).unwrap();
+    let model = crate::blueprint::parse_toml(toml_str).unwrap();
     assert_eq!(model.entities[0].constraints.len(), 1);
     assert_eq!(
         model.entities[0].constraints[0],

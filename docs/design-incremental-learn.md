@@ -17,7 +17,7 @@
 - [7. Incremental Relationship Detection](#7-incremental-relationship-detection)
 - [8. Incremental Correlation Detection](#8-incremental-correlation-detection)
 - [9. Dictionary Extraction](#9-dictionary-extraction)
-- [10. Schema Drift & Type Evolution](#10-schema-drift--type-evolution)
+- [10. Blueprint Drift & Type Evolution](#10-blueprint-drift--type-evolution)
 - [11. Determinism](#11-determinism)
 - [12. Ingestion Semantics](#12-ingestion-semantics)
 - [12b. Concurrency & Atomicity](#12b-concurrency--atomicity)
@@ -37,7 +37,7 @@ million rows, but fails for:
 - **Large datasets** (100M+ rows): Cannot fit in memory
 - **Streaming data**: Data arrives in chunks over time
 - **Distributed datasets**: Data spread across many files/partitions
-- **Iterative refinement**: User adds more data to improve schema quality
+- **Iterative refinement**: User adds more data to improve blueprint quality
 
 Incremental learning solves these problems by processing data in bounded-memory
 chunks and persisting sufficient statistics in a **state file** that accumulates
@@ -51,7 +51,7 @@ evidence across multiple invocations.
 flowchart TB
     subgraph batch["Batch Mode (current, unchanged)"]
         data1([All Data]) --> learn1[knit learn]
-        learn1 --> schema1([schema.weave.toml])
+        learn1 --> blueprint1([blueprint.knit.toml])
     end
 
     subgraph incremental["Incremental Mode (new)"]
@@ -64,7 +64,7 @@ flowchart TB
         state2 --> updateN
         updateN --> stateN[(Final State)]
         stateN --> finalize[knit learn --finalize]
-        finalize --> schema2([schema.weave.toml])
+        finalize --> blueprint2([blueprint.knit.toml])
         finalize --> dicts([*.dict.txt])
     end
 ```
@@ -75,7 +75,7 @@ flowchart TB
 |-----------|-------------|
 | **Bounded memory** | Each chunk is processed with O(chunk_size) memory; state grows sub-linearly with total data |
 | **Append-only semantics** | Chunks are assumed non-overlapping; re-processing a chunk double-counts |
-| **State is source of truth** | Output schema is always re-derivable from state via `--finalize` |
+| **State is source of truth** | Output blueprint is always re-derivable from state via `--finalize` |
 | **Backward compatible** | `knit learn` without `--state` works exactly as today (batch mode) |
 | **Deterministic** | Same chunks in same order produce identical state (seeded RNG for sampling) |
 | **Quality-transparent** | Fidelity differences vs batch mode are documented and tested |
@@ -98,14 +98,14 @@ knit learn data/chunk3.csv --state learned.state
 knit learn data/jan/ --state learned.state
 ```
 
-### Finalize Mode (emit schema from state)
+### Finalize Mode (emit blueprint from state)
 
 ```bash
-# Generate schema from accumulated state
-knit learn --finalize --state learned.state -o schema.weave.toml
+# Generate blueprint from accumulated state
+knit learn --finalize --state learned.state -o blueprint.knit.toml
 
 # Can finalize with additional data in one pass
-knit learn data/last_chunk.csv --state learned.state -o schema.weave.toml
+knit learn data/last_chunk.csv --state learned.state -o blueprint.knit.toml
 ```
 
 ### Behavior Rules
@@ -113,15 +113,15 @@ knit learn data/last_chunk.csv --state learned.state -o schema.weave.toml
 | Flags | Behavior |
 |-------|----------|
 | No `--state` | Batch mode (current behavior, unchanged) |
-| `--state` without `-o` | Update state only, no schema output |
-| `--state` with `-o` | Update state AND emit schema (finalize) |
-| `--finalize --state` without source | Emit schema from existing state only |
+| `--state` without `-o` | Update state only, no blueprint output |
+| `--state` with `-o` | Update state AND emit blueprint (finalize) |
+| `--finalize --state` without source | Emit blueprint from existing state only |
 
 ### New CLI Arguments
 
 ```
 --state <PATH>       Path to state file (creates if absent, updates if exists)
---finalize           Emit schema from state without processing new data
+--finalize           Emit blueprint from state without processing new data
 --chunk-size <N>     Max rows per internal processing chunk (default: 100,000)
 --strict             Error on duplicate source paths (default: warn)
 ```
@@ -335,7 +335,7 @@ batch mode:
 
 - **Exact features** produce identical results regardless of chunking
 - **Approximate features** have documented error bounds
-- **Degraded features** are flagged in the output schema with confidence
+- **Degraded features** are flagged in the output blueprint with confidence
   adjustments
 
 ---
@@ -471,7 +471,7 @@ multi-word structure, same as batch mode.
 
 ---
 
-## 10. Schema Drift & Type Evolution
+## 10. Blueprint Drift & Type Evolution
 
 When processing multiple chunks, column types may evolve:
 
@@ -508,7 +508,7 @@ All probabilistic components use deterministic seeding:
 - **T-digest**: Merge order is deterministic (sorted centroids)
 
 The same data processed in the same chunk order always produces the same
-state and output schema. Different chunk orderings may produce slightly
+state and output blueprint. Different chunk orderings may produce slightly
 different reservoir samples, but the error is bounded.
 
 ---
@@ -658,8 +658,8 @@ Algorithm version (u16): Statistical algorithm parameters
 
 ### Fingerprinting
 
-The state stores a schema fingerprint (hash of column names + types) to
-detect incompatible schema changes between chunks.
+The state stores a blueprint fingerprint (hash of column names + types) to
+detect incompatible blueprint changes between chunks.
 
 ---
 
@@ -677,7 +677,7 @@ detect incompatible schema changes between chunks.
 ### Integration Tests
 
 - **Parity tests**: Process dataset in batch mode vs N chunks of 1/N size;
-  compare output schemas with tolerances:
+  compare output blueprints with tolerances:
   - Type inference: must match exactly
   - Distribution choice: must match (parameters within 5%)
   - Null rate: must match exactly
@@ -685,13 +685,13 @@ detect incompatible schema changes between chunks.
   - Relationships: same set detected (P/R = 1.0)
   - Correlations: same set detected (threshold tolerance)
 - **Large file test**: Process 10M row file in 100K chunks without OOM
-- **Schema drift test**: Chunks with evolving types produce valid output
+- **Blueprint drift test**: Chunks with evolving types produce valid output
 - **Determinism test**: Same chunks, same order → identical state
 
 ### Regression Tests
 
 - Existing batch-mode tests continue to pass unchanged
-- E2E: learn in chunks → generate → learn again → compare schemas
+- E2E: learn in chunks → generate → learn again → compare blueprints
 
 ---
 
@@ -723,7 +723,7 @@ Build the `LearnState` / `TableState` / `ColumnState` container:
 - `ColumnState` merging: update from an Arrow column chunk
 - `TableState` merging: handle new/missing columns
 - Type widening logic
-- Schema fingerprinting
+- Blueprint fingerprinting
 - Unit tests for merge operations
 
 **Dependencies:** PR 2
@@ -734,12 +734,12 @@ Wire incremental mode into the CLI:
 
 - `--state` flag, `--finalize` flag, `--strict` flag
 - Internal chunked ingestion (process N rows at a time)
-- Update-only mode (state but no schema output)
-- Finalize mode (schema from state without new data)
+- Update-only mode (state but no blueprint output)
+- Finalize mode (blueprint from state without new data)
 - Combined mode (update + finalize in one pass)
 - **Finalize logic**: type inference from reservoir samples, distribution
   fitting from reservoir samples (reuse existing `fit_distribution` on sample),
-  schema assembly from state-derived `ColumnAnalysis`/`TableAnalysis`
+  blueprint assembly from state-derived `ColumnAnalysis`/`TableAnalysis`
 - Atomic state file writes + advisory locking
 - Duplicate source path warning
 - Batch mode unchanged (no `--state`)
@@ -770,7 +770,7 @@ Add cross-chunk evidence accumulation:
 
 - Batch vs incremental parity test suite
 - Large-file stress test
-- Schema drift tests
+- Blueprint drift tests
 - Determinism regression tests
 - Documentation updates to `docs/guide/learn.md`
 - CLI help text updates

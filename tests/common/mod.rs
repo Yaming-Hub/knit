@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use arrow::record_batch::RecordBatch;
 use knit::gen::{ActorPool, GenerationEngine};
 use knit::plan::compile;
-use knit::schema::{parse_toml, parse_toml_file, validate};
+use knit::blueprint::{parse_toml, parse_toml_file, validate};
 
 /// Resolve the path to the workspace `examples/` directory.
 pub fn examples_dir() -> PathBuf {
@@ -14,7 +14,7 @@ pub fn examples_dir() -> PathBuf {
     manifest.join("examples")
 }
 
-/// Collect all `.weave.toml` files from the examples directory.
+/// Collect all `.knit.toml` files from the examples directory.
 pub fn example_schemas() -> Vec<PathBuf> {
     let dir = examples_dir();
     let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
@@ -25,7 +25,7 @@ pub fn example_schemas() -> Vec<PathBuf> {
                 && path
                     .file_name()
                     .and_then(|s| s.to_str())
-                    .is_some_and(|n| n.ends_with(".weave.toml"))
+                    .is_some_and(|n| n.ends_with(".knit.toml"))
             {
                 Some(path)
             } else {
@@ -62,7 +62,7 @@ pub fn generate_from_toml(toml_input: &str) -> HashMap<String, Vec<RecordBatch>>
     batches
 }
 
-/// Parse, validate, compile, and generate all batches for a `.weave.toml` file.
+/// Parse, validate, compile, and generate all batches for a `.knit.toml` file.
 pub fn generate_from_file(path: &Path) -> HashMap<String, Vec<RecordBatch>> {
     let model = parse_toml_file(path).expect("parse failed");
     let errors = validate(&model);

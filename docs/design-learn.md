@@ -29,20 +29,20 @@
 ## 1. Overview
 
 knit-learn is the **reverse pipeline** of the Knit toolset. Where the forward pipeline
-(`knit-schema` → `knit-plan` → `knit-gen` → `knit-bind`) turns a Weave schema into
+(`knit-blueprint` → `knit-plan` → `knit-gen` → `knit-bind`) turns a knit blueprint into
 synthetic data, knit-learn does the opposite: it reads an existing dataset and infers a
-Weave schema (`DataModel`) that can reproduce data with similar statistical properties.
+knit blueprint (`DataModel`) that can reproduce data with similar statistical properties.
 
 ### Approach
 
 knit-learn uses **statistical methods only** (v1). There are no heavy ML dependencies —
 distribution fitting, hypothesis testing, and heuristic scoring are sufficient to produce
-high-quality schema candidates for tabular data.
+high-quality blueprint candidates for tabular data.
 
 ### Candidate Output
 
-The output of knit-learn is always a **candidate** schema. Every inferred element carries
-a confidence score between 0.0 and 1.0. The schema is intended for human or AI review,
+The output of knit-learn is always a **candidate** blueprint. Every inferred element carries
+a confidence score between 0.0 and 1.0. The blueprint is intended for human or AI review,
 not blind adoption. Low-confidence elements are flagged, and alternative interpretations
 are preserved so reviewers can make informed decisions.
 
@@ -50,9 +50,9 @@ are preserved so reviewers can make informed decisions.
 
 | Use Case | Description |
 |----------|-------------|
-| **Bootstrap from production data** | Point knit-learn at a database export or data lake sample to get a starting Weave schema, then refine manually or with an AI agent. |
-| **Compare synthetic vs real** | Generate data from a schema, then run knit-learn on both real and synthetic datasets to compare inferred distributions and catch drift. |
-| **Migrate from other tools** | Import data produced by another synthetic data tool and extract a Weave schema instead of rewriting specifications by hand. |
+| **Bootstrap from production data** | Point knit-learn at a database export or data lake sample to get a starting knit blueprint, then refine manually or with an AI agent. |
+| **Compare synthetic vs real** | Generate data from a blueprint, then run knit-learn on both real and synthetic datasets to compare inferred distributions and catch drift. |
+| **Migrate from other tools** | Import data produced by another synthetic data tool and extract a knit blueprint instead of rewriting specifications by hand. |
 
 ---
 
@@ -61,22 +61,22 @@ are preserved so reviewers can make informed decisions.
 | Dependency | Purpose |
 |------------|---------|
 | `knit-core` | Shared types: `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value` |
-| `knit-schema` | Serialize the inferred `DataModel` to `.weave.toml` / `.weave.json` |
+| `knit-blueprint` | Serialize the inferred `DataModel` to `.knit.toml` / `.weave.json` |
 | `arrow` | In-memory columnar format (`RecordBatch`, `ArrayRef`) for all internal processing |
 | `parquet` | Read Parquet input files via `arrow`'s Parquet reader |
 | `csv` | Read CSV input files via `arrow`'s CSV reader with type sniffing |
 | `statrs` | Statistical functions: distribution fitting, KS-test, MLE parameter estimation |
 | `serde` / `serde_json` | JSON/JSONL ingestion and annotation serialization |
 
-knit-learn depends on `knit-schema` (not `knit-plan` or `knit-gen`) — it only needs to
+knit-learn depends on `knit-blueprint` (not `knit-plan` or `knit-gen`) — it only needs to
 build and serialize a `DataModel`, never to execute one.
 
 ```mermaid
 flowchart BT
     core[knit-core]
-    schema[knit-schema] --> core
+    blueprint[knit-blueprint] --> core
     learn[knit-learn] --> core
-    learn --> schema
+    learn --> blueprint
     learn --> arrow[arrow / parquet / csv]
     learn --> statrs[statrs]
 ```
@@ -98,8 +98,8 @@ flowchart LR
     temporal --> reldet[Phase 6\nRelationship\nDetection]
     reldet --> relana[Phase 7\nRelationship\nAnalysis]
     relana --> corr[Phase 8\nCorrelation\nDetection]
-    corr --> assemble[Phase 9\nSchema\nAssembly]
-    assemble --> output([Candidate\nWeave Schema])
+    corr --> assemble[Phase 9\nBlueprint\nAssembly]
+    assemble --> output([Candidate\nknit blueprint])
 ```
 
 | Phase | Input | Output | Description |
@@ -112,7 +112,7 @@ flowchart LR
 | **6. Relationship Detection** | All `ColumnProfile`s | `CandidateRelationship` list | FK candidates via value overlap, cardinality analysis, and naming conventions |
 | **7. Relationship Analysis** | `CandidateRelationship`s + data | `AnalyzedRelationship` list | Cardinality distribution fitting, temporal ordering, graph topology inference on confirmed relationships |
 | **8. Correlation Detection** | All columns + relationships | `CandidateCorrelation` list | Cross-entity and intra-entity field correlations, conditional distributions |
-| **9. Schema Assembly** | All inferred elements | `DataModel` with confidence annotations | Build the final Weave schema, attach confidence scores, emit |
+| **9. Blueprint Assembly** | All inferred elements | `DataModel` with confidence annotations | Build the final knit blueprint, attach confidence scores, emit |
 
 ---
 
@@ -123,7 +123,7 @@ flowchart LR
 | Format | Reader | Notes |
 |--------|--------|-------|
 | **CSV** | `arrow::csv::Reader` | Type sniffing from first N rows; configurable delimiter, quote char, header detection |
-| **Parquet** | `parquet::arrow::ParquetRecordBatchReader` | Schema comes from Parquet metadata — types are already known |
+| **Parquet** | `parquet::arrow::ParquetRecordBatchReader` | Blueprint comes from Parquet metadata — types are already known |
 | **JSON / JSONL** | `arrow::json::Reader` | Each line or top-level array element becomes a row; nested objects are flattened |
 
 ### Sampling Strategy
@@ -451,7 +451,7 @@ on Fridays, batch jobs run every Monday at 02:00, login events cluster around
 business hours. Without temporal pattern detection, regenerated data would produce
 timestamps that are statistically uniform — obviously synthetic.
 
-This phase detects the time-domain structure and encodes it into the Weave schema as
+This phase detects the time-domain structure and encodes it into the knit blueprint as
 `time_series`, `temporal_pattern`, or `schedule` generator specifications, enabling
 the forward pipeline to reproduce realistic temporal behaviour.
 
@@ -526,7 +526,7 @@ generator = { type = "time_series", params = {
 
 For highly regular events (near-zero delta variance), detect fixed schedules:
 
-| Pattern | Detection | Schema Output |
+| Pattern | Detection | Blueprint Output |
 |---------|-----------|---------------|
 | Every N minutes | Delta mean ≈ N min, CV < 0.05 | `schedule = { type = "fixed_interval", interval = "5m" }` |
 | Daily at fixed time | All events within ±5 min of same hour | `schedule = { type = "daily", at = "02:00" }` |
@@ -583,7 +583,7 @@ When multiple temporal columns exist within one entity (e.g., `created_at`,
 `updated_at`, `completed_at`), knit-learn detects ordering constraints and
 delay distributions between them:
 
-| Relationship | Detection | Schema Output |
+| Relationship | Detection | Blueprint Output |
 |-------------|-----------|---------------|
 | `updated_at` always ≥ `created_at` | All deltas non-negative | `constraint = { after = "created_at" }` |
 | `completed_at - created_at` follows log-normal | Fit delta distribution | `delay = { distribution = "log_normal", params = { mu = 2.1, sigma = 0.8 }, unit = "hours" }` |
@@ -815,7 +815,7 @@ analyzes the **temporal relationship** between them.
 
 **Detected patterns:**
 
-| Pattern | Example | Schema Output |
+| Pattern | Example | Blueprint Output |
 |---------|---------|---------------|
 | **Causal ordering** | `order.created_at` always after `user.signup_date` | `temporal_constraint = { after = "user.signup_date" }` |
 | **Delay distribution** | Time between user signup and first order follows log-normal | `delay = { distribution = "log_normal", params = { mu = 3.5, sigma = 1.2 }, unit = "days" }` |
@@ -943,7 +943,7 @@ For each pair of numeric/ordinal columns within an entity, compute:
 **Output:**
 
 ```toml
-# Inferred correlation in Weave schema
+# Inferred correlation in knit blueprint
 [[entities]]
 name = "employee"
 
@@ -982,7 +982,7 @@ flowchart LR
 
 **Examples detected:**
 
-| Parent Field | Child Field | Detected Pattern | Schema Output |
+| Parent Field | Child Field | Detected Pattern | Blueprint Output |
 |-------------|-------------|-----------------|---------------|
 | `user.tier = "enterprise"` | `order.amount` | Higher mean for enterprise users | Conditional distribution: enterprise → log_normal(μ=8.5), free → log_normal(μ=5.2) |
 | `user.country` | `order.currency` | Deterministic mapping | Derived: `currency = lookup(user.country, currency_map)` |
@@ -995,7 +995,7 @@ flowchart LR
 3. For categorical parent fields: group child values by parent category, test if distributions differ significantly (KS-test between groups)
 4. For numeric parent fields: compute Pearson/Spearman correlation
 5. When significant differences found, fit conditional distributions (per-group)
-6. Output as `conditional` generator specs in the Weave schema
+6. Output as `conditional` generator specs in the knit blueprint
 
 **Output types:**
 
@@ -1030,7 +1030,7 @@ struct ConditionalDistribution {
 
 Detect time-dependent relationships:
 
-| Pattern | Detection Method | Schema Output |
+| Pattern | Detection Method | Blueprint Output |
 |---------|-----------------|---------------|
 | **Seasonal variation** | FFT / autocorrelation on time-bucketed aggregates | `time_series.seasonality` |
 | **Trend** | Linear regression on time-bucketed means | `time_series.trend` |
@@ -1055,7 +1055,7 @@ Where:
 
 ## 12. Confidence Scoring Model
 
-Every inferred element in the output schema carries a confidence score. This is the
+Every inferred element in the output blueprint carries a confidence score. This is the
 primary mechanism for communicating uncertainty to the reviewer.
 
 ### Per-Element Confidence
@@ -1101,12 +1101,12 @@ correlation_confidence = significance × effect_size × sample_size
 ```
 Based on statistical significance, effect size, and sample size (see [Section 10](#10-cross-entity-correlation-detection)).
 
-### Overall Schema Confidence
+### Overall Blueprint Confidence
 
-The overall schema confidence is the **geometric mean** of all element confidences:
+The overall blueprint confidence is the **geometric mean** of all element confidences:
 
 ```
-schema_confidence = (∏ element_confidence_i) ^ (1/n)
+blueprint_confidence = (∏ element_confidence_i) ^ (1/n)
 ```
 
 This ensures that a single low-confidence element pulls down the overall score
@@ -1127,10 +1127,10 @@ Thresholds are configurable via CLI flags or configuration file.
 
 ## 13. Output Format
 
-knit-learn emits a standard Weave schema with additional annotation fields that
+knit-learn emits a standard knit blueprint with additional annotation fields that
 communicate inference metadata to reviewers.
 
-### Annotated Weave Schema
+### Annotated knit blueprint
 
 Inferred elements include metadata fields (prefixed with `_`) alongside standard
 Weave fields:
@@ -1141,7 +1141,7 @@ weave_version = "0.1"
 [model]
 name = "inferred_ecommerce"
 description = "Inferred from dataset: ./data/ecommerce/"
-_schema_confidence = 0.82
+_blueprint_confidence = 0.82
 _source = "./data/ecommerce/"
 _sample_size = 100000
 _inferred_at = "2025-01-15T10:30:00Z"
@@ -1190,7 +1190,7 @@ _naming_match = true
 
 | Field | Level | Description |
 |-------|-------|-------------|
-| `_schema_confidence` | model | Overall schema confidence (geometric mean) |
+| `_blueprint_confidence` | model | Overall blueprint confidence (geometric mean) |
 | `_source` | model | Path to the source dataset |
 | `_sample_size` | model | Number of rows sampled per entity |
 | `_inferred_at` | model | Timestamp of inference run |
@@ -1205,11 +1205,11 @@ _naming_match = true
 
 ### Human-Readable Review Report
 
-In addition to the annotated schema, knit-learn can emit a **review report** (Markdown)
+In addition to the annotated blueprint, knit-learn can emit a **review report** (Markdown)
 summarizing the inference results:
 
 ```
-## Schema Inference Report
+## Blueprint Inference Report
 
 **Source:** ./data/ecommerce/
 **Entities:** 3 (users, orders, products)
@@ -1238,15 +1238,15 @@ summarizing the inference results:
 ### Round-Trip Tests
 
 The strongest validation for knit-learn is the **round-trip test**: generate data from
-a known schema, run knit-learn on the generated data, and compare the inferred schema
+a known blueprint, run knit-learn on the generated data, and compare the inferred blueprint
 against the original.
 
 ```mermaid
 flowchart LR
-    original([Original\nWeave Schema]) --> generate[knit generate]
+    original([Original\nknit blueprint]) --> generate[knit generate]
     generate --> data([Generated\nDataset])
     data --> learn[knit learn]
-    learn --> inferred([Inferred\nWeave Schema])
+    learn --> inferred([Inferred\nknit blueprint])
     inferred --> compare{Compare\noriginal vs\ninferred}
     compare -->|distributions match| pass([✓ Pass])
     compare -->|distributions diverge| fail([✗ Fail])
@@ -1335,12 +1335,12 @@ For each supported distribution:
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Statistical, not ML** | Use MLE, KS-test, heuristic scoring — no neural networks or gradient-based fitting | Keeps the dependency tree small, builds fast, runs deterministically, and is sufficient for tabular distribution matching in v1. ML-based inference can be added later behind the same trait interface. |
-| **Confidence scores on everything** | Every inferred element carries a 0.0–1.0 confidence score | The output is a candidate for review, not an authoritative schema. Confidence scores let reviewers (human or AI) focus on uncertain elements and auto-accept strong inferences. |
+| **Confidence scores on everything** | Every inferred element carries a 0.0–1.0 confidence score | The output is a candidate for review, not an authoritative blueprint. Confidence scores let reviewers (human or AI) focus on uncertain elements and auto-accept strong inferences. |
 | **Sample, don't full-scan** | Default to 100K-row samples instead of reading entire files | Profiling and fitting scale with sample size. 100K rows is sufficient for stable distribution estimates while keeping inference fast on multi-GB files. Full scan is available as an opt-in. |
 | **Arrow as internal format** | All ingested data is converted to Arrow `RecordBatch` immediately | Consistent columnar representation regardless of input format. Enables efficient vectorized statistics. Same format used by the forward pipeline (`knit-gen`). |
 | **AIC for distribution selection** | Use AIC (not BIC or KS alone) as the primary selection criterion | AIC balances goodness-of-fit against model complexity. BIC penalizes parameters more heavily (better for very large samples) and is reported alongside. KS p-value is used for confidence, not selection. |
 | **Multi-heuristic FK detection** | Combine naming, overlap, cardinality, and type heuristics with weighted scoring | No single heuristic is reliable alone. Name matching catches conventions; overlap catches data relationships; cardinality catches directionality. The weighted combination is robust to missing signals. |
-| **Annotations via `_` prefix** | Inference metadata uses underscore-prefixed fields (`_confidence`, `_alternatives`) | Clearly separates inference metadata from the Weave schema specification. `_`-prefixed fields are ignored by the forward pipeline and can be stripped for production use. |
+| **Annotations via `_` prefix** | Inference metadata uses underscore-prefixed fields (`_confidence`, `_alternatives`) | Clearly separates inference metadata from the knit blueprint specification. `_`-prefixed fields are ignored by the forward pipeline and can be stripped for production use. |
 | **Geometric mean for overall confidence** | Aggregate element confidences via geometric mean, not arithmetic mean | Geometric mean is sensitive to low outliers — one bad inference pulls the overall score down. This encourages reviewers to address every weak element rather than being masked by many strong ones. |
 | **Deep relationship analysis as separate phase** | Phases 5 (detection) and 6 (analysis) are distinct | Detection is cheap (heuristic scoring); analysis is expensive (joins, graph construction, distribution fitting). Separating them lets users skip deep analysis when only FK structure is needed, and lets us gate analysis on detection confidence (only analyze relationships above a threshold). |
 | **Graph topology model matching** | Match observed graph metrics to known topology models (BA, WS, ER, tree) | These models cover the vast majority of real-world relational structures. Model parameters map directly to Weave `topology` configuration, enabling faithful reproduction. Custom graph structures can always be specified manually. |

@@ -81,7 +81,7 @@ cargo doc --workspace --no-deps --open
 Knit is organised as a Cargo workspace with focused crates:
 
 ```
-knit-core → knit-schema → knit-plan → knit-gen → knit-noise → knit-bind
+knit-core → knit-blueprint → knit-plan → knit-gen → knit-noise → knit-bind
                                                                     ↑
                                                                knit-cli
 ```
@@ -92,4 +92,4 @@ right — downstream crates never depend on upstream ones.
 ## Reporting Issues
 
 - Use GitHub Issues for bug reports and feature requests.
-- Include the output of `knit --version` and a minimal reproducing schema.
+- Include the output of `knit --version` and a minimal reproducing blueprint.

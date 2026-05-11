@@ -18,5 +18,5 @@ pub mod model;
 pub mod noise;
 pub mod plan;
 pub mod scale;
-pub mod schema;
+pub mod blueprint;
 pub mod tokenize;

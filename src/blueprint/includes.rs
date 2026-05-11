@@ -18,7 +18,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use crate::core::DataModel;
-use crate::schema::error::SchemaError;
+use crate::blueprint::error::BlueprintError;
 
 /// Resolve all `include` directives for a schema file.
 ///
@@ -37,7 +37,7 @@ pub fn resolve_includes(
     includes: &[String],
     visited: &mut HashSet<PathBuf>,
     stack: &mut Vec<PathBuf>,
-) -> Result<DataModel, SchemaError> {
+) -> Result<DataModel, BlueprintError> {
     let base_dir = schema_path
         .parent()
         .unwrap_or(Path::new("."));
@@ -49,7 +49,7 @@ pub fn resolve_includes(
 
         // Security: reject absolute paths
         if include_path.is_absolute() {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "absolute paths are not allowed in include: {include_ref}"
@@ -62,7 +62,7 @@ pub fn resolve_includes(
             .components()
             .any(|c| matches!(c, std::path::Component::ParentDir))
         {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "path traversal ('..') is not allowed in include: {include_ref}"
@@ -77,7 +77,7 @@ pub fn resolve_includes(
         // (prevents symlink-based escapes)
         let canonical_base = std::fs::canonicalize(base_dir).unwrap_or_else(|_| base_dir.to_path_buf());
         if !canonical.starts_with(&canonical_base) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "included file '{}' resolves outside the schema directory",
@@ -93,7 +93,7 @@ pub fn resolve_includes(
                 .map(|p| p.display().to_string())
                 .collect::<Vec<_>>()
                 .join(" → ");
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "circular include detected: {trace} → {}",
@@ -241,7 +241,7 @@ pub fn merge_main_over_includes(includes: &DataModel, main: &DataModel) -> DataM
     result.seed = main.seed;
     result.locale = main.locale.clone();
     result.timezone = main.timezone.clone();
-    result.schema_version = main.schema_version.clone();
+    result.blueprint_version = main.blueprint_version.clone();
     result.params = main.params.clone();
 
     result
@@ -261,8 +261,8 @@ fn load_fragment(
     path: &Path,
     visited: &mut HashSet<PathBuf>,
     stack: &mut Vec<PathBuf>,
-) -> Result<DataModel, SchemaError> {
-    let content = std::fs::read_to_string(path).map_err(|e| SchemaError::Validation {
+) -> Result<DataModel, BlueprintError> {
+    let content = std::fs::read_to_string(path).map_err(|e| BlueprintError::Validation {
         path: "include".to_string(),
         message: format!("cannot read included file '{}': {e}", path.display()),
     })?;
@@ -271,12 +271,12 @@ fn load_fragment(
 
     // Parse as RawSchema to inspect include/extends/model fields
     let raw: RawIncludeSchema = if json {
-        serde_json::from_str(&content).map_err(|e| SchemaError::Validation {
+        serde_json::from_str(&content).map_err(|e| BlueprintError::Validation {
             path: "include".to_string(),
             message: format!("parse error in included file '{}': {e}", path.display()),
         })?
     } else {
-        toml::from_str(&content).map_err(|e| SchemaError::Validation {
+        toml::from_str(&content).map_err(|e| BlueprintError::Validation {
             path: "include".to_string(),
             message: format!("parse error in included file '{}': {e}", path.display()),
         })?
@@ -284,7 +284,7 @@ fn load_fragment(
 
     // Fragment validation: reject extends
     if raw.extends.is_some() {
-        return Err(SchemaError::Validation {
+        return Err(BlueprintError::Validation {
             path: "include".to_string(),
             message: format!(
                 "included file '{}' must not use 'extends' — only the root schema may extend",
@@ -295,7 +295,7 @@ fn load_fragment(
 
     // Fragment validation: reject [model] section
     if raw.model.is_some() {
-        return Err(SchemaError::Validation {
+        return Err(BlueprintError::Validation {
             path: "include".to_string(),
             message: format!(
                 "included file '{}' must not contain a [model] section — fragments define only entities, relationships, etc.",
@@ -315,9 +315,9 @@ fn load_fragment(
     // Parse fragment content into DataModel (without resolving custom types —
     // resolution happens once on the fully merged model)
     let fragment = if json {
-        crate::schema::parser::parse_json_raw(&content)?
+        crate::blueprint::parser::parse_json_raw(&content)?
     } else {
-        crate::schema::parser::parse_toml_raw(&content)?
+        crate::blueprint::parser::parse_toml_raw(&content)?
     };
 
     // Merge nested includes under fragment (fragment content wins over its own includes)
@@ -333,11 +333,11 @@ fn check_conflicts(
     existing: &DataModel,
     fragment: &DataModel,
     include_ref: &str,
-) -> Result<(), SchemaError> {
+) -> Result<(), BlueprintError> {
     // Entities
     for entity in &fragment.entities {
         if existing.entities.iter().any(|e| e.name == entity.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "entity '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -350,7 +350,7 @@ fn check_conflicts(
     // Relationships
     for rel in &fragment.relationships {
         if existing.relationships.iter().any(|r| r.name == rel.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "relationship '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -363,7 +363,7 @@ fn check_conflicts(
     // Noise profiles
     for noise in &fragment.noise_profiles {
         if existing.noise_profiles.iter().any(|n| n.name == noise.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "noise profile '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -376,7 +376,7 @@ fn check_conflicts(
     // Personas
     for persona in &fragment.personas {
         if existing.personas.iter().any(|p| p.name == persona.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "persona '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -393,7 +393,7 @@ fn check_conflicts(
             .iter()
             .any(|a| a.name == ar.name)
         {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "actor relationship '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -410,7 +410,7 @@ fn check_conflicts(
             .iter()
             .any(|c| c.entity == corr.entity)
         {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "correlation for entity '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -423,7 +423,7 @@ fn check_conflicts(
     // Mixins
     for mixin in &fragment.mixins {
         if existing.mixins.iter().any(|m| m.name == mixin.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "include".to_string(),
                 message: format!(
                     "mixin '{}' is defined in multiple included files (conflict from '{include_ref}')",
@@ -449,8 +449,8 @@ fn append_model(target: &mut DataModel, source: DataModel) {
 }
 
 /// Canonicalize a path, falling back to the original if canonicalization fails.
-fn resolve_canonical(path: &Path) -> Result<PathBuf, SchemaError> {
-    std::fs::canonicalize(path).map_err(|e| SchemaError::Validation {
+fn resolve_canonical(path: &Path) -> Result<PathBuf, BlueprintError> {
+    std::fs::canonicalize(path).map_err(|e| BlueprintError::Validation {
         path: "include".to_string(),
         message: format!("cannot resolve include path '{}': {e}", path.display()),
     })
@@ -512,7 +512,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "users.weave.toml",
+            "users.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -524,9 +524,9 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "users.weave.toml"
+            include = "users.knit.toml"
             [model]
             name = "test"
             seed = 99
@@ -540,7 +540,7 @@ mod tests {
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         assert_eq!(model.name, "test");
         assert_eq!(model.seed, 99);
         assert_eq!(model.entities.len(), 2);
@@ -553,7 +553,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "users.weave.toml",
+            "users.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -565,7 +565,7 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "products.weave.toml",
+            "products.knit.toml",
             r#"
             [[entities]]
             name = "products"
@@ -577,9 +577,9 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = ["users.weave.toml", "products.weave.toml"]
+            include = ["users.knit.toml", "products.knit.toml"]
             [model]
             name = "test"
 
@@ -592,7 +592,7 @@ mod tests {
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         assert_eq!(model.entities.len(), 3);
     }
 
@@ -602,7 +602,7 @@ mod tests {
         fs::create_dir_all(dir.path().join("common")).unwrap();
         write_schema(
             dir.path(),
-            "common/base.weave.toml",
+            "common/base.knit.toml",
             r#"
             [[entities]]
             name = "audit_log"
@@ -614,9 +614,9 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "users.weave.toml",
+            "users.knit.toml",
             r#"
-            include = "common/base.weave.toml"
+            include = "common/base.knit.toml"
 
             [[entities]]
             name = "users"
@@ -628,15 +628,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "users.weave.toml"
+            include = "users.knit.toml"
             [model]
             name = "nested"
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         assert_eq!(model.entities.len(), 2);
         assert!(model.entities.iter().any(|e| e.name == "audit_log"));
         assert!(model.entities.iter().any(|e| e.name == "users"));
@@ -647,7 +647,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "shared.weave.toml",
+            "shared.knit.toml",
             r#"
             [[entities]]
             name = "shared"
@@ -659,9 +659,9 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "a.weave.toml",
+            "a.knit.toml",
             r#"
-            include = "shared.weave.toml"
+            include = "shared.knit.toml"
             [[entities]]
             name = "a_entity"
             count = 10
@@ -672,9 +672,9 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "b.weave.toml",
+            "b.knit.toml",
             r#"
-            include = "shared.weave.toml"
+            include = "shared.knit.toml"
             [[entities]]
             name = "b_entity"
             count = 10
@@ -685,15 +685,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = ["a.weave.toml", "b.weave.toml"]
+            include = ["a.knit.toml", "b.knit.toml"]
             [model]
             name = "diamond"
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         // shared should appear only once
         assert_eq!(
             model.entities.iter().filter(|e| e.name == "shared").count(),
@@ -707,9 +707,9 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "a.weave.toml",
+            "a.knit.toml",
             r#"
-            include = "b.weave.toml"
+            include = "b.knit.toml"
             [[entities]]
             name = "a"
             count = 1
@@ -720,9 +720,9 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "b.weave.toml",
+            "b.knit.toml",
             r#"
-            include = "a.weave.toml"
+            include = "a.knit.toml"
             [[entities]]
             name = "b"
             count = 1
@@ -733,15 +733,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "a.weave.toml"
+            include = "a.knit.toml"
             [model]
             name = "cycle"
             "#,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("circular include"), "got: {msg}");
     }
@@ -751,7 +751,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "a.weave.toml",
+            "a.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -763,7 +763,7 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "b.weave.toml",
+            "b.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -775,15 +775,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = ["a.weave.toml", "b.weave.toml"]
+            include = ["a.knit.toml", "b.knit.toml"]
             [model]
             name = "conflict"
             "#,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(
             msg.contains("defined in multiple included files"),
@@ -796,7 +796,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "base.weave.toml",
+            "base.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -808,9 +808,9 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "base.weave.toml"
+            include = "base.knit.toml"
             [model]
             name = "override"
 
@@ -826,7 +826,7 @@ mod tests {
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         let users = model.entities.iter().find(|e| e.name == "users").unwrap();
         assert_eq!(users.count, crate::core::CountSpec::Fixed(999));
         assert_eq!(users.fields.len(), 2); // id + email (main's version)
@@ -837,7 +837,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "parent.weave.toml",
+            "parent.knit.toml",
             r#"
             [model]
             name = "parent"
@@ -845,9 +845,9 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "frag.weave.toml",
+            "frag.knit.toml",
             r#"
-            extends = "parent.weave.toml"
+            extends = "parent.knit.toml"
             [[entities]]
             name = "x"
             count = 1
@@ -858,15 +858,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "frag.weave.toml"
+            include = "frag.knit.toml"
             [model]
             name = "test"
             "#,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("must not use 'extends'"), "got: {msg}");
     }
@@ -876,7 +876,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "frag.weave.toml",
+            "frag.knit.toml",
             r#"
             [model]
             name = "fragment_model"
@@ -891,15 +891,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "frag.weave.toml"
+            include = "frag.knit.toml"
             [model]
             name = "test"
             "#,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(
             msg.contains("must not contain a [model] section"),
@@ -927,11 +927,11 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             &main_content,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("absolute paths are not allowed"), "got: {msg}");
     }
@@ -941,15 +941,15 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "../secret.weave.toml"
+            include = "../secret.knit.toml"
             [model]
             name = "test"
             "#,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("path traversal"), "got: {msg}");
     }
@@ -959,7 +959,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "users.weave.toml",
+            "users.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -971,7 +971,7 @@ mod tests {
         );
         write_schema(
             dir.path(),
-            "parent.weave.toml",
+            "parent.knit.toml",
             r#"
             [model]
             name = "parent"
@@ -987,17 +987,17 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "users.weave.toml"
-            extends = "parent.weave.toml"
+            include = "users.knit.toml"
+            extends = "parent.knit.toml"
 
             [model]
             name = "combined"
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         assert_eq!(model.name, "combined");
         // Should have users (from include), base_entity (from extends parent)
         assert!(model.entities.iter().any(|e| e.name == "users"));
@@ -1009,7 +1009,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "fragment.weave.toml",
+            "fragment.knit.toml",
             r#"
             [[entities]]
             name = "users"
@@ -1048,15 +1048,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "fragment.weave.toml"
+            include = "fragment.knit.toml"
             [model]
             name = "full"
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         assert_eq!(model.entities.len(), 2);
         assert_eq!(model.relationships.len(), 1);
         assert_eq!(model.personas.len(), 1);
@@ -1069,7 +1069,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
             include = []
             [model]
@@ -1084,7 +1084,7 @@ mod tests {
             "#,
         );
 
-        let model = crate::schema::parse_toml_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_toml_file(&main_path).unwrap();
         assert_eq!(model.entities.len(), 1);
     }
 
@@ -1116,7 +1116,7 @@ mod tests {
             }"#,
         );
 
-        let model = crate::schema::parse_json_file(&main_path).unwrap();
+        let model = crate::blueprint::parse_json_file(&main_path).unwrap();
         assert_eq!(model.entities.len(), 2);
         assert!(model.entities.iter().any(|e| e.name == "users"));
         assert!(model.entities.iter().any(|e| e.name == "orders"));
@@ -1127,9 +1127,9 @@ mod tests {
         let dir = TempDir::new().unwrap();
         write_schema(
             dir.path(),
-            "frag.weave.toml",
+            "frag.knit.toml",
             r#"
-            include = "main.weave.toml"
+            include = "main.knit.toml"
             [[entities]]
             name = "x"
             count = 1
@@ -1140,15 +1140,15 @@ mod tests {
         );
         let main_path = write_schema(
             dir.path(),
-            "main.weave.toml",
+            "main.knit.toml",
             r#"
-            include = "frag.weave.toml"
+            include = "frag.knit.toml"
             [model]
             name = "cycle_root"
             "#,
         );
 
-        let err = crate::schema::parse_toml_file(&main_path).unwrap_err();
+        let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("circular include"), "got: {msg}");
     }
