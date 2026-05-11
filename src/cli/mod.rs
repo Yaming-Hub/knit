@@ -15,6 +15,22 @@ pub fn parse_key_val(s: &str) -> Result<(String, String), String> {
     Ok((s[..pos].to_string(), s[pos + 1..].to_string()))
 }
 
+/// Parse `name=factor` for `--density` (e.g. "Collab=2.0").
+pub fn parse_density_spec(s: &str) -> Result<(String, f64), String> {
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("invalid NAME=FACTOR: no `=` found in `{s}`"))?;
+    let name = s[..pos].to_string();
+    let factor: f64 = s[pos + 1..]
+        .trim_end_matches('x')
+        .parse()
+        .map_err(|_| format!("invalid factor in `{s}`: expected number after `=`"))?;
+    if factor <= 0.0 {
+        return Err(format!("density factor must be positive, got {factor}"));
+    }
+    Ok((name, factor))
+}
+
 /// Parse `name=count` for `--dim` (e.g. "location=20").
 pub fn parse_dim_spec(s: &str) -> Result<(String, u64), String> {
     let pos = s
@@ -295,6 +311,10 @@ pub enum Command {
         /// Override detected time cadence (e.g. "7d", "1w").
         #[arg(long)]
         cadence: Option<String>,
+        /// Per-entity density multiplier (repeatable: --density Entity=2.0).
+        /// Scales rows without changing actor count, time range, or dimensions.
+        #[arg(long, value_parser = parse_density_spec)]
+        density: Vec<(String, f64)>,
     },
     /// Tokenize a dataset for safe sharing (replace strings with opaque tokens).
     Tokenize {
@@ -419,4 +439,45 @@ pub enum ModelAction {
         /// Model path (flat file or structured directory).
         input: String,
     },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_density_spec_basic() {
+        let (name, factor) = parse_density_spec("Orders=2.0").unwrap();
+        assert_eq!(name, "Orders");
+        assert!((factor - 2.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn parse_density_spec_with_x_suffix() {
+        let (name, factor) = parse_density_spec("Collab=3x").unwrap();
+        assert_eq!(name, "Collab");
+        assert!((factor - 3.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn parse_density_spec_fractional() {
+        let (name, factor) = parse_density_spec("Items=0.5").unwrap();
+        assert_eq!(name, "Items");
+        assert!((factor - 0.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn parse_density_spec_no_equals() {
+        assert!(parse_density_spec("NoEquals").is_err());
+    }
+
+    #[test]
+    fn parse_density_spec_zero_rejected() {
+        assert!(parse_density_spec("X=0").is_err());
+    }
+
+    #[test]
+    fn parse_density_spec_negative_rejected() {
+        assert!(parse_density_spec("X=-1").is_err());
+    }
 }

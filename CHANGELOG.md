@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Density control** (`--density Entity=Factor`) — Per-entity row density multiplier
+  for `knit scale`. Scales an entity's row count without changing actor count, time
+  range, or dimensions. Repeatable for multiple entities. Applied after actor/time/dim
+  scaling but before the uniform `--count` multiplier. Accepts both `Entity=2.0` and
+  `Entity=2x` syntax. Unknown entity names produce a helpful error listing available
+  entities.
 - **Path tokenization** (`--tokenize-paths`) — Tokenize file and folder names in the
   output dataset. File stems are replaced with shape-preserving tokens while extensions
   are preserved. Partition folders (`key=value` style) are skipped when

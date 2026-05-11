@@ -305,6 +305,7 @@ Options:
     --actors <SPEC>           Scale actor dimension (N or "EntityName=N")
     --time <SPEC>             Scale time dimension (52w, 6m, 365d, 2024-01-01..2025-12-31)
     --dim <NAME=N>            Scale custom dimension (repeatable)
+    --density <ENTITY=F>      Per-entity density multiplier (repeatable, e.g. Orders=2.0)
     --count <N|Nx>            Additional uniform row scaling
     --cadence <DURATION>      Override detected time cadence (e.g. 7d, 1w, 14d)
     --format <FMT>            Output format (csv, parquet, json, etc.)
@@ -341,9 +342,12 @@ Inject the partition date into `GenContext` so temporal generators (timestamps,
 business_hours, event_streams) anchor their output to the partition date. Without
 this, in-row timestamps may not match the partition folder date.
 
-### 8.2 Density Control (`--density`)
-Separate knob for rows-per-actor-per-period. Scoped per entity:
-`--density Collab=2x` doubles Collab rows without changing actor count or time.
+### 8.2 Density Control (`--density`) ✅ Implemented
+Per-entity row density multiplier. Scales rows without changing actor count,
+time range, or dimensions. Repeatable: `--density Orders=2.0 --density Items=0.5`.
+Applied after actor/time/dim scaling but before uniform `--count` multiplier.
+Accepts both `Entity=2.0` and `Entity=2x` syntax. Factor must be positive.
+Unknown entity names produce an error listing available entities.
 
 ### 8.3 Correlated Dimension Scaling
 When dimensions are correlated (e.g., more locations → more actors per location),
@@ -388,6 +392,7 @@ The following features are implemented and available via `knit scale`:
 | Cadence detection | ✅ | Median gap from sorted partition dates; monthly (28–31d) auto-detected |
 | `--cadence` override | ✅ | Days (`7d`), weeks (`2w`), months (`1m`, `3m`) with calendar stepping |
 | `--count Nx` | ✅ | Uniform multiplier on top of dimensional scaling |
+| `--density Entity=F` | ✅ | Per-entity row density multiplier (repeatable) |
 | `--analyze --json` | ✅ | Machine-readable JSON output for analysis |
 | `--dry-run` size estimate | ✅ | Per-entity and total estimated output size |
 | Smart dimension naming | ✅ | Auto-detected naming strategy (country codes, words, indexed) |
