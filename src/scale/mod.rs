@@ -529,9 +529,14 @@ mod tests {
         let result = expand_oneof_values(&existing, 5);
         assert_eq!(result.len(), 5);
         assert_eq!(result[0].0, "US");
-        // Smart naming: mixed uppercase codes → Generic strategy → "value_N"
-        assert_eq!(result[3].0, "value_1");
-        assert_eq!(result[4].0, "value_2");
+        // Smart naming: mixed uppercase codes → ShortCode strategy
+        // New values should be uppercase codes from the pool
+        for (name, _) in &result[3..] {
+            assert!(name.chars().all(|c| c.is_ascii_uppercase()));
+            assert_ne!(name, "US");
+            assert_ne!(name, "EU");
+            assert_ne!(name, "APAC");
+        }
         let total: f64 = result.iter().map(|(_, w)| w).sum();
         assert!((total - 1.0).abs() < 1e-9);
     }

@@ -41,6 +41,14 @@ pub fn detect_strategy(values: &[(String, f64)]) -> NamingStrategy {
         return NamingStrategy::ShortCode;
     }
 
+    // Check for mixed-length uppercase codes (2-5 chars, all uppercase)
+    // Common for region acronyms like US, EU, APAC, EMEA
+    if names.iter().all(|n| {
+        (2..=5).contains(&n.len()) && n.chars().all(|c| c.is_ascii_uppercase())
+    }) {
+        return NamingStrategy::ShortCode;
+    }
+
     // Check for capitalized English words (single word, first letter upper, rest lower)
     if names.iter().all(|n| is_capitalized_word(n)) {
         return NamingStrategy::CapitalizedWord;
@@ -162,15 +170,26 @@ fn generate_indexed(
     existing: &std::collections::HashSet<&str>,
     count: usize,
 ) -> Vec<String> {
+    // Find the max existing numeric suffix to continue from
+    let max_existing = existing
+        .iter()
+        .filter_map(|s| {
+            s.strip_prefix(prefix)
+                .and_then(|rest| rest.strip_prefix('_'))
+                .and_then(|num| num.parse::<u64>().ok())
+        })
+        .max()
+        .unwrap_or(0);
+
     let mut result = Vec::with_capacity(count);
-    let mut i = 1u64;
+    let mut i = max_existing + 1;
     while result.len() < count {
         let name = format!("{}_{}", prefix, i);
         if !existing.contains(name.as_str()) {
             result.push(name);
         }
         i += 1;
-        if i > count as u64 + existing.len() as u64 + 1000 {
+        if i > max_existing + count as u64 + 1000 {
             break; // safety limit
         }
     }
