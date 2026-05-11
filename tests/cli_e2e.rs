@@ -3099,3 +3099,322 @@ fn incremental_state_inspect() {
         .success()
         .stdout(predicate::str::contains("data"));
 }
+
+/// Write a CSV with two strongly correlated numeric columns for correlation testing.
+fn write_correlated_csv(path: &Path, rows: usize) {
+    let mut content = String::from("id,x,y,noise\n");
+    for i in 1..=rows {
+        let x = i as f64;
+        // y ≈ 2x + 10 with small perturbation — strong Pearson correlation
+        let y = 2.0 * x + 10.0 + (i % 7) as f64 * 0.1;
+        // noise is unrelated
+        let noise = ((i * 17) % 100) as f64;
+        content.push_str(&format!("{},{:.1},{:.2},{:.0}\n", i, x, y, noise));
+    }
+    fs::write(path, content).unwrap();
+}
+
+#[test]
+fn incremental_correlation_detected() {
+    // Verify that incremental learning detects Pearson correlations between
+    // strongly correlated numeric columns and emits them in the blueprint.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("corr.csv");
+    write_correlated_csv(&csv, 200);
+
+    let state_file = dir.path().join("learn.state");
+    let out = dir.path().join("incr.knit.toml");
+
+    // Ingest + finalize
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state_file.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&out).unwrap();
+    let model: toml::Value = toml::from_str(&content).unwrap();
+
+    // The blueprint should contain a [[correlation]] entry for the x/y pair
+    let correlations = model.get("correlations").and_then(|v| v.as_array());
+    assert!(
+        correlations.is_some(),
+        "Expected [[correlation]] section in blueprint, got none"
+    );
+    let corrs = correlations.unwrap();
+
+    // Find the x/y correlation
+    let has_xy = corrs.iter().any(|c| {
+        let fields = c
+            .get("fields")
+            .and_then(|f| f.as_array())
+            .map(|v| v.as_slice()).unwrap_or(&[])
+            .iter()
+            .filter_map(|v| v.as_str())
+            .collect::<Vec<_>>();
+        (fields.contains(&"x") && fields.contains(&"y"))
+    });
+    assert!(
+        has_xy,
+        "Expected correlation between x and y, found: {:?}",
+        corrs
+    );
+}
+
+#[test]
+fn incremental_correlation_parity_with_batch() {
+    // Batch and incremental should both detect x/y correlation.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("corr.csv");
+    write_correlated_csv(&csv, 200);
+
+    // Batch mode
+    let batch_out = dir.path().join("batch.knit.toml");
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "-o",
+            batch_out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Incremental mode
+    let state_file = dir.path().join("learn.state");
+    let incr_out = dir.path().join("incr.knit.toml");
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state_file.to_str().unwrap(),
+            "-o",
+            incr_out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let batch_content = fs::read_to_string(&batch_out).unwrap();
+    let incr_content = fs::read_to_string(&incr_out).unwrap();
+    let batch_model: toml::Value = toml::from_str(&batch_content).unwrap();
+    let incr_model: toml::Value = toml::from_str(&incr_content).unwrap();
+
+    // Both should have [[correlation]] sections
+    let batch_corrs = batch_model
+        .get("correlations")
+        .and_then(|v| v.as_array());
+    let incr_corrs = incr_model
+        .get("correlations")
+        .and_then(|v| v.as_array());
+
+    assert!(
+        batch_corrs.is_some(),
+        "Batch mode should detect correlations"
+    );
+    assert!(
+        incr_corrs.is_some(),
+        "Incremental mode should detect correlations"
+    );
+
+    // Both should have x/y correlation
+    let has_xy = |corrs: &[toml::Value]| {
+        corrs.iter().any(|c| {
+            let fields = c
+                .get("fields")
+                .and_then(|f| f.as_array())
+                .map(|v| v.as_slice()).unwrap_or(&[])
+                .iter()
+                .filter_map(|v| v.as_str())
+                .collect::<Vec<_>>();
+            fields.contains(&"x") && fields.contains(&"y")
+        })
+    };
+    assert!(
+        has_xy(batch_corrs.unwrap()),
+        "Batch should detect x/y correlation"
+    );
+    assert!(
+        has_xy(incr_corrs.unwrap()),
+        "Incremental should detect x/y correlation"
+    );
+}
+
+#[test]
+fn incremental_correlation_multi_chunk() {
+    // Verify correlations accumulate correctly across multiple chunks.
+    let dir = TempDir::new().unwrap();
+    let csv1 = dir.path().join("chunk1.csv");
+    let csv2 = dir.path().join("chunk2.csv");
+
+    // Split correlated data across two chunks
+    write_correlated_csv(&csv1, 100);
+
+    let mut content2 = String::from("id,x,y,noise\n");
+    for i in 101..=200 {
+        let x = i as f64;
+        let y = 2.0 * x + 10.0 + (i % 7) as f64 * 0.1;
+        let noise = ((i * 17) % 100) as f64;
+        content2.push_str(&format!("{},{:.1},{:.2},{:.0}\n", i, x, y, noise));
+    }
+    fs::write(&csv2, content2).unwrap();
+
+    let state_file = dir.path().join("learn.state");
+    let out = dir.path().join("incr.knit.toml");
+
+    // Ingest chunk 1
+    knit()
+        .args([
+            "learn",
+            csv1.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Ingest chunk 2
+    knit()
+        .args([
+            "learn",
+            csv2.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Finalize
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state_file.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&out).unwrap();
+    let model: toml::Value = toml::from_str(&content).unwrap();
+
+    let correlations = model
+        .get("correlations")
+        .and_then(|v| v.as_array())
+        .expect("Multi-chunk incremental should detect correlations");
+
+    let has_xy = correlations.iter().any(|c| {
+        let fields = c
+            .get("fields")
+            .and_then(|f| f.as_array())
+            .map(|v| v.as_slice()).unwrap_or(&[])
+            .iter()
+            .filter_map(|v| v.as_str())
+            .collect::<Vec<_>>();
+        fields.contains(&"x") && fields.contains(&"y")
+    });
+    assert!(
+        has_xy,
+        "Multi-chunk should detect x/y correlation"
+    );
+}
+
+#[test]
+fn incremental_correlation_no_false_positives() {
+    // Verify uncorrelated columns don't produce spurious correlations.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("uncorr.csv");
+
+    let mut content = String::from("id,a,b\n");
+    // Use deterministic but uncorrelated values
+    for i in 1..=200 {
+        let a = ((i * 37) % 1000) as f64;
+        let b = ((i * 83 + 500) % 997) as f64;
+        content.push_str(&format!("{},{:.0},{:.0}\n", i, a, b));
+    }
+    fs::write(&csv, content).unwrap();
+
+    let state_file = dir.path().join("learn.state");
+    let out = dir.path().join("incr.knit.toml");
+
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state_file.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(&out).unwrap();
+    let model: toml::Value = toml::from_str(&content).unwrap();
+
+    // Should NOT have any correlation entries for a/b pair
+    if let Some(corrs) = model.get("correlations").and_then(|v| v.as_array()) {
+        let has_ab = corrs.iter().any(|c| {
+            let fields = c
+                .get("fields")
+                .and_then(|f| f.as_array())
+                .map(|v| v.as_slice()).unwrap_or(&[])
+                .iter()
+                .filter_map(|v| v.as_str())
+                .collect::<Vec<_>>();
+            fields.contains(&"a") && fields.contains(&"b")
+        });
+        assert!(
+            !has_ab,
+            "Uncorrelated columns should not produce a correlation"
+        );
+    }
+    // No [[correlation]] section at all is also acceptable
+}

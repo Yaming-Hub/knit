@@ -62,7 +62,8 @@ pub struct LearnState {
     /// Relationship evidence (FK candidates with HLL sketches).
     #[serde(default)]
     pub relationship_evidence: Vec<super::relationships::RelationshipEvidence>,
-    /// Pairwise numeric correlations (running Pearson).
+    /// Legacy global correlations field (kept for backward-compatible deserialization).
+    /// Correlations are now stored per-table in `TableState.correlations`.
     #[serde(default)]
     pub correlations: Vec<super::relationships::PairwiseCorrelation>,
 }
@@ -200,6 +201,9 @@ pub struct TableState {
     pub columns: Vec<ColumnState>,
     /// Base seed for column-level RNG derivation.
     seed: u64,
+    /// Pairwise numeric correlations (running Pearson), scoped to this table.
+    #[serde(default)]
+    pub correlations: Vec<super::relationships::PairwiseCorrelation>,
 }
 
 impl TableState {
@@ -210,6 +214,7 @@ impl TableState {
             row_count: 0,
             columns: Vec::new(),
             seed,
+            correlations: Vec::new(),
         }
     }
 

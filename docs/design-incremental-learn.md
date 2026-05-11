@@ -409,6 +409,12 @@ pub struct RelationshipEvidence {
 
 ## 8. Incremental Correlation Detection
 
+> **Implementation status:** Numeric–numeric Pearson correlation is fully
+> implemented (PR #239). Pair keys are canonicalized (lexicographic order) and
+> stored per-table in `TableState.correlations`. At finalize, coefficients are
+> filtered by |r| ≥ 0.3 and p-value < 0.05 (same thresholds as batch mode),
+> then truncated to 500 results. Spearman and Cramér's V remain batch-only.
+
 ### Numeric–Numeric Correlations
 
 Pearson correlation can be computed exactly from streaming statistics
@@ -752,7 +758,7 @@ Add cross-chunk evidence accumulation:
 - Candidate pruning (naming + type) ✅
 - Running Pearson correlation for numeric pairs ✅
 - Finalize-time decision making ✅
-- Correlation wiring to CLI — **Deferred**: state tracks correlations but finalize does not emit them
+- Correlation wiring to CLI ✅ (PR #239: per-table streaming Pearson tracked during ingestion, finalized with p-value filtering)
 
 **Dependencies:** PR 4
 
@@ -787,7 +793,7 @@ gantt
 |------|--------|--------|
 | T-Digest | Complex (~200 lines); reservoir-based percentiles work well | Percentiles approximate but acceptable |
 | `--chunk-size` flag | Ingestion loads full sources eagerly; needs refactor | Memory not bounded per-chunk within a source |
-| Correlation finalize wiring | State tracks but finalize doesn't emit | Correlations require batch mode for now |
+| Spearman/Cramér's V in incremental | Only Pearson is streaming-friendly; batch has all three | Incremental may detect fewer non-linear correlations |
 | MessagePack format | JSON is simpler for debugging | State files larger but human-readable |
 | Large-file stress test | Needs CI with large datasets | No OOM verification at scale |
 

@@ -665,6 +665,12 @@ fn run_incremental(
                     }
                 }
             }
+            // Update per-table correlation evidence from this chunk's batches
+            crate::learn::incremental::update_correlation_evidence(
+                &mut state,
+                &table.entity,
+                &table.batches,
+            );
             if let Some(ref pb) = state_pb {
                 pb.inc(1);
             }
