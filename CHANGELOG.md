@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **`--tokenize-headers` implementation** — The `--tokenize-headers` flag now fully
+  tokenizes column/field names across all formats: CSV/TSV headers, JSON object keys,
+  and Parquet column names. Headers are registered during the scan phase and replaced
+  with shape-preserving tokens during the apply phase. The token dictionary captures
+  both header and value mappings for consistent restore.
 - **`--cadence` override for `knit scale`** — Users can now specify `--cadence 7d`
   or `--cadence 1w` to override auto-detected time cadence when scaling datasets.
   Low-confidence cadence detections (< 50%) emit a warning suggesting the override.

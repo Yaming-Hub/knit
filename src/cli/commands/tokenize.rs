@@ -63,9 +63,6 @@ fn run_tokenize(
     if tokenize_dates {
         eprintln!("warning: --tokenize-dates is not yet implemented; date values will be preserved");
     }
-    if tokenize_headers {
-        eprintln!("warning: --tokenize-headers is not yet implemented; headers will be preserved");
-    }
 
     let dict_path = dictionary
         .map(PathBuf::from)

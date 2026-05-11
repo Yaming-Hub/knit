@@ -162,7 +162,12 @@ pub fn restore(
     // Build a mapper with the reverse map for apply functions
     let mapper = TokenMapper::from_reverse_map(reverse_map);
 
-    let config = TokenizeConfig::default();
+    // Always enable header rewriting during restore — if headers weren't
+    // tokenized, they won't be in the inverse map and remain unchanged.
+    let config = TokenizeConfig {
+        tokenize_headers: true,
+        ..Default::default()
+    };
     let mut data_files = 0;
     let mut schema_files = 0;
     let mut dictionary_files = 0;
