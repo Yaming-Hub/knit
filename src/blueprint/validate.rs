@@ -3693,6 +3693,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     },
                     Field {
                         name: "email".to_string(),
@@ -3704,6 +3705,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     },
                 ],
                 constraints: vec![],
@@ -3713,6 +3715,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
@@ -3757,6 +3760,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -3817,6 +3821,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -3825,6 +3830,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -3867,6 +3873,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -3875,6 +3882,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -3920,6 +3928,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -3931,6 +3940,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
             ],
             constraints: vec![],
@@ -3940,6 +3950,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -3985,6 +3996,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -3996,6 +4008,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
             ],
             constraints: vec![],
@@ -4005,6 +4018,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -4049,6 +4063,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -4057,6 +4072,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         // Relationship without explicit foreign_key — implicit FK is "order_id"
         model.relationships.push(Relationship {
@@ -4184,6 +4200,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,
@@ -4264,6 +4281,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4293,6 +4311,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -4326,6 +4345,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4359,6 +4379,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4388,6 +4409,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4417,6 +4439,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -4450,6 +4473,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4520,6 +4544,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4547,6 +4572,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4574,6 +4600,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4601,6 +4628,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4628,6 +4656,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
@@ -4655,6 +4684,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4683,6 +4713,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
@@ -4711,6 +4742,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4739,6 +4771,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4760,6 +4793,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4783,6 +4817,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4806,6 +4841,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -4830,6 +4866,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4859,6 +4896,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4888,6 +4926,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -4921,6 +4960,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4950,6 +4990,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -4979,6 +5020,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5008,6 +5050,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5040,6 +5083,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5072,6 +5116,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -5105,6 +5150,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5128,6 +5174,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5158,6 +5205,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5181,6 +5229,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5202,6 +5251,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "end_date".to_string(),
@@ -5227,6 +5277,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         // Should have no errors for valid distribution offset
@@ -5250,6 +5301,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "end_date".to_string(),
@@ -5270,6 +5322,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5290,6 +5343,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "end_date".to_string(),
@@ -5310,6 +5364,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5330,6 +5385,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "expiry".to_string(),
@@ -5347,6 +5403,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         let rel_errors: Vec<_> = errors
@@ -5369,6 +5426,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "end_date".to_string(),
@@ -5383,6 +5441,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5403,6 +5462,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "end_date".to_string(),
@@ -5423,6 +5483,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5449,6 +5510,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5481,6 +5543,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -5489,6 +5552,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "ref_col".to_string(),
@@ -5506,6 +5570,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5567,6 +5632,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5590,6 +5656,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5610,6 +5677,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5637,6 +5705,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(!errors.iter().any(|e| {
@@ -5664,6 +5733,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5686,6 +5756,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5718,6 +5789,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             actor: false,
             persona_distribution: None,
@@ -5726,6 +5798,7 @@ mod tests {
             topology: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "user_id".to_string(),
@@ -5739,6 +5812,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5755,6 +5829,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             actor: true,
             persona_distribution: None,
             activity_count: None,
@@ -5775,6 +5850,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5798,6 +5874,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5822,6 +5899,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -5905,6 +5983,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             actor: false,
             persona_distribution: None,
             activity_count: None,
@@ -5937,6 +6016,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             actor: true,
             persona_distribution: None,
             activity_count: None,
@@ -5969,6 +6049,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(50),
             fields: vec![],
+            stats: None,
             actor: true,
             persona_distribution: None,
             activity_count: None,
@@ -6040,6 +6121,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             actor: true,
             persona_distribution: None,
             activity_count: None,
@@ -6081,6 +6163,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             actor: true,
             persona_distribution: None,
             activity_count: None,
@@ -6127,6 +6210,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6153,6 +6237,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             actor: false,
             persona_distribution: None,
@@ -6161,6 +6246,7 @@ mod tests {
             topology: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "post_id".to_string(),
@@ -6172,6 +6258,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "created_at".to_string(),
@@ -6191,6 +6278,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6218,6 +6306,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
                 Field {
                     name: "title".to_string(),
@@ -6229,6 +6318,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
             ],
             actor: false,
@@ -6238,6 +6328,7 @@ mod tests {
             topology: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "post_id".to_string(),
@@ -6249,6 +6340,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "created_at".to_string(),
@@ -6268,6 +6360,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6294,6 +6387,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
                 Field {
                     name: "created_at".to_string(),
@@ -6305,6 +6399,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
             ],
             actor: false,
@@ -6314,6 +6409,7 @@ mod tests {
             topology: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         // Note: no "post_id" field in user entity
         model.entities[0].fields.push(Field {
@@ -6334,6 +6430,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6362,6 +6459,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6390,6 +6488,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6418,6 +6517,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -6442,6 +6542,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -6468,6 +6569,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -6494,6 +6596,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         // Legacy template with valid field should not produce errors
@@ -6522,6 +6625,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -6549,6 +6653,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -6578,6 +6683,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "b".to_string(),
@@ -6591,6 +6697,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -6628,6 +6735,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "b".to_string(),
@@ -6641,6 +6749,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "a".to_string(),
@@ -6654,6 +6763,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(
@@ -6779,6 +6889,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,
@@ -6929,6 +7040,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             description: None,
@@ -6939,6 +7051,7 @@ mod tests {
             activity_count: None,
             mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "user_order".to_string(),
@@ -6983,6 +7096,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             description: None,
@@ -6993,6 +7107,7 @@ mod tests {
             activity_count: None,
             mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -7038,6 +7153,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
                 Field {
                     name: "user_id".to_string(),
@@ -7049,6 +7165,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                stats: None,
                 },
             ],
             constraints: vec![],
@@ -7060,6 +7177,7 @@ mod tests {
             activity_count: None,
             mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -7113,6 +7231,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             description: None,
@@ -7123,6 +7242,7 @@ mod tests {
             activity_count: None,
             mixin_refs: None,
         output: None,
+        stats: None,
         });
         model.relationships.push(Relationship {
             name: "order_user".to_string(),
@@ -7179,6 +7299,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "amount".to_string(),
@@ -7190,6 +7311,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model
     }
@@ -7438,6 +7560,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "metric".to_string(),
@@ -7458,6 +7581,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -7485,6 +7609,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "metric".to_string(),
@@ -7505,6 +7630,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -7534,6 +7660,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -7561,6 +7688,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         model.entities[0].fields.push(Field {
             name: "metric".to_string(),
@@ -7581,6 +7709,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         });
         let errors = validate(&model);
         assert!(errors.iter().any(|e| {
@@ -7628,6 +7757,4 @@ mod tests {
         }));
     }
 }
-
-
 

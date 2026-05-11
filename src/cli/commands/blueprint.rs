@@ -782,6 +782,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         }
     }
 
@@ -796,6 +797,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+                stats: None,
         }
     }
 

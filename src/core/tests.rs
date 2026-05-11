@@ -443,6 +443,7 @@ fn minimal_data_model_roundtrip() {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -451,6 +452,7 @@ fn minimal_data_model_roundtrip() {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         }],
         relationships: vec![],
         noise_profiles: vec![],
@@ -529,6 +531,7 @@ fn entity_tags_skip_serializing_when_empty() {
             tags: Vec::new(),
             count: CountSpec::Fixed(10),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,
@@ -614,4 +617,108 @@ fn constraint_not_null_json_roundtrip() {
     let json = serde_json::to_string(&c).unwrap();
     let back: Constraint = serde_json::from_str(&json).unwrap();
     assert_eq!(back, c);
+}
+
+// ── ColumnStats / TableStats serde ──────────────────────────────────
+
+#[test]
+fn column_stats_toml_roundtrip() {
+    let stats = ColumnStats {
+        distinct_count: Some(1000),
+        null_rate: Some(0.05),
+        min: Some(1.0),
+        max: Some(999.0),
+        mean: Some(500.0),
+        std: Some(100.0),
+        percentiles: Some(StatsPercentiles {
+            p25: 250.0,
+            p50: 500.0,
+            p75: 750.0,
+            p95: 950.0,
+            p99: 990.0,
+        }),
+        ..Default::default()
+    };
+    let toml_str = toml::to_string_pretty(&stats).unwrap();
+    let back: ColumnStats = toml::from_str(&toml_str).unwrap();
+    assert_eq!(back, stats);
+}
+
+#[test]
+fn column_stats_string_fields() {
+    let stats = ColumnStats {
+        distinct_count: Some(50),
+        null_rate: Some(0.0),
+        min_length: Some(3),
+        max_length: Some(100),
+        avg_length: Some(15.5),
+        top_values: Some(vec![
+            TopValue { value: "foo".into(), frequency: 0.3 },
+            TopValue { value: "bar".into(), frequency: 0.2 },
+        ]),
+        ..Default::default()
+    };
+    let json = serde_json::to_string(&stats).unwrap();
+    let back: ColumnStats = serde_json::from_str(&json).unwrap();
+    assert_eq!(back, stats);
+}
+
+#[test]
+fn table_stats_toml_roundtrip() {
+    let stats = TableStats {
+        source_rows: 10000,
+        rows_per_partition: Some(SummaryStats {
+            min: 100.0,
+            mean: 500.0,
+            max: 900.0,
+        }),
+    };
+    let toml_str = toml::to_string_pretty(&stats).unwrap();
+    let back: TableStats = toml::from_str(&toml_str).unwrap();
+    assert_eq!(back, stats);
+}
+
+#[test]
+fn field_with_stats_toml_roundtrip() {
+    let field = Field {
+        name: "amount".into(),
+        description: None,
+        data_type: DataType::Float,
+        generator: None,
+        nullable: NullSpec::Probability(0.05),
+        primary_key: None,
+        precision: Some(2),
+        actor_column: false,
+        fields: vec![],
+        stats: Some(ColumnStats {
+            distinct_count: Some(500),
+            null_rate: Some(0.05),
+            min: Some(0.01),
+            max: Some(9999.99),
+            mean: Some(150.0),
+            std: Some(80.0),
+            ..Default::default()
+        }),
+    };
+    let json = serde_json::to_string_pretty(&field).unwrap();
+    let back: Field = serde_json::from_str(&json).unwrap();
+    assert_eq!(back, field);
+}
+
+#[test]
+fn column_stats_empty_skips_serialization() {
+    let field = Field {
+        name: "id".into(),
+        description: None,
+        data_type: DataType::Int,
+        generator: None,
+        nullable: NullSpec::Never,
+        primary_key: Some(true),
+        precision: None,
+        actor_column: false,
+        fields: vec![],
+        stats: None,
+    };
+    let toml_str = toml::to_string_pretty(&field).unwrap();
+    assert!(!toml_str.contains("stats"), "stats: None should be skipped in output");
 }

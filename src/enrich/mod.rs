@@ -233,6 +233,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     },
                     Field {
                         name: "score".to_string(),
@@ -254,6 +255,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     },
                 ],
                 constraints: vec![],
@@ -263,6 +265,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
                 output: None,
+                stats: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],

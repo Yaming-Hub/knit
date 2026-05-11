@@ -278,6 +278,9 @@ pub struct Entity {
     /// the output directory. Learned from source dataset folder structure.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output: Option<OutputLayout>,
+    /// Source data statistics (populated by `knit learn`, metadata-only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stats: Option<TableStats>,
 }
 
 /// Controls the output file path for a generated entity.
@@ -306,6 +309,108 @@ pub struct PartitionValue {
     pub value: String,
     /// Proportion of total rows in this partition (0.0–1.0).
     pub weight: f64,
+}
+
+// ── Statistics ───────────────────────────────────────────────────────
+
+/// Source-data statistics for a table/entity (metadata-only, populated by `knit learn`).
+///
+/// These statistics describe the source dataset that was learned from.
+/// They do not affect generation — they are purely informational, making
+/// the model self-documenting.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TableStats {
+    /// Number of rows observed in the source data.
+    pub source_rows: u64,
+    /// Per-partition row counts (if entity uses Hive partitioning).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rows_per_partition: Option<SummaryStats>,
+}
+
+/// Source-data statistics for a single column (metadata-only, populated by `knit learn`).
+///
+/// Fields are optional so that only the relevant stats for each column type
+/// are emitted (numeric stats for numeric columns, string stats for string
+/// columns, etc.).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct ColumnStats {
+    /// Number of distinct non-null values observed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distinct_count: Option<u64>,
+    /// Fraction of null values (0.0–1.0).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub null_rate: Option<f64>,
+    // ── Numeric ──
+    /// Minimum numeric value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    /// Maximum numeric value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    /// Arithmetic mean.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mean: Option<f64>,
+    /// Standard deviation (sample).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub std: Option<f64>,
+    /// Selected percentiles.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub percentiles: Option<StatsPercentiles>,
+    // ── String ──
+    /// Minimum string length.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_length: Option<u32>,
+    /// Maximum string length.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_length: Option<u32>,
+    /// Average string length.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub avg_length: Option<f64>,
+    /// Most frequent values with occurrence counts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub top_values: Option<Vec<TopValue>>,
+    // ── Temporal ──
+    /// Earliest timestamp/date (ISO 8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_temporal: Option<String>,
+    /// Latest timestamp/date (ISO 8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_temporal: Option<String>,
+}
+
+/// Named percentiles from source data profiling.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StatsPercentiles {
+    /// 25th percentile.
+    pub p25: f64,
+    /// 50th percentile (median).
+    pub p50: f64,
+    /// 75th percentile.
+    pub p75: f64,
+    /// 95th percentile.
+    pub p95: f64,
+    /// 99th percentile.
+    pub p99: f64,
+}
+
+/// A frequently occurring value and its proportion.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TopValue {
+    /// The value (as string representation).
+    pub value: String,
+    /// Proportion of non-null rows with this value (0.0–1.0).
+    pub frequency: f64,
+}
+
+/// Summary statistics (min, mean, max) for an aggregate metric.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SummaryStats {
+    /// Minimum observed value.
+    pub min: f64,
+    /// Mean (average) value.
+    pub mean: f64,
+    /// Maximum observed value.
+    pub max: f64,
 }
 
 /// A single field (column) within an [`Entity`].
@@ -345,6 +450,9 @@ pub struct Field {
     /// Enables hierarchical document structures (JSON, Parquet, Avro).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub fields: Vec<Field>,
+    /// Source data statistics (populated by `knit learn`, metadata-only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stats: Option<ColumnStats>,
 }
 
 fn default_data_type() -> DataType {
@@ -2131,6 +2239,7 @@ step = "7d"
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                        stats: None,
                     },
                     Field {
                         name: "email".into(),
@@ -2145,6 +2254,7 @@ step = "7d"
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                        stats: None,
                     },
                 ],
                 constraints: vec![Constraint::Unique {
@@ -2156,6 +2266,7 @@ step = "7d"
                 activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -2323,6 +2434,7 @@ step = "7d"
             tags: Vec::new(),
             count: CountSpec::Fixed(1000),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: true,
@@ -2351,6 +2463,7 @@ step = "7d"
             precision: None,
             actor_column: true,
             fields: vec![],
+            stats: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         assert!(json.contains("\"actor_column\":true"));
