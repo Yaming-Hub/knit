@@ -23,10 +23,10 @@ pub fn apply_data_file(
             apply_csv(&src, out_path, entry.format, mapper, config)
         }
         FileFormat::Json | FileFormat::Jsonl => {
-            apply_json(&src, out_path, entry.format, mapper)
+            apply_json(&src, out_path, entry.format, mapper, config)
         }
         FileFormat::Parquet => {
-            apply_parquet(&src, out_path, mapper)
+            apply_parquet(&src, out_path, mapper, config)
         }
         FileFormat::Other => {
             std::fs::copy(&src, out_path)?;
@@ -61,7 +61,7 @@ fn apply_csv(
     out: &Path,
     format: FileFormat,
     mapper: &TokenMapper,
-    _config: &TokenizeConfig,
+    config: &TokenizeConfig,
 ) -> Result<()> {
     let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
 
@@ -77,9 +77,22 @@ fn apply_csv(
         .from_path(out)
         .with_context(|| format!("creating {}", out.display()))?;
 
-    // Write headers unchanged
+    // Write headers (tokenized if configured)
     let headers = rdr.headers()?.clone();
-    wtr.write_record(&headers)?;
+    if config.tokenize_headers {
+        let tokenized_headers: Vec<String> = headers
+            .iter()
+            .map(|h| {
+                mapper
+                    .get(h)
+                    .map(|t| t.to_string())
+                    .unwrap_or_else(|| h.to_string())
+            })
+            .collect();
+        wtr.write_record(&tokenized_headers)?;
+    } else {
+        wtr.write_record(&headers)?;
+    }
 
     // Write tokenized records
     for result in rdr.records() {
@@ -103,20 +116,26 @@ fn apply_json(
     out: &Path,
     format: FileFormat,
     mapper: &TokenMapper,
+    config: &TokenizeConfig,
 ) -> Result<()> {
     if format == FileFormat::Jsonl {
-        apply_jsonl(src, out, mapper)
+        apply_jsonl(src, out, mapper, config)
     } else {
         let content = std::fs::read_to_string(src)?;
         let mut value: serde_json::Value = serde_json::from_str(&content)?;
-        tokenize_json_value(&mut value, mapper);
+        tokenize_json_value(&mut value, mapper, config.tokenize_headers);
         let output = serde_json::to_string_pretty(&value)?;
         std::fs::write(out, output)?;
         Ok(())
     }
 }
 
-fn apply_jsonl(src: &Path, out: &Path, mapper: &TokenMapper) -> Result<()> {
+fn apply_jsonl(
+    src: &Path,
+    out: &Path,
+    mapper: &TokenMapper,
+    config: &TokenizeConfig,
+) -> Result<()> {
     use std::io::{BufRead, BufReader, Write};
 
     let file = std::fs::File::open(src)?;
@@ -132,15 +151,19 @@ fn apply_jsonl(src: &Path, out: &Path, mapper: &TokenMapper) -> Result<()> {
         }
         let mut value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", src.display()))?;
-        tokenize_json_value(&mut value, mapper);
+        tokenize_json_value(&mut value, mapper, config.tokenize_headers);
         serde_json::to_writer(&mut writer, &value)?;
         writeln!(writer)?;
     }
     Ok(())
 }
 
-/// Recursively tokenize all string values in a JSON value (for data files).
-fn tokenize_json_value(value: &mut serde_json::Value, mapper: &TokenMapper) {
+/// Recursively tokenize all string values (and optionally keys) in a JSON value.
+fn tokenize_json_value(
+    value: &mut serde_json::Value,
+    mapper: &TokenMapper,
+    tokenize_keys: bool,
+) {
     match value {
         serde_json::Value::String(s) => {
             if let Some(token) = mapper.get(s) {
@@ -148,13 +171,27 @@ fn tokenize_json_value(value: &mut serde_json::Value, mapper: &TokenMapper) {
             }
         }
         serde_json::Value::Object(map) => {
+            if tokenize_keys {
+                // Must rebuild map since keys need renaming
+                let entries: Vec<(String, serde_json::Value)> = map
+                    .into_iter()
+                    .map(|(k, v)| {
+                        let new_key = mapper
+                            .get(k)
+                            .map(|t| t.to_string())
+                            .unwrap_or_else(|| k.clone());
+                        (new_key, v.clone())
+                    })
+                    .collect();
+                *map = serde_json::Map::from_iter(entries);
+            }
             for val in map.values_mut() {
-                tokenize_json_value(val, mapper);
+                tokenize_json_value(val, mapper, tokenize_keys);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr.iter_mut() {
-                tokenize_json_value(item, mapper);
+                tokenize_json_value(item, mapper, tokenize_keys);
             }
         }
         _ => {}
@@ -190,8 +227,14 @@ fn tokenize_schema_value(value: &mut serde_json::Value, mapper: &TokenMapper) {
     }
 }
 
-fn apply_parquet(src: &Path, out: &Path, mapper: &TokenMapper) -> Result<()> {
+fn apply_parquet(
+    src: &Path,
+    out: &Path,
+    mapper: &TokenMapper,
+    config: &TokenizeConfig,
+) -> Result<()> {
     use arrow::array::{Array, AsArray, StringArray};
+    use arrow::datatypes::{Field, Schema};
     use arrow::record_batch::RecordBatch;
     use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
     use parquet::arrow::ArrowWriter;
@@ -202,8 +245,26 @@ fn apply_parquet(src: &Path, out: &Path, mapper: &TokenMapper) -> Result<()> {
     let schema = builder.schema().clone();
     let reader = builder.build()?;
 
+    // Optionally tokenize column names in schema
+    let output_schema = if config.tokenize_headers {
+        let new_fields: Vec<Arc<Field>> = schema
+            .fields()
+            .iter()
+            .map(|f| {
+                let new_name = mapper
+                    .get(f.name())
+                    .map(|t| t.to_string())
+                    .unwrap_or_else(|| f.name().clone());
+                Arc::new(Field::new(new_name, f.data_type().clone(), f.is_nullable()))
+            })
+            .collect();
+        Arc::new(Schema::new_with_metadata(new_fields, schema.metadata().clone()))
+    } else {
+        schema.clone()
+    };
+
     let out_file = std::fs::File::create(out)?;
-    let mut writer = ArrowWriter::try_new(out_file, schema.clone(), None)?;
+    let mut writer = ArrowWriter::try_new(out_file, output_schema.clone(), None)?;
 
     for batch_result in reader {
         let batch = batch_result?;
@@ -239,7 +300,7 @@ fn apply_parquet(src: &Path, out: &Path, mapper: &TokenMapper) -> Result<()> {
             }
         }
 
-        let new_batch = RecordBatch::try_new(schema.clone(), columns)?;
+        let new_batch = RecordBatch::try_new(output_schema.clone(), columns)?;
         writer.write(&new_batch)?;
     }
     writer.close()?;
@@ -351,5 +412,166 @@ mod tests {
         assert!(!content.contains("Customers"));
         assert!(!content.contains("Customer records"));
         assert!(!content.contains("Contact email"));
+    }
+
+    #[test]
+    fn test_apply_csv_tokenizes_headers() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.csv");
+        let out = dir.path().join("output.csv");
+
+        let mut f = std::fs::File::create(&src).unwrap();
+        writeln!(f, "id,name,city").unwrap();
+        writeln!(f, "1,Alice,Seattle").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("name");
+        mapper.register("city");
+        mapper.register("Alice");
+        mapper.register("Seattle");
+
+        let entry = FileEntry {
+            rel_path: "input.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            tokenize_headers: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let result = std::fs::read_to_string(&out).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        // Headers should be tokenized
+        assert!(!lines[0].contains("name"));
+        assert!(!lines[0].contains("city"));
+        // "id" is too short to be tokenized, so it stays
+        assert!(lines[0].contains("id"));
+        // Values also tokenized
+        assert!(!lines[1].contains("Alice"));
+        assert!(!lines[1].contains("Seattle"));
+    }
+
+    #[test]
+    fn test_apply_json_tokenizes_keys() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("data.json");
+        let out = dir.path().join("output.json");
+
+        std::fs::write(&src, r#"{"username": "Alice", "age": 30}"#).unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("username");
+        mapper.register("Alice");
+
+        let entry = FileEntry {
+            rel_path: "data.json".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Json,
+        };
+        let config = TokenizeConfig {
+            tokenize_headers: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let content = std::fs::read_to_string(&out).unwrap();
+        // Key and value should be tokenized
+        assert!(!content.contains("username"));
+        assert!(!content.contains("Alice"));
+        // Number preserved
+        assert!(content.contains("30"));
+    }
+
+    #[test]
+    fn test_apply_jsonl_tokenizes_keys() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("data.jsonl");
+        let out = dir.path().join("output.jsonl");
+
+        let mut f = std::fs::File::create(&src).unwrap();
+        writeln!(f, r#"{{"username":"Alice","score":10}}"#).unwrap();
+        writeln!(f, r#"{{"username":"Bob","score":20}}"#).unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("username");
+        mapper.register("Alice");
+        mapper.register("Bob");
+
+        let entry = FileEntry {
+            rel_path: "data.jsonl".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Jsonl,
+        };
+        let config = TokenizeConfig {
+            tokenize_headers: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let content = std::fs::read_to_string(&out).unwrap();
+        assert!(!content.contains("username"));
+        assert!(!content.contains("Alice"));
+        assert!(!content.contains("Bob"));
+    }
+
+    #[test]
+    fn test_apply_parquet_tokenizes_columns() {
+        use arrow::array::StringArray;
+        use arrow::datatypes::{DataType, Field, Schema};
+        use arrow::record_batch::RecordBatch;
+        use parquet::arrow::ArrowWriter;
+        use std::sync::Arc;
+
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.parquet");
+        let out = dir.path().join("output.parquet");
+
+        // Create a parquet file with known column names
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("username", DataType::Utf8, false),
+            Field::new("city", DataType::Utf8, false),
+        ]));
+        let names = StringArray::from(vec!["Alice", "Bob"]);
+        let cities = StringArray::from(vec!["Seattle", "Portland"]);
+        let batch = RecordBatch::try_new(schema.clone(), vec![Arc::new(names), Arc::new(cities)]).unwrap();
+        let file = std::fs::File::create(&src).unwrap();
+        let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("username");
+        mapper.register("city");
+        mapper.register("Alice");
+        mapper.register("Bob");
+        mapper.register("Seattle");
+        mapper.register("Portland");
+
+        let entry = FileEntry {
+            rel_path: "input.parquet".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Parquet,
+        };
+        let config = TokenizeConfig {
+            tokenize_headers: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        // Read back and verify column names are tokenized
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        let file = std::fs::File::open(&out).unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+        let batches: Vec<_> = reader.into_iter().collect::<Result<Vec<_>, _>>().unwrap();
+        let out_schema = batches[0].schema();
+        // Column names should NOT be the originals
+        assert_ne!(out_schema.field(0).name(), "username");
+        assert_ne!(out_schema.field(1).name(), "city");
+        // Values should also be tokenized
+        let col0 = batches[0].column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        assert_ne!(col0.value(0), "Alice");
+        assert_ne!(col0.value(1), "Bob");
     }
 }

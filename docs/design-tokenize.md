@@ -72,7 +72,7 @@ knit tokenize --verify Q:\data\my_dataset Q:\data\tokenized
 | String cell values | **Tokenized** | `--preserve-strings` (skip) |
 | String values in schema.json | **Tokenized** | — |
 | Dictionary file entries | **Tokenized** | — |
-| Column headers / field names | **Preserved** | `--tokenize-headers` |
+| Column headers / field names | **Preserved** | `--tokenize-headers` (tokenize) |
 | File names and paths | **Preserved** | `--tokenize-paths` |
 | Integer values | **Preserved** | `--tokenize-numbers` |
 | Float values | **Preserved** | `--tokenize-numbers` |
@@ -174,14 +174,19 @@ scan(dataset) → build_token_map → apply_tokens → write_output + dictionary
 ```
 
 **Phase 1: Scan** — Walk the dataset directory, classify files (data, schema,
-dictionary, companion), detect formats, read all string values.
+dictionary, companion), detect formats, read all string values. When
+`--tokenize-headers` is enabled, also registers CSV column headers, JSON object
+keys, and Parquet column names in the token map.
 
 **Phase 2: Build Token Map** — For each unique string value, generate a token
 preserving shape (length, word count, case pattern). Use a seeded RNG for
-deterministic token generation.
+deterministic token generation. Headers share the same token map as values.
 
 **Phase 3: Apply** — Re-read each file, replace string values using the token
-map, write to output directory preserving folder structure.
+map, write to output directory preserving folder structure. When
+`--tokenize-headers` is enabled, CSV headers are replaced before writing,
+JSON object keys are rewritten with tokenized names, and Parquet schemas are
+rebuilt with tokenized column names.
 
 **Phase 4: Emit Dictionary** — Write the token map as JSON.
 
@@ -353,7 +358,6 @@ src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
 |-----------|--------|-----------|
 | `--tokenize-numbers` flag accepted but not functional | Numeric values always preserved | Warning emitted at runtime |
 | `--tokenize-dates` flag accepted but not functional | Date values always preserved | Warning emitted at runtime |
-| `--tokenize-headers` flag accepted but not functional | Headers always preserved | Warning emitted at runtime |
 | Restore ambiguity | A generated token may match an untouched literal | Rare in practice; requires field-level metadata to fix fully |
 | Memory usage | All unique strings held in HashMap | Acceptable for datasets < 10M unique strings |
 
@@ -361,7 +365,6 @@ src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
 
 - Implement `--tokenize-numbers` (numeric value obfuscation)
 - Implement `--tokenize-dates` (date/timestamp shifting)
-- Implement `--tokenize-headers` (column name anonymization)
 - Field-level restore metadata (eliminate restore ambiguity)
 - Streaming tokenization for very large datasets
 - Selective column tokenization (`--tokenize-columns`, `--preserve-columns`)

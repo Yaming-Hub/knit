@@ -146,7 +146,7 @@ fn extract_csv_strings(
     path: &Path,
     format: FileFormat,
     mapper: &mut TokenMapper,
-    _config: &TokenizeConfig,
+    config: &TokenizeConfig,
 ) -> Result<()> {
     let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
     let mut rdr = csv::ReaderBuilder::new()
@@ -155,6 +155,16 @@ fn extract_csv_strings(
         .flexible(true)
         .from_path(path)
         .with_context(|| format!("opening CSV {}", path.display()))?;
+
+    // Register headers if header tokenization is enabled
+    if config.tokenize_headers {
+        let headers = rdr.headers()?.clone();
+        for h in headers.iter() {
+            if should_tokenize_value(h) {
+                mapper.register(h);
+            }
+        }
+    }
 
     for result in rdr.records() {
         let record = result?;
@@ -171,7 +181,7 @@ fn extract_json_strings(
     path: &Path,
     kind: FileKind,
     mapper: &mut TokenMapper,
-    _config: &TokenizeConfig,
+    config: &TokenizeConfig,
 ) -> Result<()> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("reading {}", path.display()))?;
@@ -181,7 +191,7 @@ fn extract_json_strings(
         if kind == FileKind::Schema {
             extract_schema_json_strings(&value, mapper);
         } else {
-            extract_data_json_strings(&value, mapper);
+            extract_data_json_strings(&value, mapper, config.tokenize_headers);
         }
         return Ok(());
     }
@@ -194,7 +204,7 @@ fn extract_json_strings(
         }
         let value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
-        extract_data_json_strings(&value, mapper);
+        extract_data_json_strings(&value, mapper, config.tokenize_headers);
     }
     Ok(())
 }
@@ -231,8 +241,12 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
     }
 }
 
-/// For data files, tokenize all string values (not keys).
-fn extract_data_json_strings(value: &serde_json::Value, mapper: &mut TokenMapper) {
+/// For data files, tokenize all string values (and optionally keys).
+fn extract_data_json_strings(
+    value: &serde_json::Value,
+    mapper: &mut TokenMapper,
+    tokenize_keys: bool,
+) {
     match value {
         serde_json::Value::String(s) => {
             if should_tokenize_value(s) {
@@ -240,13 +254,16 @@ fn extract_data_json_strings(value: &serde_json::Value, mapper: &mut TokenMapper
             }
         }
         serde_json::Value::Object(map) => {
-            for val in map.values() {
-                extract_data_json_strings(val, mapper);
+            for (key, val) in map {
+                if tokenize_keys && should_tokenize_value(key) {
+                    mapper.register(key);
+                }
+                extract_data_json_strings(val, mapper, tokenize_keys);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                extract_data_json_strings(item, mapper);
+                extract_data_json_strings(item, mapper, tokenize_keys);
             }
         }
         _ => {}
@@ -256,7 +273,7 @@ fn extract_data_json_strings(value: &serde_json::Value, mapper: &mut TokenMapper
 fn extract_parquet_strings(
     path: &Path,
     mapper: &mut TokenMapper,
-    _config: &TokenizeConfig,
+    config: &TokenizeConfig,
 ) -> Result<()> {
     use arrow::array::{Array, AsArray};
     use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
@@ -266,8 +283,20 @@ fn extract_parquet_strings(
     let reader = ParquetRecordBatchReaderBuilder::try_new(file)?
         .build()?;
 
+    let mut schema_registered = false;
     for batch_result in reader {
         let batch = batch_result?;
+
+        // Register column names (once per file)
+        if config.tokenize_headers && !schema_registered {
+            for field in batch.schema().fields() {
+                if should_tokenize_value(field.name()) {
+                    mapper.register(field.name());
+                }
+            }
+            schema_registered = true;
+        }
+
         for col_idx in 0..batch.num_columns() {
             let col = batch.column(col_idx);
             if let Some(str_arr) = col.as_string_opt::<i32>() {
