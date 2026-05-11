@@ -154,7 +154,7 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
     let orig_entries = scan_directory(original)?;
     let tok_entries = scan_directory(tokenized)?;
 
-    // Check file count match (excluding .knit-tokens.json)
+    // Compare data file sets by relative path (not just counts)
     let orig_data: Vec<_> = orig_entries.iter().filter(|e| e.kind == FileKind::Data).collect();
     let tok_data: Vec<_> = tok_entries
         .iter()
@@ -162,9 +162,21 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
         .filter(|e| !e.rel_path.to_string_lossy().contains(".knit-tokens"))
         .collect();
 
-    let file_match = orig_data.len() == tok_data.len();
+    let orig_paths: std::collections::HashSet<String> = orig_data
+        .iter()
+        .map(|e| e.rel_path.to_string_lossy().to_string())
+        .collect();
+    let tok_paths: std::collections::HashSet<String> = tok_data
+        .iter()
+        .map(|e| e.rel_path.to_string_lossy().to_string())
+        .collect();
+    let file_match = orig_paths == tok_paths;
+    let mut missing_files: Vec<_> = orig_paths.difference(&tok_paths).cloned().collect();
+    let mut extra_files: Vec<_> = tok_paths.difference(&orig_paths).cloned().collect();
+    missing_files.sort();
+    extra_files.sort();
 
-    // Check row counts for CSV files
+    // Check row counts for data files that exist in both trees
     let mut row_mismatches: Vec<serde_json::Value> = Vec::new();
     let mut row_match = true;
     for orig in &orig_data {
@@ -184,10 +196,18 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
         }
     }
 
-    // Check schema files preserved
+    // Compare schema file sets by relative path
     let orig_schemas: Vec<_> = orig_entries.iter().filter(|e| e.kind == FileKind::Schema).collect();
     let tok_schemas: Vec<_> = tok_entries.iter().filter(|e| e.kind == FileKind::Schema).collect();
-    let schema_match = orig_schemas.len() == tok_schemas.len();
+    let orig_schema_paths: std::collections::HashSet<String> = orig_schemas
+        .iter()
+        .map(|e| e.rel_path.to_string_lossy().to_string())
+        .collect();
+    let tok_schema_paths: std::collections::HashSet<String> = tok_schemas
+        .iter()
+        .map(|e| e.rel_path.to_string_lossy().to_string())
+        .collect();
+    let schema_match = orig_schema_paths == tok_schema_paths;
 
     let passed = file_match && row_match && schema_match;
 
@@ -199,6 +219,12 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
             "row_counts": { "match": row_match },
             "schema_files": { "match": schema_match, "original": orig_schemas.len(), "tokenized": tok_schemas.len() },
         });
+        if !missing_files.is_empty() {
+            json["file_count"]["missing"] = serde_json::json!(missing_files);
+        }
+        if !extra_files.is_empty() {
+            json["file_count"]["extra"] = serde_json::json!(extra_files);
+        }
         if !row_mismatches.is_empty() {
             json["row_counts"]["mismatches"] = serde_json::Value::Array(row_mismatches);
         }
@@ -211,6 +237,12 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
             orig_data.len(),
             tok_data.len()
         );
+        for f in &missing_files {
+            println!("    missing: {}", f);
+        }
+        for f in &extra_files {
+            println!("    extra:   {}", f);
+        }
 
         for m in &row_mismatches {
             println!(
@@ -228,6 +260,10 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
         } else {
             println!("\n  Structure verification FAILED.");
         }
+    }
+
+    if !passed {
+        bail!("structure verification failed");
     }
     Ok(())
 }
