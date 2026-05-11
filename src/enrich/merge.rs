@@ -245,6 +245,7 @@ mod tests {
             actor_column: false,
             fields: vec![],
                 stats: None,
+                traits: None,
         }
     }
 

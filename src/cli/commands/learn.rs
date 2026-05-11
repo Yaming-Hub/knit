@@ -943,6 +943,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                 .record();
         }
         ca.stats = Some(build_column_stats(profile));
+        ca.traits = Some(detect_field_traits(profile, &ca));
         return ca;
     }
 
@@ -967,6 +968,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
         }
         // Always return here for complex types (even if all-null)
         ca.stats = Some(build_column_stats(profile));
+        ca.traits = Some(detect_field_traits(profile, &ca));
         return ca;
     }
 
@@ -996,6 +998,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                 ca.categorical_weights = Some(weights);
                 ca.is_integer_valued = false;
                 ca.stats = Some(build_column_stats(profile));
+                ca.traits = Some(detect_field_traits(profile, &ca));
                 return ca;
             }
         }
@@ -1167,6 +1170,9 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     // Build column stats from the profile
     ca.stats = Some(build_column_stats(profile));
 
+    // Detect qualitative traits
+    ca.traits = Some(detect_field_traits(profile, &ca));
+
     ca
 }
 
@@ -1218,6 +1224,136 @@ fn build_column_stats(profile: &ColumnProfile) -> crate::core::ColumnStats {
     }
 
     stats
+}
+
+/// Detect qualitative [`FieldTraits`] from a column's profile and analysis.
+///
+/// Heuristics:
+/// - **semantic**: maps `InferredType` → human-readable label; falls back to
+///   arrow type for natively-typed columns.
+/// - **pii**: detects PII-like string patterns (email, phone, name).
+/// - **cardinality**: buckets cardinality_ratio into low / medium / high / unique.
+/// - **distribution_shape**: classifies from skewness + kurtosis (numeric only).
+/// - **trend**: reserved for future temporal-trend detection (always `None` for now).
+fn detect_field_traits(
+    profile: &ColumnProfile,
+    analysis: &ColumnAnalysis,
+) -> crate::core::FieldTraits {
+    use crate::core::{Cardinality, DistributionShape, FieldTraits};
+
+    // --- semantic ---
+    let semantic = match &analysis.inferred_type {
+        Some(InferredType::Integer) => Some("integer".to_string()),
+        Some(InferredType::Float) => Some("float".to_string()),
+        Some(InferredType::Boolean) => Some("boolean".to_string()),
+        Some(InferredType::Date(_)) => Some("date".to_string()),
+        Some(InferredType::Uuid) => Some("uuid".to_string()),
+        Some(InferredType::Categorical) => Some("categorical".to_string()),
+        Some(InferredType::Text) => Some("text".to_string()),
+        None => {
+            // Fall back to arrow type for natively-typed columns
+            match &profile.data_type {
+                DataType::Boolean => Some("boolean".to_string()),
+                DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64
+                | DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64 => {
+                    Some("integer".to_string())
+                }
+                DataType::Float16 | DataType::Float32 | DataType::Float64 => {
+                    Some("float".to_string())
+                }
+                DataType::Date32 | DataType::Date64 | DataType::Timestamp(_, _) => {
+                    Some("timestamp".to_string())
+                }
+                _ => None,
+            }
+        }
+    };
+
+    // Override semantic for pattern-detected types (email, uuid, phone, etc.)
+    let semantic = {
+        let best = analysis
+            .string_patterns
+            .iter()
+            .filter(|(_, rate)| *rate > 0.8)
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+        match best {
+            Some((StringPattern::Email, _)) => Some("email".to_string()),
+            Some((StringPattern::Phone, _)) => Some("phone".to_string()),
+            Some((StringPattern::Url, _)) => Some("url".to_string()),
+            Some((StringPattern::Uuid, _)) => Some("uuid".to_string()),
+            Some((StringPattern::Name, _)) => Some("name".to_string()),
+            Some((StringPattern::Date, _)) => Some("date".to_string()),
+            Some((StringPattern::HexString(_), _)) => Some("hex_string".to_string()),
+            _ => semantic,
+        }
+    };
+
+    // --- pii ---
+    let pii = {
+        let has_pii_pattern = analysis.string_patterns.iter().any(|(pat, rate)| {
+            *rate > 0.5
+                && matches!(
+                    pat,
+                    StringPattern::Email | StringPattern::Phone | StringPattern::Name
+                )
+        });
+        if has_pii_pattern {
+            Some(true)
+        } else {
+            None // omit false to keep output clean
+        }
+    };
+
+    // --- cardinality ---
+    let cardinality = profile.cardinality_ratio.map(|ratio| {
+        if ratio >= 0.99 {
+            Cardinality::Unique
+        } else if ratio >= 0.30 {
+            Cardinality::High
+        } else if ratio >= 0.01 {
+            Cardinality::Medium
+        } else {
+            Cardinality::Low
+        }
+    });
+
+    // --- distribution_shape (numeric only) ---
+    let distribution_shape = profile.numeric.as_ref().map(|num| {
+        let skew = num.skewness.abs();
+        let kurt = num.kurtosis; // excess kurtosis: 0 = normal
+        if skew < 0.5 && kurt.abs() < 1.0 {
+            // Symmetric, near-normal kurtosis → could be uniform or normal
+            // Use p10-p90 span vs full range to distinguish.
+            // Uniform: p10-p90 ≈ 80% of range. Normal: p10-p90 ≈ much less.
+            let range = num.max - num.min;
+            if range > 0.0 {
+                let central_span = num.percentiles.p90 - num.percentiles.p10;
+                let central_ratio = central_span / range;
+                // Uniform: ratio ≈ 0.8. Normal: ratio typically < 0.65.
+                if central_ratio > 0.70 {
+                    DistributionShape::Uniform
+                } else {
+                    DistributionShape::Normal
+                }
+            } else {
+                DistributionShape::Uniform
+            }
+        } else if skew >= 0.5 && kurt < 3.0 {
+            DistributionShape::Skewed
+        } else if kurt >= 3.0 {
+            DistributionShape::LongTail
+        } else {
+            DistributionShape::Normal
+        }
+    });
+
+    FieldTraits {
+        semantic,
+        pii,
+        cardinality,
+        trend: None, // v2: temporal trend detection
+        distribution_shape,
+    }
 }
 
 /// Extract f64 values from a numeric column in a record batch.
@@ -3141,6 +3277,191 @@ mod tests {
             output_dir.join("tables").join("data.toml").exists(),
             "should have tables/data.toml"
         );
+    }
+
+    // ── detect_field_traits tests ────────────────────────────────────
+
+    fn make_profile(name: &str) -> ColumnProfile {
+        ColumnProfile {
+            name: name.to_string(),
+            data_type: DataType::Utf8,
+            count: 100,
+            null_count: 0,
+            null_rate: 0.0,
+            empty_string_rate: 0.0,
+            distinct_count: Some(50),
+            cardinality_ratio: Some(0.5),
+            numeric: None,
+            string: None,
+            temporal: None,
+        }
+    }
+
+    fn make_analysis(name: &str) -> ColumnAnalysis {
+        ColumnAnalysis::new(name.to_string(), 0.0, 1.0)
+    }
+
+    #[test]
+    fn traits_cardinality_unique() {
+        let mut profile = make_profile("id");
+        profile.cardinality_ratio = Some(0.99);
+        let analysis = make_analysis("id");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.cardinality, Some(crate::core::Cardinality::Unique));
+    }
+
+    #[test]
+    fn traits_cardinality_high() {
+        let mut profile = make_profile("col");
+        profile.cardinality_ratio = Some(0.5);
+        let analysis = make_analysis("col");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.cardinality, Some(crate::core::Cardinality::High));
+    }
+
+    #[test]
+    fn traits_cardinality_medium() {
+        let mut profile = make_profile("col");
+        profile.cardinality_ratio = Some(0.10);
+        let analysis = make_analysis("col");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.cardinality, Some(crate::core::Cardinality::Medium));
+    }
+
+    #[test]
+    fn traits_cardinality_low() {
+        let mut profile = make_profile("col");
+        profile.cardinality_ratio = Some(0.005);
+        let analysis = make_analysis("col");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.cardinality, Some(crate::core::Cardinality::Low));
+    }
+
+    #[test]
+    fn traits_semantic_from_inferred_type() {
+        let profile = make_profile("email_col");
+        let mut analysis = make_analysis("email_col");
+        analysis.inferred_type = Some(InferredType::Uuid);
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.semantic.as_deref(), Some("uuid"));
+    }
+
+    #[test]
+    fn traits_semantic_pattern_overrides_inferred() {
+        let profile = make_profile("email_col");
+        let mut analysis = make_analysis("email_col");
+        analysis.inferred_type = Some(InferredType::Text);
+        analysis.string_patterns = vec![(StringPattern::Email, 0.95)];
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.semantic.as_deref(), Some("email"));
+    }
+
+    #[test]
+    fn traits_pii_detected_for_email() {
+        let profile = make_profile("email");
+        let mut analysis = make_analysis("email");
+        analysis.string_patterns = vec![(StringPattern::Email, 0.9)];
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.pii, Some(true));
+    }
+
+    #[test]
+    fn traits_pii_not_set_for_non_pii() {
+        let profile = make_profile("status");
+        let mut analysis = make_analysis("status");
+        analysis.inferred_type = Some(InferredType::Categorical);
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.pii, None);
+    }
+
+    #[test]
+    fn traits_distribution_normal() {
+        use crate::learn::profile::{NumericProfile, Percentiles};
+        let mut profile = make_profile("score");
+        profile.data_type = DataType::Float64;
+        // Normal: symmetric (skew≈0), mesokurtic (kurt≈0), IQR/range > 0.55
+        profile.numeric = Some(NumericProfile {
+            min: 10.0,
+            max: 90.0,
+            mean: 50.0,
+            median: 50.0,
+            std_dev: 15.0,
+            skewness: 0.1,
+            kurtosis: 0.0,
+            percentiles: Percentiles {
+                p1: 15.0, p5: 20.0, p10: 25.0, p25: 38.0, p50: 50.0,
+                p75: 62.0, p90: 75.0, p95: 80.0, p99: 85.0,
+            },
+            max_decimal_places: Some(2),
+        });
+        let analysis = make_analysis("score");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.distribution_shape, Some(crate::core::DistributionShape::Normal));
+    }
+
+    #[test]
+    fn traits_distribution_skewed() {
+        use crate::learn::profile::{NumericProfile, Percentiles};
+        let mut profile = make_profile("income");
+        profile.data_type = DataType::Float64;
+        profile.numeric = Some(NumericProfile {
+            min: 0.0,
+            max: 1000000.0,
+            mean: 50000.0,
+            median: 35000.0,
+            std_dev: 80000.0,
+            skewness: 2.5,
+            kurtosis: 1.0,
+            percentiles: Percentiles {
+                p1: 1000.0, p5: 5000.0, p10: 10000.0, p25: 20000.0, p50: 35000.0,
+                p75: 60000.0, p90: 100000.0, p95: 150000.0, p99: 500000.0,
+            },
+            max_decimal_places: Some(2),
+        });
+        let analysis = make_analysis("income");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.distribution_shape, Some(crate::core::DistributionShape::Skewed));
+    }
+
+    #[test]
+    fn traits_distribution_long_tail() {
+        use crate::learn::profile::{NumericProfile, Percentiles};
+        let mut profile = make_profile("views");
+        profile.data_type = DataType::Int64;
+        profile.numeric = Some(NumericProfile {
+            min: 0.0,
+            max: 10000000.0,
+            mean: 1000.0,
+            median: 10.0,
+            std_dev: 100000.0,
+            skewness: 5.0,
+            kurtosis: 50.0,
+            percentiles: Percentiles {
+                p1: 0.0, p5: 0.0, p10: 1.0, p25: 3.0, p50: 10.0,
+                p75: 50.0, p90: 200.0, p95: 1000.0, p99: 50000.0,
+            },
+            max_decimal_places: None,
+        });
+        let analysis = make_analysis("views");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.distribution_shape, Some(crate::core::DistributionShape::LongTail));
+    }
+
+    #[test]
+    fn traits_no_distribution_for_non_numeric() {
+        let profile = make_profile("name");
+        let analysis = make_analysis("name");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.distribution_shape, None);
+    }
+
+    #[test]
+    fn traits_semantic_from_arrow_type() {
+        let mut profile = make_profile("age");
+        profile.data_type = DataType::Int32;
+        let analysis = make_analysis("age");
+        let traits = detect_field_traits(&profile, &analysis);
+        assert_eq!(traits.semantic.as_deref(), Some("integer"));
     }
 }
 

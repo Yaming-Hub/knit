@@ -413,6 +413,74 @@ pub struct SummaryStats {
     pub max: f64,
 }
 
+// ── Field Traits ─────────────────────────────────────────────────────
+
+/// Auto-detected qualitative traits for a column (populated by `knit learn`).
+///
+/// Traits are derived categorizations that summarize the semantic nature,
+/// cardinality, trend, and distribution shape of a column. They complement
+/// [`ColumnStats`] (which holds raw numeric statistics) with human-readable
+/// classifications. Like stats, traits are metadata-only and do not affect
+/// generation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct FieldTraits {
+    /// Detected semantic type (e.g. `"email"`, `"uuid"`, `"date"`, `"categorical"`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic: Option<String>,
+    /// Whether the column likely contains personally identifiable information.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pii: Option<bool>,
+    /// Cardinality level relative to row count.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cardinality: Option<Cardinality>,
+    /// Observed value trend over the dataset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trend: Option<Trend>,
+    /// Shape of the value distribution (numeric columns only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distribution_shape: Option<DistributionShape>,
+}
+
+/// Cardinality classification for a column.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Cardinality {
+    /// Very few distinct values relative to row count (< 1%).
+    Low,
+    /// Moderate number of distinct values (1–30%).
+    Medium,
+    /// Many distinct values (30–99%).
+    High,
+    /// Nearly all values are unique (≥ 99%).
+    Unique,
+}
+
+/// Trend classification for a column's values.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Trend {
+    /// Values show no systematic drift.
+    Stable,
+    /// Values tend to increase over the dataset.
+    Increasing,
+    /// Values tend to decrease over the dataset.
+    Decreasing,
+}
+
+/// Distribution shape classification (numeric columns only).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DistributionShape {
+    /// Values spread roughly evenly across the range.
+    Uniform,
+    /// Values cluster around the mean symmetrically.
+    Normal,
+    /// Distribution has a long tail on one side.
+    Skewed,
+    /// Extreme concentration in the tails.
+    LongTail,
+}
+
 /// A single field (column) within an [`Entity`].
 ///
 /// Each field has a data type, an optional generator that produces values, and
@@ -453,6 +521,9 @@ pub struct Field {
     /// Source data statistics (populated by `knit learn`, metadata-only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stats: Option<ColumnStats>,
+    /// Auto-detected qualitative traits (populated by `knit learn`, metadata-only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub traits: Option<FieldTraits>,
 }
 
 fn default_data_type() -> DataType {
@@ -2240,6 +2311,7 @@ step = "7d"
                         actor_column: false,
                         fields: vec![],
                         stats: None,
+                        traits: None,
                     },
                     Field {
                         name: "email".into(),
@@ -2255,6 +2327,7 @@ step = "7d"
                         actor_column: false,
                         fields: vec![],
                         stats: None,
+                        traits: None,
                     },
                 ],
                 constraints: vec![Constraint::Unique {
@@ -2464,6 +2537,7 @@ step = "7d"
             actor_column: true,
             fields: vec![],
             stats: None,
+            traits: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         assert!(json.contains("\"actor_column\":true"));

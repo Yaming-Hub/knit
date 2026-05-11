@@ -444,6 +444,7 @@ fn minimal_data_model_roundtrip() {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             }],
             constraints: vec![],
             topology: None,
@@ -690,6 +691,7 @@ fn field_with_stats_toml_roundtrip() {
         precision: Some(2),
         actor_column: false,
         fields: vec![],
+        traits: None,
         stats: Some(ColumnStats {
             distinct_count: Some(500),
             null_rate: Some(0.05),
@@ -718,7 +720,89 @@ fn column_stats_empty_skips_serialization() {
         actor_column: false,
         fields: vec![],
         stats: None,
+        traits: None,
     };
     let toml_str = toml::to_string_pretty(&field).unwrap();
     assert!(!toml_str.contains("stats"), "stats: None should be skipped in output");
+    assert!(!toml_str.contains("traits"), "traits: None should be skipped in output");
+}
+
+// ── FieldTraits tests ───────────────────────────────────────────────
+
+#[test]
+fn field_traits_serde_roundtrip() {
+    let traits = FieldTraits {
+        semantic: Some("email".into()),
+        pii: Some(true),
+        cardinality: Some(Cardinality::High),
+        trend: None,
+        distribution_shape: Some(DistributionShape::Normal),
+    };
+    let toml_str = toml::to_string_pretty(&traits).unwrap();
+    let back: FieldTraits = toml::from_str(&toml_str).unwrap();
+    assert_eq!(back, traits);
+}
+
+#[test]
+fn field_traits_snake_case_enums() {
+    let toml_str = r#"
+        cardinality = "unique"
+        distribution_shape = "long_tail"
+    "#;
+    let traits: FieldTraits = toml::from_str(toml_str).unwrap();
+    assert_eq!(traits.cardinality, Some(Cardinality::Unique));
+    assert_eq!(traits.distribution_shape, Some(DistributionShape::LongTail));
+}
+
+#[test]
+fn field_traits_default_is_all_none() {
+    let traits = FieldTraits::default();
+    assert_eq!(traits.semantic, None);
+    assert_eq!(traits.pii, None);
+    assert_eq!(traits.cardinality, None);
+    assert_eq!(traits.trend, None);
+    assert_eq!(traits.distribution_shape, None);
+}
+
+#[test]
+fn field_with_traits_toml_roundtrip() {
+    let field = Field {
+        name: "user_email".into(),
+        description: None,
+        data_type: DataType::String,
+        generator: None,
+        nullable: NullSpec::Never,
+        primary_key: None,
+        precision: None,
+        actor_column: false,
+        fields: vec![],
+        stats: None,
+        traits: Some(FieldTraits {
+            semantic: Some("email".into()),
+            pii: Some(true),
+            cardinality: Some(Cardinality::Unique),
+            trend: None,
+            distribution_shape: None,
+        }),
+    };
+    let toml_str = toml::to_string_pretty(&field).unwrap();
+    assert!(toml_str.contains("semantic = \"email\""));
+    assert!(toml_str.contains("pii = true"));
+    let back: Field = toml::from_str(&toml_str).unwrap();
+    assert_eq!(back.traits, field.traits);
+}
+
+#[test]
+fn field_traits_none_skips_serialization() {
+    let traits = FieldTraits {
+        semantic: Some("integer".into()),
+        pii: None,
+        cardinality: Some(Cardinality::Low),
+        trend: None,
+        distribution_shape: None,
+    };
+    let toml_str = toml::to_string_pretty(&traits).unwrap();
+    assert!(!toml_str.contains("pii"), "None pii should be omitted");
+    assert!(!toml_str.contains("trend"), "None trend should be omitted");
+    assert!(!toml_str.contains("distribution_shape"), "None shape should be omitted");
 }

@@ -332,6 +332,7 @@ mod tests {
                         actor_column: false,
                         fields: vec![],
                 stats: None,
+                traits: None,
                     }],
                     constraints: vec![],
                     topology: None,
@@ -366,6 +367,7 @@ mod tests {
                             actor_column: false,
                             fields: vec![],
                 stats: None,
+                traits: None,
                         },
                         Field {
                             name: "user_id".into(),
@@ -381,6 +383,7 @@ mod tests {
                             actor_column: false,
                             fields: vec![],
                 stats: None,
+                traits: None,
                         },
                         Field {
                             name: "Region".into(),
@@ -408,6 +411,7 @@ mod tests {
                             actor_column: false,
                             fields: vec![],
                 stats: None,
+                traits: None,
                         },
                     ],
                     constraints: vec![],

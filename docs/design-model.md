@@ -785,7 +785,7 @@ knit model flatten my_model/ -o blueprint.knit.toml
 
 - Direct table-level update operations (edit single table without full rewrite)
 - ~~Statistics layer (`[columns.stats]`, `[table.stats]`)~~ ✅ (PR #236)
-- Auto-detected traits (semantic, cardinality, trend, distribution shape)
+- ~~Auto-detected traits (semantic, cardinality, trend, distribution shape)~~ ✅ (PR #237)
 
 ### Completed (Phase 4 — Statistics Layer)
 
@@ -800,6 +800,19 @@ knit model flatten my_model/ -o blueprint.knit.toml
 | Table stats | `src/learn/schema_assembly.rs` | Computed in `build_entity()` from row count + partition weights |
 | Structured model | `src/model/reader.rs`, `writer.rs` | Full round-trip through `TableMeta`/`TableMetaOut` |
 | Flat model | via serde | Stats serialize/deserialize as `[entities.fields.stats]` |
+
+### Completed (Phase 4 — Field Traits)
+
+| Component | Location | Notes |
+|-----------|----------|-------|
+| `FieldTraits` type | `src/core/types.rs` | semantic, pii, cardinality, trend, distribution_shape |
+| `Cardinality` enum | `src/core/types.rs` | Low / Medium / High / Unique |
+| `Trend` enum | `src/core/types.rs` | Stable / Increasing / Decreasing |
+| `DistributionShape` enum | `src/core/types.rs` | Uniform / Normal / Skewed / LongTail |
+| `Field.traits` | `src/core/types.rs` | Optional `FieldTraits`, skipped when None |
+| Trait detection | `src/cli/commands/learn.rs` | `detect_field_traits()` — maps InferredType, patterns, cardinality ratio, skewness/kurtosis |
+| PII detection | `src/cli/commands/learn.rs` | Flags Email, Phone, Name patterns as PII |
+| Propagation | `src/learn/schema_assembly.rs` | `ColumnAnalysis.traits` → `Field.traits` in `build_entity()` |
 
 ---
 
