@@ -6,6 +6,10 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **`--json` output for `knit tokenize`** — The global `--json` flag now produces
+  machine-readable JSON output for all three tokenize modes: tokenize, restore,
+  and verify. Output includes event type, file counts, token statistics, column
+  filters, and verification results. Useful for CI/CD pipelines and scripting.
 - **Selective column tokenization** — New `--tokenize-columns` and `--preserve-columns`
   flags for `knit tokenize` allow fine-grained control over which columns are tokenized.
   `--tokenize-columns "Name,Email"` only tokenizes the listed columns (whitelist);
