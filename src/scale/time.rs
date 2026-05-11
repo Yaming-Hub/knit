@@ -34,8 +34,8 @@ pub fn compute_new_partitions(
     // Parse the spec into a target date range
     let (target_start, target_end) = if let Some(range_spec) = spec.strip_prefix('+') {
         // Relative extension: +26w means extend 26 weeks beyond current end
-        let days = parse_duration_days(range_spec)?;
-        (first, last + chrono::Duration::days(days))
+        let end = apply_duration(last, range_spec)?;
+        (first, end)
     } else if spec.contains("..") {
         // Explicit range: 2024-01-01..2025-12-31
         let parts: Vec<&str> = spec.splitn(2, "..").collect();
@@ -48,8 +48,8 @@ pub fn compute_new_partitions(
         (start, end)
     } else {
         // Duration from the original start: 52w, 6m, 365d, 2y
-        let days = parse_duration_days(spec)?;
-        (first, first + chrono::Duration::days(days))
+        let end = apply_duration(first, spec)?;
+        (first, end)
     };
 
     if target_end < target_start {
@@ -93,12 +93,21 @@ fn step_dates(
             }
         }
         Cadence::Months(n) => {
-            // Use the original day-of-month as the anchor to avoid drift
-            // (e.g., Jan 31 → Feb 29 → Mar 31 → Apr 30, not Jan 31 → Feb 29 → Mar 29)
-            let anchor_day = start.day();
+            // Detect end-of-month: if start is the last day of its month,
+            // always step to the last day of each target month.
+            let is_eom = start.day() == days_in_month(start.year(), start.month());
+            let anchor_day = if is_eom { 31 } else { start.day() };
             let mut months_offset = 0u32;
             loop {
-                let d = add_months_anchored(start, months_offset, anchor_day);
+                let d = if is_eom {
+                    // End-of-month: always use the last day
+                    let total = start.year() as i32 * 12 + (start.month() as i32 - 1) + months_offset as i32;
+                    let y = total / 12;
+                    let m = (total % 12) as u32 + 1;
+                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap()
+                } else {
+                    add_months_anchored(start, months_offset, anchor_day)
+                };
                 if d > end {
                     break;
                 }
@@ -129,7 +138,7 @@ fn add_months_anchored(base: chrono::NaiveDate, months: u32, anchor_day: u32) ->
 }
 
 /// Return the number of days in a given month.
-fn days_in_month(year: i32, month: u32) -> u32 {
+pub(crate) fn days_in_month(year: i32, month: u32) -> u32 {
     match month {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
         4 | 6 | 9 | 11 => 30,
@@ -146,16 +155,8 @@ fn days_in_month(year: i32, month: u32) -> u32 {
 
 use chrono::Datelike;
 
-/// Parse a date string (YYYY-MM-DD, YYYY/MM/DD, or YYYYMMDD).
-fn parse_date(s: &str) -> Option<chrono::NaiveDate> {
-    chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d")
-        .or_else(|_| chrono::NaiveDate::parse_from_str(s, "%Y/%m/%d"))
-        .or_else(|_| chrono::NaiveDate::parse_from_str(s, "%Y%m%d"))
-        .ok()
-}
-
-/// Parse a duration spec like "52w", "6m", "365d", "2y" into days.
-fn parse_duration_days(spec: &str) -> anyhow::Result<i64> {
+/// Apply a duration spec to a base date, using calendar-aware addition for months/years.
+fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono::NaiveDate> {
     let spec = spec.trim();
     if spec.is_empty() {
         anyhow::bail!("empty duration spec");
@@ -166,23 +167,49 @@ fn parse_duration_days(spec: &str) -> anyhow::Result<i64> {
         .parse()
         .map_err(|_| anyhow::anyhow!("invalid duration number in '{}'", spec))?;
 
-    let days = match unit {
-        "d" => num,
-        "w" => num * 7.0,
-        "m" => num * 30.0,
-        "y" => num * 365.0,
+    match unit {
+        "d" => Ok(base + chrono::Duration::days(num.round() as i64)),
+        "w" => Ok(base + chrono::Duration::days((num * 7.0).round() as i64)),
+        "m" => {
+            // Calendar month addition
+            let months = num.round() as u32;
+            let is_eom = base.day() == days_in_month(base.year(), base.month());
+            if is_eom {
+                let total = base.year() as i32 * 12 + (base.month() as i32 - 1) + months as i32;
+                let y = total / 12;
+                let m = (total % 12) as u32 + 1;
+                Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap())
+            } else {
+                Ok(add_months_anchored(base, months, base.day()))
+            }
+        }
+        "y" => {
+            // Calendar year addition (= 12 months)
+            let months = (num * 12.0).round() as u32;
+            let is_eom = base.day() == days_in_month(base.year(), base.month());
+            if is_eom {
+                let total = base.year() as i32 * 12 + (base.month() as i32 - 1) + months as i32;
+                let y = total / 12;
+                let m = (total % 12) as u32 + 1;
+                Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap())
+            } else {
+                Ok(add_months_anchored(base, months, base.day()))
+            }
+        }
         _ => anyhow::bail!(
             "unknown duration unit '{}' in '{}'; use d/w/m/y",
             unit,
             spec
         ),
-    };
-
-    let days_rounded = days.round();
-    if days_rounded > i64::MAX as f64 || days_rounded < 0.0 {
-        anyhow::bail!("duration '{}' is too large", spec);
     }
-    Ok(days_rounded as i64)
+}
+
+/// Parse a date string (YYYY-MM-DD, YYYY/MM/DD, or YYYYMMDD).
+fn parse_date(s: &str) -> Option<chrono::NaiveDate> {
+    chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d")
+        .or_else(|_| chrono::NaiveDate::parse_from_str(s, "%Y/%m/%d"))
+        .or_else(|_| chrono::NaiveDate::parse_from_str(s, "%Y%m%d"))
+        .ok()
 }
 
 #[cfg(test)]
@@ -190,11 +217,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_duration_days() {
-        assert_eq!(parse_duration_days("52w").unwrap(), 364);
-        assert_eq!(parse_duration_days("7d").unwrap(), 7);
-        assert_eq!(parse_duration_days("6m").unwrap(), 180);
-        assert_eq!(parse_duration_days("2y").unwrap(), 730);
+    fn test_apply_duration() {
+        let base = chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
+        assert_eq!(apply_duration(base, "52w").unwrap(), base + chrono::Duration::days(364));
+        assert_eq!(apply_duration(base, "7d").unwrap(), base + chrono::Duration::days(7));
+        // 6m from Jan 1 = Jul 1 (calendar month addition)
+        assert_eq!(apply_duration(base, "6m").unwrap(), chrono::NaiveDate::from_ymd_opt(2024, 7, 1).unwrap());
+        // 2y from Jan 1 = Jan 1 two years later
+        assert_eq!(apply_duration(base, "2y").unwrap(), chrono::NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
+    }
+
+    #[test]
+    fn test_apply_duration_eom() {
+        // 6m from Jan 31 = Jul 31 (end-of-month aware)
+        let jan31 = chrono::NaiveDate::from_ymd_opt(2024, 1, 31).unwrap();
+        assert_eq!(apply_duration(jan31, "6m").unwrap(), chrono::NaiveDate::from_ymd_opt(2024, 7, 31).unwrap());
+        // 1m from Feb 29 (leap year, EOM) = Mar 31 (last day of March)
+        let feb29 = chrono::NaiveDate::from_ymd_opt(2024, 2, 29).unwrap();
+        assert_eq!(apply_duration(feb29, "1m").unwrap(), chrono::NaiveDate::from_ymd_opt(2024, 3, 31).unwrap());
     }
 
     #[test]
@@ -346,13 +386,14 @@ mod tests {
             cadence_confidence: 1.0,
         };
         let result = compute_new_partitions(&dim, "1y").unwrap();
-        // 2024-01-01 + 365 days = 2024-12-31
-        // Q1=Jan1, Q2=Apr1, Q3=Jul1, Q4=Oct1
-        assert_eq!(result.len(), 4);
+        // 2024-01-01 + 1y = 2025-01-01 (calendar year)
+        // Q1=Jan1, Q2=Apr1, Q3=Jul1, Q4=Oct1, Q5=Jan1(2025) = 5 partitions
+        assert_eq!(result.len(), 5);
         assert_eq!(result[0].value, "2024-01-01");
         assert_eq!(result[1].value, "2024-04-01");
         assert_eq!(result[2].value, "2024-07-01");
         assert_eq!(result[3].value, "2024-10-01");
+        assert_eq!(result[4].value, "2025-01-01");
     }
 
     #[test]
@@ -379,5 +420,46 @@ mod tests {
         let dec = chrono::NaiveDate::from_ymd_opt(2024, 12, 15).unwrap();
         assert_eq!(add_months_anchored(dec, 1, 15), chrono::NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
         assert_eq!(add_months_anchored(dec, 13, 15), chrono::NaiveDate::from_ymd_opt(2026, 1, 15).unwrap());
+    }
+
+    #[test]
+    fn test_monthly_cadence_from_feb29() {
+        // Starting Feb 29 (EOM), should step to end-of-month for each month
+        let dim = TimeDimension {
+            entity_name: "Events".into(),
+            partition_field: "date".into(),
+            partition_values: vec!["2024-02-29".into()],
+            cadence: Some(Cadence::Months(1)),
+            cadence_confidence: 1.0,
+        };
+        let result = compute_new_partitions(&dim, "2024-02-29..2024-06-30").unwrap();
+        assert_eq!(result[0].value, "2024-02-29");
+        assert_eq!(result[1].value, "2024-03-31");
+        assert_eq!(result[2].value, "2024-04-30");
+        assert_eq!(result[3].value, "2024-05-31");
+        assert_eq!(result[4].value, "2024-06-30");
+        assert_eq!(result.len(), 5);
+    }
+
+    #[test]
+    fn test_time_6m_from_jan31_with_monthly_cadence() {
+        // --time 6m from Jan 31 with monthly cadence should produce 7 partitions
+        let dim = TimeDimension {
+            entity_name: "Events".into(),
+            partition_field: "date".into(),
+            partition_values: vec!["2024-01-31".into()],
+            cadence: Some(Cadence::Months(1)),
+            cadence_confidence: 1.0,
+        };
+        let result = compute_new_partitions(&dim, "6m").unwrap();
+        // target_end = Jan 31 + 6 months = Jul 31
+        assert_eq!(result[0].value, "2024-01-31");
+        assert_eq!(result[1].value, "2024-02-29");
+        assert_eq!(result[2].value, "2024-03-31");
+        assert_eq!(result[3].value, "2024-04-30");
+        assert_eq!(result[4].value, "2024-05-31");
+        assert_eq!(result[5].value, "2024-06-30");
+        assert_eq!(result[6].value, "2024-07-31");
+        assert_eq!(result.len(), 7);
     }
 }

@@ -190,8 +190,20 @@ fn detect_cadence(values: &[String]) -> (Option<super::Cadence>, f64) {
         return (None, 0.0);
     }
 
-    // Check if the pattern looks monthly (gaps in 28–31 range consistently)
-    let is_monthly = gaps.iter().all(|&g| (28..=31).contains(&g));
+    // Check if the pattern looks monthly:
+    // 1. Gaps must be in 28–31 range
+    // 2. Calendar alignment: same day-of-month across dates, OR all end-of-month
+    let gaps_in_range = gaps.iter().all(|&g| (28..=31).contains(&g));
+    let is_monthly = if gaps_in_range && dates.len() >= 3 {
+        use chrono::Datelike;
+        let all_same_day = dates.windows(2).all(|w| w[0].day() == w[1].day());
+        let all_eom = dates.iter().all(|d| {
+            d.day() == super::time::days_in_month(d.year(), d.month())
+        });
+        all_same_day || all_eom
+    } else {
+        false
+    };
 
     // Confidence based on gap variance
     let variance: f64 = gaps
@@ -504,6 +516,33 @@ mod tests {
     fn test_cadence_detection_monthly() {
         let values: Vec<String> = vec![
             "2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+        let (cadence, confidence) = detect_cadence(&values);
+        assert_eq!(cadence, Some(crate::scale::Cadence::Months(1)));
+        assert!(confidence > 0.9);
+    }
+
+    #[test]
+    fn test_cadence_detection_4week_not_monthly() {
+        // Every 28 days, but NOT same day-of-month or EOM — should be Days(28)
+        let values: Vec<String> = vec![
+            "2024-01-01", "2024-01-29", "2024-02-26", "2024-03-25",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+        let (cadence, _confidence) = detect_cadence(&values);
+        assert_eq!(cadence, Some(crate::scale::Cadence::Days(28)));
+    }
+
+    #[test]
+    fn test_cadence_detection_monthly_eom() {
+        // End-of-month dates: 31, 29, 31, 30, 31 — should detect as monthly
+        let values: Vec<String> = vec![
+            "2024-01-31", "2024-02-29", "2024-03-31", "2024-04-30", "2024-05-31",
         ]
         .into_iter()
         .map(String::from)
