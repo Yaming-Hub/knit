@@ -649,7 +649,7 @@ fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
 
 /// Compute a deterministic date shift offset (in days) from a seed.
 /// Returns an offset between -1825 and +1825 days (±5 years), never zero.
-fn compute_date_shift(seed: u64) -> i64 {
+pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));

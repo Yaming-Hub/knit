@@ -344,6 +344,7 @@ distribution changes, and structural integrity verification.
 | Verify mode (`--verify`) | ✅ | Structural equivalence check |
 | Deterministic (`--seed`) | ✅ | Seeded StdRng for reproducibility |
 | Selective column tokenization | ✅ | `--tokenize-columns` (whitelist) / `--preserve-columns` (blacklist) |
+| Native Parquet timestamp shifting | ✅ | Date32, Date64, Timestamp(s/ms/us/ns) columns shifted by same offset as string dates |
 
 **Architecture (as implemented):**
 
@@ -360,14 +361,12 @@ src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
 
 | Limitation | Impact | Mitigation |
 |-----------|--------|-----------|
-| Native Parquet timestamp columns not shifted | Only string-encoded dates shifted | Warning could be added |
 | Native Parquet numeric columns not tokenized | Only string-encoded numbers replaced | Warning emitted at runtime |
 | Restore ambiguity | A generated token may match an untouched literal | Rare in practice; requires field-level metadata to fix fully |
 | Memory usage | All unique strings held in HashMap | Acceptable for datasets < 10M unique strings |
 
 ### Deferred to v2
 
-- Native Parquet timestamp column shifting (typed Date32/Date64/Timestamp replacement)
 - Native Parquet numeric column tokenization (typed i32/i64/f32/f64 replacement)
 - Field-level restore metadata (eliminate restore ambiguity)
 - Streaming tokenization for very large datasets
