@@ -6,6 +6,10 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Tokenization report** (`--report`) — Generate a detailed summary after tokenizing
+  a dataset. Shows per-file breakdown (rows, columns, format), token statistics
+  (unique count, length preservation rate, value length distribution), and native
+  shift parameters (temporal and numeric). Supports both text and JSON output.
 - **Native Parquet numeric tokenization** — The `--tokenize-numbers` flag now shifts
   native Arrow numeric columns (Int8–64, UInt8–64, Float32/64) in Parquet files,
   not just string-encoded numbers. All types use wrapping/additive arithmetic for

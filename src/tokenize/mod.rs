@@ -6,6 +6,7 @@
 pub mod apply;
 pub mod dictionary;
 pub mod mapper;
+pub mod report;
 pub mod scanner;
 
 use std::collections::{HashMap, HashSet};

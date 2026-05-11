@@ -21,6 +21,7 @@ pub fn run(
     preserve_partitions: bool,
     tokenize_columns: Option<Vec<String>>,
     preserve_columns: Option<Vec<String>>,
+    report: bool,
     json_output: bool,
 ) -> Result<()> {
     let input_path = Path::new(input);
@@ -62,6 +63,7 @@ pub fn run(
         preserve_partitions,
         tokenize_cols,
         preserve_cols,
+        report,
         json_output,
     )
 }
@@ -86,6 +88,7 @@ fn run_tokenize(
     preserve_partitions: bool,
     tokenize_columns: Option<HashSet<String>>,
     preserve_columns: Option<HashSet<String>>,
+    report: bool,
     json_output: bool,
 ) -> Result<()> {
     let dict_path = dictionary
@@ -105,7 +108,22 @@ fn run_tokenize(
     };
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;
-    print_result(&result, &dict_path, &config, json_output);
+
+    let report_data = if report {
+        Some(crate::tokenize::report::generate_report(output, &dict_path)?)
+    } else {
+        None
+    };
+
+    print_result(&result, &dict_path, &config, report_data.as_ref(), json_output);
+
+    // Print text-format report separately (JSON report is merged into main output)
+    if let Some(ref rpt) = report_data {
+        if !json_output {
+            print!("{}", crate::tokenize::report::format_text(rpt));
+        }
+    }
+
     Ok(())
 }
 
@@ -276,7 +294,13 @@ fn count_lines(path: &Path) -> Result<usize> {
     Ok(BufReader::new(file).lines().count())
 }
 
-fn print_result(result: &TokenizeResult, dict_path: &Path, config: &TokenizeConfig, json_output: bool) {
+fn print_result(
+    result: &TokenizeResult,
+    dict_path: &Path,
+    config: &TokenizeConfig,
+    report: Option<&crate::tokenize::report::TokenizeReport>,
+    json_output: bool,
+) {
     if json_output {
         let mut json = serde_json::json!({
             "event": "tokenize_complete",
@@ -296,6 +320,10 @@ fn print_result(result: &TokenizeResult, dict_path: &Path, config: &TokenizeConf
             let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
             sorted.sort();
             json["preserve_columns"] = serde_json::json!(sorted);
+        }
+        if let Some(rpt) = report {
+            let report_json = crate::tokenize::report::format_json(rpt);
+            json["report"] = report_json;
         }
         println!("{}", json);
     } else {

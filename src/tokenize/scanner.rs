@@ -55,6 +55,18 @@ impl FileFormat {
             _ => Self::Other,
         }
     }
+
+    /// Return a short string label for the format.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Csv => "csv",
+            Self::Tsv => "tsv",
+            Self::Parquet => "parquet",
+            Self::Json => "json",
+            Self::Jsonl => "jsonl",
+            Self::Other => "other",
+        }
+    }
 }
 
 /// Recursively scan a directory and classify all files.
