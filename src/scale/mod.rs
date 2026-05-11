@@ -11,6 +11,17 @@ use std::collections::BTreeMap;
 
 use crate::core::types::{CountSpec, DataModel, GeneratorSpec, Value, WeightedChoice};
 
+// ── Cadence type ────────────────────────────────────────────────────
+
+/// Cadence (stepping interval) for time-based partitions.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Cadence {
+    /// Fixed number of days (e.g., 1 for daily, 7 for weekly).
+    Days(u32),
+    /// Calendar months (properly handles variable-length months).
+    Months(u32),
+}
+
 // ── Analysis types ──────────────────────────────────────────────────
 
 /// Full analysis of a schema's scaling dimensions.
@@ -42,7 +53,7 @@ pub struct TimeDimension {
     pub entity_name: String,
     pub partition_field: String,
     pub partition_values: Vec<String>,
-    pub cadence_days: Option<u32>,
+    pub cadence: Option<Cadence>,
     pub cadence_confidence: f64,
 }
 
@@ -97,8 +108,8 @@ pub struct ScaleTargets {
     pub dims: Vec<(String, u64)>,
     /// Additional uniform count multiplier.
     pub count: Option<f64>,
-    /// User-specified cadence override in days (e.g. 7 for weekly).
-    pub cadence_days: Option<u32>,
+    /// User-specified cadence override (e.g. 7d for weekly, 1m for monthly).
+    pub cadence: Option<Cadence>,
 }
 
 /// Compute a scaling plan from the analysis and user targets.
@@ -125,21 +136,21 @@ pub fn compute_plan(
         (&targets.time, &analysis.time)
     {
         // Apply cadence override or warn on low confidence
-        let effective_dim = if let Some(override_days) = targets.cadence_days {
+        let effective_dim = if let Some(override_cadence) = targets.cadence {
             tracing::debug!(
-                override_days,
-                detected = ?time_dim.cadence_days,
+                ?override_cadence,
+                detected = ?time_dim.cadence,
                 "using cadence override"
             );
             let mut dim = time_dim.clone();
-            dim.cadence_days = Some(override_days);
+            dim.cadence = Some(override_cadence);
             dim.cadence_confidence = 1.0;
             dim
         } else {
             if time_dim.cadence_confidence < 0.5 {
                 tracing::warn!(
                     confidence = time_dim.cadence_confidence,
-                    detected = ?time_dim.cadence_days,
+                    detected = ?time_dim.cadence,
                     "low cadence confidence; consider using --cadence to specify explicitly (e.g. --cadence 7d)"
                 );
             }

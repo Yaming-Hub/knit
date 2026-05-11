@@ -136,12 +136,12 @@ fn detect_time(model: &DataModel) -> Option<TimeDimension> {
                     .collect();
 
                 if values.iter().all(|v| is_date_like(v)) {
-                    let (cadence_days, confidence) = detect_cadence(&values);
+                    let (cadence, confidence) = detect_cadence(&values);
                     return Some(TimeDimension {
                         entity_name: entity.name.clone(),
                         partition_field: partition_field.clone(),
                         partition_values: values,
-                        cadence_days,
+                        cadence,
                         cadence_confidence: confidence,
                     });
                 }
@@ -160,7 +160,10 @@ fn is_date_like(s: &str) -> bool {
 }
 
 /// Detect cadence (gap between sorted dates) and confidence.
-fn detect_cadence(values: &[String]) -> (Option<u32>, f64) {
+///
+/// Recognizes monthly patterns (28–31 day gaps) and returns `Cadence::Months(1)`.
+/// Otherwise returns `Cadence::Days(median_gap)`.
+fn detect_cadence(values: &[String]) -> (Option<super::Cadence>, f64) {
     let mut dates: Vec<chrono::NaiveDate> = values
         .iter()
         .filter_map(|v| {
@@ -187,6 +190,21 @@ fn detect_cadence(values: &[String]) -> (Option<u32>, f64) {
         return (None, 0.0);
     }
 
+    // Check if the pattern looks monthly:
+    // 1. Gaps must be in 28–31 range
+    // 2. Calendar alignment: same day-of-month across dates, OR all end-of-month
+    let gaps_in_range = gaps.iter().all(|&g| (28..=31).contains(&g));
+    let is_monthly = if gaps_in_range && dates.len() >= 3 {
+        use chrono::Datelike;
+        let all_same_day = dates.windows(2).all(|w| w[0].day() == w[1].day());
+        let all_eom = dates.iter().all(|d| {
+            d.day() == super::time::days_in_month(d.year(), d.month())
+        });
+        all_same_day || all_eom
+    } else {
+        false
+    };
+
     // Confidence based on gap variance
     let variance: f64 = gaps
         .iter()
@@ -195,7 +213,10 @@ fn detect_cadence(values: &[String]) -> (Option<u32>, f64) {
         / gaps.len() as f64;
     let cv = variance.sqrt() / median_gap as f64; // coefficient of variation
 
-    let confidence = if cv < 0.1 {
+    let confidence = if is_monthly {
+        // Monthly patterns naturally have variance (28–31 day gaps) — high confidence
+        1.0
+    } else if cv < 0.1 {
         1.0
     } else if cv < 0.5 {
         1.0 - cv
@@ -203,7 +224,11 @@ fn detect_cadence(values: &[String]) -> (Option<u32>, f64) {
         0.3
     };
 
-    (Some(median_gap as u32), confidence)
+    if is_monthly {
+        (Some(super::Cadence::Months(1)), confidence)
+    } else {
+        (Some(super::Cadence::Days(median_gap as u32)), confidence)
+    }
 }
 
 /// Detect custom dimensions (low-cardinality OneOf fields).
@@ -483,7 +508,47 @@ mod tests {
         .map(String::from)
         .collect();
         let (cadence, confidence) = detect_cadence(&values);
-        assert_eq!(cadence, Some(7));
+        assert_eq!(cadence, Some(crate::scale::Cadence::Days(7)));
+        assert!(confidence > 0.9);
+    }
+
+    #[test]
+    fn test_cadence_detection_monthly() {
+        let values: Vec<String> = vec![
+            "2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+        let (cadence, confidence) = detect_cadence(&values);
+        assert_eq!(cadence, Some(crate::scale::Cadence::Months(1)));
+        assert!(confidence > 0.9);
+    }
+
+    #[test]
+    fn test_cadence_detection_4week_not_monthly() {
+        // Every 28 days, but NOT same day-of-month or EOM — should be Days(28)
+        let values: Vec<String> = vec![
+            "2024-01-01", "2024-01-29", "2024-02-26", "2024-03-25",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+        let (cadence, _confidence) = detect_cadence(&values);
+        assert_eq!(cadence, Some(crate::scale::Cadence::Days(28)));
+    }
+
+    #[test]
+    fn test_cadence_detection_monthly_eom() {
+        // End-of-month dates: 31, 29, 31, 30, 31 — should detect as monthly
+        let values: Vec<String> = vec![
+            "2024-01-31", "2024-02-29", "2024-03-31", "2024-04-30", "2024-05-31",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+        let (cadence, confidence) = detect_cadence(&values);
+        assert_eq!(cadence, Some(crate::scale::Cadence::Months(1)));
         assert!(confidence > 0.9);
     }
 

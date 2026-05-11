@@ -385,7 +385,8 @@ The following features are implemented and available via `knit scale`:
 | `--format` | ✅ | Delegates to generate pipeline |
 | `--seed` | ✅ | Deterministic scaling |
 | Combined dimensions | ✅ | Multiplicative interaction |
-| Cadence detection | ✅ | Median gap from sorted partition dates |
+| Cadence detection | ✅ | Median gap from sorted partition dates; monthly (28–31d) auto-detected |
+| `--cadence` override | ✅ | Days (`7d`), weeks (`2w`), months (`1m`, `3m`) with calendar stepping |
 | FK-root actor heuristic | ✅ | Selects entity with most incoming FKs |
 
 **Architecture (as implemented):**
@@ -408,4 +409,3 @@ generation pipeline (format selection, partitioning, output writing).
 - Constraint propagation for cross-entity dimension fields
 - JSON machine-readable output for `--analyze`
 - Estimated output size in `--dry-run`
-- Calendar-aware monthly cadence stepping (`--cadence 1m`)
