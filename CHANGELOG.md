@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **`--tokenize-numbers` implementation** — The `--tokenize-numbers` flag now
+  tokenizes numeric values in CSV cells and JSON scalars. Numbers are registered
+  during the scan phase and replaced with shape-preserving random values (same
+  digit count, sign, and int/float nature). JSON `Value::Number` scalars are
+  converted in-place. Native Parquet numeric columns emit a warning (typed
+  support deferred). NaN, inf, and special values are preserved unchanged.
 - **`--tokenize-headers` implementation** — The `--tokenize-headers` flag now fully
   tokenizes column/field names across all formats: CSV/TSV headers, JSON object keys,
   and Parquet column names. Headers are registered during the scan phase and replaced

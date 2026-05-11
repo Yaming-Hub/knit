@@ -169,7 +169,7 @@ fn extract_csv_strings(
     for result in rdr.records() {
         let record = result?;
         for field in record.iter() {
-            if should_tokenize_value(field) {
+            if should_tokenize_value_with_config(field, config.tokenize_numbers) {
                 mapper.register(field);
             }
         }
@@ -191,7 +191,7 @@ fn extract_json_strings(
         if kind == FileKind::Schema {
             extract_schema_json_strings(&value, mapper);
         } else {
-            extract_data_json_strings(&value, mapper, config.tokenize_headers);
+            extract_data_json_strings(&value, mapper, config.tokenize_headers, config.tokenize_numbers);
         }
         return Ok(());
     }
@@ -204,7 +204,7 @@ fn extract_json_strings(
         }
         let value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
-        extract_data_json_strings(&value, mapper, config.tokenize_headers);
+        extract_data_json_strings(&value, mapper, config.tokenize_headers, config.tokenize_numbers);
     }
     Ok(())
 }
@@ -241,16 +241,23 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
     }
 }
 
-/// For data files, tokenize all string values (and optionally keys).
+/// For data files, tokenize all string values (and optionally keys and numbers).
 fn extract_data_json_strings(
     value: &serde_json::Value,
     mapper: &mut TokenMapper,
     tokenize_keys: bool,
+    tokenize_numbers: bool,
 ) {
     match value {
         serde_json::Value::String(s) => {
-            if should_tokenize_value(s) {
+            if should_tokenize_value_with_config(s, tokenize_numbers) {
                 mapper.register(s);
+            }
+        }
+        serde_json::Value::Number(n) => {
+            if tokenize_numbers {
+                let s = n.to_string();
+                mapper.register(&s);
             }
         }
         serde_json::Value::Object(map) => {
@@ -258,12 +265,12 @@ fn extract_data_json_strings(
                 if tokenize_keys && should_tokenize_value(key) {
                     mapper.register(key);
                 }
-                extract_data_json_strings(val, mapper, tokenize_keys);
+                extract_data_json_strings(val, mapper, tokenize_keys, tokenize_numbers);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                extract_data_json_strings(item, mapper, tokenize_keys);
+                extract_data_json_strings(item, mapper, tokenize_keys, tokenize_numbers);
             }
         }
         _ => {}
@@ -293,6 +300,7 @@ fn extract_parquet_strings(
 
     let reader = builder.build()?;
 
+    let mut warned_native_numerics = false;
     for batch_result in reader {
         let batch = batch_result?;
 
@@ -302,7 +310,7 @@ fn extract_parquet_strings(
                 for i in 0..str_arr.len() {
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
-                        if should_tokenize_value(val) {
+                        if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
                     }
@@ -311,10 +319,24 @@ fn extract_parquet_strings(
                 for i in 0..str_arr.len() {
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
-                        if should_tokenize_value(val) {
+                        if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
                     }
+                }
+            } else if config.tokenize_numbers && !warned_native_numerics {
+                use arrow::datatypes::DataType;
+                let dt = col.data_type();
+                if matches!(dt, DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64
+                    | DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64
+                    | DataType::Float16 | DataType::Float32 | DataType::Float64)
+                {
+                    tracing::warn!(
+                        file = %path.display(),
+                        "native numeric Parquet columns are not yet tokenized by --tokenize-numbers; \
+                         only string-encoded numbers are replaced"
+                    );
+                    warned_native_numerics = true;
                 }
             }
         }
@@ -324,13 +346,19 @@ fn extract_parquet_strings(
 
 /// Determine if a string value should be tokenized.
 /// Empty strings, pure whitespace, and very short single-char values are skipped.
+/// Numeric values are skipped by default (handled by --tokenize-numbers flag).
 fn should_tokenize_value(s: &str) -> bool {
+    should_tokenize_value_with_config(s, false)
+}
+
+/// Core tokenization check with numeric override.
+fn should_tokenize_value_with_config(s: &str, tokenize_numbers: bool) -> bool {
     let trimmed = s.trim();
     if trimmed.is_empty() {
         return false;
     }
-    // Skip pure numeric values (handled by --tokenize-numbers flag)
-    if trimmed.parse::<f64>().is_ok() {
+    // Skip pure numeric values unless --tokenize-numbers is enabled
+    if !tokenize_numbers && is_numeric_string(trimmed) {
         return false;
     }
     // Skip booleans
@@ -338,6 +366,22 @@ fn should_tokenize_value(s: &str) -> bool {
         return false;
     }
     true
+}
+
+/// Check if a string represents a numeric value (integer or float).
+/// Recognizes: integers, decimals, negative numbers, leading +, scientific notation.
+/// Does NOT match: NaN, inf, -inf (these are preserved unchanged).
+fn is_numeric_string(s: &str) -> bool {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    // Reject NaN, inf, -inf — these are not "numbers" for tokenization purposes
+    let lower = trimmed.to_lowercase();
+    if matches!(lower.as_str(), "nan" | "inf" | "-inf" | "+inf" | "infinity" | "-infinity" | "+infinity") {
+        return false;
+    }
+    trimmed.parse::<f64>().is_ok()
 }
 
 #[cfg(test)]
@@ -431,5 +475,62 @@ mod tests {
         assert!(mapper.contains("Alice"));
         assert!(mapper.contains("Bob"));
         assert!(!mapper.contains("10"));
+    }
+
+    #[test]
+    fn test_is_numeric_string() {
+        assert!(is_numeric_string("42"));
+        assert!(is_numeric_string("-100"));
+        assert!(is_numeric_string("3.14"));
+        assert!(is_numeric_string("+7"));
+        assert!(is_numeric_string("1e6"));
+        assert!(is_numeric_string("-0.0"));
+        // NaN and inf are NOT numeric for tokenization
+        assert!(!is_numeric_string("NaN"));
+        assert!(!is_numeric_string("inf"));
+        assert!(!is_numeric_string("-inf"));
+        assert!(!is_numeric_string("Infinity"));
+        assert!(!is_numeric_string(""));
+    }
+
+    #[test]
+    fn test_extract_csv_with_tokenize_numbers() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("data.csv");
+        let mut f = std::fs::File::create(&path).unwrap();
+        writeln!(f, "name,score").unwrap();
+        writeln!(f, "Alice,42.5").unwrap();
+        writeln!(f, "Bob,-100").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_numbers: true,
+            ..Default::default()
+        };
+        let mut mapper = TokenMapper::new(42);
+        extract_csv_strings(&path, FileFormat::Csv, &mut mapper, &config).unwrap();
+
+        assert!(mapper.contains("Alice"));
+        assert!(mapper.contains("Bob"));
+        // With tokenize_numbers, numeric values should be registered
+        assert!(mapper.contains("42.5"));
+        assert!(mapper.contains("-100"));
+    }
+
+    #[test]
+    fn test_extract_json_with_tokenize_numbers() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("data.json");
+        std::fs::write(&path, r#"{"name": "Alice", "score": 95}"#).unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_numbers: true,
+            ..Default::default()
+        };
+        let mut mapper = TokenMapper::new(42);
+        extract_json_strings(&path, FileKind::Data, &mut mapper, &config).unwrap();
+
+        assert!(mapper.contains("Alice"));
+        // JSON numeric scalar "95" should be registered as string
+        assert!(mapper.contains("95"));
     }
 }
