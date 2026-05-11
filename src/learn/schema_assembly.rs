@@ -1,8 +1,8 @@
-//! Schema assembly — build a Weave schema document from inferred elements.
+//! Blueprint assembly — build a knit blueprint document from inferred elements.
 //!
 //! Takes the combined results of profiling, distribution fitting, temporal
 //! pattern recognition, and relationship detection, and assembles them into
-//! a valid Weave schema (either as a [`DataModel`] or as a human-readable DSL).
+//! a valid knit blueprint (either as a [`DataModel`] or as a human-readable DSL).
 
 use std::collections::BTreeMap;
 use std::fmt::Write;

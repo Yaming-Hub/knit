@@ -83,7 +83,7 @@ Each crate's `lib.rs` should have a `//!` module-level doc comment explaining:
 //! ## Pipeline Position
 //!
 //! ```text
-//! knit blueprint → knit-schema → DataModel → knit-plan → ExecutionPlan → knit-gen
+//! knit blueprint → knit-blueprint → DataModel → knit-plan → ExecutionPlan → knit-gen
 //! ```
 //!
 //! ## Key Entry Point
@@ -175,7 +175,7 @@ flowchart LR
 ```mermaid
 flowchart BT
     core[knit-core]
-    schema[knit-schema] --> core
+    schema[knit-blueprint] --> core
     plan[knit-plan] --> schema
     gen[knit-gen] --> plan
     noise[knit-noise] --> gen
@@ -234,7 +234,7 @@ tracing::warn!(field = %field_name, fallback = "uniform", "unknown distribution,
 
 ### Subscriber Initialization
 
-- **Library crates** (`knit-core`, `knit-schema`, `knit-plan`, `knit-gen`, etc.)
+- **Library crates** (`knit-core`, `knit-blueprint`, `knit-plan`, `knit-gen`, etc.)
   emit tracing events but **never** initialize a subscriber.
 - **Binary crate** (`knit-cli`) initializes `tracing-subscriber` with:
   - `EnvFilter` for `RUST_LOG` support (e.g., `RUST_LOG=knit_gen=debug`)

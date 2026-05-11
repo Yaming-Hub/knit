@@ -76,7 +76,7 @@ impl std::fmt::Display for IntOrString {
 // ── Value ────────────────────────────────────────────────────────────
 
 /// A loosely-typed value used in parameters, constants, conditional branches,
-/// and weighted choices throughout the schema.
+/// and weighted choices throughout the blueprint.
 ///
 /// Maps directly to JSON/TOML value types via `#[serde(untagged)]`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -102,7 +102,7 @@ pub enum Value {
 
 /// The root data model describing an entire synthetic dataset.
 ///
-/// A `DataModel` is produced by `knit-schema`'s parser and consumed by the
+/// A `DataModel` is produced by `knit-blueprint`'s parser and consumed by the
 /// `knit-plan` compiler. It contains all entities, relationships, noise
 /// profiles, and correlations needed to generate data.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -185,7 +185,7 @@ impl Default for DataModel {
 
 /// A reusable domain type definition bundling base type, generator, and constraints.
 ///
-/// Custom types are defined in the `[[types]]` section of a schema and
+/// Custom types are defined in the `[[types]]` section of a blueprint and
 /// referenced by fields via `data_type = "type_name"`. During schema
 /// resolution, the field inherits the custom type's base type, generator,
 /// and precision (unless the field specifies its own overrides).
@@ -213,7 +213,7 @@ pub struct CustomType {
 
 /// A reusable group of fields that can be included in multiple entities.
 ///
-/// Mixins are defined in the `[[mixins]]` section of a schema and
+/// Mixins are defined in the `[[mixins]]` section of a blueprint and
 /// referenced by entities via `mixins = ["name"]`. During schema
 /// resolution, the mixin's fields are prepended to the entity's fields.
 /// Entity fields with the same name override the mixin's definition.
@@ -1060,7 +1060,7 @@ pub enum RelativeOffset {
 /// Configuration for a statistical distribution generator.
 ///
 /// Pairs a [`DistributionKind`] with named parameters (e.g. `mean`, `std_dev`).
-/// Parameter requirements vary by distribution; `knit-schema` validates them.
+/// Parameter requirements vary by distribution; `knit-blueprint` validates them.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DistributionSpec {
     /// Which distribution family to sample from.
