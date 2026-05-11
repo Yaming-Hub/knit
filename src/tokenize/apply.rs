@@ -79,16 +79,32 @@ fn apply_csv(
 
     // Write headers (tokenized if configured, respecting column filter)
     let headers = rdr.headers()?.clone();
+
+    // Resolve original column names for filter matching.
+    // During forward tokenization, headers are already original names.
+    // During restore, headers may be tokenized — resolve via mapper to get originals.
     let col_flags: Vec<bool> = headers
         .iter()
-        .map(|h| config.should_tokenize_column(h))
+        .map(|h| {
+            // Try direct match first (works during forward tokenization)
+            if config.should_tokenize_column(h) {
+                return true;
+            }
+            // If no match, try resolving via mapper (works during restore
+            // where headers are tokenized and mapper maps token→original)
+            if let Some(original) = mapper.get(h) {
+                return config.should_tokenize_column(original);
+            }
+            false
+        })
         .collect();
 
     if config.tokenize_headers {
         let tokenized_headers: Vec<String> = headers
             .iter()
-            .map(|h| {
-                if config.should_tokenize_header(h) {
+            .enumerate()
+            .map(|(idx, h)| {
+                if idx < col_flags.len() && col_flags[idx] {
                     mapper
                         .get(h)
                         .map(|t| t.to_string())
@@ -136,7 +152,7 @@ fn apply_json(
     } else {
         let content = std::fs::read_to_string(src)?;
         let mut value: serde_json::Value = serde_json::from_str(&content)?;
-        tokenize_json_value(&mut value, mapper, config, true);
+        tokenize_json_value(&mut value, mapper, config, true, false);
         let output = serde_json::to_string_pretty(&value)?;
         std::fs::write(out, output)?;
         Ok(())
@@ -164,7 +180,7 @@ fn apply_jsonl(
         }
         let mut value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", src.display()))?;
-        tokenize_json_value(&mut value, mapper, config, true);
+        tokenize_json_value(&mut value, mapper, config, true, false);
         serde_json::to_writer(&mut writer, &value)?;
         writeln!(writer)?;
     }
@@ -172,13 +188,15 @@ fn apply_jsonl(
 }
 
 /// Recursively tokenize string values, optionally keys, and optionally numbers in JSON.
-/// `should_tokenize` tracks whether values in the current subtree should be tokenized
-/// (controlled by column filter). At the top level it is `true`.
+/// `should_tokenize` tracks whether values in the current subtree should be tokenized.
+/// `filter_applied` tracks whether the column filter has been evaluated — if true,
+/// nested keys inherit the parent's decision instead of re-checking the filter.
 fn tokenize_json_value(
     value: &mut serde_json::Value,
     mapper: &TokenMapper,
     config: &TokenizeConfig,
     should_tokenize: bool,
+    filter_applied: bool,
 ) {
     match value {
         serde_json::Value::String(s) => {
@@ -217,7 +235,15 @@ fn tokenize_json_value(
                 let entries: Vec<(String, serde_json::Value)> = map
                     .into_iter()
                     .map(|(k, v)| {
-                        let new_key = if config.should_tokenize_header(k) {
+                        // Check if this key's column should be tokenized
+                        let should = if config.should_tokenize_column(k) {
+                            true
+                        } else if let Some(orig) = mapper.get(k) {
+                            config.should_tokenize_column(orig)
+                        } else {
+                            false
+                        };
+                        let new_key = if config.tokenize_headers && should {
                             mapper
                                 .get(k)
                                 .map(|t| t.to_string())
@@ -228,7 +254,6 @@ fn tokenize_json_value(
                         (new_key, v.clone())
                     })
                     .collect();
-                // Check for duplicate keys after tokenization
                 let mut deduped = serde_json::Map::new();
                 for (key, val) in entries {
                     if !seen.insert(key.clone()) {
@@ -241,19 +266,27 @@ fn tokenize_json_value(
             // Collect keys before iterating to satisfy borrow checker
             let keys: Vec<String> = map.keys().cloned().collect();
             for key in keys {
-                let child_tokenize = if config.has_column_filter() {
-                    config.should_tokenize_column(&key)
+                // Apply column filter only at the first object level
+                let (child_tokenize, child_filter_applied) = if !filter_applied && config.has_column_filter() {
+                    let should = if config.should_tokenize_column(&key) {
+                        true
+                    } else if let Some(orig) = mapper.get(&key) {
+                        config.should_tokenize_column(orig)
+                    } else {
+                        false
+                    };
+                    (should, true)
                 } else {
-                    should_tokenize
+                    (should_tokenize, filter_applied)
                 };
                 if let Some(val) = map.get_mut(&key) {
-                    tokenize_json_value(val, mapper, config, child_tokenize);
+                    tokenize_json_value(val, mapper, config, child_tokenize, child_filter_applied);
                 }
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr.iter_mut() {
-                tokenize_json_value(item, mapper, config, should_tokenize);
+                tokenize_json_value(item, mapper, config, should_tokenize, filter_applied);
             }
         }
         _ => {}
@@ -307,11 +340,19 @@ fn apply_parquet(
     let schema = builder.schema().clone();
     let reader = builder.build()?;
 
-    // Build per-column tokenization flags
+    // Build per-column tokenization flags (resolve original names via mapper for restore)
     let col_flags: Vec<bool> = schema
         .fields()
         .iter()
-        .map(|f| config.should_tokenize_column(f.name()))
+        .map(|f| {
+            if config.should_tokenize_column(f.name()) {
+                return true;
+            }
+            if let Some(original) = mapper.get(f.name()) {
+                return config.should_tokenize_column(original);
+            }
+            false
+        })
         .collect();
 
     // Optionally tokenize column names in schema (respecting column filter)
@@ -319,8 +360,9 @@ fn apply_parquet(
         let new_fields: Vec<Arc<Field>> = schema
             .fields()
             .iter()
-            .map(|f| {
-                if config.should_tokenize_header(f.name()) {
+            .enumerate()
+            .map(|(idx, f)| {
+                if idx < col_flags.len() && col_flags[idx] {
                     let new_name = mapper
                         .get(f.name())
                         .map(|t| t.to_string())
@@ -981,8 +1023,10 @@ mod tests {
         .unwrap();
 
         let mut mapper = TokenMapper::new(42);
+        // Register ALL values — the filter should prevent user subtree from being replaced
+        mapper.register("Alice");
+        mapper.register("Smith");
         mapper.register("alice@test.com");
-        // user subtree values NOT registered because user column is preserved
 
         let entry = FileEntry {
             rel_path: "data.json".into(),
@@ -996,7 +1040,7 @@ mod tests {
         apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
 
         let content = std::fs::read_to_string(&out).unwrap();
-        // user subtree should be preserved
+        // user subtree should be preserved (even though values are in mapper)
         assert!(content.contains("Alice"));
         assert!(content.contains("Smith"));
         // email should be tokenized

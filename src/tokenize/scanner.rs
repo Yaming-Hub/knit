@@ -222,7 +222,7 @@ fn extract_json_strings(
             extract_schema_json_strings(&value, mapper);
         } else {
             extract_data_json_strings(
-                &value, mapper, config, date_shift, true,
+                &value, mapper, config, date_shift, true, false,
             );
         }
         return Ok(());
@@ -237,7 +237,7 @@ fn extract_json_strings(
         let value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
         extract_data_json_strings(
-            &value, mapper, config, date_shift, true,
+            &value, mapper, config, date_shift, true, false,
         );
     }
     Ok(())
@@ -277,14 +277,15 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
 
 /// For data files, tokenize all string values (and optionally keys, numbers, and dates).
 /// `should_tokenize` tracks whether the current value is in a column that should be
-/// tokenized. At the top level it is `true`; inside an object, each child inherits
-/// from its parent key's column filter status.
+/// tokenized. `filter_applied` tracks whether the column filter has already been
+/// evaluated for this subtree — if true, nested keys inherit instead of re-checking.
 fn extract_data_json_strings(
     value: &serde_json::Value,
     mapper: &mut TokenMapper,
     config: &TokenizeConfig,
     date_shift: Option<i64>,
     should_tokenize: bool,
+    filter_applied: bool,
 ) {
     match value {
         serde_json::Value::String(s) => {
@@ -309,22 +310,22 @@ fn extract_data_json_strings(
         }
         serde_json::Value::Object(map) => {
             for (key, val) in map {
-                // Decide whether this key's subtree should be tokenized
-                let child_tokenize = if config.has_column_filter() {
-                    config.should_tokenize_column(key)
+                // Apply column filter only at the first object level
+                let (child_tokenize, child_filter_applied) = if !filter_applied && config.has_column_filter() {
+                    (config.should_tokenize_column(key), true)
                 } else {
-                    should_tokenize
+                    (should_tokenize, filter_applied)
                 };
 
                 if config.tokenize_headers && child_tokenize && should_tokenize_value(key) {
                     mapper.register(key);
                 }
-                extract_data_json_strings(val, mapper, config, date_shift, child_tokenize);
+                extract_data_json_strings(val, mapper, config, date_shift, child_tokenize, child_filter_applied);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                extract_data_json_strings(item, mapper, config, date_shift, should_tokenize);
+                extract_data_json_strings(item, mapper, config, date_shift, should_tokenize, filter_applied);
             }
         }
         _ => {}
