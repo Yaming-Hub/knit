@@ -644,18 +644,15 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     if offset == 0 { 1 } else { offset }
 }
 
-/// Compute a deterministic numeric shift for integer tokenization.
-/// Returns a pair (integer_offset, float_scale) used to shift native numeric columns.
-/// Integer offset is ±10000..100000, float scale is 0.5..2.0 (never 1.0).
-pub(crate) fn compute_numeric_shift(seed: u64) -> (i64, f64) {
+/// Compute a deterministic numeric shift for native numeric tokenization.
+/// Returns an offset between -10000 and +10000, never zero.
+/// Used for both integer (wrapping add) and float (additive shift) columns.
+pub(crate) fn compute_numeric_shift(seed: u64) -> i64 {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
-    let int_offset: i64 = rng.gen_range(-100_000..=100_000);
-    let int_offset = if int_offset == 0 { 1 } else { int_offset };
-    let float_scale: f64 = rng.gen_range(0.5..2.0);
-    let float_scale = if (float_scale - 1.0).abs() < 0.01 { 1.1 } else { float_scale };
-    (int_offset, float_scale)
+    let offset: i64 = rng.gen_range(-10_000..=10_000);
+    if offset == 0 { 1 } else { offset }
 }
 
 /// Register a date string with its shifted value in the mapper.
@@ -1030,20 +1027,16 @@ mod tests {
 
     #[test]
     fn test_compute_numeric_shift_deterministic() {
-        let (i1, f1) = compute_numeric_shift(42);
-        let (i2, f2) = compute_numeric_shift(42);
-        assert_eq!(i1, i2);
-        assert_eq!(f1, f2);
-        // Non-zero
-        assert_ne!(i1, 0);
-        assert!((f1 - 1.0).abs() >= 0.01);
+        let s1 = compute_numeric_shift(42);
+        let s2 = compute_numeric_shift(42);
+        assert_eq!(s1, s2);
+        assert_ne!(s1, 0);
     }
 
     #[test]
     fn test_compute_numeric_shift_different_seeds() {
-        let (i1, _f1) = compute_numeric_shift(42);
-        let (i2, _f2) = compute_numeric_shift(99);
-        // Very unlikely to produce the same offset with different seeds
-        assert_ne!(i1, i2);
+        let s1 = compute_numeric_shift(42);
+        let s2 = compute_numeric_shift(99);
+        assert_ne!(s1, s2);
     }
 }

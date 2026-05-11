@@ -391,8 +391,8 @@ fn apply_parquet(
 
     // Compute numeric shift for native numeric columns.
     // Use explicit override during restore, otherwise compute from seed.
-    let numeric_shift = if let Some((i, f)) = config.native_numeric_shift {
-        Some((i, f))
+    let numeric_shift = if let Some(shift) = config.native_numeric_shift {
+        Some(shift)
     } else if config.tokenize_numbers {
         Some(super::scanner::compute_numeric_shift(config.seed))
     } else {
@@ -443,7 +443,7 @@ fn apply_parquet(
                     .and_then(|shift| shift_native_temporal(col, shift))
                     .or_else(|| {
                         numeric_shift
-                            .and_then(|(i, f)| shift_native_numeric(col, i, f))
+                            .and_then(|offset| shift_native_numeric(col, offset))
                     });
                 columns.push(shifted.unwrap_or_else(|| col.clone()));
             }
@@ -537,15 +537,14 @@ fn shift_native_temporal(
     }
 }
 
-/// Shift native Arrow numeric columns (Int/UInt/Float) for tokenization.
+/// Shift native Arrow numeric columns for tokenization.
 ///
-/// Integers are shifted by `int_offset` (saturating).
-/// Floats are scaled by `float_scale` to preserve relative relationships.
+/// Integers use wrapping arithmetic (always exactly reversible).
+/// Floats use additive offset (v + offset as f64/f32).
 /// Returns `Some(shifted_array)` if the column is a supported numeric type.
 fn shift_native_numeric(
     col: &dyn arrow::array::Array,
-    int_offset: i64,
-    float_scale: f64,
+    offset: i64,
 ) -> Option<std::sync::Arc<dyn arrow::array::Array>> {
     use arrow::array::{
         Float32Array, Float64Array, Int8Array, Int16Array, Int32Array, Int64Array,
@@ -559,7 +558,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<Int8Array>()?;
             let shifted: Int8Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add(int_offset as i8)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as i8)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -567,7 +566,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<Int16Array>()?;
             let shifted: Int16Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add(int_offset as i16)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as i16)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -575,7 +574,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<Int32Array>()?;
             let shifted: Int32Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add(int_offset as i32)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as i32)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -583,7 +582,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<Int64Array>()?;
             let shifted: Int64Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add(int_offset)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -591,7 +590,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<UInt8Array>()?;
             let shifted: UInt8Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add_signed(int_offset as i8)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u8)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -599,7 +598,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<UInt16Array>()?;
             let shifted: UInt16Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add_signed(int_offset as i16)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u16)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -607,7 +606,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<UInt32Array>()?;
             let shifted: UInt32Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v.saturating_add_signed(int_offset as i32)))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u32)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -615,10 +614,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<UInt64Array>()?;
             let shifted: UInt64Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| {
-                    let result = v as i128 + int_offset as i128;
-                    result.clamp(0, u64::MAX as i128) as u64
-                }))
+                .map(|opt| opt.map(|v| v.wrapping_add(offset as u64)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -626,7 +622,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<Float32Array>()?;
             let shifted: Float32Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v * float_scale as f32))
+                .map(|opt| opt.map(|v| v + offset as f32))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -634,7 +630,7 @@ fn shift_native_numeric(
             let arr = col.as_any().downcast_ref::<Float64Array>()?;
             let shifted: Float64Array = arr
                 .iter()
-                .map(|opt| opt.map(|v| v * float_scale))
+                .map(|opt| opt.map(|v| v + offset as f64))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -1410,7 +1406,7 @@ mod tests {
     fn test_shift_native_int32() {
         use arrow::array::Int32Array;
         let arr = Int32Array::from(vec![Some(100), None, Some(-50)]);
-        let shifted = shift_native_numeric(&arr, 42, 1.5).unwrap();
+        let shifted = shift_native_numeric(&arr, 42).unwrap();
         let result = shifted.as_any().downcast_ref::<Int32Array>().unwrap();
         assert_eq!(result.value(0), 142);
         assert!(result.is_null(1));
@@ -1421,7 +1417,7 @@ mod tests {
     fn test_shift_native_int64() {
         use arrow::array::Int64Array;
         let arr = Int64Array::from(vec![Some(1000), Some(-500)]);
-        let shifted = shift_native_numeric(&arr, -200, 1.0).unwrap();
+        let shifted = shift_native_numeric(&arr, -200).unwrap();
         let result = shifted.as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(result.value(0), 800);
         assert_eq!(result.value(1), -700);
@@ -1431,7 +1427,7 @@ mod tests {
     fn test_shift_native_uint32() {
         use arrow::array::UInt32Array;
         let arr = UInt32Array::from(vec![Some(100), Some(0)]);
-        let shifted = shift_native_numeric(&arr, 50, 1.0).unwrap();
+        let shifted = shift_native_numeric(&arr, 50).unwrap();
         let result = shifted.as_any().downcast_ref::<UInt32Array>().unwrap();
         assert_eq!(result.value(0), 150);
         assert_eq!(result.value(1), 50);
@@ -1441,10 +1437,10 @@ mod tests {
     fn test_shift_native_float64() {
         use arrow::array::Float64Array;
         let arr = Float64Array::from(vec![Some(100.0), Some(-50.0), None]);
-        let shifted = shift_native_numeric(&arr, 0, 2.0).unwrap();
+        let shifted = shift_native_numeric(&arr, 42).unwrap();
         let result = shifted.as_any().downcast_ref::<Float64Array>().unwrap();
-        assert!((result.value(0) - 200.0).abs() < 0.001);
-        assert!((result.value(1) - (-100.0)).abs() < 0.001);
+        assert!((result.value(0) - 142.0).abs() < 0.001);
+        assert!((result.value(1) - (-8.0)).abs() < 0.001);
         assert!(result.is_null(2));
     }
 
@@ -1452,16 +1448,34 @@ mod tests {
     fn test_shift_native_numeric_passthrough_string() {
         use arrow::array::StringArray;
         let arr = StringArray::from(vec!["hello", "world"]);
-        assert!(shift_native_numeric(&arr, 42, 1.5).is_none());
+        assert!(shift_native_numeric(&arr, 42).is_none());
     }
 
     #[test]
-    fn test_shift_native_numeric_saturating() {
+    fn test_shift_native_numeric_wrapping() {
         use arrow::array::Int8Array;
+        // Wrapping: 120 + 42 wraps around in i8
         let arr = Int8Array::from(vec![Some(120i8)]);
-        let shifted = shift_native_numeric(&arr, 100, 1.0).unwrap();
+        let shifted = shift_native_numeric(&arr, 42).unwrap();
         let result = shifted.as_any().downcast_ref::<Int8Array>().unwrap();
-        assert_eq!(result.value(0), 127); // i8::MAX
+        let expected = 120i8.wrapping_add(42);
+        assert_eq!(result.value(0), expected);
+        // Verify roundtrip: shift back by -42
+        let restored = shift_native_numeric(&*shifted, -42).unwrap();
+        let result2 = restored.as_any().downcast_ref::<Int8Array>().unwrap();
+        assert_eq!(result2.value(0), 120);
+    }
+
+    #[test]
+    fn test_shift_native_uint_wrapping_roundtrip() {
+        use arrow::array::UInt8Array;
+        let arr = UInt8Array::from(vec![Some(10u8), Some(250u8)]);
+        let shifted = shift_native_numeric(&arr, 100).unwrap();
+        // Verify roundtrip
+        let restored = shift_native_numeric(&*shifted, -100).unwrap();
+        let result = restored.as_any().downcast_ref::<UInt8Array>().unwrap();
+        assert_eq!(result.value(0), 10);
+        assert_eq!(result.value(1), 250);
     }
 
     #[test]
@@ -1511,7 +1525,7 @@ mod tests {
         let file = std::fs::File::open(&output).unwrap();
         let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
 
-        let (int_offset, float_scale) = super::super::scanner::compute_numeric_shift(42);
+        let offset = super::super::scanner::compute_numeric_shift(42);
 
         for batch in reader {
             let batch = batch.unwrap();
@@ -1520,16 +1534,16 @@ mod tests {
                 .as_any()
                 .downcast_ref::<Int32Array>()
                 .unwrap();
-            assert_eq!(score_col.value(0), 100 + int_offset as i32);
-            assert_eq!(score_col.value(1), 200 + int_offset as i32);
+            assert_eq!(score_col.value(0), (100i32).wrapping_add(offset as i32));
+            assert_eq!(score_col.value(1), (200i32).wrapping_add(offset as i32));
 
             let value_col = batch
                 .column(2)
                 .as_any()
                 .downcast_ref::<Float64Array>()
                 .unwrap();
-            assert!((value_col.value(0) - 1.5 * float_scale).abs() < 0.001);
-            assert!((value_col.value(1) - 2.5 * float_scale).abs() < 0.001);
+            assert!((value_col.value(0) - (1.5 + offset as f64)).abs() < 0.001);
+            assert!((value_col.value(1) - (2.5 + offset as f64)).abs() < 0.001);
 
             let name_col = batch
                 .column(0)

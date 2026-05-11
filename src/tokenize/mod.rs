@@ -39,10 +39,10 @@ pub struct TokenizeConfig {
     /// Set during restore to the inverse of the original shift.
     /// When `None` and `tokenize_dates` is true, computed from seed.
     pub native_date_shift: Option<i64>,
-    /// Override for native Parquet numeric shift (int_offset, float_scale).
+    /// Override for native Parquet numeric shift (wrapping integer offset).
     /// Set during restore to the inverse of the original shift.
     /// When `None` and `tokenize_numbers` is true, computed from seed.
-    pub native_numeric_shift: Option<(i64, f64)>,
+    pub native_numeric_shift: Option<i64>,
 }
 
 impl Default for TokenizeConfig {
@@ -218,7 +218,7 @@ pub fn restore(
     // Enable date shifting with inverse offset to reverse native temporal shifts.
     // Enable numeric shifting with inverse offset to reverse native numeric shifts.
     let native_date_shift = dict.date_shift_days.map(|d| -d);
-    let native_numeric_shift = dict.numeric_shift.map(|(i, f)| (-i, 1.0 / f));
+    let native_numeric_shift = dict.numeric_shift.map(|i| -i);
     let config = TokenizeConfig {
         tokenize_headers: true,
         tokenize_numbers: true,

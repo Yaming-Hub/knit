@@ -8,9 +8,9 @@ All notable changes to Knit are documented in this file.
 
 - **Native Parquet numeric tokenization** — The `--tokenize-numbers` flag now shifts
   native Arrow numeric columns (Int8–64, UInt8–64, Float32/64) in Parquet files,
-  not just string-encoded numbers. Integers are shifted by a deterministic offset
-  (±100k from `--seed`), floats are scaled by a deterministic factor (0.5–2.0x).
-  Shift parameters are stored in the token dictionary for exact restore.
+  not just string-encoded numbers. All types use wrapping/additive arithmetic for
+  exact restore roundtrip. Shift offset (±10k from `--seed`) stored in token
+  dictionary.
 - **Native Parquet timestamp shifting** — The `--tokenize-dates` flag now shifts
   native Arrow temporal columns (Date32, Date64, Timestamp with second/ms/µs/ns
   precision) in Parquet files, not just string-encoded dates. Uses the same

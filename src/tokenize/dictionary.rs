@@ -25,10 +25,10 @@ pub struct TokenDictionary {
     /// Used during restore to reverse native Parquet temporal column shifts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub date_shift_days: Option<i64>,
-    /// Numeric shift (int_offset, float_scale) for native Parquet numeric columns.
+    /// Numeric shift offset for native Parquet numeric columns.
     /// Used during restore to reverse the shift.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub numeric_shift: Option<(i64, f64)>,
+    pub numeric_shift: Option<i64>,
     /// The token mappings (original → token), sorted for deterministic output.
     pub tokens: BTreeMap<String, String>,
 }
