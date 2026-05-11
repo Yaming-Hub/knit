@@ -392,6 +392,135 @@ fn expand_oneof_values(
     result
 }
 
+// ── Size estimation ─────────────────────────────────────────────────
+
+/// Estimated output size per entity.
+#[derive(Debug, Clone)]
+pub struct EntitySizeEstimate {
+    pub entity_name: String,
+    pub rows: u64,
+    /// Estimated bytes in CSV format.
+    pub csv_bytes: u64,
+    /// Estimated bytes in JSON/JSONL format.
+    pub json_bytes: u64,
+}
+
+/// Estimate output sizes for a scaling plan.
+///
+/// Returns per-entity estimates and total CSV bytes.
+/// Uses heuristic bytes-per-field based on data type.
+/// Parquet is typically 30-50% smaller due to compression; callers estimate 40% of CSV.
+pub fn estimate_output_size(
+    model: &DataModel,
+    analysis: &ScalingAnalysis,
+    plan: &ScalingPlan,
+) -> (Vec<EntitySizeEstimate>, u64) {
+    let mut estimates = Vec::new();
+    let mut total_csv = 0u64;
+
+    for entity in &model.entities {
+        let rows = plan
+            .entity_overrides
+            .get(&entity.name)
+            .copied()
+            .unwrap_or_else(|| {
+                analysis
+                    .entity_counts
+                    .get(&entity.name)
+                    .copied()
+                    .unwrap_or(0)
+            });
+
+        let csv_per_row = estimate_row_bytes(&entity.fields);
+        let json_per_row = estimate_json_row_bytes(&entity.fields);
+        let csv_bytes = rows * csv_per_row;
+        let json_bytes = rows * json_per_row;
+
+        estimates.push(EntitySizeEstimate {
+            entity_name: entity.name.clone(),
+            rows,
+            csv_bytes,
+            json_bytes,
+        });
+        total_csv += csv_bytes;
+    }
+
+    (estimates, total_csv)
+}
+
+/// Estimate bytes per row for a list of fields (CSV-like format).
+fn estimate_row_bytes(fields: &[crate::core::types::Field]) -> u64 {
+    use crate::core::types::DataType;
+
+    let field_bytes: u64 = fields
+        .iter()
+        .map(|f| match f.data_type {
+            DataType::Bool => 5,
+            DataType::Int | DataType::Int32 => 8,
+            DataType::Float => 12,
+            DataType::String => 20,
+            DataType::Uuid => 36,
+            DataType::Date => 10,
+            DataType::Time => 8,
+            DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz => 24,
+            DataType::Duration => 12,
+            DataType::Bytes => 24,
+            DataType::Array | DataType::Map | DataType::Object => 40,
+            _ => 16,
+        })
+        .sum();
+
+    let delimiters = fields.len().saturating_sub(1) as u64;
+    field_bytes + delimiters + 1 // +delimiters between fields, +1 newline
+}
+
+/// Estimate JSON bytes per row: field names + values + syntax overhead.
+fn estimate_json_row_bytes(fields: &[crate::core::types::Field]) -> u64 {
+    use crate::core::types::DataType;
+
+    let mut total: u64 = 2; // { and }
+    for (i, f) in fields.iter().enumerate() {
+        // "field_name": + value
+        let name_overhead = f.name.len() as u64 + 4; // quotes, colon, space
+        let value_bytes: u64 = match f.data_type {
+            DataType::Bool => 5,
+            DataType::Int | DataType::Int32 => 8,
+            DataType::Float => 12,
+            DataType::String => 22, // quotes + content
+            DataType::Uuid => 38,   // quotes + 36 chars
+            DataType::Date => 12,
+            DataType::Time => 10,
+            DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz => 26,
+            DataType::Duration => 14,
+            DataType::Bytes => 26,
+            DataType::Array | DataType::Map | DataType::Object => 50,
+            _ => 18,
+        };
+        total += name_overhead + value_bytes;
+        if i < fields.len() - 1 {
+            total += 2; // ", "
+        }
+    }
+    total + 1 // newline
+}
+
+/// Format a byte count as a human-readable string (e.g., "1.2 MB").
+pub fn format_bytes(bytes: u64) -> String {
+    const KB: u64 = 1024;
+    const MB: u64 = 1024 * 1024;
+    const GB: u64 = 1024 * 1024 * 1024;
+
+    if bytes >= GB {
+        format!("{:.1} GB", bytes as f64 / GB as f64)
+    } else if bytes >= MB {
+        format!("{:.1} MB", bytes as f64 / MB as f64)
+    } else if bytes >= KB {
+        format!("{:.1} KB", bytes as f64 / KB as f64)
+    } else {
+        format!("{} B", bytes)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -432,5 +561,133 @@ mod tests {
         let existing = vec![("X".to_string(), 0.5), ("Y".to_string(), 0.5)];
         let result = expand_oneof_values(&existing, 2);
         assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_format_bytes() {
+        assert_eq!(format_bytes(500), "500 B");
+        assert_eq!(format_bytes(1024), "1.0 KB");
+        assert_eq!(format_bytes(1536), "1.5 KB");
+        assert_eq!(format_bytes(1_048_576), "1.0 MB");
+        assert_eq!(format_bytes(1_073_741_824), "1.0 GB");
+    }
+
+    #[test]
+    fn test_estimate_row_bytes() {
+        use crate::core::types::{DataType, Field, NullSpec};
+
+        let fields = vec![
+            Field {
+                name: "id".into(),
+                data_type: DataType::Uuid,
+                description: None,
+                generator: None,
+                nullable: NullSpec::default(),
+                primary_key: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+                stats: None,
+                traits: None,
+            },
+            Field {
+                name: "name".into(),
+                data_type: DataType::String,
+                description: None,
+                generator: None,
+                nullable: NullSpec::default(),
+                primary_key: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+                stats: None,
+                traits: None,
+            },
+            Field {
+                name: "age".into(),
+                data_type: DataType::Int,
+                description: None,
+                generator: None,
+                nullable: NullSpec::default(),
+                primary_key: None,
+                precision: None,
+                actor_column: false,
+                fields: vec![],
+                stats: None,
+                traits: None,
+            },
+        ];
+        let bytes = estimate_row_bytes(&fields);
+        // UUID(36) + String(20) + Int(8) + 2 delimiters + 1 newline = 67
+        assert_eq!(bytes, 67);
+    }
+
+    #[test]
+    fn test_estimate_output_size() {
+        use crate::core::types::{CountSpec, DataModel, DataType, Entity, Field, NullSpec};
+
+        let make_field = |name: &str, dt: DataType| Field {
+            name: name.into(),
+            data_type: dt,
+            description: None,
+            generator: None,
+            nullable: NullSpec::default(),
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+            stats: None,
+            traits: None,
+        };
+
+        let model = DataModel {
+            entities: vec![Entity {
+                name: "Users".into(),
+                fields: vec![
+                    make_field("id", DataType::Uuid),
+                    make_field("name", DataType::String),
+                ],
+                count: CountSpec::Fixed(100),
+                description: None,
+                tags: vec![],
+                constraints: vec![],
+                topology: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
+                mixin_refs: None,
+                output: None,
+                stats: None,
+            }],
+            ..DataModel::default()
+        };
+
+        let mut entity_counts = BTreeMap::new();
+        entity_counts.insert("Users".to_string(), 100);
+
+        let analysis = ScalingAnalysis {
+            actor: None,
+            time: None,
+            custom: vec![],
+            entity_counts,
+        };
+
+        let mut overrides = BTreeMap::new();
+        overrides.insert("Users".to_string(), 1000);
+
+        let plan = ScalingPlan {
+            entity_overrides: overrides,
+            new_partitions: None,
+            dim_overrides: vec![],
+        };
+
+        let (estimates, total) = estimate_output_size(&model, &analysis, &plan);
+        assert_eq!(estimates.len(), 1);
+        assert_eq!(estimates[0].rows, 1000);
+        // UUID(36) + String(20) + 1 delimiter + 1 newline = 58 bytes/row
+        assert_eq!(estimates[0].csv_bytes, 58_000);
+        assert_eq!(total, 58_000);
+        // JSON: {"id": UUID(38) + "name": String(22)} = 2 + (4+2+4+38) + (6+2+4+22) + 2 + 1 = 85
+        assert!(estimates[0].json_bytes > estimates[0].csv_bytes);
     }
 }

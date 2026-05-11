@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Estimated output size in `--dry-run`** — The `knit scale --dry-run` command now
+  shows per-entity estimated output sizes and a total estimate. Size estimation uses
+  heuristic bytes-per-field based on data type (e.g., UUID=36, Int=8, String=20).
+  Both text and JSON output include estimates. The JSON output includes raw byte counts
+  for CSV and Parquet (estimated at ~40% of CSV size).
 - **Calendar-aware monthly cadence** (`--cadence 1m`) — The `--cadence` flag for
   `knit scale` now supports month-based cadence (`1m`, `3m`, `6m`) in addition to
   days (`7d`) and weeks (`2w`). Monthly cadence uses proper calendar month stepping

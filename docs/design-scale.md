@@ -387,6 +387,9 @@ The following features are implemented and available via `knit scale`:
 | Combined dimensions | ✅ | Multiplicative interaction |
 | Cadence detection | ✅ | Median gap from sorted partition dates; monthly (28–31d) auto-detected |
 | `--cadence` override | ✅ | Days (`7d`), weeks (`2w`), months (`1m`, `3m`) with calendar stepping |
+| `--count Nx` | ✅ | Uniform multiplier on top of dimensional scaling |
+| `--analyze --json` | ✅ | Machine-readable JSON output for analysis |
+| `--dry-run` size estimate | ✅ | Per-entity and total estimated output size |
 | FK-root actor heuristic | ✅ | Selects entity with most incoming FKs |
 
 **Architecture (as implemented):**
@@ -405,7 +408,4 @@ generation pipeline (format selection, partitioning, output writing).
 ### Deferred to v2
 
 - Smart value naming (faker-based) for expanded custom dimensions
-- `--count Nx` uniform multiplier on top of dimensional scaling
 - Constraint propagation for cross-entity dimension fields
-- JSON machine-readable output for `--analyze`
-- Estimated output size in `--dry-run`
