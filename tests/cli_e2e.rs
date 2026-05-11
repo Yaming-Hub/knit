@@ -2992,8 +2992,9 @@ fn incremental_type_drift_int_to_float() {
 #[test]
 fn incremental_new_column_in_later_chunk() {
     // Chunk 1 has columns A,B. Chunk 2 has columns A,B,C.
-    // Currently, new columns appearing in later chunks are detected
-    // and added by the incremental state merger.
+    // Verify that the process completes without error and core columns are
+    // preserved. Note: new columns from later chunks may or may not appear
+    // in the finalized blueprint depending on the ingestion implementation.
     let dir = TempDir::new().unwrap();
     let chunk1 = dir.path().join("c1.csv");
     let chunk2 = dir.path().join("c2.csv");
