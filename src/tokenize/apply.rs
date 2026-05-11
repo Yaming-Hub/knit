@@ -665,9 +665,11 @@ fn convert_with_tokenization(
     // Step 1: Read source into RecordBatches
     let batches = read_as_batches(src, src_format)?;
     if batches.is_empty() {
-        // Empty file — write empty output
-        std::fs::write(out, "")?;
-        return Ok(());
+        // No data — write a valid empty file in the target format.
+        // We still need a schema; re-read just the schema from source.
+        let empty_schema = infer_schema_only(src, src_format)?;
+        let schema = Arc::new(empty_schema);
+        return write_batches(out, target_format, &schema, &[]);
     }
 
     let schema = batches[0].schema();
@@ -739,11 +741,11 @@ fn read_csv_as_batches(src: &Path, format: FileFormat) -> Result<Vec<arrow::reco
 
     let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
     let file = File::open(src)?;
-    // Infer schema from file
+    // Infer schema from all rows to handle mixed-type columns correctly
     let (schema, _) = arrow_csv::reader::Format::default()
         .with_delimiter(delimiter)
         .with_header(true)
-        .infer_schema(std::io::BufReader::new(&file), Some(100))?;
+        .infer_schema(std::io::BufReader::new(&file), None)?;
     let schema = std::sync::Arc::new(schema);
 
     // Re-open and read with inferred schema
@@ -808,6 +810,36 @@ fn read_parquet_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::Record
         batches.push(batch?);
     }
     Ok(batches)
+}
+
+/// Infer schema from a source file without reading all data.
+/// Used when the source has no data rows but we need a valid schema for the target writer.
+fn infer_schema_only(src: &Path, format: FileFormat) -> Result<arrow::datatypes::Schema> {
+    match format {
+        FileFormat::Csv | FileFormat::Tsv => {
+            let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+            let file = std::fs::File::open(src)?;
+            let (schema, _) = arrow_csv::reader::Format::default()
+                .with_delimiter(delimiter)
+                .with_header(true)
+                .infer_schema(std::io::BufReader::new(&file), None)?;
+            Ok(schema)
+        }
+        FileFormat::Json | FileFormat::Jsonl => {
+            let (schema, _) = arrow_json::reader::infer_json_schema_from_seekable(
+                &mut std::io::BufReader::new(std::fs::File::open(src)?),
+                None,
+            )?;
+            Ok(schema)
+        }
+        FileFormat::Parquet => {
+            use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+            let file = std::fs::File::open(src)?;
+            let builder = ParquetRecordBatchReaderBuilder::try_new(file)?;
+            Ok(builder.schema().as_ref().clone())
+        }
+        FileFormat::Other => Ok(arrow::datatypes::Schema::empty()),
+    }
 }
 
 /// Tokenize record batches (string columns only in conversion path).
@@ -2064,5 +2096,42 @@ mod tests {
             p.with_extension("jsonl"),
             Path::new("/foo/bar/data.jsonl")
         );
+    }
+
+    #[test]
+    fn test_convert_header_only_csv_to_parquet() {
+        // Empty CSV (header only) should produce a valid Parquet file
+        let dir = TempDir::new().unwrap();
+        let csv_path = dir.path().join("empty.csv");
+        let out_path = dir.path().join("empty.parquet");
+
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,age,city").unwrap();
+        // No data rows
+
+        let mapper = TokenMapper::new(42);
+        let entry = FileEntry {
+            rel_path: "empty.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            output_format: Some(FileFormat::Parquet),
+            ..Default::default()
+        };
+
+        apply_data_file(&entry, dir.path(), &out_path, &mapper, &config).unwrap();
+
+        // Output should be a valid Parquet file (readable)
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        let file = std::fs::File::open(&out_path).unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+        let batches: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        // Should have 0 rows but valid schema with 3 columns
+        let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total_rows, 0);
     }
 }
