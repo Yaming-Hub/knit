@@ -153,7 +153,140 @@ pub fn update_relationship_evidence(state: &mut LearnState) {
     }
 }
 
-/// Check if a column is likely a primary key based on its statistics.
+/// Update per-table pairwise numeric correlation evidence from Arrow batches.
+///
+/// For each numeric column pair in the table, extracts paired non-null values
+/// and feeds them into a `PairwiseCorrelation` tracker stored on `TableState`.
+/// Pair keys are canonicalized (lexicographic order) to avoid duplicates.
+pub fn update_correlation_evidence(
+    state: &mut LearnState,
+    entity: &str,
+    batches: &[RecordBatch],
+) {
+    use arrow::array::{
+        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, UInt16Array,
+        UInt32Array, UInt64Array, UInt8Array,
+    };
+    use crate::learn::streaming::relationships::PairwiseCorrelation;
+
+    if batches.is_empty() {
+        return;
+    }
+
+    let table = match state.tables.get_mut(entity) {
+        Some(t) => t,
+        None => return,
+    };
+
+    // Identify numeric columns by index
+    let schema = batches[0].schema();
+    let numeric_indices: Vec<(usize, String)> = schema
+        .fields()
+        .iter()
+        .enumerate()
+        .filter(|(_, f)| {
+            matches!(
+                arrow_to_column_type(f.data_type()),
+                ColumnDataType::Integer | ColumnDataType::Float
+            )
+        })
+        .map(|(i, f)| (i, f.name().clone()))
+        .collect();
+
+    if numeric_indices.len() < 2 {
+        return;
+    }
+
+    // For each pair, update PairwiseCorrelation
+    for i in 0..numeric_indices.len() {
+        for j in (i + 1)..numeric_indices.len() {
+            let (idx_a, ref name_a) = numeric_indices[i];
+            let (idx_b, ref name_b) = numeric_indices[j];
+
+            // Canonicalize pair key (lexicographic order)
+            let (canon_a, canon_b, swap) = if name_a <= name_b {
+                (name_a.clone(), name_b.clone(), false)
+            } else {
+                (name_b.clone(), name_a.clone(), true)
+            };
+
+            // Find or create tracker
+            let tracker_pos = table
+                .correlations
+                .iter()
+                .position(|pc| pc.col_a == canon_a && pc.col_b == canon_b);
+            let tracker_idx = match tracker_pos {
+                Some(idx) => idx,
+                None => {
+                    table.correlations.push(PairwiseCorrelation::new(
+                        canon_a.clone(),
+                        canon_b.clone(),
+                    ));
+                    table.correlations.len() - 1
+                }
+            };
+
+            // Extract paired non-null values from all batches
+            for batch in batches {
+                let arr_a = batch.column(idx_a);
+                let arr_b = batch.column(idx_b);
+                let len = arr_a.len().min(arr_b.len());
+
+                for row in 0..len {
+                    if arr_a.is_null(row) || arr_b.is_null(row) {
+                        continue;
+                    }
+                    let va = extract_f64(arr_a, row);
+                    let vb = extract_f64(arr_b, row);
+                    if let (Some(a), Some(b)) = (va, vb) {
+                        // Skip NaN/infinity to avoid corrupting accumulators
+                        // (matches batch mode's paired_finite() filtering)
+                        if !a.is_finite() || !b.is_finite() {
+                            continue;
+                        }
+                        let (fa, fb) = if swap { (b, a) } else { (a, b) };
+                        table.correlations[tracker_idx].update(fa, fb);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Extract a numeric value as f64 from an Arrow array at the given row.
+    fn extract_f64(array: &dyn Array, row: usize) -> Option<f64> {
+        if let Some(a) = array.as_any().downcast_ref::<Float64Array>() {
+            return Some(a.value(row));
+        }
+        if let Some(a) = array.as_any().downcast_ref::<Float32Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<Int64Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<Int32Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<Int16Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<Int8Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<UInt64Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<UInt32Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<UInt16Array>() {
+            return Some(a.value(row) as f64);
+        }
+        if let Some(a) = array.as_any().downcast_ref::<UInt8Array>() {
+            return Some(a.value(row) as f64);
+        }
+        None
+    }
+}
 fn is_likely_pk_column(col: &ColumnState, table_row_count: u64) -> bool {
     if table_row_count == 0 || col.count == 0 {
         return false;
@@ -396,11 +529,40 @@ pub fn finalize_state(
     Vec<TableAnalysis>,
     Vec<crate::learn::streaming::FinalizedRelationship>,
 ) {
+    use crate::learn::correlation::{pearson_p_value, Correlation, CorrelationMethod};
+
     let mut analyses = Vec::new();
 
     for (entity_name, table_state) in &state.tables {
         let col_analyses = finalize_columns(table_state);
-        let analysis = TableAnalysis::new(entity_name.clone(), col_analyses, table_state.row_count);
+        let mut analysis =
+            TableAnalysis::new(entity_name.clone(), col_analyses, table_state.row_count);
+
+        // Finalize per-table correlations from streaming PairwiseCorrelation trackers
+        let mut corrs: Vec<Correlation> = table_state
+            .correlations
+            .iter()
+            .filter_map(|pc| {
+                let r = pc.pearson_r()?;
+                if r.abs() < 0.3 {
+                    return None;
+                }
+                let p = pearson_p_value(r, pc.count as usize);
+                if p >= 0.05 {
+                    return None;
+                }
+                Some(Correlation {
+                    column_a: pc.col_a.clone(),
+                    column_b: pc.col_b.clone(),
+                    method: CorrelationMethod::Pearson,
+                    coefficient: r,
+                    p_value: p,
+                })
+            })
+            .collect();
+        corrs.truncate(500);
+        analysis.correlations = corrs;
+
         analyses.push(analysis);
     }
 

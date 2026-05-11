@@ -256,7 +256,7 @@ fn ranks(values: &[f64]) -> Vec<f64> {
 }
 
 /// Approximate p-value for Pearson r using t-distribution approximation.
-fn pearson_p_value(r: f64, n: usize) -> f64 {
+pub fn pearson_p_value(r: f64, n: usize) -> f64 {
     if n < 3 || r.abs() >= 1.0 {
         return if r.abs() >= 1.0 { 0.0 } else { 1.0 };
     }

@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Incremental correlation finalize** — Incremental learning now detects and emits
+  Pearson correlations between numeric column pairs. Correlations are tracked per-table
+  using streaming Welford covariance during ingestion, stored in the state file, and
+  finalized with the same |r| ≥ 0.3 / p-value < 0.05 thresholds as batch mode.
+  Multi-chunk accumulation is supported via the parallel merge formula.
 - **Incremental learning parity tests** — Comprehensive integration test suite
   verifying batch vs incremental mode parity: single-chunk and multi-chunk
   structural parity, determinism (same input → same output), finalize-only mode,
@@ -41,6 +46,9 @@ All notable changes to Knit are documented in this file.
 
 ### Fixed
 
+- **ColumnState::merge precision fields** — `all_integer` and `max_decimal_places`
+  are now properly merged across incremental chunks (AND for integer flag, MAX for
+  decimal places), fixing potential incorrect numeric precision in finalized models.
 - **Always-null column detection** — Columns that are 100% null or empty string
   in source data now correctly get `NullSpec::Always` instead of being fitted
   with distribution generators. Handles both Arrow nulls and CSV empty strings.
