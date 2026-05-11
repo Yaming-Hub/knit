@@ -1172,7 +1172,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
 
 /// Build [`ColumnStats`] from a [`ColumnProfile`].
 fn build_column_stats(profile: &ColumnProfile) -> crate::core::ColumnStats {
-    use crate::core::{ColumnStats, StatsPercentiles, TopValue};
+    use crate::core::{ColumnStats, StatsPercentiles};
 
     let mut stats = ColumnStats {
         distinct_count: profile.distinct_count,
