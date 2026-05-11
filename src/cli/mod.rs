@@ -327,6 +327,12 @@ pub enum Command {
         /// Keep partition folder values as-is.
         #[arg(long)]
         preserve_partitions: bool,
+        /// Only tokenize values in these columns (comma-separated, case-insensitive).
+        #[arg(long, value_delimiter = ',', conflicts_with = "preserve_columns")]
+        tokenize_columns: Option<Vec<String>>,
+        /// Tokenize all columns except these (comma-separated, case-insensitive).
+        #[arg(long, value_delimiter = ',', conflicts_with = "tokenize_columns")]
+        preserve_columns: Option<Vec<String>>,
     },
     /// Enrich a model with statistical knowledge from reference samples.
     Enrich {

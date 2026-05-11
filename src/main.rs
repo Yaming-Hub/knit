@@ -221,6 +221,8 @@ fn main() -> anyhow::Result<()> {
             tokenize_dates,
             tokenize_headers,
             preserve_partitions,
+            tokenize_columns,
+            preserve_columns,
         } => tokenize::run(
             input,
             output,
@@ -232,6 +234,8 @@ fn main() -> anyhow::Result<()> {
             *tokenize_dates,
             *tokenize_headers,
             *preserve_partitions,
+            tokenize_columns.clone(),
+            preserve_columns.clone(),
         ),
         Command::Enrich {
             blueprint,

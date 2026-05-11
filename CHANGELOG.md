@@ -6,6 +6,15 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Selective column tokenization** — New `--tokenize-columns` and `--preserve-columns`
+  flags for `knit tokenize` allow fine-grained control over which columns are tokenized.
+  `--tokenize-columns "Name,Email"` only tokenizes the listed columns (whitelist);
+  `--preserve-columns "Country,Status"` tokenizes everything except the listed columns
+  (blacklist). The flags are mutually exclusive. Column matching is case-insensitive.
+  When `--tokenize-headers` is also set, preserved columns keep their original header
+  names. The column filter is stored in the token dictionary so that `--restore`
+  correctly limits replacement to the originally tokenized columns. JSON filtering
+  is subtree-scoped: preserving a top-level key preserves its entire nested subtree.
 - **`--tokenize-dates` implementation** — The `--tokenize-dates` flag now shifts
   date and timestamp values by a consistent random offset (±5 years, seeded).
   This preserves relative ordering and intervals between dates while obfuscating

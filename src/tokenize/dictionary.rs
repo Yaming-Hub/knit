@@ -18,8 +18,15 @@ pub struct TokenDictionary {
     pub seed: u64,
     /// Statistics about the tokenization.
     pub stats: DictionaryStats,
+    /// Column filter policy used during tokenization.
+    #[serde(default, skip_serializing_if = "is_default_column_filter")]
+    pub column_filter: ColumnFilter,
     /// The token mappings (original → token), sorted for deterministic output.
     pub tokens: BTreeMap<String, String>,
+}
+
+fn is_default_column_filter(f: &ColumnFilter) -> bool {
+    f.tokenize_columns.is_none() && f.preserve_columns.is_none()
 }
 
 /// Summary statistics stored in the dictionary.
@@ -27,6 +34,17 @@ pub struct TokenDictionary {
 pub struct DictionaryStats {
     /// Number of unique tokens generated.
     pub unique_tokens: usize,
+}
+
+/// Column filter policy stored in the dictionary for safe restore.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ColumnFilter {
+    /// If set, only these columns were tokenized (lowercase).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokenize_columns: Option<Vec<String>>,
+    /// If set, these columns were preserved (lowercase).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preserve_columns: Option<Vec<String>>,
 }
 
 impl TokenDictionary {
@@ -38,12 +56,26 @@ impl TokenDictionary {
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
 
+        let column_filter = ColumnFilter {
+            tokenize_columns: config.tokenize_columns.as_ref().map(|s| {
+                let mut v: Vec<String> = s.iter().cloned().collect();
+                v.sort();
+                v
+            }),
+            preserve_columns: config.preserve_columns.as_ref().map(|s| {
+                let mut v: Vec<String> = s.iter().cloned().collect();
+                v.sort();
+                v
+            }),
+        };
+
         Self {
             version: 1,
             seed: config.seed,
             stats: DictionaryStats {
                 unique_tokens: tokens.len(),
             },
+            column_filter,
             tokens,
         }
     }
@@ -85,6 +117,7 @@ mod tests {
             version: 1,
             seed: 42,
             stats: DictionaryStats { unique_tokens: 2 },
+            column_filter: ColumnFilter::default(),
             tokens,
         };
 
@@ -95,5 +128,53 @@ mod tests {
         assert_eq!(loaded.seed, 42);
         assert_eq!(loaded.tokens.len(), 2);
         assert_eq!(loaded.tokens.get("Hello").unwrap(), "Xkmpq");
+    }
+
+    #[test]
+    fn test_roundtrip_dictionary_with_column_filter() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("tokens.json");
+
+        let dict = TokenDictionary {
+            version: 1,
+            seed: 42,
+            stats: DictionaryStats { unique_tokens: 0 },
+            column_filter: ColumnFilter {
+                tokenize_columns: Some(vec!["name".to_string(), "email".to_string()]),
+                preserve_columns: None,
+            },
+            tokens: BTreeMap::new(),
+        };
+
+        dict.write(&path).unwrap();
+        let loaded = TokenDictionary::read(&path).unwrap();
+
+        assert_eq!(loaded.column_filter.tokenize_columns.unwrap(), vec!["name", "email"]);
+        assert!(loaded.column_filter.preserve_columns.is_none());
+    }
+
+    #[test]
+    fn test_dictionary_no_column_filter_omitted() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("tokens.json");
+
+        let dict = TokenDictionary {
+            version: 1,
+            seed: 42,
+            stats: DictionaryStats { unique_tokens: 0 },
+            column_filter: ColumnFilter::default(),
+            tokens: BTreeMap::new(),
+        };
+
+        dict.write(&path).unwrap();
+
+        // Verify JSON does not contain column_filter when empty
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(!content.contains("column_filter"));
+
+        // But still loads fine (default)
+        let loaded = TokenDictionary::read(&path).unwrap();
+        assert!(loaded.column_filter.tokenize_columns.is_none());
+        assert!(loaded.column_filter.preserve_columns.is_none());
     }
 }

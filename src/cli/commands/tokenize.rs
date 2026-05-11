@@ -1,5 +1,6 @@
 //! CLI handler for `knit tokenize`.
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Result};
@@ -18,12 +19,23 @@ pub fn run(
     tokenize_dates: bool,
     tokenize_headers: bool,
     preserve_partitions: bool,
+    tokenize_columns: Option<Vec<String>>,
+    preserve_columns: Option<Vec<String>>,
 ) -> Result<()> {
     let input_path = Path::new(input);
     let output_path = Path::new(output);
 
     if !input_path.exists() {
         bail!("input path does not exist: {}", input);
+    }
+
+    // Column filter flags are not valid in restore or verify mode
+    if restore_mode && (tokenize_columns.is_some() || preserve_columns.is_some()) {
+        bail!("--tokenize-columns and --preserve-columns cannot be used with --restore; \
+               the column filter is read from the token dictionary automatically");
+    }
+    if verify_path.is_some() && (tokenize_columns.is_some() || preserve_columns.is_some()) {
+        bail!("--tokenize-columns and --preserve-columns cannot be used with --verify");
     }
 
     if restore_mode {
@@ -34,6 +46,10 @@ pub fn run(
         return run_verify(input_path, Path::new(verify));
     }
 
+    // Normalize column filter into HashSets (lowercase, trimmed, deduped)
+    let tokenize_cols = tokenize_columns.map(|v| normalize_column_names(&v));
+    let preserve_cols = preserve_columns.map(|v| normalize_column_names(&v));
+
     run_tokenize(
         input_path,
         output_path,
@@ -43,7 +59,18 @@ pub fn run(
         tokenize_dates,
         tokenize_headers,
         preserve_partitions,
+        tokenize_cols,
+        preserve_cols,
     )
+}
+
+/// Normalize a list of column names: trim whitespace, lowercase, remove empties, deduplicate.
+fn normalize_column_names(names: &[String]) -> HashSet<String> {
+    names
+        .iter()
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .collect()
 }
 
 fn run_tokenize(
@@ -55,6 +82,8 @@ fn run_tokenize(
     tokenize_dates: bool,
     tokenize_headers: bool,
     preserve_partitions: bool,
+    tokenize_columns: Option<HashSet<String>>,
+    preserve_columns: Option<HashSet<String>>,
 ) -> Result<()> {
     let dict_path = dictionary
         .map(PathBuf::from)
@@ -66,10 +95,12 @@ fn run_tokenize(
         tokenize_dates,
         tokenize_headers,
         preserve_partitions,
+        tokenize_columns,
+        preserve_columns,
     };
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;
-    print_result(&result, &dict_path);
+    print_result(&result, &dict_path, &config);
     Ok(())
 }
 
@@ -167,13 +198,24 @@ fn count_lines(path: &Path) -> Result<usize> {
     Ok(BufReader::new(file).lines().count())
 }
 
-fn print_result(result: &TokenizeResult, dict_path: &Path) {
+fn print_result(result: &TokenizeResult, dict_path: &Path, config: &TokenizeConfig) {
     println!("═══ Tokenization Complete ═══");
     println!(
         "  files:       {} data, {} schema, {} dictionary, {} companion",
         result.data_files, result.schema_files, result.dictionary_files, result.companion_files
     );
     println!("  tokens:      {} unique string values → tokenized", result.unique_tokens);
+
+    if let Some(ref cols) = config.tokenize_columns {
+        let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
+        sorted.sort();
+        println!("  columns:     only [{}]", sorted.join(", "));
+    } else if let Some(ref cols) = config.preserve_columns {
+        let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
+        sorted.sort();
+        println!("  preserved:   [{}]", sorted.join(", "));
+    }
+
     println!("  dictionary:  {}", dict_path.display());
     println!();
     println!("The tokenized dataset is safe to share.");

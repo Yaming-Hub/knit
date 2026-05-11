@@ -157,11 +157,18 @@ fn extract_csv_strings(
         .from_path(path)
         .with_context(|| format!("opening CSV {}", path.display()))?;
 
+    let headers = rdr.headers()?.clone();
+
+    // Build per-column tokenization flags
+    let col_flags: Vec<bool> = headers
+        .iter()
+        .map(|h| config.should_tokenize_column(h))
+        .collect();
+
     // Register headers if header tokenization is enabled
     if config.tokenize_headers {
-        let headers = rdr.headers()?.clone();
         for h in headers.iter() {
-            if should_tokenize_value(h) {
+            if config.should_tokenize_header(h) && should_tokenize_value(h) {
                 mapper.register(h);
             }
         }
@@ -175,7 +182,11 @@ fn extract_csv_strings(
 
     for result in rdr.records() {
         let record = result?;
-        for field in record.iter() {
+        for (idx, field) in record.iter().enumerate() {
+            // Skip columns that should not be tokenized
+            if idx < col_flags.len() && !col_flags[idx] {
+                continue;
+            }
             // Try date shifting first (if enabled)
             if let Some(shift) = shift_days {
                 if try_register_shifted_date(field, mapper, shift) {
@@ -211,7 +222,7 @@ fn extract_json_strings(
             extract_schema_json_strings(&value, mapper);
         } else {
             extract_data_json_strings(
-                &value, mapper, config.tokenize_headers, config.tokenize_numbers, date_shift,
+                &value, mapper, config, date_shift, true, false,
             );
         }
         return Ok(());
@@ -226,7 +237,7 @@ fn extract_json_strings(
         let value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
         extract_data_json_strings(
-            &value, mapper, config.tokenize_headers, config.tokenize_numbers, date_shift,
+            &value, mapper, config, date_shift, true, false,
         );
     }
     Ok(())
@@ -265,42 +276,56 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
 }
 
 /// For data files, tokenize all string values (and optionally keys, numbers, and dates).
+/// `should_tokenize` tracks whether the current value is in a column that should be
+/// tokenized. `filter_applied` tracks whether the column filter has already been
+/// evaluated for this subtree — if true, nested keys inherit instead of re-checking.
 fn extract_data_json_strings(
     value: &serde_json::Value,
     mapper: &mut TokenMapper,
-    tokenize_keys: bool,
-    tokenize_numbers: bool,
+    config: &TokenizeConfig,
     date_shift: Option<i64>,
+    should_tokenize: bool,
+    filter_applied: bool,
 ) {
     match value {
         serde_json::Value::String(s) => {
+            if !should_tokenize {
+                return;
+            }
             // Try date shifting first
             if let Some(shift) = date_shift {
                 if try_register_shifted_date(s, mapper, shift) {
                     return;
                 }
             }
-            if should_tokenize_value_with_config(s, tokenize_numbers) {
+            if should_tokenize_value_with_config(s, config.tokenize_numbers) {
                 mapper.register(s);
             }
         }
         serde_json::Value::Number(n) => {
-            if tokenize_numbers {
+            if should_tokenize && config.tokenize_numbers {
                 let s = n.to_string();
                 mapper.register(&s);
             }
         }
         serde_json::Value::Object(map) => {
             for (key, val) in map {
-                if tokenize_keys && should_tokenize_value(key) {
+                // Apply column filter only at the first object level
+                let (child_tokenize, child_filter_applied) = if !filter_applied && config.has_column_filter() {
+                    (config.should_tokenize_column(key), true)
+                } else {
+                    (should_tokenize, filter_applied)
+                };
+
+                if config.tokenize_headers && child_tokenize && should_tokenize_value(key) {
                     mapper.register(key);
                 }
-                extract_data_json_strings(val, mapper, tokenize_keys, tokenize_numbers, date_shift);
+                extract_data_json_strings(val, mapper, config, date_shift, child_tokenize, child_filter_applied);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                extract_data_json_strings(item, mapper, tokenize_keys, tokenize_numbers, date_shift);
+                extract_data_json_strings(item, mapper, config, date_shift, should_tokenize, filter_applied);
             }
         }
         _ => {}
@@ -319,10 +344,18 @@ fn extract_parquet_strings(
         .with_context(|| format!("opening parquet {}", path.display()))?;
     let builder = ParquetRecordBatchReaderBuilder::try_new(file)?;
 
+    // Build per-column tokenization flags from schema
+    let schema = builder.schema();
+    let col_flags: Vec<bool> = schema
+        .fields()
+        .iter()
+        .map(|f| config.should_tokenize_column(f.name()))
+        .collect();
+
     // Register column names from file schema (works even for empty files)
     if config.tokenize_headers {
-        for field in builder.schema().fields() {
-            if should_tokenize_value(field.name()) {
+        for field in schema.fields() {
+            if config.should_tokenize_header(field.name()) && should_tokenize_value(field.name()) {
                 mapper.register(field.name());
             }
         }
@@ -341,6 +374,11 @@ fn extract_parquet_strings(
         let batch = batch_result?;
 
         for col_idx in 0..batch.num_columns() {
+            // Skip columns that should not be tokenized
+            if col_idx < col_flags.len() && !col_flags[col_idx] {
+                continue;
+            }
+
             let col = batch.column(col_idx);
             if let Some(str_arr) = col.as_string_opt::<i32>() {
                 for i in 0..str_arr.len() {
@@ -892,5 +930,100 @@ mod tests {
         let shifted_diff = NaiveDate::parse_from_str(d2, "%Y-%m-%d").unwrap()
             - NaiveDate::parse_from_str(d1, "%Y-%m-%d").unwrap();
         assert_eq!(orig_diff, shifted_diff);
+    }
+
+    #[test]
+    fn test_extract_csv_tokenize_columns_whitelist() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("data.csv");
+        let mut f = std::fs::File::create(&path).unwrap();
+        writeln!(f, "name,city,country").unwrap();
+        writeln!(f, "Alice,Seattle,USA").unwrap();
+        writeln!(f, "Bob,Portland,Canada").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_columns: Some(["name".to_string()].into_iter().collect()),
+            ..Default::default()
+        };
+        let mut mapper = TokenMapper::new(42);
+        extract_csv_strings(&path, FileFormat::Csv, &mut mapper, &config).unwrap();
+
+        // Only "name" column values should be registered
+        assert!(mapper.contains("Alice"));
+        assert!(mapper.contains("Bob"));
+        // "city" and "country" values should NOT be registered
+        assert!(!mapper.contains("Seattle"));
+        assert!(!mapper.contains("Portland"));
+        assert!(!mapper.contains("USA"));
+        assert!(!mapper.contains("Canada"));
+    }
+
+    #[test]
+    fn test_extract_csv_preserve_columns_blacklist() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("data.csv");
+        let mut f = std::fs::File::create(&path).unwrap();
+        writeln!(f, "name,city,country").unwrap();
+        writeln!(f, "Alice,Seattle,USA").unwrap();
+
+        let config = TokenizeConfig {
+            preserve_columns: Some(["country".to_string()].into_iter().collect()),
+            ..Default::default()
+        };
+        let mut mapper = TokenMapper::new(42);
+        extract_csv_strings(&path, FileFormat::Csv, &mut mapper, &config).unwrap();
+
+        // "name" and "city" values should be registered
+        assert!(mapper.contains("Alice"));
+        assert!(mapper.contains("Seattle"));
+        // "country" values should NOT be registered
+        assert!(!mapper.contains("USA"));
+    }
+
+    #[test]
+    fn test_extract_csv_column_filter_case_insensitive() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("data.csv");
+        let mut f = std::fs::File::create(&path).unwrap();
+        writeln!(f, "Name,City").unwrap();
+        writeln!(f, "Alice,Seattle").unwrap();
+
+        // Filter uses lowercase "name" but CSV header is "Name"
+        let config = TokenizeConfig {
+            tokenize_columns: Some(["name".to_string()].into_iter().collect()),
+            ..Default::default()
+        };
+        let mut mapper = TokenMapper::new(42);
+        extract_csv_strings(&path, FileFormat::Csv, &mut mapper, &config).unwrap();
+
+        assert!(mapper.contains("Alice"));
+        assert!(!mapper.contains("Seattle"));
+    }
+
+    #[test]
+    fn test_config_should_tokenize_column() {
+        // No filter — all columns tokenized
+        let config = TokenizeConfig::default();
+        assert!(config.should_tokenize_column("name"));
+        assert!(config.should_tokenize_column("anything"));
+
+        // Whitelist — only listed columns tokenized
+        let config = TokenizeConfig {
+            tokenize_columns: Some(["name".to_string(), "email".to_string()].into_iter().collect()),
+            ..Default::default()
+        };
+        assert!(config.should_tokenize_column("name"));
+        assert!(config.should_tokenize_column("Name")); // case-insensitive
+        assert!(config.should_tokenize_column("email"));
+        assert!(!config.should_tokenize_column("city"));
+
+        // Blacklist — listed columns preserved
+        let config = TokenizeConfig {
+            preserve_columns: Some(["country".to_string()].into_iter().collect()),
+            ..Default::default()
+        };
+        assert!(config.should_tokenize_column("name"));
+        assert!(!config.should_tokenize_column("country"));
+        assert!(!config.should_tokenize_column("Country")); // case-insensitive
     }
 }
