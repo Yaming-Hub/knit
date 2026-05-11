@@ -57,9 +57,6 @@ fn run_tokenize(
     preserve_partitions: bool,
 ) -> Result<()> {
     // Warn about unimplemented flags
-    if tokenize_numbers {
-        eprintln!("warning: --tokenize-numbers is not yet implemented; numeric values will be preserved");
-    }
     if tokenize_dates {
         eprintln!("warning: --tokenize-dates is not yet implemented; date values will be preserved");
     }

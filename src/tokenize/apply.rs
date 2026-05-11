@@ -123,7 +123,7 @@ fn apply_json(
     } else {
         let content = std::fs::read_to_string(src)?;
         let mut value: serde_json::Value = serde_json::from_str(&content)?;
-        tokenize_json_value(&mut value, mapper, config.tokenize_headers);
+        tokenize_json_value(&mut value, mapper, config.tokenize_headers, config.tokenize_numbers);
         let output = serde_json::to_string_pretty(&value)?;
         std::fs::write(out, output)?;
         Ok(())
@@ -151,23 +151,47 @@ fn apply_jsonl(
         }
         let mut value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", src.display()))?;
-        tokenize_json_value(&mut value, mapper, config.tokenize_headers);
+        tokenize_json_value(&mut value, mapper, config.tokenize_headers, config.tokenize_numbers);
         serde_json::to_writer(&mut writer, &value)?;
         writeln!(writer)?;
     }
     Ok(())
 }
 
-/// Recursively tokenize all string values (and optionally keys) in a JSON value.
+/// Recursively tokenize string values, optionally keys, and optionally numbers in JSON.
 fn tokenize_json_value(
     value: &mut serde_json::Value,
     mapper: &TokenMapper,
     tokenize_keys: bool,
+    tokenize_numbers: bool,
 ) {
     match value {
         serde_json::Value::String(s) => {
             if let Some(token) = mapper.get(s) {
                 *s = token.to_string();
+            }
+        }
+        serde_json::Value::Number(n) => {
+            if tokenize_numbers {
+                let s = n.to_string();
+                if let Some(token) = mapper.get(&s) {
+                    // Preserve integer vs float type with precision
+                    if let Ok(i) = token.parse::<i64>() {
+                        if !token.contains('.') {
+                            *value = serde_json::Value::Number(i.into());
+                        } else if let Some(num) = serde_json::Number::from_f64(i as f64) {
+                            *value = serde_json::Value::Number(num);
+                        }
+                    } else if let Ok(u) = token.parse::<u64>() {
+                        if !token.contains('.') {
+                            *value = serde_json::Value::Number(u.into());
+                        }
+                    } else if let Ok(f) = token.parse::<f64>() {
+                        if let Some(num) = serde_json::Number::from_f64(f) {
+                            *value = serde_json::Value::Number(num);
+                        }
+                    }
+                }
             }
         }
         serde_json::Value::Object(map) => {
@@ -194,12 +218,12 @@ fn tokenize_json_value(
                 *map = deduped;
             }
             for val in map.values_mut() {
-                tokenize_json_value(val, mapper, tokenize_keys);
+                tokenize_json_value(val, mapper, tokenize_keys, tokenize_numbers);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr.iter_mut() {
-                tokenize_json_value(item, mapper, tokenize_keys);
+                tokenize_json_value(item, mapper, tokenize_keys, tokenize_numbers);
             }
         }
         _ => {}
@@ -581,5 +605,105 @@ mod tests {
         let col0 = batches[0].column(0).as_any().downcast_ref::<StringArray>().unwrap();
         assert_ne!(col0.value(0), "Alice");
         assert_ne!(col0.value(1), "Bob");
+    }
+
+    #[test]
+    fn test_apply_csv_tokenizes_numbers() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.csv");
+        let out = dir.path().join("output.csv");
+
+        let mut f = std::fs::File::create(&src).unwrap();
+        writeln!(f, "id,name,score").unwrap();
+        writeln!(f, "1,Alice,42.5").unwrap();
+        writeln!(f, "2,Bob,-100").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+        mapper.register("42.5");
+        mapper.register("-100");
+
+        let entry = FileEntry {
+            rel_path: "input.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig {
+            tokenize_numbers: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let result = std::fs::read_to_string(&out).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        // Numbers should be tokenized
+        assert!(!lines[1].contains("42.5"));
+        assert!(!lines[2].contains("-100"));
+        // Strings also tokenized
+        assert!(!lines[1].contains("Alice"));
+    }
+
+    #[test]
+    fn test_apply_json_tokenizes_numbers() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("data.json");
+        let out = dir.path().join("output.json");
+
+        std::fs::write(&src, r#"{"name": "Alice", "age": 30, "score": 99.5}"#).unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("30");
+        mapper.register("99.5");
+
+        let entry = FileEntry {
+            rel_path: "data.json".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Json,
+        };
+        let config = TokenizeConfig {
+            tokenize_numbers: true,
+            ..Default::default()
+        };
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let content = std::fs::read_to_string(&out).unwrap();
+        assert!(!content.contains("Alice"));
+        // JSON numeric scalars should be replaced
+        let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
+        let age = parsed.get("age").unwrap().as_f64().unwrap();
+        assert_ne!(age, 30.0);
+        let score = parsed.get("score").unwrap().as_f64().unwrap();
+        assert_ne!(score, 99.5);
+    }
+
+    #[test]
+    fn test_csv_numbers_preserved_without_flag() {
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.csv");
+        let out = dir.path().join("output.csv");
+
+        let mut f = std::fs::File::create(&src).unwrap();
+        writeln!(f, "id,name,score").unwrap();
+        writeln!(f, "1,Alice,42.5").unwrap();
+
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+
+        let entry = FileEntry {
+            rel_path: "input.csv".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Csv,
+        };
+        let config = TokenizeConfig::default(); // tokenize_numbers = false
+        apply_data_file(&entry, dir.path(), &out, &mapper, &config).unwrap();
+
+        let result = std::fs::read_to_string(&out).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        // Numbers should NOT be tokenized (flag off)
+        assert!(lines[1].contains("42.5"));
+        // But strings should be
+        assert!(!lines[1].contains("Alice"));
     }
 }

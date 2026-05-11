@@ -74,8 +74,8 @@ knit tokenize --verify Q:\data\my_dataset Q:\data\tokenized
 | Dictionary file entries | **Tokenized** | — |
 | Column headers / field names | **Preserved** | `--tokenize-headers` (tokenize) |
 | File names and paths | **Preserved** | `--tokenize-paths` |
-| Integer values | **Preserved** | `--tokenize-numbers` |
-| Float values | **Preserved** | `--tokenize-numbers` |
+| Integer values | **Preserved** | `--tokenize-numbers` (tokenize) |
+| Float values | **Preserved** | `--tokenize-numbers` (tokenize) |
 | Date/timestamp values | **Preserved** | `--tokenize-dates` |
 | Boolean values | **Preserved** | — (no useful info) |
 | Null values | **Preserved** | — (structural) |
@@ -356,15 +356,15 @@ src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
 
 | Limitation | Impact | Mitigation |
 |-----------|--------|-----------|
-| `--tokenize-numbers` flag accepted but not functional | Numeric values always preserved | Warning emitted at runtime |
 | `--tokenize-dates` flag accepted but not functional | Date values always preserved | Warning emitted at runtime |
+| Native Parquet numeric columns not tokenized | Only string-encoded numbers replaced | Warning emitted at runtime |
 | Restore ambiguity | A generated token may match an untouched literal | Rare in practice; requires field-level metadata to fix fully |
 | Memory usage | All unique strings held in HashMap | Acceptable for datasets < 10M unique strings |
 
 ### Deferred to v2
 
-- Implement `--tokenize-numbers` (numeric value obfuscation)
 - Implement `--tokenize-dates` (date/timestamp shifting)
+- Native Parquet numeric column tokenization (typed i32/i64/f32/f64 replacement)
 - Field-level restore metadata (eliminate restore ambiguity)
 - Streaming tokenization for very large datasets
 - Selective column tokenization (`--tokenize-columns`, `--preserve-columns`)
