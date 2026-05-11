@@ -330,6 +330,12 @@ fn extract_parquet_strings(
 
     let reader = builder.build()?;
 
+    let date_shift = if config.tokenize_dates {
+        Some(compute_date_shift(config.seed))
+    } else {
+        None
+    };
+
     let mut warned_native_numerics = false;
     for batch_result in reader {
         let batch = batch_result?;
@@ -340,6 +346,11 @@ fn extract_parquet_strings(
                 for i in 0..str_arr.len() {
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
+                        if let Some(shift) = date_shift {
+                            if try_register_shifted_date(val, mapper, shift) {
+                                continue;
+                            }
+                        }
                         if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
@@ -349,6 +360,11 @@ fn extract_parquet_strings(
                 for i in 0..str_arr.len() {
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
+                        if let Some(shift) = date_shift {
+                            if try_register_shifted_date(val, mapper, shift) {
+                                continue;
+                            }
+                        }
                         if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
@@ -443,6 +459,8 @@ struct DateInfo {
     format: DateFormat,
     /// Timezone suffix (e.g., "Z", "+05:30") for formats that include it.
     tz_suffix: String,
+    /// Fractional seconds string (e.g., ".123") if present, empty otherwise.
+    frac_seconds: String,
 }
 
 /// Try to parse a string as a recognized date/timestamp format.
@@ -458,6 +476,7 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
                 datetime: d.and_hms_opt(0, 0, 0).unwrap(),
                 format: DateFormat::IsoDate,
                 tz_suffix: String::new(),
+                frac_seconds: String::new(),
             });
         }
     }
@@ -467,7 +486,10 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
         // Strip timezone suffix for parsing
         let (base, tz) = strip_tz_suffix(trimmed);
 
-        if let Ok(dt) = NaiveDateTime::parse_from_str(base, "%Y-%m-%dT%H:%M:%S") {
+        // Extract fractional seconds if present
+        let (base_no_frac, frac) = extract_frac_seconds(base);
+
+        if let Ok(dt) = NaiveDateTime::parse_from_str(base_no_frac, "%Y-%m-%dT%H:%M:%S") {
             let fmt = if tz == "Z" {
                 DateFormat::IsoDateTimeZ
             } else if tz.is_empty() {
@@ -479,40 +501,21 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
                 datetime: dt,
                 format: fmt,
                 tz_suffix: tz.to_string(),
-            });
-        }
-        // Try with fractional seconds
-        if let Ok(dt) = NaiveDateTime::parse_from_str(base, "%Y-%m-%dT%H:%M:%S%.f") {
-            let fmt = if tz == "Z" {
-                DateFormat::IsoDateTimeZ
-            } else if tz.is_empty() {
-                DateFormat::IsoDateTimeT
-            } else {
-                DateFormat::IsoDateTimeOffset
-            };
-            return Some(DateInfo {
-                datetime: dt,
-                format: fmt,
-                tz_suffix: tz.to_string(),
+                frac_seconds: frac.to_string(),
             });
         }
     }
 
     // Try ISO datetime with space separator: YYYY-MM-DD HH:MM:SS
     if trimmed.len() >= 19 && &trimmed[10..11] == " " {
-        if let Ok(dt) = NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S") {
+        let (base_no_frac, frac) = extract_frac_seconds(trimmed);
+
+        if let Ok(dt) = NaiveDateTime::parse_from_str(base_no_frac, "%Y-%m-%d %H:%M:%S") {
             return Some(DateInfo {
                 datetime: dt,
                 format: DateFormat::IsoDateTimeSpace,
                 tz_suffix: String::new(),
-            });
-        }
-        // With fractional seconds
-        if let Ok(dt) = NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S%.f") {
-            return Some(DateInfo {
-                datetime: dt,
-                format: DateFormat::IsoDateTimeSpace,
-                tz_suffix: String::new(),
+                frac_seconds: frac.to_string(),
             });
         }
     }
@@ -525,6 +528,7 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
                     datetime: d.and_hms_opt(0, 0, 0).unwrap(),
                     format: DateFormat::Compact,
                     tz_suffix: String::new(),
+                    frac_seconds: String::new(),
                 });
             }
         }
@@ -533,36 +537,76 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     None
 }
 
-/// Strip timezone suffix (Z, +HH:MM, -HH:MM) from a datetime string.
+/// Strip timezone suffix (Z, +HH:MM, -HH:MM, +HHMM, -HHMM) from a datetime string.
 /// Returns (base, tz_suffix).
 fn strip_tz_suffix(s: &str) -> (&str, &str) {
     if s.ends_with('Z') {
         (&s[..s.len() - 1], "Z")
     } else if s.len() > 6 {
-        // Look for +HH:MM or -HH:MM at the end
+        // Try +HH:MM or -HH:MM (6 chars)
         let last6 = &s[s.len() - 6..];
         if (last6.starts_with('+') || last6.starts_with('-')) && &last6[3..4] == ":" {
-            (&s[..s.len() - 6], last6)
-        } else {
-            (s, "")
+            return (&s[..s.len() - 6], last6);
         }
+        // Try +HHMM or -HHMM (5 chars)
+        if s.len() > 5 {
+            let last5 = &s[s.len() - 5..];
+            if (last5.starts_with('+') || last5.starts_with('-'))
+                && last5[1..].chars().all(|c| c.is_ascii_digit())
+            {
+                return (&s[..s.len() - 5], last5);
+            }
+        }
+        (s, "")
     } else {
         (s, "")
     }
 }
 
-/// Format a shifted datetime back to its original format.
+/// Extract fractional seconds from a datetime string.
+/// Returns (base_without_frac, frac_part) where frac_part includes the dot.
+fn extract_frac_seconds(s: &str) -> (&str, &str) {
+    // Look for ".NNN" after the seconds (position 19 for T-separated, 19 for space)
+    // Find the last '.' that's followed only by digits
+    if let Some(dot_pos) = s.rfind('.') {
+        let after_dot = &s[dot_pos + 1..];
+        if !after_dot.is_empty() && after_dot.chars().all(|c| c.is_ascii_digit()) {
+            return (&s[..dot_pos], &s[dot_pos..]);
+        }
+    }
+    (s, "")
+}
+
+/// Format a shifted datetime back to its original format, preserving fractional seconds.
 fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
-    match info.format {
+    let base = match info.format {
         DateFormat::IsoDate => dt.format("%Y-%m-%d").to_string(),
-        DateFormat::IsoDateTimeT => dt.format("%Y-%m-%dT%H:%M:%S").to_string(),
-        DateFormat::IsoDateTimeSpace => dt.format("%Y-%m-%d %H:%M:%S").to_string(),
-        DateFormat::IsoDateTimeZ => format!("{}Z", dt.format("%Y-%m-%dT%H:%M:%S")),
+        DateFormat::IsoDateTimeT => format!(
+            "{}{}",
+            dt.format("%Y-%m-%dT%H:%M:%S"),
+            info.frac_seconds,
+        ),
+        DateFormat::IsoDateTimeSpace => format!(
+            "{}{}",
+            dt.format("%Y-%m-%d %H:%M:%S"),
+            info.frac_seconds,
+        ),
+        DateFormat::IsoDateTimeZ => format!(
+            "{}{}Z",
+            dt.format("%Y-%m-%dT%H:%M:%S"),
+            info.frac_seconds,
+        ),
         DateFormat::IsoDateTimeOffset => {
-            format!("{}{}", dt.format("%Y-%m-%dT%H:%M:%S"), info.tz_suffix)
+            format!(
+                "{}{}{}",
+                dt.format("%Y-%m-%dT%H:%M:%S"),
+                info.frac_seconds,
+                info.tz_suffix,
+            )
         }
         DateFormat::Compact => dt.format("%Y%m%d").to_string(),
-    }
+    };
+    base
 }
 
 /// Compute a deterministic date shift offset (in days) from a seed.
