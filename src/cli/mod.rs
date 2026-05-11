@@ -333,6 +333,9 @@ pub enum Command {
         /// Tokenize all columns except these (comma-separated, case-insensitive).
         #[arg(long, value_delimiter = ',', conflicts_with = "tokenize_columns")]
         preserve_columns: Option<Vec<String>>,
+        /// Generate a detailed tokenization report after processing.
+        #[arg(long)]
+        report: bool,
     },
     /// Enrich a model with statistical knowledge from reference samples.
     Enrich {

@@ -223,6 +223,7 @@ fn main() -> anyhow::Result<()> {
             preserve_partitions,
             tokenize_columns,
             preserve_columns,
+            report,
         } => tokenize::run(
             input,
             output,
@@ -236,6 +237,7 @@ fn main() -> anyhow::Result<()> {
             *preserve_partitions,
             tokenize_columns.clone(),
             preserve_columns.clone(),
+            *report,
             cli.json,
         ),
         Command::Enrich {

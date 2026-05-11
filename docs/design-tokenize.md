@@ -319,8 +319,10 @@ Process files in streaming fashion for datasets too large to scan in memory.
 Build the token map incrementally with a two-pass approach.
 
 ### 9.4 Tokenization Report
-Generate an HTML/markdown report showing tokenization coverage, value
-distribution changes, and structural integrity verification.
+~~Generate an HTML/markdown report showing tokenization coverage, value
+distribution changes, and structural integrity verification.~~
+**Implemented** via `--report` flag: per-file breakdown (rows, columns, format),
+token statistics (unique count, length preservation), and native shift summary.
 
 ---
 
@@ -345,7 +347,8 @@ distribution changes, and structural integrity verification.
 | Deterministic (`--seed`) | ✅ | Seeded StdRng for reproducibility |
 | Selective column tokenization | ✅ | `--tokenize-columns` (whitelist) / `--preserve-columns` (blacklist) |
 | Native Parquet timestamp shifting | ✅ | Date32, Date64, Timestamp(s/ms/us/ns) columns shifted by same offset as string dates |
-| Native Parquet numeric shifting | ✅ | Int8-64, UInt8-64 shifted by deterministic offset; Float32/64 scaled by deterministic factor |
+| Native Parquet numeric shifting | ✅ | Int8-64, UInt8-64 shifted by deterministic offset; Float32/64 shifted by additive offset |
+| Tokenization report (`--report`) | ✅ | Per-file breakdown, token statistics, native shift summary |
 
 **Architecture (as implemented):**
 
@@ -355,7 +358,8 @@ src/tokenize/scanner.rs     — Directory walking, file classification, string e
 src/tokenize/mapper.rs      — Shape-preserving token generation, collision avoidance
 src/tokenize/apply.rs       — File rewriting (CSV, JSON/JSONL, Parquet, schema-selective)
 src/tokenize/dictionary.rs  — Token dictionary serialization (.knit-tokens.json)
-src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
+src/tokenize/report.rs      — Tokenization report generation (--report flag)
+src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify/report modes)
 ```
 
 ### Known Limitations (v1)

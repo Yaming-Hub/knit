@@ -21,6 +21,7 @@ pub fn run(
     preserve_partitions: bool,
     tokenize_columns: Option<Vec<String>>,
     preserve_columns: Option<Vec<String>>,
+    report: bool,
     json_output: bool,
 ) -> Result<()> {
     let input_path = Path::new(input);
@@ -62,6 +63,7 @@ pub fn run(
         preserve_partitions,
         tokenize_cols,
         preserve_cols,
+        report,
         json_output,
     )
 }
@@ -86,6 +88,7 @@ fn run_tokenize(
     preserve_partitions: bool,
     tokenize_columns: Option<HashSet<String>>,
     preserve_columns: Option<HashSet<String>>,
+    report: bool,
     json_output: bool,
 ) -> Result<()> {
     let dict_path = dictionary
@@ -106,6 +109,11 @@ fn run_tokenize(
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;
     print_result(&result, &dict_path, &config, json_output);
+
+    if report {
+        print_report(output, &dict_path, json_output)?;
+    }
+
     Ok(())
 }
 
@@ -321,4 +329,18 @@ fn print_result(result: &TokenizeResult, dict_path: &Path, config: &TokenizeConf
         println!("The tokenized dataset is safe to share.");
         println!("Keep the dictionary private — it can restore the original data.");
     }
+}
+
+fn print_report(output_dir: &Path, dict_path: &Path, json_output: bool) -> Result<()> {
+    use crate::tokenize::report;
+
+    let rpt = report::generate_report(output_dir, dict_path)?;
+
+    if json_output {
+        println!("{}", report::format_json(&rpt));
+    } else {
+        print!("{}", report::format_text(&rpt));
+    }
+
+    Ok(())
 }
