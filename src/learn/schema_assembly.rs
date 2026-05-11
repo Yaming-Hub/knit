@@ -251,7 +251,7 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         noise_profiles: Vec::new(),
         correlations,
         params: BTreeMap::new(),
-        schema_version: "1.0".to_string(),
+        blueprint_version: "1.0".to_string(),
         personas,
         actor_relationships,
         custom_types: Vec::new(),

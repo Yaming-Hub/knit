@@ -29,7 +29,7 @@ pipelines. No prior experience with Knit is required.
 ## Other Resources
 
 - [README](../../README.md) — Project overview and quick start
-- [Weave Language Specification](../weave-spec.md) — Formal grammar and semantics
+- [Knit Language Specification](../knit-spec.md) — Formal grammar and semantics
 - [Architecture](../architecture.md) — Internal system design
 - [Contributing](../../CONTRIBUTING.md) — Developer guide and PR process
 
@@ -43,4 +43,4 @@ pipelines. No prior experience with Knit is required.
 - **…see real-world examples** → [Examples Walkthrough](examples.md)
 - **…inject noise into my data** → [Noise Injection Guide](noise.md)
 - **…create a blueprint from existing data** → [Reverse Engineering Guide](learn.md)
-- **…read the formal language spec** → [Weave Specification](../weave-spec.md)
+- **…read the formal language spec** → [Knit Specification](../knit-spec.md)

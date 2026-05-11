@@ -2,7 +2,7 @@
 
 A practical, example-driven tutorial for writing Knit blueprints. For the formal
 grammar and exhaustive reference, see the
-[Weave Specification](../weave-spec.md).
+[Knit Specification](../knit-spec.md).
 
 **[← Back to User Guide](index.md)**
 
@@ -396,7 +396,7 @@ p = 0.8
 
 Knit also supports: `gamma`, `pareto`, `geometric`, `binomial`, `weibull`,
 `cauchy`, `chi_squared`, `student_t`, and more. See the
-[Weave Specification](../weave-spec.md) for the full list.
+[Knit Specification](../knit-spec.md) for the full list.
 
 #### Vector-Valued Distributions
 
@@ -626,7 +626,7 @@ expr = "row_number()"
 | Timezone | `to_timezone`, `timezone_offset` |
 | Utility | `hash`, `row_number` |
 
-See the [Weave Specification](../weave-spec.md) for the full expression
+See the [Knit Specification](../knit-spec.md) for the full expression
 function reference.
 
 #### Pipe Operator `|>`
@@ -1501,4 +1501,4 @@ fields = ["id", "user_id"]
 - **[CLI Reference](cli-reference.md)** — All commands and flags
 - **[Examples Walkthrough](examples.md)** — See these features in real blueprints
 - **[Noise Injection Guide](noise.md)** — Configure data quality testing
-- **[Weave Specification](../weave-spec.md)** — Formal grammar and full reference
+- **[Knit Specification](../knit-spec.md)** — Formal grammar and full reference

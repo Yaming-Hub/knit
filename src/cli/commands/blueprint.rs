@@ -1,8 +1,8 @@
-//! `knit schema` — schema manipulation subcommands.
+//! `knit blueprint` — schema manipulation subcommands.
 //!
 //! Provides:
 //! - `expand` — flatten an extends chain into a standalone schema
-//! - `normalize` — reformat a schema to canonical style
+//! - `normalize` — reformat a blueprint to canonical style
 //! - `diff` — compare two schemas and show differences
 //! - `doc` — generate markdown documentation for a schema
 
@@ -12,14 +12,14 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use crate::core::{DataModel, Entity, Field};
 
-use super::load_schema;
+use super::load_blueprint;
 
 /// Run the `schema expand` command.
 ///
-/// Loads a schema file (resolving any `extends` chain via the schema module),
+/// Loads a blueprint file (resolving any `extends` chain via the schema module),
 /// then serializes the fully resolved model back to TOML.
 pub fn run_expand(path: &str, json: bool) -> Result<()> {
-    let model = load_schema(path).with_context(|| format!("failed to load schema `{}`", path))?;
+    let model = load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&model)?);
@@ -35,7 +35,7 @@ pub fn run_expand(path: &str, json: bool) -> Result<()> {
 /// Parses a schema and re-serializes it in canonical TOML form with
 /// sorted keys and consistent formatting.
 pub fn run_normalize(path: &str, json: bool) -> Result<()> {
-    let model = load_schema(path).with_context(|| format!("failed to load schema `{}`", path))?;
+    let model = load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&model)?);
@@ -48,13 +48,13 @@ pub fn run_normalize(path: &str, json: bool) -> Result<()> {
 
 /// Run the `schema diff` command.
 ///
-/// Parses two schema files and compares them entity-by-entity
+/// Parses two blueprint files and compares them entity-by-entity
 /// and field-by-field, printing colored diff output.
 pub fn run_diff(path_a: &str, path_b: &str) -> Result<()> {
     let model_a =
-        load_schema(path_a).with_context(|| format!("failed to load schema `{}`", path_a))?;
+        load_blueprint(path_a).with_context(|| format!("failed to load schema `{}`", path_a))?;
     let model_b =
-        load_schema(path_b).with_context(|| format!("failed to load schema `{}`", path_b))?;
+        load_blueprint(path_b).with_context(|| format!("failed to load schema `{}`", path_b))?;
 
     let diffs = compute_diff(&model_a, &model_b);
 
@@ -76,7 +76,7 @@ pub fn run_diff(path_a: &str, path_b: &str) -> Result<()> {
 /// Generates markdown documentation for the schema including entity descriptions,
 /// field tables, relationships, and generator info.
 pub fn run_doc(path: &str, output: Option<&str>) -> Result<()> {
-    let model = load_schema(path).with_context(|| format!("failed to load schema `{}`", path))?;
+    let model = load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     let markdown = generate_schema_doc(&model);
 
@@ -107,7 +107,7 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     // Overview table
     doc.push_str("## Overview\n\n");
     doc.push_str("| Property | Value |\n|---|---|\n");
-    doc.push_str(&format!("| Schema version | {} |\n", model.schema_version));
+    doc.push_str(&format!("| Schema version | {} |\n", model.blueprint_version));
     doc.push_str(&format!("| Seed | {} |\n", model.seed));
     doc.push_str(&format!("| Locale | {} |\n", model.locale));
     doc.push_str(&format!("| Entities | {} |\n", model.entities.len()));
@@ -622,14 +622,14 @@ fn print_diff_entry(entry: &DiffEntry) {
 /// Serialize a [`DataModel`] to a canonical TOML schema string.
 ///
 /// Produces a hand-formatted TOML document that matches the expected
-/// `.weave.toml` layout with `[model]`, `[[entities]]`, and `[[relationships]]`
+/// `.knit.toml` layout with `[model]`, `[[entities]]`, and `[[relationships]]`
 /// sections.
 fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
     let mut out = String::new();
 
     out.push_str(&format!(
-        "schema_version = \"{}\"\n\n",
-        model.schema_version
+        "blueprint_version = \"{}\"\n\n",
+        model.blueprint_version
     ));
 
     // [model]
@@ -759,7 +759,7 @@ mod tests {
             noise_profiles: vec![],
             correlations: vec![],
             params: std::collections::BTreeMap::new(),
-            schema_version: "1.0".to_string(),
+            blueprint_version: "1.0".to_string(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),

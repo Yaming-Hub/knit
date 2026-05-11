@@ -9,7 +9,7 @@ use knit::learn::fitting::{fit_categorical, fit_distribution, Distribution};
 
 /// Schema with a normal distribution (mean=100, std_dev=15) and categorical column.
 const ROUNDTRIP_SCHEMA: &str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "roundtrip_test"
@@ -203,7 +203,7 @@ fn categorical_recovers_weights() {
 fn schema_assembly_produces_valid_model() {
     use knit::learn::fitting::fit_distribution;
     use knit::learn::schema_assembly::{assemble_data_model, ColumnAnalysis, TableAnalysis};
-    use knit::schema::validate;
+    use knit::blueprint::validate;
 
     let data = generate_from_toml(ROUNDTRIP_SCHEMA);
     let batches = data.get("samples").expect("samples entity");

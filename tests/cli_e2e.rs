@@ -89,7 +89,7 @@ fn generators_json_output() {
 #[test]
 fn validate_valid_schema() {
     knit()
-        .args(["validate", "examples/ecommerce.weave.toml"])
+        .args(["validate", "examples/ecommerce.knit.toml"])
         .assert()
         .success()
         .stdout(predicate::str::contains("valid"));
@@ -107,7 +107,7 @@ fn validate_nonexistent_file() {
 #[test]
 fn validate_invalid_schema() {
     let dir = TempDir::new().unwrap();
-    let path = dir.path().join("bad.weave.toml");
+    let path = dir.path().join("bad.knit.toml");
     fs::write(&path, "this is not valid toml [[[").unwrap();
 
     knit()
@@ -119,10 +119,10 @@ fn validate_invalid_schema() {
 #[test]
 fn validate_missing_dictionary_file() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("dict_schema.weave.toml");
+    let schema = dir.path().join("dict_schema.knit.toml");
     fs::write(
         &schema,
-        r#"schema_version = "1.0"
+        r#"blueprint_version = "1.0"
 
 [model]
 name = "dict_test"
@@ -166,10 +166,10 @@ fn validate_existing_dictionary_file_passes() {
     let dict_file = dir.path().join("words.dict.txt");
     fs::write(&dict_file, "apple\nbanana\ncherry\n").unwrap();
 
-    let schema = dir.path().join("dict_schema.weave.toml");
+    let schema = dir.path().join("dict_schema.knit.toml");
     fs::write(
         &schema,
-        r#"schema_version = "1.0"
+        r#"blueprint_version = "1.0"
 
 [model]
 name = "dict_test"
@@ -209,7 +209,7 @@ expansion = "sample"
 #[test]
 fn validate_dictionary_absolute_path_rejected() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("abs.weave.toml");
+    let schema = dir.path().join("abs.knit.toml");
     // Use a platform-appropriate absolute path
     let abs_path = if cfg!(windows) {
         "C:\\\\Windows\\\\System32\\\\drivers\\\\etc\\\\hosts"
@@ -219,7 +219,7 @@ fn validate_dictionary_absolute_path_rejected() {
     fs::write(
         &schema,
         format!(
-            r#"schema_version = "1.0"
+            r#"blueprint_version = "1.0"
 
 [model]
 name = "abs_test"
@@ -261,10 +261,10 @@ expansion = "sample"
 #[test]
 fn validate_dictionary_path_traversal_rejected() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("traversal.weave.toml");
+    let schema = dir.path().join("traversal.knit.toml");
     fs::write(
         &schema,
-        r#"schema_version = "1.0"
+        r#"blueprint_version = "1.0"
 
 [model]
 name = "traversal_test"
@@ -307,10 +307,10 @@ fn validate_dictionary_empty_content_rejected() {
     let dict_file = dir.path().join("empty.dict.txt");
     fs::write(&dict_file, "   \n  \n\n").unwrap();
 
-    let schema = dir.path().join("empty_dict.weave.toml");
+    let schema = dir.path().join("empty_dict.knit.toml");
     fs::write(
         &schema,
-        r#"schema_version = "1.0"
+        r#"blueprint_version = "1.0"
 
 [model]
 name = "empty_test"
@@ -350,10 +350,10 @@ expansion = "sample"
 #[test]
 fn validate_dictionary_json_mode_reports_file_errors() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("dict_json.weave.toml");
+    let schema = dir.path().join("dict_json.knit.toml");
     fs::write(
         &schema,
-        r#"schema_version = "1.0"
+        r#"blueprint_version = "1.0"
 
 [model]
 name = "json_test"
@@ -401,7 +401,7 @@ expansion = "sample"
 #[test]
 fn plan_shows_entities() {
     knit()
-        .args(["plan", "examples/ecommerce.weave.toml"])
+        .args(["plan", "examples/ecommerce.knit.toml"])
         .assert()
         .success()
         .stdout(predicate::str::contains("users").or(predicate::str::contains("products")));
@@ -410,7 +410,7 @@ fn plan_shows_entities() {
 #[test]
 fn plan_json_mode() {
     knit()
-        .args(["plan", "examples/ecommerce.weave.toml", "--json"])
+        .args(["plan", "examples/ecommerce.knit.toml", "--json"])
         .assert()
         .success()
         .stdout(predicate::str::contains("{"));
@@ -419,7 +419,7 @@ fn plan_json_mode() {
 #[test]
 fn validate_fk_target_no_pk() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("test.weave.toml");
+    let schema = dir.path().join("test.knit.toml");
     fs::write(
         &schema,
         r#"
@@ -463,7 +463,7 @@ foreign_key = "id"
 #[test]
 fn validate_fk_type_mismatch() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("test.weave.toml");
+    let schema = dir.path().join("test.knit.toml");
     fs::write(
         &schema,
         r#"
@@ -508,7 +508,7 @@ foreign_key = "user_id"
 // ── Generate ────────────────────────────────────────────────────────
 
 /// Schema used for generate tests — minimal, fast, and stable.
-const TEST_SCHEMA: &str = "examples/cli_test.weave.toml";
+const TEST_SCHEMA: &str = "examples/cli_test.knit.toml";
 
 #[test]
 fn generate_parquet_output() {
@@ -709,11 +709,11 @@ fn generate_dry_run_no_output() {
 fn generate_no_noise_flag() {
     // Use a schema with noise profiles to test that --no-noise actually skips them
     let tmp = TempDir::new().unwrap();
-    let schema_path = tmp.path().join("noisy.weave.toml");
+    let schema_path = tmp.path().join("noisy.knit.toml");
     fs::write(
         &schema_path,
         r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 [model]
 name = "noisy_test"
 seed = 99
@@ -818,7 +818,7 @@ fn generate_count_absolute_override() {
         .assert()
         .success();
 
-    // cli_test.weave.toml has 1 entity "items" with count=100
+    // cli_test.knit.toml has 1 entity "items" with count=100
     // With --count 5 it should have exactly 5 data rows + 1 header
     let csv_files: Vec<_> = fs::read_dir(dir.path())
         .unwrap()
@@ -852,7 +852,7 @@ fn generate_count_multiplier_override() {
         .assert()
         .success();
 
-    // cli_test.weave.toml has count=100, so 0.5x → 50 rows
+    // cli_test.knit.toml has count=100, so 0.5x → 50 rows
     let csv_files: Vec<_> = fs::read_dir(dir.path())
         .unwrap()
         .filter_map(|e| e.ok())
@@ -909,7 +909,7 @@ fn generate_entity_filter_single() {
     knit()
         .args([
             "generate",
-            "examples/ecommerce.weave.toml",
+            "examples/ecommerce.knit.toml",
             "-o",
             dir.path().to_str().unwrap(),
             "--format",
@@ -940,7 +940,7 @@ fn generate_entity_filter_multiple() {
     knit()
         .args([
             "generate",
-            "examples/ecommerce.weave.toml",
+            "examples/ecommerce.knit.toml",
             "-o",
             dir.path().to_str().unwrap(),
             "--format",
@@ -969,7 +969,7 @@ fn generate_entity_filter_unknown_entity_fails() {
     knit()
         .args([
             "generate",
-            "examples/ecommerce.weave.toml",
+            "examples/ecommerce.knit.toml",
             "-o",
             dir.path().to_str().unwrap(),
             "--entity",
@@ -989,7 +989,7 @@ fn generate_entity_filter_fk_integrity() {
     knit()
         .args([
             "generate",
-            "examples/ecommerce.weave.toml",
+            "examples/ecommerce.knit.toml",
             "-o",
             dir.path().to_str().unwrap(),
             "--format",
@@ -1026,7 +1026,7 @@ fn generate_entity_filter_fk_integrity() {
 #[test]
 fn init_creates_schema_file() {
     let dir = TempDir::new().unwrap();
-    let out_path = dir.path().join("test.weave.toml");
+    let out_path = dir.path().join("test.knit.toml");
     knit()
         .args(["init", "-o", out_path.to_str().unwrap()])
         .assert()
@@ -1035,15 +1035,15 @@ fn init_creates_schema_file() {
     assert!(out_path.exists(), "init should create schema file");
     let content = fs::read_to_string(&out_path).unwrap();
     assert!(
-        content.contains("schema_version"),
-        "generated file should contain schema_version"
+        content.contains("blueprint_version"),
+        "generated file should contain blueprint_version"
     );
 }
 
 #[test]
 fn init_output_validates_successfully() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("new.weave.toml");
+    let schema = dir.path().join("new.knit.toml");
     knit()
         .args(["init", "-o", schema.to_str().unwrap()])
         .assert()
@@ -1059,7 +1059,7 @@ fn init_output_validates_successfully() {
 #[test]
 fn init_output_generates_data() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("new.weave.toml");
+    let schema = dir.path().join("new.knit.toml");
     let out_dir = dir.path().join("data");
     knit()
         .args(["init", "-o", schema.to_str().unwrap()])
@@ -1085,7 +1085,7 @@ fn init_output_generates_data() {
 #[test]
 fn init_scaffold_references_only_valid_generator_types() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("new.weave.toml");
+    let schema = dir.path().join("new.knit.toml");
     knit()
         .args(["init", "-o", schema.to_str().unwrap()])
         .assert()
@@ -1129,11 +1129,11 @@ fn init_scaffold_references_only_valid_generator_types() {
 #[test]
 fn init_template_from_file_path() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("out.weave.toml");
+    let schema = dir.path().join("out.knit.toml");
 
     // Use one of the example files as a template (file path)
     let example_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/ecommerce.weave.toml");
+        .join("examples/ecommerce.knit.toml");
 
     knit()
         .args([
@@ -1159,7 +1159,7 @@ fn init_template_from_file_path() {
 #[test]
 fn init_template_from_directory() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("schema.weave.toml");
+    let schema = dir.path().join("schema.knit.toml");
 
     // Use the examples/ directory as a template directory
     let examples_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples");
@@ -1181,14 +1181,14 @@ fn init_template_from_directory() {
 #[test]
 fn init_template_nonexistent_path_fails() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("bad.weave.toml");
+    let schema = dir.path().join("bad.knit.toml");
     knit()
         .args([
             "init",
             "-o",
             schema.to_str().unwrap(),
             "--template",
-            "/nonexistent/path.weave.toml",
+            "/nonexistent/path.knit.toml",
         ])
         .assert()
         .failure()
@@ -1198,32 +1198,32 @@ fn init_template_nonexistent_path_fails() {
 // ── Schema subcommands ──────────────────────────────────────────────
 
 #[test]
-fn schema_expand() {
+fn blueprint_expand() {
     knit()
-        .args(["schema", "expand", "examples/ecommerce.weave.toml"])
+        .args(["blueprint", "expand", "examples/ecommerce.knit.toml"])
         .assert()
         .success()
         .stdout(predicate::str::contains("entities").or(predicate::str::contains("name")));
 }
 
 #[test]
-fn schema_normalize() {
+fn blueprint_normalize() {
     knit()
-        .args(["schema", "normalize", "examples/ecommerce.weave.toml"])
+        .args(["blueprint", "normalize", "examples/ecommerce.knit.toml"])
         .assert()
         .success()
         .stdout(predicate::str::contains("entities").or(predicate::str::contains("name")));
 }
 
 #[test]
-fn schema_diff_identical() {
+fn blueprint_diff_identical() {
     // Diffing a schema against itself should produce no differences
     knit()
         .args([
-            "schema",
+            "blueprint",
             "diff",
-            "examples/ecommerce.weave.toml",
-            "examples/ecommerce.weave.toml",
+            "examples/ecommerce.knit.toml",
+            "examples/ecommerce.knit.toml",
         ])
         .assert()
         .success()
@@ -1231,14 +1231,14 @@ fn schema_diff_identical() {
 }
 
 #[test]
-fn schema_diff_different_schemas() {
+fn blueprint_diff_different_schemas() {
     // Diffing two different schemas should produce differences
     knit()
         .args([
-            "schema",
+            "blueprint",
             "diff",
-            "examples/ecommerce.weave.toml",
-            "examples/financial.weave.toml",
+            "examples/ecommerce.knit.toml",
+            "examples/financial.knit.toml",
         ])
         .assert()
         .success()
@@ -1246,11 +1246,11 @@ fn schema_diff_different_schemas() {
 }
 
 #[test]
-fn schema_diff_learned_vs_original() {
+fn blueprint_diff_learned_vs_original() {
     // Generate → learn → diff learned against original
     let dir = TempDir::new().unwrap();
     let data_dir = dir.path().join("data");
-    let learned = dir.path().join("learned.weave.toml");
+    let learned = dir.path().join("learned.knit.toml");
 
     knit()
         .args([
@@ -1277,7 +1277,7 @@ fn schema_diff_learned_vs_original() {
 
     // Diff should succeed and report differences (learned schema differs from original)
     knit()
-        .args(["schema", "diff", TEST_SCHEMA, learned.to_str().unwrap()])
+        .args(["blueprint", "diff", TEST_SCHEMA, learned.to_str().unwrap()])
         .assert()
         .success()
         .stdout(predicate::str::contains("change(s) found"));
@@ -1321,7 +1321,7 @@ fn learn_from_csv_produces_valid_schema() {
         .success();
 
     // Step 2: Learn schema from the generated CSV
-    let learned_schema = data_dir.path().join("learned.weave.toml");
+    let learned_schema = data_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -1362,7 +1362,7 @@ fn learn_from_parquet_produces_valid_schema() {
         .success();
 
     // Learn from Parquet
-    let learned_schema = data_dir.path().join("learned.weave.toml");
+    let learned_schema = data_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -1400,7 +1400,7 @@ fn learn_from_jsonl_produces_valid_schema() {
     .unwrap();
 
     // Learn from JSONL
-    let learned_schema = data_dir.path().join("learned.weave.toml");
+    let learned_schema = data_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -1432,7 +1432,7 @@ fn learn_from_json_array_produces_valid_schema() {
     )
     .unwrap();
 
-    let learned_schema = data_dir.path().join("learned.weave.toml");
+    let learned_schema = data_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -1473,7 +1473,7 @@ fn learn_round_trip_generates_data() {
         .success();
 
     // Learn
-    let learned = gen1_dir.path().join("learned.weave.toml");
+    let learned = gen1_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -1542,7 +1542,7 @@ fn learn_json_round_trip_generates_data() {
         .success();
 
     // Learn from JSON array files (previously this would fail)
-    let learned = gen1_dir.path().join("learned.weave.toml");
+    let learned = gen1_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -1593,7 +1593,7 @@ fn learn_json_round_trip_generates_data() {
 #[test]
 fn learn_missing_source_fails() {
     knit()
-        .args(["learn", "nonexistent_dir", "-o", "out.weave.toml"])
+        .args(["learn", "nonexistent_dir", "-o", "out.knit.toml"])
         .assert()
         .failure();
 }
@@ -1616,7 +1616,7 @@ fn learn_quiet_suppresses_output() {
         .assert()
         .success();
 
-    let learned = data_dir.path().join("learned.weave.toml");
+    let learned = data_dir.path().join("learned.knit.toml");
     let output = knit()
         .args([
             "learn",
@@ -1661,7 +1661,7 @@ fn learn_json_mode_outputs_summary() {
         .assert()
         .success();
 
-    let learned = data_dir.path().join("learned.weave.toml");
+    let learned = data_dir.path().join("learned.knit.toml");
     let output = knit()
         .args([
             "learn",
@@ -1700,7 +1700,7 @@ fn learn_sample_zero_rejected() {
     let tmp = TempDir::new().unwrap();
     let csv_path = tmp.path().join("data.csv");
     fs::write(&csv_path, "id,value\n1,10\n").unwrap();
-    let out = tmp.path().join("out.weave.toml");
+    let out = tmp.path().join("out.knit.toml");
 
     knit()
         .args([
@@ -1728,7 +1728,7 @@ fn learn_sample_limits_rows() {
     }
     fs::write(&csv_path, &csv_content).unwrap();
 
-    let learned = tmp.path().join("learned.weave.toml");
+    let learned = tmp.path().join("learned.knit.toml");
 
     // Learn with --sample 10 (only first 10 rows)
     knit()
@@ -1764,7 +1764,7 @@ fn learn_entity_filter_includes_only_matching() {
     let orders_path = tmp.path().join("orders.csv");
     fs::write(&orders_path, "id,amount\n1,10.5\n2,20.0\n3,5.75\n").unwrap();
 
-    let learned = tmp.path().join("learned.weave.toml");
+    let learned = tmp.path().join("learned.knit.toml");
 
     // Learn only the "users" entity
     knit()
@@ -1799,7 +1799,7 @@ fn learn_entity_filter_multiple_entities() {
     fs::write(tmp.path().join("beta.csv"), "id,y\n1,c\n2,d\n").unwrap();
     fs::write(tmp.path().join("gamma.csv"), "id,z\n1,e\n2,f\n").unwrap();
 
-    let learned = tmp.path().join("learned.weave.toml");
+    let learned = tmp.path().join("learned.knit.toml");
 
     // Learn only alpha and gamma
     knit()
@@ -1828,7 +1828,7 @@ fn learn_entity_filter_no_match_fails() {
     let tmp = TempDir::new().unwrap();
     fs::write(tmp.path().join("data.csv"), "id,value\n1,10\n2,20\n").unwrap();
 
-    let learned = tmp.path().join("learned.weave.toml");
+    let learned = tmp.path().join("learned.knit.toml");
 
     knit()
         .args([
@@ -1855,7 +1855,7 @@ fn learn_entity_filter_incremental_mode() {
     fs::write(tmp.path().join("orders.csv"), "id,amount\n1,99.9\n2,50.0\n").unwrap();
 
     let state_file = tmp.path().join("state.bin");
-    let learned = tmp.path().join("learned.weave.toml");
+    let learned = tmp.path().join("learned.knit.toml");
 
     // Learn incrementally with entity filter (ingest only)
     knit()
@@ -1901,11 +1901,11 @@ fn learn_entity_filter_incremental_mode() {
 #[test]
 fn generate_param_substitution_in_derived() {
     let tmp = TempDir::new().unwrap();
-    let schema_path = tmp.path().join("param_test.weave.toml");
+    let schema_path = tmp.path().join("param_test.knit.toml");
     fs::write(
         &schema_path,
         r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 seed = 1
 
 [[entities]]
@@ -1963,11 +1963,11 @@ depends_on = ["id"]
 #[test]
 fn generate_param_without_flag_leaves_placeholder() {
     let tmp = TempDir::new().unwrap();
-    let schema_path = tmp.path().join("param_test.weave.toml");
+    let schema_path = tmp.path().join("param_test.knit.toml");
     fs::write(
         &schema_path,
         r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 seed = 1
 
 [[entities]]
@@ -2041,7 +2041,7 @@ fn learn_dictionary_extraction_round_trip() {
     fs::write(&csv_path, &csv_content).unwrap();
 
     // Learn from the CSV (should extract dictionary for product_name)
-    let learned_schema = source_dir.path().join("learned.weave.toml");
+    let learned_schema = source_dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -2157,7 +2157,7 @@ fn learn_dictionary_threshold_boundary() {
     }
     fs::write(&csv_50, &content).unwrap();
 
-    let schema_50 = dir_50.path().join("learned.weave.toml");
+    let schema_50 = dir_50.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -2189,7 +2189,7 @@ fn learn_dictionary_threshold_boundary() {
     }
     fs::write(&csv_51, &content).unwrap();
 
-    let schema_51 = dir_51.path().join("learned.weave.toml");
+    let schema_51 = dir_51.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -2233,7 +2233,7 @@ fn learn_incremental_generates_valid_schema() {
     fs::write(&csv_path, &csv_content).unwrap();
 
     let state_file = source_dir.path().join("learn.state");
-    let output_schema = source_dir.path().join("incremental.weave.toml");
+    let output_schema = source_dir.path().join("incremental.knit.toml");
 
     // Step 1: Ingest data into state
     knit()
@@ -2423,7 +2423,7 @@ fn learn_actors_round_trip() {
     }
     fs::write(&csv_path, &csv_content).unwrap();
 
-    let schema_path = dir.path().join("learned.weave.toml");
+    let schema_path = dir.path().join("learned.knit.toml");
     knit()
         .args([
             "learn",
@@ -2481,7 +2481,7 @@ fn learn_actor_column_explicit_round_trip() {
     }
     fs::write(&csv_path, &csv_content).unwrap();
 
-    let schema_path = dir.path().join("schema.weave.toml");
+    let schema_path = dir.path().join("schema.knit.toml");
     knit()
         .args([
             "learn",
@@ -2565,7 +2565,7 @@ fn learn_actors_json_summary() {
     }
     fs::write(&csv_path, &csv_content).unwrap();
 
-    let schema_path = dir.path().join("schema.weave.toml");
+    let schema_path = dir.path().join("schema.knit.toml");
     let output = knit()
         .args([
             "--json",

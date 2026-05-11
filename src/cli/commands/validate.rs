@@ -1,20 +1,20 @@
-//! `knit validate` — parse a schema file and report errors.
+//! `knit validate` — parse a blueprint file and report errors.
 
 use std::path::Path;
 
 use anyhow::{bail, Result};
 use colored::Colorize;
 
-use super::{load_schema, validate_model};
+use super::{load_blueprint, validate_model};
 use crate::cli::Cli;
 
 /// Run the validate command.
 ///
-/// Parses the schema file, runs semantic validation, and prints diagnostics.
+/// Parses the blueprint file, runs semantic validation, and prints diagnostics.
 /// In `--json` mode the output is a JSON array of error objects.
-pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
+pub fn run(blueprint_path: &str, cli: &Cli) -> Result<()> {
     // Phase 1: parse
-    let model = match load_schema(schema_path) {
+    let model = match load_blueprint(blueprint_path) {
         Ok(m) => m,
         Err(e) => {
             if cli.json {
@@ -34,7 +34,7 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
     let errors = validate_model(&model);
 
     // Phase 3: file-system validation (dictionary files, etc.)
-    let schema_dir = Path::new(schema_path)
+    let schema_dir = Path::new(blueprint_path)
         .parent()
         .unwrap_or_else(|| Path::new("."));
     let fs_warnings = validate_dictionary_files(&model, schema_dir);
@@ -69,7 +69,7 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
         println!(
             "{} schema {} is valid ({} entities)",
             "✓".green().bold(),
-            schema_path.cyan(),
+            blueprint_path.cyan(),
             model.entities.len()
         );
         print_schema_summary(&model);
@@ -79,7 +79,7 @@ pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
             "{} {} error(s) in {}",
             "✗".red().bold(),
             total_errors,
-            schema_path.cyan()
+            blueprint_path.cyan()
         );
         for (i, err) in errors.iter().enumerate() {
             eprintln!("  {} {}", format!("{}.", i + 1).dimmed(), err);

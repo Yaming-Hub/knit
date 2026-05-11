@@ -63,9 +63,9 @@ pub fn suggest_fix(error: &str) -> Option<&'static str> {
         );
     }
 
-    if lower.contains("schema_version") {
+    if lower.contains("blueprint_version") {
         return Some(
-            "Ensure your schema starts with `schema_version = \"1.0\"`. \
+            "Ensure your schema starts with `blueprint_version = \"1.0\"`. \
              This field is required.",
         );
     }
@@ -153,8 +153,8 @@ mod tests {
     }
 
     #[test]
-    fn suggests_for_schema_version() {
-        let msg = suggest_fix("invalid schema_version format");
+    fn suggests_for_blueprint_version() {
+        let msg = suggest_fix("invalid blueprint_version format");
         assert!(msg.is_some());
         assert!(msg.unwrap().contains("1.0"));
     }

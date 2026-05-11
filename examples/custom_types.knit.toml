@@ -3,7 +3,7 @@
 # Demonstrates defining reusable type aliases with default generators,
 # precision, and nullable settings.
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "custom_types_demo"

@@ -6,14 +6,14 @@ use anyhow::Result;
 use colored::Colorize;
 use serde::Serialize;
 
-use crate::cli::commands::load_schema;
+use crate::cli::commands::load_blueprint;
 use crate::core::{ActorRelationship, Correlation, Entity, Persona, Relationship};
 use crate::model::{is_structured_model, reader, writer};
 
 /// Wrapper for proper flat TOML serialization with [model] section.
 #[derive(Serialize)]
 struct FlatSchema {
-    schema_version: String,
+    blueprint_version: String,
     model: FlatModelMeta,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     entities: Vec<Entity>,
@@ -52,7 +52,7 @@ pub fn run_convert(input: &str, output: &str) -> Result<()> {
         println!("{}", "Converting structured model → flat schema...".bold());
         let model = reader::load_model_directory(input_path)?;
         let flat = FlatSchema {
-            schema_version: model.schema_version.clone(),
+            blueprint_version: model.blueprint_version.clone(),
             model: FlatModelMeta {
                 name: model.name.clone(),
                 description: model.description.clone(),
@@ -73,7 +73,7 @@ pub fn run_convert(input: &str, output: &str) -> Result<()> {
     } else {
         // Flat → Structured
         println!("{}", "Converting flat schema → structured model...".bold());
-        let model = load_schema(input)?;
+        let model = load_blueprint(input)?;
         writer::write_model_directory(&model, output_path)?;
         println!("  Written to: {}", output.green());
     }
@@ -88,7 +88,7 @@ pub fn run_info(input: &str) -> Result<()> {
     let (model, format_name) = if is_structured_model(input_path) {
         (reader::load_model_directory(input_path)?, "structured directory")
     } else {
-        (load_schema(input)?, "flat schema file")
+        (load_blueprint(input)?, "flat schema file")
     };
 
     println!("{}", "== Model Info ==".bold());
@@ -99,7 +99,7 @@ pub fn run_info(input: &str) -> Result<()> {
     }
     println!("  Seed:           {}", model.seed);
     println!("  Locale:         {}", model.locale);
-    println!("  Schema version: {}", model.schema_version);
+    println!("  Schema version: {}", model.blueprint_version);
     println!();
 
     println!("  {} entities:", model.entities.len());

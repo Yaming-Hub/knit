@@ -4,17 +4,17 @@ use anyhow::{bail, Result};
 use colored::Colorize;
 use std::collections::HashSet;
 
-use super::{load_schema, validate_model};
+use super::{load_blueprint, validate_model};
 use crate::cli::Cli;
 
 /// Run the plan command.
 ///
 /// Parses the schema, validates it, compiles an execution plan, and prints a
 /// human-readable (or JSON) summary of the planned generation pipeline.
-pub fn run(schema_path: &str, cli: &Cli) -> Result<()> {
+pub fn run(blueprint_path: &str, cli: &Cli) -> Result<()> {
     // Load and validate
-    let mut model = load_schema(schema_path)
-        .map_err(|e| anyhow::anyhow!("failed to parse schema `{}`: {}", schema_path, e))?;
+    let mut model = load_blueprint(blueprint_path)
+        .map_err(|e| anyhow::anyhow!("failed to parse schema `{}`: {}", blueprint_path, e))?;
 
     // Apply --count override so the plan reflects it
     if let Some(ref count_str) = cli.count {

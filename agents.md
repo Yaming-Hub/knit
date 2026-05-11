@@ -83,7 +83,7 @@ Each crate's `lib.rs` should have a `//!` module-level doc comment explaining:
 //! ## Pipeline Position
 //!
 //! ```text
-//! Weave Schema → knit-schema → DataModel → knit-plan → ExecutionPlan → knit-gen
+//! knit blueprint → knit-schema → DataModel → knit-plan → ExecutionPlan → knit-gen
 //! ```
 //!
 //! ## Key Entry Point
@@ -162,7 +162,7 @@ Use the appropriate Mermaid diagram type for the concept:
 #### Pipeline Flow
 ```mermaid
 flowchart LR
-    schema([Weave Schema]) --> parse[Parse]
+    schema([knit blueprint]) --> parse[Parse]
     parse --> validate[Validate]
     validate --> plan[Plan]
     plan --> gen[Generate]

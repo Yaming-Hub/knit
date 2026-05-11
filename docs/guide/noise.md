@@ -345,4 +345,4 @@ receive a typo from stage 1 (clean runs first). This means:
 
 - **[Blueprint Language Tutorial](blueprint-language.md)** — Full blueprint reference
 - **[Examples Walkthrough](examples.md)** — See noise in context
-- **[Weave Specification](../weave-spec.md)** — Formal noise profile grammar
+- **[Knit Specification](../knit-spec.md)** — Formal noise profile grammar

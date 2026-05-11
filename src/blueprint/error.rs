@@ -5,9 +5,9 @@ use thiserror::Error;
 /// Errors that can occur when parsing or validating a Weave schema.
 ///
 /// Wraps underlying TOML, JSON, and I/O errors as well as semantic validation
-/// failures detected by [`validate()`](crate::schema::validate).
+/// failures detected by [`validate()`](crate::blueprint::validate).
 #[derive(Debug, Error)]
-pub enum SchemaError {
+pub enum BlueprintError {
     /// The input is not valid TOML.
     #[error("TOML parse error: {0}")]
     TomlParse(#[from] toml::de::Error),

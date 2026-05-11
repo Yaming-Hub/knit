@@ -11,15 +11,15 @@ use crate::core::{
     ActorRelationship, Correlation, DataModel, Entity, NoiseProfile, Persona, Relationship, Value,
 };
 
-use crate::schema::error::SchemaError;
-use crate::schema::includes::StringOrVec;
+use crate::blueprint::error::BlueprintError;
+use crate::blueprint::includes::StringOrVec;
 
 // ── Intermediate schema representation ──────────────────────────────
 
 /// Raw schema as it appears in TOML/JSON — wraps top-level fields in `[model]`.
 #[derive(Debug, Deserialize)]
 struct RawSchema {
-    schema_version: Option<String>,
+    blueprint_version: Option<String>,
     #[serde(default)]
     extends: Option<String>,
     #[serde(default)]
@@ -58,7 +58,7 @@ struct RawModel {
 }
 
 impl RawSchema {
-    fn into_data_model(self) -> Result<DataModel, SchemaError> {
+    fn into_data_model(self) -> Result<DataModel, BlueprintError> {
         let model = DataModel {
             name: self.model.name.unwrap_or_else(|| "unnamed".to_string()),
             description: self.model.description,
@@ -70,7 +70,7 @@ impl RawSchema {
             noise_profiles: self.noise,
             correlations: self.correlations,
             params: self.model.params,
-            schema_version: self.schema_version.unwrap_or_else(|| "1.0".to_string()),
+            blueprint_version: self.blueprint_version.unwrap_or_else(|| "1.0".to_string()),
             personas: self.personas,
             actor_relationships: self.actor_relationships,
             custom_types: self.types,
@@ -84,7 +84,7 @@ impl RawSchema {
 // ── Public API ──────────────────────────────────────────────────────
 
 /// Parse a Weave schema from a TOML string.
-pub fn parse_toml(input: &str) -> Result<DataModel, SchemaError> {
+pub fn parse_toml(input: &str) -> Result<DataModel, BlueprintError> {
     let mut model = parse_toml_raw(input)?;
     resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
@@ -93,13 +93,13 @@ pub fn parse_toml(input: &str) -> Result<DataModel, SchemaError> {
 
 /// Parse TOML into DataModel without resolving mixins or custom types.
 /// Used by includes/extends to defer resolution until after merge.
-pub(crate) fn parse_toml_raw(input: &str) -> Result<DataModel, SchemaError> {
+pub(crate) fn parse_toml_raw(input: &str) -> Result<DataModel, BlueprintError> {
     let raw: RawSchema = toml::from_str(input)?;
     raw.into_data_model()
 }
 
 /// Parse a Weave schema from a JSON string.
-pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
+pub fn parse_json(input: &str) -> Result<DataModel, BlueprintError> {
     let mut model = parse_json_raw(input)?;
     resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
@@ -108,7 +108,7 @@ pub fn parse_json(input: &str) -> Result<DataModel, SchemaError> {
 
 /// Parse JSON into DataModel without resolving custom types.
 /// Used by includes/extends to defer resolution until after merge.
-pub(crate) fn parse_json_raw(input: &str) -> Result<DataModel, SchemaError> {
+pub(crate) fn parse_json_raw(input: &str) -> Result<DataModel, BlueprintError> {
     let raw: RawSchema = serde_json::from_str(input)?;
     raw.into_data_model()
 }
@@ -118,7 +118,7 @@ pub(crate) fn parse_json_raw(input: &str) -> Result<DataModel, SchemaError> {
 /// If the schema specifies `include` directives, the included fragments are
 /// resolved and merged first. If the schema specifies an `extends` field,
 /// the parent schema is resolved and merged on top.
-pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
+pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, BlueprintError> {
     let mut model = parse_toml_file_raw(path)?;
     resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
@@ -127,7 +127,7 @@ pub fn parse_toml_file(path: &std::path::Path) -> Result<DataModel, SchemaError>
 
 /// Parse a TOML file into DataModel without resolving custom types.
 /// Handles includes and extends merging but defers type resolution.
-pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, SchemaError> {
+pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, BlueprintError> {
     let content = std::fs::read_to_string(path)?;
     let raw: RawSchema = toml::from_str(&content)?;
     let extends = raw.extends.clone();
@@ -145,8 +145,8 @@ pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, S
             let mut stack = vec![canonical.clone()];
             visited.insert(canonical);
             let included =
-                crate::schema::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
-            crate::schema::includes::merge_main_over_includes(&included, &model)
+                crate::blueprint::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
+            crate::blueprint::includes::merge_main_over_includes(&included, &model)
         }
     } else {
         model
@@ -154,7 +154,7 @@ pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, S
 
     // Step 2: resolve extends (if any)
     let model = if let Some(ref parent_ref) = extends {
-        crate::schema::resolve_extends(path, &model, parent_ref)?
+        crate::blueprint::resolve_extends(path, &model, parent_ref)?
     } else {
         model
     };
@@ -167,7 +167,7 @@ pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, S
 /// If the schema specifies `include` directives, the included fragments are
 /// resolved and merged first. If the schema specifies an `extends` field,
 /// the parent schema is resolved and merged on top.
-pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError> {
+pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, BlueprintError> {
     let mut model = parse_json_file_raw(path)?;
     resolve_mixins(&mut model)?;
     resolve_custom_types(&mut model)?;
@@ -175,7 +175,7 @@ pub fn parse_json_file(path: &std::path::Path) -> Result<DataModel, SchemaError>
 }
 
 /// Parse a JSON file into DataModel without resolving custom types.
-pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, SchemaError> {
+pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, BlueprintError> {
     let content = std::fs::read_to_string(path)?;
     let raw: RawSchema = serde_json::from_str(&content)?;
     let extends = raw.extends.clone();
@@ -193,8 +193,8 @@ pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, S
             let mut stack = vec![canonical.clone()];
             visited.insert(canonical);
             let included =
-                crate::schema::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
-            crate::schema::includes::merge_main_over_includes(&included, &model)
+                crate::blueprint::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
+            crate::blueprint::includes::merge_main_over_includes(&included, &model)
         }
     } else {
         model
@@ -202,7 +202,7 @@ pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, S
 
     // Step 2: resolve extends (if any)
     let model = if let Some(ref parent_ref) = extends {
-        crate::schema::resolve_extends(path, &model, parent_ref)?
+        crate::blueprint::resolve_extends(path, &model, parent_ref)?
     } else {
         model
     };
@@ -222,13 +222,13 @@ use crate::core::Mixin;
 /// - Entity fields with the same name override mixin fields
 /// - Error on mixin-vs-mixin field name collisions
 /// - Clear entity.mixin_refs after resolution
-pub fn resolve_mixins(model: &mut DataModel) -> Result<(), SchemaError> {
+pub fn resolve_mixins(model: &mut DataModel) -> Result<(), BlueprintError> {
     if model.mixins.is_empty() {
         // Check for references to undefined mixins
         for entity in &mut model.entities {
             if let Some(ref refs) = entity.mixin_refs {
                 for name in refs {
-                    return Err(SchemaError::Validation {
+                    return Err(BlueprintError::Validation {
                         path: format!("entities.{}.mixins", entity.name),
                         message: format!("references undefined mixin '{}'", name),
                     });
@@ -244,13 +244,13 @@ pub fn resolve_mixins(model: &mut DataModel) -> Result<(), SchemaError> {
     let mut seen_names = std::collections::HashSet::new();
     for mixin in &model.mixins {
         if mixin.name.is_empty() {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: "mixins".to_string(),
                 message: "mixin name cannot be empty".to_string(),
             });
         }
         if !seen_names.insert(&mixin.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: format!("mixins.{}", mixin.name),
                 message: "duplicate mixin name".to_string(),
             });
@@ -269,7 +269,7 @@ pub fn resolve_mixins(model: &mut DataModel) -> Result<(), SchemaError> {
 
             for mixin_name in refs {
                 let mixin = mixin_map.get(mixin_name.as_str()).ok_or_else(|| {
-                    SchemaError::Validation {
+                    BlueprintError::Validation {
                         path: format!("entities.{}.mixins", entity.name),
                         message: format!("references undefined mixin '{}'", mixin_name),
                     }
@@ -278,7 +278,7 @@ pub fn resolve_mixins(model: &mut DataModel) -> Result<(), SchemaError> {
                 for mixin_field in &mixin.fields {
                     // Check for mixin-vs-mixin field collision
                     if !mixin_field_names.insert(mixin_field.name.clone()) {
-                        return Err(SchemaError::Validation {
+                        return Err(BlueprintError::Validation {
                             path: format!("entities.{}", entity.name),
                             message: format!(
                                 "mixin field '{}' conflicts with field from another mixin",
@@ -329,7 +329,7 @@ const BUILTIN_TYPES: &[&str] = &[
 ///
 /// Errors if a custom type name conflicts with a built-in type, if names
 /// are duplicated, or if a field references an undefined custom type.
-pub fn resolve_custom_types(model: &mut DataModel) -> Result<(), SchemaError> {
+pub fn resolve_custom_types(model: &mut DataModel) -> Result<(), BlueprintError> {
     if model.custom_types.is_empty() {
         // Check for Custom references (including nested fields) without types defined
         for entity in &model.entities {
@@ -343,28 +343,28 @@ pub fn resolve_custom_types(model: &mut DataModel) -> Result<(), SchemaError> {
     for ct in &model.custom_types {
         // No built-in name conflicts
         if BUILTIN_TYPES.contains(&ct.name.as_str()) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: format!("types.{}", ct.name),
                 message: "conflicts with built-in type name".to_string(),
             });
         }
         // No duplicate names
         if !seen_names.insert(&ct.name) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: format!("types.{}", ct.name),
                 message: "duplicate custom type name".to_string(),
             });
         }
         // Base must not be Custom (no chaining in v1)
         if matches!(ct.base, DataType::Custom(_)) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: format!("types.{}", ct.name),
                 message: "cannot reference another custom type as base".to_string(),
             });
         }
         // Base must not be complex types
         if matches!(ct.base, DataType::Object | DataType::Array | DataType::Map) {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: format!("types.{}", ct.name),
                 message: format!("cannot use complex base type '{}'", ct.base),
             });
@@ -388,11 +388,11 @@ fn resolve_fields(
     fields: &mut [Field],
     type_map: &std::collections::HashMap<&str, &CustomType>,
     entity_name: &str,
-) -> Result<(), SchemaError> {
+) -> Result<(), BlueprintError> {
     for field in fields.iter_mut() {
         if let DataType::Custom(ref name) = field.data_type {
             let ct = type_map.get(name.as_str()).ok_or_else(|| {
-                SchemaError::Validation {
+                BlueprintError::Validation {
                     path: format!("{}.{}", entity_name, field.name),
                     message: format!("references undefined type '{}'", name),
                 }
@@ -428,10 +428,10 @@ fn resolve_fields(
 }
 
 /// Recursively check for `DataType::Custom` references in fields, erroring on the first one found.
-fn check_undefined_custom_refs(fields: &[Field], entity_name: &str) -> Result<(), SchemaError> {
+fn check_undefined_custom_refs(fields: &[Field], entity_name: &str) -> Result<(), BlueprintError> {
     for field in fields {
         if let DataType::Custom(ref name) = field.data_type {
-            return Err(SchemaError::Validation {
+            return Err(BlueprintError::Validation {
                 path: format!("{}.{}", entity_name, field.name),
                 message: format!("references undefined type '{}'", name),
             });
@@ -454,14 +454,14 @@ mod tests {
     #[test]
     fn test_parse_minimal_schema() {
         let input = indoc! {r#"
-            schema_version = "1.0"
+            blueprint_version = "1.0"
 
             [model]
             name = "test"
         "#};
         let model = parse_toml(input).unwrap();
         assert_eq!(model.name, "test");
-        assert_eq!(model.schema_version, "1.0");
+        assert_eq!(model.blueprint_version, "1.0");
         assert_eq!(model.seed, 42);
         assert_eq!(model.locale, "en_US");
         assert_eq!(model.timezone, "UTC");
@@ -674,7 +674,7 @@ mod tests {
     #[test]
     fn test_parse_json() {
         let input = r#"{
-            "schema_version": "1.0",
+            "blueprint_version": "1.0",
             "model": {
                 "name": "json_test",
                 "seed": 99
@@ -714,7 +714,7 @@ mod tests {
     #[test]
     fn test_parse_full_ecommerce() {
         let input = indoc! {r#"
-            schema_version = "1.0"
+            blueprint_version = "1.0"
 
             [model]
             name = "ecommerce"
@@ -801,7 +801,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(
-            matches!(err, SchemaError::TomlParse(_)),
+            matches!(err, BlueprintError::TomlParse(_)),
             "expected TomlParse error, got {err:?}"
         );
     }

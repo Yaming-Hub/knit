@@ -29,7 +29,7 @@ Weave is the declarative blueprint language at the center of Knit. A Weave docum
 describes **what** data looks like — its structure, statistical properties,
 relationships, and quality characteristics — without specifying **how** to generate it.
 
-**Specification:** [`docs/weave-spec.md`](weave-spec.md)
+**Specification:** [`docs/knit-spec.md`](knit-spec.md)
 
 ### Role in the Architecture
 
@@ -482,7 +482,7 @@ loaded at runtime from a plugin directory.
 
 | Document | Path | Status |
 |----------|------|--------|
-| Weave Language Specification | [`docs/weave-spec.md`](weave-spec.md) | Draft |
+| Knit Language Specification | [`docs/knit-spec.md`](knit-spec.md) | Draft |
 | Architecture (this document) | [`docs/architecture.md`](architecture.md) | Draft |
 | knit-core Design | [`docs/design-core.md`](design-core.md) | Draft |
 | knit-blueprint Design | [`docs/design-blueprint.md`](design-blueprint.md) | Draft |

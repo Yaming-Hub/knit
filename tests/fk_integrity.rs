@@ -43,7 +43,7 @@ fn ecommerce_order_user_fk_integrity() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("ecommerce"))
         })
-        .expect("ecommerce.weave.toml not found");
+        .expect("ecommerce.knit.toml not found");
 
     let batches = generate_from_file(&path);
 
@@ -77,7 +77,7 @@ fn ecommerce_order_product_fk_integrity() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("ecommerce"))
         })
-        .expect("ecommerce.weave.toml not found");
+        .expect("ecommerce.knit.toml not found");
 
     let batches = generate_from_file(&path);
 
@@ -113,7 +113,7 @@ fn ecommerce_review_fk_integrity() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("ecommerce"))
         })
-        .expect("ecommerce.weave.toml not found");
+        .expect("ecommerce.knit.toml not found");
 
     let batches = generate_from_file(&path);
 
@@ -165,7 +165,7 @@ fn iot_reading_device_fk_integrity() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("iot"))
         })
-        .expect("iot_sensors.weave.toml not found");
+        .expect("iot_sensors.knit.toml not found");
 
     let batches = generate_from_file(&path);
 
@@ -199,7 +199,7 @@ fn financial_transaction_account_fk_integrity() {
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.starts_with("financial"))
         })
-        .expect("financial.weave.toml not found");
+        .expect("financial.knit.toml not found");
 
     let batches = generate_from_file(&path);
 

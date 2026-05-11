@@ -46,7 +46,7 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
 
-    /// Global random seed (overrides schema seed).
+    /// Global random seed (overrides blueprint seed).
     #[arg(long, global = true)]
     pub seed: Option<u64>,
 
@@ -66,7 +66,7 @@ pub struct Cli {
     #[arg(long, global = true, default_value_t = 8192)]
     pub batch_size: usize,
 
-    /// Schema parameter overrides (repeatable: --param key=value).
+    /// Blueprint parameter overrides (repeatable: --param key=value).
     #[arg(long = "param", global = true, value_parser = parse_key_val)]
     pub params: Vec<(String, String)>,
 
@@ -86,7 +86,7 @@ pub struct Cli {
     #[arg(short, long, global = true)]
     pub verbose: bool,
 
-    /// Skip noise injection even if schema defines noise profiles.
+    /// Skip noise injection even if blueprint defines noise profiles.
     #[arg(long, global = true)]
     pub no_noise: bool,
 
@@ -177,20 +177,20 @@ pub enum ModelFormat {
 /// Top-level subcommands.
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    /// Parse and validate a schema file.
+    /// Parse and validate a blueprint file.
     Validate {
-        /// Path to the schema file (TOML or JSON).
-        schema: String,
+        /// Path to the blueprint file (TOML or JSON).
+        blueprint: String,
     },
     /// Show the execution plan without generating data.
     Plan {
-        /// Path to the schema file (TOML or JSON).
-        schema: String,
+        /// Path to the blueprint file (TOML or JSON).
+        blueprint: String,
     },
-    /// Generate synthetic data from a schema.
+    /// Generate synthetic data from a blueprint.
     Generate {
-        /// Path to the schema file (TOML or JSON).
-        schema: String,
+        /// Path to the blueprint file (TOML or JSON).
+        blueprint: String,
         /// Output directory for generated files.
         #[arg(short, long, default_value = "output")]
         output: String,
@@ -199,15 +199,15 @@ pub enum Command {
         #[arg(long = "entity")]
         entities: Vec<String>,
     },
-    /// Schema manipulation operations.
-    Schema {
+    /// Blueprint manipulation operations.
+    Blueprint {
         #[command(subcommand)]
-        action: SchemaAction,
+        action: BlueprintAction,
     },
-    /// Initialize a new knit project with a starter schema.
+    /// Initialize a new knit project with a starter blueprint.
     Init {
         /// Output file path.
-        #[arg(short, long, default_value = "schema.weave.toml")]
+        #[arg(short, long, default_value = "blueprint.knit.toml")]
         output: String,
         /// Path to a template file or directory to copy from.
         /// If a file, copies it as the schema (plus sibling dictionaries).
@@ -215,12 +215,12 @@ pub enum Command {
         #[arg(long)]
         template: Option<String>,
     },
-    /// Infer a Weave schema from existing data files or directories.
+    /// Infer a knit blueprint from existing data files or directories.
     Learn {
         /// Path to data file or directory to learn from.
         source: Option<String>,
-        /// Output schema file path (or directory for structured format).
-        #[arg(short, long, default_value = "learned.weave.toml")]
+        /// Output blueprint file path (or directory for structured format).
+        #[arg(short, long, default_value = "learned.knit.toml")]
         output: String,
         /// Maximum rows to read per entity (for faster profiling of large files).
         #[arg(long)]
@@ -228,7 +228,7 @@ pub enum Command {
         /// State file for incremental learning (creates if absent, updates if exists).
         #[arg(long)]
         state: Option<String>,
-        /// Emit schema from existing state without processing new data.
+        /// Emit blueprint from existing state without processing new data.
         #[arg(long)]
         finalize: bool,
         /// Error on duplicate source paths (default: warn).
@@ -250,15 +250,15 @@ pub enum Command {
         #[arg(long, value_enum)]
         model_format: Option<ModelFormat>,
     },
-    /// Inspect a learning state file or schema file.
+    /// Inspect a learning state file or blueprint file.
     Inspect {
-        /// Path to the state file (.json) or schema file (.toml) to inspect.
+        /// Path to the state file (.json) or blueprint file (.toml) to inspect.
         #[arg(name = "FILE")]
         file: String,
         /// Show per-column details (cardinality, nulls, top values).
         #[arg(long)]
         columns: bool,
-        /// Show actor, persona, and relationship summary (schema files only).
+        /// Show actor, persona, and relationship summary (blueprint files only).
         #[arg(long)]
         actors: bool,
     },
@@ -270,10 +270,10 @@ pub enum Command {
     },
     /// List available generator types with descriptions and examples.
     Generators,
-    /// Scale a learned schema along discovered dimensions (actors, time, custom).
+    /// Scale a learned blueprint along discovered dimensions (actors, time, custom).
     Scale {
-        /// Path to the learned schema file.
-        schema: String,
+        /// Path to the learned blueprint file.
+        blueprint: String,
         /// Output directory for generated files.
         #[arg(short, long)]
         output: Option<String>,
@@ -330,12 +330,12 @@ pub enum Command {
     },
     /// Enrich a model with statistical knowledge from reference samples.
     Enrich {
-        /// Path to the base schema file to enrich.
-        schema: String,
+        /// Path to the base blueprint file to enrich.
+        blueprint: String,
         /// Path to reference data file (CSV, Parquet, JSON).
         #[arg(long = "ref")]
         reference: String,
-        /// Output schema path (default: overwrite input).
+        /// Output blueprint path (default: overwrite input).
         #[arg(short, long)]
         output: Option<String>,
         /// Only enrich this entity (default: auto-detect from filename).
@@ -358,29 +358,29 @@ pub enum Command {
     },
 }
 
-/// Schema subcommands.
+/// Blueprint subcommands.
 #[derive(Subcommand, Debug)]
-pub enum SchemaAction {
-    /// Flatten extends chain into a standalone schema.
+pub enum BlueprintAction {
+    /// Flatten extends chain into a standalone blueprint.
     Expand {
-        /// Path to the schema file.
+        /// Path to the blueprint file.
         file: String,
     },
-    /// Reformat schema to canonical style.
+    /// Reformat blueprint to canonical style.
     Normalize {
-        /// Path to the schema file.
+        /// Path to the blueprint file.
         file: String,
     },
-    /// Compare two schemas and show differences.
+    /// Compare two blueprints and show differences.
     Diff {
-        /// Path to the first schema file.
+        /// Path to the first blueprint file.
         a: String,
-        /// Path to the second schema file.
+        /// Path to the second blueprint file.
         b: String,
     },
-    /// Generate markdown documentation for a schema.
+    /// Generate markdown documentation for a blueprint.
     Doc {
-        /// Path to the schema file.
+        /// Path to the blueprint file.
         file: String,
         /// Output file path (prints to stdout if omitted).
         #[arg(short, long)]
@@ -391,7 +391,7 @@ pub enum SchemaAction {
 /// Model directory subcommands.
 #[derive(Subcommand, Debug)]
 pub enum ModelAction {
-    /// Convert between flat schema and structured model directory.
+    /// Convert between flat blueprint and structured model directory.
     Convert {
         /// Input path (flat .toml file or structured directory).
         input: String,

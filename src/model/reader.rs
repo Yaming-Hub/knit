@@ -119,7 +119,7 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
         noise_profiles,
         correlations,
         params: manifest.model.params.unwrap_or_default(),
-        schema_version: manifest.schema_version.unwrap_or_else(|| "2.0".to_string()),
+        blueprint_version: manifest.blueprint_version.unwrap_or_else(|| "2.0".to_string()),
         personas,
         actor_relationships,
         custom_types,
@@ -141,7 +141,7 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
 /// Root manifest (`knit.toml`).
 #[derive(Debug, Deserialize)]
 struct Manifest {
-    schema_version: Option<String>,
+    blueprint_version: Option<String>,
     model: ManifestModel,
 }
 
@@ -306,7 +306,7 @@ mod tests {
 
         // Create knit.toml
         fs::write(root.join("knit.toml"), r#"
-schema_version = "2.0"
+blueprint_version = "2.0"
 
 [model]
 name = "test_model"

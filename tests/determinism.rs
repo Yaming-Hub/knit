@@ -5,7 +5,7 @@ use common::generate_from_toml;
 
 /// A minimal schema used by determinism tests.
 const DETERMINISM_SCHEMA: &str = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "determinism_test"
@@ -100,7 +100,7 @@ fn same_seed_produces_identical_batches() {
 #[test]
 fn different_seeds_produce_different_output() {
     let schema_a = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "seed_a"
@@ -122,7 +122,7 @@ max = 1000.0
 "#;
 
     let schema_b = r#"
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "seed_b"

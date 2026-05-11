@@ -1,8 +1,8 @@
-//! `knit inspect` — display summary information about a learn state file or schema file.
+//! `knit inspect` — display summary information about a learn state file or blueprint file.
 //!
-//! This command reads a serialized [`LearnState`] file (.json) or a schema file (.toml)
+//! This command reads a serialized [`LearnState`] file (.json) or a blueprint file (.toml)
 //! and prints a human-readable summary. For state files: tables, row counts, columns,
-//! cardinality estimates, and processing history. For schema files with `--actors`:
+//! cardinality estimates, and processing history. For blueprint files with `--actors`:
 //! actor entities, personas, and actor relationships.
 
 use std::path::Path;
@@ -28,9 +28,9 @@ pub fn run(file_path: &str, show_columns: bool, show_actors: bool, cli: &Cli) ->
     }
 }
 
-/// Inspect a schema file (.toml) for actor/persona/relationship summary.
-fn run_schema(schema_path: &str, show_actors: bool, cli: &Cli) -> Result<()> {
-    let model = super::load_schema(schema_path)
+/// Inspect a blueprint file (.toml) for actor/persona/relationship summary.
+fn run_schema(blueprint_path: &str, show_actors: bool, cli: &Cli) -> Result<()> {
+    let model = super::load_blueprint(blueprint_path)
         .map_err(|e| anyhow::anyhow!("failed to parse schema: {}", e))?;
 
     if cli.json {
@@ -341,13 +341,13 @@ fn run_state(state_path: &str, show_columns: bool, show_actors: bool, cli: &Cli)
 
     if show_actors && !cli.json {
         eprintln!(
-            "  {} behavioral data is stored in the schema file, not the state file",
+            "  {} behavioral data is stored in the blueprint file, not the state file",
             "note:".yellow(),
         );
         eprintln!(
-            "  {} run {} on a .weave.toml file to see actor details",
+            "  {} run {} on a .knit.toml file to see actor details",
             "hint:".dimmed(),
-            "knit inspect schema.weave.toml --actors".cyan(),
+            "knit inspect schema.knit.toml --actors".cyan(),
         );
         eprintln!();
     }

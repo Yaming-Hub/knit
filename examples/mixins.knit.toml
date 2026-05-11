@@ -3,7 +3,7 @@
 # Demonstrates reusable field groups that can be included in multiple entities.
 # Mixin fields are prepended; entity fields with the same name override the mixin.
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "mixins_demo"

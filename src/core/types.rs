@@ -17,7 +17,7 @@ fn default_locale() -> String {
 fn default_timezone() -> String {
     "UTC".into()
 }
-fn default_schema_version() -> String {
+fn default_blueprint_version() -> String {
     "1.0".into()
 }
 fn default_uuid_version() -> u8 {
@@ -136,9 +136,9 @@ pub struct DataModel {
     /// User-defined key-value parameters available to generators.
     #[serde(default)]
     pub params: BTreeMap<String, Value>,
-    /// Schema format version (currently `"1.0"`).
-    #[serde(default = "default_schema_version")]
-    pub schema_version: String,
+    /// Blueprint format version (currently `"1.0"`).
+    #[serde(default = "default_blueprint_version")]
+    pub blueprint_version: String,
     /// Persona definitions for human behavioral modeling.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub personas: Vec<Persona>,
@@ -171,7 +171,7 @@ impl Default for DataModel {
             noise_profiles: Vec::new(),
             correlations: Vec::new(),
             params: BTreeMap::new(),
-            schema_version: default_schema_version(),
+            blueprint_version: default_blueprint_version(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
@@ -2175,7 +2175,7 @@ step = "7d"
             }],
             correlations: vec![],
             params: BTreeMap::new(),
-            schema_version: "1.0".into(),
+            blueprint_version: "1.0".into(),
             personas: Vec::new(),
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),

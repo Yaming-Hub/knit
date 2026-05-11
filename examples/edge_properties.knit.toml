@@ -4,9 +4,9 @@
 # Edge properties become additional columns on the "from" entity.
 #
 # Run:
-#   knit generate edge_properties.weave.toml -o output/
+#   knit generate edge_properties.knit.toml -o output/
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "edge_properties"

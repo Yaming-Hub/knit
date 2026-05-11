@@ -4,9 +4,9 @@
 # and clustered (locality-based) parent assignment.
 #
 # Run:
-#   knit generate selection_strategies.weave.toml -o output/
+#   knit generate selection_strategies.knit.toml -o output/
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "selection_strategies"

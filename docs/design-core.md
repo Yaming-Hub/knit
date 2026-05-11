@@ -1118,5 +1118,5 @@ fn model_error_messages_are_readable() {
 ---
 
 *This document covers `knit-core` only. See [`architecture.md`](architecture.md) for
-the full system design and [`weave-spec.md`](weave-spec.md) for the blueprint language
+the full system design and [`knit-spec.md`](knit-spec.md) for the blueprint language
 specification.*

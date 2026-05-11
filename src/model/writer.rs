@@ -21,7 +21,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
 
     // 1. Write knit.toml
     let manifest = ManifestOut {
-        schema_version: "2.0".to_string(),
+        blueprint_version: "2.0".to_string(),
         model: ManifestModelOut {
             name: model.name.clone(),
             description: model.description.clone(),
@@ -123,7 +123,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
 
 #[derive(Serialize)]
 struct ManifestOut {
-    schema_version: String,
+    blueprint_version: String,
     model: ManifestModelOut,
 }
 
@@ -281,7 +281,7 @@ mod tests {
             noise_profiles: vec![],
             correlations: vec![],
             params: BTreeMap::new(),
-            schema_version: "2.0".to_string(),
+            blueprint_version: "2.0".to_string(),
             personas: vec![],
             actor_relationships: vec![],
             custom_types: vec![],

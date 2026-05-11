@@ -4,9 +4,9 @@ use clap::{CommandFactory, Parser};
 use colored::Colorize;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, schema, tokenize, validate};
+use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, blueprint, tokenize, validate};
 use knit::cli::config::resolve_config;
-use knit::cli::{Cli, Command, LogFormat, ModelAction, ModelFormat, SchemaAction};
+use knit::cli::{Cli, Command, LogFormat, ModelAction, ModelFormat, BlueprintAction};
 use knit::decision::{self, DecisionLogger};
 
 /// Guard that must be held for the lifetime of the program to flush async writers.
@@ -132,18 +132,18 @@ fn main() -> anyhow::Result<()> {
     }
 
     let result: anyhow::Result<()> = match &cli.command {
-        Command::Validate { schema } => validate::run(schema, &cli),
-        Command::Plan { schema } => plan::run(schema, &cli),
+        Command::Validate { blueprint } => validate::run(blueprint, &cli),
+        Command::Plan { blueprint } => plan::run(blueprint, &cli),
         Command::Generate {
-            schema,
+            blueprint,
             output,
             entities,
-        } => generate::run(schema, output, entities, &cli),
-        Command::Schema { action } => match action {
-            SchemaAction::Expand { file } => schema::run_expand(file, cli.json),
-            SchemaAction::Normalize { file } => schema::run_normalize(file, cli.json),
-            SchemaAction::Diff { a, b } => schema::run_diff(a, b),
-            SchemaAction::Doc { file, output } => schema::run_doc(file, output.as_deref()),
+        } => generate::run(blueprint, output, entities, &cli),
+        Command::Blueprint { action } => match action {
+            BlueprintAction::Expand { file } => blueprint::run_expand(file, cli.json),
+            BlueprintAction::Normalize { file } => blueprint::run_normalize(file, cli.json),
+            BlueprintAction::Diff { a, b } => blueprint::run_diff(a, b),
+            BlueprintAction::Doc { file, output } => blueprint::run_doc(file, output.as_deref()),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
@@ -191,7 +191,7 @@ fn main() -> anyhow::Result<()> {
         }
         Command::Generators => generators::run(cli.json),
         Command::Scale {
-            schema,
+            blueprint,
             output,
             analyze,
             actors,
@@ -200,7 +200,7 @@ fn main() -> anyhow::Result<()> {
             count,
             cadence,
         } => scale::run(
-            schema,
+            blueprint,
             output.as_deref(),
             *analyze,
             *actors,
@@ -234,7 +234,7 @@ fn main() -> anyhow::Result<()> {
             *preserve_partitions,
         ),
         Command::Enrich {
-            schema,
+            blueprint,
             reference,
             output,
             entity,
@@ -242,7 +242,7 @@ fn main() -> anyhow::Result<()> {
             max_rows,
             dry_run,
         } => enrich::run(
-            schema,
+            blueprint,
             reference,
             output.as_deref(),
             entity.as_deref(),

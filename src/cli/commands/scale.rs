@@ -5,13 +5,13 @@ use std::path::Path;
 use anyhow::{bail, Result};
 use colored::Colorize;
 
-use super::load_schema;
+use super::load_blueprint;
 use crate::cli::Cli;
 use crate::scale::{self, analyze, ScaleTargets};
 
 /// Run the `knit scale` command.
 pub fn run(
-    schema_path: &str,
+    blueprint_path: &str,
     output_dir: Option<&str>,
     analyze_only: bool,
     actors: Option<u64>,
@@ -21,10 +21,10 @@ pub fn run(
     cadence: Option<&str>,
     cli: &Cli,
 ) -> Result<()> {
-    let _span = tracing::info_span!("scale", schema = %schema_path).entered();
+    let _span = tracing::info_span!("scale", schema = %blueprint_path).entered();
 
     // Load and parse schema
-    let mut model = load_schema(schema_path)?;
+    let mut model = load_blueprint(blueprint_path)?;
 
     // Apply CLI seed override
     if let Some(seed) = cli.seed {
@@ -80,7 +80,7 @@ pub fn run(
     scale::rewrite(&mut model, &plan);
 
     // Delegate to generate pipeline
-    let schema_dir = Path::new(schema_path)
+    let schema_dir = Path::new(blueprint_path)
         .parent()
         .unwrap_or_else(|| Path::new("."));
     super::generate::run_from_model(model, schema_dir, output, &[], cli)

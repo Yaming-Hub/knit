@@ -1,7 +1,7 @@
 # Timezone-aware business hours example
 # Generates meeting timestamps during business hours with timezone support.
 
-schema_version = "1.0"
+blueprint_version = "1.0"
 
 [model]
 name = "timezone_business_hours"

@@ -21,7 +21,7 @@
 //!
 //! ## Error Handling
 //!
-//! All functions return [`SchemaError`], which wraps TOML/JSON parse errors,
+//! All functions return [`BlueprintError`], which wraps TOML/JSON parse errors,
 //! I/O errors, and semantic validation issues.
 
 mod error;
@@ -30,7 +30,7 @@ pub(crate) mod includes;
 mod parser;
 mod validate;
 
-pub use error::SchemaError;
+pub use error::BlueprintError;
 pub use extends::{merge_models, resolve_extends};
 pub use includes::{merge_main_over_includes, resolve_includes};
 pub use parser::{parse_json, parse_json_file, parse_toml, parse_toml_file};

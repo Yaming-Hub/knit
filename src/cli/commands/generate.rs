@@ -22,22 +22,22 @@ use crate::gen::{generate_graph, ActorPool, GenerationEngine};
 use crate::noise::{ColumnFilter, PerturbConfig, Pipeline};
 use crate::plan::ExecutionPlan;
 
-use super::{load_schema, validate_model};
+use super::{load_blueprint, validate_model};
 use crate::cli::{Cli, CompressionArg, Format};
 
 /// Run the generate command — full forward pipeline.
 ///
 /// Loads the schema, validates, compiles a plan, generates data in batches,
 /// and writes output files to the specified directory.
-pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
-    let _gen_span = tracing::info_span!("generate", schema = %schema_path).entered();
+pub fn run(blueprint_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
+    let _gen_span = tracing::info_span!("generate", schema = %blueprint_path).entered();
 
     // ── Load WASM plugins (if any) ──────────────────────────────────
     load_plugins(cli)?;
 
     // ── Parse & validate ────────────────────────────────────────────
-    let mut model = load_schema(schema_path)
-        .with_context(|| format!("failed to parse schema `{}`", schema_path))?;
+    let mut model = load_blueprint(blueprint_path)
+        .with_context(|| format!("failed to parse schema `{}`", blueprint_path))?;
 
     // Apply CLI overrides to the model before validation/compilation.
     if let Some(seed) = cli.seed {
@@ -54,7 +54,7 @@ pub fn run(schema_path: &str, output_dir: &str, entity_filter: &[String], cli: &
         apply_count_override(&mut model, count_str)?;
     }
 
-    let schema_dir = Path::new(schema_path)
+    let schema_dir = Path::new(blueprint_path)
         .parent()
         .unwrap_or_else(|| Path::new("."));
 
