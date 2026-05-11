@@ -232,14 +232,17 @@ fn register_path_components(
 ) {
     let mut seen = std::collections::HashSet::new();
     for entry in entries {
-        for component in entry.rel_path.components() {
+        let components: Vec<_> = entry.rel_path.components().collect();
+        let last_idx = components.len().saturating_sub(1);
+
+        for (idx, component) in components.iter().enumerate() {
             if let std::path::Component::Normal(c) = component {
                 let s = c.to_string_lossy();
                 // Skip partition folders (key=value) when preserve_partitions is set
-                if config.preserve_partitions && s.contains('=') {
+                // Only applies to directory components, not the final file component
+                if idx != last_idx && config.preserve_partitions && s.contains('=') {
                     continue;
                 }
-                // For the file component, register just the stem (not extension)
                 let name = s.to_string();
                 if !seen.insert(name.clone()) {
                     continue;
@@ -270,8 +273,8 @@ fn tokenize_rel_path(
         if let std::path::Component::Normal(c) = component {
             let s = c.to_string_lossy();
 
-            // Skip partition folders when preserve_partitions is set
-            if config.preserve_partitions && s.contains('=') {
+            // Skip partition directory folders (key=value) when preserve_partitions is set
+            if idx != last_idx && config.preserve_partitions && s.contains('=') {
                 result.push(c);
                 continue;
             }
@@ -346,6 +349,7 @@ pub fn restore(
         tokenize_numbers: true,
         tokenize_dates: dict.date_shift_days.is_some(),
         tokenize_paths: dict.tokenized_paths,
+        preserve_partitions: dict.preserve_partitions,
         native_date_shift,
         native_numeric_shift,
         tokenize_columns,

@@ -33,12 +33,20 @@ pub struct TokenDictionary {
     /// Used during restore to reverse path tokenization.
     #[serde(default)]
     pub tokenized_paths: bool,
+    /// Whether partition folders were preserved during path tokenization.
+    /// Used during restore to correctly reverse path renaming.
+    #[serde(default = "default_true")]
+    pub preserve_partitions: bool,
     /// The token mappings (original → token), sorted for deterministic output.
     pub tokens: BTreeMap<String, String>,
 }
 
 fn is_default_column_filter(f: &ColumnFilter) -> bool {
     f.tokenize_columns.is_none() && f.preserve_columns.is_none()
+}
+
+fn default_true() -> bool {
+    true
 }
 
 /// Summary statistics stored in the dictionary.
@@ -103,6 +111,7 @@ impl TokenDictionary {
             date_shift_days,
             numeric_shift,
             tokenized_paths: config.tokenize_paths,
+            preserve_partitions: config.preserve_partitions,
             tokens,
         }
     }
@@ -148,6 +157,7 @@ mod tests {
             date_shift_days: None,
             numeric_shift: None,
             tokenized_paths: false,
+            preserve_partitions: true,
             tokens,
         };
 
@@ -176,6 +186,7 @@ mod tests {
             date_shift_days: None,
             numeric_shift: None,
             tokenized_paths: false,
+            preserve_partitions: true,
             tokens: BTreeMap::new(),
         };
 
@@ -199,6 +210,7 @@ mod tests {
             date_shift_days: None,
             numeric_shift: None,
             tokenized_paths: false,
+            preserve_partitions: true,
             tokens: BTreeMap::new(),
         };
 
