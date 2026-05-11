@@ -1888,6 +1888,7 @@ fn copy_companion_files(
                 logger
                     .builder(crate::decision::DecisionKind::CompanionClassification)
                     .phase("learn/companion")
+                    .entity(&rel_str)
                     .chosen("companion")
                     .reason(reason)
                     .confidence(crate::decision::Confidence::High)
