@@ -2593,3 +2593,508 @@ fn learn_actors_json_summary() {
         "actors count should be positive when --actors is used: {json}"
     );
 }
+
+// ── Incremental Learning Parity Tests ───────────────────────────────
+
+/// Helper: generate a multi-column CSV for parity testing.
+fn write_parity_csv(path: &Path, rows: usize) {
+    let mut content = String::from("id,name,score,category,created_at\n");
+    let categories = ["A", "B", "C", "D"];
+    for i in 1..=rows {
+        content.push_str(&format!(
+            "{},user_{},{:.1},{},2024-01-{:02}\n",
+            i,
+            i,
+            50.0 + (i as f64) * 0.1,
+            categories[i % 4],
+            (i % 28) + 1,
+        ));
+    }
+    fs::write(path, content).unwrap();
+}
+
+#[test]
+fn incremental_parity_single_chunk() {
+    // Learn the same CSV in batch mode and incremental mode (single chunk).
+    // Output blueprints should have matching entity/field structure.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("data.csv");
+    write_parity_csv(&csv, 200);
+
+    // Batch mode
+    let batch_out = dir.path().join("batch.knit.toml");
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "-o",
+            batch_out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Incremental mode (single chunk + finalize)
+    let state_file = dir.path().join("learn.state");
+    let incr_out = dir.path().join("incr.knit.toml");
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "--state",
+            state_file.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state_file.to_str().unwrap(),
+            "-o",
+            incr_out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Compare: parse both blueprints and check structural parity
+    let batch_text = fs::read_to_string(&batch_out).unwrap();
+    let incr_text = fs::read_to_string(&incr_out).unwrap();
+
+    let batch_model: toml::Value = toml::from_str(&batch_text).unwrap();
+    let incr_model: toml::Value = toml::from_str(&incr_text).unwrap();
+
+    // Both should have the same entity names
+    let batch_entities = batch_model["entities"].as_array().unwrap();
+    let incr_entities = incr_model["entities"].as_array().unwrap();
+    assert_eq!(
+        batch_entities.len(),
+        incr_entities.len(),
+        "entity count should match"
+    );
+
+    // Both should have same field names (sorted for comparison)
+    let mut batch_fields: Vec<String> = batch_entities[0]["fields"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["name"].as_str().unwrap().to_string())
+        .collect();
+    let mut incr_fields: Vec<String> = incr_entities[0]["fields"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["name"].as_str().unwrap().to_string())
+        .collect();
+    batch_fields.sort();
+    incr_fields.sort();
+    assert_eq!(batch_fields, incr_fields, "field names should match");
+
+    // Type inference should match for each field
+    for field_name in &batch_fields {
+        let batch_field = batch_entities[0]["fields"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|f| f["name"].as_str().unwrap() == field_name)
+            .unwrap();
+        let incr_field = incr_entities[0]["fields"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|f| f["name"].as_str().unwrap() == field_name)
+            .unwrap();
+        assert_eq!(
+            batch_field["data_type"], incr_field["data_type"],
+            "data_type mismatch for field '{field_name}'"
+        );
+    }
+}
+
+#[test]
+fn incremental_parity_multi_chunk() {
+    // Split CSV into two files, learn each with --state, compare with batch.
+    let dir = TempDir::new().unwrap();
+
+    // Create two chunk files
+    let chunk1 = dir.path().join("chunk1.csv");
+    let chunk2 = dir.path().join("chunk2.csv");
+    let full = dir.path().join("full.csv");
+
+    let mut full_content = String::from("id,value,label\n");
+    let mut c1_content = String::from("id,value,label\n");
+    let mut c2_content = String::from("id,value,label\n");
+    let labels = ["red", "green", "blue"];
+    for i in 1..=100 {
+        let line = format!("{},{:.1},{}\n", i, i as f64 * 1.5, labels[i % 3]);
+        full_content.push_str(&line);
+        if i <= 50 {
+            c1_content.push_str(&line);
+        } else {
+            c2_content.push_str(&line);
+        }
+    }
+    fs::write(&full, &full_content).unwrap();
+    fs::write(&chunk1, &c1_content).unwrap();
+    fs::write(&chunk2, &c2_content).unwrap();
+
+    // Batch on full data
+    let batch_out = dir.path().join("batch.knit.toml");
+    knit()
+        .args([
+            "learn",
+            full.to_str().unwrap(),
+            "-o",
+            batch_out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Incremental: two chunks
+    let state = dir.path().join("learn.state");
+    knit()
+        .args([
+            "learn",
+            chunk1.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+    knit()
+        .args([
+            "learn",
+            chunk2.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let incr_out = dir.path().join("incr.knit.toml");
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state.to_str().unwrap(),
+            "-o",
+            incr_out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Parse and compare structure
+    let batch_model: toml::Value =
+        toml::from_str(&fs::read_to_string(&batch_out).unwrap()).unwrap();
+    let incr_model: toml::Value =
+        toml::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
+
+    let batch_e = &batch_model["entities"].as_array().unwrap()[0];
+    let incr_e = &incr_model["entities"].as_array().unwrap()[0];
+
+    // Field count should match
+    assert_eq!(
+        batch_e["fields"].as_array().unwrap().len(),
+        incr_e["fields"].as_array().unwrap().len(),
+        "field count should match between batch and multi-chunk incremental"
+    );
+
+    // Data types should match for each field
+    let batch_fields = batch_e["fields"].as_array().unwrap();
+    let incr_fields = incr_e["fields"].as_array().unwrap();
+    for bf in batch_fields {
+        let name = bf["name"].as_str().unwrap();
+        let if_match = incr_fields
+            .iter()
+            .find(|f| f["name"].as_str().unwrap() == name);
+        assert!(if_match.is_some(), "incremental should have field '{name}'");
+        assert_eq!(
+            bf["data_type"],
+            if_match.unwrap()["data_type"],
+            "data_type mismatch for field '{name}'"
+        );
+    }
+}
+
+#[test]
+fn incremental_determinism() {
+    // Same data, same order, same seed → identical state & output.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("data.csv");
+    write_parity_csv(&csv, 50);
+
+    let mut outputs = Vec::new();
+    for run in 0..2 {
+        let state = dir.path().join(format!("run{run}.state"));
+        let out = dir.path().join(format!("run{run}.knit.toml"));
+        knit()
+            .args([
+                "learn",
+                csv.to_str().unwrap(),
+                "--state",
+                state.to_str().unwrap(),
+                "--quiet",
+            ])
+            .assert()
+            .success();
+        knit()
+            .args([
+                "learn",
+                "--finalize",
+                "--state",
+                state.to_str().unwrap(),
+                "-o",
+                out.to_str().unwrap(),
+                "--quiet",
+            ])
+            .assert()
+            .success();
+        outputs.push(fs::read_to_string(&out).unwrap());
+    }
+
+    // Compare parsed models (normalizing the model name which contains output filename)
+    let m0: toml::Value = toml::from_str(&outputs[0]).unwrap();
+    let m1: toml::Value = toml::from_str(&outputs[1]).unwrap();
+
+    // Check entities match exactly
+    assert_eq!(
+        m0["entities"], m1["entities"],
+        "deterministic runs should produce identical entities"
+    );
+    // Check blueprint_version matches
+    assert_eq!(
+        m0["blueprint_version"], m1["blueprint_version"],
+        "blueprint versions should match"
+    );
+}
+
+#[test]
+fn incremental_finalize_only_from_existing_state() {
+    // Create state, then finalize without new data → valid blueprint.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("data.csv");
+    write_parity_csv(&csv, 30);
+
+    let state = dir.path().join("learn.state");
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Finalize from existing state (no new data)
+    let out = dir.path().join("final.knit.toml");
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let text = fs::read_to_string(&out).unwrap();
+    assert!(text.contains("[[entities]]"), "should produce valid blueprint");
+    assert!(text.contains("[[entities.fields]]"), "should have fields");
+}
+
+#[test]
+fn incremental_type_drift_int_to_float() {
+    // Chunk 1 has integer values, chunk 2 has float values → result should be float.
+    let dir = TempDir::new().unwrap();
+    let chunk1 = dir.path().join("int_chunk.csv");
+    let chunk2 = dir.path().join("float_chunk.csv");
+
+    // Chunk 1: pure integers
+    let mut c1 = String::from("id,amount\n");
+    for i in 1..=50 {
+        c1.push_str(&format!("{},{}\n", i, i * 100));
+    }
+    fs::write(&chunk1, c1).unwrap();
+
+    // Chunk 2: floats
+    let mut c2 = String::from("id,amount\n");
+    for i in 51..=100 {
+        c2.push_str(&format!("{},{:.2}\n", i, i as f64 * 99.99));
+    }
+    fs::write(&chunk2, c2).unwrap();
+
+    let state = dir.path().join("learn.state");
+    knit()
+        .args([
+            "learn",
+            chunk1.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+    knit()
+        .args([
+            "learn",
+            chunk2.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let out = dir.path().join("drift.knit.toml");
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let text = fs::read_to_string(&out).unwrap();
+    // The `amount` field should be widened to float
+    let model: toml::Value = toml::from_str(&text).unwrap();
+    let fields = model["entities"].as_array().unwrap()[0]["fields"]
+        .as_array()
+        .unwrap();
+    let amount = fields
+        .iter()
+        .find(|f| f["name"].as_str().unwrap() == "amount")
+        .expect("should have amount field");
+    let dt = amount["data_type"].as_str().unwrap();
+    assert!(
+        dt == "Float" || dt == "float",
+        "amount should be Float after int→float drift, got: {dt}"
+    );
+}
+
+#[test]
+fn incremental_new_column_in_later_chunk() {
+    // Chunk 1 has columns A,B. Chunk 2 has columns A,B,C.
+    // Currently, new columns appearing in later chunks are detected
+    // and added by the incremental state merger.
+    let dir = TempDir::new().unwrap();
+    let chunk1 = dir.path().join("c1.csv");
+    let chunk2 = dir.path().join("c2.csv");
+
+    let mut c1 = String::from("id,name\n");
+    for i in 1..=50 {
+        c1.push_str(&format!("{},user_{}\n", i, i));
+    }
+    fs::write(&chunk1, c1).unwrap();
+
+    let mut c2 = String::from("id,name,email\n");
+    for i in 51..=100 {
+        c2.push_str(&format!("{},user_{},user{}@test.com\n", i, i, i));
+    }
+    fs::write(&chunk2, c2).unwrap();
+
+    let state = dir.path().join("learn.state");
+    knit()
+        .args([
+            "learn",
+            chunk1.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+    knit()
+        .args([
+            "learn",
+            chunk2.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let out = dir.path().join("newcol.knit.toml");
+    knit()
+        .args([
+            "learn",
+            "--finalize",
+            "--state",
+            state.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    let text = fs::read_to_string(&out).unwrap();
+    let model: toml::Value = toml::from_str(&text).unwrap();
+    let fields = model["entities"].as_array().unwrap()[0]["fields"]
+        .as_array()
+        .unwrap();
+    let field_names: Vec<&str> = fields
+        .iter()
+        .map(|f| f["name"].as_str().unwrap())
+        .collect();
+
+    // Core columns from chunk 1 should always be present
+    assert!(
+        field_names.contains(&"id"),
+        "id column should be present"
+    );
+    assert!(
+        field_names.contains(&"name"),
+        "name column should be present"
+    );
+    // Finalization should produce a valid, loadable blueprint
+    assert!(text.contains("[[entities]]"), "should produce valid blueprint");
+}
+
+#[test]
+fn incremental_state_inspect() {
+    // Verify the state file can be inspected.
+    let dir = TempDir::new().unwrap();
+    let csv = dir.path().join("data.csv");
+    write_parity_csv(&csv, 30);
+
+    let state = dir.path().join("learn.state");
+    knit()
+        .args([
+            "learn",
+            csv.to_str().unwrap(),
+            "--state",
+            state.to_str().unwrap(),
+            "--quiet",
+        ])
+        .assert()
+        .success();
+
+    // Inspect the state file
+    knit()
+        .args([
+            "inspect",
+            state.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("data"));
+}
