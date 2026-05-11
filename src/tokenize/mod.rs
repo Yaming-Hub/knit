@@ -35,6 +35,10 @@ pub struct TokenizeConfig {
     pub tokenize_columns: Option<HashSet<String>>,
     /// Blacklist: tokenize all columns except these (case-insensitive).
     pub preserve_columns: Option<HashSet<String>>,
+    /// Override for native Parquet temporal shift (in days).
+    /// Set during restore to the inverse of the original shift.
+    /// When `None` and `tokenize_dates` is true, computed from seed.
+    pub native_date_shift: Option<i64>,
 }
 
 impl Default for TokenizeConfig {
@@ -47,6 +51,7 @@ impl Default for TokenizeConfig {
             preserve_partitions: true,
             tokenize_columns: None,
             preserve_columns: None,
+            native_date_shift: None,
         }
     }
 }
@@ -205,9 +210,13 @@ pub fn restore(
 
     // Always enable header and number rewriting during restore — if they weren't
     // tokenized, they won't be in the inverse map and remain unchanged.
+    // Enable date shifting with inverse offset to reverse native temporal shifts.
+    let native_date_shift = dict.date_shift_days.map(|d| -d);
     let config = TokenizeConfig {
         tokenize_headers: true,
         tokenize_numbers: true,
+        tokenize_dates: dict.date_shift_days.is_some(),
+        native_date_shift,
         tokenize_columns,
         preserve_columns,
         ..Default::default()

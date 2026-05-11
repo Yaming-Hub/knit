@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::tokenize::mapper::TokenMapper;
-use crate::tokenize::TokenizeConfig;
+use crate::tokenize::{scanner, TokenizeConfig};
 
 /// The token dictionary file format.
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,6 +21,10 @@ pub struct TokenDictionary {
     /// Column filter policy used during tokenization.
     #[serde(default, skip_serializing_if = "is_default_column_filter")]
     pub column_filter: ColumnFilter,
+    /// Date shift offset in days (set when --tokenize-dates was used).
+    /// Used during restore to reverse native Parquet temporal column shifts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub date_shift_days: Option<i64>,
     /// The token mappings (original → token), sorted for deterministic output.
     pub tokens: BTreeMap<String, String>,
 }
@@ -69,6 +73,12 @@ impl TokenDictionary {
             }),
         };
 
+        let date_shift_days = if config.tokenize_dates {
+            Some(scanner::compute_date_shift(config.seed))
+        } else {
+            None
+        };
+
         Self {
             version: 1,
             seed: config.seed,
@@ -76,6 +86,7 @@ impl TokenDictionary {
                 unique_tokens: tokens.len(),
             },
             column_filter,
+            date_shift_days,
             tokens,
         }
     }
@@ -118,6 +129,7 @@ mod tests {
             seed: 42,
             stats: DictionaryStats { unique_tokens: 2 },
             column_filter: ColumnFilter::default(),
+            date_shift_days: None,
             tokens,
         };
 
@@ -143,6 +155,7 @@ mod tests {
                 tokenize_columns: Some(vec!["name".to_string(), "email".to_string()]),
                 preserve_columns: None,
             },
+            date_shift_days: None,
             tokens: BTreeMap::new(),
         };
 
@@ -163,6 +176,7 @@ mod tests {
             seed: 42,
             stats: DictionaryStats { unique_tokens: 0 },
             column_filter: ColumnFilter::default(),
+            date_shift_days: None,
             tokens: BTreeMap::new(),
         };
 

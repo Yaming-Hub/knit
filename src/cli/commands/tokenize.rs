@@ -100,6 +100,7 @@ fn run_tokenize(
         preserve_partitions,
         tokenize_columns,
         preserve_columns,
+        native_date_shift: None,
     };
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;

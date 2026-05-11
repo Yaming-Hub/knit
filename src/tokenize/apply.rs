@@ -378,8 +378,12 @@ fn apply_parquet(
         schema.clone()
     };
 
-    // Compute date shift for native timestamp columns
-    let date_shift = if config.tokenize_dates {
+    // Compute date shift for native timestamp columns.
+    // Use explicit override (e.g., inverse shift during restore) if set,
+    // otherwise compute from seed.
+    let date_shift = if let Some(shift) = config.native_date_shift {
+        Some(shift)
+    } else if config.tokenize_dates {
         Some(super::scanner::compute_date_shift(config.seed))
     } else {
         None
@@ -464,17 +468,18 @@ fn shift_native_temporal(
             let arr = col.as_any().downcast_ref::<Date32Array>()?;
             let shifted: Date32Array = arr
                 .iter()
-                .map(|opt| opt.map(|days| days + shift_days as i32))
+                .map(|opt| opt.map(|days| days.saturating_add(shift_days as i32)))
                 .collect();
             Some(Arc::new(shifted))
         }
         DataType::Date64 => {
             // Date64: milliseconds since Unix epoch
             let ms_per_day = 86_400_000i64;
+            let offset = shift_days.saturating_mul(ms_per_day);
             let arr = col.as_any().downcast_ref::<Date64Array>()?;
             let shifted: Date64Array = arr
                 .iter()
-                .map(|opt| opt.map(|ms| ms + shift_days * ms_per_day))
+                .map(|opt| opt.map(|ms| ms.saturating_add(offset)))
                 .collect();
             Some(Arc::new(shifted))
         }
@@ -482,38 +487,38 @@ fn shift_native_temporal(
             let tz = tz.clone();
             match unit {
                 arrow::datatypes::TimeUnit::Second => {
-                    let secs_per_day = 86_400i64;
+                    let offset = shift_days.saturating_mul(86_400);
                     let arr = col.as_any().downcast_ref::<TimestampSecondArray>()?;
                     let shifted: PrimitiveArray<arrow::datatypes::TimestampSecondType> = arr
                         .iter()
-                        .map(|opt| opt.map(|s| s + shift_days * secs_per_day))
+                        .map(|opt| opt.map(|s| s.saturating_add(offset)))
                         .collect();
                     Some(Arc::new(shifted.with_timezone_opt(tz)))
                 }
                 arrow::datatypes::TimeUnit::Millisecond => {
-                    let ms_per_day = 86_400_000i64;
+                    let offset = shift_days.saturating_mul(86_400_000);
                     let arr = col.as_any().downcast_ref::<TimestampMillisecondArray>()?;
                     let shifted: PrimitiveArray<arrow::datatypes::TimestampMillisecondType> = arr
                         .iter()
-                        .map(|opt| opt.map(|ms| ms + shift_days * ms_per_day))
+                        .map(|opt| opt.map(|ms| ms.saturating_add(offset)))
                         .collect();
                     Some(Arc::new(shifted.with_timezone_opt(tz)))
                 }
                 arrow::datatypes::TimeUnit::Microsecond => {
-                    let us_per_day = 86_400_000_000i64;
+                    let offset = shift_days.saturating_mul(86_400_000_000);
                     let arr = col.as_any().downcast_ref::<TimestampMicrosecondArray>()?;
                     let shifted: PrimitiveArray<arrow::datatypes::TimestampMicrosecondType> = arr
                         .iter()
-                        .map(|opt| opt.map(|us| us + shift_days * us_per_day))
+                        .map(|opt| opt.map(|us| us.saturating_add(offset)))
                         .collect();
                     Some(Arc::new(shifted.with_timezone_opt(tz)))
                 }
                 arrow::datatypes::TimeUnit::Nanosecond => {
-                    let ns_per_day = 86_400_000_000_000i64;
+                    let offset = shift_days.saturating_mul(86_400_000_000_000);
                     let arr = col.as_any().downcast_ref::<TimestampNanosecondArray>()?;
                     let shifted: PrimitiveArray<arrow::datatypes::TimestampNanosecondType> = arr
                         .iter()
-                        .map(|opt| opt.map(|ns| ns + shift_days * ns_per_day))
+                        .map(|opt| opt.map(|ns| ns.saturating_add(offset)))
                         .collect();
                     Some(Arc::new(shifted.with_timezone_opt(tz)))
                 }
