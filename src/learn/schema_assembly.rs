@@ -112,6 +112,8 @@ pub struct ColumnAnalysis {
     pub is_actor_column: bool,
     /// Source data statistics for this column (populated during profiling).
     pub stats: Option<crate::core::ColumnStats>,
+    /// Auto-detected qualitative traits for this column.
+    pub traits: Option<crate::core::FieldTraits>,
 }
 
 impl ColumnAnalysis {
@@ -135,6 +137,7 @@ impl ColumnAnalysis {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         }
     }
 
@@ -295,6 +298,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
                 actor_column: false,
                 fields: vec![],
                 stats: col.stats.clone(),
+                traits: col.traits.clone(),
             });
             continue;
         }
@@ -341,6 +345,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
                     actor_column: false,
                     fields: vec![],
                     stats: col.stats.clone(),
+                    traits: col.traits.clone(),
                 });
                 continue;
             }
@@ -364,6 +369,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             actor_column: false,
             fields: vec![],
             stats: col.stats.clone(),
+            traits: col.traits.clone(),
         });
     }
 
@@ -1600,6 +1606,7 @@ mod tests {
                     max_decimal_places: None,
                     is_actor_column: false,
                     stats: None,
+                    traits: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -1619,6 +1626,7 @@ mod tests {
                     max_decimal_places: None,
                     is_actor_column: false,
                     stats: None,
+                    traits: None,
                 },
             ],
             relationships: vec![],
@@ -1663,6 +1671,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -1710,6 +1719,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1756,6 +1766,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1882,6 +1893,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1921,6 +1933,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1964,6 +1977,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -1989,6 +2003,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
@@ -2014,6 +2029,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -2043,6 +2059,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -2074,6 +2091,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2112,6 +2130,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2179,6 +2198,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2203,6 +2223,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int);
     }
@@ -2227,6 +2248,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2260,6 +2282,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::DatetimeUs);
     }
@@ -2293,6 +2316,7 @@ mod tests {
             max_decimal_places: None,
             is_actor_column: false,
             stats: None,
+            traits: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Datetime);
     }
@@ -2314,6 +2338,7 @@ mod tests {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             },
             Field {
                 name: "EndDate".into(),
@@ -2329,6 +2354,7 @@ mod tests {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -2351,6 +2377,7 @@ mod tests {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             },
             Field {
                 name: "end_balance".into(),
@@ -2363,6 +2390,7 @@ mod tests {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -2390,6 +2418,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             },
             ColumnAnalysis {
                 name: "EndDate".into(),
@@ -2409,6 +2438,7 @@ mod tests {
                 max_decimal_places: None,
                 is_actor_column: false,
                 stats: None,
+                traits: None,
             },
         ];
         let mut fields = vec![
@@ -2426,6 +2456,7 @@ mod tests {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             },
             Field {
                 name: "EndDate".into(),
@@ -2441,6 +2472,7 @@ mod tests {
                 actor_column: false,
                 fields: vec![],
                 stats: None,
+                traits: None,
             },
         ];
         rewrite_temporal_pairs(&mut fields, &cols);
@@ -2535,6 +2567,7 @@ mod tests {
             actor_column: false,
             fields: vec![],
             stats: None,
+            traits: None,
         }];
         let scores = vec![("user_id".to_string(), 0.95)];
         assert!(is_actor_entity("some_table", &scores, &fields));

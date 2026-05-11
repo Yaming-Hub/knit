@@ -234,6 +234,7 @@ mod tests {
                         actor_column: false,
                         fields: vec![],
                 stats: None,
+                traits: None,
                     },
                     Field {
                         name: "score".to_string(),
@@ -256,6 +257,7 @@ mod tests {
                         actor_column: false,
                         fields: vec![],
                 stats: None,
+                traits: None,
                     },
                 ],
                 constraints: vec![],

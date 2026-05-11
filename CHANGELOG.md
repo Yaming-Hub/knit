@@ -6,6 +6,15 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Source data statistics** — `knit learn` now populates `[stats]` sections on
+  both fields and entities. Field stats include numeric summaries (min/max/mean/std
+  /percentiles), string lengths, temporal ranges, and top values. Entity stats
+  capture `source_rows` and optional per-partition row distribution.
+- **Auto-detected field traits** — `knit learn` detects qualitative column traits:
+  `semantic` (email, uuid, date, integer, float, categorical, etc.), `pii` (true
+  for email/phone/name patterns), `cardinality` (low/medium/high/unique),
+  `distribution_shape` (uniform/normal/skewed/long_tail). Traits are metadata-only
+  and stored alongside stats in the learned model.
 - **Output folder hierarchy** — `knit learn` captures the source dataset's
   directory layout (e.g. `Entity/Results/`) and `knit generate` reproduces
   the same folder structure in output via the new `[entities.output]` section.
