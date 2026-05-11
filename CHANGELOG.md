@@ -6,6 +6,10 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Native Parquet timestamp shifting** — The `--tokenize-dates` flag now shifts
+  native Arrow temporal columns (Date32, Date64, Timestamp with second/ms/µs/ns
+  precision) in Parquet files, not just string-encoded dates. Uses the same
+  deterministic offset (±5 years from `--seed`). Timezone metadata is preserved.
 - **Smart value naming for scaled dimensions** — When expanding custom dimensions
   (e.g., `--dim region=20`), new values are now generated using semantically
   appropriate names instead of generic indexed placeholders. The naming strategy

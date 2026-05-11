@@ -378,6 +378,13 @@ fn apply_parquet(
         schema.clone()
     };
 
+    // Compute date shift for native timestamp columns
+    let date_shift = if config.tokenize_dates {
+        Some(super::scanner::compute_date_shift(config.seed))
+    } else {
+        None
+    };
+
     let out_file = std::fs::File::create(out)?;
     let mut writer = ArrowWriter::try_new(out_file, output_schema.clone(), None)?;
 
@@ -416,8 +423,15 @@ fn apply_parquet(
                     })
                     .collect();
                 columns.push(Arc::new(tokenized));
+            } else if let Some(shift) = date_shift {
+                // Attempt native timestamp/date shifting
+                if let Some(shifted) = shift_native_temporal(col, shift) {
+                    columns.push(shifted);
+                } else {
+                    columns.push(col.clone());
+                }
             } else {
-                // Non-string columns: pass through unchanged
+                // Non-string, non-temporal columns: pass through unchanged
                 columns.push(col.clone());
             }
         }
@@ -427,6 +441,86 @@ fn apply_parquet(
     }
     writer.close()?;
     Ok(())
+}
+
+/// Shift native Arrow temporal columns (Date32, Date64, Timestamp) by `shift_days`.
+///
+/// Returns `Some(shifted_array)` if the column is a supported temporal type,
+/// `None` otherwise (indicating the column should be passed through unchanged).
+fn shift_native_temporal(
+    col: &dyn arrow::array::Array,
+    shift_days: i64,
+) -> Option<std::sync::Arc<dyn arrow::array::Array>> {
+    use arrow::array::{
+        Date32Array, Date64Array, PrimitiveArray, TimestampMicrosecondArray,
+        TimestampMillisecondArray, TimestampNanosecondArray, TimestampSecondArray,
+    };
+    use arrow::datatypes::DataType;
+    use std::sync::Arc;
+
+    match col.data_type() {
+        DataType::Date32 => {
+            // Date32: days since Unix epoch
+            let arr = col.as_any().downcast_ref::<Date32Array>()?;
+            let shifted: Date32Array = arr
+                .iter()
+                .map(|opt| opt.map(|days| days + shift_days as i32))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Date64 => {
+            // Date64: milliseconds since Unix epoch
+            let ms_per_day = 86_400_000i64;
+            let arr = col.as_any().downcast_ref::<Date64Array>()?;
+            let shifted: Date64Array = arr
+                .iter()
+                .map(|opt| opt.map(|ms| ms + shift_days * ms_per_day))
+                .collect();
+            Some(Arc::new(shifted))
+        }
+        DataType::Timestamp(unit, tz) => {
+            let tz = tz.clone();
+            match unit {
+                arrow::datatypes::TimeUnit::Second => {
+                    let secs_per_day = 86_400i64;
+                    let arr = col.as_any().downcast_ref::<TimestampSecondArray>()?;
+                    let shifted: PrimitiveArray<arrow::datatypes::TimestampSecondType> = arr
+                        .iter()
+                        .map(|opt| opt.map(|s| s + shift_days * secs_per_day))
+                        .collect();
+                    Some(Arc::new(shifted.with_timezone_opt(tz)))
+                }
+                arrow::datatypes::TimeUnit::Millisecond => {
+                    let ms_per_day = 86_400_000i64;
+                    let arr = col.as_any().downcast_ref::<TimestampMillisecondArray>()?;
+                    let shifted: PrimitiveArray<arrow::datatypes::TimestampMillisecondType> = arr
+                        .iter()
+                        .map(|opt| opt.map(|ms| ms + shift_days * ms_per_day))
+                        .collect();
+                    Some(Arc::new(shifted.with_timezone_opt(tz)))
+                }
+                arrow::datatypes::TimeUnit::Microsecond => {
+                    let us_per_day = 86_400_000_000i64;
+                    let arr = col.as_any().downcast_ref::<TimestampMicrosecondArray>()?;
+                    let shifted: PrimitiveArray<arrow::datatypes::TimestampMicrosecondType> = arr
+                        .iter()
+                        .map(|opt| opt.map(|us| us + shift_days * us_per_day))
+                        .collect();
+                    Some(Arc::new(shifted.with_timezone_opt(tz)))
+                }
+                arrow::datatypes::TimeUnit::Nanosecond => {
+                    let ns_per_day = 86_400_000_000_000i64;
+                    let arr = col.as_any().downcast_ref::<TimestampNanosecondArray>()?;
+                    let shifted: PrimitiveArray<arrow::datatypes::TimestampNanosecondType> = arr
+                        .iter()
+                        .map(|opt| opt.map(|ns| ns + shift_days * ns_per_day))
+                        .collect();
+                    Some(Arc::new(shifted.with_timezone_opt(tz)))
+                }
+            }
+        }
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -1045,5 +1139,150 @@ mod tests {
         assert!(content.contains("Smith"));
         // email should be tokenized
         assert!(!content.contains("alice@test.com"));
+    }
+
+    #[test]
+    fn test_shift_native_date32() {
+        use arrow::array::{Array, Date32Array};
+        let arr = Date32Array::from(vec![Some(19000), Some(19100), None]);
+        let shifted = shift_native_temporal(&arr, 10).unwrap();
+        let result = shifted
+            .as_any()
+            .downcast_ref::<Date32Array>()
+            .unwrap();
+        assert_eq!(result.value(0), 19010);
+        assert_eq!(result.value(1), 19110);
+        assert!(result.is_null(2));
+    }
+
+    #[test]
+    fn test_shift_native_date64() {
+        use arrow::array::{Array, Date64Array};
+        let ms_per_day = 86_400_000i64;
+        let arr = Date64Array::from(vec![Some(1_000 * ms_per_day), None]);
+        let shifted = shift_native_temporal(&arr, -5).unwrap();
+        let result = shifted
+            .as_any()
+            .downcast_ref::<Date64Array>()
+            .unwrap();
+        assert_eq!(result.value(0), 995 * ms_per_day);
+        assert!(result.is_null(1));
+    }
+
+    #[test]
+    fn test_shift_native_timestamp_us() {
+        use arrow::array::TimestampMicrosecondArray;
+        let us_per_day = 86_400_000_000i64;
+        let arr = TimestampMicrosecondArray::from(vec![Some(100 * us_per_day), Some(200 * us_per_day)]);
+        let shifted = shift_native_temporal(&arr, 7).unwrap();
+        let result = shifted
+            .as_any()
+            .downcast_ref::<TimestampMicrosecondArray>()
+            .unwrap();
+        assert_eq!(result.value(0), 107 * us_per_day);
+        assert_eq!(result.value(1), 207 * us_per_day);
+    }
+
+    #[test]
+    fn test_shift_non_temporal_returns_none() {
+        use arrow::array::Int32Array;
+        let arr = Int32Array::from(vec![1, 2, 3]);
+        assert!(shift_native_temporal(&arr, 10).is_none());
+    }
+
+    #[test]
+    fn test_apply_parquet_native_timestamps() {
+        use arrow::array::{Array, Date32Array, StringArray, TimestampMicrosecondArray};
+        use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
+        use arrow::record_batch::RecordBatch;
+        use parquet::arrow::ArrowWriter;
+        use std::sync::Arc;
+
+        let dir = TempDir::new().unwrap();
+        let src = dir.path().join("input.parquet");
+
+        // Create a Parquet file with string, Date32, and Timestamp columns
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("name", DataType::Utf8, false),
+            Field::new("birth_date", DataType::Date32, true),
+            Field::new("created_at", DataType::Timestamp(TimeUnit::Microsecond, None), true),
+        ]));
+
+        let names = StringArray::from(vec!["Alice", "Bob"]);
+        let dates = Date32Array::from(vec![Some(19000), Some(19100)]);
+        let us_per_day = 86_400_000_000i64;
+        let timestamps = TimestampMicrosecondArray::from(vec![
+            Some(100 * us_per_day),
+            Some(200 * us_per_day),
+        ]);
+
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(names), Arc::new(dates), Arc::new(timestamps)],
+        )
+        .unwrap();
+
+        let file = std::fs::File::create(&src).unwrap();
+        let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        // Tokenize with date shifting enabled
+        let mut mapper = TokenMapper::new(42);
+        mapper.register("Alice");
+        mapper.register("Bob");
+
+        let config = TokenizeConfig {
+            tokenize_dates: true,
+            seed: 42,
+            ..TokenizeConfig::default()
+        };
+
+        let entry = FileEntry {
+            rel_path: "input.parquet".into(),
+            kind: crate::tokenize::scanner::FileKind::Data,
+            format: FileFormat::Parquet,
+        };
+
+        let out_file = dir.path().join("output.parquet");
+        apply_data_file(&entry, dir.path(), &out_file, &mapper, &config).unwrap();
+
+        // Read output and verify dates were shifted
+        let file = std::fs::File::open(&out_file).unwrap();
+        let reader = parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+
+        let shift = super::super::scanner::compute_date_shift(42);
+
+        for batch in reader {
+            let batch = batch.unwrap();
+            let date_col = batch
+                .column(1)
+                .as_any()
+                .downcast_ref::<Date32Array>()
+                .unwrap();
+            // Dates should be shifted
+            assert_eq!(date_col.value(0), 19000 + shift as i32);
+            assert_eq!(date_col.value(1), 19100 + shift as i32);
+
+            let ts_col = batch
+                .column(2)
+                .as_any()
+                .downcast_ref::<TimestampMicrosecondArray>()
+                .unwrap();
+            assert_eq!(ts_col.value(0), 100 * us_per_day + shift * 86_400_000_000);
+            assert_eq!(ts_col.value(1), 200 * us_per_day + shift * 86_400_000_000);
+
+            // String column should be tokenized (not original values)
+            let name_col = batch
+                .column(0)
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap();
+            assert_ne!(name_col.value(0), "Alice");
+            assert_ne!(name_col.value(1), "Bob");
+        }
     }
 }
