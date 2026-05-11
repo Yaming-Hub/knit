@@ -390,6 +390,7 @@ The following features are implemented and available via `knit scale`:
 | `--count Nx` | ✅ | Uniform multiplier on top of dimensional scaling |
 | `--analyze --json` | ✅ | Machine-readable JSON output for analysis |
 | `--dry-run` size estimate | ✅ | Per-entity and total estimated output size |
+| Smart dimension naming | ✅ | Auto-detected naming strategy (country codes, words, indexed) |
 | FK-root actor heuristic | ✅ | Selects entity with most incoming FKs |
 
 **Architecture (as implemented):**
@@ -407,5 +408,4 @@ generation pipeline (format selection, partitioning, output writing).
 
 ### Deferred to v2
 
-- Smart value naming (faker-based) for expanded custom dimensions
 - Constraint propagation for cross-entity dimension fields

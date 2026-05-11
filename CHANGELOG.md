@@ -6,6 +6,13 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Smart value naming for scaled dimensions** — When expanding custom dimensions
+  (e.g., `--dim region=20`), new values are now generated using semantically
+  appropriate names instead of generic indexed placeholders. The naming strategy
+  is auto-detected from existing values: 2-letter uppercase → ISO country codes
+  (e.g., `JP`, `BR`), capitalized words → category pool (e.g., `Furniture`,
+  `Healthcare`), indexed prefix pattern → sequential continuation, fallback →
+  generic `value_N`. Built-in pools include 60 country codes and 60 category words.
 - **Estimated output size in `--dry-run`** — The `knit scale --dry-run` command now
   shows per-entity estimated output sizes and a total estimate. Size estimation uses
   heuristic bytes-per-field based on data type (e.g., UUID=36, Int=8, String=20).

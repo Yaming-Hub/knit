@@ -5,6 +5,7 @@
 //! DataModel so the generate pipeline produces the scaled output.
 
 pub mod analyze;
+pub mod naming;
 pub mod time;
 
 use std::collections::BTreeMap;
@@ -358,7 +359,7 @@ fn expand_oneof_values(
         return sorted;
     }
 
-    // Upscale: keep existing, add new with average weight
+    // Upscale: keep existing, add new with smart naming
     let existing_total: f64 = existing.iter().map(|(_, w)| w).sum();
     let avg_weight = if existing.is_empty() {
         1.0
@@ -366,20 +367,13 @@ fn expand_oneof_values(
         existing_total / existing.len() as f64
     };
 
-    let mut result: Vec<(String, f64)> = existing.to_vec();
-    let prefix = if let Some((first, _)) = existing.first() {
-        // Try to extract a base name (e.g., "US" → "value")
-        if first.chars().all(|c| c.is_uppercase() || c.is_ascii_digit()) {
-            "value".to_string()
-        } else {
-            first.clone()
-        }
-    } else {
-        "value".to_string()
-    };
+    let new_count = target - existing.len();
+    let strategy = naming::detect_strategy(existing);
+    let new_names = naming::generate_values(&strategy, existing, new_count);
 
-    for i in existing.len()..target {
-        result.push((format!("{}_{}", prefix, i + 1), avg_weight));
+    let mut result: Vec<(String, f64)> = existing.to_vec();
+    for name in new_names {
+        result.push((name, avg_weight));
     }
 
     // Normalize weights
@@ -535,8 +529,9 @@ mod tests {
         let result = expand_oneof_values(&existing, 5);
         assert_eq!(result.len(), 5);
         assert_eq!(result[0].0, "US");
-        assert_eq!(result[3].0, "value_4");
-        assert_eq!(result[4].0, "value_5");
+        // Smart naming: mixed uppercase codes → Generic strategy → "value_N"
+        assert_eq!(result[3].0, "value_1");
+        assert_eq!(result[4].0, "value_2");
         let total: f64 = result.iter().map(|(_, w)| w).sum();
         assert!((total - 1.0).abs() < 1e-9);
     }
@@ -561,6 +556,48 @@ mod tests {
         let existing = vec![("X".to_string(), 0.5), ("Y".to_string(), 0.5)];
         let result = expand_oneof_values(&existing, 2);
         assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_expand_oneof_country_codes() {
+        // 2-letter country codes should use the country code pool
+        let existing = vec![
+            ("US".to_string(), 0.5),
+            ("GB".to_string(), 0.3),
+            ("DE".to_string(), 0.2),
+        ];
+        let result = expand_oneof_values(&existing, 8);
+        assert_eq!(result.len(), 8);
+        // First 3 are original
+        assert_eq!(result[0].0, "US");
+        assert_eq!(result[1].0, "GB");
+        assert_eq!(result[2].0, "DE");
+        // New values should be real country codes, not "value_N"
+        for (name, _) in &result[3..] {
+            assert_eq!(name.len(), 2);
+            assert!(name.chars().all(|c| c.is_ascii_uppercase()));
+            assert_ne!(name, "US");
+            assert_ne!(name, "GB");
+            assert_ne!(name, "DE");
+        }
+    }
+
+    #[test]
+    fn test_expand_oneof_capitalized_words() {
+        let existing = vec![
+            ("Electronics".to_string(), 0.6),
+            ("Clothing".to_string(), 0.4),
+        ];
+        let result = expand_oneof_values(&existing, 5);
+        assert_eq!(result.len(), 5);
+        assert_eq!(result[0].0, "Electronics");
+        assert_eq!(result[1].0, "Clothing");
+        // New values should be capitalized words from the pool
+        for (name, _) in &result[2..] {
+            assert!(name.chars().next().unwrap().is_ascii_uppercase());
+            assert_ne!(name, "Electronics");
+            assert_ne!(name, "Clothing");
+        }
     }
 
     #[test]
