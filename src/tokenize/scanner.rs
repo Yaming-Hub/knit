@@ -369,7 +369,6 @@ fn extract_parquet_strings(
         None
     };
 
-    let mut warned_native_numerics = false;
     for batch_result in reader {
         let batch = batch_result?;
 
@@ -408,21 +407,9 @@ fn extract_parquet_strings(
                         }
                     }
                 }
-            } else if config.tokenize_numbers && !warned_native_numerics {
-                use arrow::datatypes::DataType;
-                let dt = col.data_type();
-                if matches!(dt, DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64
-                    | DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64
-                    | DataType::Float16 | DataType::Float32 | DataType::Float64)
-                {
-                    tracing::warn!(
-                        file = %path.display(),
-                        "native numeric Parquet columns are not yet tokenized by --tokenize-numbers; \
-                         only string-encoded numbers are replaced"
-                    );
-                    warned_native_numerics = true;
-                }
             }
+            // Native numeric and temporal columns are handled in the apply phase
+            // (shift_native_temporal and shift_native_numeric in apply.rs)
         }
     }
     Ok(())
@@ -655,6 +642,20 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
     let offset: i64 = rng.gen_range(-1825..=1825);
     if offset == 0 { 1 } else { offset }
+}
+
+/// Compute a deterministic numeric shift for integer tokenization.
+/// Returns a pair (integer_offset, float_scale) used to shift native numeric columns.
+/// Integer offset is ±10000..100000, float scale is 0.5..2.0 (never 1.0).
+pub(crate) fn compute_numeric_shift(seed: u64) -> (i64, f64) {
+    use rand::rngs::StdRng;
+    use rand::{Rng, SeedableRng};
+    let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
+    let int_offset: i64 = rng.gen_range(-100_000..=100_000);
+    let int_offset = if int_offset == 0 { 1 } else { int_offset };
+    let float_scale: f64 = rng.gen_range(0.5..2.0);
+    let float_scale = if (float_scale - 1.0).abs() < 0.01 { 1.1 } else { float_scale };
+    (int_offset, float_scale)
 }
 
 /// Register a date string with its shifted value in the mapper.
@@ -1025,5 +1026,24 @@ mod tests {
         assert!(config.should_tokenize_column("name"));
         assert!(!config.should_tokenize_column("country"));
         assert!(!config.should_tokenize_column("Country")); // case-insensitive
+    }
+
+    #[test]
+    fn test_compute_numeric_shift_deterministic() {
+        let (i1, f1) = compute_numeric_shift(42);
+        let (i2, f2) = compute_numeric_shift(42);
+        assert_eq!(i1, i2);
+        assert_eq!(f1, f2);
+        // Non-zero
+        assert_ne!(i1, 0);
+        assert!((f1 - 1.0).abs() >= 0.01);
+    }
+
+    #[test]
+    fn test_compute_numeric_shift_different_seeds() {
+        let (i1, _f1) = compute_numeric_shift(42);
+        let (i2, _f2) = compute_numeric_shift(99);
+        // Very unlikely to produce the same offset with different seeds
+        assert_ne!(i1, i2);
     }
 }
