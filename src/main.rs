@@ -236,6 +236,7 @@ fn main() -> anyhow::Result<()> {
             *preserve_partitions,
             tokenize_columns.clone(),
             preserve_columns.clone(),
+            cli.json,
         ),
         Command::Enrich {
             blueprint,

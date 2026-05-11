@@ -21,6 +21,7 @@ pub fn run(
     preserve_partitions: bool,
     tokenize_columns: Option<Vec<String>>,
     preserve_columns: Option<Vec<String>>,
+    json_output: bool,
 ) -> Result<()> {
     let input_path = Path::new(input);
     let output_path = Path::new(output);
@@ -39,11 +40,11 @@ pub fn run(
     }
 
     if restore_mode {
-        return run_restore(input_path, output_path, dictionary);
+        return run_restore(input_path, output_path, dictionary, json_output);
     }
 
     if let Some(verify) = verify_path {
-        return run_verify(input_path, Path::new(verify));
+        return run_verify(input_path, Path::new(verify), json_output);
     }
 
     // Normalize column filter into HashSets (lowercase, trimmed, deduped)
@@ -61,6 +62,7 @@ pub fn run(
         preserve_partitions,
         tokenize_cols,
         preserve_cols,
+        json_output,
     )
 }
 
@@ -84,6 +86,7 @@ fn run_tokenize(
     preserve_partitions: bool,
     tokenize_columns: Option<HashSet<String>>,
     preserve_columns: Option<HashSet<String>>,
+    json_output: bool,
 ) -> Result<()> {
     let dict_path = dictionary
         .map(PathBuf::from)
@@ -100,11 +103,11 @@ fn run_tokenize(
     };
 
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;
-    print_result(&result, &dict_path, &config);
+    print_result(&result, &dict_path, &config, json_output);
     Ok(())
 }
 
-fn run_restore(input: &Path, output: &Path, dictionary: Option<&str>) -> Result<()> {
+fn run_restore(input: &Path, output: &Path, dictionary: Option<&str>, json_output: bool) -> Result<()> {
     let dict_path = dictionary
         .map(PathBuf::from)
         .unwrap_or_else(|| input.join(".knit-tokens.json"));
@@ -118,18 +121,30 @@ fn run_restore(input: &Path, output: &Path, dictionary: Option<&str>) -> Result<
 
     let result = tokenize::restore(input, output, &dict_path)?;
 
-    println!("═══ Restore Complete ═══");
-    println!("  data files:       {}", result.data_files);
-    println!("  schema files:     {}", result.schema_files);
-    println!("  dictionary files: {}", result.dictionary_files);
-    println!("  companion files:  {}", result.companion_files);
-    println!("  tokens applied:   {}", result.unique_tokens);
-    println!();
-    println!("  Restored dataset: {}", output.display());
+    if json_output {
+        println!("{}", serde_json::json!({
+            "event": "restore_complete",
+            "data_files": result.data_files,
+            "schema_files": result.schema_files,
+            "dictionary_files": result.dictionary_files,
+            "companion_files": result.companion_files,
+            "unique_tokens": result.unique_tokens,
+            "output": output.display().to_string(),
+        }));
+    } else {
+        println!("═══ Restore Complete ═══");
+        println!("  data files:       {}", result.data_files);
+        println!("  schema files:     {}", result.schema_files);
+        println!("  dictionary files: {}", result.dictionary_files);
+        println!("  companion files:  {}", result.companion_files);
+        println!("  tokens applied:   {}", result.unique_tokens);
+        println!();
+        println!("  Restored dataset: {}", output.display());
+    }
     Ok(())
 }
 
-fn run_verify(original: &Path, tokenized: &Path) -> Result<()> {
+fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()> {
     use crate::tokenize::scanner::{scan_directory, FileKind};
 
     if !tokenized.exists() {
@@ -138,8 +153,6 @@ fn run_verify(original: &Path, tokenized: &Path) -> Result<()> {
 
     let orig_entries = scan_directory(original)?;
     let tok_entries = scan_directory(tokenized)?;
-
-    println!("═══ Verification ═══");
 
     // Check file count match (excluding .knit-tokens.json)
     let orig_data: Vec<_> = orig_entries.iter().filter(|e| e.kind == FileKind::Data).collect();
@@ -150,14 +163,9 @@ fn run_verify(original: &Path, tokenized: &Path) -> Result<()> {
         .collect();
 
     let file_match = orig_data.len() == tok_data.len();
-    println!(
-        "  file count:        {} (original: {}, tokenized: {})",
-        if file_match { "✓" } else { "✗" },
-        orig_data.len(),
-        tok_data.len()
-    );
 
     // Check row counts for CSV files
+    let mut row_mismatches: Vec<serde_json::Value> = Vec::new();
     let mut row_match = true;
     for orig in &orig_data {
         let orig_path = original.join(&orig.rel_path);
@@ -166,28 +174,60 @@ fn run_verify(original: &Path, tokenized: &Path) -> Result<()> {
             if let (Ok(o_count), Ok(t_count)) = (count_lines(&orig_path), count_lines(&tok_path)) {
                 if o_count != t_count {
                     row_match = false;
-                    println!(
-                        "    row mismatch: {} (orig={}, tok={})",
-                        orig.rel_path.display(),
-                        o_count,
-                        t_count
-                    );
+                    row_mismatches.push(serde_json::json!({
+                        "file": orig.rel_path.display().to_string(),
+                        "original": o_count,
+                        "tokenized": t_count,
+                    }));
                 }
             }
         }
     }
-    println!("  row counts:        {}", if row_match { "✓" } else { "✗" });
 
     // Check schema files preserved
     let orig_schemas: Vec<_> = orig_entries.iter().filter(|e| e.kind == FileKind::Schema).collect();
     let tok_schemas: Vec<_> = tok_entries.iter().filter(|e| e.kind == FileKind::Schema).collect();
     let schema_match = orig_schemas.len() == tok_schemas.len();
-    println!("  schema files:      {}", if schema_match { "✓" } else { "✗" });
 
-    if file_match && row_match && schema_match {
-        println!("\n  Structure verification passed.");
+    let passed = file_match && row_match && schema_match;
+
+    if json_output {
+        let mut json = serde_json::json!({
+            "event": "verify",
+            "passed": passed,
+            "file_count": { "match": file_match, "original": orig_data.len(), "tokenized": tok_data.len() },
+            "row_counts": { "match": row_match },
+            "schema_files": { "match": schema_match, "original": orig_schemas.len(), "tokenized": tok_schemas.len() },
+        });
+        if !row_mismatches.is_empty() {
+            json["row_counts"]["mismatches"] = serde_json::Value::Array(row_mismatches);
+        }
+        println!("{}", json);
     } else {
-        println!("\n  Structure verification FAILED.");
+        println!("═══ Verification ═══");
+        println!(
+            "  file count:        {} (original: {}, tokenized: {})",
+            if file_match { "✓" } else { "✗" },
+            orig_data.len(),
+            tok_data.len()
+        );
+
+        for m in &row_mismatches {
+            println!(
+                "    row mismatch: {} (orig={}, tok={})",
+                m["file"].as_str().unwrap_or("?"),
+                m["original"],
+                m["tokenized"]
+            );
+        }
+        println!("  row counts:        {}", if row_match { "✓" } else { "✗" });
+        println!("  schema files:      {}", if schema_match { "✓" } else { "✗" });
+
+        if passed {
+            println!("\n  Structure verification passed.");
+        } else {
+            println!("\n  Structure verification FAILED.");
+        }
     }
     Ok(())
 }
@@ -198,26 +238,49 @@ fn count_lines(path: &Path) -> Result<usize> {
     Ok(BufReader::new(file).lines().count())
 }
 
-fn print_result(result: &TokenizeResult, dict_path: &Path, config: &TokenizeConfig) {
-    println!("═══ Tokenization Complete ═══");
-    println!(
-        "  files:       {} data, {} schema, {} dictionary, {} companion",
-        result.data_files, result.schema_files, result.dictionary_files, result.companion_files
-    );
-    println!("  tokens:      {} unique string values → tokenized", result.unique_tokens);
+fn print_result(result: &TokenizeResult, dict_path: &Path, config: &TokenizeConfig, json_output: bool) {
+    if json_output {
+        let mut json = serde_json::json!({
+            "event": "tokenize_complete",
+            "data_files": result.data_files,
+            "schema_files": result.schema_files,
+            "dictionary_files": result.dictionary_files,
+            "companion_files": result.companion_files,
+            "unique_tokens": result.unique_tokens,
+            "dictionary": dict_path.display().to_string(),
+        });
+        if let Some(ref cols) = config.tokenize_columns {
+            let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
+            sorted.sort();
+            json["tokenize_columns"] = serde_json::json!(sorted);
+        }
+        if let Some(ref cols) = config.preserve_columns {
+            let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
+            sorted.sort();
+            json["preserve_columns"] = serde_json::json!(sorted);
+        }
+        println!("{}", json);
+    } else {
+        println!("═══ Tokenization Complete ═══");
+        println!(
+            "  files:       {} data, {} schema, {} dictionary, {} companion",
+            result.data_files, result.schema_files, result.dictionary_files, result.companion_files
+        );
+        println!("  tokens:      {} unique string values → tokenized", result.unique_tokens);
 
-    if let Some(ref cols) = config.tokenize_columns {
-        let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
-        sorted.sort();
-        println!("  columns:     only [{}]", sorted.join(", "));
-    } else if let Some(ref cols) = config.preserve_columns {
-        let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
-        sorted.sort();
-        println!("  preserved:   [{}]", sorted.join(", "));
+        if let Some(ref cols) = config.tokenize_columns {
+            let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
+            sorted.sort();
+            println!("  columns:     only [{}]", sorted.join(", "));
+        } else if let Some(ref cols) = config.preserve_columns {
+            let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();
+            sorted.sort();
+            println!("  preserved:   [{}]", sorted.join(", "));
+        }
+
+        println!("  dictionary:  {}", dict_path.display());
+        println!();
+        println!("The tokenized dataset is safe to share.");
+        println!("Keep the dictionary private — it can restore the original data.");
     }
-
-    println!("  dictionary:  {}", dict_path.display());
-    println!();
-    println!("The tokenized dataset is safe to share.");
-    println!("Keep the dictionary private — it can restore the original data.");
 }
