@@ -942,6 +942,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                 .confidence(crate::decision::Confidence::High)
                 .record();
         }
+        ca.stats = Some(build_column_stats(profile));
         return ca;
     }
 
@@ -965,6 +966,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
             ca.inferred_type = Some(InferredType::Categorical);
         }
         // Always return here for complex types (even if all-null)
+        ca.stats = Some(build_column_stats(profile));
         return ca;
     }
 
@@ -993,6 +995,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
                 weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                 ca.categorical_weights = Some(weights);
                 ca.is_integer_valued = false;
+                ca.stats = Some(build_column_stats(profile));
                 return ca;
             }
         }
@@ -1160,7 +1163,61 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     ca.temporal_range = temporal_range;
     ca.source_arrow_type = Some(profile.data_type.clone());
     ca.max_decimal_places = profile.numeric.as_ref().and_then(|n| n.max_decimal_places);
+
+    // Build column stats from the profile
+    ca.stats = Some(build_column_stats(profile));
+
     ca
+}
+
+/// Build [`ColumnStats`] from a [`ColumnProfile`].
+fn build_column_stats(profile: &ColumnProfile) -> crate::core::ColumnStats {
+    use crate::core::{ColumnStats, StatsPercentiles, TopValue};
+
+    let mut stats = ColumnStats {
+        distinct_count: profile.distinct_count,
+        null_rate: Some(profile.null_rate),
+        ..Default::default()
+    };
+
+    // Numeric stats
+    if let Some(ref num) = profile.numeric {
+        stats.min = Some(num.min);
+        stats.max = Some(num.max);
+        stats.mean = Some(num.mean);
+        stats.std = Some(num.std_dev);
+        stats.percentiles = Some(StatsPercentiles {
+            p25: num.percentiles.p25,
+            p50: num.percentiles.p50,
+            p75: num.percentiles.p75,
+            p95: num.percentiles.p95,
+            p99: num.percentiles.p99,
+        });
+    }
+
+    // String stats
+    if let Some(ref str_prof) = profile.string {
+        stats.min_length = Some(str_prof.min_length as u32);
+        stats.max_length = Some(str_prof.max_length as u32);
+        stats.avg_length = Some(str_prof.avg_length);
+    }
+
+    // Categorical top values (from categorical_weights if available in profile)
+    // For batch learn, we extract top values from the cardinality tracker
+    if let Some(ref str_prof) = profile.string {
+        if !str_prof.patterns.is_empty() {
+            // Patterns are stored as (pattern, match_rate) — not the same as top_values.
+            // We don't have top-k in batch profiling, so skip for now.
+        }
+    }
+
+    // Temporal stats
+    if let Some(ref temp) = profile.temporal {
+        stats.min_temporal = Some(temp.min.clone());
+        stats.max_temporal = Some(temp.max.clone());
+    }
+
+    stats
 }
 
 /// Extract f64 values from a numeric column in a record batch.

@@ -216,9 +216,9 @@ struct TableMeta {
     topology: Option<TopologySpec>,
     #[serde(default)]
     mixins: Option<Vec<String>>,
+    #[serde(default)]
+    stats: Option<TableStats>,
 }
-
-/// Relationships file (`relationships.toml`).
 #[derive(Debug, Deserialize)]
 struct RelationshipsFile {
     #[serde(default)]
@@ -290,6 +290,7 @@ fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
         activity_count: table.table.activity_count,
         mixin_refs: table.table.mixins,
         output,
+        stats: table.table.stats,
     }
 }
 

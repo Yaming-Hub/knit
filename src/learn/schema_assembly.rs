@@ -110,6 +110,8 @@ pub struct ColumnAnalysis {
     pub max_decimal_places: Option<u8>,
     /// Whether this column was explicitly marked as an actor column (via --actor-column).
     pub is_actor_column: bool,
+    /// Source data statistics for this column (populated during profiling).
+    pub stats: Option<crate::core::ColumnStats>,
 }
 
 impl ColumnAnalysis {
@@ -132,6 +134,7 @@ impl ColumnAnalysis {
             source_arrow_type: None,
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         }
     }
 
@@ -291,6 +294,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: col.stats.clone(),
             });
             continue;
         }
@@ -336,6 +340,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
                     precision,
                     actor_column: false,
                     fields: vec![],
+                    stats: col.stats.clone(),
                 });
                 continue;
             }
@@ -358,6 +363,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             precision,
             actor_column: false,
             fields: vec![],
+            stats: col.stats.clone(),
         });
     }
 
@@ -440,6 +446,27 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
         }
     }
 
+    // Compute table-level statistics from learned data
+    let table_stats = {
+        let rows_per_partition = if table.partition_values.len() > 1 {
+            let per_part: Vec<f64> = table
+                .partition_values
+                .iter()
+                .map(|pv| pv.weight * table.row_count as f64)
+                .collect();
+            let min = per_part.iter().cloned().fold(f64::INFINITY, f64::min);
+            let max = per_part.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+            let mean = per_part.iter().sum::<f64>() / per_part.len() as f64;
+            Some(crate::core::SummaryStats { min, mean, max })
+        } else {
+            None
+        };
+        Some(crate::core::TableStats {
+            source_rows: table.row_count,
+            rows_per_partition,
+        })
+    };
+
     let entity = Entity {
         name: table.name.clone(),
         description: None,
@@ -461,6 +488,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
         } else {
             None
         },
+        stats: table_stats,
     };
 
     (entity, rels, corrs)
@@ -1571,6 +1599,7 @@ mod tests {
                     source_arrow_type: None,
                     max_decimal_places: None,
                     is_actor_column: false,
+                    stats: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -1589,6 +1618,7 @@ mod tests {
                     source_arrow_type: None,
                     max_decimal_places: None,
                     is_actor_column: false,
+                    stats: None,
                 },
             ],
             relationships: vec![],
@@ -1632,6 +1662,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -1678,6 +1709,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1723,6 +1755,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1848,6 +1881,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1886,6 +1920,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -1928,6 +1963,7 @@ mod tests {
             source_arrow_type: None,
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -1952,6 +1988,7 @@ mod tests {
             source_arrow_type: None,
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         let gen = build_generator(&col, None);
         assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
@@ -1976,6 +2013,7 @@ mod tests {
             source_arrow_type: None,
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -2004,6 +2042,7 @@ mod tests {
             source_arrow_type: None,
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         let gen = build_generator(&col, None);
         assert!(
@@ -2034,6 +2073,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2071,6 +2111,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2137,6 +2178,7 @@ mod tests {
             source_arrow_type: Some(arrow::datatypes::DataType::Int32),
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2160,6 +2202,7 @@ mod tests {
             source_arrow_type: Some(arrow::datatypes::DataType::Int64),
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int);
     }
@@ -2183,6 +2226,7 @@ mod tests {
             source_arrow_type: Some(arrow::datatypes::DataType::Int32),
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2215,6 +2259,7 @@ mod tests {
             )),
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::DatetimeUs);
     }
@@ -2247,6 +2292,7 @@ mod tests {
             )),
             max_decimal_places: None,
             is_actor_column: false,
+            stats: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Datetime);
     }
@@ -2267,6 +2313,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
             Field {
                 name: "EndDate".into(),
@@ -2281,6 +2328,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -2302,6 +2350,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
             Field {
                 name: "end_balance".into(),
@@ -2313,6 +2362,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
         ];
         let pairs = find_temporal_pairs(&fields);
@@ -2339,6 +2389,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             },
             ColumnAnalysis {
                 name: "EndDate".into(),
@@ -2357,6 +2408,7 @@ mod tests {
                 source_arrow_type: None,
                 max_decimal_places: None,
                 is_actor_column: false,
+                stats: None,
             },
         ];
         let mut fields = vec![
@@ -2373,6 +2425,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
             Field {
                 name: "EndDate".into(),
@@ -2387,6 +2440,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
         ];
         rewrite_temporal_pairs(&mut fields, &cols);
@@ -2480,6 +2534,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         }];
         let scores = vec![("user_id".to_string(), 0.95)];
         assert!(is_actor_entity("some_table", &scores, &fields));
@@ -2776,5 +2831,73 @@ mod tests {
 
         // No source_layout and no partition → output should be None
         assert!(entity.output.is_none());
+    }
+
+    #[test]
+    fn build_entity_populates_table_stats() {
+        let table = TableAnalysis::new(
+            "orders".into(),
+            vec![ColumnAnalysis::new("id".into(), 0.0, 1.0)],
+            500,
+        );
+
+        let (entity, _, _) = build_entity(&table);
+
+        let stats = entity.stats.expect("table stats should be populated");
+        assert_eq!(stats.source_rows, 500);
+        assert!(stats.rows_per_partition.is_none());
+    }
+
+    #[test]
+    fn build_entity_computes_partition_stats() {
+        let mut table = TableAnalysis::new(
+            "events".into(),
+            vec![ColumnAnalysis::new("id".into(), 0.0, 1.0)],
+            1000,
+        );
+        table.partition_by = Some("date".into());
+        table.partition_values = vec![
+            crate::core::PartitionValue { value: "2024-01-01".into(), weight: 0.6 },
+            crate::core::PartitionValue { value: "2024-01-02".into(), weight: 0.4 },
+        ];
+
+        let (entity, _, _) = build_entity(&table);
+
+        let stats = entity.stats.expect("table stats should be populated");
+        assert_eq!(stats.source_rows, 1000);
+        let rpp = stats.rows_per_partition.expect("should have rows_per_partition");
+        assert!((rpp.min - 400.0).abs() < 0.01);
+        assert!((rpp.max - 600.0).abs() < 0.01);
+        assert!((rpp.mean - 500.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn column_stats_propagated_to_field() {
+        let mut col = ColumnAnalysis::new("amount".into(), 0.05, 0.9);
+        col.distribution = Some(make_fit(Distribution::Normal(100.0, 20.0)));
+        col.stats = Some(crate::core::ColumnStats {
+            distinct_count: Some(450),
+            null_rate: Some(0.05),
+            min: Some(10.0),
+            max: Some(500.0),
+            mean: Some(100.0),
+            std: Some(20.0),
+            percentiles: Some(crate::core::StatsPercentiles {
+                p25: 85.0,
+                p50: 100.0,
+                p75: 115.0,
+                p95: 140.0,
+                p99: 155.0,
+            }),
+            ..Default::default()
+        });
+
+        let table = TableAnalysis::new("orders".into(), vec![col], 500);
+        let (entity, _, _) = build_entity(&table);
+
+        let field_stats = entity.fields[0].stats.as_ref().expect("field should have stats");
+        assert_eq!(field_stats.distinct_count, Some(450));
+        assert_eq!(field_stats.min, Some(10.0));
+        assert_eq!(field_stats.max, Some(500.0));
     }
 }

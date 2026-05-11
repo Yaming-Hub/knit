@@ -331,6 +331,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     }],
                     constraints: vec![],
                     topology: None,
@@ -339,6 +340,7 @@ mod tests {
                     activity_count: None,
                     mixin_refs: None,
                     output: None,
+                    stats: None,
                 },
                 Entity {
                     name: "Events".into(),
@@ -363,6 +365,7 @@ mod tests {
                             precision: None,
                             actor_column: false,
                             fields: vec![],
+                stats: None,
                         },
                         Field {
                             name: "user_id".into(),
@@ -377,6 +380,7 @@ mod tests {
                             precision: None,
                             actor_column: false,
                             fields: vec![],
+                stats: None,
                         },
                         Field {
                             name: "Region".into(),
@@ -403,6 +407,7 @@ mod tests {
                             precision: None,
                             actor_column: false,
                             fields: vec![],
+                stats: None,
                         },
                     ],
                     constraints: vec![],
@@ -412,6 +417,7 @@ mod tests {
                     activity_count: None,
                     mixin_refs: None,
                     output: None,
+                    stats: None,
                 },
             ],
             relationships: vec![Relationship {

@@ -255,6 +255,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(count),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,
@@ -521,6 +522,7 @@ mod tests {
                 tags: Vec::new(),
                 count: CountSpec::Range { min: 50, max: 150 },
                 fields: vec![],
+                stats: None,
                 constraints: vec![],
                 topology: None,
                 actor: false,
@@ -553,6 +555,7 @@ mod tests {
                     round: false,
                 }),
                 fields: vec![],
+                stats: None,
                 constraints: vec![],
                 topology: None,
                 actor: false,
@@ -594,6 +597,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -602,6 +606,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         };
         let events = Entity {
             name: "events".to_string(),
@@ -620,6 +625,7 @@ mod tests {
                 precision: None,
                 actor_column: true,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -628,6 +634,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         };
         // No explicit relationship — only ActorRef generator
         let model = model_with(vec![users, events], vec![]);
@@ -673,6 +680,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -681,6 +689,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         };
         let model = model_with(vec![users], vec![]);
         let result = assign_phases(&model).unwrap();

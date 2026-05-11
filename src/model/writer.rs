@@ -72,6 +72,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
                 activity_count: entity.activity_count.clone(),
                 topology: entity.topology.clone(),
                 mixins: entity.mixin_refs.clone(),
+                stats: entity.stats.clone(),
             },
             columns: entity.fields.clone(),
             constraints: if entity.constraints.is_empty() { None } else { Some(entity.constraints.clone()) },
@@ -193,6 +194,8 @@ struct TableMetaOut {
     topology: Option<TopologySpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     mixins: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stats: Option<TableStats>,
 }
 
 #[derive(Serialize)]
@@ -253,6 +256,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                        stats: None,
                     },
                     Field {
                         name: "name".to_string(),
@@ -267,6 +271,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                        stats: None,
                     },
                 ],
                 constraints: vec![],
@@ -276,6 +281,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
                 output: None,
+                stats: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],

@@ -784,8 +784,22 @@ knit model flatten my_model/ -o blueprint.knit.toml
 ### Remaining (Phase 3–4)
 
 - Direct table-level update operations (edit single table without full rewrite)
-- Statistics layer (`[columns.stats]`, `[table.stats]`)
+- ~~Statistics layer (`[columns.stats]`, `[table.stats]`)~~ ✅ (PR #236)
 - Auto-detected traits (semantic, cardinality, trend, distribution shape)
+
+### Completed (Phase 4 — Statistics Layer)
+
+| Component | Location | Notes |
+|-----------|----------|-------|
+| `ColumnStats` type | `src/core/types.rs` | Numeric (min/max/mean/std/percentiles), string (lengths), temporal (range), top values |
+| `TableStats` type | `src/core/types.rs` | `source_rows`, optional `rows_per_partition` summary |
+| `StatsPercentiles` | `src/core/types.rs` | p25, p50, p75, p95, p99 |
+| `Field.stats` | `src/core/types.rs` | Optional `ColumnStats`, skipped when None |
+| `Entity.stats` | `src/core/types.rs` | Optional `TableStats`, skipped when None |
+| Stats population | `src/cli/commands/learn.rs` | `build_column_stats()` extracts from `ColumnProfile` |
+| Table stats | `src/learn/schema_assembly.rs` | Computed in `build_entity()` from row count + partition weights |
+| Structured model | `src/model/reader.rs`, `writer.rs` | Full round-trip through `TableMeta`/`TableMetaOut` |
+| Flat model | via serde | Stats serialize/deserialize as `[entities.fields.stats]` |
 
 ---
 

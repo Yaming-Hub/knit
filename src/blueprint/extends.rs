@@ -256,6 +256,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     },
                     Field {
                         name: "email".to_string(),
@@ -267,6 +268,7 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
+                stats: None,
                     },
                 ],
                 constraints: vec![],
@@ -276,6 +278,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
             }],
             relationships: vec![Relationship {
                 name: "user_order".to_string(),
@@ -347,6 +350,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(500),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,
@@ -370,6 +374,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::Fixed(5000),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,
@@ -402,6 +407,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -410,6 +416,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities[0].fields.len(), 3);
@@ -435,6 +442,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             }],
             constraints: vec![],
             topology: None,
@@ -443,6 +451,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         });
         let merged = merge_models(&parent, &child);
         let email = merged.entities[0]
@@ -521,6 +530,7 @@ mod tests {
             tags: Vec::new(),
             count: CountSpec::default(),
             fields: vec![],
+            stats: None,
             constraints: vec![],
             topology: None,
             actor: false,

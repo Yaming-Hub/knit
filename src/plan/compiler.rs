@@ -1220,6 +1220,7 @@ fn compile_generator_from_spec(
         precision: None,
         actor_column: false,
         fields: vec![],
+        stats: None,
     };
     compile_generator(&dummy_field, all_fields)
 }
@@ -1541,6 +1542,7 @@ fn compute_generator_spec_deps(spec: &GeneratorSpec, all_fields: &[Field]) -> u3
         precision: None,
         actor_column: false,
         fields: vec![],
+        stats: None,
     };
     compute_dependency_order(&tmp, all_fields)
 }
@@ -1904,6 +1906,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                    stats: None,
                 },
                 Field {
                     name: "name".to_string(),
@@ -1918,6 +1921,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                    stats: None,
                 },
             ],
             constraints: vec![],
@@ -1927,6 +1931,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
         }
     }
 
@@ -2078,6 +2083,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model(
@@ -2128,6 +2134,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let mut entity_b = simple_entity("b", 1000);
@@ -2141,6 +2148,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model(
@@ -2286,6 +2294,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -2329,6 +2338,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("autoround", vec![entity], vec![]);
@@ -2373,6 +2383,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("noround", vec![entity], vec![]);
@@ -2447,6 +2458,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -2484,6 +2496,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -2512,6 +2525,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -2553,6 +2567,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
         entity.fields.push(Field {
             name: "tax".to_string(),
@@ -2566,6 +2581,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("fields", vec![entity], vec![]);
@@ -2609,6 +2625,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
         entity.fields.push(Field {
             name: "label".to_string(),
@@ -2622,6 +2639,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model("params", vec![entity], vec![]);
@@ -2723,6 +2741,7 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
+            stats: None,
         });
 
         let model = simple_model(
@@ -2801,6 +2820,7 @@ mod tests {
                     precision: None,
                     actor_column: false,
                     fields: vec![],
+                    stats: None,
                 }],
                 constraints: vec![],
                 topology: None,
@@ -2809,6 +2829,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
         output: None,
+        stats: None,
             }],
             vec![],
         );
@@ -2844,6 +2865,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
             Field {
                 name: "price".to_string(),
@@ -2855,6 +2877,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
         ];
         // "price * 2" should match only "price", not "p"
@@ -3089,6 +3112,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
             Field {
                 name: "start_date".to_string(),
@@ -3107,6 +3131,7 @@ mod tests {
                 precision: None,
                 actor_column: false,
                 fields: vec![],
+                stats: None,
             },
         ];
         let order_end = compute_dependency_order(&fields[0], &fields);
@@ -3295,6 +3320,7 @@ mod tests {
             precision: None,
             actor_column: true,
             fields: vec![],
+            stats: None,
         });
         posts.activity_count = Some(ActivityCount {
             actor_field: "author_id".to_string(),
@@ -3368,6 +3394,7 @@ mod tests {
             precision: None,
             actor_column: true,
             fields: vec![],
+            stats: None,
         });
         posts.activity_count = Some(ActivityCount {
             actor_field: "author_id".to_string(),
