@@ -258,6 +258,8 @@ Options:
     --tokenize-headers        Also tokenize column headers
     --tokenize-paths          Also tokenize file/folder names
     --preserve-partitions     Keep partition folder values as-is
+    --tokenize-columns <LIST> Only tokenize values in these columns (comma-separated)
+    --preserve-columns <LIST> Tokenize all columns except these (comma-separated)
     --quiet                   Suppress progress output
     --json                    Machine-readable JSON output
 ```
@@ -308,19 +310,15 @@ Tokenization must preserve these properties for knit troubleshooting:
 Add noise to numeric values during tokenization to provide formal privacy
 guarantees (ε-differential privacy).
 
-### 9.2 Selective Tokenization
-Allow users to specify which columns to tokenize vs preserve:
-`--tokenize-columns "Name,Email,Address" --preserve-columns "Country,Status"`
-
-### 9.3 Format Conversion During Tokenization
+### 9.2 Format Conversion During Tokenization
 Convert between formats while tokenizing: tokenize a Parquet dataset and
 output as CSV (or vice versa) for easier inspection.
 
-### 9.4 Streaming Tokenization
+### 9.3 Streaming Tokenization
 Process files in streaming fashion for datasets too large to scan in memory.
 Build the token map incrementally with a two-pass approach.
 
-### 9.5 Tokenization Report
+### 9.4 Tokenization Report
 Generate an HTML/markdown report showing tokenization coverage, value
 distribution changes, and structural integrity verification.
 
@@ -345,6 +343,7 @@ distribution changes, and structural integrity verification.
 | Restore mode (`--restore`) | ✅ | Reverse map from dictionary |
 | Verify mode (`--verify`) | ✅ | Structural equivalence check |
 | Deterministic (`--seed`) | ✅ | Seeded StdRng for reproducibility |
+| Selective column tokenization | ✅ | `--tokenize-columns` (whitelist) / `--preserve-columns` (blacklist) |
 
 **Architecture (as implemented):**
 
@@ -372,4 +371,3 @@ src/cli/commands/tokenize.rs — CLI handler (tokenize/restore/verify modes)
 - Native Parquet numeric column tokenization (typed i32/i64/f32/f64 replacement)
 - Field-level restore metadata (eliminate restore ambiguity)
 - Streaming tokenization for very large datasets
-- Selective column tokenization (`--tokenize-columns`, `--preserve-columns`)

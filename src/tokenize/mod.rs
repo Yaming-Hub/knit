@@ -8,7 +8,7 @@ pub mod dictionary;
 pub mod mapper;
 pub mod scanner;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use anyhow::{Context, Result};
@@ -31,6 +31,10 @@ pub struct TokenizeConfig {
     pub tokenize_headers: bool,
     /// Whether to preserve partition folder names as-is.
     pub preserve_partitions: bool,
+    /// Whitelist: only tokenize values in these columns (case-insensitive).
+    pub tokenize_columns: Option<HashSet<String>>,
+    /// Blacklist: tokenize all columns except these (case-insensitive).
+    pub preserve_columns: Option<HashSet<String>>,
 }
 
 impl Default for TokenizeConfig {
@@ -41,7 +45,35 @@ impl Default for TokenizeConfig {
             tokenize_dates: false,
             tokenize_headers: false,
             preserve_partitions: true,
+            tokenize_columns: None,
+            preserve_columns: None,
         }
+    }
+}
+
+impl TokenizeConfig {
+    /// Check whether values in the given column should be tokenized,
+    /// based on `--tokenize-columns` (whitelist) or `--preserve-columns` (blacklist).
+    pub fn should_tokenize_column(&self, column_name: &str) -> bool {
+        let lower = column_name.to_lowercase();
+        if let Some(ref cols) = self.tokenize_columns {
+            return cols.contains(&lower);
+        }
+        if let Some(ref cols) = self.preserve_columns {
+            return !cols.contains(&lower);
+        }
+        true
+    }
+
+    /// Check whether a column header should be tokenized (when `--tokenize-headers` is on).
+    /// A preserved column's header is also preserved.
+    pub fn should_tokenize_header(&self, column_name: &str) -> bool {
+        self.tokenize_headers && self.should_tokenize_column(column_name)
+    }
+
+    /// Whether any column filter is active.
+    pub fn has_column_filter(&self) -> bool {
+        self.tokenize_columns.is_some() || self.preserve_columns.is_some()
     }
 }
 
@@ -162,11 +194,22 @@ pub fn restore(
     // Build a mapper with the reverse map for apply functions
     let mapper = TokenMapper::from_reverse_map(reverse_map);
 
+    // Restore the column filter from the dictionary so that restore only
+    // replaces values in the columns that were originally tokenized.
+    let tokenize_columns = dict.column_filter.tokenize_columns.map(|v| {
+        v.into_iter().collect::<HashSet<String>>()
+    });
+    let preserve_columns = dict.column_filter.preserve_columns.map(|v| {
+        v.into_iter().collect::<HashSet<String>>()
+    });
+
     // Always enable header and number rewriting during restore — if they weren't
     // tokenized, they won't be in the inverse map and remain unchanged.
     let config = TokenizeConfig {
         tokenize_headers: true,
         tokenize_numbers: true,
+        tokenize_columns,
+        preserve_columns,
         ..Default::default()
     };
     let mut data_files = 0;
