@@ -85,10 +85,11 @@ pub fn compute_new_partitions(
     Ok(values)
 }
 
-/// Parse a date string (YYYY-MM-DD or YYYY/MM/DD).
+/// Parse a date string (YYYY-MM-DD, YYYY/MM/DD, or YYYYMMDD).
 fn parse_date(s: &str) -> Option<chrono::NaiveDate> {
     chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d")
         .or_else(|_| chrono::NaiveDate::parse_from_str(s, "%Y/%m/%d"))
+        .or_else(|_| chrono::NaiveDate::parse_from_str(s, "%Y%m%d"))
         .ok()
 }
 
@@ -190,5 +191,52 @@ mod tests {
         let result = compute_new_partitions(&dim, "3w").unwrap();
         let total: f64 = result.iter().map(|v| v.weight).sum();
         assert!((total - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_cadence_override_changes_output() {
+        // With weekly cadence: 28 days / 7 = 5 partitions
+        let dim_weekly = TimeDimension {
+            entity_name: "Events".into(),
+            partition_field: "date".into(),
+            partition_values: vec!["2024-01-01".into()],
+            cadence_days: Some(7),
+            cadence_confidence: 1.0,
+        };
+        let weekly = compute_new_partitions(&dim_weekly, "4w").unwrap();
+        assert_eq!(weekly.len(), 5);
+
+        // With daily cadence: 28 days / 1 = 29 partitions
+        let dim_daily = TimeDimension {
+            entity_name: "Events".into(),
+            partition_field: "date".into(),
+            partition_values: vec!["2024-01-01".into()],
+            cadence_days: Some(1),
+            cadence_confidence: 1.0,
+        };
+        let daily = compute_new_partitions(&dim_daily, "4w").unwrap();
+        assert_eq!(daily.len(), 29);
+    }
+
+    #[test]
+    fn test_parse_date_yyyymmdd() {
+        assert!(parse_date("20240101").is_some());
+        assert_eq!(
+            parse_date("20240101").unwrap(),
+            parse_date("2024-01-01").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_yyyymmdd_partitions() {
+        let dim = TimeDimension {
+            entity_name: "Events".into(),
+            partition_field: "date".into(),
+            partition_values: vec!["20240101".into(), "20240108".into()],
+            cadence_days: Some(7),
+            cadence_confidence: 1.0,
+        };
+        let result = compute_new_partitions(&dim, "3w").unwrap();
+        assert!(result.len() >= 3);
     }
 }

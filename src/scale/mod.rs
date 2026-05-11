@@ -97,6 +97,8 @@ pub struct ScaleTargets {
     pub dims: Vec<(String, u64)>,
     /// Additional uniform count multiplier.
     pub count: Option<f64>,
+    /// User-specified cadence override in days (e.g. 7 for weekly).
+    pub cadence_days: Option<u32>,
 }
 
 /// Compute a scaling plan from the analysis and user targets.
@@ -122,7 +124,29 @@ pub fn compute_plan(
     let new_partitions = if let (Some(ref time_spec), Some(time_dim)) =
         (&targets.time, &analysis.time)
     {
-        let new_values = time::compute_new_partitions(time_dim, time_spec)?;
+        // Apply cadence override or warn on low confidence
+        let effective_dim = if let Some(override_days) = targets.cadence_days {
+            tracing::debug!(
+                override_days,
+                detected = ?time_dim.cadence_days,
+                "using cadence override"
+            );
+            let mut dim = time_dim.clone();
+            dim.cadence_days = Some(override_days);
+            dim.cadence_confidence = 1.0;
+            dim
+        } else {
+            if time_dim.cadence_confidence < 0.5 {
+                tracing::warn!(
+                    confidence = time_dim.cadence_confidence,
+                    detected = ?time_dim.cadence_days,
+                    "low cadence confidence; consider using --cadence to specify explicitly (e.g. --cadence 7d)"
+                );
+            }
+            time_dim.clone()
+        };
+
+        let new_values = time::compute_new_partitions(&effective_dim, time_spec)?;
         let time_ratio = new_values.len() as f64
             / time_dim.partition_values.len().max(1) as f64;
 
