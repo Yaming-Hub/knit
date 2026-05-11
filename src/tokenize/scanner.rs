@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
+use chrono::{NaiveDate, NaiveDateTime, Duration};
 use tracing::debug;
 
 use crate::tokenize::mapper::TokenMapper;
@@ -166,9 +167,21 @@ fn extract_csv_strings(
         }
     }
 
+    let shift_days = if config.tokenize_dates {
+        Some(compute_date_shift(config.seed))
+    } else {
+        None
+    };
+
     for result in rdr.records() {
         let record = result?;
         for field in record.iter() {
+            // Try date shifting first (if enabled)
+            if let Some(shift) = shift_days {
+                if try_register_shifted_date(field, mapper, shift) {
+                    continue;
+                }
+            }
             if should_tokenize_value_with_config(field, config.tokenize_numbers) {
                 mapper.register(field);
             }
@@ -186,12 +199,20 @@ fn extract_json_strings(
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("reading {}", path.display()))?;
 
+    let date_shift = if config.tokenize_dates {
+        Some(compute_date_shift(config.seed))
+    } else {
+        None
+    };
+
     // Try parsing as a single JSON document first
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&content) {
         if kind == FileKind::Schema {
             extract_schema_json_strings(&value, mapper);
         } else {
-            extract_data_json_strings(&value, mapper, config.tokenize_headers, config.tokenize_numbers);
+            extract_data_json_strings(
+                &value, mapper, config.tokenize_headers, config.tokenize_numbers, date_shift,
+            );
         }
         return Ok(());
     }
@@ -204,7 +225,9 @@ fn extract_json_strings(
         }
         let value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
-        extract_data_json_strings(&value, mapper, config.tokenize_headers, config.tokenize_numbers);
+        extract_data_json_strings(
+            &value, mapper, config.tokenize_headers, config.tokenize_numbers, date_shift,
+        );
     }
     Ok(())
 }
@@ -241,15 +264,22 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
     }
 }
 
-/// For data files, tokenize all string values (and optionally keys and numbers).
+/// For data files, tokenize all string values (and optionally keys, numbers, and dates).
 fn extract_data_json_strings(
     value: &serde_json::Value,
     mapper: &mut TokenMapper,
     tokenize_keys: bool,
     tokenize_numbers: bool,
+    date_shift: Option<i64>,
 ) {
     match value {
         serde_json::Value::String(s) => {
+            // Try date shifting first
+            if let Some(shift) = date_shift {
+                if try_register_shifted_date(s, mapper, shift) {
+                    return;
+                }
+            }
             if should_tokenize_value_with_config(s, tokenize_numbers) {
                 mapper.register(s);
             }
@@ -265,12 +295,12 @@ fn extract_data_json_strings(
                 if tokenize_keys && should_tokenize_value(key) {
                     mapper.register(key);
                 }
-                extract_data_json_strings(val, mapper, tokenize_keys, tokenize_numbers);
+                extract_data_json_strings(val, mapper, tokenize_keys, tokenize_numbers, date_shift);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                extract_data_json_strings(item, mapper, tokenize_keys, tokenize_numbers);
+                extract_data_json_strings(item, mapper, tokenize_keys, tokenize_numbers, date_shift);
             }
         }
         _ => {}
@@ -351,18 +381,22 @@ fn should_tokenize_value(s: &str) -> bool {
     should_tokenize_value_with_config(s, false)
 }
 
-/// Core tokenization check with numeric override.
+/// Core tokenization check with numeric and date overrides.
 fn should_tokenize_value_with_config(s: &str, tokenize_numbers: bool) -> bool {
     let trimmed = s.trim();
     if trimmed.is_empty() {
         return false;
     }
-    // Skip pure numeric values unless --tokenize-numbers is enabled
-    if !tokenize_numbers && is_numeric_string(trimmed) {
-        return false;
-    }
     // Skip booleans
     if matches!(trimmed.to_lowercase().as_str(), "true" | "false" | "yes" | "no") {
+        return false;
+    }
+    // Skip date/timestamp strings — handled separately by --tokenize-dates
+    if is_date_string(trimmed).is_some() {
+        return false;
+    }
+    // Skip pure numeric values unless --tokenize-numbers is enabled
+    if !tokenize_numbers && is_numeric_string(trimmed) {
         return false;
     }
     true
@@ -382,6 +416,180 @@ fn is_numeric_string(s: &str) -> bool {
         return false;
     }
     trimmed.parse::<f64>().is_ok()
+}
+
+/// Recognized date format patterns.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DateFormat {
+    /// YYYY-MM-DD (e.g., 2024-01-15)
+    IsoDate,
+    /// YYYY-MM-DDThh:mm:ss (e.g., 2024-01-15T10:30:00)
+    IsoDateTimeT,
+    /// YYYY-MM-DD hh:mm:ss (e.g., 2024-01-15 10:30:00)
+    IsoDateTimeSpace,
+    /// YYYY-MM-DDThh:mm:ssZ (e.g., 2024-01-15T10:30:00Z)
+    IsoDateTimeZ,
+    /// YYYY-MM-DDThh:mm:ss+HH:MM (e.g., 2024-01-15T10:30:00+05:30)
+    IsoDateTimeOffset,
+    /// YYYYMMDD (e.g., 20240115) — only 8-digit strings starting with 19/20
+    Compact,
+}
+
+/// Parsed date information.
+struct DateInfo {
+    /// The datetime value (date + optional time component).
+    datetime: NaiveDateTime,
+    /// Which format was detected.
+    format: DateFormat,
+    /// Timezone suffix (e.g., "Z", "+05:30") for formats that include it.
+    tz_suffix: String,
+}
+
+/// Try to parse a string as a recognized date/timestamp format.
+/// Returns None if the string doesn't match any supported format.
+/// Only recognizes unambiguous ISO 8601 and compact (YYYYMMDD) formats.
+fn is_date_string(s: &str) -> Option<DateInfo> {
+    let trimmed = s.trim();
+
+    // Try ISO date: YYYY-MM-DD
+    if trimmed.len() == 10 {
+        if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
+            return Some(DateInfo {
+                datetime: d.and_hms_opt(0, 0, 0).unwrap(),
+                format: DateFormat::IsoDate,
+                tz_suffix: String::new(),
+            });
+        }
+    }
+
+    // Try ISO datetime with T separator
+    if trimmed.contains('T') {
+        // Strip timezone suffix for parsing
+        let (base, tz) = strip_tz_suffix(trimmed);
+
+        if let Ok(dt) = NaiveDateTime::parse_from_str(base, "%Y-%m-%dT%H:%M:%S") {
+            let fmt = if tz == "Z" {
+                DateFormat::IsoDateTimeZ
+            } else if tz.is_empty() {
+                DateFormat::IsoDateTimeT
+            } else {
+                DateFormat::IsoDateTimeOffset
+            };
+            return Some(DateInfo {
+                datetime: dt,
+                format: fmt,
+                tz_suffix: tz.to_string(),
+            });
+        }
+        // Try with fractional seconds
+        if let Ok(dt) = NaiveDateTime::parse_from_str(base, "%Y-%m-%dT%H:%M:%S%.f") {
+            let fmt = if tz == "Z" {
+                DateFormat::IsoDateTimeZ
+            } else if tz.is_empty() {
+                DateFormat::IsoDateTimeT
+            } else {
+                DateFormat::IsoDateTimeOffset
+            };
+            return Some(DateInfo {
+                datetime: dt,
+                format: fmt,
+                tz_suffix: tz.to_string(),
+            });
+        }
+    }
+
+    // Try ISO datetime with space separator: YYYY-MM-DD HH:MM:SS
+    if trimmed.len() >= 19 && &trimmed[10..11] == " " {
+        if let Ok(dt) = NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S") {
+            return Some(DateInfo {
+                datetime: dt,
+                format: DateFormat::IsoDateTimeSpace,
+                tz_suffix: String::new(),
+            });
+        }
+        // With fractional seconds
+        if let Ok(dt) = NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S%.f") {
+            return Some(DateInfo {
+                datetime: dt,
+                format: DateFormat::IsoDateTimeSpace,
+                tz_suffix: String::new(),
+            });
+        }
+    }
+
+    // Try compact: YYYYMMDD (only 8 digits, starts with 19 or 20)
+    if trimmed.len() == 8 && trimmed.chars().all(|c| c.is_ascii_digit()) {
+        if trimmed.starts_with("19") || trimmed.starts_with("20") {
+            if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
+                return Some(DateInfo {
+                    datetime: d.and_hms_opt(0, 0, 0).unwrap(),
+                    format: DateFormat::Compact,
+                    tz_suffix: String::new(),
+                });
+            }
+        }
+    }
+
+    None
+}
+
+/// Strip timezone suffix (Z, +HH:MM, -HH:MM) from a datetime string.
+/// Returns (base, tz_suffix).
+fn strip_tz_suffix(s: &str) -> (&str, &str) {
+    if s.ends_with('Z') {
+        (&s[..s.len() - 1], "Z")
+    } else if s.len() > 6 {
+        // Look for +HH:MM or -HH:MM at the end
+        let last6 = &s[s.len() - 6..];
+        if (last6.starts_with('+') || last6.starts_with('-')) && &last6[3..4] == ":" {
+            (&s[..s.len() - 6], last6)
+        } else {
+            (s, "")
+        }
+    } else {
+        (s, "")
+    }
+}
+
+/// Format a shifted datetime back to its original format.
+fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
+    match info.format {
+        DateFormat::IsoDate => dt.format("%Y-%m-%d").to_string(),
+        DateFormat::IsoDateTimeT => dt.format("%Y-%m-%dT%H:%M:%S").to_string(),
+        DateFormat::IsoDateTimeSpace => dt.format("%Y-%m-%d %H:%M:%S").to_string(),
+        DateFormat::IsoDateTimeZ => format!("{}Z", dt.format("%Y-%m-%dT%H:%M:%S")),
+        DateFormat::IsoDateTimeOffset => {
+            format!("{}{}", dt.format("%Y-%m-%dT%H:%M:%S"), info.tz_suffix)
+        }
+        DateFormat::Compact => dt.format("%Y%m%d").to_string(),
+    }
+}
+
+/// Compute a deterministic date shift offset (in days) from a seed.
+/// Returns an offset between -1825 and +1825 days (±5 years), never zero.
+fn compute_date_shift(seed: u64) -> i64 {
+    use rand::rngs::StdRng;
+    use rand::{Rng, SeedableRng};
+    let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
+    let offset: i64 = rng.gen_range(-1825..=1825);
+    if offset == 0 { 1 } else { offset }
+}
+
+/// Register a date string with its shifted value in the mapper.
+/// Returns true if the value was detected as a date and registered.
+fn try_register_shifted_date(
+    s: &str,
+    mapper: &mut TokenMapper,
+    shift_days: i64,
+) -> bool {
+    if let Some(info) = is_date_string(s) {
+        let shifted = info.datetime + Duration::days(shift_days);
+        let shifted_str = format_shifted_date(&shifted, &info);
+        mapper.register_with_value(s, &shifted_str);
+        true
+    } else {
+        false
+    }
 }
 
 #[cfg(test)]
@@ -532,5 +740,113 @@ mod tests {
         assert!(mapper.contains("Alice"));
         // JSON numeric scalar "95" should be registered as string
         assert!(mapper.contains("95"));
+    }
+
+    #[test]
+    fn test_is_date_string_iso_date() {
+        let info = is_date_string("2024-01-15").unwrap();
+        assert_eq!(info.format, DateFormat::IsoDate);
+        assert_eq!(info.datetime.date(), NaiveDate::from_ymd_opt(2024, 1, 15).unwrap());
+    }
+
+    #[test]
+    fn test_is_date_string_iso_datetime() {
+        let info = is_date_string("2024-01-15T10:30:00").unwrap();
+        assert_eq!(info.format, DateFormat::IsoDateTimeT);
+
+        let info_z = is_date_string("2024-01-15T10:30:00Z").unwrap();
+        assert_eq!(info_z.format, DateFormat::IsoDateTimeZ);
+        assert_eq!(info_z.tz_suffix, "Z");
+
+        let info_off = is_date_string("2024-01-15T10:30:00+05:30").unwrap();
+        assert_eq!(info_off.format, DateFormat::IsoDateTimeOffset);
+        assert_eq!(info_off.tz_suffix, "+05:30");
+    }
+
+    #[test]
+    fn test_is_date_string_space_separator() {
+        let info = is_date_string("2024-01-15 10:30:00").unwrap();
+        assert_eq!(info.format, DateFormat::IsoDateTimeSpace);
+    }
+
+    #[test]
+    fn test_is_date_string_compact() {
+        let info = is_date_string("20240115").unwrap();
+        assert_eq!(info.format, DateFormat::Compact);
+    }
+
+    #[test]
+    fn test_is_date_string_rejects_non_dates() {
+        assert!(is_date_string("hello").is_none());
+        assert!(is_date_string("12345678").is_none()); // doesn't start with 19/20
+        assert!(is_date_string("42").is_none());
+        assert!(is_date_string("").is_none());
+        assert!(is_date_string("2024-13-01").is_none()); // invalid month
+    }
+
+    #[test]
+    fn test_date_shift_deterministic() {
+        let shift1 = compute_date_shift(42);
+        let shift2 = compute_date_shift(42);
+        assert_eq!(shift1, shift2);
+        assert_ne!(shift1, 0); // never zero
+    }
+
+    #[test]
+    fn test_date_shifting_preserves_format() {
+        let mut mapper = TokenMapper::new(42);
+        let shift = 100; // +100 days
+
+        try_register_shifted_date("2024-01-15", &mut mapper, shift);
+        let token = mapper.get("2024-01-15").unwrap();
+        // Should be a valid ISO date, 100 days later
+        assert_eq!(token, "2024-04-24");
+
+        try_register_shifted_date("20240115", &mut mapper, shift);
+        let token = mapper.get("20240115").unwrap();
+        assert_eq!(token, "20240424");
+    }
+
+    #[test]
+    fn test_dates_skipped_by_default() {
+        // Date strings should NOT be tokenized when tokenize_dates is false
+        assert!(!should_tokenize_value("2024-01-15"));
+        assert!(!should_tokenize_value("2024-01-15T10:30:00Z"));
+        assert!(!should_tokenize_value("20240115"));
+    }
+
+    #[test]
+    fn test_extract_csv_with_tokenize_dates() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("data.csv");
+        let mut f = std::fs::File::create(&path).unwrap();
+        writeln!(f, "name,date").unwrap();
+        writeln!(f, "Alice,2024-01-15").unwrap();
+        writeln!(f, "Bob,2024-03-20").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_dates: true,
+            ..Default::default()
+        };
+        let mut mapper = TokenMapper::new(42);
+        extract_csv_strings(&path, FileFormat::Csv, &mut mapper, &config).unwrap();
+
+        // Names registered normally
+        assert!(mapper.contains("Alice"));
+        assert!(mapper.contains("Bob"));
+        // Dates registered with shifted values
+        assert!(mapper.contains("2024-01-15"));
+        assert!(mapper.contains("2024-03-20"));
+        // Both shifted by the same offset (relative order preserved)
+        let d1 = mapper.get("2024-01-15").unwrap();
+        let d2 = mapper.get("2024-03-20").unwrap();
+        assert_ne!(d1, "2024-01-15");
+        assert_ne!(d2, "2024-03-20");
+        // The difference between the two should be preserved (65 days)
+        let orig_diff = NaiveDate::parse_from_str("2024-03-20", "%Y-%m-%d").unwrap()
+            - NaiveDate::parse_from_str("2024-01-15", "%Y-%m-%d").unwrap();
+        let shifted_diff = NaiveDate::parse_from_str(d2, "%Y-%m-%d").unwrap()
+            - NaiveDate::parse_from_str(d1, "%Y-%m-%d").unwrap();
+        assert_eq!(orig_diff, shifted_diff);
     }
 }
