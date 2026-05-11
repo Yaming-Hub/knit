@@ -399,33 +399,24 @@ fn expand_oneof_values(
 pub struct EntitySizeEstimate {
     pub entity_name: String,
     pub rows: u64,
-    pub estimated_bytes: u64,
+    /// Estimated bytes in CSV format.
+    pub csv_bytes: u64,
+    /// Estimated bytes in JSON/JSONL format.
+    pub json_bytes: u64,
 }
 
 /// Estimate output sizes for a scaling plan.
 ///
-/// Returns per-entity estimates and total bytes.
-/// Uses heuristic bytes-per-field based on data type:
-/// - Bool: 5 bytes (true/false)
-/// - Int/Int32: 8 bytes
-/// - Float: 12 bytes
-/// - String: 20 bytes (average)
-/// - UUID: 36 bytes
-/// - Date: 10 bytes
-/// - Datetime/DatetimeUs/Datetimetz: 24 bytes
-/// - Time: 8 bytes
-/// - Duration: 12 bytes
-/// - Other: 16 bytes
-///
-/// CSV format adds ~1 byte per field (delimiter) + 1 byte newline.
-/// Parquet is typically 30-50% smaller due to compression; we estimate 40% of CSV.
+/// Returns per-entity estimates and total CSV bytes.
+/// Uses heuristic bytes-per-field based on data type.
+/// Parquet is typically 30-50% smaller due to compression; callers estimate 40% of CSV.
 pub fn estimate_output_size(
     model: &DataModel,
     analysis: &ScalingAnalysis,
     plan: &ScalingPlan,
 ) -> (Vec<EntitySizeEstimate>, u64) {
     let mut estimates = Vec::new();
-    let mut total = 0u64;
+    let mut total_csv = 0u64;
 
     for entity in &model.entities {
         let rows = plan
@@ -440,18 +431,21 @@ pub fn estimate_output_size(
                     .unwrap_or(0)
             });
 
-        let bytes_per_row = estimate_row_bytes(&entity.fields);
-        let estimated_bytes = rows * bytes_per_row;
+        let csv_per_row = estimate_row_bytes(&entity.fields);
+        let json_per_row = estimate_json_row_bytes(&entity.fields);
+        let csv_bytes = rows * csv_per_row;
+        let json_bytes = rows * json_per_row;
 
         estimates.push(EntitySizeEstimate {
             entity_name: entity.name.clone(),
             rows,
-            estimated_bytes,
+            csv_bytes,
+            json_bytes,
         });
-        total += estimated_bytes;
+        total_csv += csv_bytes;
     }
 
-    (estimates, total)
+    (estimates, total_csv)
 }
 
 /// Estimate bytes per row for a list of fields (CSV-like format).
@@ -460,26 +454,54 @@ fn estimate_row_bytes(fields: &[crate::core::types::Field]) -> u64 {
 
     let field_bytes: u64 = fields
         .iter()
-        .map(|f| {
-            let base = match f.data_type {
-                DataType::Bool => 5,
-                DataType::Int | DataType::Int32 => 8,
-                DataType::Float => 12,
-                DataType::String => 20,
-                DataType::Uuid => 36,
-                DataType::Date => 10,
-                DataType::Time => 8,
-                DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz => 24,
-                DataType::Duration => 12,
-                DataType::Bytes => 24,
-                DataType::Array | DataType::Map | DataType::Object => 40,
-                _ => 16,
-            };
-            base + 1 // +1 for delimiter
+        .map(|f| match f.data_type {
+            DataType::Bool => 5,
+            DataType::Int | DataType::Int32 => 8,
+            DataType::Float => 12,
+            DataType::String => 20,
+            DataType::Uuid => 36,
+            DataType::Date => 10,
+            DataType::Time => 8,
+            DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz => 24,
+            DataType::Duration => 12,
+            DataType::Bytes => 24,
+            DataType::Array | DataType::Map | DataType::Object => 40,
+            _ => 16,
         })
         .sum();
 
-    field_bytes + 1 // +1 for newline
+    let delimiters = fields.len().saturating_sub(1) as u64;
+    field_bytes + delimiters + 1 // +delimiters between fields, +1 newline
+}
+
+/// Estimate JSON bytes per row: field names + values + syntax overhead.
+fn estimate_json_row_bytes(fields: &[crate::core::types::Field]) -> u64 {
+    use crate::core::types::DataType;
+
+    let mut total: u64 = 2; // { and }
+    for (i, f) in fields.iter().enumerate() {
+        // "field_name": + value
+        let name_overhead = f.name.len() as u64 + 4; // quotes, colon, space
+        let value_bytes: u64 = match f.data_type {
+            DataType::Bool => 5,
+            DataType::Int | DataType::Int32 => 8,
+            DataType::Float => 12,
+            DataType::String => 22, // quotes + content
+            DataType::Uuid => 38,   // quotes + 36 chars
+            DataType::Date => 12,
+            DataType::Time => 10,
+            DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz => 26,
+            DataType::Duration => 14,
+            DataType::Bytes => 26,
+            DataType::Array | DataType::Map | DataType::Object => 50,
+            _ => 18,
+        };
+        total += name_overhead + value_bytes;
+        if i < fields.len() - 1 {
+            total += 2; // ", "
+        }
+    }
+    total + 1 // newline
 }
 
 /// Format a byte count as a human-readable string (e.g., "1.2 MB").
@@ -596,8 +618,8 @@ mod tests {
             },
         ];
         let bytes = estimate_row_bytes(&fields);
-        // UUID(36+1) + String(20+1) + Int(8+1) + newline(1) = 68
-        assert_eq!(bytes, 68);
+        // UUID(36) + String(20) + Int(8) + 2 delimiters + 1 newline = 67
+        assert_eq!(bytes, 67);
     }
 
     #[test]
@@ -662,8 +684,10 @@ mod tests {
         let (estimates, total) = estimate_output_size(&model, &analysis, &plan);
         assert_eq!(estimates.len(), 1);
         assert_eq!(estimates[0].rows, 1000);
-        // UUID(36+1) + String(20+1) + newline(1) = 59 bytes/row
-        assert_eq!(estimates[0].estimated_bytes, 59_000);
-        assert_eq!(total, 59_000);
+        // UUID(36) + String(20) + 1 delimiter + 1 newline = 58 bytes/row
+        assert_eq!(estimates[0].csv_bytes, 58_000);
+        assert_eq!(total, 58_000);
+        // JSON: {"id": UUID(38) + "name": String(22)} = 2 + (4+2+4+38) + (6+2+4+22) + 2 + 1 = 85
+        assert!(estimates[0].json_bytes > estimates[0].csv_bytes);
     }
 }

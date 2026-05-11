@@ -289,13 +289,29 @@ fn print_dry_run(
 ) {
     let (entity_estimates, total_csv_bytes) =
         scale::estimate_output_size(model, analysis, plan);
+    let total_json_bytes: u64 = entity_estimates.iter().map(|e| e.json_bytes).sum();
     let total_parquet_bytes = (total_csv_bytes as f64 * 0.4) as u64;
 
-    let format_estimate = match cli.format {
-        crate::cli::Format::Csv | crate::cli::Format::Json | crate::cli::Format::Jsonl => {
-            total_csv_bytes
+    // Pick the estimate for the selected format
+    let (format_estimate, format_label) = match cli.format {
+        crate::cli::Format::Csv => (total_csv_bytes, "csv"),
+        crate::cli::Format::Json | crate::cli::Format::Jsonl => (total_json_bytes, "json"),
+        crate::cli::Format::Parquet => (total_parquet_bytes, "parquet"),
+        crate::cli::Format::Avro => ((total_csv_bytes as f64 * 0.5) as u64, "avro"),
+        crate::cli::Format::ArrowIpc => ((total_csv_bytes as f64 * 0.6) as u64, "arrow"),
+        crate::cli::Format::Sql => ((total_csv_bytes as f64 * 1.5) as u64, "sql"),
+    };
+
+    // Per-entity estimate getter for the selected format
+    let entity_bytes = |e: &scale::EntitySizeEstimate| -> u64 {
+        match cli.format {
+            crate::cli::Format::Csv => e.csv_bytes,
+            crate::cli::Format::Json | crate::cli::Format::Jsonl => e.json_bytes,
+            crate::cli::Format::Parquet => (e.csv_bytes as f64 * 0.4) as u64,
+            crate::cli::Format::Avro => (e.csv_bytes as f64 * 0.5) as u64,
+            crate::cli::Format::ArrowIpc => (e.csv_bytes as f64 * 0.6) as u64,
+            crate::cli::Format::Sql => (e.csv_bytes as f64 * 1.5) as u64,
         }
-        _ => total_parquet_bytes, // Parquet, Avro
     };
 
     if cli.json {
@@ -308,7 +324,7 @@ fn print_dry_run(
                 let est = entity_estimates
                     .iter()
                     .find(|e| e.entity_name == *name)
-                    .map(|e| e.estimated_bytes)
+                    .map(|e| entity_bytes(e))
                     .unwrap_or(0);
                 serde_json::json!({
                     "entity": name,
@@ -331,8 +347,9 @@ fn print_dry_run(
             }).collect::<Vec<_>>(),
             "estimated_size": {
                 "csv_bytes": total_csv_bytes,
+                "json_bytes": total_json_bytes,
                 "parquet_bytes": total_parquet_bytes,
-                "format": format!("{:?}", cli.format).to_lowercase(),
+                "format": format_label,
                 "format_bytes": format_estimate,
                 "display": scale::format_bytes(format_estimate),
             },
@@ -362,7 +379,7 @@ fn print_dry_run(
         let est = entity_estimates
             .iter()
             .find(|e| e.entity_name == *name)
-            .map(|e| scale::format_bytes(e.estimated_bytes))
+            .map(|e| scale::format_bytes(entity_bytes(e)))
             .unwrap_or_else(|| "—".to_string());
         println!(
             "  {:<20}{:<12}{:<12}{:<10}{}",
@@ -400,13 +417,11 @@ fn print_dry_run(
     }
 
     println!();
-    let format_name = format!("{:?}", cli.format).to_lowercase();
     println!(
-        "  {} ~{} ({}), ~{} (parquet)",
+        "  {} ~{} ({})",
         "Estimated output:".bold(),
         scale::format_bytes(format_estimate),
-        format_name,
-        scale::format_bytes(total_parquet_bytes),
+        format_label,
     );
     println!();
 }
