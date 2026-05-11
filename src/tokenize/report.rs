@@ -68,9 +68,19 @@ pub fn generate_report(
 
     let entries = scan_directory(output_dir)?;
 
+    // Canonicalize the dict path for exclusion comparison
+    let dict_canonical = dict_path.canonicalize().ok();
+
     let mut files = Vec::new();
     for entry in &entries {
-        if entry.rel_path.to_string_lossy().contains(".knit-tokens") {
+        // Exclude the dictionary file (by canonical path or name pattern)
+        let entry_path = output_dir.join(&entry.rel_path);
+        let excluded = dict_canonical
+            .as_ref()
+            .map(|dc| entry_path.canonicalize().ok().as_ref() == Some(dc))
+            .unwrap_or(false)
+            || entry.rel_path.to_string_lossy().contains(".knit-tokens");
+        if excluded {
             continue;
         }
 
@@ -132,22 +142,19 @@ pub fn generate_report(
 fn count_rows_cols(path: &Path, format: &str) -> Result<(Option<usize>, Option<usize>)> {
     match format {
         "csv" | "tsv" => count_csv_rows_cols(path),
-        "json" | "jsonl" => count_jsonl_rows(path),
+        "json" => count_json_rows_cols(path),
+        "jsonl" => count_jsonl_rows(path),
         "parquet" => count_parquet_rows_cols(path),
         _ => Ok((None, None)),
     }
 }
 
 fn count_csv_rows_cols(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
-    use std::io::{BufRead, BufReader};
-    let file = std::fs::File::open(path)?;
-    let reader = BufReader::new(file);
-    let mut lines = reader.lines();
-    let columns = lines
-        .next()
-        .and_then(|l| l.ok())
-        .map(|header| header.split(',').count());
-    let rows = lines.count(); // remaining lines after header
+    let mut reader = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_path(path)?;
+    let columns = Some(reader.headers()?.len());
+    let rows = reader.records().count();
     Ok((Some(rows), columns))
 }
 
@@ -165,7 +172,6 @@ fn count_jsonl_rows(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
         }
         rows += 1;
         if columns.is_none() {
-            // Try to parse first data line to count fields
             if let Ok(val) = serde_json::from_str::<serde_json::Value>(trimmed.trim_end_matches(',')) {
                 if let Some(obj) = val.as_object() {
                     columns = Some(obj.len());
@@ -174,6 +180,24 @@ fn count_jsonl_rows(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
         }
     }
     Ok((Some(rows), columns))
+}
+
+fn count_json_rows_cols(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
+    let content = std::fs::read_to_string(path)?;
+    let val: serde_json::Value = serde_json::from_str(&content)?;
+    match val {
+        serde_json::Value::Array(arr) => {
+            let rows = arr.len();
+            let columns = arr.first()
+                .and_then(|v| v.as_object())
+                .map(|obj| obj.len());
+            Ok((Some(rows), columns))
+        }
+        serde_json::Value::Object(obj) => {
+            Ok((Some(1), Some(obj.len())))
+        }
+        _ => Ok((None, None)),
+    }
 }
 
 fn count_parquet_rows_cols(path: &Path) -> Result<(Option<usize>, Option<usize>)> {

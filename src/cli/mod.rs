@@ -334,7 +334,7 @@ pub enum Command {
         #[arg(long, value_delimiter = ',', conflicts_with = "tokenize_columns")]
         preserve_columns: Option<Vec<String>>,
         /// Generate a detailed tokenization report after processing.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "restore", conflicts_with = "verify")]
         report: bool,
     },
     /// Enrich a model with statistical knowledge from reference samples.
