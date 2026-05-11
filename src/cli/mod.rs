@@ -327,6 +327,9 @@ pub enum Command {
         /// Keep partition folder values as-is.
         #[arg(long)]
         preserve_partitions: bool,
+        /// Also tokenize file and folder names in the output.
+        #[arg(long, conflicts_with = "verify")]
+        tokenize_paths: bool,
         /// Only tokenize values in these columns (comma-separated, case-insensitive).
         #[arg(long, value_delimiter = ',', conflicts_with = "preserve_columns")]
         tokenize_columns: Option<Vec<String>>,

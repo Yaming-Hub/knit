@@ -32,6 +32,8 @@ pub struct TokenizeConfig {
     pub tokenize_headers: bool,
     /// Whether to preserve partition folder names as-is.
     pub preserve_partitions: bool,
+    /// Whether to tokenize file and folder names in the output.
+    pub tokenize_paths: bool,
     /// Whitelist: only tokenize values in these columns (case-insensitive).
     pub tokenize_columns: Option<HashSet<String>>,
     /// Blacklist: tokenize all columns except these (case-insensitive).
@@ -56,6 +58,7 @@ impl Default for TokenizeConfig {
             tokenize_dates: false,
             tokenize_headers: false,
             preserve_partitions: true,
+            tokenize_paths: false,
             tokenize_columns: None,
             preserve_columns: None,
             native_date_shift: None,
@@ -135,6 +138,12 @@ pub fn tokenize(
         scanner::extract_strings(entry, input_dir, &mut mapper, config)
             .with_context(|| format!("scanning {}", entry.rel_path.display()))?;
     }
+
+    // Register path components (folder names, file stems) if --tokenize-paths
+    if config.tokenize_paths {
+        register_path_components(&entries, &mut mapper, config);
+    }
+
     info!(unique_tokens = mapper.len(), "token map built");
 
     // Phase 3: Apply tokens and write output
@@ -147,14 +156,21 @@ pub fn tokenize(
     let mut companion_files = 0;
 
     for entry in &entries {
+        // Compute the output-relative path, optionally tokenizing path components
+        let rel = if config.tokenize_paths {
+            tokenize_rel_path(&entry.rel_path, &mapper, config)
+        } else {
+            entry.rel_path.clone()
+        };
+
         let out_path = if let Some(target_fmt) = config.output_format {
             if entry.kind == FileKind::Data || entry.kind == FileKind::Dictionary {
-                change_extension(&output_dir.join(&entry.rel_path), target_fmt)
+                change_extension(&output_dir.join(&rel), target_fmt)
             } else {
-                output_dir.join(&entry.rel_path)
+                output_dir.join(&rel)
             }
         } else {
-            output_dir.join(&entry.rel_path)
+            output_dir.join(&rel)
         };
         if let Some(parent) = out_path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -208,6 +224,90 @@ fn change_extension(path: &Path, format: scanner::FileFormat) -> std::path::Path
     path.with_extension(ext)
 }
 
+/// Register path components (folder names and file stems) in the token mapper.
+fn register_path_components(
+    entries: &[scanner::FileEntry],
+    mapper: &mut mapper::TokenMapper,
+    config: &TokenizeConfig,
+) {
+    let mut seen = std::collections::HashSet::new();
+    for entry in entries {
+        let components: Vec<_> = entry.rel_path.components().collect();
+        let last_idx = components.len().saturating_sub(1);
+
+        for (idx, component) in components.iter().enumerate() {
+            if let std::path::Component::Normal(c) = component {
+                let s = c.to_string_lossy();
+                // Skip partition folders (key=value) when preserve_partitions is set
+                // Only applies to directory components, not the final file component
+                if idx != last_idx && config.preserve_partitions && s.contains('=') {
+                    continue;
+                }
+                let name = s.to_string();
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                // Register the stem (filename without extension)
+                if let Some(stem) = std::path::Path::new(&*s).file_stem() {
+                    let stem_str = stem.to_string_lossy();
+                    if !stem_str.is_empty() {
+                        mapper.register(&stem_str);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Tokenize folder names and file stems in a relative path.
+fn tokenize_rel_path(
+    rel_path: &Path,
+    mapper: &mapper::TokenMapper,
+    config: &TokenizeConfig,
+) -> std::path::PathBuf {
+    let mut result = std::path::PathBuf::new();
+    let components: Vec<_> = rel_path.components().collect();
+    let last_idx = components.len().saturating_sub(1);
+
+    for (idx, component) in components.iter().enumerate() {
+        if let std::path::Component::Normal(c) = component {
+            let s = c.to_string_lossy();
+
+            // Skip partition directory folders (key=value) when preserve_partitions is set
+            if idx != last_idx && config.preserve_partitions && s.contains('=') {
+                result.push(c);
+                continue;
+            }
+
+            if idx == last_idx {
+                // File component: tokenize stem, preserve extension
+                let path = std::path::Path::new(&*s);
+                let ext = path.extension().and_then(|e| e.to_str());
+                let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+
+                let tokenized_stem = mapper.get(stem)
+                    .map(|t| t.to_string())
+                    .unwrap_or_else(|| stem.to_string());
+
+                if let Some(ext) = ext {
+                    result.push(format!("{}.{}", tokenized_stem, ext));
+                } else {
+                    result.push(tokenized_stem);
+                }
+            } else {
+                // Directory component: tokenize the folder name
+                let tokenized = mapper.get(&s)
+                    .map(|t| t.to_string())
+                    .unwrap_or_else(|| s.to_string());
+                result.push(tokenized);
+            }
+        } else {
+            result.push(component.as_os_str());
+        }
+    }
+    result
+}
+
 /// Restore a tokenized dataset using a token dictionary.
 pub fn restore(
     input_dir: &Path,
@@ -248,6 +348,8 @@ pub fn restore(
         tokenize_headers: true,
         tokenize_numbers: true,
         tokenize_dates: dict.date_shift_days.is_some(),
+        tokenize_paths: dict.tokenized_paths,
+        preserve_partitions: dict.preserve_partitions,
         native_date_shift,
         native_numeric_shift,
         tokenize_columns,
@@ -265,7 +367,14 @@ pub fn restore(
             continue;
         }
 
-        let out_path = output_dir.join(&entry.rel_path);
+        // Reverse path tokenization if paths were tokenized
+        let rel = if config.tokenize_paths {
+            tokenize_rel_path(&entry.rel_path, &mapper, &config)
+        } else {
+            entry.rel_path.clone()
+        };
+
+        let out_path = output_dir.join(&rel);
         if let Some(parent) = out_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -439,5 +548,135 @@ mod tests {
         let name_col = batches[0].column(0).as_string::<i32>();
         assert_ne!(name_col.value(0), "Alice");
         assert_ne!(name_col.value(1), "Bob");
+    }
+
+    #[test]
+    fn test_tokenize_paths_renames_files() {
+        let input = TempDir::new().unwrap();
+        let output = TempDir::new().unwrap();
+
+        let csv_path = input.path().join("users.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,city").unwrap();
+        writeln!(f, "Alice,Seattle").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_paths: true,
+            ..Default::default()
+        };
+        let dict_path = output.path().join(".knit-tokens.json");
+        let result = tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
+        assert_eq!(result.data_files, 1);
+
+        // "users.csv" should NOT exist — the stem "users" should be tokenized
+        let original_out = output.path().join("users.csv");
+        assert!(!original_out.exists(), "users.csv should be renamed");
+
+        // Find the actual output file (should be <token>.csv)
+        let csv_files: Vec<_> = std::fs::read_dir(output.path())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().and_then(|x| x.to_str()) == Some("csv"))
+            .collect();
+        assert_eq!(csv_files.len(), 1, "should have exactly one CSV file");
+
+        let out_name = csv_files[0].file_name().to_string_lossy().to_string();
+        assert_ne!(out_name, "users.csv");
+        assert!(out_name.ends_with(".csv"));
+    }
+
+    #[test]
+    fn test_tokenize_paths_renames_subdirectories() {
+        let input = TempDir::new().unwrap();
+        let output = TempDir::new().unwrap();
+
+        // Create a nested structure: mydata/records.csv
+        let sub = input.path().join("mydata");
+        std::fs::create_dir_all(&sub).unwrap();
+        let csv_path = sub.join("records.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "id,value").unwrap();
+        writeln!(f, "1,hello").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_paths: true,
+            ..Default::default()
+        };
+        let dict_path = output.path().join(".knit-tokens.json");
+        tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
+
+        // Original directory name should be tokenized
+        assert!(!output.path().join("mydata").exists(),
+            "mydata directory should be renamed");
+
+        // Find the output directory
+        let dirs: Vec<_> = std::fs::read_dir(output.path())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir())
+            .collect();
+        assert_eq!(dirs.len(), 1);
+        let dir_name = dirs[0].file_name().to_string_lossy().to_string();
+        assert_ne!(dir_name, "mydata");
+    }
+
+    #[test]
+    fn test_tokenize_paths_preserves_partitions() {
+        let input = TempDir::new().unwrap();
+        let output = TempDir::new().unwrap();
+
+        // Create a partition-style path: region=US/data.csv
+        let partition_dir = input.path().join("region=US");
+        std::fs::create_dir_all(&partition_dir).unwrap();
+        let csv_path = partition_dir.join("data.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "id,name").unwrap();
+        writeln!(f, "1,Alice").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_paths: true,
+            preserve_partitions: true,
+            ..Default::default()
+        };
+        let dict_path = output.path().join(".knit-tokens.json");
+        tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
+
+        // Partition folder should be preserved
+        assert!(output.path().join("region=US").exists(),
+            "partition folder region=US should be preserved");
+
+        // But the file stem should be tokenized
+        assert!(!output.path().join("region=US").join("data.csv").exists(),
+            "data.csv should be renamed");
+    }
+
+    #[test]
+    fn test_tokenize_paths_roundtrip() {
+        let input = TempDir::new().unwrap();
+        let output = TempDir::new().unwrap();
+        let restored = TempDir::new().unwrap();
+
+        let csv_path = input.path().join("users.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "name,city").unwrap();
+        writeln!(f, "Alice,Seattle").unwrap();
+
+        let config = TokenizeConfig {
+            tokenize_paths: true,
+            ..Default::default()
+        };
+        let dict_path = output.path().join(".knit-tokens.json");
+        tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
+
+        // Restore should reverse the path tokenization
+        restore(output.path(), restored.path(), &dict_path).unwrap();
+
+        // The restored file should have the original name
+        let restored_csv = restored.path().join("users.csv");
+        assert!(restored_csv.exists(), "restored users.csv should exist");
+
+        let content = std::fs::read_to_string(&restored_csv).unwrap();
+        assert!(content.contains("Alice"));
+        assert!(content.contains("Seattle"));
     }
 }
