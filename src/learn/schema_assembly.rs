@@ -495,6 +495,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
             None
         },
         stats: table_stats,
+        scaling: None,
     };
 
     (entity, rels, corrs)

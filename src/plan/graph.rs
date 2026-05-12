@@ -263,6 +263,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+            scaling: None,
         }
     }
 
@@ -530,6 +531,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
         output: None,
+                scaling: None,
             }],
             vec![],
         );
@@ -563,6 +565,7 @@ mod tests {
                 activity_count: None,
                 mixin_refs: None,
         output: None,
+                scaling: None,
             }],
             vec![],
         );
@@ -608,6 +611,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+            scaling: None,
         };
         let events = Entity {
             name: "events".to_string(),
@@ -637,6 +641,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+            scaling: None,
         };
         // No explicit relationship — only ActorRef generator
         let model = model_with(vec![users, events], vec![]);
@@ -693,6 +698,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+            scaling: None,
         };
         let model = model_with(vec![users], vec![]);
         let result = assign_phases(&model).unwrap();

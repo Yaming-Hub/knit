@@ -21,6 +21,7 @@
 
 pub mod actor_graph;
 pub mod actor_registry;
+pub mod annotate;
 pub mod behavioral;
 pub mod clustering;
 pub mod correlation;

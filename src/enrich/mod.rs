@@ -294,6 +294,7 @@ mod tests {
                 mixin_refs: None,
                 output: None,
                 stats: None,
+                scaling: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],

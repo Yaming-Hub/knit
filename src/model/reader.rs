@@ -218,6 +218,8 @@ struct TableMeta {
     mixins: Option<Vec<String>>,
     #[serde(default)]
     stats: Option<TableStats>,
+    #[serde(default)]
+    scaling: Option<DimensionAnnotation>,
 }
 #[derive(Debug, Deserialize)]
 struct RelationshipsFile {
@@ -291,6 +293,7 @@ fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
         mixin_refs: table.table.mixins,
         output,
         stats: table.table.stats,
+        scaling: table.table.scaling,
     }
 }
 
