@@ -152,6 +152,12 @@ fn main() -> anyhow::Result<()> {
             } => blueprint::run_merge(base, overlay, output.as_deref(), cli.json),
             BlueprintAction::Graph { file, format } => blueprint::run_graph(file, &format),
             BlueprintAction::Lint { file } => blueprint::run_lint(file, cli.json),
+            BlueprintAction::Subset {
+                file,
+                entities,
+                no_deps,
+                output,
+            } => blueprint::run_subset(file, &entities, !no_deps, output.as_deref(), cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

@@ -457,6 +457,20 @@ pub enum BlueprintAction {
         /// Path to the blueprint file.
         file: String,
     },
+    /// Extract a subset of entities (with dependencies) into a smaller blueprint.
+    Subset {
+        /// Path to the blueprint file.
+        file: String,
+        /// Entities to include (repeatable).
+        #[arg(long = "entity", required = true)]
+        entities: Vec<String>,
+        /// Skip automatic dependency inclusion (only emit named entities).
+        #[arg(long)]
+        no_deps: bool,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.

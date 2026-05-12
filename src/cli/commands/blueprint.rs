@@ -1638,6 +1638,155 @@ pub fn run_lint(path: &str, json: bool) -> Result<()> {
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Subset
+// ---------------------------------------------------------------------------
+
+/// Compute the subset of a model containing only the specified entities and
+/// their transitive dependencies (parent entities reachable via relationships).
+pub fn subset_model(model: &DataModel, roots: &[String], include_deps: bool) -> DataModel {
+    let entity_names: BTreeSet<String> = model.entities.iter().map(|e| e.name.clone()).collect();
+
+    // Start with requested roots (filter to those that actually exist).
+    let mut selected: BTreeSet<String> = roots
+        .iter()
+        .filter(|r| entity_names.contains(r.as_str()))
+        .cloned()
+        .collect();
+
+    // Transitively include parent entities reachable via relationships.
+    if include_deps {
+        let mut frontier: Vec<String> = selected.iter().cloned().collect();
+        while let Some(name) = frontier.pop() {
+            for rel in &model.relationships {
+                // If this entity is the child (`from`), the parent (`to`) is a dependency.
+                if rel.from == name && !selected.contains(&rel.to) {
+                    selected.insert(rel.to.clone());
+                    frontier.push(rel.to.clone());
+                }
+            }
+        }
+    }
+
+    // Filter entities.
+    let entities: Vec<Entity> = model
+        .entities
+        .iter()
+        .filter(|e| selected.contains(&e.name))
+        .cloned()
+        .collect();
+
+    // Filter relationships: keep only those where both sides are in the subset.
+    let relationships = model
+        .relationships
+        .iter()
+        .filter(|r| selected.contains(&r.from) && selected.contains(&r.to))
+        .cloned()
+        .collect();
+
+    // Filter correlations: keep only those referencing entities in the subset.
+    let correlations = model
+        .correlations
+        .iter()
+        .filter(|c| selected.contains(&c.entity))
+        .cloned()
+        .collect();
+
+    // Filter noise profiles: keep those whose entity is in the subset.
+    let noise_profiles = model
+        .noise_profiles
+        .iter()
+        .filter(|np| !np.entity.is_empty() && selected.contains(&np.entity))
+        .cloned()
+        .collect();
+
+    // Filter actor relationships: keep those where both actors are in the subset.
+    let actor_relationships = model
+        .actor_relationships
+        .iter()
+        .filter(|ar| selected.contains(&ar.from_entity) && selected.contains(&ar.to_entity))
+        .cloned()
+        .collect();
+
+    DataModel {
+        name: model.name.clone(),
+        description: model.description.clone(),
+        seed: model.seed,
+        locale: model.locale.clone(),
+        timezone: model.timezone.clone(),
+        entities,
+        relationships,
+        noise_profiles,
+        correlations,
+        params: model.params.clone(),
+        blueprint_version: model.blueprint_version.clone(),
+        personas: model.personas.clone(),
+        actor_relationships,
+        custom_types: model.custom_types.clone(),
+        mixins: model.mixins.clone(),
+        companion_files: model.companion_files.clone(),
+    }
+}
+
+/// Run the `blueprint subset` command.
+pub fn run_subset(
+    path: &str,
+    entities: &[String],
+    include_deps: bool,
+    output: Option<&str>,
+    json: bool,
+) -> Result<()> {
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load blueprint `{}`", path))?;
+
+    if entities.is_empty() {
+        anyhow::bail!("at least one --entity must be specified");
+    }
+
+    // Warn about requested entities not found in the model.
+    let existing: BTreeSet<&str> = model.entities.iter().map(|e| e.name.as_str()).collect();
+    for name in entities {
+        if !existing.contains(name.as_str()) {
+            eprintln!(
+                "{} entity `{}` not found in blueprint (available: {})",
+                "warning:".yellow(),
+                name,
+                existing.iter().copied().collect::<Vec<_>>().join(", ")
+            );
+        }
+    }
+
+    let subset = subset_model(&model, entities, include_deps);
+
+    if subset.entities.is_empty() {
+        anyhow::bail!(
+            "no matching entities found; available: {}",
+            existing.iter().copied().collect::<Vec<_>>().join(", ")
+        );
+    }
+
+    let output_str = if json {
+        serde_json::to_string_pretty(&subset)?
+    } else {
+        serialize_model_to_toml(&subset)?
+    };
+
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &output_str)
+            .with_context(|| format!("failed to write `{}`", out_path))?;
+        eprintln!(
+            "{} wrote subset ({} entities) to {}",
+            "✓".green(),
+            subset.entities.len(),
+            out_path
+        );
+    } else {
+        println!("{}", output_str);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2576,5 +2725,147 @@ mod tests {
         assert!(parsed.as_array().unwrap().len() > 0);
         assert!(parsed[0]["severity"].is_string());
         assert!(parsed[0]["message"].is_string());
+    }
+
+    // -----------------------------------------------------------------------
+    // Subset tests
+    // -----------------------------------------------------------------------
+
+    use crate::core::types::{Relationship, RelationshipKind};
+
+    fn make_relationship(name: &str, from: &str, to: &str) -> Relationship {
+        Relationship {
+            name: name.to_string(),
+            from: from.to_string(),
+            to: to.to_string(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn subset_single_entity_no_deps() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        let subset = subset_model(&model, &["orders".into()], false);
+        assert_eq!(subset.entities.len(), 1);
+        assert_eq!(subset.entities[0].name, "orders");
+    }
+
+    #[test]
+    fn subset_includes_transitive_deps() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("regions", vec![make_field("id", DataType::Int)]),
+                make_entity("stores", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.relationships = vec![
+            make_relationship("orders_stores", "orders", "stores"),
+            make_relationship("stores_regions", "stores", "regions"),
+        ];
+        let subset = subset_model(&model, &["orders".into()], true);
+        assert_eq!(subset.entities.len(), 3);
+        assert_eq!(subset.relationships.len(), 2);
+    }
+
+    #[test]
+    fn subset_filters_unrelated_relationships() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("a", vec![make_field("id", DataType::Int)]),
+                make_entity("b", vec![make_field("id", DataType::Int)]),
+                make_entity("c", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.relationships = vec![
+            make_relationship("a_b", "a", "b"),
+            make_relationship("c_b", "c", "b"),
+        ];
+        // Select only "a" with deps -> pulls in "b", but "c" excluded.
+        let subset = subset_model(&model, &["a".into()], true);
+        assert_eq!(subset.entities.len(), 2); // a, b
+        assert_eq!(subset.relationships.len(), 1); // a_b only
+        assert_eq!(subset.relationships[0].name, "a_b");
+    }
+
+    #[test]
+    fn subset_filters_correlations() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("age", DataType::Int)]),
+                make_entity("orders", vec![make_field("amount", DataType::Float)]),
+            ],
+        );
+        model.correlations = vec![
+            crate::core::Correlation {
+                entity: "users".into(),
+                correlation_type: None,
+                fields: vec!["age".into()],
+                matrix: vec![],
+                conditional: vec![],
+                copula: None,
+                dependent: None,
+                given: None,
+                distributions: vec![],
+                default: None,
+            },
+            crate::core::Correlation {
+                entity: "orders".into(),
+                correlation_type: None,
+                fields: vec!["amount".into()],
+                matrix: vec![],
+                conditional: vec![],
+                copula: None,
+                dependent: None,
+                given: None,
+                distributions: vec![],
+                default: None,
+            },
+        ];
+        let subset = subset_model(&model, &["users".into()], false);
+        assert_eq!(subset.correlations.len(), 1);
+        assert_eq!(subset.correlations[0].entity, "users");
+    }
+
+    #[test]
+    fn subset_unknown_entity_ignored() {
+        let model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        let subset = subset_model(&model, &["nonexistent".into()], true);
+        assert_eq!(subset.entities.len(), 0);
+    }
+
+    #[test]
+    fn subset_preserves_model_metadata() {
+        let mut model = make_model(
+            "my_model",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        model.description = Some("A test model".into());
+        model.locale = "de_DE".into();
+        let subset = subset_model(&model, &["users".into()], true);
+        assert_eq!(subset.name, "my_model");
+        assert_eq!(subset.description.as_deref(), Some("A test model"));
+        assert_eq!(subset.locale, "de_DE");
     }
 }
