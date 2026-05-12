@@ -7,6 +7,7 @@ pub mod extract;
 pub mod interactive;
 pub mod mapper;
 pub mod merge;
+pub mod quality;
 
 use std::path::Path;
 
@@ -62,6 +63,8 @@ pub struct EnrichResult {
     pub unmapped_columns: usize,
     /// The mappings used.
     pub mappings: Vec<ColumnMapping>,
+    /// Quality report (present when enrichment ran, not dry-run).
+    pub quality_report: Option<quality::QualityReport>,
 }
 
 /// Run the enrichment pipeline: load reference → profile → map → extract → merge.
@@ -121,6 +124,7 @@ pub fn enrich(
             skipped_fields: 0,
             unmapped_columns: unmapped_count,
             mappings,
+            quality_report: None,
         });
     }
 
@@ -128,6 +132,7 @@ pub fn enrich(
     let ref_row_count = batches.iter().map(|b| b.num_rows()).sum::<usize>() as u64;
     let mut enriched_fields = 0;
     let mut skipped_fields = 0;
+    let mut field_scores = Vec::new();
 
     let accepted_mappings: Vec<&ColumnMapping> = mappings.iter()
         .filter(|m| m.confidence >= config.min_confidence)
@@ -162,12 +167,18 @@ pub fn enrich(
 
         // Merge into the field's generator
         let merged = merge_enrichment(field, &enrichment, ref_row_count);
+
+        // Score the field enrichment quality
+        field_scores.push(quality::score_field(mapping, &enrichment, merged));
+
         if merged {
             enriched_fields += 1;
         } else {
             skipped_fields += 1;
         }
     }
+
+    let quality_report = Some(quality::build_report(field_scores));
 
     Ok(EnrichResult {
         ref_columns: profiles.len(),
@@ -176,6 +187,7 @@ pub fn enrich(
         skipped_fields,
         unmapped_columns: unmapped_count,
         mappings,
+        quality_report,
     })
 }
 
