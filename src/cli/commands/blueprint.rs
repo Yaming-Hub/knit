@@ -12,7 +12,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use crate::core::{DataModel, Entity, Field};
 
-use super::load_blueprint;
+use super::{load_blueprint, validate_model};
 
 /// Run the `schema expand` command.
 ///
@@ -2542,7 +2542,28 @@ pub fn scaffold_model(
 
     let mut relationships = Vec::new();
     for spec in rel_specs {
-        let (from_entity, from_field, to_entity, _to_field) = parse_rel_spec(spec)?;
+        let (from_entity, from_field, to_entity, to_field) = parse_rel_spec(spec)?;
+
+        // Validate: if to_field is specified, it must be the PK of the target entity.
+        // The Relationship type resolves FKs against the target PK, so a non-PK
+        // target field would produce incorrect semantics.
+        if let Some(ref tf) = to_field {
+            let target = entities.iter().find(|e| e.name == to_entity);
+            if let Some(target_ent) = target {
+                let is_pk = target_ent
+                    .fields
+                    .iter()
+                    .any(|f| f.name == *tf && f.primary_key == Some(true));
+                if !is_pk {
+                    anyhow::bail!(
+                        "relationship target field `{}.{}` is not a primary key; \
+                         FK relationships resolve against the target entity's PK",
+                        to_entity,
+                        tf
+                    );
+                }
+            }
+        }
         let rel_name = format!("{}_{}", from_entity, to_entity).to_lowercase();
         let foreign_key = from_field;
         relationships.push(crate::core::Relationship {
@@ -2595,6 +2616,20 @@ pub fn run_scaffold(
     }
 
     let model = scaffold_model(name, entity_specs, rel_specs)?;
+
+    // Validate the scaffolded model to catch issues like duplicate entities,
+    // relationships referencing unknown entities, missing FK fields, etc.
+    let errors = validate_model(&model);
+    if !errors.is_empty() {
+        for err in &errors {
+            eprintln!("{} {}", "warning:".yellow().bold(), err);
+        }
+        eprintln!(
+            "{} scaffold produced {} warning(s); review the output",
+            "⚠".yellow(),
+            errors.len()
+        );
+    }
 
     let output_str = if json {
         serde_json::to_string_pretty(&model)?
@@ -4141,6 +4176,21 @@ mod tests {
         assert!(scaffold_model("test", &["".into()], &[]).is_err());
         assert!(scaffold_model("test", &["NoFields:".into()], &[]).is_err());
         assert!(parse_rel_spec("noequals").is_err());
+    }
+
+    #[test]
+    fn scaffold_rejects_non_pk_target() {
+        let err = scaffold_model(
+            "test",
+            &[
+                "Users:id:int,email:string".into(),
+                "Orders:id:int,user_email:string".into(),
+            ],
+            &["Orders.user_email=Users.email".into()],
+        );
+        assert!(err.is_err());
+        let msg = err.unwrap_err().to_string();
+        assert!(msg.contains("not a primary key"));
     }
 
     #[test]
