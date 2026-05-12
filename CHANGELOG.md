@@ -6,6 +6,12 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Interactive learn review** (`--review`) — Review low and medium-confidence
+  decisions interactively before writing the blueprint. Shows the current choice,
+  alternatives with scores, and lets users accept, skip, or switch to an
+  alternative. Distribution fit decisions can be overridden to change the
+  distribution kind in the output blueprint. Works with both batch and
+  incremental (`--state --finalize`) modes.
 - **Density control** (`--density Entity=Factor`) — Per-entity row density multiplier
   for `knit scale`. Scales an entity's row count without changing actor count, time
   range, or dimensions. Repeatable for multiple entities. Applied after actor/time/dim

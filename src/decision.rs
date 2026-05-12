@@ -59,6 +59,29 @@ pub enum DecisionKind {
     Other,
 }
 
+impl DecisionKind {
+    /// Short human-readable label for display.
+    pub fn label(&self) -> &'static str {
+        match self {
+            DecisionKind::DistributionFit => "distribution",
+            DecisionKind::TypeInference => "type",
+            DecisionKind::GeneratorSelection => "generator",
+            DecisionKind::RelationshipDetection => "relationship",
+            DecisionKind::TemporalDetection => "temporal",
+            DecisionKind::CorrelationEvaluation => "correlation",
+            DecisionKind::PrimaryKeyType => "primary-key",
+            DecisionKind::PartitionAllocation => "partition",
+            DecisionKind::CountScaling => "count",
+            DecisionKind::ForeignKeyGenerator => "fk-generator",
+            DecisionKind::NoiseInjection => "noise",
+            DecisionKind::IndexStrategy => "index",
+            DecisionKind::CompanionClassification => "companion",
+            DecisionKind::NullHandling => "null",
+            DecisionKind::Other => "other",
+        }
+    }
+}
+
 /// Confidence level for a decision.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -80,6 +103,15 @@ impl Confidence {
             Confidence::Medium
         } else {
             Confidence::Low
+        }
+    }
+
+    /// Short human-readable label.
+    pub fn label(&self) -> &'static str {
+        match self {
+            Confidence::High => "high",
+            Confidence::Medium => "medium",
+            Confidence::Low => "low",
         }
     }
 }
@@ -209,6 +241,12 @@ impl DecisionLogger {
             .filter(|d| d.confidence == Confidence::Low)
             .cloned()
             .collect()
+    }
+
+    /// Get all recorded decisions.
+    pub fn all_decisions(&self) -> Vec<Decision> {
+        let inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        inner.decisions.clone()
     }
 
     /// Produce the final report.

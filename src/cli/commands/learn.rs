@@ -148,6 +148,7 @@ pub fn run(
     entities: &[String],
     actors_opts: Option<&ActorsOpts>,
     model_format: Option<crate::cli::ModelFormat>,
+    review: bool,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     // Validate argument combinations
@@ -160,6 +161,13 @@ pub fn run(
 
     if let Some(0) = sample {
         anyhow::bail!("--sample must be at least 1");
+    }
+
+    // --review requires the decision logger to be active
+    if review && cli.decision_report.is_none() {
+        // Auto-enable the decision logger for review mode
+        let logger = crate::decision::DecisionLogger::new();
+        crate::decision::set_global_logger(logger);
     }
 
     // Build entity filter set (empty = all)
@@ -179,13 +187,14 @@ pub fn run(
             strict,
             &entity_filter,
             model_format,
+            review,
             cli,
         );
     }
 
     // Batch mode (original behavior)
     let source = source.unwrap();
-    run_batch(source, output, sample, &entity_filter, actors_opts, model_format, cli)
+    run_batch(source, output, sample, &entity_filter, actors_opts, model_format, review, cli)
 }
 
 /// Batch mode: load all data, profile, fit, emit blueprint (original behavior).
@@ -196,6 +205,7 @@ fn run_batch(
     entity_filter: &HashSet<String>,
     actors_opts: Option<&ActorsOpts>,
     model_format: Option<crate::cli::ModelFormat>,
+    review: bool,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     let _learn_span = info_span!("learn", source = %source).entered();
@@ -447,6 +457,29 @@ fn run_batch(
         );
     }
 
+    // 5d. Interactive review of low-confidence decisions
+    if review {
+        let decisions = if let Some(logger) = crate::decision::global_logger() {
+            logger.low_confidence_decisions()
+        } else {
+            vec![]
+        };
+        // Include medium-confidence decisions with alternatives too
+        let all_decisions = if let Some(logger) = crate::decision::global_logger() {
+            logger.all_decisions()
+        } else {
+            vec![]
+        };
+        let overrides = crate::learn::review::interactive_review(
+            &mut data_model,
+            &all_decisions,
+            cli.quiet,
+        );
+        if overrides > 0 && !cli.quiet {
+            eprintln!();
+        }
+    }
+
     // 6. Write output (flat TOML or structured directory)
     write_model_output(
         &data_model,
@@ -513,6 +546,7 @@ fn run_incremental(
     strict: bool,
     entity_filter: &HashSet<String>,
     model_format: Option<crate::cli::ModelFormat>,
+    review: bool,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     use crate::learn::incremental::ingest_batches_to_state;
@@ -704,7 +738,7 @@ fn run_incremental(
         // Since output has a default, we always emit when finalize is set
         // or when source is provided with --state (update + finalize in one pass)
         if finalize {
-            emit_blueprint_from_state(&state, output, entity_filter, model_format, cli)?;
+            emit_blueprint_from_state(&state, output, entity_filter, model_format, review, cli)?;
         }
     }
 
@@ -717,6 +751,7 @@ fn emit_blueprint_from_state(
     output: &str,
     entity_filter: &HashSet<String>,
     model_format: Option<crate::cli::ModelFormat>,
+    review: bool,
     cli: &crate::cli::Cli,
 ) -> Result<()> {
     use crate::learn::incremental::finalize_state;
@@ -795,6 +830,23 @@ fn emit_blueprint_from_state(
             "  The schema was written but may need manual adjustment \
              before generating data.\n"
         );
+    }
+
+    // Interactive review of low-confidence decisions
+    if review {
+        let all_decisions = if let Some(logger) = crate::decision::global_logger() {
+            logger.all_decisions()
+        } else {
+            vec![]
+        };
+        let overrides = crate::learn::review::interactive_review(
+            &mut data_model,
+            &all_decisions,
+            cli.quiet,
+        );
+        if overrides > 0 && !cli.quiet {
+            eprintln!();
+        }
     }
 
     // Write output (flat or structured)
@@ -2880,6 +2932,7 @@ mod tests {
             &[],
             None,
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -2931,6 +2984,7 @@ mod tests {
             &[],
             None,
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -2956,6 +3010,7 @@ mod tests {
             &[],
             None,
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_err());
@@ -2983,6 +3038,7 @@ mod tests {
             &[],
             None,
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn failed: {result:?}");
@@ -3175,6 +3231,7 @@ mod tests {
             &[],
             Some(&opts),
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn --actors failed: {result:?}");
@@ -3216,6 +3273,7 @@ mod tests {
             &[],
             Some(&opts),
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn --actor-column failed: {result:?}");
@@ -3242,6 +3300,7 @@ mod tests {
                 max_personas: None,
             }),
             None,
+            false,
             &quiet_cli(),
         );
         assert!(result.is_err());
@@ -3274,6 +3333,7 @@ mod tests {
             &[],
             None,
             Some(crate::cli::ModelFormat::Structured),
+            false,
             &quiet_cli(),
         );
         assert!(result.is_ok(), "learn --model-format structured failed: {result:?}");
