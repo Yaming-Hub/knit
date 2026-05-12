@@ -28,11 +28,11 @@ pub fn confirm_mappings(mappings: Vec<ColumnMapping>) -> Result<Vec<ColumnMappin
     }
 
     if !io::stdin().is_terminal() {
-        eprintln!(
-            "\n{} --interactive requires a terminal (stdin is not a TTY), accepting all mappings.",
-            "warning:".yellow().bold()
+        anyhow::bail!(
+            "--interactive requires an interactive terminal (stdin is not a TTY). \
+             Remove --interactive to accept all mappings automatically, \
+             or use --dry-run to preview mappings."
         );
-        return Ok(mappings);
     }
 
     let stdin = io::stdin();
@@ -115,11 +115,17 @@ fn prompt_mapping_action(reader: &mut impl BufRead) -> Result<MappingAction> {
         io::stderr().flush()?;
 
         let mut line = String::new();
-        reader.read_line(&mut line)?;
+        let n = reader.read_line(&mut line)?;
+        if n == 0 {
+            // EOF — treat as reject to avoid silent acceptance
+            eprintln!("    (EOF — rejecting remaining mappings)");
+            return Ok(MappingAction::Reject);
+        }
         let input = line.trim().to_lowercase();
 
         match input.as_str() {
-            "" | "a" | "accept" | "y" | "yes" => return Ok(MappingAction::Accept),
+            "a" | "accept" | "y" | "yes" => return Ok(MappingAction::Accept),
+            "" => return Ok(MappingAction::Accept), // Enter = accept
             "r" | "reject" | "n" | "no" => return Ok(MappingAction::Reject),
             _ => {
                 eprintln!("    {} enter [a] accept or [r] reject", "?".yellow());
@@ -176,6 +182,27 @@ mod tests {
         let mut reader = Cursor::new(b"xyz\na\n");
         let action = prompt_mapping_action(&mut reader).unwrap();
         assert_eq!(action, MappingAction::Accept);
+    }
+
+    #[test]
+    fn prompt_eof_rejects() {
+        let mut reader = Cursor::new(b"");
+        let action = prompt_mapping_action(&mut reader).unwrap();
+        assert_eq!(action, MappingAction::Reject);
+    }
+
+    #[test]
+    fn confirm_eof_rejects_remaining() {
+        let mappings = vec![
+            make_mapping("email", "email", 0.95),
+            make_mapping("age", "age", 0.8),
+            make_mapping("name", "name", 0.9),
+        ];
+        // Accept first, then EOF — remaining two get rejected
+        let reader = Cursor::new(b"a\n");
+        let result = confirm_mappings_with_reader(mappings, reader).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].ref_col_name, "email");
     }
 
     #[test]
