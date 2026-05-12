@@ -444,6 +444,14 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Visualize entity relationships as a dependency graph.
+    Graph {
+        /// Path to the blueprint file.
+        file: String,
+        /// Output format: dot (GraphViz) or json.
+        #[arg(short, long, default_value = "dot")]
+        format: String,
+    },
 }
 
 /// Model directory subcommands.

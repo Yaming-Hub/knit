@@ -1285,6 +1285,148 @@ pub fn run_merge(base_path: &str, overlay_path: &str, output: Option<&str>, json
     Ok(())
 }
 
+// ── Blueprint Graph ─────────────────────────────────────────────────
+
+/// A node in the entity dependency graph.
+#[derive(Debug, serde::Serialize)]
+struct GraphNode {
+    name: String,
+    fields: usize,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    actor: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    count: Option<u64>,
+}
+
+/// An edge in the entity dependency graph.
+#[derive(Debug, serde::Serialize)]
+struct GraphEdge {
+    from: String,
+    to: String,
+    kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    foreign_key: Option<String>,
+    name: String,
+}
+
+/// Full graph output.
+#[derive(Debug, serde::Serialize)]
+struct GraphOutput {
+    nodes: Vec<GraphNode>,
+    edges: Vec<GraphEdge>,
+}
+
+/// Build the graph representation from a DataModel.
+pub fn build_graph(model: &DataModel) -> GraphOutput {
+    let nodes: Vec<GraphNode> = model
+        .entities
+        .iter()
+        .map(|e| {
+            let count = match &e.count {
+                crate::core::CountSpec::Fixed(n) => Some(*n),
+                crate::core::CountSpec::Range { min, max } => Some((min + max) / 2),
+                _ => None,
+            };
+            GraphNode {
+                name: e.name.clone(),
+                fields: e.fields.len(),
+                actor: e.actor,
+                count,
+            }
+        })
+        .collect();
+
+    let edges: Vec<GraphEdge> = model
+        .relationships
+        .iter()
+        .map(|r| GraphEdge {
+            from: r.from.clone(),
+            to: r.to.clone(),
+            kind: r.kind.to_string(),
+            foreign_key: r.foreign_key.clone(),
+            name: r.name.clone(),
+        })
+        .collect();
+
+    GraphOutput { nodes, edges }
+}
+
+/// Render a graph as DOT (GraphViz) format.
+fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
+    let mut out = String::new();
+    out.push_str(&format!(
+        "digraph \"{}\" {{\n  rankdir=LR;\n  node [shape=record, style=filled, fillcolor=\"#f0f0f0\"];\n\n",
+        model.name
+    ));
+
+    // Nodes.
+    for node in &graph.nodes {
+        let mut label = node.name.clone();
+        label.push_str(&format!(" | {} fields", node.fields));
+        if let Some(count) = node.count {
+            label.push_str(&format!(" | ~{} rows", count));
+        }
+        let color = if node.actor {
+            "\"#d4edda\""
+        } else {
+            "\"#f0f0f0\""
+        };
+        out.push_str(&format!(
+            "  \"{}\" [label=\"{{{}}}\", fillcolor={}];\n",
+            node.name, label, color
+        ));
+    }
+
+    out.push('\n');
+
+    // Edges.
+    for edge in &graph.edges {
+        let label = if edge.from == edge.to {
+            format!("{} (self)", edge.kind)
+        } else {
+            edge.kind.clone()
+        };
+        let fk_label = edge
+            .foreign_key
+            .as_deref()
+            .map(|fk| format!("\\n({})", fk))
+            .unwrap_or_default();
+        let style = if edge.from == edge.to {
+            ", style=dashed"
+        } else {
+            ""
+        };
+        out.push_str(&format!(
+            "  \"{}\" -> \"{}\" [label=\"{}{}\"{}];\n",
+            edge.from, edge.to, label, fk_label, style
+        ));
+    }
+
+    out.push_str("}\n");
+    out
+}
+
+/// Run `knit blueprint graph`.
+pub fn run_graph(path: &str, format: &str) -> Result<()> {
+    let model = load_blueprint(path)
+        .with_context(|| format!("failed to load blueprint `{}`", path))?;
+    let graph = build_graph(&model);
+
+    match format {
+        "dot" | "graphviz" => {
+            print!("{}", render_dot(&model, &graph));
+        }
+        "json" => {
+            println!("{}", serde_json::to_string_pretty(&graph)?);
+        }
+        other => {
+            anyhow::bail!("unsupported graph format `{}` (use `dot` or `json`)", other);
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1901,5 +2043,154 @@ mod tests {
         let json = serde_json::to_string(&report).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["entities_added"][0], "b");
+    }
+
+    // ── Graph tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn graph_empty_model() {
+        let model = make_model("empty", vec![]);
+        let graph = build_graph(&model);
+        assert!(graph.nodes.is_empty());
+        assert!(graph.edges.is_empty());
+    }
+
+    #[test]
+    fn graph_nodes_from_entities() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int), make_field("name", DataType::String)]),
+                make_entity("orders", vec![make_field("oid", DataType::Int)]),
+            ],
+        );
+        let graph = build_graph(&model);
+        assert_eq!(graph.nodes.len(), 2);
+        assert_eq!(graph.nodes[0].name, "users");
+        assert_eq!(graph.nodes[0].fields, 2);
+        assert_eq!(graph.nodes[0].count, Some(100)); // Fixed(100) from make_entity
+        assert_eq!(graph.nodes[1].name, "orders");
+        assert_eq!(graph.nodes[1].fields, 1);
+    }
+
+    #[test]
+    fn graph_edges_from_relationships() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.relationships.push(Relationship {
+            name: "orders_users".into(),
+            from: "orders".into(),
+            to: "users".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let graph = build_graph(&model);
+        assert_eq!(graph.edges.len(), 1);
+        assert_eq!(graph.edges[0].from, "orders");
+        assert_eq!(graph.edges[0].to, "users");
+        assert_eq!(graph.edges[0].kind, "one_to_many");
+        assert_eq!(graph.edges[0].foreign_key, Some("user_id".into()));
+    }
+
+    #[test]
+    fn graph_dot_output_contains_structure() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut model = make_model(
+            "myschema",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("oid", DataType::Int)]),
+            ],
+        );
+        model.relationships.push(Relationship {
+            name: "fk_orders_users".into(),
+            from: "orders".into(),
+            to: "users".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let graph = build_graph(&model);
+        let dot = render_dot(&model, &graph);
+        assert!(dot.contains("digraph \"myschema\""));
+        assert!(dot.contains("\"users\""));
+        assert!(dot.contains("\"orders\""));
+        assert!(dot.contains("\"orders\" -> \"users\""));
+        assert!(dot.contains("(user_id)"));
+    }
+
+    #[test]
+    fn graph_self_referential_dashed() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut model = make_model(
+            "test",
+            vec![make_entity("categories", vec![make_field("id", DataType::Int)])],
+        );
+        model.relationships.push(Relationship {
+            name: "self_ref".into(),
+            from: "categories".into(),
+            to: "categories".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("parent_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let graph = build_graph(&model);
+        let dot = render_dot(&model, &graph);
+        assert!(dot.contains("style=dashed"));
+        assert!(dot.contains("(self)"));
+    }
+
+    #[test]
+    fn graph_json_output() {
+        let model = make_model(
+            "test",
+            vec![make_entity("t", vec![make_field("id", DataType::Int)])],
+        );
+        let graph = build_graph(&model);
+        let json = serde_json::to_string(&graph).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["nodes"][0]["name"], "t");
+        assert_eq!(parsed["nodes"][0]["fields"], 1);
+    }
+
+    #[test]
+    fn graph_actor_node_flag() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].actor = true;
+        let graph = build_graph(&model);
+        assert!(graph.nodes[0].actor);
+        let dot = render_dot(&model, &graph);
+        assert!(dot.contains("#d4edda")); // actor node color
     }
 }
