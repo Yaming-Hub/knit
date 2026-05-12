@@ -1450,6 +1450,217 @@ pub fn run_graph(path: &str, format: &str) -> Result<()> {
     Ok(())
 }
 
+// ── Blueprint Lint ──────────────────────────────────────────────────
+
+/// Severity level for lint findings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LintSeverity {
+    Warning,
+    Info,
+}
+
+/// A single lint finding.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct LintFinding {
+    pub severity: LintSeverity,
+    pub entity: Option<String>,
+    pub field: Option<String>,
+    pub message: String,
+}
+
+/// Run all lint checks on a DataModel.
+pub fn lint_model(model: &DataModel) -> Vec<LintFinding> {
+    let mut findings = Vec::new();
+    let entity_names: BTreeSet<&str> = model.entities.iter().map(|e| e.name.as_str()).collect();
+
+    // Collect all entities referenced by relationships (both sides).
+    let mut referenced: BTreeSet<&str> = BTreeSet::new();
+    for rel in &model.relationships {
+        referenced.insert(&rel.from);
+        referenced.insert(&rel.to);
+    }
+
+    // Collect FK field names from relationships.
+    let mut fk_fields: BTreeSet<(&str, String)> = BTreeSet::new();
+    for rel in &model.relationships {
+        let fk = rel
+            .foreign_key
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+        fk_fields.insert((&rel.from, fk));
+    }
+
+    for entity in &model.entities {
+        // 1. Entity with no fields.
+        if entity.fields.is_empty() {
+            findings.push(LintFinding {
+                severity: LintSeverity::Warning,
+                entity: Some(entity.name.clone()),
+                field: None,
+                message: "entity has no fields".into(),
+            });
+        }
+
+        // 2. Missing description.
+        if entity.description.is_none() {
+            findings.push(LintFinding {
+                severity: LintSeverity::Info,
+                entity: Some(entity.name.clone()),
+                field: None,
+                message: "entity has no description".into(),
+            });
+        }
+
+        // 3. Orphan entity (not referenced by any relationship and not an actor).
+        if model.entities.len() > 1
+            && !referenced.contains(entity.name.as_str())
+            && !entity.actor
+        {
+            findings.push(LintFinding {
+                severity: LintSeverity::Info,
+                entity: Some(entity.name.clone()),
+                field: None,
+                message: "entity is not referenced by any relationship".into(),
+            });
+        }
+
+        // 4. Duplicate field names.
+        let mut seen_fields: BTreeSet<&str> = BTreeSet::new();
+        for field in &entity.fields {
+            if !seen_fields.insert(&field.name) {
+                findings.push(LintFinding {
+                    severity: LintSeverity::Warning,
+                    entity: Some(entity.name.clone()),
+                    field: Some(field.name.clone()),
+                    message: "duplicate field name".into(),
+                });
+            }
+        }
+
+        // 5. Fields without generators (skip PKs and FKs).
+        for field in &entity.fields {
+            if field.generator.is_none()
+                && field.primary_key != Some(true)
+                && !fk_fields.contains(&(entity.name.as_str(), field.name.clone()))
+            {
+                findings.push(LintFinding {
+                    severity: LintSeverity::Info,
+                    entity: Some(entity.name.clone()),
+                    field: Some(field.name.clone()),
+                    message: "field has no generator specified".into(),
+                });
+            }
+        }
+    }
+
+    // 6. Dangling relationship references.
+    for rel in &model.relationships {
+        if !entity_names.contains(rel.from.as_str()) {
+            findings.push(LintFinding {
+                severity: LintSeverity::Warning,
+                entity: None,
+                field: None,
+                message: format!(
+                    "relationship `{}`: `from` entity `{}` does not exist",
+                    rel.name, rel.from
+                ),
+            });
+        }
+        if !entity_names.contains(rel.to.as_str()) {
+            findings.push(LintFinding {
+                severity: LintSeverity::Warning,
+                entity: None,
+                field: None,
+                message: format!(
+                    "relationship `{}`: `to` entity `{}` does not exist",
+                    rel.name, rel.to
+                ),
+            });
+        }
+    }
+
+    // 7. Self-referential relationships without acyclic flag.
+    for rel in &model.relationships {
+        if rel.from == rel.to && rel.acyclic != Some(true) {
+            findings.push(LintFinding {
+                severity: LintSeverity::Info,
+                entity: Some(rel.from.clone()),
+                field: None,
+                message: format!(
+                    "self-referential relationship `{}` has no `acyclic = true` flag",
+                    rel.name
+                ),
+            });
+        }
+    }
+
+    // 8. Noise profiles targeting non-existent entities.
+    for np in &model.noise_profiles {
+        if !np.entity.is_empty() && !entity_names.contains(np.entity.as_str()) {
+            findings.push(LintFinding {
+                severity: LintSeverity::Warning,
+                entity: None,
+                field: None,
+                message: format!(
+                    "noise profile `{}` targets non-existent entity `{}`",
+                    np.name, np.entity
+                ),
+            });
+        }
+    }
+
+    findings
+}
+
+/// Run `knit blueprint lint`.
+pub fn run_lint(path: &str, json: bool) -> Result<()> {
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load blueprint `{}`", path))?;
+    let findings = lint_model(&model);
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&findings)?);
+        return Ok(());
+    }
+
+    if findings.is_empty() {
+        println!("{}", "No issues found.".green());
+        return Ok(());
+    }
+
+    let warnings = findings
+        .iter()
+        .filter(|f| f.severity == LintSeverity::Warning)
+        .count();
+    let infos = findings
+        .iter()
+        .filter(|f| f.severity == LintSeverity::Info)
+        .count();
+
+    for finding in &findings {
+        let icon = match finding.severity {
+            LintSeverity::Warning => "⚠".yellow(),
+            LintSeverity::Info => "ℹ".cyan(),
+        };
+        let location = match (&finding.entity, &finding.field) {
+            (Some(e), Some(f)) => format!("{}.{}", e, f),
+            (Some(e), None) => e.clone(),
+            _ => "model".into(),
+        };
+        println!("  {} {} — {}", icon, location.bold(), finding.message);
+    }
+
+    println!();
+    println!(
+        "  {} warning(s), {} info(s)",
+        warnings.to_string().yellow(),
+        infos.to_string().cyan()
+    );
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2255,5 +2466,197 @@ mod tests {
         assert!(dot.contains("user\\\"data"));
         // Should not contain unescaped metacharacters in DOT strings
         assert!(!dot.contains("\"my|schema\""));
+    }
+
+    // ── Lint tests ──────────────────────────────────────────────────
+
+    #[test]
+    fn lint_clean_model() {
+        let mut f = make_field("id", DataType::Int);
+        f.primary_key = Some(true);
+        let mut model = make_model("test", vec![make_entity("users", vec![f])]);
+        model.entities[0].description = Some("User table".into());
+        let findings = lint_model(&model);
+        // Single entity: no orphan check, has description, has PK (so no "no generator" lint)
+        assert!(findings.is_empty(), "unexpected findings: {:?}", findings);
+    }
+
+    #[test]
+    fn lint_empty_entity() {
+        let model = make_model("test", vec![make_entity("empty", vec![])]);
+        let findings = lint_model(&model);
+        assert!(findings.iter().any(|f| f.message.contains("no fields")));
+    }
+
+    #[test]
+    fn lint_missing_description() {
+        let model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        let findings = lint_model(&model);
+        assert!(findings.iter().any(|f| f.message.contains("no description")));
+    }
+
+    #[test]
+    fn lint_orphan_entity() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("logs", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        // Both entities are orphans (no relationships), not actors
+        let findings = lint_model(&model);
+        let orphan_findings: Vec<_> = findings
+            .iter()
+            .filter(|f| f.message.contains("not referenced"))
+            .collect();
+        assert_eq!(orphan_findings.len(), 2);
+    }
+
+    #[test]
+    fn lint_actor_not_orphan() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("logs", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.entities[0].actor = true;
+        let findings = lint_model(&model);
+        // users (actor) should not be flagged as orphan, but logs should
+        let orphans: Vec<_> = findings
+            .iter()
+            .filter(|f| f.message.contains("not referenced"))
+            .collect();
+        assert_eq!(orphans.len(), 1);
+        assert_eq!(orphans[0].entity, Some("logs".into()));
+    }
+
+    #[test]
+    fn lint_dangling_relationship() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        model.relationships.push(Relationship {
+            name: "bad_rel".into(),
+            from: "orders".into(),
+            to: "products".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let findings = lint_model(&model);
+        assert!(findings.iter().any(|f| f.message.contains("`orders` does not exist")));
+        assert!(findings.iter().any(|f| f.message.contains("`products` does not exist")));
+    }
+
+    #[test]
+    fn lint_self_ref_without_acyclic() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut model = make_model(
+            "test",
+            vec![make_entity("categories", vec![make_field("id", DataType::Int)])],
+        );
+        model.relationships.push(Relationship {
+            name: "self_ref".into(),
+            from: "categories".into(),
+            to: "categories".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("parent_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let findings = lint_model(&model);
+        assert!(findings.iter().any(|f| f.message.contains("acyclic")));
+    }
+
+    #[test]
+    fn lint_field_no_generator() {
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "users",
+                vec![
+                    make_field("name", DataType::String),
+                    make_field("age", DataType::Int),
+                ],
+            )],
+        );
+        let findings = lint_model(&model);
+        let no_gen: Vec<_> = findings
+            .iter()
+            .filter(|f| f.message.contains("no generator"))
+            .collect();
+        assert_eq!(no_gen.len(), 2);
+    }
+
+    #[test]
+    fn lint_fk_field_not_flagged() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity(
+                    "orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(Relationship {
+            name: "orders_users".into(),
+            from: "orders".into(),
+            to: "users".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let findings = lint_model(&model);
+        // user_id is a FK, should not be flagged for missing generator
+        let no_gen: Vec<_> = findings
+            .iter()
+            .filter(|f| f.message.contains("no generator") && f.field == Some("user_id".into()))
+            .collect();
+        assert!(no_gen.is_empty());
+    }
+
+    #[test]
+    fn lint_json_output() {
+        let model = make_model("test", vec![make_entity("t", vec![])]);
+        let findings = lint_model(&model);
+        let json = serde_json::to_string(&findings).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(parsed.as_array().unwrap().len() > 0);
+        assert!(parsed[0]["severity"].is_string());
+        assert!(parsed[0]["message"].is_string());
     }
 }
