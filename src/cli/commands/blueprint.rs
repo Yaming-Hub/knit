@@ -2762,12 +2762,28 @@ pub fn import_sql(sql: &str, model_name: &str) -> Result<DataModel> {
     })
 }
 
-/// Remove SQL line comments (--) and block comments (/* ... */).
+/// Remove SQL line comments (--) and block comments (/* ... */), respecting string literals.
 fn remove_sql_comments(sql: &str) -> String {
     let mut out = String::with_capacity(sql.len());
     let mut chars = sql.chars().peekable();
+    let mut in_string = false;
+    let mut string_char = '\'';
     while let Some(ch) = chars.next() {
-        if ch == '-' && chars.peek() == Some(&'-') {
+        if in_string {
+            out.push(ch);
+            if ch == string_char {
+                // Check for escaped quote (doubled)
+                if chars.peek() == Some(&string_char) {
+                    out.push(chars.next().unwrap());
+                } else {
+                    in_string = false;
+                }
+            }
+        } else if ch == '\'' || ch == '"' {
+            in_string = true;
+            string_char = ch;
+            out.push(ch);
+        } else if ch == '-' && chars.peek() == Some(&'-') {
             // Skip to end of line.
             for c in chars.by_ref() {
                 if c == '\n' {
@@ -2858,8 +2874,23 @@ fn parse_create_table(
             continue;
         }
 
+        // Named CONSTRAINT — could be PK or FK
+        if upper_def.starts_with("CONSTRAINT") {
+            if upper_def.contains("PRIMARY KEY") {
+                // CONSTRAINT pk_name PRIMARY KEY (cols)
+                let pk_idx = upper_def.find("PRIMARY KEY").unwrap();
+                let after_pk = &trimmed[pk_idx + "PRIMARY KEY".len()..];
+                if let Some(cols) = extract_paren_list(after_pk) {
+                    table_pk_cols = cols.iter().map(|c| unquote_ident(c)).collect();
+                }
+            } else if let Some(fk) = parse_inline_fk_constraint(trimmed, &table_name) {
+                relationships.push(fk);
+            }
+            continue;
+        }
+
         // Table-level FOREIGN KEY constraint
-        if upper_def.starts_with("FOREIGN KEY") || upper_def.starts_with("CONSTRAINT") {
+        if upper_def.starts_with("FOREIGN KEY") {
             if let Some(fk) = parse_inline_fk_constraint(trimmed, &table_name) {
                 relationships.push(fk);
             }
@@ -2881,9 +2912,18 @@ fn parse_create_table(
         }
     }
 
-    // Apply table-level PK
-    for pk_col in &table_pk_cols {
-        if let Some(f) = fields.iter_mut().find(|f| f.name.eq_ignore_ascii_case(pk_col)) {
+    // Apply table-level PK — only first column for composite PKs (knit supports single PK).
+    if table_pk_cols.len() > 1 {
+        eprintln!(
+            "{} table `{}` has composite primary key ({}); only `{}` will be marked as PK",
+            "warning:".yellow().bold(),
+            table_name,
+            table_pk_cols.join(", "),
+            table_pk_cols[0]
+        );
+    }
+    if let Some(first_pk) = table_pk_cols.first() {
+        if let Some(f) = fields.iter_mut().find(|f| f.name.eq_ignore_ascii_case(first_pk)) {
             f.primary_key = Some(true);
         }
     }
@@ -2934,26 +2974,45 @@ fn extract_paren_body(s: &str) -> Result<String> {
     Ok(s[start + 1..end].to_string())
 }
 
-/// Split comma-separated column definitions, respecting nested parentheses.
+/// Split comma-separated column definitions, respecting nested parentheses and string literals.
 fn split_column_defs(body: &str) -> Vec<String> {
     let mut result = Vec::new();
     let mut current = String::new();
     let mut depth = 0;
-    for ch in body.chars() {
-        match ch {
-            '(' => {
-                depth += 1;
-                current.push(ch);
+    let mut in_string = false;
+    let mut string_char = '\'';
+    let mut chars = body.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if in_string {
+            current.push(ch);
+            if ch == string_char {
+                if chars.peek() == Some(&string_char) {
+                    current.push(chars.next().unwrap());
+                } else {
+                    in_string = false;
+                }
             }
-            ')' => {
-                depth -= 1;
-                current.push(ch);
+        } else {
+            match ch {
+                '\'' | '"' => {
+                    in_string = true;
+                    string_char = ch;
+                    current.push(ch);
+                }
+                '(' => {
+                    depth += 1;
+                    current.push(ch);
+                }
+                ')' => {
+                    depth -= 1;
+                    current.push(ch);
+                }
+                ',' if depth == 0 => {
+                    result.push(current.trim().to_string());
+                    current.clear();
+                }
+                _ => current.push(ch),
             }
-            ',' if depth == 0 => {
-                result.push(current.trim().to_string());
-                current.clear();
-            }
-            _ => current.push(ch),
         }
     }
     let last = current.trim().to_string();
@@ -3142,7 +3201,7 @@ fn parse_inline_references(
         unquote_ident(rest.split_whitespace().next()?)
     };
 
-    let rel_name = format!("{}_{}", from_entity, to_entity).to_lowercase();
+    let rel_name = format!("{}_{}_{}", from_entity, fk_col, to_entity).to_lowercase();
     Some(crate::core::Relationship {
         name: rel_name,
         from: from_entity.to_string(),
@@ -3186,7 +3245,7 @@ fn parse_inline_fk_constraint(
         unquote_ident(after_ref.split_whitespace().next()?)
     };
 
-    let rel_name = format!("{}_{}", table_name, to_entity).to_lowercase();
+    let rel_name = format!("{}_{}_{}", table_name, fk_col, to_entity).to_lowercase();
     Some(crate::core::Relationship {
         name: rel_name,
         from: table_name.to_string(),
@@ -5033,5 +5092,48 @@ mod tests {
         let entity_names: Vec<&str> = imported.entities.iter().map(|e| e.name.as_str()).collect();
         assert!(entity_names.contains(&"Users"));
         assert!(entity_names.contains(&"Orders"));
+    }
+
+    #[test]
+    fn import_named_constraint_pk() {
+        let sql = r#"
+            CREATE TABLE accounts (
+                account_id BIGINT NOT NULL,
+                name TEXT NOT NULL,
+                CONSTRAINT pk_accounts PRIMARY KEY (account_id)
+            );
+        "#;
+        let model = import_sql(sql, "test").unwrap();
+        assert_eq!(model.entities[0].fields[0].primary_key, Some(true));
+    }
+
+    #[test]
+    fn import_string_literal_with_comma() {
+        let sql = r#"
+            CREATE TABLE items (
+                id INTEGER PRIMARY KEY,
+                note TEXT DEFAULT 'a,b' NOT NULL
+            );
+        "#;
+        let model = import_sql(sql, "test").unwrap();
+        assert_eq!(model.entities[0].fields.len(), 2);
+    }
+
+    #[test]
+    fn import_multiple_fks_unique_names() {
+        let sql = r#"
+            CREATE TABLE users (id INTEGER PRIMARY KEY);
+            CREATE TABLE tasks (
+                id INTEGER PRIMARY KEY,
+                created_by INTEGER NOT NULL,
+                approved_by INTEGER NOT NULL
+            );
+            ALTER TABLE tasks ADD FOREIGN KEY (created_by) REFERENCES users (id);
+            ALTER TABLE tasks ADD FOREIGN KEY (approved_by) REFERENCES users (id);
+        "#;
+        let model = import_sql(sql, "test").unwrap();
+        assert_eq!(model.relationships.len(), 2);
+        // Names should be unique
+        assert_ne!(model.relationships[0].name, model.relationships[1].name);
     }
 }
