@@ -1336,7 +1336,7 @@ pub fn build_graph(model: &DataModel) -> GraphOutput {
         })
         .collect();
 
-    let edges: Vec<GraphEdge> = model
+    let mut edges: Vec<GraphEdge> = model
         .relationships
         .iter()
         .map(|r| GraphEdge {
@@ -1348,7 +1348,29 @@ pub fn build_graph(model: &DataModel) -> GraphOutput {
         })
         .collect();
 
+    // Include actor_relationships as edges with "actor_*" kind prefix.
+    for ar in &model.actor_relationships {
+        edges.push(GraphEdge {
+            from: ar.from_entity.clone(),
+            to: ar.to_entity.clone(),
+            kind: format!("actor_{:?}", ar.graph_type).to_lowercase(),
+            foreign_key: None,
+            name: ar.name.clone(),
+        });
+    }
+
     GraphOutput { nodes, edges }
+}
+
+/// Escape a string for use in DOT quoted strings and record labels.
+fn dot_escape(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('{', "\\{")
+        .replace('}', "\\}")
+        .replace('|', "\\|")
+        .replace('<', "\\<")
+        .replace('>', "\\>")
 }
 
 /// Render a graph as DOT (GraphViz) format.
@@ -1356,12 +1378,13 @@ fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
     let mut out = String::new();
     out.push_str(&format!(
         "digraph \"{}\" {{\n  rankdir=LR;\n  node [shape=record, style=filled, fillcolor=\"#f0f0f0\"];\n\n",
-        model.name
+        dot_escape(&model.name)
     ));
 
     // Nodes.
     for node in &graph.nodes {
-        let mut label = node.name.clone();
+        let escaped = dot_escape(&node.name);
+        let mut label = escaped.clone();
         label.push_str(&format!(" | {} fields", node.fields));
         if let Some(count) = node.count {
             label.push_str(&format!(" | ~{} rows", count));
@@ -1373,7 +1396,7 @@ fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
         };
         out.push_str(&format!(
             "  \"{}\" [label=\"{{{}}}\", fillcolor={}];\n",
-            node.name, label, color
+            escaped, label, color
         ));
     }
 
@@ -1389,7 +1412,7 @@ fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
         let fk_label = edge
             .foreign_key
             .as_deref()
-            .map(|fk| format!("\\n({})", fk))
+            .map(|fk| format!("\\n({})", dot_escape(fk)))
             .unwrap_or_default();
         let style = if edge.from == edge.to {
             ", style=dashed"
@@ -1398,7 +1421,7 @@ fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
         };
         out.push_str(&format!(
             "  \"{}\" -> \"{}\" [label=\"{}{}\"{}];\n",
-            edge.from, edge.to, label, fk_label, style
+            dot_escape(&edge.from), dot_escape(&edge.to), label, fk_label, style
         ));
     }
 
@@ -2192,5 +2215,45 @@ mod tests {
         assert!(graph.nodes[0].actor);
         let dot = render_dot(&model, &graph);
         assert!(dot.contains("#d4edda")); // actor node color
+    }
+
+    #[test]
+    fn graph_includes_actor_relationships() {
+        use crate::core::types::ActorRelationship;
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("teams", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.actor_relationships.push(ActorRelationship {
+            name: "collab_network".into(),
+            from_entity: "users".into(),
+            to_entity: "teams".into(),
+            graph_type: Default::default(),
+            params: std::collections::BTreeMap::new(),
+            community_count: None,
+            hierarchy_depth: None,
+        });
+        let graph = build_graph(&model);
+        assert_eq!(graph.edges.len(), 1);
+        assert_eq!(graph.edges[0].name, "collab_network");
+        assert!(graph.edges[0].kind.starts_with("actor_"));
+        assert!(graph.edges[0].foreign_key.is_none());
+    }
+
+    #[test]
+    fn graph_dot_escapes_special_chars() {
+        let model = make_model(
+            "my|schema",
+            vec![make_entity("user\"data", vec![make_field("id", DataType::Int)])],
+        );
+        let graph = build_graph(&model);
+        let dot = render_dot(&model, &graph);
+        assert!(dot.contains("my\\|schema"));
+        assert!(dot.contains("user\\\"data"));
+        // Should not contain unescaped metacharacters in DOT strings
+        assert!(!dot.contains("\"my|schema\""));
     }
 }
