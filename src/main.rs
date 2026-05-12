@@ -177,6 +177,11 @@ fn main() -> anyhow::Result<()> {
                 rels,
                 output,
             } => blueprint::run_scaffold(&name, &entities, &rels, output.as_deref(), cli.json),
+            BlueprintAction::Import {
+                file,
+                name,
+                output,
+            } => blueprint::run_import(&file, name.as_deref(), output.as_deref(), cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

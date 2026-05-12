@@ -518,6 +518,17 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Import a SQL DDL file (CREATE TABLE statements) into a knit blueprint.
+    Import {
+        /// Path to the SQL file to import.
+        file: String,
+        /// Model name (default: derived from filename).
+        #[arg(long)]
+        name: Option<String>,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.
