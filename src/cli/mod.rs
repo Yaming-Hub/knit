@@ -485,6 +485,23 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Export blueprint as SQL DDL or other external schema format.
+    Export {
+        /// Path to the blueprint file.
+        file: String,
+        /// Export format (currently: sql).
+        #[arg(short, long, default_value = "sql")]
+        format: String,
+        /// SQL dialect: postgres, mysql, sqlite.
+        #[arg(long, default_value = "postgres")]
+        dialect: String,
+        /// Omit FOREIGN KEY constraints.
+        #[arg(long)]
+        no_fks: bool,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.

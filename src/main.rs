@@ -164,6 +164,13 @@ fn main() -> anyhow::Result<()> {
                 fields,
                 output,
             } => blueprint::run_rename(file, &entities, &fields, output.as_deref(), cli.json),
+            BlueprintAction::Export {
+                file,
+                format,
+                dialect,
+                no_fks,
+                output,
+            } => blueprint::run_export(file, &format, &dialect, !no_fks, output.as_deref()),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
