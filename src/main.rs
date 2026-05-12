@@ -144,6 +144,7 @@ fn main() -> anyhow::Result<()> {
             BlueprintAction::Normalize { file } => blueprint::run_normalize(file, cli.json),
             BlueprintAction::Diff { a, b } => blueprint::run_diff(a, b),
             BlueprintAction::Doc { file, output } => blueprint::run_doc(file, output.as_deref()),
+            BlueprintAction::Stats { file } => blueprint::run_stats(file, cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

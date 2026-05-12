@@ -429,6 +429,11 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Show statistics and complexity summary for a blueprint.
+    Stats {
+        /// Path to the blueprint file.
+        file: String,
+    },
 }
 
 /// Model directory subcommands.
