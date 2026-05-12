@@ -281,6 +281,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+                scaling: None,
             }],
             relationships: vec![Relationship {
                 name: "user_order".to_string(),
@@ -360,6 +361,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+            scaling: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 2);
@@ -384,6 +386,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+            scaling: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities.len(), 1);
@@ -420,6 +423,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+            scaling: None,
         });
         let merged = merge_models(&parent, &child);
         assert_eq!(merged.entities[0].fields.len(), 3);
@@ -456,6 +460,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+            scaling: None,
         });
         let merged = merge_models(&parent, &child);
         let email = merged.entities[0]
@@ -542,6 +547,7 @@ mod tests {
             activity_count: None,
                 mixin_refs: None,
         output: None,
+            scaling: None,
         });
         let merged = merge_models(&parent, &child);
         // Parent constraints & topology preserved since child has empty/None

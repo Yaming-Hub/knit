@@ -281,6 +281,71 @@ pub struct Entity {
     /// Source data statistics (populated by `knit learn`, metadata-only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stats: Option<TableStats>,
+    /// Scaling dimension annotations (populated by `knit learn`).
+    ///
+    /// Records which scaling dimensions (actor, time, custom) this entity
+    /// participates in, so `knit scale` can skip re-analysis.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scaling: Option<DimensionAnnotation>,
+}
+
+/// Scaling dimension metadata attached to an entity during `knit learn`.
+///
+/// Captures the detected scaling dimensions so `knit scale` can read them
+/// directly from the blueprint without re-running analysis.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DimensionAnnotation {
+    /// Actor dimension: present when this entity is the actor root or driven by one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actor: Option<ActorAnnotation>,
+    /// Time dimension: present when this entity has time-partitioned output.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time: Option<TimeAnnotation>,
+    /// Custom (non-actor, non-time) scaling dimensions.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub custom: Vec<CustomDimensionAnnotation>,
+}
+
+/// Marks an entity's role in the actor dimension.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ActorAnnotation {
+    /// Whether this entity is the actor root (true) or a child driven by it.
+    #[serde(default)]
+    pub is_root: bool,
+    /// Name of the actor root entity that drives this entity's row count.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root_entity: Option<String>,
+    /// Learned rows-per-actor ratio for child entities.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rows_per_actor: Option<f64>,
+}
+
+/// Time dimension metadata for partition-based temporal scaling.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TimeAnnotation {
+    /// Name of the partition column (e.g. `"PartitionDate"`).
+    pub partition_column: String,
+    /// Detected cadence as a human-readable string (e.g. `"7d"`, `"1m"`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cadence: Option<String>,
+    /// Number of observed partitions.
+    #[serde(default)]
+    pub partition_count: usize,
+    /// Observed partition values (dates/keys), sorted.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub partition_values: Vec<String>,
+}
+
+/// A custom (non-actor, non-time) scaling dimension.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CustomDimensionAnnotation {
+    /// Human-readable name of the dimension.
+    pub name: String,
+    /// The entity field that represents this dimension.
+    pub field: String,
+    /// Number of distinct values observed.
+    #[serde(default)]
+    pub cardinality: usize,
 }
 
 /// Controls the output file path for a generated entity.
@@ -2340,6 +2405,7 @@ step = "7d"
                 mixin_refs: None,
         output: None,
         stats: None,
+                scaling: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -2515,6 +2581,7 @@ step = "7d"
             activity_count: None,
                 mixin_refs: None,
         output: None,
+            scaling: None,
         };
         let json = serde_json::to_string(&entity).unwrap();
         assert!(json.contains("\"actor\":true"));

@@ -417,6 +417,12 @@ fn run_batch(
         .to_string();
     let mut data_model = assemble_data_model(&model_name, &table_analyses);
 
+    // 5a2. Annotate entities with scaling dimension metadata
+    {
+        let analysis = crate::scale::analyze::analyze(&data_model);
+        crate::learn::annotate::annotate_dimensions(&mut data_model, &analysis);
+    }
+
     // 5b. Extract dictionaries for high-cardinality string columns
     let use_structured = resolve_use_structured(output, model_format);
     let output_dir = resolve_asset_dir(output, use_structured);
@@ -801,6 +807,12 @@ fn emit_blueprint_from_state(
         .unwrap_or("learned")
         .to_string();
     let mut data_model = assemble_data_model(&model_name, &table_analyses);
+
+    // Annotate entities with scaling dimension metadata
+    {
+        let analysis = crate::scale::analyze::analyze(&data_model);
+        crate::learn::annotate::annotate_dimensions(&mut data_model, &analysis);
+    }
 
     // Extract dictionaries from reservoir samples for high-cardinality string columns
     let use_structured = resolve_use_structured(output, model_format);

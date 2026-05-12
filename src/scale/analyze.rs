@@ -367,6 +367,7 @@ mod tests {
                     mixin_refs: None,
                     output: None,
                     stats: None,
+                    scaling: None,
                 },
                 Entity {
                     name: "Events".into(),
@@ -447,6 +448,7 @@ mod tests {
                     mixin_refs: None,
                     output: None,
                     stats: None,
+                    scaling: None,
                 },
             ],
             relationships: vec![Relationship {

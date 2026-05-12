@@ -324,6 +324,7 @@ mod tests {
             mixin_refs: None,
             output: None,
             stats: None,
+            scaling: None,
         });
         model
     }

@@ -1936,6 +1936,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+            scaling: None,
         }
     }
 
@@ -2849,6 +2850,7 @@ mod tests {
                 mixin_refs: None,
         output: None,
         stats: None,
+                scaling: None,
             }],
             vec![],
         );
