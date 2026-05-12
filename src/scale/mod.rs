@@ -111,6 +111,9 @@ pub struct ScaleTargets {
     pub count: Option<f64>,
     /// User-specified cadence override (e.g. 7d for weekly, 1m for monthly).
     pub cadence: Option<Cadence>,
+    /// Per-entity density multipliers: (entity_name, factor).
+    /// Scales rows without changing actor count, time range, or dimensions.
+    pub density: Vec<(String, f64)>,
 }
 
 /// Compute a scaling plan from the analysis and user targets.
@@ -225,6 +228,39 @@ pub fn compute_plan(
             dim.entity_name.clone(),
             (base as f64 * dim_ratio).round().max(1.0) as u64,
         );
+    }
+
+    // Per-entity density multipliers (applied after dimension scaling, before uniform count)
+    for (entity_name, factor) in &targets.density {
+        let entity_exists = analysis.entity_counts.contains_key(entity_name);
+        if !entity_exists {
+            anyhow::bail!(
+                "entity '{}' not found for --density; available entities: {}",
+                entity_name,
+                analysis.entity_counts.keys().cloned().collect::<Vec<_>>().join(", ")
+            );
+        }
+        // Reject density on the actor entity — use --actors instead
+        if let Some(ref actor) = analysis.actor {
+            if actor.entity_name == *entity_name {
+                anyhow::bail!(
+                    "'{}' is the actor entity; use --actors to scale it (--density \
+                     is for non-actor entities)",
+                    entity_name
+                );
+            }
+        }
+        let current = analysis.entity_counts.get(entity_name).copied().unwrap_or(1);
+        let base = entity_overrides.get(entity_name).copied().unwrap_or(current);
+        let new_count = (base as f64 * factor).round().max(1.0) as u64;
+        tracing::debug!(
+            entity = %entity_name,
+            base,
+            factor,
+            new_count,
+            "applying density multiplier"
+        );
+        entity_overrides.insert(entity_name.clone(), new_count);
     }
 
     // Uniform count multiplier (applied on top of other scaling)
@@ -731,5 +767,116 @@ mod tests {
         assert_eq!(total, 58_000);
         // JSON: {"id": UUID(38) + "name": String(22)} = 2 + (4+2+4+38) + (6+2+4+22) + 2 + 1 = 85
         assert!(estimates[0].json_bytes > estimates[0].csv_bytes);
+    }
+
+    // ── Density tests ─────────────────────────────────────────────────
+
+    fn make_test_analysis() -> ScalingAnalysis {
+        let mut entity_counts = BTreeMap::new();
+        entity_counts.insert("Users".into(), 10);
+        entity_counts.insert("Orders".into(), 100);
+        entity_counts.insert("Items".into(), 300);
+        ScalingAnalysis {
+            actor: None,
+            time: None,
+            custom: vec![],
+            entity_counts,
+        }
+    }
+
+    #[test]
+    fn density_doubles_single_entity() {
+        let analysis = make_test_analysis();
+        let targets = ScaleTargets {
+            density: vec![("Orders".into(), 2.0)],
+            ..Default::default()
+        };
+        let plan = compute_plan(&analysis, &targets).unwrap();
+        assert_eq!(plan.entity_overrides.get("Orders"), Some(&200));
+        // Other entities unchanged
+        assert!(!plan.entity_overrides.contains_key("Users"));
+        assert!(!plan.entity_overrides.contains_key("Items"));
+    }
+
+    #[test]
+    fn density_fractional_downscale() {
+        let analysis = make_test_analysis();
+        let targets = ScaleTargets {
+            density: vec![("Items".into(), 0.5)],
+            ..Default::default()
+        };
+        let plan = compute_plan(&analysis, &targets).unwrap();
+        assert_eq!(plan.entity_overrides.get("Items"), Some(&150));
+    }
+
+    #[test]
+    fn density_combined_with_count() {
+        let analysis = make_test_analysis();
+        let targets = ScaleTargets {
+            density: vec![("Orders".into(), 3.0)],
+            count: Some(2.0),
+            ..Default::default()
+        };
+        let plan = compute_plan(&analysis, &targets).unwrap();
+        // Orders: 100 * 3.0 (density) * 2.0 (count) = 600
+        assert_eq!(plan.entity_overrides.get("Orders"), Some(&600));
+        // Users: 10 * 2.0 (count only) = 20
+        assert_eq!(plan.entity_overrides.get("Users"), Some(&20));
+    }
+
+    #[test]
+    fn density_multiple_entities() {
+        let analysis = make_test_analysis();
+        let targets = ScaleTargets {
+            density: vec![
+                ("Orders".into(), 2.0),
+                ("Items".into(), 0.5),
+            ],
+            ..Default::default()
+        };
+        let plan = compute_plan(&analysis, &targets).unwrap();
+        assert_eq!(plan.entity_overrides.get("Orders"), Some(&200));
+        assert_eq!(plan.entity_overrides.get("Items"), Some(&150));
+    }
+
+    #[test]
+    fn density_unknown_entity_errors() {
+        let analysis = make_test_analysis();
+        let targets = ScaleTargets {
+            density: vec![("NonExistent".into(), 2.0)],
+            ..Default::default()
+        };
+        let err = compute_plan(&analysis, &targets).unwrap_err();
+        assert!(err.to_string().contains("NonExistent"));
+        assert!(err.to_string().contains("not found"));
+    }
+
+    #[test]
+    fn density_minimum_clamp() {
+        let analysis = make_test_analysis();
+        let targets = ScaleTargets {
+            density: vec![("Users".into(), 0.01)], // 10 * 0.01 = 0.1, rounds to 0, clamped to 1
+            ..Default::default()
+        };
+        let plan = compute_plan(&analysis, &targets).unwrap();
+        assert_eq!(plan.entity_overrides.get("Users"), Some(&1));
+    }
+
+    #[test]
+    fn density_rejected_on_actor_entity() {
+        let mut analysis = make_test_analysis();
+        analysis.actor = Some(ActorDimension {
+            entity_name: "Users".into(),
+            current_count: 10,
+            confidence: 1.0,
+            dependents: vec![],
+        });
+        let targets = ScaleTargets {
+            density: vec![("Users".into(), 2.0)],
+            ..Default::default()
+        };
+        let err = compute_plan(&analysis, &targets).unwrap_err();
+        assert!(err.to_string().contains("actor entity"));
+        assert!(err.to_string().contains("--actors"));
     }
 }

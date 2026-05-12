@@ -199,6 +199,7 @@ fn main() -> anyhow::Result<()> {
             dims,
             count,
             cadence,
+            density,
         } => scale::run(
             blueprint,
             output.as_deref(),
@@ -208,6 +209,7 @@ fn main() -> anyhow::Result<()> {
             dims,
             *count,
             cadence.as_deref(),
+            density,
             &cli,
         ),
         Command::Tokenize {

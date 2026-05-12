@@ -19,6 +19,7 @@ pub fn run(
     dims: &[(String, u64)],
     count: Option<f64>,
     cadence: Option<&str>,
+    density: &[(String, f64)],
     cli: &Cli,
 ) -> Result<()> {
     let _span = tracing::info_span!("scale", schema = %blueprint_path).entered();
@@ -45,11 +46,11 @@ pub fn run(
     }
 
     // Need at least one scaling target
-    if actors.is_none() && time.is_none() && dims.is_empty() && count.is_none() {
+    if actors.is_none() && time.is_none() && dims.is_empty() && count.is_none() && density.is_empty() {
         print_analysis(&analysis, cli);
         eprintln!();
         eprintln!(
-            "{} specify at least one scaling target (--actors, --time, --dim, --count)",
+            "{} specify at least one scaling target (--actors, --time, --dim, --count, --density)",
             "hint:".cyan().bold()
         );
         return Ok(());
@@ -77,6 +78,7 @@ pub fn run(
         dims: dims.to_vec(),
         count,
         cadence,
+        density: density.to_vec(),
     };
 
     // Compute plan
