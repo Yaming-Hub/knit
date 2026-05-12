@@ -471,6 +471,20 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Rename entities or fields with automatic cross-reference updates.
+    Rename {
+        /// Path to the blueprint file.
+        file: String,
+        /// Rename an entity: `OldName=NewName` (repeatable).
+        #[arg(long = "entity")]
+        entities: Vec<String>,
+        /// Rename a field: `Entity.OldField=NewField` (repeatable).
+        #[arg(long = "field")]
+        fields: Vec<String>,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.
