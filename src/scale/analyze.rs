@@ -14,22 +14,49 @@ use crate::core::types::{CountSpec, DataModel, GeneratorSpec, RelationshipKind};
 
 use super::{ActorDimension, Cadence, CustomDimension, ScalingAnalysis, TimeDimension};
 
-/// Prefer persisted annotations; fall back to heuristic analysis.
+/// Prefer persisted annotations; fall back to heuristic analysis per-dimension.
 ///
 /// Returns `(analysis, from_annotations)` where the bool indicates whether
-/// annotations were used (true) or heuristic analysis was performed (false).
+/// annotations were used for at least one dimension.
+///
+/// For partial annotations (e.g. actor annotated but time missing), the
+/// annotated dimensions use the fast path while missing dimensions fall
+/// back to heuristic detection.
 pub fn analyze_or_from_annotations(model: &DataModel) -> (ScalingAnalysis, bool) {
-    if let Some(analysis) = from_annotations(model) {
-        (analysis, true)
-    } else {
-        (analyze(model), false)
+    let has_any = model.entities.iter().any(|e| e.scaling.is_some());
+    if !has_any {
+        return (analyze(model), false);
     }
+
+    let entity_counts = collect_entity_counts(model);
+
+    // Try annotation reconstruction per dimension, fall back to heuristics
+    let actor = reconstruct_actor(model, &entity_counts)
+        .or_else(|| detect_actor(model, &entity_counts));
+
+    let time = reconstruct_time(model).or_else(|| detect_time(model));
+
+    let ann_custom = reconstruct_custom(model);
+    let custom = if ann_custom.is_empty() {
+        detect_custom_dimensions(model, &entity_counts)
+    } else {
+        ann_custom
+    };
+
+    (
+        ScalingAnalysis {
+            actor,
+            time,
+            custom,
+            entity_counts,
+        },
+        true,
+    )
 }
 
-/// Reconstruct a `ScalingAnalysis` from persisted dimension annotations.
+/// Reconstruct a `ScalingAnalysis` purely from persisted annotations.
 ///
-/// Returns `None` if no entity has a `scaling` annotation (i.e. blueprint
-/// was not produced by a version of `knit learn` that writes annotations).
+/// Returns `None` if no entity has a `scaling` annotation.
 pub fn from_annotations(model: &DataModel) -> Option<ScalingAnalysis> {
     let has_any = model.entities.iter().any(|e| e.scaling.is_some());
     if !has_any {
@@ -37,14 +64,8 @@ pub fn from_annotations(model: &DataModel) -> Option<ScalingAnalysis> {
     }
 
     let entity_counts = collect_entity_counts(model);
-
-    // Reconstruct actor dimension
     let actor = reconstruct_actor(model, &entity_counts);
-
-    // Reconstruct time dimension
     let time = reconstruct_time(model);
-
-    // Reconstruct custom dimensions
     let custom = reconstruct_custom(model);
 
     Some(ScalingAnalysis {
@@ -108,6 +129,14 @@ fn reconstruct_time(model: &DataModel) -> Option<TimeDimension> {
 
     let cadence = time_ann.cadence.as_deref().and_then(parse_cadence);
 
+    // Confidence is high if cadence was successfully parsed (or absent),
+    // lower if cadence string was present but unparseable
+    let cadence_confidence = if time_ann.cadence.is_some() && cadence.is_none() {
+        0.5 // cadence string present but unparseable — annotation may be stale
+    } else {
+        1.0
+    };
+
     // Use partition_values from annotation if available, else from output layout
     let partition_values = if !time_ann.partition_values.is_empty() {
         time_ann.partition_values.clone()
@@ -126,19 +155,27 @@ fn reconstruct_time(model: &DataModel) -> Option<TimeDimension> {
         partition_field: time_ann.partition_column.clone(),
         partition_values,
         cadence,
-        cadence_confidence: 1.0, // annotations are authoritative
+        cadence_confidence,
     })
 }
 
 /// Reconstruct custom dimensions from annotations.
+///
+/// Skips dimensions where the field's generator values cannot be recovered
+/// (e.g. the field no longer has a OneOf generator), since scaling would
+/// produce incorrect results with empty value sets.
 fn reconstruct_custom(model: &DataModel) -> Vec<CustomDimension> {
     let mut dims = Vec::new();
 
     for entity in &model.entities {
         if let Some(ref scaling) = entity.scaling {
             for custom in &scaling.custom {
-                // Recover actual values from the generator if possible
+                // Recover actual values from the generator
                 let current_values = recover_custom_values(entity, &custom.field);
+                if current_values.is_empty() {
+                    // Cannot reconstruct — skip (heuristic fallback will handle)
+                    continue;
+                }
                 let is_condition_key = entity.fields.iter().any(|f| {
                     matches!(
                         &f.generator,
@@ -867,5 +904,49 @@ mod tests {
         });
         let (_, used) = analyze_or_from_annotations(&model);
         assert!(used);
+    }
+
+    #[test]
+    fn partial_annotations_fall_back_for_missing_dimensions() {
+        let mut model = make_test_model();
+        // Annotate only actor — time should still be detected by heuristics
+        // (though this model has no partitions, so time is None either way)
+        model.entities[0].scaling = Some(DimensionAnnotation {
+            actor: Some(ActorAnnotation {
+                is_root: true,
+                root_entity: None,
+                rows_per_actor: None,
+            }),
+            time: None,
+            custom: vec![],
+        });
+
+        let (analysis, used) = analyze_or_from_annotations(&model);
+        assert!(used);
+        // Actor from annotations
+        assert!(analysis.actor.is_some());
+        assert_eq!(analysis.actor.as_ref().unwrap().entity_name, "Users");
+        // Custom dimensions fall back to heuristic (detects Region OneOf)
+        assert!(!analysis.custom.is_empty());
+        assert_eq!(analysis.custom[0].field_name, "Region");
+    }
+
+    #[test]
+    fn custom_dimension_skipped_when_recovery_fails() {
+        let mut model = make_test_model();
+        // Annotate a custom dimension for a non-existent field
+        model.entities[1].scaling = Some(DimensionAnnotation {
+            actor: None,
+            time: None,
+            custom: vec![CustomDimensionAnnotation {
+                name: "Nonexistent".into(),
+                field: "no_such_field".into(),
+                cardinality: 5,
+            }],
+        });
+
+        let analysis = from_annotations(&model).unwrap();
+        // Should be empty because recovery fails
+        assert!(analysis.custom.is_empty());
     }
 }
