@@ -1,12 +1,237 @@
 //! Dimension detection from a DataModel.
+//!
+//! Provides two paths:
+//! - `from_annotations()` — fast path that reconstructs `ScalingAnalysis` from
+//!   persisted `Entity.scaling` metadata (written by `knit learn`).
+//! - `analyze()` — full heuristic analysis for blueprints without annotations.
+//!
+//! The public entry point `analyze_or_from_annotations()` prefers annotations
+//! when available and falls back to heuristic analysis.
 
 use std::collections::BTreeMap;
 
 use crate::core::types::{CountSpec, DataModel, GeneratorSpec, RelationshipKind};
 
-use super::{ActorDimension, CustomDimension, ScalingAnalysis, TimeDimension};
+use super::{ActorDimension, Cadence, CustomDimension, ScalingAnalysis, TimeDimension};
 
-/// Analyze a DataModel to discover scaling dimensions.
+/// Prefer persisted annotations; fall back to heuristic analysis per-dimension.
+///
+/// Returns `(analysis, from_annotations)` where the bool indicates whether
+/// annotations were used for at least one dimension.
+///
+/// For partial annotations (e.g. actor annotated but time missing), the
+/// annotated dimensions use the fast path while missing dimensions fall
+/// back to heuristic detection.
+pub fn analyze_or_from_annotations(model: &DataModel) -> (ScalingAnalysis, bool) {
+    let has_any = model.entities.iter().any(|e| e.scaling.is_some());
+    if !has_any {
+        return (analyze(model), false);
+    }
+
+    let entity_counts = collect_entity_counts(model);
+
+    // Try annotation reconstruction per dimension, fall back to heuristics
+    let actor = reconstruct_actor(model, &entity_counts)
+        .or_else(|| detect_actor(model, &entity_counts));
+
+    let time = reconstruct_time(model).or_else(|| detect_time(model));
+
+    let ann_custom = reconstruct_custom(model);
+    let custom = if ann_custom.is_empty() {
+        detect_custom_dimensions(model, &entity_counts)
+    } else {
+        ann_custom
+    };
+
+    (
+        ScalingAnalysis {
+            actor,
+            time,
+            custom,
+            entity_counts,
+        },
+        true,
+    )
+}
+
+/// Reconstruct a `ScalingAnalysis` purely from persisted annotations.
+///
+/// Returns `None` if no entity has a `scaling` annotation.
+pub fn from_annotations(model: &DataModel) -> Option<ScalingAnalysis> {
+    let has_any = model.entities.iter().any(|e| e.scaling.is_some());
+    if !has_any {
+        return None;
+    }
+
+    let entity_counts = collect_entity_counts(model);
+    let actor = reconstruct_actor(model, &entity_counts);
+    let time = reconstruct_time(model);
+    let custom = reconstruct_custom(model);
+
+    Some(ScalingAnalysis {
+        actor,
+        time,
+        custom,
+        entity_counts,
+    })
+}
+
+/// Reconstruct ActorDimension from annotations.
+fn reconstruct_actor(
+    model: &DataModel,
+    entity_counts: &BTreeMap<String, u64>,
+) -> Option<ActorDimension> {
+    // Find the actor root
+    let root_entity = model.entities.iter().find(|e| {
+        e.scaling
+            .as_ref()
+            .and_then(|s| s.actor.as_ref())
+            .is_some_and(|a| a.is_root)
+    })?;
+
+    let current_count = entity_counts
+        .get(&root_entity.name)
+        .copied()
+        .unwrap_or(1);
+
+    // Find dependents
+    let dependents: Vec<(String, f64)> = model
+        .entities
+        .iter()
+        .filter_map(|e| {
+            let ann = e.scaling.as_ref()?.actor.as_ref()?;
+            if !ann.is_root && ann.root_entity.as_deref() == Some(&root_entity.name) {
+                Some((e.name.clone(), ann.rows_per_actor.unwrap_or(1.0)))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    Some(ActorDimension {
+        entity_name: root_entity.name.clone(),
+        current_count,
+        dependents,
+        confidence: 1.0, // annotations are authoritative
+    })
+}
+
+/// Reconstruct TimeDimension from annotations.
+fn reconstruct_time(model: &DataModel) -> Option<TimeDimension> {
+    let entity = model.entities.iter().find(|e| {
+        e.scaling
+            .as_ref()
+            .and_then(|s| s.time.as_ref())
+            .is_some()
+    })?;
+
+    let time_ann = entity.scaling.as_ref().unwrap().time.as_ref().unwrap();
+
+    let cadence = time_ann.cadence.as_deref().and_then(parse_cadence);
+
+    // Confidence is high if cadence was successfully parsed (or absent),
+    // lower if cadence string was present but unparseable
+    let cadence_confidence = if time_ann.cadence.is_some() && cadence.is_none() {
+        0.5 // cadence string present but unparseable — annotation may be stale
+    } else {
+        1.0
+    };
+
+    // Use partition_values from annotation if available, else from output layout
+    let partition_values = if !time_ann.partition_values.is_empty() {
+        time_ann.partition_values.clone()
+    } else if let Some(ref output) = entity.output {
+        output
+            .partition_values
+            .iter()
+            .map(|pv| pv.value.clone())
+            .collect()
+    } else {
+        vec![]
+    };
+
+    Some(TimeDimension {
+        entity_name: entity.name.clone(),
+        partition_field: time_ann.partition_column.clone(),
+        partition_values,
+        cadence,
+        cadence_confidence,
+    })
+}
+
+/// Reconstruct custom dimensions from annotations.
+///
+/// Skips dimensions where the field's generator values cannot be recovered
+/// (e.g. the field no longer has a OneOf generator), since scaling would
+/// produce incorrect results with empty value sets.
+fn reconstruct_custom(model: &DataModel) -> Vec<CustomDimension> {
+    let mut dims = Vec::new();
+
+    for entity in &model.entities {
+        if let Some(ref scaling) = entity.scaling {
+            for custom in &scaling.custom {
+                // Recover actual values from the generator
+                let current_values = recover_custom_values(entity, &custom.field);
+                if current_values.is_empty() {
+                    // Cannot reconstruct — skip (heuristic fallback will handle)
+                    continue;
+                }
+                let is_condition_key = entity.fields.iter().any(|f| {
+                    matches!(
+                        &f.generator,
+                        Some(GeneratorSpec::Conditional { field: ref cond_field, .. })
+                        if cond_field == &custom.field
+                    )
+                });
+
+                dims.push(CustomDimension {
+                    entity_name: entity.name.clone(),
+                    field_name: custom.field.clone(),
+                    current_values,
+                    is_condition_key,
+                });
+            }
+        }
+    }
+
+    dims
+}
+
+/// Recover custom dimension values from the field's OneOf generator.
+fn recover_custom_values(
+    entity: &crate::core::types::Entity,
+    field_name: &str,
+) -> Vec<(String, f64)> {
+    if let Some(field) = entity.fields.iter().find(|f| f.name == field_name) {
+        if let Some(GeneratorSpec::OneOf { ref choices }) = field.generator {
+            return choices
+                .iter()
+                .map(|c| {
+                    let v = match &c.value {
+                        crate::core::Value::String(s) => s.clone(),
+                        other => format!("{:?}", other),
+                    };
+                    (v, c.weight)
+                })
+                .collect();
+        }
+    }
+    vec![]
+}
+
+/// Parse a cadence string (e.g. `"7d"`, `"1m"`) into a `Cadence` value.
+fn parse_cadence(s: &str) -> Option<Cadence> {
+    let s = s.trim();
+    if let Some(n) = s.strip_suffix('d') {
+        n.parse::<u32>().ok().map(Cadence::Days)
+    } else if let Some(n) = s.strip_suffix('m') {
+        n.parse::<u32>().ok().map(Cadence::Months)
+    } else {
+        None
+    }
+}
+
+/// Analyze a DataModel to discover scaling dimensions (heuristic path).
 pub fn analyze(model: &DataModel) -> ScalingAnalysis {
     let entity_counts = collect_entity_counts(model);
     let actor = detect_actor(model, &entity_counts);
@@ -560,5 +785,168 @@ mod tests {
         assert!(is_date_like("2024/06/15"));
         assert!(!is_date_like("hello"));
         assert!(!is_date_like("123"));
+    }
+
+    // ── from_annotations tests ──────────────────────────────────────
+
+    #[test]
+    fn from_annotations_returns_none_without_annotations() {
+        let model = make_test_model();
+        assert!(from_annotations(&model).is_none());
+    }
+
+    #[test]
+    fn from_annotations_reconstructs_actor() {
+        let mut model = make_test_model();
+        // Add annotations
+        model.entities[0].scaling = Some(DimensionAnnotation {
+            actor: Some(ActorAnnotation {
+                is_root: true,
+                root_entity: None,
+                rows_per_actor: None,
+            }),
+            time: None,
+            custom: vec![],
+        });
+        model.entities[1].scaling = Some(DimensionAnnotation {
+            actor: Some(ActorAnnotation {
+                is_root: false,
+                root_entity: Some("Users".into()),
+                rows_per_actor: Some(10.0),
+            }),
+            time: None,
+            custom: vec![],
+        });
+
+        let analysis = from_annotations(&model).unwrap();
+        let actor = analysis.actor.unwrap();
+        assert_eq!(actor.entity_name, "Users");
+        assert_eq!(actor.current_count, 10);
+        assert_eq!(actor.confidence, 1.0);
+        assert_eq!(actor.dependents.len(), 1);
+        assert_eq!(actor.dependents[0], ("Events".into(), 10.0));
+    }
+
+    #[test]
+    fn from_annotations_reconstructs_time() {
+        let mut model = make_test_model();
+        model.entities[1].scaling = Some(DimensionAnnotation {
+            actor: None,
+            time: Some(TimeAnnotation {
+                partition_column: "date".into(),
+                cadence: Some("7d".into()),
+                partition_count: 3,
+                partition_values: vec![
+                    "2024-01-01".into(),
+                    "2024-01-08".into(),
+                    "2024-01-15".into(),
+                ],
+            }),
+            custom: vec![],
+        });
+
+        let analysis = from_annotations(&model).unwrap();
+        let time = analysis.time.unwrap();
+        assert_eq!(time.entity_name, "Events");
+        assert_eq!(time.partition_field, "date");
+        assert_eq!(time.cadence, Some(Cadence::Days(7)));
+        assert_eq!(time.partition_values.len(), 3);
+        assert_eq!(time.cadence_confidence, 1.0);
+    }
+
+    #[test]
+    fn from_annotations_reconstructs_custom() {
+        let mut model = make_test_model();
+        model.entities[1].scaling = Some(DimensionAnnotation {
+            actor: None,
+            time: None,
+            custom: vec![CustomDimensionAnnotation {
+                name: "Region".into(),
+                field: "Region".into(),
+                cardinality: 3,
+            }],
+        });
+
+        let analysis = from_annotations(&model).unwrap();
+        assert_eq!(analysis.custom.len(), 1);
+        assert_eq!(analysis.custom[0].entity_name, "Events");
+        assert_eq!(analysis.custom[0].field_name, "Region");
+        // Values recovered from OneOf generator
+        assert_eq!(analysis.custom[0].current_values.len(), 3);
+    }
+
+    #[test]
+    fn parse_cadence_roundtrip() {
+        assert_eq!(parse_cadence("1d"), Some(Cadence::Days(1)));
+        assert_eq!(parse_cadence("7d"), Some(Cadence::Days(7)));
+        assert_eq!(parse_cadence("1m"), Some(Cadence::Months(1)));
+        assert_eq!(parse_cadence("3m"), Some(Cadence::Months(3)));
+        assert_eq!(parse_cadence(""), None);
+        assert_eq!(parse_cadence("abc"), None);
+    }
+
+    #[test]
+    fn analyze_or_from_annotations_prefers_annotations() {
+        let mut model = make_test_model();
+        // With no annotations, falls back to heuristic
+        let (_, used) = analyze_or_from_annotations(&model);
+        assert!(!used);
+
+        // With annotations, uses them
+        model.entities[0].scaling = Some(DimensionAnnotation {
+            actor: Some(ActorAnnotation {
+                is_root: true,
+                root_entity: None,
+                rows_per_actor: None,
+            }),
+            time: None,
+            custom: vec![],
+        });
+        let (_, used) = analyze_or_from_annotations(&model);
+        assert!(used);
+    }
+
+    #[test]
+    fn partial_annotations_fall_back_for_missing_dimensions() {
+        let mut model = make_test_model();
+        // Annotate only actor — time should still be detected by heuristics
+        // (though this model has no partitions, so time is None either way)
+        model.entities[0].scaling = Some(DimensionAnnotation {
+            actor: Some(ActorAnnotation {
+                is_root: true,
+                root_entity: None,
+                rows_per_actor: None,
+            }),
+            time: None,
+            custom: vec![],
+        });
+
+        let (analysis, used) = analyze_or_from_annotations(&model);
+        assert!(used);
+        // Actor from annotations
+        assert!(analysis.actor.is_some());
+        assert_eq!(analysis.actor.as_ref().unwrap().entity_name, "Users");
+        // Custom dimensions fall back to heuristic (detects Region OneOf)
+        assert!(!analysis.custom.is_empty());
+        assert_eq!(analysis.custom[0].field_name, "Region");
+    }
+
+    #[test]
+    fn custom_dimension_skipped_when_recovery_fails() {
+        let mut model = make_test_model();
+        // Annotate a custom dimension for a non-existent field
+        model.entities[1].scaling = Some(DimensionAnnotation {
+            actor: None,
+            time: None,
+            custom: vec![CustomDimensionAnnotation {
+                name: "Nonexistent".into(),
+                field: "no_such_field".into(),
+                cardinality: 5,
+            }],
+        });
+
+        let analysis = from_annotations(&model).unwrap();
+        // Should be empty because recovery fails
+        assert!(analysis.custom.is_empty());
     }
 }

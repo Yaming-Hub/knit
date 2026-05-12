@@ -37,10 +37,16 @@ pub fn run(
             .insert(key.clone(), crate::core::Value::String(value.clone()));
     }
 
-    // Analyze dimensions
-    let analysis = analyze::analyze(&model);
+    // Analyze dimensions (prefer persisted annotations when available)
+    let (analysis, used_annotations) = analyze::analyze_or_from_annotations(&model);
 
     if analyze_only {
+        if used_annotations && !cli.quiet {
+            eprintln!(
+                "  {} using persisted dimension annotations from blueprint",
+                "✓".green().bold()
+            );
+        }
         print_analysis(&analysis, cli);
         return Ok(());
     }
