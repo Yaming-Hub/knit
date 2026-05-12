@@ -995,6 +995,266 @@ fn format_count(n: u64) -> String {
     }
 }
 
+// ── Blueprint Merge ─────────────────────────────────────────────────
+
+/// Result of merging two blueprints.
+#[derive(Debug, serde::Serialize)]
+pub struct MergeReport {
+    /// Entities added from overlay (not present in base).
+    pub entities_added: Vec<String>,
+    /// Entities that existed in both (base version kept, overlay fields appended).
+    pub entities_merged: Vec<String>,
+    /// Relationships added from overlay.
+    pub relationships_added: usize,
+    /// Noise profiles added from overlay.
+    pub noise_profiles_added: usize,
+    /// Correlations added from overlay.
+    pub correlations_added: usize,
+    /// Personas added from overlay.
+    pub personas_added: usize,
+    /// Warnings (e.g. duplicate field names in merged entities).
+    pub warnings: Vec<String>,
+}
+
+/// Merge two DataModels. The base model is used as the foundation; the overlay
+/// adds new entities, appends fields to shared entities, and unions collection
+/// fields (relationships, noise, correlations, personas, etc.).
+pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeReport) {
+    let mut result = base.clone();
+    let mut report = MergeReport {
+        entities_added: Vec::new(),
+        entities_merged: Vec::new(),
+        relationships_added: 0,
+        noise_profiles_added: 0,
+        correlations_added: 0,
+        personas_added: 0,
+        warnings: Vec::new(),
+    };
+
+    for overlay_entity in &overlay.entities {
+        if let Some(base_entity) = result.entities.iter_mut().find(|e| e.name == overlay_entity.name)
+        {
+            // Merge fields: append new fields from overlay that don't exist in base.
+            let existing_fields: BTreeSet<String> =
+                base_entity.fields.iter().map(|f| f.name.clone()).collect();
+            let mut added = 0usize;
+            for field in &overlay_entity.fields {
+                if existing_fields.contains(&field.name) {
+                    report.warnings.push(format!(
+                        "entity `{}`: field `{}` exists in both, keeping base version",
+                        overlay_entity.name, field.name
+                    ));
+                } else {
+                    base_entity.fields.push(field.clone());
+                    added += 1;
+                }
+            }
+            // Merge constraints from overlay.
+            let existing_constraints: BTreeSet<String> = base_entity
+                .constraints
+                .iter()
+                .map(|c| format!("{:?}", c))
+                .collect();
+            for constraint in &overlay_entity.constraints {
+                let key = format!("{:?}", constraint);
+                if !existing_constraints.contains(&key) {
+                    base_entity.constraints.push(constraint.clone());
+                }
+            }
+            if added > 0 {
+                report.entities_merged.push(overlay_entity.name.clone());
+            }
+        } else {
+            // New entity — add to result.
+            result.entities.push(overlay_entity.clone());
+            report.entities_added.push(overlay_entity.name.clone());
+        }
+    }
+
+    // Merge relationships (dedup by (from, to, fk) tuple).
+    let existing_rels: BTreeSet<(String, String, Option<String>)> = result
+        .relationships
+        .iter()
+        .map(|r| (r.from.clone(), r.to.clone(), r.foreign_key.clone()))
+        .collect();
+    for rel in &overlay.relationships {
+        let key = (rel.from.clone(), rel.to.clone(), rel.foreign_key.clone());
+        if !existing_rels.contains(&key) {
+            result.relationships.push(rel.clone());
+            report.relationships_added += 1;
+        }
+    }
+
+    // Merge noise profiles (dedup by name).
+    let existing_noise: BTreeSet<String> =
+        result.noise_profiles.iter().map(|n| n.name.clone()).collect();
+    for np in &overlay.noise_profiles {
+        if !existing_noise.contains(&np.name) {
+            result.noise_profiles.push(np.clone());
+            report.noise_profiles_added += 1;
+        }
+    }
+
+    // Merge correlations (dedup by field pair).
+    let existing_corr: BTreeSet<String> = result
+        .correlations
+        .iter()
+        .map(|c| format!("{:?}", c))
+        .collect();
+    for corr in &overlay.correlations {
+        let key = format!("{:?}", corr);
+        if !existing_corr.contains(&key) {
+            result.correlations.push(corr.clone());
+            report.correlations_added += 1;
+        }
+    }
+
+    // Merge personas (dedup by name).
+    let existing_personas: BTreeSet<String> =
+        result.personas.iter().map(|p| p.name.clone()).collect();
+    for persona in &overlay.personas {
+        if !existing_personas.contains(&persona.name) {
+            result.personas.push(persona.clone());
+            report.personas_added += 1;
+        }
+    }
+
+    // Merge actor_relationships (dedup by debug repr).
+    let existing_ar: BTreeSet<String> = result
+        .actor_relationships
+        .iter()
+        .map(|a| format!("{:?}", a))
+        .collect();
+    for ar in &overlay.actor_relationships {
+        let key = format!("{:?}", ar);
+        if !existing_ar.contains(&key) {
+            result.actor_relationships.push(ar.clone());
+        }
+    }
+
+    // Merge custom_types (dedup by name).
+    let existing_types: BTreeSet<String> =
+        result.custom_types.iter().map(|t| t.name.clone()).collect();
+    for ct in &overlay.custom_types {
+        if !existing_types.contains(&ct.name) {
+            result.custom_types.push(ct.clone());
+        }
+    }
+
+    // Merge mixins (dedup by name).
+    let existing_mixins: BTreeSet<String> =
+        result.mixins.iter().map(|m| m.name.clone()).collect();
+    for mixin in &overlay.mixins {
+        if !existing_mixins.contains(&mixin.name) {
+            result.mixins.push(mixin.clone());
+        }
+    }
+
+    // Merge params (overlay wins on conflict).
+    for (k, v) in &overlay.params {
+        if result.params.contains_key(k) {
+            report.warnings.push(format!(
+                "param `{}` exists in both, overlay value used",
+                k
+            ));
+        }
+        result.params.insert(k.clone(), v.clone());
+    }
+
+    // Merge companion_files (dedup).
+    let existing_companions: BTreeSet<String> =
+        result.companion_files.iter().cloned().collect();
+    for cf in &overlay.companion_files {
+        if !existing_companions.contains(cf) {
+            result.companion_files.push(cf.clone());
+        }
+    }
+
+    (result, report)
+}
+
+/// Run `knit blueprint merge`.
+pub fn run_merge(base_path: &str, overlay_path: &str, output: Option<&str>, json: bool) -> Result<()> {
+    let base = load_blueprint(base_path)
+        .with_context(|| format!("failed to load base blueprint `{}`", base_path))?;
+    let overlay = load_blueprint(overlay_path)
+        .with_context(|| format!("failed to load overlay blueprint `{}`", overlay_path))?;
+
+    let (merged, report) = merge_models(&base, &overlay);
+
+    // Serialize merged model.
+    let toml_output = toml::to_string_pretty(&merged)
+        .context("failed to serialize merged blueprint")?;
+
+    // Write or print.
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &toml_output)
+            .with_context(|| format!("failed to write `{}`", out_path))?;
+        if !json {
+            println!("{} {}", "Wrote:".green(), out_path);
+        }
+    } else if !json {
+        println!("{}", toml_output);
+    }
+
+    // Report.
+    if json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else if output.is_some() {
+        println!();
+        println!("{}", "Merge Report".bold().underline());
+        if !report.entities_added.is_empty() {
+            println!(
+                "  {} {} ({})",
+                "Entities added:".dimmed(),
+                report.entities_added.len(),
+                report.entities_added.join(", ")
+            );
+        }
+        if !report.entities_merged.is_empty() {
+            println!(
+                "  {} {} ({})",
+                "Entities merged:".dimmed(),
+                report.entities_merged.len(),
+                report.entities_merged.join(", ")
+            );
+        }
+        if report.relationships_added > 0 {
+            println!(
+                "  {} {}",
+                "Relationships added:".dimmed(),
+                report.relationships_added
+            );
+        }
+        if report.noise_profiles_added > 0 {
+            println!(
+                "  {} {}",
+                "Noise profiles added:".dimmed(),
+                report.noise_profiles_added
+            );
+        }
+        if report.correlations_added > 0 {
+            println!(
+                "  {} {}",
+                "Correlations added:".dimmed(),
+                report.correlations_added
+            );
+        }
+        if report.personas_added > 0 {
+            println!(
+                "  {} {}",
+                "Personas added:".dimmed(),
+                report.personas_added
+            );
+        }
+        for w in &report.warnings {
+            println!("  {} {}", "⚠".yellow(), w);
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1488,5 +1748,128 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["entities"], 1);
         assert_eq!(parsed["total_fields"], 1);
+    }
+
+    // ── Merge tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn merge_adds_new_entity() {
+        let base = make_model("base", vec![make_entity("users", vec![make_field("id", DataType::Int)])]);
+        let overlay = make_model("overlay", vec![make_entity("orders", vec![make_field("oid", DataType::Int)])]);
+        let (merged, report) = merge_models(&base, &overlay);
+        assert_eq!(merged.entities.len(), 2);
+        assert_eq!(report.entities_added, vec!["orders"]);
+        assert!(report.entities_merged.is_empty());
+    }
+
+    #[test]
+    fn merge_appends_new_fields_to_existing_entity() {
+        let base = make_model("base", vec![make_entity("users", vec![make_field("id", DataType::Int)])]);
+        let overlay = make_model("overlay", vec![make_entity("users", vec![
+            make_field("id", DataType::Int),
+            make_field("email", DataType::String),
+        ])]);
+        let (merged, report) = merge_models(&base, &overlay);
+        assert_eq!(merged.entities.len(), 1);
+        assert_eq!(merged.entities[0].fields.len(), 2);
+        assert_eq!(merged.entities[0].fields[1].name, "email");
+        assert_eq!(report.entities_merged, vec!["users"]);
+        // Warning about duplicate "id" field
+        assert!(report.warnings.iter().any(|w| w.contains("field `id`")));
+    }
+
+    #[test]
+    fn merge_deduplicates_relationships() {
+        use crate::core::types::{Relationship, RelationshipKind};
+        let mut base = make_model("base", vec![
+            make_entity("users", vec![make_field("id", DataType::Int)]),
+            make_entity("orders", vec![make_field("id", DataType::Int)]),
+        ]);
+        base.relationships.push(Relationship {
+            name: "orders_users".into(),
+            from: "orders".into(),
+            to: "users".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let mut overlay = make_model("overlay", vec![]);
+        overlay.relationships.push(Relationship {
+            name: "orders_users".into(),
+            from: "orders".into(),
+            to: "users".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        overlay.relationships.push(Relationship {
+            name: "orders_products".into(),
+            from: "orders".into(),
+            to: "products".into(),
+            kind: RelationshipKind::OneToMany,
+            foreign_key: None,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+        let (merged, report) = merge_models(&base, &overlay);
+        assert_eq!(merged.relationships.len(), 2);
+        assert_eq!(report.relationships_added, 1);
+    }
+
+    #[test]
+    fn merge_params_overlay_wins() {
+        let mut base = make_model("base", vec![]);
+        base.params.insert("scale".into(), crate::core::types::Value::Int(10));
+        let mut overlay = make_model("overlay", vec![]);
+        overlay.params.insert("scale".into(), crate::core::types::Value::Int(100));
+        overlay.params.insert("new_param".into(), crate::core::types::Value::Int(5));
+        let (merged, report) = merge_models(&base, &overlay);
+        assert_eq!(merged.params.get("scale"), Some(&crate::core::types::Value::Int(100)));
+        assert_eq!(merged.params.get("new_param"), Some(&crate::core::types::Value::Int(5)));
+        assert!(report.warnings.iter().any(|w| w.contains("param `scale`")));
+    }
+
+    #[test]
+    fn merge_empty_overlay_is_identity() {
+        let base = make_model("base", vec![
+            make_entity("users", vec![make_field("id", DataType::Int)]),
+        ]);
+        let overlay = make_model("overlay", vec![]);
+        let (merged, report) = merge_models(&base, &overlay);
+        assert_eq!(merged.entities.len(), 1);
+        assert!(report.entities_added.is_empty());
+        assert!(report.entities_merged.is_empty());
+        assert_eq!(report.relationships_added, 0);
+        assert!(report.warnings.is_empty());
+    }
+
+    #[test]
+    fn merge_report_json_serializable() {
+        let base = make_model("base", vec![make_entity("a", vec![make_field("x", DataType::Int)])]);
+        let overlay = make_model("overlay", vec![make_entity("b", vec![make_field("y", DataType::String)])]);
+        let (_, report) = merge_models(&base, &overlay);
+        let json = serde_json::to_string(&report).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["entities_added"][0], "b");
     }
 }
