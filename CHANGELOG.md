@@ -6,6 +6,10 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Interactive enrich confirmation** (`--interactive`) — Review each proposed
+  column mapping before enrichment proceeds. Shows reference column, target field,
+  confidence score, and type compatibility. Users can accept or reject each mapping
+  individually. If stdin is not a TTY, all mappings are accepted with a warning.
 - **Interactive learn review** (`--review`) — Review low and medium-confidence
   decisions interactively before writing the blueprint. Shows the current choice,
   alternatives with scores, and lets users accept, skip, or switch to an

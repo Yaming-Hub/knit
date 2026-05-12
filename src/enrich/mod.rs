@@ -4,6 +4,7 @@
 //! a base model, improving generated data quality without storing actual values.
 
 pub mod extract;
+pub mod interactive;
 pub mod mapper;
 pub mod merge;
 
@@ -30,6 +31,8 @@ pub struct EnrichConfig {
     pub dry_run: bool,
     /// Only enrich fields in this entity (None = all entities).
     pub entity_filter: Option<String>,
+    /// If true, interactively confirm each column mapping.
+    pub interactive: bool,
 }
 
 impl Default for EnrichConfig {
@@ -39,6 +42,7 @@ impl Default for EnrichConfig {
             max_rows: Some(100_000),
             dry_run: false,
             entity_filter: None,
+            interactive: false,
         }
     }
 }
@@ -99,6 +103,15 @@ pub fn enrich(
         unmapped = unmapped_count,
         "column mapping complete"
     );
+
+    // Phase 4b: Interactive confirmation
+    let mappings = if config.interactive && !config.dry_run {
+        interactive::confirm_mappings(mappings)?
+    } else {
+        mappings
+    };
+    let mapped_count = mappings.iter().filter(|m| m.confidence >= config.min_confidence).count();
+    let unmapped_count = profiles.len() - mapped_count;
 
     if config.dry_run {
         return Ok(EnrichResult {

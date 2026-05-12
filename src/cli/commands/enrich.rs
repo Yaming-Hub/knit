@@ -18,6 +18,7 @@ pub fn run(
     min_confidence: f64,
     max_rows: Option<usize>,
     dry_run: bool,
+    interactive: bool,
     _cli: &Cli,
 ) -> Result<()> {
     // Load model
@@ -28,6 +29,7 @@ pub fn run(
         max_rows: max_rows.or(Some(100_000)),
         dry_run,
         entity_filter: entity.map(|s| s.to_string()),
+        interactive,
     };
 
     let result = enrich(&mut model, Path::new(ref_path), &config)?;

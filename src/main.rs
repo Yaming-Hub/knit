@@ -256,6 +256,7 @@ fn main() -> anyhow::Result<()> {
             min_confidence,
             max_rows,
             dry_run,
+            interactive,
         } => enrich::run(
             blueprint,
             reference,
@@ -264,6 +265,7 @@ fn main() -> anyhow::Result<()> {
             *min_confidence,
             *max_rows,
             *dry_run,
+            *interactive,
             &cli,
         ),
         Command::Model { action } => match action {

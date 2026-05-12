@@ -390,6 +390,9 @@ pub enum Command {
         /// Show mapping plan without modifying the model.
         #[arg(long)]
         dry_run: bool,
+        /// Interactively confirm each column mapping before enriching.
+        #[arg(long)]
+        interactive: bool,
     },
     /// Model directory operations (convert, info).
     Model {
