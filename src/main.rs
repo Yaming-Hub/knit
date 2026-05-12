@@ -158,6 +158,7 @@ fn main() -> anyhow::Result<()> {
             actor_columns,
             personas,
             model_format,
+            review,
         } => {
             let actors_opts = if *actors || !actor_columns.is_empty() || personas.is_some() {
                 Some(learn::ActorsOpts {
@@ -177,6 +178,7 @@ fn main() -> anyhow::Result<()> {
                 entities,
                 actors_opts.as_ref(),
                 *model_format,
+                *review,
                 &cli,
             )
         }

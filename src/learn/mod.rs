@@ -30,6 +30,7 @@ pub mod incremental;
 pub mod ingest;
 pub mod profile;
 pub mod relationships;
+pub mod review;
 pub mod sampling;
 pub mod schema_assembly;
 pub mod streaming;

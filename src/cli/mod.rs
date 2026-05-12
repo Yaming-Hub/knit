@@ -267,6 +267,9 @@ pub enum Command {
         /// Output model format: flat (single TOML file) or structured (directory).
         #[arg(long, value_enum)]
         model_format: Option<ModelFormat>,
+        /// Interactively review low-confidence decisions before writing the blueprint.
+        #[arg(long)]
+        review: bool,
     },
     /// Inspect a learning state file or blueprint file.
     Inspect {
