@@ -2380,6 +2380,245 @@ pub fn run_export(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Scaffold
+// ---------------------------------------------------------------------------
+
+/// Parse an entity spec: `Name:field1:type1,field2:type2,...` or `Name:count:field1:type1,...`.
+///
+/// Returns `(entity_name, count, fields)`.
+fn parse_entity_spec(spec: &str) -> Result<(String, u64, Vec<Field>)> {
+    let parts: Vec<&str> = spec.splitn(2, ':').collect();
+    if parts.len() < 2 || parts[0].is_empty() {
+        anyhow::bail!(
+            "invalid entity spec `{}`: expected `Name:field1:type1,field2:type2,...`",
+            spec
+        );
+    }
+
+    let entity_name = parts[0].to_string();
+    let field_str = parts[1];
+
+    // Try parsing first token as a count (e.g. "1000:id:int,name:string").
+    let (count, fields_part) = {
+        let tokens: Vec<&str> = field_str.splitn(2, ':').collect();
+        if tokens.len() == 2 {
+            if let Ok(n) = tokens[0].parse::<u64>() {
+                (n, tokens[1])
+            } else {
+                (1000, field_str)
+            }
+        } else {
+            (1000, field_str)
+        }
+    };
+
+    let mut fields = Vec::new();
+    // Fields are comma-separated pairs: `name:type` or just `name` (defaults to string).
+    for pair in fields_part.split(',') {
+        let pair = pair.trim();
+        if pair.is_empty() {
+            continue;
+        }
+        let ft: Vec<&str> = pair.splitn(2, ':').collect();
+        let field_name = ft[0].trim();
+        let dt_str = if ft.len() > 1 { ft[1].trim() } else { "string" };
+        let data_type = parse_scaffold_type(dt_str)?;
+
+        let is_pk = field_name == "id"
+            || field_name.ends_with("_id") && fields.is_empty();
+
+        fields.push(Field {
+            name: field_name.to_string(),
+            description: None,
+            data_type,
+            generator: None,
+            nullable: crate::core::NullSpec::Never,
+            primary_key: if is_pk && field_name == "id" {
+                Some(true)
+            } else {
+                None
+            },
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+            stats: None,
+            traits: None,
+        });
+    }
+
+    if fields.is_empty() {
+        anyhow::bail!(
+            "entity `{}` has no fields; expected `Name:field1:type1,field2:type2,...`",
+            entity_name
+        );
+    }
+
+    Ok((entity_name, count, fields))
+}
+
+/// Parse a simple type string into a DataType.
+fn parse_scaffold_type(s: &str) -> Result<crate::core::DataType> {
+    use crate::core::DataType;
+    match s.to_lowercase().as_str() {
+        "int" | "integer" | "bigint" | "i64" => Ok(DataType::Int),
+        "int32" | "i32" => Ok(DataType::Int32),
+        "float" | "double" | "f64" | "decimal" | "number" => Ok(DataType::Float),
+        "string" | "str" | "text" | "varchar" => Ok(DataType::String),
+        "bool" | "boolean" => Ok(DataType::Bool),
+        "uuid" => Ok(DataType::Uuid),
+        "date" => Ok(DataType::Date),
+        "time" => Ok(DataType::Time),
+        "datetime" | "timestamp" => Ok(DataType::Datetime),
+        "datetimetz" | "timestamptz" => Ok(DataType::Datetimetz),
+        "bytes" | "binary" | "blob" => Ok(DataType::Bytes),
+        "array" | "list" => Ok(DataType::Array),
+        "map" | "object" | "json" => Ok(DataType::Map),
+        _ => anyhow::bail!(
+            "unknown type `{}`; supported: int, float, string, bool, uuid, date, time, datetime, bytes, array, map",
+            s
+        ),
+    }
+}
+
+/// Parse a relationship spec: `From.fk_col=To.pk_col` or `From=To` (implicit FK).
+fn parse_rel_spec(spec: &str) -> Result<(String, Option<String>, String, Option<String>)> {
+    let sides: Vec<&str> = spec.splitn(2, '=').collect();
+    if sides.len() != 2 || sides[0].is_empty() || sides[1].is_empty() {
+        anyhow::bail!(
+            "invalid relationship spec `{}`: expected `From.fk=To.pk` or `From=To`",
+            spec
+        );
+    }
+
+    let (from_entity, from_field) = if let Some(dot) = sides[0].find('.') {
+        (
+            sides[0][..dot].to_string(),
+            Some(sides[0][dot + 1..].to_string()),
+        )
+    } else {
+        (sides[0].to_string(), None)
+    };
+
+    let (to_entity, to_field) = if let Some(dot) = sides[1].find('.') {
+        (
+            sides[1][..dot].to_string(),
+            Some(sides[1][dot + 1..].to_string()),
+        )
+    } else {
+        (sides[1].to_string(), None)
+    };
+
+    Ok((from_entity, from_field, to_entity, to_field))
+}
+
+/// Build a scaffold DataModel from parsed specs.
+pub fn scaffold_model(
+    name: &str,
+    entity_specs: &[String],
+    rel_specs: &[String],
+) -> Result<DataModel> {
+    let mut entities = Vec::new();
+
+    for spec in entity_specs {
+        let (ent_name, count, fields) = parse_entity_spec(spec)?;
+        entities.push(Entity {
+            name: ent_name,
+            description: None,
+            tags: Vec::new(),
+            count: crate::core::CountSpec::Fixed(count),
+            fields,
+            constraints: vec![],
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
+            scaling: None,
+        });
+    }
+
+    let mut relationships = Vec::new();
+    for spec in rel_specs {
+        let (from_entity, from_field, to_entity, _to_field) = parse_rel_spec(spec)?;
+        let rel_name = format!("{}_{}", from_entity, to_entity).to_lowercase();
+        let foreign_key = from_field;
+        relationships.push(crate::core::Relationship {
+            name: rel_name,
+            from: from_entity,
+            to: to_entity,
+            kind: crate::core::RelationshipKind::OneToMany,
+            foreign_key,
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+    }
+
+    Ok(DataModel {
+        name: name.to_string(),
+        description: None,
+        seed: 42,
+        locale: "en_US".to_string(),
+        timezone: "UTC".to_string(),
+        entities,
+        relationships,
+        noise_profiles: Vec::new(),
+        correlations: Vec::new(),
+        params: BTreeMap::new(),
+        blueprint_version: "1.0".to_string(),
+        personas: Vec::new(),
+        actor_relationships: Vec::new(),
+        custom_types: Vec::new(),
+        mixins: Vec::new(),
+        companion_files: Vec::new(),
+    })
+}
+
+/// Run the `blueprint scaffold` command.
+pub fn run_scaffold(
+    name: &str,
+    entity_specs: &[String],
+    rel_specs: &[String],
+    output: Option<&str>,
+    json: bool,
+) -> Result<()> {
+    if entity_specs.is_empty() {
+        anyhow::bail!("at least one --entity must be specified");
+    }
+
+    let model = scaffold_model(name, entity_specs, rel_specs)?;
+
+    let output_str = if json {
+        serde_json::to_string_pretty(&model)?
+    } else {
+        serialize_model_to_toml(&model)?
+    };
+
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &output_str)
+            .with_context(|| format!("failed to write `{}`", out_path))?;
+        eprintln!(
+            "{} scaffolded {} entities, {} relationships to {}",
+            "✓".green(),
+            model.entities.len(),
+            model.relationships.len(),
+            out_path
+        );
+    } else {
+        println!("{}", output_str);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3798,5 +4037,127 @@ mod tests {
         assert!(SqlDialect::from_str("mysql").is_ok());
         assert!(SqlDialect::from_str("sqlite").is_ok());
         assert!(SqlDialect::from_str("oracle").is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // Scaffold tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn scaffold_basic_entity() {
+        let model = scaffold_model(
+            "test",
+            &["Users:id:int,name:string,email:string".into()],
+            &[],
+        )
+        .unwrap();
+
+        assert_eq!(model.entities.len(), 1);
+        assert_eq!(model.entities[0].name, "Users");
+        assert_eq!(model.entities[0].fields.len(), 3);
+        assert_eq!(model.entities[0].fields[0].name, "id");
+        assert_eq!(model.entities[0].fields[0].data_type, DataType::Int);
+        assert_eq!(model.entities[0].fields[0].primary_key, Some(true));
+        assert_eq!(model.entities[0].fields[1].data_type, DataType::String);
+    }
+
+    #[test]
+    fn scaffold_with_count() {
+        let model = scaffold_model(
+            "test",
+            &["Products:5000:id:int,name:string,price:float".into()],
+            &[],
+        )
+        .unwrap();
+
+        assert_eq!(model.entities[0].count, CountSpec::Fixed(5000));
+        assert_eq!(model.entities[0].fields.len(), 3);
+    }
+
+    #[test]
+    fn scaffold_with_relationship() {
+        let model = scaffold_model(
+            "test",
+            &[
+                "Users:id:int,name:string".into(),
+                "Orders:id:int,amount:float".into(),
+            ],
+            &["Orders.user_id=Users.id".into()],
+        )
+        .unwrap();
+
+        assert_eq!(model.relationships.len(), 1);
+        assert_eq!(model.relationships[0].from, "Orders");
+        assert_eq!(model.relationships[0].to, "Users");
+        assert_eq!(
+            model.relationships[0].foreign_key.as_deref(),
+            Some("user_id")
+        );
+    }
+
+    #[test]
+    fn scaffold_implicit_relationship() {
+        let model = scaffold_model(
+            "test",
+            &[
+                "Users:id:int".into(),
+                "Orders:id:int".into(),
+            ],
+            &["Orders=Users".into()],
+        )
+        .unwrap();
+
+        assert_eq!(model.relationships[0].from, "Orders");
+        assert_eq!(model.relationships[0].to, "Users");
+        assert!(model.relationships[0].foreign_key.is_none());
+    }
+
+    #[test]
+    fn scaffold_type_aliases() {
+        let model = scaffold_model(
+            "test",
+            &["T:a:integer,b:varchar,c:boolean,d:timestamp,e:blob".into()],
+            &[],
+        )
+        .unwrap();
+
+        assert_eq!(model.entities[0].fields[0].data_type, DataType::Int);
+        assert_eq!(model.entities[0].fields[1].data_type, DataType::String);
+        assert_eq!(model.entities[0].fields[2].data_type, DataType::Bool);
+        assert_eq!(model.entities[0].fields[3].data_type, DataType::Datetime);
+        assert_eq!(model.entities[0].fields[4].data_type, DataType::Bytes);
+    }
+
+    #[test]
+    fn scaffold_default_type_is_string() {
+        let model = scaffold_model("test", &["T:name,email".into()], &[]).unwrap();
+
+        assert_eq!(model.entities[0].fields[0].data_type, DataType::String);
+        assert_eq!(model.entities[0].fields[1].data_type, DataType::String);
+    }
+
+    #[test]
+    fn scaffold_invalid_specs() {
+        assert!(scaffold_model("test", &["".into()], &[]).is_err());
+        assert!(scaffold_model("test", &["NoFields:".into()], &[]).is_err());
+        assert!(parse_rel_spec("noequals").is_err());
+    }
+
+    #[test]
+    fn scaffold_generates_valid_toml() {
+        let model = scaffold_model(
+            "ecommerce",
+            &[
+                "Users:id:int,name:string".into(),
+                "Orders:id:int,total:float".into(),
+            ],
+            &["Orders.user_id=Users.id".into()],
+        )
+        .unwrap();
+
+        let toml = serialize_model_to_toml(&model).unwrap();
+        assert!(toml.contains("name = \"ecommerce\""));
+        assert!(toml.contains("[[entities]]"));
+        assert!(toml.contains("[[relationships]]"));
     }
 }

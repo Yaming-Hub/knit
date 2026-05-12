@@ -502,6 +502,22 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Generate a starter blueprint from entity/field specs on the command line.
+    Scaffold {
+        /// Model name.
+        #[arg(long, default_value = "scaffold")]
+        name: String,
+        /// Entity spec: `Name:field1:type1,field2:type2,...` (repeatable).
+        /// Prefix with count: `Name:1000:field1:type1,...`.
+        #[arg(long = "entity", required = true)]
+        entities: Vec<String>,
+        /// Relationship spec: `From.fk_col=To.pk_col` or `From=To` (repeatable).
+        #[arg(long = "rel")]
+        rels: Vec<String>,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.
