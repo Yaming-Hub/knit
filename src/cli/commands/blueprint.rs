@@ -2181,7 +2181,7 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
         })
         .collect();
 
-    // Build FK map from relationships: (from_entity, fk_column) → (to_entity, to_pk).
+    // Build FK info from relationships.
     struct FkInfo {
         fk_col: String,
         to_entity: String,
@@ -2210,15 +2210,28 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
         }
     }
 
+    // Collect existing field names per entity to detect implicit FK columns.
+    let entity_field_names: BTreeMap<&str, BTreeSet<&str>> = model
+        .entities
+        .iter()
+        .map(|e| {
+            let names = e.fields.iter().map(|f| f.name.as_str()).collect();
+            (e.name.as_str(), names)
+        })
+        .collect();
+
+    // Phase 1: CREATE TABLE statements (no inline FK constraints).
     for entity in &model.entities {
-        out.push_str(&format!("CREATE TABLE {} (\n", sql_quote_ident(&entity.name, dialect)));
+        out.push_str(&format!(
+            "CREATE TABLE {} (\n",
+            sql_quote_ident(&entity.name, dialect)
+        ));
 
         let mut columns: Vec<String> = Vec::new();
 
         for field in &entity.fields {
-            // Skip nested object fields — they don't map to SQL columns.
+            // Skip nested object fields — flatten them.
             if field.data_type == crate::core::DataType::Object && !field.fields.is_empty() {
-                // Flatten nested fields with prefix.
                 flatten_fields(&field.fields, &field.name, dialect, &mut columns);
                 continue;
             }
@@ -2231,6 +2244,10 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
             );
             if field.primary_key == Some(true) {
                 col_def.push_str(" PRIMARY KEY");
+                // SQLite needs explicit NOT NULL on PKs (unlike PG/MySQL).
+                if dialect == SqlDialect::Sqlite {
+                    col_def.push_str(" NOT NULL");
+                }
             }
             let is_nullable = !matches!(field.nullable, crate::core::NullSpec::Never);
             if !is_nullable && field.primary_key != Some(true) {
@@ -2239,20 +2256,56 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
             columns.push(col_def);
         }
 
-        // Add FK constraint clauses.
+        // Synthesize implicit FK columns not present in entity.fields.
         if let Some(fks) = fk_map.get(&entity.name) {
+            let existing = entity_field_names.get(entity.name.as_str());
             for fk in fks {
-                columns.push(format!(
-                    "    FOREIGN KEY ({}) REFERENCES {} ({})",
-                    sql_quote_ident(&fk.fk_col, dialect),
-                    sql_quote_ident(&fk.to_entity, dialect),
-                    sql_quote_ident(&fk.to_pk, dialect),
-                ));
+                let has_col = existing.map_or(false, |s| s.contains(fk.fk_col.as_str()));
+                if !has_col {
+                    // Infer type from referenced PK — look up the target entity.
+                    let ref_type = model
+                        .entities
+                        .iter()
+                        .find(|e| e.name == fk.to_entity)
+                        .and_then(|e| e.fields.iter().find(|f| f.name == fk.to_pk))
+                        .map(|f| sql_type(&f.data_type, dialect))
+                        .unwrap_or("BIGINT");
+                    columns.push(format!(
+                        "    {} {}",
+                        sql_quote_ident(&fk.fk_col, dialect),
+                        ref_type
+                    ));
+                }
             }
         }
 
         out.push_str(&columns.join(",\n"));
         out.push_str("\n);\n\n");
+    }
+
+    // Phase 2: ALTER TABLE ... ADD FOREIGN KEY (avoids ordering issues).
+    if include_fks {
+        let mut has_fks = false;
+        for entity in &model.entities {
+            if let Some(fks) = fk_map.get(&entity.name) {
+                for fk in fks {
+                    if !has_fks {
+                        out.push_str("-- Foreign key constraints\n");
+                        has_fks = true;
+                    }
+                    out.push_str(&format!(
+                        "ALTER TABLE {} ADD FOREIGN KEY ({}) REFERENCES {} ({});\n",
+                        sql_quote_ident(&entity.name, dialect),
+                        sql_quote_ident(&fk.fk_col, dialect),
+                        sql_quote_ident(&fk.to_entity, dialect),
+                        sql_quote_ident(&fk.to_pk, dialect),
+                    ));
+                }
+            }
+        }
+        if has_fks {
+            out.push('\n');
+        }
     }
 
     out
@@ -2281,11 +2334,11 @@ fn flatten_fields(
     }
 }
 
-/// Quote a SQL identifier based on dialect.
+/// Quote a SQL identifier based on dialect, escaping embedded quote characters.
 fn sql_quote_ident(name: &str, dialect: SqlDialect) -> String {
     match dialect {
-        SqlDialect::Mysql => format!("`{}`", name),
-        _ => format!("\"{}\"", name),
+        SqlDialect::Mysql => format!("`{}`", name.replace('`', "``")),
+        _ => format!("\"{}\"", name.replace('"', "\"\"")),
     }
 }
 
@@ -3669,7 +3722,7 @@ mod tests {
         model.relationships = vec![make_relationship("orders_users", "orders", "users")];
 
         let sql = export_sql(&model, SqlDialect::Postgres, true);
-        assert!(sql.contains("FOREIGN KEY (\"users_id\") REFERENCES \"users\" (\"id\")"));
+        assert!(sql.contains("ALTER TABLE \"orders\" ADD FOREIGN KEY (\"users_id\") REFERENCES \"users\" (\"id\")"));
     }
 
     #[test]
