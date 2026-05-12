@@ -787,11 +787,7 @@ pub fn compute_stats(model: &DataModel) -> BlueprintStats {
         let fields = count_fields_recursive(&entity.fields);
         total_fields += fields;
 
-        let entity_rows = match &entity.count {
-            crate::core::CountSpec::Fixed(n) => *n,
-            crate::core::CountSpec::Range { min, max } => (min + max) / 2,
-            _ => 1000,
-        };
+        let entity_rows = crate::plan::compiler::resolve_count_estimate(&entity.count);
         estimated_rows += entity_rows;
 
         let nullable_fields = count_nullable(&entity.fields);
@@ -843,8 +839,15 @@ fn count_fields_recursive(fields: &[Field]) -> usize {
 fn count_nullable(fields: &[Field]) -> usize {
     fields
         .iter()
-        .filter(|f| !matches!(f.nullable, crate::core::NullSpec::Never))
-        .count()
+        .map(|f| {
+            let this = if matches!(f.nullable, crate::core::NullSpec::Never) {
+                0
+            } else {
+                1
+            };
+            this + count_nullable(&f.fields)
+        })
+        .sum()
 }
 
 fn collect_generator_usage(field: &Field, usage: &mut BTreeMap<String, usize>) {
@@ -1446,6 +1449,18 @@ mod tests {
             )],
         );
         let stats = compute_stats(&model);
+        assert_eq!(stats.entity_details[0].nullable_fields, 1);
+    }
+
+    #[test]
+    fn stats_nullable_nested_fields() {
+        let mut child = make_field("inner", DataType::String);
+        child.nullable = NullSpec::Probability(0.3);
+        let mut parent = make_field("obj", DataType::String);
+        parent.fields = vec![child, make_field("solid", DataType::Int)];
+        let model = make_model("test", vec![make_entity("t", vec![parent])]);
+        let stats = compute_stats(&model);
+        // parent itself is Never, but one nested child is nullable
         assert_eq!(stats.entity_details[0].nullable_fields, 1);
     }
 

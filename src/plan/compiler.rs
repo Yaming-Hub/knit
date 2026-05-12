@@ -401,7 +401,7 @@ fn has_entity_prefix(persona_name: &str, entities: &[Entity]) -> bool {
 
 /// Resolve a CountSpec to a deterministic estimate (midpoint for ranges,
 /// mean for distributions).
-fn resolve_count_estimate(count: &crate::core::CountSpec) -> u64 {
+pub(crate) fn resolve_count_estimate(count: &crate::core::CountSpec) -> u64 {
     match count {
         crate::core::CountSpec::Fixed(n) => *n,
         crate::core::CountSpec::Range { min, max } => (min + max) / 2,
