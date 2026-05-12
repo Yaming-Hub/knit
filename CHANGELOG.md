@@ -6,6 +6,11 @@ All notable changes to Knit are documented in this file.
 
 ### Added
 
+- **Enrichment quality scoring** — After `knit enrich` merges reference statistics,
+  an automatic quality report shows per-field and aggregate scores. Reports mapping
+  confidence, distribution fit quality (KS statistic, p-value), sample size adequacy,
+  and categorical coverage. Flags concerns with severity levels (high/medium/low) for
+  poor fits, small samples, type mismatches, and failed merges.
 - **Interactive enrich confirmation** (`--interactive`) — Review each proposed
   column mapping before enrichment proceeds. Shows reference column, target field,
   confidence score, and type compatibility. Users can accept or reject each mapping

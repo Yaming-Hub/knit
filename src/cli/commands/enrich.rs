@@ -65,10 +65,16 @@ pub fn run(
     println!("  Fields enriched:    {}", result.enriched_fields);
     println!("  Fields skipped:     {}", result.skipped_fields);
 
+    // Print quality report
+    if let Some(ref report) = result.quality_report {
+        println!();
+        println!("{}", report);
+    }
+
     // Write updated schema (format-aware: preserves structured directory if input was structured)
     let out_path = output.unwrap_or(blueprint_path);
     save_blueprint(&model, out_path)?;
-    println!("\n  Written to: {}", out_path.green());
+    println!("  Written to: {}", out_path.green());
 
     Ok(())
 }
