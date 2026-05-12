@@ -171,6 +171,12 @@ fn main() -> anyhow::Result<()> {
                 no_fks,
                 output,
             } => blueprint::run_export(file, &format, &dialect, !no_fks, output.as_deref()),
+            BlueprintAction::Scaffold {
+                name,
+                entities,
+                rels,
+                output,
+            } => blueprint::run_scaffold(&name, &entities, &rels, output.as_deref(), cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
