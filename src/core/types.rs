@@ -331,6 +331,9 @@ pub struct TimeAnnotation {
     /// Number of observed partitions.
     #[serde(default)]
     pub partition_count: usize,
+    /// Observed partition values (dates/keys), sorted.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub partition_values: Vec<String>,
 }
 
 /// A custom (non-actor, non-time) scaling dimension.

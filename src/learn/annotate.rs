@@ -65,6 +65,7 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
                 partition_column: time.partition_field.clone(),
                 cadence: time.cadence.map(format_cadence),
                 partition_count: time.partition_values.len(),
+                partition_values: time.partition_values.clone(),
             });
         }
     }
@@ -236,6 +237,10 @@ mod tests {
         assert_eq!(time.partition_column, "date");
         assert_eq!(time.cadence.as_deref(), Some("7d"));
         assert_eq!(time.partition_count, 2);
+        assert_eq!(
+            time.partition_values,
+            vec!["2024-01-01".to_string(), "2024-01-08".to_string()]
+        );
     }
 
     #[test]
