@@ -6,7 +6,7 @@
 //! - `diff` — compare two schemas and show differences
 //! - `doc` — generate markdown documentation for a schema
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use anyhow::{Context, Result};
 use colored::Colorize;
@@ -742,6 +742,259 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
     Ok(out)
 }
 
+// ── Blueprint stats ──────────────────────────────────────────────────
+
+/// Collected statistics about a blueprint's structure and complexity.
+#[derive(Debug, serde::Serialize)]
+pub struct BlueprintStats {
+    pub entities: usize,
+    pub total_fields: usize,
+    pub relationships: usize,
+    pub correlations: usize,
+    pub noise_profiles: usize,
+    pub personas: usize,
+    pub actor_relationships: usize,
+    pub estimated_rows: u64,
+    pub generator_usage: BTreeMap<String, usize>,
+    pub data_type_usage: BTreeMap<String, usize>,
+    pub entity_details: Vec<EntityStats>,
+    pub scaling_annotated: usize,
+}
+
+/// Per-entity statistics.
+#[derive(Debug, serde::Serialize)]
+pub struct EntityStats {
+    pub name: String,
+    pub fields: usize,
+    pub estimated_rows: u64,
+    pub constraints: usize,
+    pub is_actor: bool,
+    pub has_scaling: bool,
+    pub has_topology: bool,
+    pub nullable_fields: usize,
+}
+
+/// Compute blueprint statistics.
+pub fn compute_stats(model: &DataModel) -> BlueprintStats {
+    let mut generator_usage: BTreeMap<String, usize> = BTreeMap::new();
+    let mut data_type_usage: BTreeMap<String, usize> = BTreeMap::new();
+    let mut total_fields = 0usize;
+    let mut estimated_rows = 0u64;
+    let mut entity_details = Vec::new();
+    let mut scaling_annotated = 0usize;
+
+    for entity in &model.entities {
+        let fields = count_fields_recursive(&entity.fields);
+        total_fields += fields;
+
+        let entity_rows = crate::plan::compiler::resolve_count_estimate(&entity.count);
+        estimated_rows += entity_rows;
+
+        let nullable_fields = count_nullable(&entity.fields);
+
+        if entity.scaling.is_some() {
+            scaling_annotated += 1;
+        }
+
+        entity_details.push(EntityStats {
+            name: entity.name.clone(),
+            fields,
+            estimated_rows: entity_rows,
+            constraints: entity.constraints.len(),
+            is_actor: entity.actor,
+            has_scaling: entity.scaling.is_some(),
+            has_topology: entity.topology.is_some(),
+            nullable_fields,
+        });
+
+        for field in &entity.fields {
+            collect_generator_usage(field, &mut generator_usage);
+            collect_data_type_usage(field, &mut data_type_usage);
+        }
+    }
+
+    BlueprintStats {
+        entities: model.entities.len(),
+        total_fields,
+        relationships: model.relationships.len(),
+        correlations: model.correlations.len(),
+        noise_profiles: model.noise_profiles.len(),
+        personas: model.personas.len(),
+        actor_relationships: model.actor_relationships.len(),
+        estimated_rows,
+        generator_usage,
+        data_type_usage,
+        entity_details,
+        scaling_annotated,
+    }
+}
+
+fn count_fields_recursive(fields: &[Field]) -> usize {
+    fields
+        .iter()
+        .map(|f| 1 + count_fields_recursive(&f.fields))
+        .sum()
+}
+
+fn count_nullable(fields: &[Field]) -> usize {
+    fields
+        .iter()
+        .map(|f| {
+            let this = if matches!(f.nullable, crate::core::NullSpec::Never) {
+                0
+            } else {
+                1
+            };
+            this + count_nullable(&f.fields)
+        })
+        .sum()
+}
+
+fn collect_generator_usage(field: &Field, usage: &mut BTreeMap<String, usize>) {
+    if let Some(ref gen) = field.generator {
+        *usage.entry(gen.type_name().to_string()).or_insert(0) += 1;
+    }
+    for sub in &field.fields {
+        collect_generator_usage(sub, usage);
+    }
+}
+
+fn collect_data_type_usage(field: &Field, usage: &mut BTreeMap<String, usize>) {
+    *usage
+        .entry(field.data_type.to_string())
+        .or_insert(0) += 1;
+    for sub in &field.fields {
+        collect_data_type_usage(sub, usage);
+    }
+}
+
+/// Run `knit blueprint stats`.
+pub fn run_stats(path: &str, json: bool) -> Result<()> {
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load blueprint `{}`", path))?;
+    let stats = compute_stats(&model);
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&stats)?);
+        return Ok(());
+    }
+
+    // ── Header ──────────────────────────────────────────────────────
+    println!(
+        "{} {}",
+        "Blueprint:".bold(),
+        model.name.cyan()
+    );
+    if let Some(ref desc) = model.description {
+        println!("  {}", desc.dimmed());
+    }
+    println!();
+
+    // ── Overview table ──────────────────────────────────────────────
+    println!("{}", "Overview".bold().underline());
+    println!("  {} {}", "Entities:".dimmed(), stats.entities);
+    println!("  {} {}", "Fields:".dimmed(), stats.total_fields);
+    println!(
+        "  {} ~{}",
+        "Estimated rows:".dimmed(),
+        format_count(stats.estimated_rows)
+    );
+    println!(
+        "  {} {}",
+        "Relationships:".dimmed(),
+        stats.relationships
+    );
+    if stats.correlations > 0 {
+        println!("  {} {}", "Correlations:".dimmed(), stats.correlations);
+    }
+    if stats.noise_profiles > 0 {
+        println!(
+            "  {} {}",
+            "Noise profiles:".dimmed(),
+            stats.noise_profiles
+        );
+    }
+    if stats.personas > 0 {
+        println!("  {} {}", "Personas:".dimmed(), stats.personas);
+    }
+    if stats.scaling_annotated > 0 {
+        println!(
+            "  {} {}/{}",
+            "Scaling annotations:".dimmed(),
+            stats.scaling_annotated,
+            stats.entities
+        );
+    }
+    println!();
+
+    // ── Entity breakdown ────────────────────────────────────────────
+    println!("{}", "Entities".bold().underline());
+    for e in &stats.entity_details {
+        let mut flags = Vec::new();
+        if e.is_actor {
+            flags.push("actor".to_string());
+        }
+        if e.has_topology {
+            flags.push("topology".to_string());
+        }
+        if e.has_scaling {
+            flags.push("scaled".to_string());
+        }
+        let flag_str = if flags.is_empty() {
+            String::new()
+        } else {
+            format!(" [{}]", flags.join(", "))
+        };
+
+        println!(
+            "  {} — {} fields, ~{} rows, {} constraints{}",
+            e.name.cyan(),
+            e.fields,
+            format_count(e.estimated_rows),
+            e.constraints,
+            flag_str.dimmed()
+        );
+    }
+    println!();
+
+    // ── Generator distribution ──────────────────────────────────────
+    if !stats.generator_usage.is_empty() {
+        println!("{}", "Generators".bold().underline());
+        let mut sorted: Vec<_> = stats.generator_usage.iter().collect();
+        sorted.sort_by(|a, b| b.1.cmp(a.1));
+        for (gen, count) in sorted {
+            let pct = (*count as f64 / stats.total_fields as f64) * 100.0;
+            println!("  {:15} {:>4} ({:.0}%)", gen, count, pct);
+        }
+        println!();
+    }
+
+    // ── Data type distribution ──────────────────────────────────────
+    if !stats.data_type_usage.is_empty() {
+        println!("{}", "Data Types".bold().underline());
+        let mut sorted: Vec<_> = stats.data_type_usage.iter().collect();
+        sorted.sort_by(|a, b| b.1.cmp(a.1));
+        for (dt, count) in sorted {
+            println!("  {:15} {:>4}", dt, count);
+        }
+        println!();
+    }
+
+    Ok(())
+}
+
+fn format_count(n: u64) -> String {
+    if n >= 1_000_000_000 {
+        format!("{:.1}B", n as f64 / 1_000_000_000.0)
+    } else if n >= 1_000_000 {
+        format!("{:.1}M", n as f64 / 1_000_000.0)
+    } else if n >= 10_000 {
+        format!("{:.1}K", n as f64 / 1_000.0)
+    } else {
+        n.to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1088,5 +1341,152 @@ mod tests {
         assert!(!doc.contains("Actor entities"));
         assert!(!doc.contains("| Personas |"));
         assert!(!doc.contains("| Actor relationships |"));
+    }
+
+    // ── Stats tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn stats_empty_model() {
+        let model = make_model("empty", vec![]);
+        let stats = compute_stats(&model);
+        assert_eq!(stats.entities, 0);
+        assert_eq!(stats.total_fields, 0);
+        assert_eq!(stats.estimated_rows, 0);
+        assert!(stats.generator_usage.is_empty());
+        assert!(stats.data_type_usage.is_empty());
+        assert!(stats.entity_details.is_empty());
+    }
+
+    #[test]
+    fn stats_counts_fields_and_rows() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity(
+                    "users",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("name", DataType::String),
+                    ],
+                ),
+                make_entity("orders", vec![make_field("oid", DataType::Int)]),
+            ],
+        );
+        let stats = compute_stats(&model);
+        assert_eq!(stats.entities, 2);
+        assert_eq!(stats.total_fields, 3);
+        // Each entity has CountSpec::Fixed(100) from make_entity
+        assert_eq!(stats.estimated_rows, 200);
+        assert_eq!(stats.entity_details.len(), 2);
+        assert_eq!(stats.entity_details[0].name, "users");
+        assert_eq!(stats.entity_details[0].fields, 2);
+        assert_eq!(stats.entity_details[1].name, "orders");
+        assert_eq!(stats.entity_details[1].fields, 1);
+    }
+
+    #[test]
+    fn stats_tracks_generator_usage() {
+        use crate::core::GeneratorSpec;
+
+        let mut f1 = make_field("id", DataType::Int);
+        f1.generator = Some(GeneratorSpec::Sequence {
+            start: crate::core::types::IntOrString::Int(1),
+            step: crate::core::types::IntOrString::Int(1),
+            prefix: None,
+            values: None,
+            cycle: None,
+            jitter: None,
+        });
+        let mut f2 = make_field("code", DataType::String);
+        f2.generator = Some(GeneratorSpec::Pattern {
+            pattern: "###-???".into(),
+        });
+        let mut f3 = make_field("seq2", DataType::Int);
+        f3.generator = Some(GeneratorSpec::Sequence {
+            start: crate::core::types::IntOrString::Int(100),
+            step: crate::core::types::IntOrString::Int(5),
+            prefix: None,
+            values: None,
+            cycle: None,
+            jitter: None,
+        });
+
+        let model = make_model("test", vec![make_entity("t", vec![f1, f2, f3])]);
+        let stats = compute_stats(&model);
+
+        assert_eq!(stats.generator_usage.get("sequence"), Some(&2));
+        assert_eq!(stats.generator_usage.get("pattern"), Some(&1));
+        assert_eq!(stats.generator_usage.len(), 2);
+    }
+
+    #[test]
+    fn stats_tracks_data_type_usage() {
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "t",
+                vec![
+                    make_field("a", DataType::Int),
+                    make_field("b", DataType::Int),
+                    make_field("c", DataType::String),
+                ],
+            )],
+        );
+        let stats = compute_stats(&model);
+        assert_eq!(stats.data_type_usage.get("int"), Some(&2));
+        assert_eq!(stats.data_type_usage.get("string"), Some(&1));
+    }
+
+    #[test]
+    fn stats_nullable_field_count() {
+        let mut nf = make_field("opt", DataType::String);
+        nf.nullable = NullSpec::Probability(0.5);
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "t",
+                vec![make_field("id", DataType::Int), nf],
+            )],
+        );
+        let stats = compute_stats(&model);
+        assert_eq!(stats.entity_details[0].nullable_fields, 1);
+    }
+
+    #[test]
+    fn stats_nullable_nested_fields() {
+        let mut child = make_field("inner", DataType::String);
+        child.nullable = NullSpec::Probability(0.3);
+        let mut parent = make_field("obj", DataType::String);
+        parent.fields = vec![child, make_field("solid", DataType::Int)];
+        let model = make_model("test", vec![make_entity("t", vec![parent])]);
+        let stats = compute_stats(&model);
+        // parent itself is Never, but one nested child is nullable
+        assert_eq!(stats.entity_details[0].nullable_fields, 1);
+    }
+
+    #[test]
+    fn stats_scaling_annotated_count() {
+        let mut e = make_entity("scaled", vec![make_field("id", DataType::Int)]);
+        e.scaling = Some(crate::core::DimensionAnnotation {
+            actor: None,
+            time: None,
+            custom: Vec::new(),
+        });
+        let model = make_model("test", vec![e]);
+        let stats = compute_stats(&model);
+        assert_eq!(stats.scaling_annotated, 1);
+    }
+
+    #[test]
+    fn stats_json_round_trip() {
+        let model = make_model(
+            "test",
+            vec![make_entity("t", vec![make_field("id", DataType::Int)])],
+        );
+        let stats = compute_stats(&model);
+        let json = serde_json::to_string(&stats).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["entities"], 1);
+        assert_eq!(parsed["total_fields"], 1);
     }
 }
