@@ -1696,7 +1696,7 @@ pub fn subset_model(model: &DataModel, roots: &[String], include_deps: bool) -> 
     let noise_profiles = model
         .noise_profiles
         .iter()
-        .filter(|np| np.entity.is_empty() || selected.contains(&np.entity))
+        .filter(|np| !np.entity.is_empty() && selected.contains(&np.entity))
         .cloned()
         .collect();
 
@@ -1757,6 +1757,13 @@ pub fn run_subset(
     }
 
     let subset = subset_model(&model, entities, include_deps);
+
+    if subset.entities.is_empty() {
+        anyhow::bail!(
+            "no matching entities found; available: {}",
+            existing.iter().copied().collect::<Vec<_>>().join(", ")
+        );
+    }
 
     let output_str = if json {
         serde_json::to_string_pretty(&subset)?
