@@ -56,6 +56,23 @@ impl Distribution {
             _ => 2,
         }
     }
+
+    /// Serialized parameter string for storing in decision alternatives.
+    ///
+    /// Format: `param1=val1,param2=val2` — parseable by `review::parse_params_str`.
+    pub fn params_str(&self) -> String {
+        match self {
+            Distribution::Uniform(min, max) => format!("min={min},max={max}"),
+            Distribution::Normal(mean, std_dev) => format!("mean={mean},std_dev={std_dev}"),
+            Distribution::LogNormal(mu, sigma) => format!("mu={mu},sigma={sigma}"),
+            Distribution::Exponential(lambda) => format!("lambda={lambda}"),
+            Distribution::Poisson(lambda) => format!("lambda={lambda}"),
+            Distribution::Zipf(n, s) => format!("n={n},s={s}"),
+            Distribution::Beta(alpha, beta) => format!("alpha={alpha},beta={beta}"),
+            Distribution::Gamma(shape, rate) => format!("shape={shape},scale={}", 1.0 / rate),
+            Distribution::Pareto(x_m, alpha) => format!("scale={x_m},shape={alpha}"),
+        }
+    }
 }
 
 /// A single candidate fit result.
@@ -364,7 +381,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
 
         for alt in candidates.iter().skip(1).take(3) {
             builder = builder.alternative(
-                alt.distribution.name(),
+                &format!("{}|{}", alt.distribution.name(), alt.distribution.params_str()),
                 format!("aic={:.1}, ks={:.4}", alt.aic, alt.ks_stat),
                 Some(1.0 - alt.ks_stat),
             );

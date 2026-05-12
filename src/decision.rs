@@ -249,6 +249,27 @@ impl DecisionLogger {
         inner.decisions.clone()
     }
 
+    /// Set entity and column on the most recently logged decision of a given kind.
+    ///
+    /// Used to enrich decisions logged by lower-level code that lacks context.
+    pub fn set_last_context(
+        &self,
+        kind: DecisionKind,
+        entity: &str,
+        column: &str,
+    ) {
+        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(d) = inner
+            .decisions
+            .iter_mut()
+            .rev()
+            .find(|d| d.kind == kind)
+        {
+            d.entity = Some(entity.to_string());
+            d.column = Some(column.to_string());
+        }
+    }
+
     /// Produce the final report.
     pub fn into_report(self, pipeline: &str) -> DecisionReport {
         let inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());

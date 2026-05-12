@@ -923,6 +923,19 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
 
     for profile in &profiles {
         let col_analysis = analyse_column(profile, &combined);
+
+        // Enrich distribution-fit decisions with entity/column context
+        // (fit_distribution logs the decision without table/column context)
+        if col_analysis.distribution.is_some() {
+            if let Some(logger) = crate::decision::global_logger() {
+                logger.set_last_context(
+                    crate::decision::DecisionKind::DistributionFit,
+                    &table.entity,
+                    &profile.name,
+                );
+            }
+        }
+
         col_analyses.push(col_analysis);
 
         // Build RelColumn for relationship detection

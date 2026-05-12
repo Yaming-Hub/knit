@@ -4,7 +4,7 @@
 //! decision to the user for confirmation or override before writing the blueprint.
 
 use std::collections::BTreeMap;
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, IsTerminal, Write};
 
 use colored::Colorize;
 
@@ -50,6 +50,17 @@ pub fn interactive_review(
         return 0;
     }
 
+    // Check if stdin is interactive (TTY)
+    if !std::io::stdin().is_terminal() {
+        if !quiet {
+            eprintln!(
+                "\n{} --review requires an interactive terminal (stdin is not a TTY), skipping review.",
+                "warning:".yellow().bold()
+            );
+        }
+        return 0;
+    }
+
     if !quiet {
         eprintln!(
             "\n{} {} decision(s) to review (low/medium confidence with alternatives):",
@@ -84,10 +95,12 @@ pub fn interactive_review(
                 .score
                 .map(|s| format!(" (score: {:.3})", s))
                 .unwrap_or_default();
+            // Display label: strip encoded params for clean output
+            let display_label = alt.label.split('|').next().unwrap_or(&alt.label);
             eprintln!(
                 "    {}) {}{}  — {}",
                 j + 1,
-                alt.label,
+                display_label,
                 score_str,
                 alt.reason.dimmed(),
             );
@@ -188,6 +201,9 @@ fn apply_override(model: &mut DataModel, decision: &Decision, alt_label: &str) -
 
 /// Parse a distribution name from a decision alternative label and rebuild the
 /// generator spec for the matching field.
+///
+/// The alternative label format is `"name|param1=val1,param2=val2"` (from
+/// `Distribution::params_str()`).
 fn apply_distribution_override(
     model: &mut DataModel,
     decision: &Decision,
@@ -202,21 +218,11 @@ fn apply_distribution_override(
         None => return false,
     };
 
-    // Parse distribution kind from alternative label (e.g., "normal", "log_normal")
-    let kind = match parse_distribution_kind(alt_label) {
-        Some(k) => k,
+    // Parse "kind|param1=val1,param2=val2"
+    let (kind, params) = match parse_alternative_label(alt_label) {
+        Some(kp) => kp,
         None => return false,
     };
-
-    // Parse parameters from the alternative label's reason/score info
-    // The alternative label in fitting.rs is just the distribution name,
-    // and the reason has "aic=X, ks=Y". We need to re-parse from the label
-    // which contains the distribution name. The actual parameters were in
-    // the decision's chosen string or we rebuild from the label.
-    //
-    // Since we don't have the raw parameters stored in alternatives, we
-    // replace the distribution kind while keeping existing params structure.
-    // This is a best-effort approach.
 
     // Find the field in the model and update its generator
     for entity in &mut model.entities {
@@ -228,15 +234,28 @@ fn apply_distribution_override(
                 continue;
             }
             if let Some(GeneratorSpec::Distribution { ref mut spec }) = field.generator {
-                // Switch the distribution kind, keeping params as-is
-                // (the params may not be perfectly valid for the new kind,
-                // but the generator will use sensible defaults for missing ones)
+                let is_integer = spec.round;
                 spec.kind = kind;
+                spec.params = params;
+                spec.round = is_integer;
                 return true;
             }
         }
     }
     false
+}
+
+/// Parse an alternative label of the form `"kind|param1=val1,param2=val2"`.
+fn parse_alternative_label(label: &str) -> Option<(DistributionKind, BTreeMap<String, f64>)> {
+    let (name_part, params_part) = label.split_once('|')?;
+    let kind = parse_distribution_kind(name_part.trim())?;
+    let mut params = BTreeMap::new();
+    for kv in params_part.split(',') {
+        let (k, v) = kv.split_once('=')?;
+        let val: f64 = v.trim().parse().ok()?;
+        params.insert(k.trim().to_string(), val);
+    }
+    Some((kind, params))
 }
 
 /// Parse a distribution kind from a label string.
@@ -322,12 +341,12 @@ mod tests {
             confidence_score: Some(0.85),
             alternatives: vec![
                 Alternative {
-                    label: "log_normal".into(),
+                    label: "log_normal|mu=3.4,sigma=0.4".into(),
                     reason: "aic=122.0, ks=0.06".into(),
                     score: Some(0.82),
                 },
                 Alternative {
-                    label: "gamma".into(),
+                    label: "gamma|shape=2.0,scale=0.5".into(),
                     reason: "aic=125.0, ks=0.08".into(),
                     score: Some(0.78),
                 },
@@ -345,16 +364,33 @@ mod tests {
     }
 
     #[test]
+    fn parse_alternative_label_roundtrip() {
+        let (kind, params) = parse_alternative_label("log_normal|mu=3.4,sigma=0.4").unwrap();
+        assert_eq!(kind, DistributionKind::LogNormal);
+        assert_eq!(params.get("mu"), Some(&3.4));
+        assert_eq!(params.get("sigma"), Some(&0.4));
+    }
+
+    #[test]
+    fn parse_alternative_label_invalid() {
+        assert!(parse_alternative_label("just_a_name").is_none());
+        assert!(parse_alternative_label("normal|bad").is_none());
+        assert!(parse_alternative_label("unknown|x=1").is_none());
+    }
+
+    #[test]
     fn apply_distribution_override_changes_kind() {
         let mut model = make_test_model();
         let decision = make_distribution_decision("Users", "age");
 
-        assert!(apply_distribution_override(&mut model, &decision, "log_normal"));
+        assert!(apply_distribution_override(&mut model, &decision, "log_normal|mu=3.4,sigma=0.4"));
 
-        // Verify the field's generator was updated
+        // Verify the field's generator was updated with correct kind and params
         let field = &model.entities[0].fields[0];
         if let Some(GeneratorSpec::Distribution { spec }) = &field.generator {
             assert_eq!(spec.kind, DistributionKind::LogNormal);
+            assert_eq!(spec.params.get("mu"), Some(&3.4));
+            assert_eq!(spec.params.get("sigma"), Some(&0.4));
         } else {
             panic!("expected Distribution generator");
         }
@@ -364,14 +400,14 @@ mod tests {
     fn apply_override_returns_false_for_missing_entity() {
         let mut model = make_test_model();
         let decision = make_distribution_decision("NonExistent", "age");
-        assert!(!apply_distribution_override(&mut model, &decision, "gamma"));
+        assert!(!apply_distribution_override(&mut model, &decision, "gamma|shape=2.0,scale=0.5"));
     }
 
     #[test]
     fn apply_override_returns_false_for_missing_column() {
         let mut model = make_test_model();
         let decision = make_distribution_decision("Users", "nonexistent");
-        assert!(!apply_distribution_override(&mut model, &decision, "gamma"));
+        assert!(!apply_distribution_override(&mut model, &decision, "gamma|shape=2.0,scale=0.5"));
     }
 
     #[test]
