@@ -145,6 +145,11 @@ fn main() -> anyhow::Result<()> {
             BlueprintAction::Diff { a, b } => blueprint::run_diff(a, b),
             BlueprintAction::Doc { file, output } => blueprint::run_doc(file, output.as_deref()),
             BlueprintAction::Stats { file } => blueprint::run_stats(file, cli.json),
+            BlueprintAction::Merge {
+                base,
+                overlay,
+                output,
+            } => blueprint::run_merge(base, overlay, output.as_deref(), cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

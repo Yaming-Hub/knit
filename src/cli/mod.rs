@@ -434,6 +434,16 @@ pub enum BlueprintAction {
         /// Path to the blueprint file.
         file: String,
     },
+    /// Merge two blueprints into one combined schema.
+    Merge {
+        /// Path to the base blueprint file.
+        base: String,
+        /// Path to the overlay blueprint file to merge in.
+        overlay: String,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.
