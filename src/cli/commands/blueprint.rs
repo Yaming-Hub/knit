@@ -1481,16 +1481,6 @@ pub fn lint_model(model: &DataModel) -> Vec<LintFinding> {
         referenced.insert(&rel.to);
     }
 
-    // Collect FK field names from relationships.
-    let mut fk_fields: BTreeSet<(&str, String)> = BTreeSet::new();
-    for rel in &model.relationships {
-        let fk = rel
-            .foreign_key
-            .clone()
-            .unwrap_or_else(|| format!("{}_id", rel.to));
-        fk_fields.insert((&rel.from, fk));
-    }
-
     for entity in &model.entities {
         // 1. Entity with no fields.
         if entity.fields.is_empty() {
@@ -1538,20 +1528,7 @@ pub fn lint_model(model: &DataModel) -> Vec<LintFinding> {
             }
         }
 
-        // 5. Fields without generators (skip PKs and FKs).
-        for field in &entity.fields {
-            if field.generator.is_none()
-                && field.primary_key != Some(true)
-                && !fk_fields.contains(&(entity.name.as_str(), field.name.clone()))
-            {
-                findings.push(LintFinding {
-                    severity: LintSeverity::Info,
-                    entity: Some(entity.name.clone()),
-                    field: Some(field.name.clone()),
-                    message: "field has no generator specified".into(),
-                });
-            }
-        }
+        // 5. Duplicate field names check already done above.
     }
 
     // 6. Dangling relationship references.
@@ -2472,12 +2449,13 @@ mod tests {
 
     #[test]
     fn lint_clean_model() {
-        let mut f = make_field("id", DataType::Int);
-        f.primary_key = Some(true);
-        let mut model = make_model("test", vec![make_entity("users", vec![f])]);
+        let mut model = make_model(
+            "test",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
         model.entities[0].description = Some("User table".into());
         let findings = lint_model(&model);
-        // Single entity: no orphan check, has description, has PK (so no "no generator" lint)
+        // Single entity: no orphan check, has description
         assert!(findings.is_empty(), "unexpected findings: {:?}", findings);
     }
 
@@ -2587,66 +2565,6 @@ mod tests {
         });
         let findings = lint_model(&model);
         assert!(findings.iter().any(|f| f.message.contains("acyclic")));
-    }
-
-    #[test]
-    fn lint_field_no_generator() {
-        let model = make_model(
-            "test",
-            vec![make_entity(
-                "users",
-                vec![
-                    make_field("name", DataType::String),
-                    make_field("age", DataType::Int),
-                ],
-            )],
-        );
-        let findings = lint_model(&model);
-        let no_gen: Vec<_> = findings
-            .iter()
-            .filter(|f| f.message.contains("no generator"))
-            .collect();
-        assert_eq!(no_gen.len(), 2);
-    }
-
-    #[test]
-    fn lint_fk_field_not_flagged() {
-        use crate::core::types::{Relationship, RelationshipKind};
-        let mut model = make_model(
-            "test",
-            vec![
-                make_entity("users", vec![make_field("id", DataType::Int)]),
-                make_entity(
-                    "orders",
-                    vec![
-                        make_field("id", DataType::Int),
-                        make_field("user_id", DataType::Int),
-                    ],
-                ),
-            ],
-        );
-        model.relationships.push(Relationship {
-            name: "orders_users".into(),
-            from: "orders".into(),
-            to: "users".into(),
-            kind: RelationshipKind::OneToMany,
-            foreign_key: Some("user_id".into()),
-            cardinality: None,
-            degree: None,
-            selection: None,
-            nullable: None,
-            acyclic: None,
-            root_probability: None,
-            max_depth: None,
-            properties: Vec::new(),
-        });
-        let findings = lint_model(&model);
-        // user_id is a FK, should not be flagged for missing generator
-        let no_gen: Vec<_> = findings
-            .iter()
-            .filter(|f| f.message.contains("no generator") && f.field == Some("user_id".into()))
-            .collect();
-        assert!(no_gen.is_empty());
     }
 
     #[test]
