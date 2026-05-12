@@ -1787,6 +1787,317 @@ pub fn run_subset(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Rename
+// ---------------------------------------------------------------------------
+
+/// Apply entity and field renames to a model, updating all cross-references.
+///
+/// `entity_renames` maps old entity name → new entity name.
+/// `field_renames` maps (entity_name, old_field_name) → new_field_name.
+/// Returns the modified model and a count of references updated.
+pub fn rename_in_model(
+    model: &DataModel,
+    entity_renames: &BTreeMap<String, String>,
+    field_renames: &BTreeMap<(String, String), String>,
+) -> (DataModel, usize) {
+    let mut m = model.clone();
+    let mut updates = 0usize;
+
+    // Helper: rename an entity name string if it matches.
+    let rename_entity = |name: &mut String, count: &mut usize| {
+        if let Some(new) = entity_renames.get(name.as_str()) {
+            *name = new.clone();
+            *count += 1;
+        }
+    };
+
+    // Helper: rename a field name if there's a matching rename for this entity.
+    let rename_field =
+        |orig_entity: &str, name: &mut String, count: &mut usize| {
+            if let Some(new) = field_renames.get(&(orig_entity.to_string(), name.clone())) {
+                *name = new.clone();
+                *count += 1;
+            }
+        };
+
+    // Collect original entity names before renaming.
+    let orig_entity_names: Vec<String> = m.entities.iter().map(|e| e.name.clone()).collect();
+
+    // Rename entity names and their fields.
+    for (i, ent) in m.entities.iter_mut().enumerate() {
+        rename_entity(&mut ent.name, &mut updates);
+        let orig = &orig_entity_names[i];
+        rename_fields_recursive(&mut ent.fields, orig, field_renames, &mut updates);
+    }
+
+    // Rename references in relationships.
+    // Preserve implicit FK semantics: if renaming `to` and no explicit FK is set,
+    // lock in the original implicit FK name.
+    for rel in &mut m.relationships {
+        if entity_renames.contains_key(&rel.to) && rel.foreign_key.is_none() {
+            rel.foreign_key = Some(format!("{}_id", rel.to));
+            updates += 1;
+        }
+        rename_entity(&mut rel.from, &mut updates);
+        rename_entity(&mut rel.to, &mut updates);
+    }
+
+    // Rename references in correlations.
+    for corr in &mut m.correlations {
+        let orig_entity = corr.entity.clone();
+        rename_entity(&mut corr.entity, &mut updates);
+        for f in &mut corr.fields {
+            rename_field(&orig_entity, f, &mut updates);
+        }
+        if let Some(ref mut dep) = corr.dependent {
+            rename_field(&orig_entity, dep, &mut updates);
+        }
+        if let Some(ref mut given) = corr.given {
+            rename_field(&orig_entity, given, &mut updates);
+        }
+    }
+
+    // Rename references in noise profiles.
+    for np in &mut m.noise_profiles {
+        let orig_entity = np.entity.clone();
+        rename_entity(&mut np.entity, &mut updates);
+        for f in &mut np.fields {
+            rename_field(&orig_entity, f, &mut updates);
+        }
+    }
+
+    // Rename references in actor relationships.
+    for ar in &mut m.actor_relationships {
+        rename_entity(&mut ar.from_entity, &mut updates);
+        rename_entity(&mut ar.to_entity, &mut updates);
+    }
+
+    // Rename entity/field references inside generators.
+    for (i, ent) in m.entities.iter_mut().enumerate() {
+        let orig = &orig_entity_names[i];
+        for field in &mut ent.fields {
+            rename_generator_refs(field, orig, entity_renames, field_renames, &mut updates);
+        }
+    }
+
+    (m, updates)
+}
+
+/// Recursively rename fields in a field list.
+fn rename_fields_recursive(
+    fields: &mut [Field],
+    entity_name: &str,
+    field_renames: &BTreeMap<(String, String), String>,
+    updates: &mut usize,
+) {
+    for field in fields.iter_mut() {
+        if let Some(new) = field_renames.get(&(entity_name.to_string(), field.name.clone())) {
+            field.name = new.clone();
+            *updates += 1;
+        }
+        rename_fields_recursive(&mut field.fields, entity_name, field_renames, updates);
+    }
+}
+
+/// Rename entity/field references inside generator specs.
+fn rename_generator_refs(
+    field: &mut Field,
+    owner_entity: &str,
+    entity_renames: &BTreeMap<String, String>,
+    field_renames: &BTreeMap<(String, String), String>,
+    updates: &mut usize,
+) {
+    if let Some(ref mut gen) = field.generator {
+        rename_generator_spec(gen, owner_entity, entity_renames, field_renames, updates);
+    }
+    for child in &mut field.fields {
+        rename_generator_refs(child, owner_entity, entity_renames, field_renames, updates);
+    }
+}
+
+/// Rename references within a single GeneratorSpec.
+fn rename_generator_spec(
+    gen: &mut crate::core::GeneratorSpec,
+    owner_entity: &str,
+    entity_renames: &BTreeMap<String, String>,
+    field_renames: &BTreeMap<(String, String), String>,
+    updates: &mut usize,
+) {
+    use crate::core::GeneratorSpec;
+
+    let rename_field =
+        |entity: &str, name: &mut String, count: &mut usize| {
+            if let Some(new) = field_renames.get(&(entity.to_string(), name.clone())) {
+                *name = new.clone();
+                *count += 1;
+            }
+        };
+
+    match gen {
+        GeneratorSpec::Lookup { entity, field } => {
+            let orig_entity = entity.clone();
+            if let Some(new) = entity_renames.get(entity.as_str()) {
+                *entity = new.clone();
+                *updates += 1;
+            }
+            rename_field(&orig_entity, field, updates);
+        }
+        GeneratorSpec::ActorRef { entity } => {
+            if let Some(new) = entity_renames.get(entity.as_str()) {
+                *entity = new.clone();
+                *updates += 1;
+            }
+        }
+        GeneratorSpec::ActorTemporal { temporal_after, .. } => {
+            if let Some(ref mut ta) = temporal_after {
+                let orig = ta.entity.clone();
+                if let Some(new) = entity_renames.get(ta.entity.as_str()) {
+                    ta.entity = new.clone();
+                    *updates += 1;
+                }
+                rename_field(&orig, &mut ta.field, updates);
+                rename_field(owner_entity, &mut ta.fk, updates);
+            }
+        }
+        GeneratorSpec::Relative { anchor, .. } => {
+            rename_field(owner_entity, anchor, updates);
+        }
+        GeneratorSpec::RelationshipRef { source_field, .. } => {
+            if let Some(ref mut sf) = source_field {
+                rename_field(owner_entity, sf, updates);
+            }
+        }
+        GeneratorSpec::Unique { inner, .. } => {
+            rename_generator_spec(inner, owner_entity, entity_renames, field_renames, updates);
+        }
+        GeneratorSpec::Composite { generators, .. } => {
+            for sub in generators.values_mut() {
+                rename_generator_spec(sub, owner_entity, entity_renames, field_renames, updates);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Parse a rename spec of the form `Old=New`.
+fn parse_rename_spec(spec: &str) -> Result<(String, String)> {
+    let parts: Vec<&str> = spec.splitn(2, '=').collect();
+    if parts.len() != 2 || parts[0].is_empty() || parts[1].is_empty() {
+        anyhow::bail!("invalid rename spec `{}`: expected `Old=New`", spec);
+    }
+    Ok((parts[0].to_string(), parts[1].to_string()))
+}
+
+/// Parse a field rename spec of the form `Entity.Old=New`.
+fn parse_field_rename_spec(spec: &str) -> Result<(String, String, String)> {
+    let parts: Vec<&str> = spec.splitn(2, '=').collect();
+    if parts.len() != 2 || parts[0].is_empty() || parts[1].is_empty() {
+        anyhow::bail!(
+            "invalid field rename spec `{}`: expected `Entity.OldField=NewField`",
+            spec
+        );
+    }
+    let dot_parts: Vec<&str> = parts[0].splitn(2, '.').collect();
+    if dot_parts.len() != 2 || dot_parts[0].is_empty() || dot_parts[1].is_empty() {
+        anyhow::bail!(
+            "invalid field rename spec `{}`: expected `Entity.OldField=NewField`",
+            spec
+        );
+    }
+    Ok((
+        dot_parts[0].to_string(),
+        dot_parts[1].to_string(),
+        parts[1].to_string(),
+    ))
+}
+
+/// Run the `blueprint rename` command.
+pub fn run_rename(
+    path: &str,
+    entity_specs: &[String],
+    field_specs: &[String],
+    output: Option<&str>,
+    json: bool,
+) -> Result<()> {
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load blueprint `{}`", path))?;
+
+    if entity_specs.is_empty() && field_specs.is_empty() {
+        anyhow::bail!("at least one --entity or --field rename must be specified");
+    }
+
+    let mut entity_renames = BTreeMap::new();
+    for spec in entity_specs {
+        let (old, new) = parse_rename_spec(spec)?;
+        // Verify the old entity exists.
+        if !model.entities.iter().any(|e| e.name == old) {
+            anyhow::bail!(
+                "entity `{}` not found in blueprint",
+                old
+            );
+        }
+        // Check for collision: new name must not conflict with an existing
+        // entity that isn't itself being renamed away.
+        let conflicts = model.entities.iter().any(|e| {
+            e.name == new && !entity_specs.iter().any(|s| s.starts_with(&format!("{}=", e.name)))
+        });
+        if conflicts {
+            anyhow::bail!(
+                "cannot rename `{}` to `{}`: entity `{}` already exists",
+                old, new, new
+            );
+        }
+        entity_renames.insert(old, new);
+    }
+
+    let mut field_renames: BTreeMap<(String, String), String> = BTreeMap::new();
+    for spec in field_specs {
+        let (entity, old, new) = parse_field_rename_spec(spec)?;
+        // Verify entity and field exist.
+        let ent = model.entities.iter().find(|e| e.name == entity);
+        match ent {
+            None => anyhow::bail!("entity `{}` not found in blueprint", entity),
+            Some(e) => {
+                if !e.fields.iter().any(|f| f.name == old) {
+                    anyhow::bail!("field `{}` not found in entity `{}`", old, entity);
+                }
+                // Check for field name collision.
+                if e.fields.iter().any(|f| f.name == new) {
+                    anyhow::bail!(
+                        "cannot rename `{}.{}` to `{}`: field `{}` already exists in `{}`",
+                        entity, old, new, new, entity
+                    );
+                }
+            }
+        }
+        field_renames.insert((entity, old), new);
+    }
+
+    let (renamed, update_count) = rename_in_model(&model, &entity_renames, &field_renames);
+
+    let output_str = if json {
+        serde_json::to_string_pretty(&renamed)?
+    } else {
+        serialize_model_to_toml(&renamed)?
+    };
+
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &output_str)
+            .with_context(|| format!("failed to write `{}`", out_path))?;
+        eprintln!(
+            "{} renamed ({} references updated), wrote to {}",
+            "✓".green(),
+            update_count,
+            out_path
+        );
+    } else {
+        println!("{}", output_str);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2867,5 +3178,213 @@ mod tests {
         assert_eq!(subset.name, "my_model");
         assert_eq!(subset.description.as_deref(), Some("A test model"));
         assert_eq!(subset.locale, "de_DE");
+    }
+
+    // -----------------------------------------------------------------------
+    // Rename tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn rename_entity_basic() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        model.relationships = vec![make_relationship("orders_users", "orders", "users")];
+
+        let entity_renames = BTreeMap::from([("users".to_string(), "customers".to_string())]);
+        let (renamed, updates) = rename_in_model(&model, &entity_renames, &BTreeMap::new());
+
+        assert_eq!(renamed.entities[0].name, "customers");
+        assert_eq!(renamed.relationships[0].to, "customers");
+        assert!(updates >= 2); // entity name + relationship ref
+    }
+
+    #[test]
+    fn rename_field_basic() {
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "users",
+                vec![
+                    make_field("id", DataType::Int),
+                    make_field("user_name", DataType::String),
+                ],
+            )],
+        );
+
+        let field_renames = BTreeMap::from([(
+            ("users".to_string(), "user_name".to_string()),
+            "username".to_string(),
+        )]);
+        let (renamed, updates) = rename_in_model(&model, &BTreeMap::new(), &field_renames);
+
+        assert_eq!(renamed.entities[0].fields[1].name, "username");
+        assert!(updates >= 1);
+    }
+
+    #[test]
+    fn rename_entity_updates_correlations() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity(
+                "users",
+                vec![make_field("age", DataType::Int)],
+            )],
+        );
+        model.correlations = vec![crate::core::Correlation {
+            entity: "users".into(),
+            correlation_type: None,
+            fields: vec!["age".into()],
+            matrix: vec![],
+            conditional: vec![],
+            copula: None,
+            dependent: None,
+            given: None,
+            distributions: vec![],
+            default: None,
+        }];
+
+        let entity_renames = BTreeMap::from([("users".to_string(), "people".to_string())]);
+        let (renamed, _) = rename_in_model(&model, &entity_renames, &BTreeMap::new());
+
+        assert_eq!(renamed.correlations[0].entity, "people");
+    }
+
+    #[test]
+    fn rename_entity_updates_noise_profiles() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity(
+                "users",
+                vec![make_field("name", DataType::String)],
+            )],
+        );
+        model.noise_profiles = vec![crate::core::NoiseProfile {
+            name: "typo".into(),
+            entity: "users".into(),
+            fields: vec!["name".into()],
+            null_rate: 0.0,
+            typo_rate: 0.1,
+            outlier_rate: 0.0,
+            swap_rate: 0.0,
+            duplicate_rate: 0.0,
+            truncate_rate: 0.0,
+            fk_violate_rate: 0.0,
+            temporal_spike_rate: 0.0,
+            missing_field_rate: 0.0,
+            scope: None,
+        }];
+
+        let entity_renames = BTreeMap::from([("users".to_string(), "people".to_string())]);
+        let (renamed, _) = rename_in_model(&model, &entity_renames, &BTreeMap::new());
+
+        assert_eq!(renamed.noise_profiles[0].entity, "people");
+    }
+
+    #[test]
+    fn rename_entity_updates_lookup_generator() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![{
+                    let mut f = make_field("user_name", DataType::String);
+                    f.generator = Some(crate::core::GeneratorSpec::Lookup {
+                        entity: "users".into(),
+                        field: "name".into(),
+                    });
+                    f
+                }]),
+            ],
+        );
+
+        let entity_renames = BTreeMap::from([("users".to_string(), "customers".to_string())]);
+        let (renamed, updates) = rename_in_model(&model, &entity_renames, &BTreeMap::new());
+
+        match &renamed.entities[1].fields[0].generator {
+            Some(crate::core::GeneratorSpec::Lookup { entity, .. }) => {
+                assert_eq!(entity, "customers");
+            }
+            _ => panic!("expected Lookup generator"),
+        }
+        assert!(updates >= 2); // entity name + lookup ref
+    }
+
+    #[test]
+    fn rename_parse_specs() {
+        let (old, new) = parse_rename_spec("Users=Customers").unwrap();
+        assert_eq!(old, "Users");
+        assert_eq!(new, "Customers");
+
+        let (entity, old_f, new_f) = parse_field_rename_spec("Users.name=full_name").unwrap();
+        assert_eq!(entity, "Users");
+        assert_eq!(old_f, "name");
+        assert_eq!(new_f, "full_name");
+
+        assert!(parse_rename_spec("noequals").is_err());
+        assert!(parse_field_rename_spec("nodot=new").is_err());
+    }
+
+    #[test]
+    fn rename_entity_preserves_implicit_fk() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        // Relationship with implicit FK (no explicit foreign_key).
+        model.relationships = vec![make_relationship("orders_users", "orders", "users")];
+        assert!(model.relationships[0].foreign_key.is_none());
+
+        let entity_renames = BTreeMap::from([("users".to_string(), "customers".to_string())]);
+        let (renamed, _) = rename_in_model(&model, &entity_renames, &BTreeMap::new());
+
+        // After rename, FK should be explicitly set to preserve the original "users_id".
+        assert_eq!(renamed.relationships[0].to, "customers");
+        assert_eq!(
+            renamed.relationships[0].foreign_key.as_deref(),
+            Some("users_id")
+        );
+    }
+
+    #[test]
+    fn rename_entity_updates_relative_anchor() {
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "events",
+                vec![
+                    make_field("start_time", DataType::Datetime),
+                    {
+                        let mut f = make_field("end_time", DataType::Datetime);
+                        f.generator = Some(crate::core::GeneratorSpec::Relative {
+                            anchor: "start_time".into(),
+                            offset: crate::core::types::RelativeOffset::Simple(crate::core::Value::Float(3600.0)),
+                        });
+                        f
+                    },
+                ],
+            )],
+        );
+
+        let field_renames = BTreeMap::from([(
+            ("events".to_string(), "start_time".to_string()),
+            "begin_time".to_string(),
+        )]);
+        let (renamed, _) = rename_in_model(&model, &BTreeMap::new(), &field_renames);
+
+        // The Relative anchor should also be renamed.
+        match &renamed.entities[0].fields[1].generator {
+            Some(crate::core::GeneratorSpec::Relative { anchor, .. }) => {
+                assert_eq!(anchor, "begin_time");
+            }
+            _ => panic!("expected Relative generator"),
+        }
     }
 }

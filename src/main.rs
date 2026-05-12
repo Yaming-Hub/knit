@@ -158,6 +158,12 @@ fn main() -> anyhow::Result<()> {
                 no_deps,
                 output,
             } => blueprint::run_subset(file, &entities, !no_deps, output.as_deref(), cli.json),
+            BlueprintAction::Rename {
+                file,
+                entities,
+                fields,
+                output,
+            } => blueprint::run_rename(file, &entities, &fields, output.as_deref(), cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
