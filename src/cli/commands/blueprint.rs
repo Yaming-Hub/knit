@@ -1034,6 +1034,26 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
     for overlay_entity in &overlay.entities {
         if let Some(base_entity) = result.entities.iter_mut().find(|e| e.name == overlay_entity.name)
         {
+            // Warn about entity-level metadata differences (base version is kept).
+            if overlay_entity.count != base_entity.count {
+                report.warnings.push(format!(
+                    "entity `{}`: count differs, keeping base version",
+                    overlay_entity.name
+                ));
+            }
+            if overlay_entity.actor != base_entity.actor {
+                report.warnings.push(format!(
+                    "entity `{}`: actor flag differs, keeping base version",
+                    overlay_entity.name
+                ));
+            }
+            if overlay_entity.topology != base_entity.topology {
+                report.warnings.push(format!(
+                    "entity `{}`: topology differs, keeping base version",
+                    overlay_entity.name
+                ));
+            }
+
             // Merge fields: append new fields from overlay that don't exist in base.
             let existing_fields: BTreeSet<String> =
                 base_entity.fields.iter().map(|f| f.name.clone()).collect();
@@ -1071,15 +1091,25 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
         }
     }
 
-    // Merge relationships (dedup by (from, to, fk) tuple).
-    let existing_rels: BTreeSet<(String, String, Option<String>)> = result
+    // Merge relationships (dedup by name).
+    let existing_rels: BTreeSet<String> = result
         .relationships
         .iter()
-        .map(|r| (r.from.clone(), r.to.clone(), r.foreign_key.clone()))
+        .map(|r| r.name.clone())
         .collect();
     for rel in &overlay.relationships {
-        let key = (rel.from.clone(), rel.to.clone(), rel.foreign_key.clone());
-        if !existing_rels.contains(&key) {
+        if existing_rels.contains(&rel.name) {
+            // Same name exists — check if semantics differ.
+            let base_rel = result.relationships.iter().find(|r| r.name == rel.name);
+            if let Some(br) = base_rel {
+                if br.from != rel.from || br.to != rel.to || br.foreign_key != rel.foreign_key {
+                    report.warnings.push(format!(
+                        "relationship `{}`: exists in both with different endpoints, keeping base version",
+                        rel.name
+                    ));
+                }
+            }
+        } else {
             result.relationships.push(rel.clone());
             report.relationships_added += 1;
         }
@@ -1182,8 +1212,8 @@ pub fn run_merge(base_path: &str, overlay_path: &str, output: Option<&str>, json
 
     let (merged, report) = merge_models(&base, &overlay);
 
-    // Serialize merged model.
-    let toml_output = toml::to_string_pretty(&merged)
+    // Serialize merged model in canonical blueprint format.
+    let toml_output = serialize_model_to_toml(&merged)
         .context("failed to serialize merged blueprint")?;
 
     // Write or print.
