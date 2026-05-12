@@ -452,6 +452,11 @@ pub enum BlueprintAction {
         #[arg(short, long, default_value = "dot")]
         format: String,
     },
+    /// Check for potential issues and best-practice violations.
+    Lint {
+        /// Path to the blueprint file.
+        file: String,
+    },
 }
 
 /// Model directory subcommands.

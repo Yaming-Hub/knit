@@ -151,6 +151,7 @@ fn main() -> anyhow::Result<()> {
                 output,
             } => blueprint::run_merge(base, overlay, output.as_deref(), cli.json),
             BlueprintAction::Graph { file, format } => blueprint::run_graph(file, &format),
+            BlueprintAction::Lint { file } => blueprint::run_lint(file, cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
