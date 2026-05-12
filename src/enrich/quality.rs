@@ -9,6 +9,7 @@ use colored::Colorize;
 
 use crate::enrich::extract::FieldEnrichment;
 use crate::enrich::mapper::ColumnMapping;
+use crate::enrich::merge::MergeOutcome;
 
 /// Quality report for an entire enrichment run.
 #[derive(Debug, Clone)]
@@ -50,6 +51,8 @@ pub struct FieldQuality {
     pub categorical_cardinality: Option<usize>,
     /// Whether the merge succeeded.
     pub merge_succeeded: bool,
+    /// Merge failure reason (if any).
+    pub merge_reason: &'static str,
     /// Composite field score (0.0–1.0).
     pub score: f64,
 }
@@ -69,8 +72,9 @@ pub struct QualityConcern {
 pub fn score_field(
     mapping: &ColumnMapping,
     enrichment: &FieldEnrichment,
-    merge_succeeded: bool,
+    outcome: &MergeOutcome,
 ) -> FieldQuality {
+    let merge_succeeded = outcome.is_success();
     let mut concerns_weight = 0.0;
 
     // Distribution fit quality
@@ -111,7 +115,12 @@ pub fn score_field(
     };
 
     let raw_score = 0.4 * mapping_component + 0.35 * fit_component + 0.25 * sample_component;
-    let score = (raw_score - concerns_weight).clamp(0.0, 1.0);
+    // Merge failure is a hard failure — field was not enriched
+    let score = if merge_succeeded {
+        (raw_score - concerns_weight).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
 
     FieldQuality {
         field_name: mapping.target_field.clone(),
@@ -124,6 +133,7 @@ pub fn score_field(
         null_rate: enrichment.null_rate,
         categorical_cardinality,
         merge_succeeded,
+        merge_reason: outcome.reason(),
         score,
     }
 }
@@ -211,7 +221,7 @@ pub fn build_report(field_scores: Vec<FieldQuality>) -> QualityReport {
             concerns.push(QualityConcern {
                 severity: "high",
                 field: f.field_name.clone(),
-                message: "enrichment merge failed (incompatible generator)".into(),
+                message: format!("enrichment failed: {}", f.merge_reason),
             });
         }
     }
@@ -310,6 +320,7 @@ impl fmt::Display for QualityReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enrich::merge::MergeOutcome;
     use crate::learn::fitting::{CandidateFit, CategoricalFit, Distribution, FitResult};
     use std::collections::HashMap;
 
@@ -360,7 +371,7 @@ mod tests {
     fn score_high_quality_numeric_field() {
         let mapping = make_mapping("age_col", "age", 0.95);
         let enrichment = make_numeric_enrichment(0.03, 0.85, 500);
-        let fq = score_field(&mapping, &enrichment, true);
+        let fq = score_field(&mapping, &enrichment, &MergeOutcome::Success);
 
         assert!(fq.score > 0.8, "high-quality field score should be >0.8, got {}", fq.score);
         assert_eq!(fq.fit_quality, Some(0.97));
@@ -373,17 +384,18 @@ mod tests {
         let mut mapping = make_mapping("foo", "bar", 0.55);
         mapping.type_compatible = false;
         let enrichment = make_numeric_enrichment(0.4, 0.01, 15);
-        let fq = score_field(&mapping, &enrichment, false);
+        let fq = score_field(&mapping, &enrichment, &MergeOutcome::FamilyMismatch);
 
-        assert!(fq.score < 0.3, "low-quality field score should be <0.3, got {}", fq.score);
+        assert_eq!(fq.score, 0.0, "failed merge should score 0");
         assert!(!fq.merge_succeeded);
+        assert_eq!(fq.merge_reason, "distribution family mismatch");
     }
 
     #[test]
     fn score_categorical_field() {
         let mapping = make_mapping("category", "category", 0.90);
         let enrichment = make_categorical_enrichment(5, 200);
-        let fq = score_field(&mapping, &enrichment, true);
+        let fq = score_field(&mapping, &enrichment, &MergeOutcome::Success);
 
         assert!(fq.score > 0.7);
         assert_eq!(fq.categorical_cardinality, Some(5));
@@ -401,11 +413,11 @@ mod tests {
     fn build_report_aggregates_correctly() {
         let m1 = make_mapping("age", "age", 0.95);
         let e1 = make_numeric_enrichment(0.03, 0.85, 500);
-        let f1 = score_field(&m1, &e1, true);
+        let f1 = score_field(&m1, &e1, &MergeOutcome::Success);
 
         let m2 = make_mapping("name", "name", 0.85);
         let e2 = make_categorical_enrichment(10, 200);
-        let f2 = score_field(&m2, &e2, true);
+        let f2 = score_field(&m2, &e2, &MergeOutcome::Success);
 
         let report = build_report(vec![f1, f2]);
 
@@ -420,7 +432,7 @@ mod tests {
         let mut m = make_mapping("x", "y", 0.5);
         m.type_compatible = false;
         let e = make_numeric_enrichment(0.5, 0.01, 10);
-        let fq = score_field(&m, &e, false);
+        let fq = score_field(&m, &e, &MergeOutcome::NoGenerator);
 
         let report = build_report(vec![fq]);
 
@@ -433,12 +445,23 @@ mod tests {
     fn display_report_format() {
         let m = make_mapping("age_col", "age", 0.92);
         let e = make_numeric_enrichment(0.04, 0.82, 300);
-        let fq = score_field(&m, &e, true);
+        let fq = score_field(&m, &e, &MergeOutcome::Success);
         let report = build_report(vec![fq]);
 
         let output = format!("{}", report);
         assert!(output.contains("Quality Report"));
         assert!(output.contains("age"));
         assert!(output.contains("age_col"));
+    }
+
+    #[test]
+    fn merge_failure_scores_zero() {
+        let mapping = make_mapping("score", "score", 0.99);
+        let enrichment = make_numeric_enrichment(0.01, 0.99, 10000);
+        let fq = score_field(&mapping, &enrichment, &MergeOutcome::UnsupportedGenerator);
+
+        assert_eq!(fq.score, 0.0, "failed merge must always score 0");
+        assert!(!fq.merge_succeeded);
+        assert_eq!(fq.merge_reason, "unsupported generator type");
     }
 }

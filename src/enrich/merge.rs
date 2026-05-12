@@ -9,13 +9,49 @@ use crate::core::Field;
 use crate::enrich::extract::FieldEnrichment;
 use crate::learn::fitting::Distribution;
 
+/// Outcome of a merge attempt, indicating success or specific failure reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MergeOutcome {
+    /// Merge succeeded.
+    Success,
+    /// Field has no generator to enrich.
+    NoGenerator,
+    /// Generator type is not statistical (e.g., Sequence, ForeignKey).
+    UnsupportedGenerator,
+    /// No distribution fit available from reference data.
+    NoDistributionFit,
+    /// Distribution family mismatch between base and reference.
+    FamilyMismatch,
+    /// No categorical fit available from reference data.
+    NoCategoricalFit,
+}
+
+impl MergeOutcome {
+    /// Whether the merge succeeded.
+    pub fn is_success(&self) -> bool {
+        matches!(self, MergeOutcome::Success)
+    }
+
+    /// Human-readable description of the outcome.
+    pub fn reason(&self) -> &'static str {
+        match self {
+            MergeOutcome::Success => "enriched",
+            MergeOutcome::NoGenerator => "no generator to enrich",
+            MergeOutcome::UnsupportedGenerator => "unsupported generator type",
+            MergeOutcome::NoDistributionFit => "no distribution fit from reference",
+            MergeOutcome::FamilyMismatch => "distribution family mismatch",
+            MergeOutcome::NoCategoricalFit => "no categorical fit from reference",
+        }
+    }
+}
+
 /// Merge enrichment data into a field's generator.
 ///
-/// Returns true if the field was successfully enriched, false if skipped.
-pub fn merge_enrichment(field: &mut Field, enrichment: &FieldEnrichment, ref_row_count: u64) -> bool {
+/// Returns the outcome indicating success or specific failure reason.
+pub fn merge_enrichment(field: &mut Field, enrichment: &FieldEnrichment, ref_row_count: u64) -> MergeOutcome {
     let Some(ref mut gen) = field.generator else {
         debug!(field = %field.name, "no generator to enrich");
-        return false;
+        return MergeOutcome::NoGenerator;
     };
 
     match gen {
@@ -27,7 +63,7 @@ pub fn merge_enrichment(field: &mut Field, enrichment: &FieldEnrichment, ref_row
         }
         _ => {
             debug!(field = %field.name, gen_type = gen.type_name(), "skipping non-statistical generator");
-            false
+            MergeOutcome::UnsupportedGenerator
         }
     }
 }
@@ -38,10 +74,10 @@ fn merge_distribution(
     spec: &mut DistributionSpec,
     enrichment: &FieldEnrichment,
     ref_row_count: u64,
-) -> bool {
+) -> MergeOutcome {
     let Some(ref fit) = enrichment.distribution else {
         debug!(field = %field_name, "no distribution fit from reference");
-        return false;
+        return MergeOutcome::NoDistributionFit;
     };
 
     // Map the fit result to a DistributionKind using canonical param names
@@ -92,7 +128,7 @@ fn merge_distribution(
             reference = ?ref_kind,
             "distribution family mismatch — skipping (would need --replace-generator-kind)"
         );
-        return false;
+        return MergeOutcome::FamilyMismatch;
     }
 
     // Weighted merge of parameters
@@ -129,7 +165,7 @@ fn merge_distribution(
 
     if !updated {
         debug!(field = %field_name, "no parameters updated");
-        return false;
+        return MergeOutcome::NoDistributionFit;
     }
 
     info!(
@@ -137,7 +173,7 @@ fn merge_distribution(
         kind = ?spec.kind,
         "distribution parameters enriched"
     );
-    true
+    MergeOutcome::Success
 }
 
 /// Merge categorical data into a OneOf generator using weighted averaging.
@@ -146,20 +182,20 @@ fn merge_oneof(
     choices: &mut Vec<WeightedChoice>,
     enrichment: &FieldEnrichment,
     _ref_row_count: u64,
-) -> bool {
+) -> MergeOutcome {
     let Some(ref cat_fit) = enrichment.categorical else {
         debug!(field = %field_name, "no categorical fit from reference");
-        return false;
+        return MergeOutcome::NoCategoricalFit;
     };
 
     if cat_fit.weights.is_empty() {
-        return false;
+        return MergeOutcome::NoCategoricalFit;
     }
 
     // Normalize base weights to probabilities
     let base_total: f64 = choices.iter().map(|c| c.weight).sum();
     if base_total <= 0.0 {
-        return false;
+        return MergeOutcome::NoCategoricalFit;
     }
 
     let ref_total: f64 = cat_fit.weights.values().sum();
@@ -223,7 +259,7 @@ fn merge_oneof(
         added = added,
         "categorical values enriched"
     );
-    true
+    MergeOutcome::Success
 }
 
 #[cfg(test)]
@@ -284,7 +320,7 @@ mod tests {
         };
 
         let result = merge_enrichment(&mut field, &enrichment, 100);
-        assert!(result);
+        assert!(result.is_success());
 
         // Check that mean moved toward 60
         if let Some(GeneratorSpec::Distribution { spec }) = &field.generator {
@@ -330,7 +366,7 @@ mod tests {
         };
 
         let result = merge_enrichment(&mut field, &enrichment, 100);
-        assert!(!result); // Should skip due to family mismatch
+        assert_eq!(result, MergeOutcome::FamilyMismatch);
     }
 
     #[test]
@@ -360,7 +396,7 @@ mod tests {
         };
 
         let result = merge_enrichment(&mut field, &enrichment, 200);
-        assert!(result);
+        assert!(result.is_success());
 
         if let Some(GeneratorSpec::OneOf { choices }) = &field.generator {
             // Should have added APAC and LATAM
@@ -401,6 +437,6 @@ mod tests {
         };
 
         let result = merge_enrichment(&mut field, &enrichment, 100);
-        assert!(!result); // Sequence generator should be skipped
+        assert_eq!(result, MergeOutcome::UnsupportedGenerator);
     }
 }

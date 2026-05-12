@@ -19,7 +19,7 @@ use crate::learn::ingest::read_auto_with_limit;
 use crate::learn::profile::compute_profiles;
 
 use self::mapper::{ColumnMapping, map_columns};
-use self::merge::merge_enrichment;
+use self::merge::{merge_enrichment, MergeOutcome};
 
 /// Configuration for an enrichment run.
 #[derive(Debug, Clone)]
@@ -50,6 +50,7 @@ impl Default for EnrichConfig {
 
 /// Result of an enrichment run.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct EnrichResult {
     /// Number of reference columns processed.
     pub ref_columns: usize,
@@ -166,12 +167,12 @@ pub fn enrich(
         );
 
         // Merge into the field's generator
-        let merged = merge_enrichment(field, &enrichment, ref_row_count);
+        let outcome = merge_enrichment(field, &enrichment, ref_row_count);
 
         // Score the field enrichment quality
-        field_scores.push(quality::score_field(mapping, &enrichment, merged));
+        field_scores.push(quality::score_field(mapping, &enrichment, &outcome));
 
-        if merged {
+        if outcome.is_success() {
             enriched_fields += 1;
         } else {
             skipped_fields += 1;
