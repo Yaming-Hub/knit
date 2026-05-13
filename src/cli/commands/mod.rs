@@ -94,8 +94,8 @@ pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
                 } else {
                     None
                 },
+                params: model.params.clone(),
             },
-            params: model.params.clone(),
             entities: model.entities.clone(),
             relationships: model.relationships.clone(),
             noise: model.noise_profiles.clone(),
@@ -119,8 +119,6 @@ pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
 pub(crate) struct FlatSchemaOutput {
     pub blueprint_version: String,
     pub model: FlatModelMeta,
-    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    pub params: std::collections::BTreeMap<String, crate::core::Value>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub entities: Vec<crate::core::Entity>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -152,6 +150,8 @@ pub(crate) struct FlatModelMeta {
     pub locale: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
+    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub params: std::collections::BTreeMap<String, crate::core::Value>,
 }
 
 /// Validate a parsed model and return collected errors.

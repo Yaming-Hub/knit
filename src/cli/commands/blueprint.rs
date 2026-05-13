@@ -5023,7 +5023,11 @@ pub fn run_test(
 /// Run the `blueprint convert` command — convert a blueprint between TOML and JSON.
 ///
 /// Auto-detects input format from file extension, writes output in the specified format.
+/// Auto-detects input format from file extension, writes output in the specified format.
 /// If no output path is given, prints to stdout.
+///
+/// Note: conversion resolves `extends`, `include`, mixins, and custom types. The output
+/// is a fully-expanded standalone blueprint. Use this for interchange, not editing.
 pub fn run_convert(
     file: &str,
     output: Option<&str>,
@@ -5089,27 +5093,21 @@ fn serialize_model_to_json(model: &DataModel) -> Result<String> {
         json!(model.blueprint_version),
     );
 
-    // Model metadata
+    // Model metadata — always serialize seed/locale/timezone to avoid round-trip loss
     let mut meta = serde_json::Map::new();
     meta.insert("name".to_string(), json!(model.name));
     if let Some(ref desc) = model.description {
         meta.insert("description".to_string(), json!(desc));
     }
-    if model.seed != 0 {
-        meta.insert("seed".to_string(), json!(model.seed));
-    }
-    if model.locale != "en" {
-        meta.insert("locale".to_string(), json!(model.locale));
-    }
-    if model.timezone != "UTC" {
-        meta.insert("timezone".to_string(), json!(model.timezone));
+    meta.insert("seed".to_string(), json!(model.seed));
+    meta.insert("locale".to_string(), json!(model.locale));
+    meta.insert("timezone".to_string(), json!(model.timezone));
+
+    // Params belong under model (where the parser reads them)
+    if !model.params.is_empty() {
+        meta.insert("params".to_string(), serde_json::to_value(&model.params)?);
     }
     obj.insert("model".to_string(), serde_json::Value::Object(meta));
-
-    // Params
-    if !model.params.is_empty() {
-        obj.insert("params".to_string(), serde_json::to_value(&model.params)?);
-    }
 
     // Entities
     if !model.entities.is_empty() {
@@ -5182,19 +5180,11 @@ fn serialize_model_to_toml_string(model: &DataModel) -> Result<String> {
         model: FlatModelMeta {
             name: model.name.clone(),
             description: model.description.clone(),
-            seed: if model.seed != 0 { Some(model.seed) } else { None },
-            locale: if model.locale != "en" {
-                Some(model.locale.clone())
-            } else {
-                None
-            },
-            timezone: if model.timezone != "UTC" {
-                Some(model.timezone.clone())
-            } else {
-                None
-            },
+            seed: Some(model.seed),
+            locale: Some(model.locale.clone()),
+            timezone: Some(model.timezone.clone()),
+            params: model.params.clone(),
         },
-        params: model.params.clone(),
         entities: model.entities.clone(),
         relationships: model.relationships.clone(),
         noise: model.noise_profiles.clone(),
