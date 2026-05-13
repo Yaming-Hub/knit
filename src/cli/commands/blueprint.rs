@@ -5016,6 +5016,199 @@ pub fn run_test(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Blueprint convert — format conversion (TOML ↔ JSON)
+// ---------------------------------------------------------------------------
+
+/// Run the `blueprint convert` command — convert a blueprint between TOML and JSON.
+///
+/// Auto-detects input format from file extension, writes output in the specified format.
+/// If no output path is given, prints to stdout.
+pub fn run_convert(
+    file: &str,
+    output: Option<&str>,
+    format: &str,
+) -> Result<()> {
+    let model = load_blueprint(file)
+        .with_context(|| format!("failed to load `{}`", file))?;
+
+    let target_format = match format.to_lowercase().as_str() {
+        "toml" => "toml",
+        "json" => "json",
+        other => anyhow::bail!(
+            "unsupported output format `{}`; supported: toml, json",
+            other
+        ),
+    };
+
+    // Detect if input and output would be the same format
+    let input_ext = std::path::Path::new(file)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("toml")
+        .to_lowercase();
+    let input_format = if input_ext == "json" { "json" } else { "toml" };
+
+    if output.is_none() && input_format == target_format {
+        eprintln!(
+            "{} input is already in {} format (use --output to write a copy)",
+            "⚠".yellow(),
+            target_format
+        );
+    }
+
+    let content = match target_format {
+        "json" => serialize_model_to_json(&model)?,
+        _ => serialize_model_to_toml_string(&model)?,
+    };
+
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &content)
+            .with_context(|| format!("failed to write `{}`", out_path))?;
+        eprintln!(
+            "{} converted {} → {} ({})",
+            "✓".green().bold(),
+            file,
+            out_path,
+            target_format.to_uppercase()
+        );
+    } else {
+        print!("{}", content);
+    }
+
+    Ok(())
+}
+
+/// Serialize a DataModel to pretty-printed JSON.
+fn serialize_model_to_json(model: &DataModel) -> Result<String> {
+    use serde_json::json;
+
+    let mut obj = serde_json::Map::new();
+    obj.insert(
+        "blueprint_version".to_string(),
+        json!(model.blueprint_version),
+    );
+
+    // Model metadata
+    let mut meta = serde_json::Map::new();
+    meta.insert("name".to_string(), json!(model.name));
+    if let Some(ref desc) = model.description {
+        meta.insert("description".to_string(), json!(desc));
+    }
+    if model.seed != 0 {
+        meta.insert("seed".to_string(), json!(model.seed));
+    }
+    if model.locale != "en" {
+        meta.insert("locale".to_string(), json!(model.locale));
+    }
+    if model.timezone != "UTC" {
+        meta.insert("timezone".to_string(), json!(model.timezone));
+    }
+    obj.insert("model".to_string(), serde_json::Value::Object(meta));
+
+    // Params
+    if !model.params.is_empty() {
+        obj.insert("params".to_string(), serde_json::to_value(&model.params)?);
+    }
+
+    // Entities
+    if !model.entities.is_empty() {
+        obj.insert("entities".to_string(), serde_json::to_value(&model.entities)?);
+    }
+
+    // Relationships
+    if !model.relationships.is_empty() {
+        obj.insert(
+            "relationships".to_string(),
+            serde_json::to_value(&model.relationships)?,
+        );
+    }
+
+    // Noise profiles
+    if !model.noise_profiles.is_empty() {
+        obj.insert("noise".to_string(), serde_json::to_value(&model.noise_profiles)?);
+    }
+
+    // Correlations
+    if !model.correlations.is_empty() {
+        obj.insert(
+            "correlations".to_string(),
+            serde_json::to_value(&model.correlations)?,
+        );
+    }
+
+    // Personas
+    if !model.personas.is_empty() {
+        obj.insert("personas".to_string(), serde_json::to_value(&model.personas)?);
+    }
+
+    // Actor relationships
+    if !model.actor_relationships.is_empty() {
+        obj.insert(
+            "actor_relationships".to_string(),
+            serde_json::to_value(&model.actor_relationships)?,
+        );
+    }
+
+    // Custom types
+    if !model.custom_types.is_empty() {
+        obj.insert("types".to_string(), serde_json::to_value(&model.custom_types)?);
+    }
+
+    // Mixins
+    if !model.mixins.is_empty() {
+        obj.insert("mixins".to_string(), serde_json::to_value(&model.mixins)?);
+    }
+
+    // Companion files
+    if !model.companion_files.is_empty() {
+        obj.insert(
+            "companion_files".to_string(),
+            serde_json::to_value(&model.companion_files)?,
+        );
+    }
+
+    serde_json::to_string_pretty(&serde_json::Value::Object(obj))
+        .context("failed to serialize to JSON")
+}
+
+/// Serialize a DataModel to TOML string using serde.
+fn serialize_model_to_toml_string(model: &DataModel) -> Result<String> {
+    use super::FlatSchemaOutput;
+    use super::FlatModelMeta;
+
+    let raw = FlatSchemaOutput {
+        blueprint_version: model.blueprint_version.clone(),
+        model: FlatModelMeta {
+            name: model.name.clone(),
+            description: model.description.clone(),
+            seed: if model.seed != 0 { Some(model.seed) } else { None },
+            locale: if model.locale != "en" {
+                Some(model.locale.clone())
+            } else {
+                None
+            },
+            timezone: if model.timezone != "UTC" {
+                Some(model.timezone.clone())
+            } else {
+                None
+            },
+        },
+        params: model.params.clone(),
+        entities: model.entities.clone(),
+        relationships: model.relationships.clone(),
+        noise: model.noise_profiles.clone(),
+        correlations: model.correlations.clone(),
+        personas: model.personas.clone(),
+        actor_relationships: model.actor_relationships.clone(),
+        types: model.custom_types.clone(),
+        mixins: model.mixins.clone(),
+        companion_files: model.companion_files.clone(),
+    };
+
+    toml::to_string_pretty(&raw).context("failed to serialize to TOML")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -8147,5 +8340,190 @@ to_field = "id"
             &[],
         );
         assert!(result.is_ok(), "test with FK failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn convert_toml_to_json() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "convert_test"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Users"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "email"
+data_type = "string"
+"#,
+        )
+        .unwrap();
+
+        let out_path = dir.path().join("output.json");
+        let result = run_convert(
+            blueprint_path.to_str().unwrap(),
+            Some(out_path.to_str().unwrap()),
+            "json",
+        );
+        assert!(result.is_ok(), "convert to json failed: {:?}", result.err());
+
+        let content = std::fs::read_to_string(&out_path).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
+        assert_eq!(parsed["model"]["name"], "convert_test");
+        assert_eq!(parsed["model"]["seed"], 42);
+        assert!(parsed["entities"].is_array());
+        assert_eq!(parsed["entities"][0]["name"], "Users");
+    }
+
+    #[test]
+    fn convert_json_to_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.json");
+        std::fs::write(
+            &blueprint_path,
+            r#"{
+  "blueprint_version": "1",
+  "model": {
+    "name": "json_model",
+    "seed": 99,
+    "locale": "en_US",
+    "timezone": "UTC"
+  },
+  "entities": [
+    {
+      "name": "Items",
+      "count": 50,
+      "fields": [
+        {"name": "id", "data_type": "int", "primary_key": true}
+      ]
+    }
+  ]
+}"#,
+        )
+        .unwrap();
+
+        let out_path = dir.path().join("output.toml");
+        let result = run_convert(
+            blueprint_path.to_str().unwrap(),
+            Some(out_path.to_str().unwrap()),
+            "toml",
+        );
+        assert!(result.is_ok(), "convert to toml failed: {:?}", result.err());
+
+        let content = std::fs::read_to_string(&out_path).unwrap();
+        assert!(content.contains("json_model"), "TOML should contain model name");
+        assert!(content.contains("Items"), "TOML should contain entity name");
+    }
+
+    #[test]
+    fn convert_unsupported_format_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "x"
+seed = 1
+locale = "en"
+timezone = "UTC"
+
+[[entities]]
+name = "A"
+count = 1
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_convert(
+            blueprint_path.to_str().unwrap(),
+            None,
+            "yaml",
+        );
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("unsupported output format"), "unexpected: {}", msg);
+    }
+
+    #[test]
+    fn convert_roundtrip_preserves_model() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "roundtrip"
+seed = 77
+locale = "fr_FR"
+timezone = "Europe/Paris"
+
+[[entities]]
+name = "Products"
+count = 500
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "price"
+data_type = "float"
+"#,
+        )
+        .unwrap();
+
+        // Convert TOML → JSON
+        let json_path = dir.path().join("intermediate.json");
+        run_convert(
+            blueprint_path.to_str().unwrap(),
+            Some(json_path.to_str().unwrap()),
+            "json",
+        )
+        .unwrap();
+
+        // Convert JSON → TOML
+        let toml_path = dir.path().join("final.toml");
+        run_convert(
+            json_path.to_str().unwrap(),
+            Some(toml_path.to_str().unwrap()),
+            "toml",
+        )
+        .unwrap();
+
+        // Load both and compare key properties
+        let original = load_blueprint(blueprint_path.to_str().unwrap()).unwrap();
+        let roundtripped = load_blueprint(toml_path.to_str().unwrap()).unwrap();
+        assert_eq!(original.name, roundtripped.name);
+        assert_eq!(original.seed, roundtripped.seed);
+        assert_eq!(original.locale, roundtripped.locale);
+        assert_eq!(original.timezone, roundtripped.timezone);
+        assert_eq!(original.entities.len(), roundtripped.entities.len());
+        assert_eq!(original.entities[0].name, roundtripped.entities[0].name);
+        assert_eq!(original.entities[0].fields.len(), roundtripped.entities[0].fields.len());
     }
 }

@@ -116,42 +116,42 @@ pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
 
 /// Wrapper for proper flat TOML serialization of a DataModel.
 #[derive(Serialize)]
-struct FlatSchemaOutput {
-    blueprint_version: String,
-    model: FlatModelMeta,
+pub(crate) struct FlatSchemaOutput {
+    pub blueprint_version: String,
+    pub model: FlatModelMeta,
     #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    params: std::collections::BTreeMap<String, crate::core::Value>,
+    pub params: std::collections::BTreeMap<String, crate::core::Value>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    entities: Vec<crate::core::Entity>,
+    pub entities: Vec<crate::core::Entity>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    relationships: Vec<crate::core::Relationship>,
+    pub relationships: Vec<crate::core::Relationship>,
     #[serde(skip_serializing_if = "Vec::is_empty", rename = "noise")]
-    noise: Vec<crate::core::NoiseProfile>,
+    pub noise: Vec<crate::core::NoiseProfile>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    correlations: Vec<crate::core::Correlation>,
+    pub correlations: Vec<crate::core::Correlation>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    personas: Vec<crate::core::Persona>,
+    pub personas: Vec<crate::core::Persona>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    actor_relationships: Vec<crate::core::ActorRelationship>,
+    pub actor_relationships: Vec<crate::core::ActorRelationship>,
     #[serde(skip_serializing_if = "Vec::is_empty", rename = "types")]
-    types: Vec<crate::core::CustomType>,
+    pub types: Vec<crate::core::CustomType>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    mixins: Vec<crate::core::Mixin>,
+    pub mixins: Vec<crate::core::Mixin>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    companion_files: Vec<String>,
+    pub companion_files: Vec<String>,
 }
 
 #[derive(Serialize)]
-struct FlatModelMeta {
-    name: String,
+pub(crate) struct FlatModelMeta {
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
+    pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    seed: Option<u64>,
+    pub seed: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    locale: Option<String>,
+    pub locale: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    timezone: Option<String>,
+    pub timezone: Option<String>,
 }
 
 /// Validate a parsed model and return collected errors.

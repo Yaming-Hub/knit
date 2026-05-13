@@ -241,6 +241,11 @@ fn main() -> anyhow::Result<()> {
                 seed,
                 strict,
             } => blueprint::run_test(&file, *rows, &entities, seed.clone(), *strict, cli.json, &cli.params),
+            BlueprintAction::Convert {
+                file,
+                format,
+                output,
+            } => blueprint::run_convert(&file, output.as_deref(), format),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
