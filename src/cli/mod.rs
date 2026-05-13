@@ -569,6 +569,32 @@ pub enum BlueprintAction {
         #[arg(long)]
         strict: bool,
     },
+    /// Create a variant blueprint by applying scale/override operations.
+    Derive {
+        /// Path to the source blueprint file.
+        file: String,
+        /// Multiply all entity counts by a factor: `Nx` (e.g., `10x`, `0.1x`).
+        #[arg(long)]
+        scale: Option<String>,
+        /// Override specific entity counts: `Entity=N` (repeatable).
+        #[arg(long = "count")]
+        counts: Vec<String>,
+        /// Override global seed.
+        #[arg(long)]
+        seed: Option<u64>,
+        /// Override global locale.
+        #[arg(long)]
+        locale: Option<String>,
+        /// Set variant name (stored in model description).
+        #[arg(long)]
+        variant: Option<String>,
+        /// Exclude entities from scaling: `Entity` (repeatable).
+        #[arg(long = "exclude")]
+        excludes: Vec<String>,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.

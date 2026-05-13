@@ -4329,6 +4329,199 @@ pub fn run_validate(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Blueprint derive — create variant blueprints with scale/overrides
+// ---------------------------------------------------------------------------
+
+/// Parse a scale factor spec like `10x`, `0.5x`, `2.5x`.
+fn parse_scale_factor(spec: &str) -> Result<f64> {
+    let trimmed = spec.trim().trim_end_matches('x').trim_end_matches('X');
+    let factor: f64 = trimmed
+        .parse()
+        .with_context(|| format!("invalid scale factor `{}`: expected format like `10x`", spec))?;
+    if factor <= 0.0 {
+        anyhow::bail!("scale factor must be positive, got `{}`", spec);
+    }
+    Ok(factor)
+}
+
+/// Apply derive operations to a cloned DataModel.
+pub fn derive_model(
+    model: &DataModel,
+    scale: Option<f64>,
+    count_overrides: &[(String, u64)],
+    excludes: &[String],
+    seed: Option<u64>,
+    locale: Option<&str>,
+    variant: Option<&str>,
+) -> Result<(DataModel, Vec<String>)> {
+    let mut derived = model.clone();
+    let mut changes = Vec::new();
+
+    // Apply variant name to description
+    if let Some(v) = variant {
+        let base_desc = derived
+            .description
+            .as_deref()
+            .unwrap_or(&derived.name);
+        derived.description = Some(format!("{} [variant: {}]", base_desc, v));
+        changes.push(format!("variant = \"{}\"", v));
+    }
+
+    // Apply seed override
+    if let Some(s) = seed {
+        let old = derived.seed;
+        derived.seed = s;
+        changes.push(format!("seed: {} → {}", old, s));
+    }
+
+    // Apply locale override
+    if let Some(loc) = locale {
+        let old = derived.locale.clone();
+        derived.locale = loc.to_string();
+        changes.push(format!("locale: {} → {}", old, loc));
+    }
+
+    // Build exclusion set
+    let exclude_set: HashSet<&str> = excludes.iter().map(|s| s.as_str()).collect();
+    for excl in excludes {
+        if !derived.entities.iter().any(|e| e.name == *excl) {
+            anyhow::bail!("excluded entity `{}` not found in blueprint", excl);
+        }
+    }
+
+    // Apply scale factor to all non-excluded entities
+    if let Some(factor) = scale {
+        for entity in &mut derived.entities {
+            if exclude_set.contains(entity.name.as_str()) {
+                continue;
+            }
+            match &entity.count {
+                crate::core::CountSpec::Fixed(n) => {
+                    let new_count = ((*n as f64) * factor).round().max(1.0) as u64;
+                    let old = *n;
+                    entity.count = crate::core::CountSpec::Fixed(new_count);
+                    changes.push(format!("{}.count: {} → {} (×{})", entity.name, old, new_count, factor));
+                }
+                crate::core::CountSpec::Range { min, max } => {
+                    let old_min = *min;
+                    let old_max = *max;
+                    let new_min = ((old_min as f64) * factor).round().max(1.0) as u64;
+                    let new_max = ((old_max as f64) * factor).round().max(new_min as f64) as u64;
+                    entity.count = crate::core::CountSpec::Range {
+                        min: new_min,
+                        max: new_max,
+                    };
+                    changes.push(format!(
+                        "{}.count: [{}, {}] → [{}, {}] (×{})",
+                        entity.name, old_min, old_max, new_min, new_max, factor
+                    ));
+                }
+                _ => {
+                    // Expression/Distribution counts — skip with warning
+                    changes.push(format!(
+                        "{}.count: skipped (expression/distribution)",
+                        entity.name
+                    ));
+                }
+            }
+        }
+    }
+
+    // Apply explicit count overrides (after scale, so they take priority)
+    for (entity_name, count) in count_overrides {
+        let entity = derived
+            .entities
+            .iter_mut()
+            .find(|e| e.name == *entity_name)
+            .ok_or_else(|| anyhow::anyhow!("entity `{}` not found in blueprint", entity_name))?;
+        let old = match &entity.count {
+            crate::core::CountSpec::Fixed(n) => format!("{}", n),
+            other => format!("{:?}", other),
+        };
+        entity.count = crate::core::CountSpec::Fixed(*count);
+        changes.push(format!("{}.count: {} → {} (override)", entity_name, old, count));
+    }
+
+    Ok((derived, changes))
+}
+
+/// Run the `blueprint derive` command.
+pub fn run_derive(
+    file: &str,
+    scale: Option<&str>,
+    counts: &[String],
+    seed: Option<u64>,
+    locale: Option<&str>,
+    variant: Option<&str>,
+    excludes: &[String],
+    output: Option<&str>,
+    json: bool,
+) -> Result<()> {
+    let model = load_blueprint(file)
+        .with_context(|| format!("failed to load `{}`", file))?;
+
+    let scale_factor = match scale {
+        Some(s) => Some(parse_scale_factor(s)?),
+        None => None,
+    };
+
+    // Parse count overrides
+    let mut count_overrides = Vec::new();
+    for spec in counts {
+        let (entity, val) = split_kv(spec, "count")?;
+        let count: u64 = val
+            .parse()
+            .with_context(|| format!("invalid count `{}` for entity `{}`", val, entity))?;
+        count_overrides.push((entity, count));
+    }
+
+    if scale_factor.is_none() && count_overrides.is_empty() && seed.is_none()
+        && locale.is_none() && variant.is_none()
+    {
+        anyhow::bail!("no derive operations specified (use --scale, --count, --seed, --locale, or --variant)");
+    }
+
+    let (derived, changes) = derive_model(
+        &model,
+        scale_factor,
+        &count_overrides,
+        excludes,
+        seed,
+        locale,
+        variant,
+    )?;
+
+    // Serialize output — always TOML for file, JSON for --json stdout
+    let output_str = serialize_model_to_toml(&derived)?;
+
+    if let Some(out_path) = output {
+        std::fs::write(out_path, &output_str)
+            .with_context(|| format!("failed to write `{}`", out_path))?;
+    } else {
+        print!("{}", output_str);
+    }
+
+    if json {
+        let summary = serde_json::json!({
+            "changes": changes,
+            "output": output.unwrap_or("stdout"),
+        });
+        eprintln!("{}", serde_json::to_string_pretty(&summary)?);
+    } else {
+        for change in &changes {
+            eprintln!("  {} {}", "▸".green(), change);
+        }
+        eprintln!(
+            "{} derived variant with {} change(s)",
+            "✓".green(),
+            changes.len()
+        );
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -6805,5 +6998,162 @@ mod tests {
         assert!(!findings.iter().any(|f| {
             f.message.contains("unexpected column `Users_id`")
         }));
+    }
+
+    // -----------------------------------------------------------------------
+    // Derive tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn derive_scale_factor() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("Users", vec![make_field("id", DataType::Int)]),
+                make_entity("Orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        let (derived, changes) = derive_model(&model, Some(10.0), &[], &[], None, None, None).unwrap();
+        assert_eq!(derived.entities[0].count, CountSpec::Fixed(1000));
+        assert_eq!(derived.entities[1].count, CountSpec::Fixed(1000));
+        assert_eq!(changes.len(), 2);
+    }
+
+    #[test]
+    fn derive_scale_fractional() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].count = CountSpec::Fixed(100);
+        let (derived, _) = derive_model(&model, Some(0.1), &[], &[], None, None, None).unwrap();
+        assert_eq!(derived.entities[0].count, CountSpec::Fixed(10));
+    }
+
+    #[test]
+    fn derive_scale_minimum_one() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].count = CountSpec::Fixed(1);
+        let (derived, _) = derive_model(&model, Some(0.001), &[], &[], None, None, None).unwrap();
+        assert_eq!(derived.entities[0].count, CountSpec::Fixed(1));
+    }
+
+    #[test]
+    fn derive_scale_range() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].count = CountSpec::Range { min: 10, max: 100 };
+        let (derived, _) = derive_model(&model, Some(5.0), &[], &[], None, None, None).unwrap();
+        assert_eq!(
+            derived.entities[0].count,
+            CountSpec::Range { min: 50, max: 500 }
+        );
+    }
+
+    #[test]
+    fn derive_count_override() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("Users", vec![make_field("id", DataType::Int)]),
+                make_entity("Orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        let overrides = vec![("Users".to_string(), 5000u64)];
+        let (derived, _) = derive_model(&model, None, &overrides, &[], None, None, None).unwrap();
+        assert_eq!(derived.entities[0].count, CountSpec::Fixed(5000));
+        // Orders unchanged
+        assert_eq!(derived.entities[1].count, CountSpec::Fixed(100));
+    }
+
+    #[test]
+    fn derive_count_override_after_scale() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("Users", vec![make_field("id", DataType::Int)]),
+                make_entity("Orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        // Scale 10x then override Users to exactly 50
+        let overrides = vec![("Users".to_string(), 50u64)];
+        let (derived, _) = derive_model(&model, Some(10.0), &overrides, &[], None, None, None).unwrap();
+        assert_eq!(derived.entities[0].count, CountSpec::Fixed(50)); // override wins
+        assert_eq!(derived.entities[1].count, CountSpec::Fixed(1000)); // scaled 100*10
+    }
+
+    #[test]
+    fn derive_exclude_entities() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("Users", vec![make_field("id", DataType::Int)]),
+                make_entity("Config", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        let (derived, _) =
+            derive_model(&model, Some(10.0), &[], &["Config".to_string()], None, None, None).unwrap();
+        assert_eq!(derived.entities[0].count, CountSpec::Fixed(1000)); // scaled 100*10
+        assert_eq!(derived.entities[1].count, CountSpec::Fixed(100)); // excluded, unchanged
+    }
+
+    #[test]
+    fn derive_seed_and_locale() {
+        let model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let (derived, changes) =
+            derive_model(&model, None, &[], &[], Some(42), Some("ja_JP"), None).unwrap();
+        assert_eq!(derived.seed, 42);
+        assert_eq!(derived.locale, "ja_JP");
+        assert_eq!(changes.len(), 2);
+    }
+
+    #[test]
+    fn derive_variant_name() {
+        let model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let (derived, _) =
+            derive_model(&model, None, &[], &[], None, None, Some("small-test")).unwrap();
+        assert!(derived.description.unwrap().contains("small-test"));
+    }
+
+    #[test]
+    fn derive_unknown_entity_fails() {
+        let model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let overrides = vec![("NonExistent".to_string(), 100u64)];
+        assert!(derive_model(&model, None, &overrides, &[], None, None, None).is_err());
+    }
+
+    #[test]
+    fn derive_unknown_exclude_fails() {
+        let model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        assert!(
+            derive_model(&model, Some(2.0), &[], &["Bad".to_string()], None, None, None).is_err()
+        );
+    }
+
+    #[test]
+    fn derive_parse_scale_factor() {
+        assert!((parse_scale_factor("10x").unwrap() - 10.0).abs() < f64::EPSILON);
+        assert!((parse_scale_factor("0.5X").unwrap() - 0.5).abs() < f64::EPSILON);
+        assert!((parse_scale_factor("2.5x").unwrap() - 2.5).abs() < f64::EPSILON);
+        assert!(parse_scale_factor("0x").is_err());
+        assert!(parse_scale_factor("-1x").is_err());
+        assert!(parse_scale_factor("abc").is_err());
     }
 }
