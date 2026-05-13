@@ -1435,35 +1435,37 @@ fn render_mermaid(model: &DataModel, _graph: &GraphOutput) -> String {
     let mut out = String::new();
     out.push_str("erDiagram\n");
 
+    // Pre-compute effective FK columns per entity for FK annotation.
+    let mut effective_fks: BTreeSet<(String, String)> = BTreeSet::new();
+    for rel in &model.relationships {
+        let fk_col = rel
+            .foreign_key
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+        effective_fks.insert((rel.from.clone(), fk_col));
+    }
+
     // Entity blocks with fields.
     for entity in &model.entities {
-        out.push_str(&format!("    {} {{\n", mermaid_escape_entity(&entity.name)));
+        out.push_str(&format!(
+            "    {} {{\n",
+            mermaid_ident(&entity.name)
+        ));
         for field in &entity.fields {
             let type_str = mermaid_type(&field.data_type);
-            let mut comment_parts: Vec<&str> = Vec::new();
-            if field.primary_key == Some(true) {
-                comment_parts.push("PK");
-            }
-            // Check if this field is an FK
-            let is_fk = model.relationships.iter().any(|r| {
-                r.from == entity.name
-                    && r.foreign_key
-                        .as_ref()
-                        .map_or(false, |fk| fk == &field.name)
-            });
-            if is_fk {
-                comment_parts.push("FK");
-            }
-            let comment = if comment_parts.is_empty() {
-                String::new()
-            } else {
-                format!(" \"{}\"", comment_parts.join(", "))
+            let is_pk = field.primary_key == Some(true);
+            let is_fk = effective_fks.contains(&(entity.name.clone(), field.name.clone()));
+            let key = match (is_pk, is_fk) {
+                (true, true) => " PK,FK",
+                (true, false) => " PK",
+                (false, true) => " FK",
+                (false, false) => "",
             };
             out.push_str(&format!(
                 "        {} {}{}\n",
                 type_str,
-                mermaid_escape_field(&field.name),
-                comment,
+                mermaid_ident(&field.name),
+                key,
             ));
         }
         out.push_str("    }\n");
@@ -1472,24 +1474,27 @@ fn render_mermaid(model: &DataModel, _graph: &GraphOutput) -> String {
     out.push('\n');
 
     // Relationships as Mermaid ERD links.
+    // `from` = child (FK side), `to` = parent (PK side).
     for rel in &model.relationships {
-        let from = mermaid_escape_entity(&rel.from);
-        let to = mermaid_escape_entity(&rel.to);
-        let cardinality = mermaid_cardinality(&rel.kind);
-        let label = rel
+        let child = mermaid_ident(&rel.from);
+        let parent = mermaid_ident(&rel.to);
+        let fk_label = rel
             .foreign_key
-            .as_deref()
-            .unwrap_or(&rel.name);
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+        // Mermaid reads: left <cardinality> right.
+        // For OneToMany: parent has one, child has many → parent ||--o{ child.
+        let cardinality = mermaid_cardinality_directed(&rel.kind);
         out.push_str(&format!(
             "    {} {} {} : \"{}\"\n",
-            to, cardinality, from, label
+            parent, cardinality, child, fk_label
         ));
     }
 
     // Actor relationships.
     for ar in &model.actor_relationships {
-        let from = mermaid_escape_entity(&ar.from_entity);
-        let to = mermaid_escape_entity(&ar.to_entity);
+        let from = mermaid_ident(&ar.from_entity);
+        let to = mermaid_ident(&ar.to_entity);
         out.push_str(&format!(
             "    {} ||--o{{ {} : \"{}\"\n",
             from, to, ar.name
@@ -1520,28 +1525,33 @@ fn mermaid_type(dt: &crate::core::DataType) -> &'static str {
 }
 
 /// Map RelationshipKind to Mermaid ERD cardinality notation.
-fn mermaid_cardinality(kind: &crate::core::RelationshipKind) -> &'static str {
+/// Returns notation for parent → child direction (parent on left).
+fn mermaid_cardinality_directed(kind: &crate::core::RelationshipKind) -> &'static str {
     use crate::core::RelationshipKind;
     match kind {
         RelationshipKind::OneToOne => "||--||",
         RelationshipKind::OneToMany => "||--o{",
-        RelationshipKind::ManyToOne => "}o--||",
+        // ManyToOne: from has many → to; but we render parent(to) left, child(from) right,
+        // so parent has one, child has many (same visual as OneToMany).
+        RelationshipKind::ManyToOne => "||--o{",
         RelationshipKind::ManyToMany => "}o--o{",
     }
 }
 
-/// Escape an entity name for Mermaid (replace spaces/special chars with underscores).
-fn mermaid_escape_entity(name: &str) -> String {
-    name.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
-        .collect()
-}
-
-/// Escape a field name for Mermaid (no spaces or special chars).
-fn mermaid_escape_field(name: &str) -> String {
-    name.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
-        .collect()
+/// Format a name as a valid Mermaid identifier.
+/// If the name is purely alphanumeric/underscore, use as-is.
+/// Otherwise, wrap in double quotes to preserve the original name.
+fn mermaid_ident(name: &str) -> String {
+    if name
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_')
+        && !name.is_empty()
+    {
+        name.to_string()
+    } else {
+        // Mermaid supports quoted identifiers
+        format!("\"{}\"", name.replace('"', "'"))
+    }
 }
 
 /// Run `knit blueprint graph`.
@@ -4302,7 +4312,7 @@ mod tests {
         assert!(mermaid.starts_with("erDiagram\n"));
         assert!(mermaid.contains("users {"));
         assert!(mermaid.contains("orders {"));
-        assert!(mermaid.contains("int id \"PK\""));
+        assert!(mermaid.contains("int id PK"));
         assert!(mermaid.contains("string name"));
     }
 
@@ -4344,7 +4354,33 @@ mod tests {
         let graph = build_graph(&model);
         let mermaid = render_mermaid(&model, &graph);
         // user_id field should be annotated as FK
-        assert!(mermaid.contains("int user_id \"FK\""));
+        assert!(mermaid.contains("int user_id FK"));
+    }
+
+    #[test]
+    fn graph_mermaid_implicit_fk() {
+        // Implicit FK: no foreign_key set, defaults to "{to}_id"
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity(
+                    "orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("users_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(make_relationship("r1", "orders", "users"));
+        // foreign_key is None → defaults to "users_id"
+        let graph = build_graph(&model);
+        let mermaid = render_mermaid(&model, &graph);
+        // Implicit FK field should still be annotated
+        assert!(mermaid.contains("int users_id FK"));
+        // Relationship label should show the effective FK
+        assert!(mermaid.contains("users_id"));
     }
 
     #[test]
@@ -4355,9 +4391,9 @@ mod tests {
         );
         let graph = build_graph(&model);
         let mermaid = render_mermaid(&model, &graph);
-        // Spaces replaced with underscores
-        assert!(mermaid.contains("user_data {"));
-        assert!(mermaid.contains("first_name"));
+        // Names with spaces get quoted
+        assert!(mermaid.contains("\"user data\" {"));
+        assert!(mermaid.contains("\"first name\""));
     }
 
     // ── Lint tests ──────────────────────────────────────────────────
