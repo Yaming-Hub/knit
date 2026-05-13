@@ -240,7 +240,7 @@ fn main() -> anyhow::Result<()> {
                 entities,
                 seed,
                 strict,
-            } => blueprint::run_test(&file, *rows, &entities, seed.clone(), *strict, cli.json),
+            } => blueprint::run_test(&file, *rows, &entities, seed.clone(), *strict, cli.json, &cli.params),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

@@ -4789,11 +4789,23 @@ pub fn run_test(
     seed: Option<u64>,
     strict: bool,
     json: bool,
+    params: &[(String, String)],
 ) -> Result<()> {
     use std::collections::HashMap;
 
+    if rows == 0 {
+        anyhow::bail!("--rows must be at least 1");
+    }
+
     let mut model = load_blueprint(file)
         .with_context(|| format!("failed to load `{}`", file))?;
+
+    // Apply CLI params to model
+    for (k, v) in params {
+        model
+            .params
+            .insert(k.clone(), crate::core::Value::String(v.clone()));
+    }
 
     // Override counts to test size
     for entity in &mut model.entities {
@@ -4853,6 +4865,19 @@ pub fn run_test(
     super::generate::resolve_dictionary_plans(&mut plan, schema_dir)?;
     super::generate::resolve_external_lookup_plans(&mut plan, schema_dir)?;
 
+    // Build Arrow schemas for each entity (for cast step)
+    let mut entity_schemas: HashMap<String, std::sync::Arc<arrow::datatypes::Schema>> =
+        HashMap::new();
+    for phase in &plan.phases {
+        for ep in &phase.entity_plans {
+            let arrow_schema = super::generate::build_arrow_schema(ep);
+            entity_schemas.insert(
+                ep.entity_name.clone(),
+                std::sync::Arc::new(arrow_schema),
+            );
+        }
+    }
+
     // Run generation engine
     let gen_params: HashMap<String, String> = model
         .params
@@ -4873,6 +4898,16 @@ pub fn run_test(
     // Write generated data as CSV files to temp directory
     engine
         .execute(&plan, |entity_name, batch| {
+            // Cast columns to match declared Arrow schema
+            let target_schema = entity_schemas
+                .get(entity_name)
+                .cloned()
+                .unwrap_or_else(|| batch.schema());
+            let batch = super::generate::cast_batch_to_schema(&batch, &target_schema)?;
+
+            // Flatten nested columns (List, Map, Object) to JSON strings for CSV
+            let batch = super::generate::flatten_nested_columns(&batch)?;
+
             let csv_path = tmp_dir.path().join(format!("{}.csv", entity_name));
             let file_handle = std::fs::OpenOptions::new()
                 .create(true)
@@ -7877,6 +7912,7 @@ data_type = "string"
             Some(42),
             false,
             false,
+            &[],
         );
         assert!(result.is_ok(), "test command failed: {:?}", result.err());
     }
@@ -7915,6 +7951,7 @@ primary_key = true
             Some(99),
             false,
             true,
+            &[],
         );
         assert!(result.is_ok(), "test json failed: {:?}", result.err());
     }
@@ -7962,6 +7999,7 @@ primary_key = true
             None,
             false,
             false,
+            &[],
         );
         assert!(result.is_ok(), "test entity filter failed: {:?}", result.err());
     }
@@ -8000,6 +8038,7 @@ primary_key = true
             None,
             false,
             false,
+            &[],
         );
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
@@ -8008,6 +8047,47 @@ primary_key = true
             "unexpected error: {}",
             msg
         );
+    }
+
+    #[test]
+    fn test_zero_rows_rejected() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_zero"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "X"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            0,
+            &[],
+            None,
+            false,
+            false,
+            &[],
+        );
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("--rows must be at least 1"), "unexpected: {}", msg);
     }
 
     #[test]
@@ -8064,6 +8144,7 @@ to_field = "id"
             Some(42),
             true,
             false,
+            &[],
         );
         assert!(result.is_ok(), "test with FK failed: {:?}", result.err());
     }
