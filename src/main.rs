@@ -228,6 +228,12 @@ fn main() -> anyhow::Result<()> {
                 output.as_deref(),
                 cli.json,
             ),
+            BlueprintAction::Sample {
+                file,
+                rows,
+                entities,
+                seed,
+            } => blueprint::run_sample(&file, *rows, &entities, seed.clone(), cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

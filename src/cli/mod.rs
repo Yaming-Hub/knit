@@ -595,6 +595,20 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Generate a small sample preview from a blueprint.
+    Sample {
+        /// Path to the blueprint file.
+        file: String,
+        /// Number of rows to generate per entity (default: 5).
+        #[arg(short, long, default_value = "5")]
+        rows: u64,
+        /// Only sample these entities (repeatable, default: all).
+        #[arg(long = "entity")]
+        entities: Vec<String>,
+        /// Override random seed.
+        #[arg(long)]
+        seed: Option<u64>,
+    },
 }
 
 /// Model directory subcommands.

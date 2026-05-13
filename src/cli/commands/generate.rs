@@ -1668,7 +1668,7 @@ pub(crate) fn apply_count_override(model: &mut DataModel, count_str: &str) -> Re
 }
 
 /// Convert a crate::core::Value to its string representation for param injection.
-fn value_to_string(v: &crate::core::Value) -> String {
+pub(crate) fn value_to_string(v: &crate::core::Value) -> String {
     match v {
         crate::core::Value::String(s) => s.clone(),
         crate::core::Value::Int(n) => n.to_string(),
@@ -1880,7 +1880,7 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
 /// Walks all entity plans and loads dictionary files from disk, replacing
 /// the empty `entries` vec with actual file contents. File paths are
 /// resolved relative to the schema directory.
-fn resolve_dictionary_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
+pub(crate) fn resolve_dictionary_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
     for phase in &mut plan.phases {
         for entity_plan in &mut phase.entity_plans {
             for field_plan in &mut entity_plan.field_plans {
@@ -1965,7 +1965,7 @@ fn resolve_dict_in_generator(plan: &mut crate::plan::GeneratorPlan, schema_dir: 
 /// Walks all entity plans and loads external lookup source files from disk,
 /// populating the `entries` and `weights` vecs. File paths are resolved
 /// relative to the schema directory.
-fn resolve_external_lookup_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
+pub(crate) fn resolve_external_lookup_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
     for phase in &mut plan.phases {
         for entity_plan in &mut phase.entity_plans {
             for field_plan in &mut entity_plan.field_plans {
