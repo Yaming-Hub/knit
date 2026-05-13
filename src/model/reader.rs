@@ -170,8 +170,8 @@ struct LayoutFile {
 struct FolderEntry {
     table: String,
     path: Option<String>,
-    #[serde(default)]
-    format: Option<String>,
+    #[serde(default, rename = "format")]
+    _format: Option<String>,
     #[serde(default)]
     partition: Option<PartitionEntry>,
 }

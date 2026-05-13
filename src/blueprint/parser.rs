@@ -227,7 +227,7 @@ pub fn resolve_mixins(model: &mut DataModel) -> Result<(), BlueprintError> {
         // Check for references to undefined mixins
         for entity in &mut model.entities {
             if let Some(ref refs) = entity.mixin_refs {
-                for name in refs {
+                if let Some(name) = refs.first() {
                     return Err(BlueprintError::Validation {
                         path: format!("entities.{}.mixins", entity.name),
                         message: format!("references undefined mixin '{}'", name),

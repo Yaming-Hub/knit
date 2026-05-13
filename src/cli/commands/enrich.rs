@@ -10,6 +10,7 @@ use crate::cli::Cli;
 use crate::enrich::{enrich, EnrichConfig};
 
 /// Run the enrich subcommand.
+#[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.
 pub fn run(
     blueprint_path: &str,
     ref_path: &str,

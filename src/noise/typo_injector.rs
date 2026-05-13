@@ -201,7 +201,6 @@ mod tests {
 
     #[test]
     fn typo_all_kinds_exercised() {
-        use std::collections::HashSet;
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let original = "hello";
         let orig_chars: Vec<char> = original.chars().collect();

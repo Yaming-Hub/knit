@@ -8,7 +8,7 @@ use std::io::{self, BufRead, IsTerminal, Write};
 
 use colored::Colorize;
 
-use crate::core::types::{DataModel, DistributionKind, DistributionSpec, GeneratorSpec};
+use crate::core::types::{DataModel, DistributionKind, GeneratorSpec};
 use crate::decision::{Confidence, Decision, DecisionKind};
 
 /// Outcome of reviewing a single decision.
@@ -282,7 +282,9 @@ fn parse_distribution_kind(label: &str) -> Option<DistributionKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::types::{CountSpec, DataType, Entity, Field, NullSpec};
+    use crate::core::types::{
+        CountSpec, DataType, DistributionSpec, Entity, Field, NullSpec,
+    };
     use crate::decision::Alternative;
 
     fn make_test_model() -> DataModel {

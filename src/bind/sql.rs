@@ -411,9 +411,7 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
 
 /// Write a float value, ensuring it always has a decimal point.
 fn write_float(buf: &mut String, v: f64) {
-    if v.is_nan() {
-        buf.push_str("NULL");
-    } else if v.is_infinite() {
+    if v.is_nan() || v.is_infinite() {
         buf.push_str("NULL");
     } else if v == v.trunc() && v.abs() < 1e15 {
         write!(buf, "{:.1}", v).unwrap();

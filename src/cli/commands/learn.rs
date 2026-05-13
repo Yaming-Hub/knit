@@ -198,6 +198,7 @@ pub fn run(
 }
 
 /// Batch mode: load all data, profile, fit, emit blueprint (original behavior).
+#[allow(clippy::too_many_arguments)] // Keeps the batch path aligned with CLI-derived inputs.
 fn run_batch(
     source: &str,
     output: &str,
@@ -465,7 +466,7 @@ fn run_batch(
 
     // 5d. Interactive review of low-confidence decisions
     if review {
-        let decisions = if let Some(logger) = crate::decision::global_logger() {
+        let _decisions = if let Some(logger) = crate::decision::global_logger() {
             logger.low_confidence_decisions()
         } else {
             vec![]

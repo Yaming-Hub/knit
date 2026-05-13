@@ -100,7 +100,7 @@ fn format_cadence(c: Cadence) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::types::{CountSpec, Entity, Field};
+    use crate::core::types::{CountSpec, Entity};
     use crate::scale::{ActorDimension, CustomDimension, TimeDimension};
     use std::collections::BTreeMap;
 

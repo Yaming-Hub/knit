@@ -9,12 +9,14 @@ use knit::plan::compile;
 use knit::blueprint::{parse_toml, parse_toml_file, validate};
 
 /// Resolve the path to the workspace `examples/` directory.
+#[allow(dead_code)] // Shared helper for selectively running integration fixtures.
 pub fn examples_dir() -> PathBuf {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     manifest.join("examples")
 }
 
 /// Collect all `.knit.toml` files from the examples directory.
+#[allow(dead_code)] // Shared helper for example-driven integration tests.
 pub fn example_schemas() -> Vec<PathBuf> {
     let dir = examples_dir();
     let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
@@ -38,6 +40,7 @@ pub fn example_schemas() -> Vec<PathBuf> {
 }
 
 /// Parse, validate, compile, and generate all batches for a TOML schema string.
+#[allow(dead_code)] // Shared helper for string-based integration tests.
 pub fn generate_from_toml(toml_input: &str) -> HashMap<String, Vec<RecordBatch>> {
     let model = parse_toml(toml_input).expect("parse failed");
     let errors = validate(&model);
@@ -63,6 +66,7 @@ pub fn generate_from_toml(toml_input: &str) -> HashMap<String, Vec<RecordBatch>>
 }
 
 /// Parse, validate, compile, and generate all batches for a `.knit.toml` file.
+#[allow(dead_code)] // Shared helper for file-based integration tests.
 pub fn generate_from_file(path: &Path) -> HashMap<String, Vec<RecordBatch>> {
     let model = parse_toml_file(path).expect("parse failed");
     let errors = validate(&model);
@@ -88,6 +92,7 @@ pub fn generate_from_file(path: &Path) -> HashMap<String, Vec<RecordBatch>> {
 }
 
 /// Count total rows across all batches for a given entity.
+#[allow(dead_code)] // Shared helper for integration assertions.
 pub fn total_rows(batches: &[RecordBatch]) -> usize {
     batches.iter().map(|b| b.num_rows()).sum()
 }

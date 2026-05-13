@@ -73,13 +73,13 @@ pub fn generate_values(
 
     match strategy {
         NamingStrategy::CountryCode => {
-            pick_unused(&COUNTRY_CODES, &existing_set, count)
+            pick_unused(COUNTRY_CODES, &existing_set, count)
         }
         NamingStrategy::ShortCode => {
-            pick_unused(&SHORT_CODES, &existing_set, count)
+            pick_unused(SHORT_CODES, &existing_set, count)
         }
         NamingStrategy::CapitalizedWord => {
-            pick_unused(&CATEGORY_WORDS, &existing_set, count)
+            pick_unused(CATEGORY_WORDS, &existing_set, count)
         }
         NamingStrategy::IndexedSuffix { prefix } => {
             generate_indexed(prefix, &existing_set, count)

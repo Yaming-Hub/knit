@@ -127,7 +127,6 @@ fn coerce_to_logical_type(
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
                 let ts: arrow::array::TimestampMillisecondArray = i64_arr
                     .iter()
-                    .map(|v| v)
                     .collect();
                 return Arc::new(ts);
             }
@@ -1723,7 +1722,7 @@ impl GenerationEngine {
             if idx == 0 {
                 assignments.insert(pk, None);
                 depths.insert(pk, 0);
-                if depth_limit.map_or(true, |lim| 0 < lim) {
+                if depth_limit.is_none_or(|lim| 0 < lim) {
                     eligible.push(pk);
                 }
                 continue;
@@ -1735,7 +1734,7 @@ impl GenerationEngine {
                 // Make this node a root
                 assignments.insert(pk, None);
                 depths.insert(pk, 0);
-                if depth_limit.map_or(true, |lim| 0 < lim) {
+                if depth_limit.is_none_or(|lim| 0 < lim) {
                     eligible.push(pk);
                 }
             } else {
@@ -1749,7 +1748,7 @@ impl GenerationEngine {
                 depths.insert(pk, child_depth);
 
                 // This child is eligible as parent if its depth allows grandchildren
-                if depth_limit.map_or(true, |lim| child_depth < lim) {
+                if depth_limit.is_none_or(|lim| child_depth < lim) {
                     eligible.push(pk);
                 }
             }

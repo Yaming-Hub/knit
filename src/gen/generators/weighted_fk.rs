@@ -52,8 +52,8 @@ impl WeightedForeignKeyGenerator {
                 let zipf = Zipf::new(n, exponent).expect("valid Zipf params");
                 let rank: f64 = zipf.sample(rng);
                 // Convert 1-based rank to 0-based index, clamped.
-                let idx = (rank as u64).saturating_sub(1).min(n - 1) as usize;
-                idx
+                
+                (rank as u64).saturating_sub(1).min(n - 1) as usize
             }
             _ => {
                 // For unsupported distributions, fall back to uniform.
@@ -125,8 +125,8 @@ impl WeightedStringForeignKeyGenerator {
                     .unwrap_or(1.0);
                 let zipf = Zipf::new(n, exponent).expect("valid Zipf params");
                 let rank: f64 = zipf.sample(rng);
-                let idx = (rank as u64).saturating_sub(1).min(n - 1) as usize;
-                idx
+                
+                (rank as u64).saturating_sub(1).min(n - 1) as usize
             }
             _ => {
                 let threshold = u64::MAX - (u64::MAX % n);

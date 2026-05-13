@@ -2825,7 +2825,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
 
         // Self-ref with root nodes requires nullable FK
         if is_self_ref {
-            let produces_roots = rel.root_probability.map_or(true, |p| p > 0.0);
+            let produces_roots = rel.root_probability.is_none_or(|p| p > 0.0);
             if produces_roots && rel.nullable == Some(false) {
                 errors.push(BlueprintError::Validation {
                     path: path.clone(),
@@ -2933,7 +2933,7 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
         for (prop_name, rels) in &name_to_rel {
             if rels.len() > 1 {
                 errors.push(BlueprintError::Validation {
-                    path: format!("relationships"),
+                    path: "relationships".to_string(),
                     message: format!(
                         "edge property '{}' appears in multiple relationships ({}) targeting entity '{}'",
                         prop_name,

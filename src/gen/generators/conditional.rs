@@ -578,7 +578,6 @@ mod tests {
     #[test]
     fn test_conditional_unsupported_ref_type_uses_default() {
         // Timestamp array is unsupported — all rows should route to default
-        use arrow::datatypes::TimeUnit;
         let gen = ConditionalGenerator::new(
             "ts".into(),
             vec![(

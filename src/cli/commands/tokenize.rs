@@ -8,6 +8,7 @@ use anyhow::{bail, Result};
 use crate::tokenize::{self, TokenizeConfig, TokenizeResult};
 
 /// Run the tokenize command.
+#[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.
 pub fn run(
     input: &str,
     output: &str,
@@ -93,6 +94,7 @@ fn normalize_column_names(names: &[String]) -> HashSet<String> {
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)] // Keeps tokenization execution parameters explicit.
 fn run_tokenize(
     input: &Path,
     output: &Path,

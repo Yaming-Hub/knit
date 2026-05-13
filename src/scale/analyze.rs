@@ -10,7 +10,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::core::types::{CountSpec, DataModel, GeneratorSpec, RelationshipKind};
+use crate::core::types::{CountSpec, DataModel, GeneratorSpec};
 
 use super::{ActorDimension, Cadence, CustomDimension, ScalingAnalysis, TimeDimension};
 
@@ -299,10 +299,8 @@ fn detect_actor(
         for field in &entity.fields {
             if field.actor_column {
                 // Find the FK target
-                if let Some(ref gen) = field.generator {
-                    if let GeneratorSpec::Lookup { entity: target, .. } = gen {
-                        *ref_counts.entry(target.as_str()).or_insert(0) += 1;
-                    }
+                if let Some(GeneratorSpec::Lookup { entity: target, .. }) = field.generator.as_ref() {
+                    *ref_counts.entry(target.as_str()).or_insert(0) += 1;
                 }
             }
         }

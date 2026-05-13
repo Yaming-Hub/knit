@@ -101,7 +101,7 @@ fn step_dates(
             loop {
                 let d = if is_eom {
                     // End-of-month: always use the last day
-                    let total = start.year() as i32 * 12 + (start.month() as i32 - 1) + months_offset as i32;
+                    let total = start.year() * 12 + (start.month() as i32 - 1) + months_offset as i32;
                     let y = total / 12;
                     let m = (total % 12) as u32 + 1;
                     chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap()
@@ -128,7 +128,7 @@ fn step_dates(
 /// The `anchor_day` is the original intended day (e.g., 31 for end-of-month).
 /// This prevents drift: Jan 31 + 1m = Feb 29, + 2m = Mar 31 (not Mar 29).
 fn add_months_anchored(base: chrono::NaiveDate, months: u32, anchor_day: u32) -> chrono::NaiveDate {
-    let total_months = base.year() as i32 * 12 + (base.month() as i32 - 1) + months as i32;
+    let total_months = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
     let new_year = total_months / 12;
     let new_month = (total_months % 12) as u32 + 1;
     let max_day = days_in_month(new_year, new_month);
@@ -175,7 +175,7 @@ fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono:
             let months = num.round() as u32;
             let is_eom = base.day() == days_in_month(base.year(), base.month());
             if is_eom {
-                let total = base.year() as i32 * 12 + (base.month() as i32 - 1) + months as i32;
+                let total = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
                 let y = total / 12;
                 let m = (total % 12) as u32 + 1;
                 Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap())
@@ -188,7 +188,7 @@ fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono:
             let months = (num * 12.0).round() as u32;
             let is_eom = base.day() == days_in_month(base.year(), base.month());
             if is_eom {
-                let total = base.year() as i32 * 12 + (base.month() as i32 - 1) + months as i32;
+                let total = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
                 let y = total / 12;
                 let m = (total % 12) as u32 + 1;
                 Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap())

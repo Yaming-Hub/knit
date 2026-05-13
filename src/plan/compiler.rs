@@ -1452,21 +1452,22 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
             pk_order + 1
         }
         Some(GeneratorSpec::TimeSeries {
-            timestamp_field, ..
+            timestamp_field: Some(ts_name),
+            ..
         }) => {
             // Depends on the timestamp field if specified (must be generated first
             // so calendar-aware components can read it from batch_columns).
-            if let Some(ts_name) = timestamp_field {
-                let ts_order = all_fields
-                    .iter()
-                    .find(|f| f.name == *ts_name)
-                    .map(|f| compute_dependency_order(f, all_fields))
-                    .unwrap_or(0);
-                ts_order + 1
-            } else {
-                0
-            }
+            let ts_order = all_fields
+                .iter()
+                .find(|f| f.name == *ts_name)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            ts_order + 1
         }
+        Some(GeneratorSpec::TimeSeries {
+            timestamp_field: None,
+            ..
+        }) => 0,
         // BusinessHours with timezone_field depends on the timezone field
         Some(GeneratorSpec::BusinessHours {
             timezone_field: Some(ref tz_f),
@@ -1600,7 +1601,7 @@ fn build_index_strategy(row_counts: &BTreeMap<String, u64>) -> IndexStrategy {
                 logger
                     .builder(crate::decision::DecisionKind::IndexStrategy)
                     .phase("plan")
-                    .entity(&*name)
+                    .entity(name)
                     .chosen(chosen)
                     .reason(&reason)
                     .confidence(crate::decision::Confidence::High)

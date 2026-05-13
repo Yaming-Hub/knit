@@ -19,7 +19,7 @@ use crate::learn::ingest::read_auto_with_limit;
 use crate::learn::profile::compute_profiles;
 
 use self::mapper::{ColumnMapping, map_columns};
-use self::merge::{merge_enrichment, MergeOutcome};
+use self::merge::merge_enrichment;
 
 /// Configuration for an enrichment run.
 #[derive(Debug, Clone)]

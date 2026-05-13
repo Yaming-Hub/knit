@@ -204,9 +204,9 @@ impl Pipeline {
         for &(_, idx) in &order {
             let (_, overrides) = &self.perturbators[idx];
             if let Some(ref expr) = overrides.scope_expr {
-                if !precomputed_scope.contains_key(&idx) {
+                if let std::collections::hash_map::Entry::Vacant(e) = precomputed_scope.entry(idx) {
                     let mask = evaluate_scope_mask(expr, &batch)?;
-                    precomputed_scope.insert(idx, Arc::new(mask));
+                    e.insert(Arc::new(mask));
                 }
             }
         }
@@ -338,11 +338,13 @@ mod tests {
     }
 
     /// Perturbator that records the probability it received.
+    #[allow(dead_code)] // Reserved for probability propagation tests in this module.
     struct ProbRecorder {
         received_prob: std::sync::Mutex<f64>,
     }
 
     impl ProbRecorder {
+        #[allow(dead_code)] // Reserved for probability propagation tests in this module.
         fn new() -> Self {
             Self {
                 received_prob: std::sync::Mutex::new(0.0),
