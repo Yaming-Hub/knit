@@ -555,6 +555,20 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Validate generated data files against a blueprint schema.
+    Validate {
+        /// Path to the blueprint file.
+        file: String,
+        /// Path to the data directory containing generated files.
+        #[arg(short, long)]
+        data: String,
+        /// Check only these entities (repeatable, default: all).
+        #[arg(long = "entity")]
+        entities: Vec<String>,
+        /// Treat warnings as errors.
+        #[arg(long)]
+        strict: bool,
+    },
 }
 
 /// Model directory subcommands.

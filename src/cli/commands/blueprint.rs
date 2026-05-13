@@ -3757,6 +3757,578 @@ pub fn run_update(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Blueprint validate — check generated data against blueprint schema
+// ---------------------------------------------------------------------------
+
+use std::collections::HashSet;
+
+/// Severity level for validation findings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Severity {
+    Error,
+    Warning,
+}
+
+/// A single validation finding.
+#[derive(Debug)]
+struct Finding {
+    severity: Severity,
+    entity: String,
+    message: String,
+}
+
+impl Finding {
+    fn error(entity: &str, msg: impl Into<String>) -> Self {
+        Self {
+            severity: Severity::Error,
+            entity: entity.to_string(),
+            message: msg.into(),
+        }
+    }
+    fn warning(entity: &str, msg: impl Into<String>) -> Self {
+        Self {
+            severity: Severity::Warning,
+            entity: entity.to_string(),
+            message: msg.into(),
+        }
+    }
+}
+
+/// Map a knit DataType to the expected Arrow DataType(s).
+fn expected_arrow_types(dt: &crate::core::DataType) -> Vec<arrow::datatypes::DataType> {
+    use arrow::datatypes::DataType as A;
+    use crate::core::DataType as K;
+    match dt {
+        K::Bool => vec![A::Boolean],
+        K::Int => vec![A::Int64, A::Int32, A::Int16, A::Int8, A::UInt64, A::UInt32, A::UInt16, A::UInt8],
+        K::Int32 => vec![A::Int32, A::Int16, A::Int8, A::UInt32, A::UInt16, A::UInt8],
+        K::Float => vec![A::Float64, A::Float32],
+        K::String => vec![A::Utf8, A::LargeUtf8],
+        K::Uuid => vec![A::Utf8, A::LargeUtf8],
+        K::Date => vec![A::Date32, A::Date64, A::Utf8, A::LargeUtf8],
+        K::Time => vec![
+            A::Time64(arrow::datatypes::TimeUnit::Microsecond),
+            A::Time64(arrow::datatypes::TimeUnit::Nanosecond),
+            A::Time32(arrow::datatypes::TimeUnit::Second),
+            A::Time32(arrow::datatypes::TimeUnit::Millisecond),
+            A::Utf8,
+            A::LargeUtf8,
+        ],
+        K::Datetime | K::DatetimeUs | K::Datetimetz => vec![
+            A::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None),
+            A::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None),
+            A::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None),
+            A::Timestamp(arrow::datatypes::TimeUnit::Second, None),
+            A::Date64,
+            A::Utf8,
+            A::LargeUtf8,
+        ],
+        K::Duration => vec![
+            A::Duration(arrow::datatypes::TimeUnit::Microsecond),
+            A::Duration(arrow::datatypes::TimeUnit::Millisecond),
+            A::Duration(arrow::datatypes::TimeUnit::Nanosecond),
+            A::Duration(arrow::datatypes::TimeUnit::Second),
+            A::Int64,
+        ],
+        K::Bytes => vec![A::Binary, A::LargeBinary],
+        K::Array | K::Map | K::Object => vec![A::Utf8, A::LargeUtf8], // serialized as JSON strings
+        K::Custom(_) => vec![], // skip type checking for custom types
+    }
+}
+
+/// Check if an Arrow DataType is compatible with the expected types.
+/// For Timestamp with timezone info, strip the tz for comparison.
+fn arrow_type_compatible(
+    actual: &arrow::datatypes::DataType,
+    expected: &[arrow::datatypes::DataType],
+) -> bool {
+    if expected.is_empty() {
+        return true; // custom types — no check
+    }
+    for exp in expected {
+        if actual == exp {
+            return true;
+        }
+        // Timestamp with timezone matches Timestamp without
+        if let (
+            arrow::datatypes::DataType::Timestamp(unit_a, _),
+            arrow::datatypes::DataType::Timestamp(unit_e, _),
+        ) = (actual, exp)
+        {
+            if unit_a == unit_e {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Find a data file for the given entity name in the data directory.
+fn find_entity_file(data_dir: &std::path::Path, entity_name: &str) -> Option<std::path::PathBuf> {
+    let extensions = ["parquet", "csv", "json", "jsonl"];
+    for ext in &extensions {
+        let path = data_dir.join(format!("{}.{}", entity_name, ext));
+        if path.exists() {
+            return Some(path);
+        }
+    }
+    // Try case-insensitive match
+    if let Ok(entries) = std::fs::read_dir(data_dir) {
+        let lower = entity_name.to_lowercase();
+        for entry in entries.flatten() {
+            let fname = entry.file_name().to_string_lossy().to_string();
+            let stem = fname.rsplit_once('.').map(|(s, _)| s).unwrap_or(&fname);
+            if stem.to_lowercase() == lower {
+                return Some(entry.path());
+            }
+        }
+    }
+    None
+}
+
+/// Read a data file into Arrow RecordBatches using the learn ingest reader.
+fn read_data_file(path: &std::path::Path) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+    crate::learn::ingest::read_auto(path)
+        .map_err(|e| anyhow::anyhow!("failed to read `{}`: {}", path.display(), e))
+}
+
+/// Validate generated data files against a blueprint model.
+pub fn validate_data(
+    model: &DataModel,
+    data_dir: &std::path::Path,
+    filter_entities: &[String],
+) -> Result<Vec<Finding>> {
+    let mut findings = Vec::new();
+
+    // Determine which entities to check.
+    let entities: Vec<&Entity> = if filter_entities.is_empty() {
+        model.entities.iter().collect()
+    } else {
+        let mut out = Vec::new();
+        for name in filter_entities {
+            if let Some(ent) = model.entities.iter().find(|e| e.name == *name) {
+                out.push(ent);
+            } else {
+                findings.push(Finding::error(name, "entity not found in blueprint"));
+            }
+        }
+        out
+    };
+
+    // entity name -> (schema, row_count, pk_values)
+    let mut entity_data: BTreeMap<
+        String,
+        (
+            arrow::datatypes::Schema,
+            usize,
+            Option<HashSet<String>>,
+        ),
+    > = BTreeMap::new();
+
+    for entity in &entities {
+        let file = match find_entity_file(data_dir, &entity.name) {
+            Some(f) => f,
+            None => {
+                findings.push(Finding::error(&entity.name, "data file not found"));
+                continue;
+            }
+        };
+
+        let batches = match read_data_file(&file) {
+            Ok(b) => b,
+            Err(e) => {
+                findings.push(Finding::error(
+                    &entity.name,
+                    format!("cannot read data file: {}", e),
+                ));
+                continue;
+            }
+        };
+
+        if batches.is_empty() {
+            findings.push(Finding::warning(&entity.name, "data file is empty"));
+            entity_data.insert(
+                entity.name.clone(),
+                (arrow::datatypes::Schema::empty(), 0, None),
+            );
+            continue;
+        }
+
+        let schema = batches[0].schema();
+        let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+
+        // --- Column presence ---
+        let data_cols: HashSet<String> = schema
+            .fields()
+            .iter()
+            .map(|f| f.name().clone())
+            .collect();
+
+        for field in &entity.fields {
+            if !data_cols.contains(&field.name) {
+                findings.push(Finding::error(
+                    &entity.name,
+                    format!("missing column `{}`", field.name),
+                ));
+            }
+        }
+
+        // Extra columns (warning only) — include implicit FK columns
+        let mut expected_cols: HashSet<String> =
+            entity.fields.iter().map(|f| f.name.clone()).collect();
+        for rel in &model.relationships {
+            if rel.from == entity.name {
+                let fk = rel
+                    .foreign_key
+                    .clone()
+                    .unwrap_or_else(|| format!("{}_id", rel.to));
+                expected_cols.insert(fk);
+            }
+        }
+        // Also include edge property columns from relationships
+        for rel in &model.relationships {
+            if rel.from == entity.name {
+                for prop in &rel.properties {
+                    expected_cols.insert(prop.name.clone());
+                }
+            }
+        }
+        for col in &data_cols {
+            if !expected_cols.contains(col) {
+                findings.push(Finding::warning(
+                    &entity.name,
+                    format!("unexpected column `{}`", col),
+                ));
+            }
+        }
+
+        // --- Data type checks ---
+        for field in &entity.fields {
+            if let Some(arrow_field) = schema.field_with_name(&field.name).ok() {
+                let expected = expected_arrow_types(&field.data_type);
+                if !arrow_type_compatible(arrow_field.data_type(), &expected) {
+                    findings.push(Finding::error(
+                        &entity.name,
+                        format!(
+                            "column `{}`: expected {:?}, got {:?}",
+                            field.name, field.data_type, arrow_field.data_type()
+                        ),
+                    ));
+                }
+            }
+        }
+
+        // --- Null checks ---
+        for field in &entity.fields {
+            if matches!(field.nullable, crate::core::NullSpec::Never) {
+                // Check for nulls in non-nullable columns
+                let mut null_count = 0usize;
+                for batch in &batches {
+                    if let Some(col_idx) = schema.index_of(&field.name).ok() {
+                        let col = batch.column(col_idx);
+                        null_count += col.null_count();
+                    }
+                }
+                if null_count > 0 {
+                    findings.push(Finding::error(
+                        &entity.name,
+                        format!(
+                            "column `{}`: {} null(s) but nullable = Never",
+                            field.name, null_count
+                        ),
+                    ));
+                }
+            }
+        }
+
+        // --- PK uniqueness ---
+        let mut pk_values: Option<HashSet<String>> = None;
+        for field in &entity.fields {
+            if field.primary_key == Some(true) {
+                let mut seen = HashSet::new();
+                let mut dup_count = 0usize;
+                for batch in &batches {
+                    if let Some(col_idx) = schema.index_of(&field.name).ok() {
+                        let col = batch.column(col_idx);
+                        for i in 0..col.len() {
+                            use arrow::array::Array;
+                            if col.is_null(i) {
+                                findings.push(Finding::error(
+                                    &entity.name,
+                                    format!("PK column `{}` contains null", field.name),
+                                ));
+                                break;
+                            }
+                            let val = format!(
+                                "{}",
+                                arrow::util::display::ArrayFormatter::try_new(
+                                    col.as_ref(),
+                                    &arrow::util::display::FormatOptions::default()
+                                )
+                                .map(|f| f.value(i).to_string())
+                                .unwrap_or_default()
+                            );
+                            if !seen.insert(val) {
+                                dup_count += 1;
+                            }
+                        }
+                    }
+                }
+                if dup_count > 0 {
+                    findings.push(Finding::error(
+                        &entity.name,
+                        format!(
+                            "PK column `{}`: {} duplicate value(s) out of {} rows",
+                            field.name, dup_count, total_rows
+                        ),
+                    ));
+                }
+                pk_values = Some(seen);
+                break; // only one PK
+            }
+        }
+
+        // --- Row count ---
+        match &entity.count {
+            crate::core::CountSpec::Fixed(expected) => {
+                if total_rows != *expected as usize {
+                    findings.push(Finding::warning(
+                        &entity.name,
+                        format!(
+                            "row count: expected {}, got {}",
+                            expected, total_rows
+                        ),
+                    ));
+                }
+            }
+            crate::core::CountSpec::Range { min, max } => {
+                if total_rows < *min as usize || total_rows > *max as usize {
+                    findings.push(Finding::warning(
+                        &entity.name,
+                        format!(
+                            "row count {} outside expected range [{}, {}]",
+                            total_rows, min, max
+                        ),
+                    ));
+                }
+            }
+            _ => {} // Expression/Distribution — skip
+        }
+
+        entity_data.insert(
+            entity.name.clone(),
+            (schema.as_ref().clone(), total_rows, pk_values),
+        );
+    }
+
+    // --- FK referential integrity ---
+    for rel in &model.relationships {
+        // Skip if child entity is filtered out
+        if !filter_entities.is_empty()
+            && !filter_entities.iter().any(|e| e == &rel.from)
+        {
+            continue;
+        }
+
+        let fk_col = rel
+            .foreign_key
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+
+        // Get parent PK values
+        // Load parent PK values — may need on-demand loading if parent was filtered out
+        let parent_pks = if let Some((_, _, pk_opt)) = entity_data.get(&rel.to) {
+            match pk_opt {
+                Some(pks) => pks.clone(),
+                None => {
+                    findings.push(Finding::warning(
+                        &rel.from,
+                        format!(
+                            "FK `{}` -> `{}`: parent entity has no PK to check against",
+                            fk_col, rel.to
+                        ),
+                    ));
+                    continue;
+                }
+            }
+        } else {
+            // Parent not loaded yet (filtered out) — load on demand
+            let parent_entity = model.entities.iter().find(|e| e.name == rel.to);
+            let pk_field = parent_entity.and_then(|e| {
+                e.fields.iter().find(|f| f.primary_key == Some(true))
+            });
+            match (find_entity_file(data_dir, &rel.to), pk_field) {
+                (Some(file), Some(pk)) => {
+                    match read_data_file(&file) {
+                        Ok(batches) if !batches.is_empty() => {
+                            let schema = batches[0].schema();
+                            let mut pks = HashSet::new();
+                            if let Ok(col_idx) = schema.index_of(&pk.name) {
+                                for batch in &batches {
+                                    let col = batch.column(col_idx);
+                                    for i in 0..col.len() {
+                                        use arrow::array::Array;
+                                        if !col.is_null(i) {
+                                            let val = arrow::util::display::ArrayFormatter::try_new(
+                                                col.as_ref(),
+                                                &arrow::util::display::FormatOptions::default(),
+                                            )
+                                            .map(|f| f.value(i).to_string())
+                                            .unwrap_or_default();
+                                            pks.insert(val);
+                                        }
+                                    }
+                                }
+                            }
+                            pks
+                        }
+                        _ => continue,
+                    }
+                }
+                _ => continue,
+            }
+        };
+
+        // Read child FK column
+        let child_file = match find_entity_file(data_dir, &rel.from) {
+            Some(f) => f,
+            None => continue,
+        };
+        let child_batches = match read_data_file(&child_file) {
+            Ok(b) => b,
+            Err(_) => continue,
+        };
+        if child_batches.is_empty() {
+            continue;
+        }
+
+        let child_schema = child_batches[0].schema();
+        let fk_idx = match child_schema.index_of(&fk_col) {
+            Ok(i) => i,
+            Err(_) => {
+                findings.push(Finding::error(
+                    &rel.from,
+                    format!(
+                        "FK column `{}` not found (relationship `{}` -> `{}`)",
+                        fk_col, rel.from, rel.to
+                    ),
+                ));
+                continue;
+            }
+        };
+
+        let mut orphan_count = 0usize;
+        for batch in &child_batches {
+            let col = batch.column(fk_idx);
+            for i in 0..col.len() {
+                use arrow::array::Array;
+                if col.is_null(i) {
+                    continue; // null FKs are ok if nullable
+                }
+                let val = arrow::util::display::ArrayFormatter::try_new(
+                    col.as_ref(),
+                    &arrow::util::display::FormatOptions::default(),
+                )
+                .map(|f| f.value(i).to_string())
+                .unwrap_or_default();
+                if !parent_pks.contains(&val) {
+                    orphan_count += 1;
+                }
+            }
+        }
+        if orphan_count > 0 {
+            findings.push(Finding::error(
+                &rel.from,
+                format!(
+                    "FK `{}` -> `{}`: {} orphan row(s) reference non-existent parent keys",
+                    fk_col, rel.to, orphan_count
+                ),
+            ));
+        }
+    }
+
+    Ok(findings)
+}
+
+/// Run the `blueprint validate` command.
+pub fn run_validate(
+    file: &str,
+    data: &str,
+    entities: &[String],
+    strict: bool,
+    json: bool,
+) -> Result<()> {
+    let model = load_blueprint(file)
+        .with_context(|| format!("failed to load `{}`", file))?;
+
+    let data_dir = std::path::Path::new(data);
+    if !data_dir.is_dir() {
+        anyhow::bail!("`{}` is not a directory", data);
+    }
+
+    let findings = validate_data(&model, data_dir, entities)?;
+
+    let errors = findings.iter().filter(|f| f.severity == Severity::Error).count();
+    let warnings = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Warning)
+        .count();
+
+    if json {
+        let items: Vec<serde_json::Value> = findings
+            .iter()
+            .map(|f| {
+                serde_json::json!({
+                    "severity": if f.severity == Severity::Error { "error" } else { "warning" },
+                    "entity": f.entity,
+                    "message": f.message,
+                })
+            })
+            .collect();
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "errors": errors,
+                "warnings": warnings,
+                "findings": items,
+            }))?
+        );
+    } else {
+        for f in &findings {
+            let (icon, label) = match f.severity {
+                Severity::Error => ("✗".red(), "ERROR".red()),
+                Severity::Warning => ("⚠".yellow(), "WARN ".yellow()),
+            };
+            eprintln!("  {} [{}] {}: {}", icon, label, f.entity, f.message);
+        }
+        if findings.is_empty() {
+            eprintln!(
+                "{} all checks passed for {}",
+                "✓".green(),
+                file
+            );
+        } else {
+            eprintln!(
+                "\n{} {} error(s), {} warning(s)",
+                if errors > 0 { "✗".red() } else { "✓".green() },
+                errors,
+                warnings
+            );
+        }
+    }
+
+    if errors > 0 || (strict && warnings > 0) {
+        anyhow::bail!(
+            "validation failed: {} error(s), {} warning(s)",
+            errors,
+            warnings
+        );
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5869,5 +6441,369 @@ mod tests {
         let op = parse_tag_spec("Users=pii,core").unwrap();
         matches!(op, UpdateOp::AddTags { entity, tags }
             if entity == "Users" && tags == vec!["pii", "core"]);
+    }
+
+    // -----------------------------------------------------------------------
+    // Validate tests
+    // -----------------------------------------------------------------------
+
+    /// Helper: write a CSV file from column names and string rows.
+    fn write_test_csv(dir: &std::path::Path, name: &str, headers: &[&str], rows: &[Vec<&str>]) {
+        let path = dir.join(format!("{}.csv", name));
+        let mut wtr = csv::Writer::from_path(&path).unwrap();
+        wtr.write_record(headers).unwrap();
+        for row in rows {
+            wtr.write_record(row).unwrap();
+        }
+        wtr.flush().unwrap();
+    }
+
+    #[test]
+    fn validate_all_pass() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "Users",
+                vec![
+                    {
+                        let mut f = make_field("id", DataType::Int);
+                        f.primary_key = Some(true);
+                        f
+                    },
+                    make_field("name", DataType::String),
+                ],
+            )],
+        );
+        write_test_csv(
+            dir.path(),
+            "Users",
+            &["id", "name"],
+            &[
+                vec!["1", "Alice"],
+                vec!["2", "Bob"],
+                vec!["3", "Carol"],
+            ],
+        );
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        let errors: Vec<_> = findings
+            .iter()
+            .filter(|f| f.severity == Severity::Error)
+            .collect();
+        assert!(errors.is_empty(), "unexpected errors: {:?}", errors);
+    }
+
+    #[test]
+    fn validate_missing_column() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = make_model(
+            "test",
+            vec![make_entity(
+                "Users",
+                vec![
+                    make_field("id", DataType::Int),
+                    make_field("email", DataType::String),
+                ],
+            )],
+        );
+        // CSV only has "id" column, missing "email"
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"]]);
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == Severity::Error && f.message.contains("missing column `email`")));
+    }
+
+    #[test]
+    fn validate_extra_column_warning() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        write_test_csv(
+            dir.path(),
+            "Users",
+            &["id", "extra_col"],
+            &[vec!["1", "foo"]],
+        );
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == Severity::Warning && f.message.contains("unexpected column")));
+    }
+
+    #[test]
+    fn validate_missing_data_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        // No file written
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == Severity::Error && f.message.contains("data file not found")));
+    }
+
+    #[test]
+    fn validate_row_count_mismatch() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].count = CountSpec::Fixed(5);
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"], vec!["2"]]);
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == Severity::Warning && f.message.contains("row count")));
+    }
+
+    #[test]
+    fn validate_fk_referential_integrity() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity(
+                    "Users",
+                    vec![{
+                        let mut f = make_field("id", DataType::Int);
+                        f.primary_key = Some(true);
+                        f
+                    }],
+                ),
+                make_entity(
+                    "Orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(crate::core::Relationship {
+            name: "orders_users".into(),
+            from: "Orders".into(),
+            to: "Users".into(),
+            kind: crate::core::RelationshipKind::ManyToOne,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"], vec!["2"]]);
+        // Order references user_id=99, which doesn't exist
+        write_test_csv(
+            dir.path(),
+            "Orders",
+            &["id", "user_id"],
+            &[vec!["1", "1"], vec!["2", "99"]],
+        );
+
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        assert!(findings.iter().any(|f| {
+            f.severity == Severity::Error && f.message.contains("orphan")
+        }));
+    }
+
+    #[test]
+    fn validate_fk_all_valid() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity(
+                    "Users",
+                    vec![{
+                        let mut f = make_field("id", DataType::Int);
+                        f.primary_key = Some(true);
+                        f
+                    }],
+                ),
+                make_entity(
+                    "Orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(crate::core::Relationship {
+            name: "orders_users".into(),
+            from: "Orders".into(),
+            to: "Users".into(),
+            kind: crate::core::RelationshipKind::ManyToOne,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"], vec!["2"]]);
+        write_test_csv(
+            dir.path(),
+            "Orders",
+            &["id", "user_id"],
+            &[vec!["1", "1"], vec!["2", "2"]],
+        );
+
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        let errors: Vec<_> = findings
+            .iter()
+            .filter(|f| f.severity == Severity::Error)
+            .collect();
+        assert!(errors.is_empty(), "unexpected errors: {:?}", errors);
+    }
+
+    #[test]
+    fn validate_entity_filter() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = make_model(
+            "test",
+            vec![
+                make_entity("Users", vec![make_field("id", DataType::Int)]),
+                make_entity("Orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
+        // Only write Users data — Orders should not be checked
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"]]);
+        let findings = validate_data(
+            &model,
+            dir.path(),
+            &["Users".to_string()],
+        )
+        .unwrap();
+        // No error for missing Orders file since it's filtered out
+        assert!(!findings
+            .iter()
+            .any(|f| f.entity == "Orders"));
+    }
+
+    #[test]
+    fn validate_fk_with_child_only_filter() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity(
+                    "Users",
+                    vec![{
+                        let mut f = make_field("id", DataType::Int);
+                        f.primary_key = Some(true);
+                        f
+                    }],
+                ),
+                make_entity(
+                    "Orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(crate::core::Relationship {
+            name: "orders_users".into(),
+            from: "Orders".into(),
+            to: "Users".into(),
+            kind: crate::core::RelationshipKind::ManyToOne,
+            foreign_key: Some("user_id".into()),
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"], vec!["2"]]);
+        write_test_csv(
+            dir.path(),
+            "Orders",
+            &["id", "user_id"],
+            &[vec!["1", "1"], vec!["2", "99"]],
+        );
+
+        // Filter to Orders only — should still detect FK orphans
+        let findings = validate_data(
+            &model,
+            dir.path(),
+            &["Orders".to_string()],
+        )
+        .unwrap();
+        assert!(findings.iter().any(|f| {
+            f.severity == Severity::Error && f.message.contains("orphan")
+        }));
+    }
+
+    #[test]
+    fn validate_implicit_fk_not_flagged_as_extra() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity(
+                    "Users",
+                    vec![{
+                        let mut f = make_field("id", DataType::Int);
+                        f.primary_key = Some(true);
+                        f
+                    }],
+                ),
+                make_entity(
+                    "Orders",
+                    vec![make_field("id", DataType::Int)],
+                ),
+            ],
+        );
+        // Relationship with implicit FK (Users_id)
+        model.relationships.push(crate::core::Relationship {
+            name: "orders_users".into(),
+            from: "Orders".into(),
+            to: "Users".into(),
+            kind: crate::core::RelationshipKind::ManyToOne,
+            foreign_key: None, // implicit: Users_id
+            cardinality: None,
+            degree: None,
+            selection: None,
+            nullable: None,
+            acyclic: None,
+            root_probability: None,
+            max_depth: None,
+            properties: Vec::new(),
+        });
+
+        // Data has the implicit FK column
+        write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"]]);
+        write_test_csv(
+            dir.path(),
+            "Orders",
+            &["id", "Users_id"],
+            &[vec!["1", "1"]],
+        );
+
+        let findings = validate_data(&model, dir.path(), &[]).unwrap();
+        // Users_id should NOT be flagged as unexpected
+        assert!(!findings.iter().any(|f| {
+            f.message.contains("unexpected column `Users_id`")
+        }));
     }
 }
