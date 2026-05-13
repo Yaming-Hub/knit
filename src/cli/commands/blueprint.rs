@@ -619,6 +619,15 @@ fn print_diff_entry(entry: &DiffEntry) {
     }
 }
 
+/// Escape a string for use inside TOML double-quoted strings.
+fn toml_escape(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
+        .replace('\t', "\\t")
+}
+
 /// Serialize a [`DataModel`] to a canonical TOML schema string.
 ///
 /// Produces a hand-formatted TOML document that matches the expected
@@ -636,7 +645,7 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
     out.push_str("[model]\n");
     out.push_str(&format!("name = \"{}\"\n", model.name));
     if let Some(desc) = &model.description {
-        out.push_str(&format!("description = \"{}\"\n", desc));
+        out.push_str(&format!("description = \"{}\"\n", toml_escape(desc)));
     }
     out.push_str(&format!("seed = {}\n", model.seed));
     out.push_str(&format!("locale = \"{}\"\n", model.locale));
@@ -646,7 +655,11 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
     for entity in &model.entities {
         out.push_str(&format!("\n[[entities]]\nname = \"{}\"\n", entity.name));
         if let Some(desc) = &entity.description {
-            out.push_str(&format!("description = \"{}\"\n", desc));
+            out.push_str(&format!("description = \"{}\"\n", toml_escape(desc)));
+        }
+        if !entity.tags.is_empty() {
+            let tags_str: Vec<String> = entity.tags.iter().map(|t| format!("\"{}\"", toml_escape(t))).collect();
+            out.push_str(&format!("tags = [{}]\n", tags_str.join(", ")));
         }
         if entity.actor {
             out.push_str("actor = true\n");
@@ -687,6 +700,9 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
                 "\n[[entities.fields]]\nname = \"{}\"\n",
                 field.name
             ));
+            if let Some(desc) = &field.description {
+                out.push_str(&format!("description = \"{}\"\n", toml_escape(desc)));
+            }
             out.push_str(&format!("data_type = \"{:?}\"\n", field.data_type).to_lowercase());
             if let Some(pk) = field.primary_key {
                 if pk {
@@ -3713,26 +3729,30 @@ pub fn run_update(
 
     let changes = update_model(&mut model, &ops)?;
 
-    // Serialize output.
-    let output_str = if json {
-        serde_json::to_string_pretty(&model)?
-    } else {
-        serialize_model_to_toml(&model)?
-    };
+    // Always serialize as TOML for file output (--json only controls summary).
+    let output_str = serialize_model_to_toml(&model)?;
 
     let out_path = output.unwrap_or(file);
     std::fs::write(out_path, &output_str)
         .with_context(|| format!("failed to write `{}`", out_path))?;
 
-    for change in &changes {
-        eprintln!("  {} {}", "▸".green(), change);
+    if json {
+        let summary = serde_json::json!({
+            "changes": changes,
+            "output": out_path,
+        });
+        println!("{}", serde_json::to_string_pretty(&summary)?);
+    } else {
+        for change in &changes {
+            eprintln!("  {} {}", "▸".green(), change);
+        }
+        eprintln!(
+            "{} applied {} update(s) to {}",
+            "✓".green(),
+            changes.len(),
+            out_path
+        );
     }
-    eprintln!(
-        "{} applied {} update(s) to {}",
-        "✓".green(),
-        changes.len(),
-        out_path
-    );
 
     Ok(())
 }
