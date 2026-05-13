@@ -4527,6 +4527,155 @@ pub fn run_derive(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Blueprint sample — quick preview of generated data
+// ---------------------------------------------------------------------------
+
+/// Run the `blueprint sample` command — generate a small preview of data.
+///
+/// Creates a miniature version of the blueprint (default 5 rows per entity),
+/// runs the generation engine, and pretty-prints the results as tables.
+pub fn run_sample(
+    file: &str,
+    rows: u64,
+    entities: &[String],
+    seed: Option<u64>,
+    json: bool,
+) -> Result<()> {
+    use std::collections::HashMap;
+
+    let mut model = load_blueprint(file)
+        .with_context(|| format!("failed to load `{}`", file))?;
+
+    // Override counts to sample size
+    for entity in &mut model.entities {
+        entity.count = crate::core::CountSpec::Fixed(rows);
+    }
+
+    // Override seed if specified
+    if let Some(s) = seed {
+        model.seed = s;
+    }
+
+    // Validate
+    let errors = validate_model(&model);
+    if !errors.is_empty() {
+        for err in &errors {
+            eprintln!("{} {}", "error:".red().bold(), err);
+        }
+        anyhow::bail!("blueprint has {} validation error(s)", errors.len());
+    }
+
+    // Filter entities if specified
+    let entity_filter: std::collections::HashSet<&str> = if entities.is_empty() {
+        std::collections::HashSet::new()
+    } else {
+        entities.iter().map(|s| s.as_str()).collect()
+    };
+
+    // Compile plan
+    let mut plan = crate::plan::compile(&model)
+        .map_err(|e| anyhow::anyhow!("plan compilation failed: {}", e))?;
+
+    // Resolve dictionaries relative to schema dir
+    let schema_dir = std::path::Path::new(file)
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new("."));
+    super::generate::resolve_dictionary_plans(&mut plan, schema_dir)?;
+    super::generate::resolve_external_lookup_plans(&mut plan, schema_dir)?;
+
+    // Run generation engine
+    let gen_params: HashMap<String, String> = model
+        .params
+        .iter()
+        .map(|(k, v)| (k.clone(), super::generate::value_to_string(v)))
+        .collect();
+    let mut engine =
+        crate::gen::GenerationEngine::with_batch_size(rows as usize).with_params(gen_params);
+    engine.build_graphs(&plan);
+
+    // Build actor pool if needed
+    if !plan.actor_pool.pools.is_empty() {
+        let pool = crate::gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
+        engine = engine.with_actor_pool(std::sync::Arc::new(pool));
+    }
+
+    // Collect batches per entity
+    let mut entity_batches: HashMap<String, Vec<arrow::record_batch::RecordBatch>> =
+        HashMap::new();
+
+    engine
+        .execute(&plan, |entity_name, batch| {
+            entity_batches
+                .entry(entity_name.to_string())
+                .or_default()
+                .push(batch);
+            Ok(())
+        })
+        .map_err(|e| anyhow::anyhow!("generation failed: {}", e))?;
+
+    // Display results
+    if json {
+        let mut output = serde_json::Map::new();
+        for (name, batches) in &entity_batches {
+            if !entity_filter.is_empty() && !entity_filter.contains(name.as_str()) {
+                continue;
+            }
+            let mut rows_json = Vec::new();
+            for batch in batches {
+                let schema = batch.schema();
+                for row_idx in 0..batch.num_rows() {
+                    let mut row = serde_json::Map::new();
+                    for (col_idx, field) in schema.fields().iter().enumerate() {
+                        let col = batch.column(col_idx);
+                        let val = arrow::util::display::ArrayFormatter::try_new(
+                            col.as_ref(),
+                            &arrow::util::display::FormatOptions::default(),
+                        )
+                        .map(|f| f.value(row_idx).to_string())
+                        .unwrap_or_default();
+                        row.insert(
+                            field.name().clone(),
+                            serde_json::Value::String(val),
+                        );
+                    }
+                    rows_json.push(serde_json::Value::Object(row));
+                }
+            }
+            output.insert(name.clone(), serde_json::Value::Array(rows_json));
+        }
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        // Determine display order from the plan phases
+        let mut display_order: Vec<String> = Vec::new();
+        for phase in &plan.phases {
+            for ep in &phase.entity_plans {
+                if !entity_filter.is_empty()
+                    && !entity_filter.contains(ep.entity_name.as_str())
+                {
+                    continue;
+                }
+                if !display_order.contains(&ep.entity_name) {
+                    display_order.push(ep.entity_name.clone());
+                }
+            }
+        }
+
+        for name in &display_order {
+            if let Some(batches) = entity_batches.get(name) {
+                eprintln!("\n{} {} ({} rows):", "─".dimmed(), name.bold(), rows);
+                for batch in batches {
+                    let table = arrow::util::pretty::pretty_format_batches(&[batch.clone()])
+                        .map_err(|e| anyhow::anyhow!("format error: {}", e))?;
+                    println!("{}", table);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -7162,5 +7311,138 @@ mod tests {
         assert!(parse_scale_factor("abc").is_err());
         assert!(parse_scale_factor("infx").is_err());
         assert!(parse_scale_factor("NaNx").is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // Sample tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn sample_generates_preview() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "sample_test"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Users"
+count = 1000
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+"#,
+        )
+        .unwrap();
+
+        // run_sample should succeed with 3 rows
+        let result = run_sample(
+            blueprint_path.to_str().unwrap(),
+            3,
+            &[],
+            Some(99),
+            false,
+        );
+        assert!(result.is_ok(), "sample failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn sample_json_output() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "sample_test"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Items"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "value"
+data_type = "float"
+"#,
+        )
+        .unwrap();
+
+        let result = run_sample(
+            blueprint_path.to_str().unwrap(),
+            2,
+            &[],
+            None,
+            true, // json mode
+        );
+        assert!(result.is_ok(), "sample json failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn sample_entity_filter() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "sample_test"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Users"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities]]
+name = "Orders"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_sample(
+            blueprint_path.to_str().unwrap(),
+            3,
+            &["Users".to_string()],
+            None,
+            false,
+        );
+        assert!(result.is_ok(), "sample filter failed: {:?}", result.err());
     }
 }
