@@ -626,6 +626,17 @@ pub enum BlueprintAction {
         #[arg(long)]
         strict: bool,
     },
+    /// Convert blueprint between TOML and JSON formats.
+    Convert {
+        /// Path to the input blueprint file.
+        file: String,
+        /// Output format: toml or json.
+        #[arg(short, long, default_value = "json")]
+        format: String,
+        /// Output file path (prints to stdout if omitted).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.
