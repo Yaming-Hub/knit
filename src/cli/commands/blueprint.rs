@@ -1429,6 +1429,131 @@ fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
     out
 }
 
+/// Render a graph as Mermaid ERD format.
+/// Output can be embedded in GitHub Markdown as ```mermaid ... ``` blocks.
+fn render_mermaid(model: &DataModel, _graph: &GraphOutput) -> String {
+    let mut out = String::new();
+    out.push_str("erDiagram\n");
+
+    // Pre-compute effective FK columns per entity for FK annotation.
+    let mut effective_fks: BTreeSet<(String, String)> = BTreeSet::new();
+    for rel in &model.relationships {
+        let fk_col = rel
+            .foreign_key
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+        effective_fks.insert((rel.from.clone(), fk_col));
+    }
+
+    // Entity blocks with fields.
+    for entity in &model.entities {
+        out.push_str(&format!(
+            "    {} {{\n",
+            mermaid_ident(&entity.name)
+        ));
+        for field in &entity.fields {
+            let type_str = mermaid_type(&field.data_type);
+            let is_pk = field.primary_key == Some(true);
+            let is_fk = effective_fks.contains(&(entity.name.clone(), field.name.clone()));
+            let key = match (is_pk, is_fk) {
+                (true, true) => " PK,FK",
+                (true, false) => " PK",
+                (false, true) => " FK",
+                (false, false) => "",
+            };
+            out.push_str(&format!(
+                "        {} {}{}\n",
+                type_str,
+                mermaid_ident(&field.name),
+                key,
+            ));
+        }
+        out.push_str("    }\n");
+    }
+
+    out.push('\n');
+
+    // Relationships as Mermaid ERD links.
+    // `from` = child (FK side), `to` = parent (PK side).
+    for rel in &model.relationships {
+        let child = mermaid_ident(&rel.from);
+        let parent = mermaid_ident(&rel.to);
+        let fk_label = rel
+            .foreign_key
+            .clone()
+            .unwrap_or_else(|| format!("{}_id", rel.to));
+        // Mermaid reads: left <cardinality> right.
+        // For OneToMany: parent has one, child has many → parent ||--o{ child.
+        let cardinality = mermaid_cardinality_directed(&rel.kind);
+        out.push_str(&format!(
+            "    {} {} {} : \"{}\"\n",
+            parent, cardinality, child, fk_label
+        ));
+    }
+
+    // Actor relationships.
+    for ar in &model.actor_relationships {
+        let from = mermaid_ident(&ar.from_entity);
+        let to = mermaid_ident(&ar.to_entity);
+        out.push_str(&format!(
+            "    {} ||--o{{ {} : \"{}\"\n",
+            from, to, ar.name
+        ));
+    }
+
+    out
+}
+
+/// Map DataType to a Mermaid-friendly type string.
+fn mermaid_type(dt: &crate::core::DataType) -> &'static str {
+    use crate::core::DataType;
+    match dt {
+        DataType::Bool => "bool",
+        DataType::Int | DataType::Int32 => "int",
+        DataType::Float => "float",
+        DataType::String => "string",
+        DataType::Uuid => "uuid",
+        DataType::Date => "date",
+        DataType::Time => "time",
+        DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz => "datetime",
+        DataType::Duration => "duration",
+        DataType::Bytes => "bytes",
+        DataType::Array => "array",
+        DataType::Map | DataType::Object => "json",
+        DataType::Custom(_) => "custom",
+    }
+}
+
+/// Map RelationshipKind to Mermaid ERD cardinality notation.
+/// Returns notation for parent → child direction (parent on left).
+fn mermaid_cardinality_directed(kind: &crate::core::RelationshipKind) -> &'static str {
+    use crate::core::RelationshipKind;
+    match kind {
+        RelationshipKind::OneToOne => "||--||",
+        RelationshipKind::OneToMany => "||--o{",
+        // ManyToOne: from has many → to; but we render parent(to) left, child(from) right,
+        // so parent has one, child has many (same visual as OneToMany).
+        RelationshipKind::ManyToOne => "||--o{",
+        RelationshipKind::ManyToMany => "}o--o{",
+    }
+}
+
+/// Format a name as a valid Mermaid identifier.
+/// If the name is purely alphanumeric/underscore, use as-is.
+/// Otherwise, wrap in double quotes to preserve the original name.
+fn mermaid_ident(name: &str) -> String {
+    if name
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_')
+        && !name.is_empty()
+    {
+        name.to_string()
+    } else {
+        // Mermaid supports quoted identifiers
+        format!("\"{}\"", name.replace('"', "'"))
+    }
+}
+
 /// Run `knit blueprint graph`.
 pub fn run_graph(path: &str, format: &str) -> Result<()> {
     let model = load_blueprint(path)
@@ -1439,11 +1564,14 @@ pub fn run_graph(path: &str, format: &str) -> Result<()> {
         "dot" | "graphviz" => {
             print!("{}", render_dot(&model, &graph));
         }
+        "mermaid" => {
+            print!("{}", render_mermaid(&model, &graph));
+        }
         "json" => {
             println!("{}", serde_json::to_string_pretty(&graph)?);
         }
         other => {
-            anyhow::bail!("unsupported graph format `{}` (use `dot` or `json`)", other);
+            anyhow::bail!("unsupported graph format `{}` (use `dot`, `mermaid`, or `json`)", other);
         }
     }
 
@@ -4148,6 +4276,124 @@ mod tests {
         assert!(dot.contains("user\\\"data"));
         // Should not contain unescaped metacharacters in DOT strings
         assert!(!dot.contains("\"my|schema\""));
+    }
+
+    #[test]
+    fn graph_mermaid_basic() {
+        let model = make_model(
+            "test",
+            vec![
+                make_entity(
+                    "users",
+                    vec![
+                        {
+                            let mut f = make_field("id", DataType::Int);
+                            f.primary_key = Some(true);
+                            f
+                        },
+                        make_field("name", DataType::String),
+                    ],
+                ),
+                make_entity(
+                    "orders",
+                    vec![
+                        {
+                            let mut f = make_field("id", DataType::Int);
+                            f.primary_key = Some(true);
+                            f
+                        },
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        let graph = build_graph(&model);
+        let mermaid = render_mermaid(&model, &graph);
+        assert!(mermaid.starts_with("erDiagram\n"));
+        assert!(mermaid.contains("users {"));
+        assert!(mermaid.contains("orders {"));
+        assert!(mermaid.contains("int id PK"));
+        assert!(mermaid.contains("string name"));
+    }
+
+    #[test]
+    fn graph_mermaid_with_relationships() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("user_id", DataType::Int)]),
+            ],
+        );
+        model.relationships.push(make_relationship("r1", "orders", "users"));
+        model.relationships[0].foreign_key = Some("user_id".into());
+        let graph = build_graph(&model);
+        let mermaid = render_mermaid(&model, &graph);
+        // Should contain relationship line with cardinality
+        assert!(mermaid.contains("users ||--o{ orders"));
+        assert!(mermaid.contains("user_id"));
+    }
+
+    #[test]
+    fn graph_mermaid_fk_annotation() {
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity(
+                    "orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(make_relationship("r1", "orders", "users"));
+        model.relationships[0].foreign_key = Some("user_id".into());
+        let graph = build_graph(&model);
+        let mermaid = render_mermaid(&model, &graph);
+        // user_id field should be annotated as FK
+        assert!(mermaid.contains("int user_id FK"));
+    }
+
+    #[test]
+    fn graph_mermaid_implicit_fk() {
+        // Implicit FK: no foreign_key set, defaults to "{to}_id"
+        let mut model = make_model(
+            "test",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity(
+                    "orders",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("users_id", DataType::Int),
+                    ],
+                ),
+            ],
+        );
+        model.relationships.push(make_relationship("r1", "orders", "users"));
+        // foreign_key is None → defaults to "users_id"
+        let graph = build_graph(&model);
+        let mermaid = render_mermaid(&model, &graph);
+        // Implicit FK field should still be annotated
+        assert!(mermaid.contains("int users_id FK"));
+        // Relationship label should show the effective FK
+        assert!(mermaid.contains("users_id"));
+    }
+
+    #[test]
+    fn graph_mermaid_special_chars() {
+        let model = make_model(
+            "test",
+            vec![make_entity("user data", vec![make_field("first name", DataType::String)])],
+        );
+        let graph = build_graph(&model);
+        let mermaid = render_mermaid(&model, &graph);
+        // Names with spaces get quoted
+        assert!(mermaid.contains("\"user data\" {"));
+        assert!(mermaid.contains("\"first name\""));
     }
 
     // ── Lint tests ──────────────────────────────────────────────────
