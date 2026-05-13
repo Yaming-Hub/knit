@@ -334,7 +334,7 @@ pub enum Command {
         /// Verify tokenized dataset matches original structure.
         #[arg(long)]
         verify: Option<String>,
-        /// Token dictionary path (default: <output>/.knit-tokens.json).
+        /// Token dictionary path (default: `<output>/.knit-tokens.json`).
         #[arg(long)]
         dictionary: Option<String>,
         /// Random seed for deterministic token generation.

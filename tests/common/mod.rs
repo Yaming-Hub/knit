@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use arrow::record_batch::RecordBatch;
+use knit::blueprint::{parse_toml, parse_toml_file, validate};
 use knit::gen::{ActorPool, GenerationEngine};
 use knit::plan::compile;
-use knit::blueprint::{parse_toml, parse_toml_file, validate};
 
 /// Resolve the path to the workspace `examples/` directory.
 #[allow(dead_code)] // Shared helper for selectively running integration fixtures.

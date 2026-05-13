@@ -4,9 +4,12 @@ use clap::{CommandFactory, Parser};
 use colored::Colorize;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, blueprint, tokenize, validate};
+use knit::cli::commands::{
+    blueprint, enrich, generate, generators, init, inspect, learn, model, plan, scale, tokenize,
+    validate,
+};
 use knit::cli::config::resolve_config;
-use knit::cli::{Cli, Command, LogFormat, ModelAction, BlueprintAction};
+use knit::cli::{BlueprintAction, Cli, Command, LogFormat, ModelAction};
 use knit::decision::{self, DecisionLogger};
 
 /// Guard that must be held for the lifetime of the program to flush async writers.
@@ -82,11 +85,7 @@ fn init_tracing(cli: &Cli) -> _TracingGuard {
                 .with_writer(std::io::stderr),
         )
     } else {
-        Box::new(
-            fmt::layer()
-                .with_target(false)
-                .with_writer(std::io::stderr),
-        )
+        Box::new(fmt::layer().with_target(false).with_writer(std::io::stderr))
     };
 
     Registry::default()
@@ -196,11 +195,9 @@ fn run() -> anyhow::Result<()> {
                 rels,
                 output,
             } => blueprint::run_scaffold(name, entities, rels, output.as_deref(), cli.json),
-            BlueprintAction::Import {
-                file,
-                name,
-                output,
-            } => blueprint::run_import(file, name.as_deref(), output.as_deref(), cli.json),
+            BlueprintAction::Import { file, name, output } => {
+                blueprint::run_import(file, name.as_deref(), output.as_deref(), cli.json)
+            }
             BlueprintAction::Update {
                 file,
                 counts,
@@ -416,10 +413,7 @@ fn run() -> anyhow::Result<()> {
                     (Some(e), None) => e.clone(),
                     _ => "—".to_string(),
                 };
-                eprintln!(
-                    "  • [{loc}] {}: {}",
-                    d.chosen, d.reason,
-                );
+                eprintln!("  • [{loc}] {}: {}", d.chosen, d.reason,);
             }
             if low_conf.len() > 5 {
                 eprintln!("  … and {} more", low_conf.len() - 5);

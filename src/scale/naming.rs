@@ -28,24 +28,27 @@ pub fn detect_strategy(values: &[(String, f64)]) -> NamingStrategy {
     let names: Vec<&str> = values.iter().map(|(s, _)| s.as_str()).collect();
 
     // Check for 2-letter uppercase (country codes)
-    if names.iter().all(|n| {
-        n.len() == 2 && n.chars().all(|c| c.is_ascii_uppercase())
-    }) {
+    if names
+        .iter()
+        .all(|n| n.len() == 2 && n.chars().all(|c| c.is_ascii_uppercase()))
+    {
         return NamingStrategy::CountryCode;
     }
 
     // Check for 2-3 letter uppercase codes
-    if names.iter().all(|n| {
-        (2..=3).contains(&n.len()) && n.chars().all(|c| c.is_ascii_uppercase())
-    }) {
+    if names
+        .iter()
+        .all(|n| (2..=3).contains(&n.len()) && n.chars().all(|c| c.is_ascii_uppercase()))
+    {
         return NamingStrategy::ShortCode;
     }
 
     // Check for mixed-length uppercase codes (2-5 chars, all uppercase)
     // Common for region acronyms like US, EU, APAC, EMEA
-    if names.iter().all(|n| {
-        (2..=5).contains(&n.len()) && n.chars().all(|c| c.is_ascii_uppercase())
-    }) {
+    if names
+        .iter()
+        .all(|n| (2..=5).contains(&n.len()) && n.chars().all(|c| c.is_ascii_uppercase()))
+    {
         return NamingStrategy::ShortCode;
     }
 
@@ -72,21 +75,11 @@ pub fn generate_values(
         existing.iter().map(|(s, _)| s.as_str()).collect();
 
     match strategy {
-        NamingStrategy::CountryCode => {
-            pick_unused(COUNTRY_CODES, &existing_set, count)
-        }
-        NamingStrategy::ShortCode => {
-            pick_unused(SHORT_CODES, &existing_set, count)
-        }
-        NamingStrategy::CapitalizedWord => {
-            pick_unused(CATEGORY_WORDS, &existing_set, count)
-        }
-        NamingStrategy::IndexedSuffix { prefix } => {
-            generate_indexed(prefix, &existing_set, count)
-        }
-        NamingStrategy::Generic => {
-            generate_indexed("value", &existing_set, count)
-        }
+        NamingStrategy::CountryCode => pick_unused(COUNTRY_CODES, &existing_set, count),
+        NamingStrategy::ShortCode => pick_unused(SHORT_CODES, &existing_set, count),
+        NamingStrategy::CapitalizedWord => pick_unused(CATEGORY_WORDS, &existing_set, count),
+        NamingStrategy::IndexedSuffix { prefix } => generate_indexed(prefix, &existing_set, count),
+        NamingStrategy::Generic => generate_indexed("value", &existing_set, count),
     }
 }
 
@@ -146,7 +139,8 @@ fn pick_unused(
     // If pool exhausted, fall back to indexed
     if result.len() < count {
         let remaining = count - result.len();
-        let mut all_used: std::collections::HashSet<String> = existing.iter().copied().map(|s| s.to_string()).collect();
+        let mut all_used: std::collections::HashSet<String> =
+            existing.iter().copied().map(|s| s.to_string()).collect();
         for r in &result {
             all_used.insert(r.clone());
         }
@@ -200,44 +194,92 @@ fn generate_indexed(
 
 /// ISO 3166-1 alpha-2 country codes (most common ones first).
 const COUNTRY_CODES: &[&str] = &[
-    "US", "GB", "DE", "FR", "JP", "CN", "IN", "BR", "CA", "AU",
-    "IT", "ES", "KR", "MX", "RU", "NL", "SE", "CH", "NO", "DK",
-    "FI", "PL", "AT", "BE", "PT", "IE", "NZ", "SG", "HK", "TW",
-    "IL", "ZA", "AR", "CL", "CO", "PE", "EG", "NG", "KE", "TH",
-    "MY", "PH", "ID", "VN", "TR", "SA", "AE", "QA", "CZ", "RO",
-    "HU", "GR", "UA", "BG", "HR", "SK", "LT", "LV", "EE", "IS",
+    "US", "GB", "DE", "FR", "JP", "CN", "IN", "BR", "CA", "AU", "IT", "ES", "KR", "MX", "RU", "NL",
+    "SE", "CH", "NO", "DK", "FI", "PL", "AT", "BE", "PT", "IE", "NZ", "SG", "HK", "TW", "IL", "ZA",
+    "AR", "CL", "CO", "PE", "EG", "NG", "KE", "TH", "MY", "PH", "ID", "VN", "TR", "SA", "AE", "QA",
+    "CZ", "RO", "HU", "GR", "UA", "BG", "HR", "SK", "LT", "LV", "EE", "IS",
 ];
 
 /// Short 2-3 letter codes (generic).
 const SHORT_CODES: &[&str] = &[
-    "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ",
-    "BA", "BB", "BC", "BD", "BE", "BF", "BG", "BH", "BI", "BJ",
-    "CA", "CB", "CC", "CD", "CE", "CF", "CG", "CH", "CI", "CJ",
-    "DA", "DB", "DC", "DD", "DE", "DF", "DG", "DH", "DI", "DJ",
-    "EA", "EB", "EC", "ED", "EE", "EF", "EG", "EH", "EI", "EJ",
-    "FA", "FB", "FC", "FD", "FE", "FF", "FG", "FH", "FI", "FJ",
+    "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ", "BA", "BB", "BC", "BD", "BE", "BF",
+    "BG", "BH", "BI", "BJ", "CA", "CB", "CC", "CD", "CE", "CF", "CG", "CH", "CI", "CJ", "DA", "DB",
+    "DC", "DD", "DE", "DF", "DG", "DH", "DI", "DJ", "EA", "EB", "EC", "ED", "EE", "EF", "EG", "EH",
+    "EI", "EJ", "FA", "FB", "FC", "FD", "FE", "FF", "FG", "FH", "FI", "FJ",
 ];
 
 /// Plausible category words (mixed domains: products, regions, departments, etc.).
 const CATEGORY_WORDS: &[&str] = &[
     // Products / categories
-    "Electronics", "Clothing", "Furniture", "Automotive", "Groceries",
-    "Sporting", "Healthcare", "Beauty", "Toys", "Books",
-    "Music", "Garden", "Kitchen", "Office", "Pets",
-    "Travel", "Finance", "Education", "Entertainment", "Technology",
+    "Electronics",
+    "Clothing",
+    "Furniture",
+    "Automotive",
+    "Groceries",
+    "Sporting",
+    "Healthcare",
+    "Beauty",
+    "Toys",
+    "Books",
+    "Music",
+    "Garden",
+    "Kitchen",
+    "Office",
+    "Pets",
+    "Travel",
+    "Finance",
+    "Education",
+    "Entertainment",
+    "Technology",
     // Regions / locations
-    "Northern", "Southern", "Eastern", "Western", "Central",
-    "Pacific", "Atlantic", "Mountain", "Coastal", "Highland",
-    "Metro", "Suburban", "Rural", "Downtown", "Uptown",
+    "Northern",
+    "Southern",
+    "Eastern",
+    "Western",
+    "Central",
+    "Pacific",
+    "Atlantic",
+    "Mountain",
+    "Coastal",
+    "Highland",
+    "Metro",
+    "Suburban",
+    "Rural",
+    "Downtown",
+    "Uptown",
     // Departments / teams
-    "Engineering", "Marketing", "Sales", "Support", "Operations",
-    "Research", "Design", "Legal", "Logistics", "Quality",
+    "Engineering",
+    "Marketing",
+    "Sales",
+    "Support",
+    "Operations",
+    "Research",
+    "Design",
+    "Legal",
+    "Logistics",
+    "Quality",
     // Status / tiers
-    "Premium", "Standard", "Basic", "Enterprise", "Starter",
-    "Advanced", "Professional", "Ultimate", "Essential", "Custom",
+    "Premium",
+    "Standard",
+    "Basic",
+    "Enterprise",
+    "Starter",
+    "Advanced",
+    "Professional",
+    "Ultimate",
+    "Essential",
+    "Custom",
     // Colors (as category names)
-    "Azure", "Crimson", "Emerald", "Golden", "Silver",
-    "Sapphire", "Amber", "Ivory", "Coral", "Slate",
+    "Azure",
+    "Crimson",
+    "Emerald",
+    "Golden",
+    "Silver",
+    "Sapphire",
+    "Amber",
+    "Ivory",
+    "Coral",
+    "Slate",
 ];
 
 #[cfg(test)]
@@ -323,10 +365,7 @@ mod tests {
 
     #[test]
     fn test_generate_indexed_avoids_existing() {
-        let existing = vec![
-            ("Type_1".to_string(), 0.5),
-            ("Type_2".to_string(), 0.5),
-        ];
+        let existing = vec![("Type_1".to_string(), 0.5), ("Type_2".to_string(), 0.5)];
         let strategy = NamingStrategy::IndexedSuffix {
             prefix: "Type".to_string(),
         };
@@ -341,10 +380,7 @@ mod tests {
 
     #[test]
     fn test_mixed_case_not_country_code() {
-        let values = vec![
-            ("Active".to_string(), 0.7),
-            ("Inactive".to_string(), 0.3),
-        ];
+        let values = vec![("Active".to_string(), 0.7), ("Inactive".to_string(), 0.3)];
         // Should be CapitalizedWord, not CountryCode
         assert_eq!(detect_strategy(&values), NamingStrategy::CapitalizedWord);
     }

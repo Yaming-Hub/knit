@@ -434,9 +434,9 @@ fn minimal_data_model_roundtrip() {
                     start: IntOrString::Int(1),
                     step: IntOrString::Int(1),
                     prefix: None,
-                values: None,
-                cycle: None,
-                jitter: None,
+                    values: None,
+                    cycle: None,
+                    jitter: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
@@ -451,9 +451,9 @@ fn minimal_data_model_roundtrip() {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         }],
         relationships: vec![],
@@ -464,8 +464,8 @@ fn minimal_data_model_roundtrip() {
         personas: Vec::new(),
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
-            mixins: Vec::new(),
-    companion_files: Vec::new(),
+        mixins: Vec::new(),
+        companion_files: Vec::new(),
     };
 
     let json = serde_json::to_string_pretty(&model).unwrap();
@@ -540,7 +540,7 @@ fn entity_tags_skip_serializing_when_empty() {
             persona_distribution: None,
             activity_count: None,
             mixin_refs: None,
-        output: None,
+            output: None,
             scaling: None,
         }],
         relationships: vec![],
@@ -552,7 +552,7 @@ fn entity_tags_skip_serializing_when_empty() {
         actor_relationships: Vec::new(),
         custom_types: Vec::new(),
         mixins: Vec::new(),
-    companion_files: Vec::new(),
+        companion_files: Vec::new(),
     };
     let json = serde_json::to_string(&model).unwrap();
     assert!(!json.contains("\"tags\""));
@@ -656,8 +656,14 @@ fn column_stats_string_fields() {
         max_length: Some(100),
         avg_length: Some(15.5),
         top_values: Some(vec![
-            TopValue { value: "foo".into(), frequency: 0.3 },
-            TopValue { value: "bar".into(), frequency: 0.2 },
+            TopValue {
+                value: "foo".into(),
+                frequency: 0.3,
+            },
+            TopValue {
+                value: "bar".into(),
+                frequency: 0.2,
+            },
         ]),
         ..Default::default()
     };
@@ -725,8 +731,14 @@ fn column_stats_empty_skips_serialization() {
         traits: None,
     };
     let toml_str = toml::to_string_pretty(&field).unwrap();
-    assert!(!toml_str.contains("stats"), "stats: None should be skipped in output");
-    assert!(!toml_str.contains("traits"), "traits: None should be skipped in output");
+    assert!(
+        !toml_str.contains("stats"),
+        "stats: None should be skipped in output"
+    );
+    assert!(
+        !toml_str.contains("traits"),
+        "traits: None should be skipped in output"
+    );
 }
 
 // ── FieldTraits tests ───────────────────────────────────────────────
@@ -806,5 +818,8 @@ fn field_traits_none_skips_serialization() {
     let toml_str = toml::to_string_pretty(&traits).unwrap();
     assert!(!toml_str.contains("pii"), "None pii should be omitted");
     assert!(!toml_str.contains("trend"), "None trend should be omitted");
-    assert!(!toml_str.contains("distribution_shape"), "None shape should be omitted");
+    assert!(
+        !toml_str.contains("distribution_shape"),
+        "None shape should be omitted"
+    );
 }

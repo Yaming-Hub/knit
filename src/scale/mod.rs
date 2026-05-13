@@ -162,8 +162,7 @@ pub fn compute_plan(
         };
 
         let new_values = time::compute_new_partitions(&effective_dim, time_spec)?;
-        let time_ratio = new_values.len() as f64
-            / time_dim.partition_values.len().max(1) as f64;
+        let time_ratio = new_values.len() as f64 / time_dim.partition_values.len().max(1) as f64;
 
         // Scale entities that use this partition proportionally
         let current = analysis
@@ -237,7 +236,12 @@ pub fn compute_plan(
             anyhow::bail!(
                 "entity '{}' not found for --density; available entities: {}",
                 entity_name,
-                analysis.entity_counts.keys().cloned().collect::<Vec<_>>().join(", ")
+                analysis
+                    .entity_counts
+                    .keys()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(", ")
             );
         }
         // Reject density on the actor entity — use --actors instead
@@ -250,8 +254,15 @@ pub fn compute_plan(
                 );
             }
         }
-        let current = analysis.entity_counts.get(entity_name).copied().unwrap_or(1);
-        let base = entity_overrides.get(entity_name).copied().unwrap_or(current);
+        let current = analysis
+            .entity_counts
+            .get(entity_name)
+            .copied()
+            .unwrap_or(1);
+        let base = entity_overrides
+            .get(entity_name)
+            .copied()
+            .unwrap_or(current);
         let new_count = (base as f64 * factor).round().max(1.0) as u64;
         tracing::debug!(
             entity = %entity_name,
@@ -326,8 +337,7 @@ pub fn rewrite(model: &mut DataModel, plan: &ScalingPlan) {
                                         weight: pv.weight,
                                     })
                                     .collect();
-                                field.generator =
-                                    Some(GeneratorSpec::OneOf { choices });
+                                field.generator = Some(GeneratorSpec::OneOf { choices });
                                 tracing::debug!(
                                     entity = %entity.name,
                                     field = %field.name,
@@ -376,10 +386,7 @@ pub fn rewrite(model: &mut DataModel, plan: &ScalingPlan) {
 /// Expand a OneOf value set to the target cardinality.
 /// Keeps existing values, adds indexed suffixes for new ones.
 /// Weights follow the existing distribution shape (normalized).
-fn expand_oneof_values(
-    existing: &[(String, f64)],
-    target_count: u64,
-) -> Vec<(String, f64)> {
+fn expand_oneof_values(existing: &[(String, f64)], target_count: u64) -> Vec<(String, f64)> {
     let target = target_count as usize;
     if target <= existing.len() {
         // Downscale: keep top-N by weight
@@ -829,10 +836,7 @@ mod tests {
     fn density_multiple_entities() {
         let analysis = make_test_analysis();
         let targets = ScaleTargets {
-            density: vec![
-                ("Orders".into(), 2.0),
-                ("Items".into(), 0.5),
-            ],
+            density: vec![("Orders".into(), 2.0), ("Items".into(), 0.5)],
             ..Default::default()
         };
         let plan = compute_plan(&analysis, &targets).unwrap();

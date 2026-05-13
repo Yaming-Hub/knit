@@ -14,10 +14,8 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
     info!(path = %output.display(), "writing structured model");
 
     // Create directory structure
-    std::fs::create_dir_all(output)
-        .with_context(|| format!("creating {}", output.display()))?;
-    std::fs::create_dir_all(output.join("tables"))
-        .with_context(|| "creating tables/")?;
+    std::fs::create_dir_all(output).with_context(|| format!("creating {}", output.display()))?;
+    std::fs::create_dir_all(output.join("tables")).with_context(|| "creating tables/")?;
 
     // 1. Write knit.toml
     let manifest = ManifestOut {
@@ -28,32 +26,55 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
             seed: model.seed,
             locale: model.locale.clone(),
             timezone: model.timezone.clone(),
-            params: if model.params.is_empty() { None } else { Some(model.params.clone()) },
+            params: if model.params.is_empty() {
+                None
+            } else {
+                Some(model.params.clone())
+            },
         },
     };
     let manifest_str = toml::to_string_pretty(&manifest).context("serializing knit.toml")?;
     std::fs::write(output.join("knit.toml"), manifest_str)?;
 
     // 2. Write layout.toml (if any entities have output layout or companions exist)
-    let folders: Vec<FolderOut> = model.entities.iter()
+    let folders: Vec<FolderOut> = model
+        .entities
+        .iter()
         .filter_map(|e| {
             e.output.as_ref().map(|o| FolderOut {
                 table: e.name.clone(),
                 path: o.path.clone(),
                 partition: o.partition_by.as_ref().map(|by| PartitionOut {
                     by: by.clone(),
-                    values: o.partition_values.iter().map(|pv| pv.value.clone()).collect(),
+                    values: o
+                        .partition_values
+                        .iter()
+                        .map(|pv| pv.value.clone())
+                        .collect(),
                     weights: o.partition_values.iter().map(|pv| pv.weight).collect(),
                 }),
             })
         })
         .collect();
 
-    if !folders.is_empty() || !model.companion_files.is_empty() || !model.noise_profiles.is_empty() {
+    if !folders.is_empty() || !model.companion_files.is_empty() || !model.noise_profiles.is_empty()
+    {
         let layout = LayoutOut {
-            folders: if folders.is_empty() { None } else { Some(folders) },
-            companions: if model.companion_files.is_empty() { None } else { Some(model.companion_files.clone()) },
-            noise: if model.noise_profiles.is_empty() { None } else { Some(model.noise_profiles.clone()) },
+            folders: if folders.is_empty() {
+                None
+            } else {
+                Some(folders)
+            },
+            companions: if model.companion_files.is_empty() {
+                None
+            } else {
+                Some(model.companion_files.clone())
+            },
+            noise: if model.noise_profiles.is_empty() {
+                None
+            } else {
+                Some(model.noise_profiles.clone())
+            },
         };
         let layout_str = toml::to_string_pretty(&layout).context("serializing layout.toml")?;
         std::fs::write(output.join("layout.toml"), layout_str)?;
@@ -65,7 +86,11 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
             table: TableMetaOut {
                 name: entity.name.clone(),
                 description: entity.description.clone(),
-                tags: if entity.tags.is_empty() { None } else { Some(entity.tags.clone()) },
+                tags: if entity.tags.is_empty() {
+                    None
+                } else {
+                    Some(entity.tags.clone())
+                },
                 count: entity.count.clone(),
                 actor: if entity.actor { Some(true) } else { None },
                 persona_distribution: entity.persona_distribution.clone(),
@@ -76,7 +101,11 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
                 scaling: entity.scaling.clone(),
             },
             columns: entity.fields.clone(),
-            constraints: if entity.constraints.is_empty() { None } else { Some(entity.constraints.clone()) },
+            constraints: if entity.constraints.is_empty() {
+                None
+            } else {
+                Some(entity.constraints.clone())
+            },
         };
         let table_str = toml::to_string_pretty(&table).context("serializing table")?;
         let filename = format!("{}.toml", entity.name);
@@ -86,8 +115,16 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
     // 4. Write relationships.toml (if any)
     if !model.relationships.is_empty() || !model.actor_relationships.is_empty() {
         let rels = RelationshipsOut {
-            foreign_keys: if model.relationships.is_empty() { None } else { Some(model.relationships.clone()) },
-            actor_graphs: if model.actor_relationships.is_empty() { None } else { Some(model.actor_relationships.clone()) },
+            foreign_keys: if model.relationships.is_empty() {
+                None
+            } else {
+                Some(model.relationships.clone())
+            },
+            actor_graphs: if model.actor_relationships.is_empty() {
+                None
+            } else {
+                Some(model.actor_relationships.clone())
+            },
         };
         let rels_str = toml::to_string_pretty(&rels).context("serializing relationships.toml")?;
         std::fs::write(output.join("relationships.toml"), rels_str)?;
@@ -105,18 +142,27 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
     // 6. Write shared.toml (if custom types, mixins, or personas exist)
     if !model.custom_types.is_empty() || !model.mixins.is_empty() || !model.personas.is_empty() {
         let shared = SharedOut {
-            types: if model.custom_types.is_empty() { None } else { Some(model.custom_types.clone()) },
-            mixins: if model.mixins.is_empty() { None } else { Some(model.mixins.clone()) },
-            personas: if model.personas.is_empty() { None } else { Some(model.personas.clone()) },
+            types: if model.custom_types.is_empty() {
+                None
+            } else {
+                Some(model.custom_types.clone())
+            },
+            mixins: if model.mixins.is_empty() {
+                None
+            } else {
+                Some(model.mixins.clone())
+            },
+            personas: if model.personas.is_empty() {
+                None
+            } else {
+                Some(model.personas.clone())
+            },
         };
         let shared_str = toml::to_string_pretty(&shared).context("serializing shared.toml")?;
         std::fs::write(output.join("shared.toml"), shared_str)?;
     }
 
-    info!(
-        tables = model.entities.len(),
-        "structured model written"
-    );
+    info!(tables = model.entities.len(), "structured model written");
 
     Ok(())
 }

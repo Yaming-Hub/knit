@@ -53,7 +53,12 @@ pub fn run(
     }
 
     // Need at least one scaling target
-    if actors.is_none() && time.is_none() && dims.is_empty() && count.is_none() && density.is_empty() {
+    if actors.is_none()
+        && time.is_none()
+        && dims.is_empty()
+        && count.is_none()
+        && density.is_empty()
+    {
         print_analysis(&analysis, cli);
         eprintln!();
         eprintln!(
@@ -74,9 +79,8 @@ pub fn run(
     };
 
     // Need output directory for generation
-    let output = output_dir.ok_or_else(|| {
-        anyhow::anyhow!("--output is required when generating scaled data")
-    })?;
+    let output = output_dir
+        .ok_or_else(|| anyhow::anyhow!("--output is required when generating scaled data"))?;
 
     // Build scaling targets
     let targets = ScaleTargets {
@@ -125,7 +129,9 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
         if let Some(ref t) = analysis.time {
             let cadence_json = match t.cadence {
                 Some(scale::Cadence::Days(d)) => serde_json::json!({"unit": "days", "value": d}),
-                Some(scale::Cadence::Months(m)) => serde_json::json!({"unit": "months", "value": m}),
+                Some(scale::Cadence::Months(m)) => {
+                    serde_json::json!({"unit": "months", "value": m})
+                }
                 None => serde_json::json!(null),
             };
             dims.push(serde_json::json!({
@@ -207,10 +213,7 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
                 t.partition_values.last().unwrap()
             )
         } else {
-            t.partition_values
-                .first()
-                .cloned()
-                .unwrap_or_default()
+            t.partition_values.first().cloned().unwrap_or_default()
         };
         let confidence_hint = if t.cadence_confidence < 1.0 {
             format!(" (confidence: {:.0}%)", t.cadence_confidence * 100.0)
@@ -264,14 +267,10 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
     println!();
     println!("  {}:", "Suggested commands".dimmed());
     if let Some(ref _a) = analysis.actor {
-        println!(
-            "    knit scale <SCHEMA> -o out/ --actors 100",
-        );
+        println!("    knit scale <SCHEMA> -o out/ --actors 100",);
     }
     if analysis.time.is_some() {
-        println!(
-            "    knit scale <SCHEMA> -o out/ --time 52w",
-        );
+        println!("    knit scale <SCHEMA> -o out/ --time 52w",);
     }
     for c in &analysis.custom {
         println!(
@@ -289,8 +288,7 @@ fn print_dry_run(
     plan: &scale::ScalingPlan,
     cli: &Cli,
 ) {
-    let (entity_estimates, total_csv_bytes) =
-        scale::estimate_output_size(model, analysis, plan);
+    let (entity_estimates, total_csv_bytes) = scale::estimate_output_size(model, analysis, plan);
     let total_json_bytes: u64 = entity_estimates.iter().map(|e| e.json_bytes).sum();
     let total_parquet_bytes = (total_csv_bytes as f64 * 0.4) as u64;
 
@@ -337,25 +335,28 @@ fn print_dry_run(
                 })
             })
             .collect();
-        println!("{}", serde_json::json!({
-            "event": "dry_run",
-            "entities": entities,
-            "partitions": plan.new_partitions.as_ref().map(|np| np.values.len()),
-            "dim_overrides": plan.dim_overrides.iter().map(|d| {
-                serde_json::json!({
-                    "field": d.field_name,
-                    "new_count": d.new_values.len(),
-                })
-            }).collect::<Vec<_>>(),
-            "estimated_size": {
-                "csv_bytes": total_csv_bytes,
-                "json_bytes": total_json_bytes,
-                "parquet_bytes": total_parquet_bytes,
-                "format": format_label,
-                "format_bytes": format_estimate,
-                "display": scale::format_bytes(format_estimate),
-            },
-        }));
+        println!(
+            "{}",
+            serde_json::json!({
+                "event": "dry_run",
+                "entities": entities,
+                "partitions": plan.new_partitions.as_ref().map(|np| np.values.len()),
+                "dim_overrides": plan.dim_overrides.iter().map(|d| {
+                    serde_json::json!({
+                        "field": d.field_name,
+                        "new_count": d.new_values.len(),
+                    })
+                }).collect::<Vec<_>>(),
+                "estimated_size": {
+                    "csv_bytes": total_csv_bytes,
+                    "json_bytes": total_json_bytes,
+                    "parquet_bytes": total_parquet_bytes,
+                    "format": format_label,
+                    "format_bytes": format_estimate,
+                    "display": scale::format_bytes(format_estimate),
+                },
+            })
+        );
         return;
     }
 
@@ -385,7 +386,11 @@ fn print_dry_run(
             .unwrap_or_else(|| "—".to_string());
         println!(
             "  {:<20}{:<12}{:<12}{:<10}{}",
-            name, current, scaled, format!("{:.1}×", factor), est
+            name,
+            current,
+            scaled,
+            format!("{:.1}×", factor),
+            est
         );
     }
 
@@ -412,10 +417,7 @@ fn print_dry_run(
             .find(|c| c.field_name == d.field_name)
             .map(|c| c.current_values.len())
             .unwrap_or(0);
-        println!(
-            "  {}: {} → {}",
-            d.field_name, old_count, d.new_values.len()
-        );
+        println!("  {}: {} → {}", d.field_name, old_count, d.new_values.len());
     }
 
     println!();
@@ -446,10 +448,9 @@ fn parse_cadence(spec: &str) -> Result<scale::Cadence> {
 
     match unit {
         "d" => Ok(scale::Cadence::Days(num)),
-        "w" => Ok(scale::Cadence::Days(
-            num.checked_mul(7)
-                .ok_or_else(|| anyhow::anyhow!("cadence overflow: '{spec}' is too large"))?,
-        )),
+        "w" => Ok(scale::Cadence::Days(num.checked_mul(7).ok_or_else(
+            || anyhow::anyhow!("cadence overflow: '{spec}' is too large"),
+        )?)),
         "m" => Ok(scale::Cadence::Months(num)),
         _ => bail!(
             "unsupported cadence unit '{unit}' in '{spec}'; use d (days), w (weeks), or m (months)"

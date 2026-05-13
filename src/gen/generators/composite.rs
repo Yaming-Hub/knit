@@ -125,9 +125,9 @@ impl FieldGenerator for CompositeGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::array::ArrayRef;
     use crate::core::Value;
     use crate::plan::GeneratorPlan;
+    use arrow::array::ArrayRef;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;

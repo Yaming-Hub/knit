@@ -17,8 +17,8 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use crate::core::DataModel;
 use crate::blueprint::error::BlueprintError;
+use crate::core::DataModel;
 
 /// Resolve all `include` directives for a schema file.
 ///
@@ -38,9 +38,7 @@ pub fn resolve_includes(
     visited: &mut HashSet<PathBuf>,
     stack: &mut Vec<PathBuf>,
 ) -> Result<DataModel, BlueprintError> {
-    let base_dir = schema_path
-        .parent()
-        .unwrap_or(Path::new("."));
+    let base_dir = schema_path.parent().unwrap_or(Path::new("."));
 
     let mut merged = DataModel::default();
 
@@ -51,9 +49,7 @@ pub fn resolve_includes(
         if include_path.is_absolute() {
             return Err(BlueprintError::Validation {
                 path: "include".to_string(),
-                message: format!(
-                    "absolute paths are not allowed in include: {include_ref}"
-                ),
+                message: format!("absolute paths are not allowed in include: {include_ref}"),
             });
         }
 
@@ -64,9 +60,7 @@ pub fn resolve_includes(
         {
             return Err(BlueprintError::Validation {
                 path: "include".to_string(),
-                message: format!(
-                    "path traversal ('..') is not allowed in include: {include_ref}"
-                ),
+                message: format!("path traversal ('..') is not allowed in include: {include_ref}"),
             });
         }
 
@@ -75,7 +69,8 @@ pub fn resolve_includes(
 
         // Security: verify the resolved path stays under the base directory
         // (prevents symlink-based escapes)
-        let canonical_base = std::fs::canonicalize(base_dir).unwrap_or_else(|_| base_dir.to_path_buf());
+        let canonical_base =
+            std::fs::canonicalize(base_dir).unwrap_or_else(|_| base_dir.to_path_buf());
         if !canonical.starts_with(&canonical_base) {
             return Err(BlueprintError::Validation {
                 path: "include".to_string(),
@@ -224,11 +219,7 @@ pub fn merge_main_over_includes(includes: &DataModel, main: &DataModel) -> DataM
 
     // Mixins: main wins on name collision
     for main_mixin in &main.mixins {
-        if let Some(existing) = result
-            .mixins
-            .iter_mut()
-            .find(|m| m.name == main_mixin.name)
-        {
+        if let Some(existing) = result.mixins.iter_mut().find(|m| m.name == main_mixin.name) {
             *existing = main_mixin.clone();
         } else {
             result.mixins.push(main_mixin.clone());
@@ -443,7 +434,9 @@ fn append_model(target: &mut DataModel, source: DataModel) {
     target.noise_profiles.extend(source.noise_profiles);
     target.correlations.extend(source.correlations);
     target.personas.extend(source.personas);
-    target.actor_relationships.extend(source.actor_relationships);
+    target
+        .actor_relationships
+        .extend(source.actor_relationships);
     target.custom_types.extend(source.custom_types);
     target.mixins.extend(source.mixins);
 }
@@ -925,11 +918,7 @@ mod tests {
             name = "test"
             "#
         );
-        let main_path = write_schema(
-            dir.path(),
-            "main.knit.toml",
-            &main_content,
-        );
+        let main_path = write_schema(dir.path(), "main.knit.toml", &main_content);
 
         let err = crate::blueprint::parse_toml_file(&main_path).unwrap_err();
         let msg = err.to_string();

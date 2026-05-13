@@ -190,7 +190,9 @@ pub fn tokenize(input: &str) -> Result<Vec<SpannedToken>, LexError> {
         }
 
         // Number: integer or float
-        if bytes[i].is_ascii_digit() || (bytes[i] == b'.' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit()) {
+        if bytes[i].is_ascii_digit()
+            || (bytes[i] == b'.' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit())
+        {
             let num_start = i;
             let mut has_dot = false;
             let mut has_exp = false;
@@ -351,7 +353,12 @@ mod tests {
     fn float_and_scientific() {
         assert_eq!(
             tok_types("3.14 + 1e5"),
-            vec![Token::Float(3.14), Token::Plus, Token::Float(1e5), Token::Eof]
+            vec![
+                Token::Float(3.14),
+                Token::Plus,
+                Token::Float(1e5),
+                Token::Eof
+            ]
         );
     }
 
@@ -408,7 +415,12 @@ mod tests {
     fn keywords() {
         assert_eq!(
             tok_types("true false null"),
-            vec![Token::Bool(true), Token::Bool(false), Token::Null, Token::Eof]
+            vec![
+                Token::Bool(true),
+                Token::Bool(false),
+                Token::Null,
+                Token::Eof
+            ]
         );
     }
 

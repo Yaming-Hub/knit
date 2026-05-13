@@ -216,9 +216,9 @@ fn build_result_array(collected: &[(ArrayRef, Vec<usize>)]) -> ArrayRef {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::{Value, WeightedChoice};
     use crate::gen::generators::constant::ConstantGenerator;
     use crate::gen::generators::one_of::OneOfGenerator;
-    use crate::core::{Value, WeightedChoice};
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
@@ -541,7 +541,9 @@ mod tests {
         let (a1_r2, a2_r2) = run();
         let s = |a: &ArrayRef| {
             let s = a.as_any().downcast_ref::<StringArray>().unwrap();
-            (0..s.len()).map(|i| s.value(i).to_string()).collect::<Vec<_>>()
+            (0..s.len())
+                .map(|i| s.value(i).to_string())
+                .collect::<Vec<_>>()
         };
         assert_eq!(s(&a1_r1), s(&a1_r2), "partition 1 must be deterministic");
         assert_eq!(s(&a2_r1), s(&a2_r2), "partition 2 must be deterministic");

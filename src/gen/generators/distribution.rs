@@ -742,7 +742,14 @@ mod tests {
             DistributionKind::Triangular,
         ];
         for kind in &continuous {
-            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), BTreeMap::new(), None, None, false);
+            let g = DistributionGenerator::new(
+                kind.clone(),
+                BTreeMap::new(),
+                BTreeMap::new(),
+                None,
+                None,
+                false,
+            );
             assert_eq!(
                 g.output_type(),
                 DataType::Float64,
@@ -761,7 +768,14 @@ mod tests {
             DistributionKind::Zipf,
         ];
         for kind in &discrete {
-            let g = DistributionGenerator::new(kind.clone(), BTreeMap::new(), BTreeMap::new(), None, None, false);
+            let g = DistributionGenerator::new(
+                kind.clone(),
+                BTreeMap::new(),
+                BTreeMap::new(),
+                None,
+                None,
+                false,
+            );
             assert_eq!(
                 g.output_type(),
                 DataType::Int64,
@@ -926,10 +940,7 @@ mod tests {
                 "row {i}: Dirichlet sample should sum to 1.0, got {sum}"
             );
             for j in 0..3 {
-                assert!(
-                    floats.value(j) > 0.0,
-                    "row {i}: all elements must be > 0"
-                );
+                assert!(floats.value(j) > 0.0, "row {i}: all elements must be > 0");
             }
         }
     }
@@ -975,12 +986,12 @@ mod tests {
             let ints = inner.as_any().downcast_ref::<Int64Array>().unwrap();
             assert_eq!(ints.len(), 3);
             let sum: i64 = (0..3).map(|j| ints.value(j)).sum();
-            assert_eq!(sum, 50, "row {i}: multinomial counts must sum to n=50, got {sum}");
+            assert_eq!(
+                sum, 50,
+                "row {i}: multinomial counts must sum to n=50, got {sum}"
+            );
             for j in 0..3 {
-                assert!(
-                    ints.value(j) >= 0,
-                    "row {i}: counts must be non-negative"
-                );
+                assert!(ints.value(j) >= 0, "row {i}: counts must be non-negative");
             }
         }
     }
@@ -1027,7 +1038,11 @@ mod tests {
             let fa = va.as_any().downcast_ref::<Float64Array>().unwrap();
             let fb = vb.as_any().downcast_ref::<Float64Array>().unwrap();
             for j in 0..3 {
-                assert_eq!(fa.value(j), fb.value(j), "determinism check row {i} col {j}");
+                assert_eq!(
+                    fa.value(j),
+                    fb.value(j),
+                    "determinism check row {i} col {j}"
+                );
             }
         }
     }

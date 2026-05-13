@@ -65,11 +65,9 @@ pub struct EvalContext<'a> {
 pub fn evaluate(expr: &Expr, ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError> {
     match expr {
         Expr::Literal(lit) => eval_literal(lit, ctx.row_count),
-        Expr::FieldRef(name) => {
-            ctx.columns.get(name).cloned().ok_or_else(|| EvalError {
-                message: format!("field `{name}` not found in batch"),
-            })
-        }
+        Expr::FieldRef(name) => ctx.columns.get(name).cloned().ok_or_else(|| EvalError {
+            message: format!("field `{name}` not found in batch"),
+        }),
         Expr::ParamRef(key) => {
             let value = ctx.params.get(key).ok_or_else(|| EvalError {
                 message: format!("parameter `{key}` not found"),
@@ -79,9 +77,10 @@ pub fn evaluate(expr: &Expr, ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalErro
             } else if let Ok(f) = value.parse::<f64>() {
                 Ok(Arc::new(Float64Array::from(vec![f; ctx.row_count])))
             } else {
-                Ok(Arc::new(StringArray::from(
-                    vec![value.as_str(); ctx.row_count],
-                )))
+                Ok(Arc::new(StringArray::from(vec![
+                    value.as_str();
+                    ctx.row_count
+                ])))
             }
         }
         Expr::BinaryOp { left, op, right } => {
@@ -122,16 +121,52 @@ fn as_bool(arr: &ArrayRef) -> Option<&BooleanArray> {
 fn as_millis(arr: &ArrayRef) -> Option<Vec<Option<i64>>> {
     let len = arr.len();
     if let Some(a) = arr.as_any().downcast_ref::<TimestampMillisecondArray>() {
-        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i)) }).collect())
+        Some(
+            (0..len)
+                .map(|i| if a.is_null(i) { None } else { Some(a.value(i)) })
+                .collect(),
+        )
     } else if let Some(a) = arr.as_any().downcast_ref::<TimestampSecondArray>() {
-        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i) * 1_000) }).collect())
+        Some(
+            (0..len)
+                .map(|i| {
+                    if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i) * 1_000)
+                    }
+                })
+                .collect(),
+        )
     } else if let Some(a) = arr.as_any().downcast_ref::<TimestampMicrosecondArray>() {
-        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i).div_euclid(1_000)) }).collect())
+        Some(
+            (0..len)
+                .map(|i| {
+                    if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i).div_euclid(1_000))
+                    }
+                })
+                .collect(),
+        )
     } else if let Some(a) = arr.as_any().downcast_ref::<TimestampNanosecondArray>() {
-        Some((0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i).div_euclid(1_000_000)) }).collect())
+        Some(
+            (0..len)
+                .map(|i| {
+                    if a.is_null(i) {
+                        None
+                    } else {
+                        Some(a.value(i).div_euclid(1_000_000))
+                    }
+                })
+                .collect(),
+        )
     } else {
         as_i64(arr).map(|a| {
-            (0..len).map(|i| if a.is_null(i) { None } else { Some(a.value(i)) }).collect()
+            (0..len)
+                .map(|i| if a.is_null(i) { None } else { Some(a.value(i)) })
+                .collect()
         })
     }
 }
@@ -139,7 +174,10 @@ fn as_millis(arr: &ArrayRef) -> Option<Vec<Option<i64>>> {
 /// Extract millis or return an error.
 fn require_millis(arr: &ArrayRef, fname: &str) -> Result<Vec<Option<i64>>, EvalError> {
     as_millis(arr).ok_or_else(|| EvalError {
-        message: format!("{fname}: expected timestamp or integer, got {:?}", arr.data_type()),
+        message: format!(
+            "{fname}: expected timestamp or integer, got {:?}",
+            arr.data_type()
+        ),
     })
 }
 
@@ -187,7 +225,13 @@ fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
     }
     if let Some(fa) = as_f64(arr) {
         Ok((0..fa.len())
-            .map(|i| if fa.is_null(i) { None } else { Some(fa.value(i)) })
+            .map(|i| {
+                if fa.is_null(i) {
+                    None
+                } else {
+                    Some(fa.value(i))
+                }
+            })
             .collect())
     } else if let Some(ia) = as_i64(arr) {
         Ok((0..ia.len())
@@ -266,7 +310,9 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
     }
 
     // String concatenation via +
-    if op == BinOp::Add && left.data_type() == &DataType::Utf8 && right.data_type() == &DataType::Utf8
+    if op == BinOp::Add
+        && left.data_type() == &DataType::Utf8
+        && right.data_type() == &DataType::Utf8
     {
         let l = as_str(left).unwrap();
         let r = as_str(right).unwrap();
@@ -429,12 +475,10 @@ fn eval_unary_op(op: UnOp, arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
     match op {
         UnOp::Neg => {
             if let Some(ia) = as_i64(arr) {
-                let result: Int64Array =
-                    ia.iter().map(|v| v.map(|i| -i)).collect();
+                let result: Int64Array = ia.iter().map(|v| v.map(|i| -i)).collect();
                 Ok(Arc::new(result))
             } else if let Some(fa) = as_f64(arr) {
-                let result: Float64Array =
-                    fa.iter().map(|v| v.map(|f| -f)).collect();
+                let result: Float64Array = fa.iter().map(|v| v.map(|f| -f)).collect();
                 Ok(Arc::new(result))
             } else {
                 Err(EvalError {
@@ -617,9 +661,17 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
         "sqrt" => {
             check_args(name, args, 1, 1)?;
             let arr = evaluate(&args[0], ctx)?;
-            eval_f64_map_checked(&arr, "sqrt", |x| {
-                if x < 0.0 { None } else { Some(x.sqrt()) }
-            })
+            eval_f64_map_checked(
+                &arr,
+                "sqrt",
+                |x| {
+                    if x < 0.0 {
+                        None
+                    } else {
+                        Some(x.sqrt())
+                    }
+                },
+            )
         }
         "pow" => {
             check_args(name, args, 2, 2)?;
@@ -627,7 +679,11 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
             let exp = evaluate(&args[1], ctx)?;
             eval_f64_map2(&base, &exp, "pow", |b, e| {
                 let result = b.powf(e);
-                if result.is_finite() { Some(result) } else { None }
+                if result.is_finite() {
+                    Some(result)
+                } else {
+                    None
+                }
             })
         }
         "log" => {
@@ -639,23 +695,29 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
                     None
                 } else {
                     let result = v.log(b);
-                    if result.is_finite() { Some(result) } else { None }
+                    if result.is_finite() {
+                        Some(result)
+                    } else {
+                        None
+                    }
                 }
             })
         }
         "ln" => {
             check_args(name, args, 1, 1)?;
             let arr = evaluate(&args[0], ctx)?;
-            eval_f64_map_checked(&arr, "ln", |x| {
-                if x <= 0.0 { None } else { Some(x.ln()) }
-            })
+            eval_f64_map_checked(&arr, "ln", |x| if x <= 0.0 { None } else { Some(x.ln()) })
         }
         "exp" => {
             check_args(name, args, 1, 1)?;
             let arr = evaluate(&args[0], ctx)?;
             eval_f64_map_checked(&arr, "exp", |x| {
                 let result = x.exp();
-                if result.is_finite() { Some(result) } else { None }
+                if result.is_finite() {
+                    Some(result)
+                } else {
+                    None
+                }
             })
         }
         // Phase 2: String functions
@@ -946,11 +1008,7 @@ fn eval_abs(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
     }
 }
 
-fn eval_f64_map(
-    arr: &ArrayRef,
-    name: &str,
-    f: fn(f64) -> f64,
-) -> Result<ArrayRef, EvalError> {
+fn eval_f64_map(arr: &ArrayRef, name: &str, f: fn(f64) -> f64) -> Result<ArrayRef, EvalError> {
     let v = to_f64_vec(arr).map_err(|e| EvalError {
         message: format!("{name}: {e}"),
     })?;
@@ -967,10 +1025,7 @@ fn eval_f64_map_checked(
     let v = to_f64_vec(arr).map_err(|e| EvalError {
         message: format!("{name}: {e}"),
     })?;
-    let result: Float64Array = v
-        .into_iter()
-        .map(|opt| opt.and_then(&f))
-        .collect();
+    let result: Float64Array = v.into_iter().map(|opt| opt.and_then(&f)).collect();
     Ok(Arc::new(result))
 }
 
@@ -1214,10 +1269,16 @@ fn eval_cast_string(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
 
 fn eval_left_right(arr: &ArrayRef, n: &ArrayRef, is_left: bool) -> Result<ArrayRef, EvalError> {
     let sa = as_str(arr).ok_or_else(|| EvalError {
-        message: format!("{}: expected string", if is_left { "left" } else { "right" }),
+        message: format!(
+            "{}: expected string",
+            if is_left { "left" } else { "right" }
+        ),
     })?;
     let na = as_i64(n).ok_or_else(|| EvalError {
-        message: format!("{}: n must be integer", if is_left { "left" } else { "right" }),
+        message: format!(
+            "{}: n must be integer",
+            if is_left { "left" } else { "right" }
+        ),
     })?;
     let result: StringArray = (0..sa.len())
         .map(|i| {
@@ -1315,7 +1376,8 @@ fn eval_hash(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
         .iter()
         .map(|v| {
             v.as_ref().map(|s| {
-                let mut hasher = SipHasher::new_with_keys(0x5175_6972_6B79_2D6B, 0x6E69_745F_6861_7368);
+                let mut hasher =
+                    SipHasher::new_with_keys(0x5175_6972_6B79_2D6B, 0x6E69_745F_6861_7368);
                 s.hash(&mut hasher);
                 hasher.finish() as i64
             })
@@ -1370,10 +1432,7 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
         .filter(|dt| dt != &DataType::Null)
         .collect();
 
-    let mut result_type = all_types
-        .first()
-        .cloned()
-        .unwrap_or(DataType::Int64);
+    let mut result_type = all_types.first().cloned().unwrap_or(DataType::Int64);
 
     // Promote to Float64 if any branch is Float64 and result_type is Int64
     if result_type == DataType::Int64 && all_types.iter().any(|dt| dt == &DataType::Float64) {
@@ -1415,7 +1474,11 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
                 })?;
                 for i in 0..count {
                     if !assigned[i] && !ba.is_null(i) && ba.value(i) {
-                        result[i] = if ia.is_null(i) { None } else { Some(ia.value(i)) };
+                        result[i] = if ia.is_null(i) {
+                            None
+                        } else {
+                            Some(ia.value(i))
+                        };
                         assigned[i] = true;
                     }
                 }
@@ -1426,7 +1489,11 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
                 })?;
                 for i in 0..count {
                     if !assigned[i] {
-                        result[i] = if ia.is_null(i) { None } else { Some(ia.value(i)) };
+                        result[i] = if ia.is_null(i) {
+                            None
+                        } else {
+                            Some(ia.value(i))
+                        };
                     }
                 }
             }
@@ -1441,7 +1508,11 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
                 })?;
                 for i in 0..count {
                     if !assigned[i] && !ba.is_null(i) && ba.value(i) {
-                        result[i] = if va.is_null(i) { None } else { Some(va.value(i)) };
+                        result[i] = if va.is_null(i) {
+                            None
+                        } else {
+                            Some(va.value(i))
+                        };
                         assigned[i] = true;
                     }
                 }
@@ -1452,7 +1523,11 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
                 })?;
                 for i in 0..count {
                     if !assigned[i] {
-                        result[i] = if va.is_null(i) { None } else { Some(va.value(i)) };
+                        result[i] = if va.is_null(i) {
+                            None
+                        } else {
+                            Some(va.value(i))
+                        };
                     }
                 }
             }
@@ -1485,11 +1560,7 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
     }
 }
 
-fn eval_if(
-    cond: &ArrayRef,
-    then: &ArrayRef,
-    otherwise: &ArrayRef,
-) -> Result<ArrayRef, EvalError> {
+fn eval_if(cond: &ArrayRef, then: &ArrayRef, otherwise: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let ba = require_bool(cond)?;
     let count = ba.len();
 
@@ -1538,7 +1609,11 @@ fn eval_if(
                         return None;
                     }
                     if ba.value(i) {
-                        if t_vals.is_null(i) { None } else { Some(t_vals.value(i)) }
+                        if t_vals.is_null(i) {
+                            None
+                        } else {
+                            Some(t_vals.value(i))
+                        }
                     } else if o_vals.is_null(i) {
                         None
                     } else {
@@ -1618,10 +1693,7 @@ fn eval_coalesce(arrays: &[ArrayRef]) -> Result<ArrayRef, EvalError> {
         .unwrap_or(DataType::Int64);
 
     // Promote to Float64 if any non-null array is Float64 and result_type is Int64
-    if result_type == DataType::Int64
-        && arrays
-            .iter()
-            .any(|a| a.data_type() == &DataType::Float64)
+    if result_type == DataType::Int64 && arrays.iter().any(|a| a.data_type() == &DataType::Float64)
     {
         result_type = DataType::Float64;
     }
@@ -1827,12 +1899,20 @@ fn unit_to_millis(unit: &str) -> Option<i64> {
 }
 
 fn eval_make_date(y: &ArrayRef, m: &ArrayRef, d: &ArrayRef) -> Result<ArrayRef, EvalError> {
-    let ya = as_i64(y).ok_or_else(|| EvalError { message: "make_date: year must be integer".into() })?;
-    let ma = as_i64(m).ok_or_else(|| EvalError { message: "make_date: month must be integer".into() })?;
-    let da = as_i64(d).ok_or_else(|| EvalError { message: "make_date: day must be integer".into() })?;
+    let ya = as_i64(y).ok_or_else(|| EvalError {
+        message: "make_date: year must be integer".into(),
+    })?;
+    let ma = as_i64(m).ok_or_else(|| EvalError {
+        message: "make_date: month must be integer".into(),
+    })?;
+    let da = as_i64(d).ok_or_else(|| EvalError {
+        message: "make_date: day must be integer".into(),
+    })?;
     let result: TimestampMillisecondArray = (0..ya.len())
         .map(|i| {
-            if ya.is_null(i) || ma.is_null(i) || da.is_null(i) { return None; }
+            if ya.is_null(i) || ma.is_null(i) || da.is_null(i) {
+                return None;
+            }
             let yv = i32::try_from(ya.value(i)).ok()?;
             let mv = u32::try_from(ma.value(i)).ok()?;
             let dv = u32::try_from(da.value(i)).ok()?;
@@ -1844,13 +1924,21 @@ fn eval_make_date(y: &ArrayRef, m: &ArrayRef, d: &ArrayRef) -> Result<ArrayRef, 
 }
 
 fn eval_make_time(h: &ArrayRef, m: &ArrayRef, s: &ArrayRef) -> Result<ArrayRef, EvalError> {
-    let ha = as_i64(h).ok_or_else(|| EvalError { message: "make_time: hour must be integer".into() })?;
-    let ma = as_i64(m).ok_or_else(|| EvalError { message: "make_time: minute must be integer".into() })?;
-    let sa = as_i64(s).ok_or_else(|| EvalError { message: "make_time: second must be integer".into() })?;
+    let ha = as_i64(h).ok_or_else(|| EvalError {
+        message: "make_time: hour must be integer".into(),
+    })?;
+    let ma = as_i64(m).ok_or_else(|| EvalError {
+        message: "make_time: minute must be integer".into(),
+    })?;
+    let sa = as_i64(s).ok_or_else(|| EvalError {
+        message: "make_time: second must be integer".into(),
+    })?;
     // Returns millis since midnight
     let result: Int64Array = (0..ha.len())
         .map(|i| {
-            if ha.is_null(i) || ma.is_null(i) || sa.is_null(i) { return None; }
+            if ha.is_null(i) || ma.is_null(i) || sa.is_null(i) {
+                return None;
+            }
             let h = ha.value(i);
             let m = ma.value(i);
             let s = sa.value(i);
@@ -1864,19 +1952,42 @@ fn eval_make_time(h: &ArrayRef, m: &ArrayRef, s: &ArrayRef) -> Result<ArrayRef, 
 }
 
 fn eval_make_datetime(
-    y: &ArrayRef, mo: &ArrayRef, d: &ArrayRef,
-    h: &ArrayRef, mi: &ArrayRef, s: &ArrayRef,
+    y: &ArrayRef,
+    mo: &ArrayRef,
+    d: &ArrayRef,
+    h: &ArrayRef,
+    mi: &ArrayRef,
+    s: &ArrayRef,
 ) -> Result<ArrayRef, EvalError> {
-    let ya = as_i64(y).ok_or_else(|| EvalError { message: "make_datetime: year must be integer".into() })?;
-    let moa = as_i64(mo).ok_or_else(|| EvalError { message: "make_datetime: month must be integer".into() })?;
-    let da = as_i64(d).ok_or_else(|| EvalError { message: "make_datetime: day must be integer".into() })?;
-    let ha = as_i64(h).ok_or_else(|| EvalError { message: "make_datetime: hour must be integer".into() })?;
-    let mia = as_i64(mi).ok_or_else(|| EvalError { message: "make_datetime: minute must be integer".into() })?;
-    let sa = as_i64(s).ok_or_else(|| EvalError { message: "make_datetime: second must be integer".into() })?;
+    let ya = as_i64(y).ok_or_else(|| EvalError {
+        message: "make_datetime: year must be integer".into(),
+    })?;
+    let moa = as_i64(mo).ok_or_else(|| EvalError {
+        message: "make_datetime: month must be integer".into(),
+    })?;
+    let da = as_i64(d).ok_or_else(|| EvalError {
+        message: "make_datetime: day must be integer".into(),
+    })?;
+    let ha = as_i64(h).ok_or_else(|| EvalError {
+        message: "make_datetime: hour must be integer".into(),
+    })?;
+    let mia = as_i64(mi).ok_or_else(|| EvalError {
+        message: "make_datetime: minute must be integer".into(),
+    })?;
+    let sa = as_i64(s).ok_or_else(|| EvalError {
+        message: "make_datetime: second must be integer".into(),
+    })?;
     let result: TimestampMillisecondArray = (0..ya.len())
         .map(|i| {
-            if ya.is_null(i) || moa.is_null(i) || da.is_null(i)
-                || ha.is_null(i) || mia.is_null(i) || sa.is_null(i) { return None; }
+            if ya.is_null(i)
+                || moa.is_null(i)
+                || da.is_null(i)
+                || ha.is_null(i)
+                || mia.is_null(i)
+                || sa.is_null(i)
+            {
+                return None;
+            }
             let yv = i32::try_from(ya.value(i)).ok()?;
             let mov = u32::try_from(moa.value(i)).ok()?;
             let dv = u32::try_from(da.value(i)).ok()?;
@@ -1892,11 +2003,17 @@ fn eval_make_datetime(
 }
 
 fn eval_make_duration(n: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
-    let na = as_i64(n).ok_or_else(|| EvalError { message: "make_duration: n must be integer".into() })?;
-    let ua = as_str(unit).ok_or_else(|| EvalError { message: "make_duration: unit must be string".into() })?;
+    let na = as_i64(n).ok_or_else(|| EvalError {
+        message: "make_duration: n must be integer".into(),
+    })?;
+    let ua = as_str(unit).ok_or_else(|| EvalError {
+        message: "make_duration: unit must be string".into(),
+    })?;
     let result: Int64Array = (0..na.len())
         .map(|i| {
-            if na.is_null(i) || ua.is_null(i) { return None; }
+            if na.is_null(i) || ua.is_null(i) {
+                return None;
+            }
             let val = na.value(i);
             let u = ua.value(i);
             if let Some(m) = unit_to_millis(u) {
@@ -1915,11 +2032,17 @@ fn eval_make_duration(n: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalErr
 }
 
 fn eval_to_date(s: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError> {
-    let sa = as_str(s).ok_or_else(|| EvalError { message: "to_date: expected string".into() })?;
-    let fa = as_str(fmt).ok_or_else(|| EvalError { message: "to_date: format must be string".into() })?;
+    let sa = as_str(s).ok_or_else(|| EvalError {
+        message: "to_date: expected string".into(),
+    })?;
+    let fa = as_str(fmt).ok_or_else(|| EvalError {
+        message: "to_date: format must be string".into(),
+    })?;
     let result: TimestampMillisecondArray = (0..sa.len())
         .map(|i| {
-            if sa.is_null(i) || fa.is_null(i) { return None; }
+            if sa.is_null(i) || fa.is_null(i) {
+                return None;
+            }
             let date = NaiveDate::parse_from_str(sa.value(i), fa.value(i)).ok()?;
             Some(datetime_to_millis(&date.and_hms_opt(0, 0, 0)?))
         })
@@ -1928,11 +2051,17 @@ fn eval_to_date(s: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError> {
 }
 
 fn eval_to_datetime(s: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError> {
-    let sa = as_str(s).ok_or_else(|| EvalError { message: "to_datetime: expected string".into() })?;
-    let fa = as_str(fmt).ok_or_else(|| EvalError { message: "to_datetime: format must be string".into() })?;
+    let sa = as_str(s).ok_or_else(|| EvalError {
+        message: "to_datetime: expected string".into(),
+    })?;
+    let fa = as_str(fmt).ok_or_else(|| EvalError {
+        message: "to_datetime: format must be string".into(),
+    })?;
     let result: TimestampMillisecondArray = (0..sa.len())
         .map(|i| {
-            if sa.is_null(i) || fa.is_null(i) { return None; }
+            if sa.is_null(i) || fa.is_null(i) {
+                return None;
+            }
             let dt = NaiveDateTime::parse_from_str(sa.value(i), fa.value(i)).ok()?;
             Some(datetime_to_millis(&dt))
         })
@@ -1942,7 +2071,8 @@ fn eval_to_datetime(s: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError>
 
 fn eval_epoch_seconds(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let millis = require_millis(arr, "epoch_seconds")?;
-    let result: Float64Array = millis.into_iter()
+    let result: Float64Array = millis
+        .into_iter()
         .map(|v| v.map(|m| m as f64 / 1_000.0))
         .collect();
     Ok(Arc::new(result))
@@ -1952,7 +2082,8 @@ fn eval_from_epoch(arr: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let v = to_f64_vec(arr).map_err(|e| EvalError {
         message: format!("from_epoch: {e}"),
     })?;
-    let result: TimestampMillisecondArray = v.into_iter()
+    let result: TimestampMillisecondArray = v
+        .into_iter()
         .map(|opt| opt.map(|secs| (secs * 1_000.0) as i64))
         .collect();
     Ok(Arc::new(result))
@@ -1965,7 +2096,8 @@ fn eval_date_extract(
     f: fn(&NaiveDateTime) -> i64,
 ) -> Result<ArrayRef, EvalError> {
     let millis = require_millis(arr, fname)?;
-    let result: Int64Array = millis.into_iter()
+    let result: Int64Array = millis
+        .into_iter()
         .map(|v| v.and_then(|m| millis_to_datetime(m).map(|dt| f(&dt))))
         .collect();
     Ok(Arc::new(result))
@@ -1989,7 +2121,9 @@ fn eval_date_add_sub(
     let result: TimestampMillisecondArray = (0..dm.len())
         .map(|i| {
             let ms = dm[i]?;
-            if na.is_null(i) || ua.is_null(i) { return None; }
+            if na.is_null(i) || ua.is_null(i) {
+                return None;
+            }
             let amount = if is_add { na.value(i) } else { -na.value(i) };
             let unit_str = ua.value(i);
 
@@ -2012,7 +2146,12 @@ fn eval_date_add_sub(
                     let max_day = days_in_month(new_year, new_month);
                     let new_day = dt.day().min(max_day);
                     let new_dt = NaiveDate::from_ymd_opt(new_year, new_month, new_day)?
-                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), dt.and_utc().timestamp_subsec_millis())?;
+                        .and_hms_milli_opt(
+                            dt.hour(),
+                            dt.minute(),
+                            dt.second(),
+                            dt.and_utc().timestamp_subsec_millis(),
+                        )?;
                     Some(datetime_to_millis(&new_dt))
                 }
                 "quarter" => {
@@ -2022,7 +2161,12 @@ fn eval_date_add_sub(
                     let max_day = days_in_month(new_year, new_month);
                     let new_day = dt.day().min(max_day);
                     let new_dt = NaiveDate::from_ymd_opt(new_year, new_month, new_day)?
-                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), dt.and_utc().timestamp_subsec_millis())?;
+                        .and_hms_milli_opt(
+                            dt.hour(),
+                            dt.minute(),
+                            dt.second(),
+                            dt.and_utc().timestamp_subsec_millis(),
+                        )?;
                     Some(datetime_to_millis(&new_dt))
                 }
                 "year" => {
@@ -2030,7 +2174,12 @@ fn eval_date_add_sub(
                     let max_day = days_in_month(new_year, dt.month());
                     let new_day = dt.day().min(max_day);
                     let new_dt = NaiveDate::from_ymd_opt(new_year, dt.month(), new_day)?
-                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), dt.and_utc().timestamp_subsec_millis())?;
+                        .and_hms_milli_opt(
+                            dt.hour(),
+                            dt.minute(),
+                            dt.second(),
+                            dt.and_utc().timestamp_subsec_millis(),
+                        )?;
                     Some(datetime_to_millis(&new_dt))
                 }
                 _ => None,
@@ -2046,7 +2195,11 @@ fn days_in_month(year: i32, month: u32) -> u32 {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
         4 | 6 | 9 | 11 => 30,
         2 => {
-            if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 { 29 } else { 28 }
+            if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 {
+                29
+            } else {
+                28
+            }
         }
         _ => 30,
     }
@@ -2063,7 +2216,9 @@ fn eval_date_diff(d1: &ArrayRef, d2: &ArrayRef, unit: &ArrayRef) -> Result<Array
         .map(|i| {
             let ms1 = m1[i]?;
             let ms2 = m2[i]?;
-            if ua.is_null(i) { return None; }
+            if ua.is_null(i) {
+                return None;
+            }
             let diff_ms = ms1 - ms2;
             let unit_str = ua.value(i);
 
@@ -2078,13 +2233,13 @@ fn eval_date_diff(d1: &ArrayRef, d2: &ArrayRef, unit: &ArrayRef) -> Result<Array
             let dt1 = millis_to_datetime(ms1)?;
             let dt2 = millis_to_datetime(ms2)?;
             match unit_str {
-                "month" => {
-                    Some((dt1.year() as i64 - dt2.year() as i64) * 12
-                        + dt1.month() as i64 - dt2.month() as i64)
-                }
+                "month" => Some(
+                    (dt1.year() as i64 - dt2.year() as i64) * 12 + dt1.month() as i64
+                        - dt2.month() as i64,
+                ),
                 "quarter" => {
-                    let months = (dt1.year() as i64 - dt2.year() as i64) * 12
-                        + dt1.month() as i64 - dt2.month() as i64;
+                    let months = (dt1.year() as i64 - dt2.year() as i64) * 12 + dt1.month() as i64
+                        - dt2.month() as i64;
                     Some(months / 3)
                 }
                 "year" => Some(dt1.year() as i64 - dt2.year() as i64),
@@ -2098,7 +2253,9 @@ fn eval_date_diff(d1: &ArrayRef, d2: &ArrayRef, unit: &ArrayRef) -> Result<Array
 fn eval_duration_add(d: &ArrayRef, dur: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let dm = require_millis(d, "duration_add")?;
     let dur_m = require_millis(dur, "duration_add")?;
-    let result: TimestampMillisecondArray = dm.iter().zip(dur_m.iter())
+    let result: TimestampMillisecondArray = dm
+        .iter()
+        .zip(dur_m.iter())
         .map(|(a, b)| match (a, b) {
             (Some(a), Some(b)) => Some(a + b),
             _ => None,
@@ -2116,7 +2273,9 @@ fn eval_start_of(d: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let result: TimestampMillisecondArray = (0..dm.len())
         .map(|i| {
             let ms = dm[i]?;
-            if ua.is_null(i) { return None; }
+            if ua.is_null(i) {
+                return None;
+            }
             let dt = millis_to_datetime(ms)?;
             let truncated = match ua.value(i) {
                 "second" => dt.date().and_hms_opt(dt.hour(), dt.minute(), dt.second())?,
@@ -2128,15 +2287,14 @@ fn eval_start_of(d: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
                     let start = dt.date() - chrono::Duration::days(weekday as i64);
                     start.and_hms_opt(0, 0, 0)?
                 }
-                "month" => NaiveDate::from_ymd_opt(dt.year(), dt.month(), 1)?
-                    .and_hms_opt(0, 0, 0)?,
+                "month" => {
+                    NaiveDate::from_ymd_opt(dt.year(), dt.month(), 1)?.and_hms_opt(0, 0, 0)?
+                }
                 "quarter" => {
                     let q_month = (dt.month() - 1) / 3 * 3 + 1;
-                    NaiveDate::from_ymd_opt(dt.year(), q_month, 1)?
-                        .and_hms_opt(0, 0, 0)?
+                    NaiveDate::from_ymd_opt(dt.year(), q_month, 1)?.and_hms_opt(0, 0, 0)?
                 }
-                "year" => NaiveDate::from_ymd_opt(dt.year(), 1, 1)?
-                    .and_hms_opt(0, 0, 0)?,
+                "year" => NaiveDate::from_ymd_opt(dt.year(), 1, 1)?.and_hms_opt(0, 0, 0)?,
                 _ => return None,
             };
             Some(datetime_to_millis(&truncated))
@@ -2154,11 +2312,18 @@ fn eval_end_of(d: &ArrayRef, unit: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let result: TimestampMillisecondArray = (0..dm.len())
         .map(|i| {
             let ms = dm[i]?;
-            if ua.is_null(i) { return None; }
+            if ua.is_null(i) {
+                return None;
+            }
             let dt = millis_to_datetime(ms)?;
             let end = match ua.value(i) {
-                "second" => dt.date().and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), 999)?,
-                "minute" => dt.date().and_hms_milli_opt(dt.hour(), dt.minute(), 59, 999)?,
+                "second" => {
+                    dt.date()
+                        .and_hms_milli_opt(dt.hour(), dt.minute(), dt.second(), 999)?
+                }
+                "minute" => dt
+                    .date()
+                    .and_hms_milli_opt(dt.hour(), dt.minute(), 59, 999)?,
                 "hour" => dt.date().and_hms_milli_opt(dt.hour(), 59, 59, 999)?,
                 "day" => dt.date().and_hms_milli_opt(23, 59, 59, 999)?,
                 "week" => {
@@ -2196,7 +2361,9 @@ fn eval_format_date(d: &ArrayRef, fmt: &ArrayRef) -> Result<ArrayRef, EvalError>
     let result: StringArray = (0..dm.len())
         .map(|i| {
             let ms = dm[i]?;
-            if fa.is_null(i) { return None; }
+            if fa.is_null(i) {
+                return None;
+            }
             let dt = millis_to_datetime(ms)?;
             Some(dt.format(fa.value(i)).to_string())
         })
@@ -2213,7 +2380,9 @@ fn eval_format_duration(d: &ArrayRef, style: &ArrayRef) -> Result<ArrayRef, Eval
     let result: StringArray = (0..dm.len())
         .map(|i| {
             let ms = dm[i]?;
-            if sa.is_null(i) { return None; }
+            if sa.is_null(i) {
+                return None;
+            }
             let total_secs = ms / 1_000;
             let remaining_ms = ms % 1_000;
             match sa.value(i) {
@@ -2345,7 +2514,9 @@ fn next_call_id(ctx: &EvalContext<'_>) -> u64 {
 
 /// Derive a per-row seed from the context seed, call ID, and row index.
 fn row_seed(ctx: &EvalContext<'_>, call_id: u64, row: usize) -> u64 {
-    splitmix64(ctx.seed ^ call_id.wrapping_mul(0x517C_C1B7_2722_0A95) ^ (ctx.row_offset + row as u64))
+    splitmix64(
+        ctx.seed ^ call_id.wrapping_mul(0x517C_C1B7_2722_0A95) ^ (ctx.row_offset + row as u64),
+    )
 }
 
 fn eval_random_int(
@@ -2820,7 +2991,12 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert(
             "x".into(),
-            Arc::new(Float64Array::from(vec![Some(4.0), Some(9.0), Some(-1.0), None])) as ArrayRef,
+            Arc::new(Float64Array::from(vec![
+                Some(4.0),
+                Some(9.0),
+                Some(-1.0),
+                None,
+            ])) as ArrayRef,
         );
         let result = eval_expr("sqrt(${x})", cols);
         let fa = as_f64(&result).unwrap();
@@ -2853,7 +3029,12 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert(
             "x".into(),
-            Arc::new(Float64Array::from(vec![Some(1.0), Some(std::f64::consts::E), Some(0.0), Some(-1.0)])) as ArrayRef,
+            Arc::new(Float64Array::from(vec![
+                Some(1.0),
+                Some(std::f64::consts::E),
+                Some(0.0),
+                Some(-1.0),
+            ])) as ArrayRef,
         );
         let result = eval_expr("ln(${x})", cols.clone());
         let fa = as_f64(&result).unwrap();
@@ -3233,8 +3414,10 @@ mod tests {
     fn date_extraction_functions() {
         let mut cols = HashMap::new();
         // 2024-03-15 14:30:45 UTC
-        let dt = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
-            .and_hms_opt(14, 30, 45).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 3, 15)
+            .unwrap()
+            .and_hms_opt(14, 30, 45)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3277,8 +3460,10 @@ mod tests {
     #[test]
     fn date_add_sub_fixed_units() {
         let mut cols = HashMap::new();
-        let dt = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap()
-            .and_hms_opt(12, 0, 0).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 1, 15)
+            .unwrap()
+            .and_hms_opt(12, 0, 0)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3302,8 +3487,10 @@ mod tests {
     fn date_add_month_clamp() {
         // Jan 31 + 1 month should clamp to Feb 29 (2024 is leap year)
         let mut cols = HashMap::new();
-        let dt = NaiveDate::from_ymd_opt(2024, 1, 31).unwrap()
-            .and_hms_opt(0, 0, 0).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 1, 31)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3319,17 +3506,25 @@ mod tests {
     #[test]
     fn date_diff_function() {
         let mut cols = HashMap::new();
-        let dt1 = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
-            .and_hms_opt(0, 0, 0).unwrap();
-        let dt2 = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap()
-            .and_hms_opt(0, 0, 0).unwrap();
+        let dt1 = NaiveDate::from_ymd_opt(2024, 3, 15)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        let dt2 = NaiveDate::from_ymd_opt(2024, 1, 15)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
         cols.insert(
             "d1".into(),
-            Arc::new(TimestampMillisecondArray::from(vec![datetime_to_millis(&dt1)])) as ArrayRef,
+            Arc::new(TimestampMillisecondArray::from(vec![datetime_to_millis(
+                &dt1,
+            )])) as ArrayRef,
         );
         cols.insert(
             "d2".into(),
-            Arc::new(TimestampMillisecondArray::from(vec![datetime_to_millis(&dt2)])) as ArrayRef,
+            Arc::new(TimestampMillisecondArray::from(vec![datetime_to_millis(
+                &dt2,
+            )])) as ArrayRef,
         );
 
         let r = eval_expr("date_diff(${d1}, ${d2}, \"day\")", cols.clone());
@@ -3342,8 +3537,10 @@ mod tests {
     #[test]
     fn duration_add_function() {
         let mut cols = HashMap::new();
-        let dt = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-            .and_hms_opt(0, 0, 0).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3362,8 +3559,10 @@ mod tests {
     #[test]
     fn start_of_function() {
         let mut cols = HashMap::new();
-        let dt = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
-            .and_hms_opt(14, 30, 45).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 3, 15)
+            .unwrap()
+            .and_hms_opt(14, 30, 45)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3394,8 +3593,10 @@ mod tests {
     #[test]
     fn end_of_function() {
         let mut cols = HashMap::new();
-        let dt = NaiveDate::from_ymd_opt(2024, 2, 15).unwrap()
-            .and_hms_opt(10, 0, 0).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 2, 15)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3421,8 +3622,10 @@ mod tests {
     #[test]
     fn format_date_function() {
         let mut cols = HashMap::new();
-        let dt = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap()
-            .and_hms_opt(14, 30, 0).unwrap();
+        let dt = NaiveDate::from_ymd_opt(2024, 3, 15)
+            .unwrap()
+            .and_hms_opt(14, 30, 0)
+            .unwrap();
         let ms = datetime_to_millis(&dt);
         cols.insert(
             "ts".into(),
@@ -3642,7 +3845,10 @@ mod tests {
         let arr = as_f64(&r).unwrap();
         // If both calls used the same stream, all differences would be 0
         let any_nonzero = (0..20).any(|i| arr.value(i) != 0.0);
-        assert!(any_nonzero, "two random_int calls should produce different values");
+        assert!(
+            any_nonzero,
+            "two random_int calls should produce different values"
+        );
     }
 
     #[test]
@@ -3690,8 +3896,10 @@ mod tests {
         let a2 = r2.as_any().downcast_ref::<Int64Array>().unwrap();
         let val_from_small_batch = a2.value(0);
 
-        assert_eq!(val_from_big_batch, val_from_small_batch,
-            "same absolute row with same seed should produce same value");
+        assert_eq!(
+            val_from_big_batch, val_from_small_batch,
+            "same absolute row with same seed should produce same value"
+        );
     }
 
     // ─── Timezone function tests ────────────────────────────────────────
@@ -3776,7 +3984,9 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert(
             "dt".into(),
-            Arc::new(TimestampMillisecondArray::from(vec![utc_millis, utc_millis])) as ArrayRef,
+            Arc::new(TimestampMillisecondArray::from(vec![
+                utc_millis, utc_millis,
+            ])) as ArrayRef,
         );
         cols.insert(
             "tz".into(),

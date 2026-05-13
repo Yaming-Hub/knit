@@ -387,10 +387,7 @@ impl CompanionSchema {
 
     /// Build a lookup from column name to CompanionColumn.
     pub fn column_map(&self) -> HashMap<String, &CompanionColumn> {
-        self.columns
-            .iter()
-            .map(|c| (c.name.clone(), c))
-            .collect()
+        self.columns.iter().map(|c| (c.name.clone(), c)).collect()
     }
 }
 
@@ -521,7 +518,10 @@ pub fn ingest_directory_with_limit(
 
     // Try structured dataset discovery first (companion schema.json layout)
     if let Some(results) = try_structured_ingest(dir, max_rows)? {
-        info!(entities = results.len(), "Structured dataset ingestion complete");
+        info!(
+            entities = results.len(),
+            "Structured dataset ingestion complete"
+        );
         return Ok(results);
     }
 
@@ -702,10 +702,7 @@ fn try_structured_ingest(
                 .map(|rel| {
                     // For partitioned dirs, go up one level (Results/PartitionDate=... → Results)
                     // Check if the immediate parent directory name contains '=' (partition key)
-                    let parent_name = rel
-                        .file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or("");
+                    let parent_name = rel.file_name().and_then(|n| n.to_str()).unwrap_or("");
                     if parent_name.contains('=') {
                         // It's a partition subdir; use grandparent
                         rel.parent()
@@ -817,10 +814,7 @@ fn unify_batch_schemas(batches: Vec<RecordBatch>, target: &Arc<Schema>) -> Vec<R
 }
 
 /// Flat file discovery (original behavior, no companion schema).
-fn ingest_directory_flat(
-    dir: &Path,
-    max_rows: Option<usize>,
-) -> LearnResult<Vec<IngestionResult>> {
+fn ingest_directory_flat(dir: &Path, max_rows: Option<usize>) -> LearnResult<Vec<IngestionResult>> {
     info!(dir = %dir.display(), ?max_rows, "Ingesting directory");
 
     let mut results = Vec::new();

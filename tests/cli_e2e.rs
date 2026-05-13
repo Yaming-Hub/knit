@@ -1132,8 +1132,8 @@ fn init_template_from_file_path() {
     let schema = dir.path().join("out.knit.toml");
 
     // Use one of the example files as a template (file path)
-    let example_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/ecommerce.knit.toml");
+    let example_path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/ecommerce.knit.toml");
 
     knit()
         .args([
@@ -2794,8 +2794,7 @@ fn incremental_parity_multi_chunk() {
     // Parse and compare structure
     let batch_model: toml::Value =
         toml::from_str(&fs::read_to_string(&batch_out).unwrap()).unwrap();
-    let incr_model: toml::Value =
-        toml::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
+    let incr_model: toml::Value = toml::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
 
     let batch_e = &batch_model["entities"].as_array().unwrap()[0];
     let incr_e = &incr_model["entities"].as_array().unwrap()[0];
@@ -2911,7 +2910,10 @@ fn incremental_finalize_only_from_existing_state() {
         .success();
 
     let text = fs::read_to_string(&out).unwrap();
-    assert!(text.contains("[[entities]]"), "should produce valid blueprint");
+    assert!(
+        text.contains("[[entities]]"),
+        "should produce valid blueprint"
+    );
     assert!(text.contains("[[entities.fields]]"), "should have fields");
 }
 
@@ -3052,22 +3054,19 @@ fn incremental_new_column_in_later_chunk() {
     let fields = model["entities"].as_array().unwrap()[0]["fields"]
         .as_array()
         .unwrap();
-    let field_names: Vec<&str> = fields
-        .iter()
-        .map(|f| f["name"].as_str().unwrap())
-        .collect();
+    let field_names: Vec<&str> = fields.iter().map(|f| f["name"].as_str().unwrap()).collect();
 
     // Core columns from chunk 1 should always be present
-    assert!(
-        field_names.contains(&"id"),
-        "id column should be present"
-    );
+    assert!(field_names.contains(&"id"), "id column should be present");
     assert!(
         field_names.contains(&"name"),
         "name column should be present"
     );
     // Finalization should produce a valid, loadable blueprint
-    assert!(text.contains("[[entities]]"), "should produce valid blueprint");
+    assert!(
+        text.contains("[[entities]]"),
+        "should produce valid blueprint"
+    );
 }
 
 #[test]
@@ -3091,10 +3090,7 @@ fn incremental_state_inspect() {
 
     // Inspect the state file
     knit()
-        .args([
-            "inspect",
-            state.to_str().unwrap(),
-        ])
+        .args(["inspect", state.to_str().unwrap()])
         .assert()
         .success()
         .stdout(predicate::str::contains("data"));
@@ -3166,7 +3162,8 @@ fn incremental_correlation_detected() {
         let fields = c
             .get("fields")
             .and_then(|f| f.as_array())
-            .map(|v| v.as_slice()).unwrap_or(&[])
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
             .iter()
             .filter_map(|v| v.as_str())
             .collect::<Vec<_>>();
@@ -3231,12 +3228,8 @@ fn incremental_correlation_parity_with_batch() {
     let incr_model: toml::Value = toml::from_str(&incr_content).unwrap();
 
     // Both should have [[correlation]] sections
-    let batch_corrs = batch_model
-        .get("correlations")
-        .and_then(|v| v.as_array());
-    let incr_corrs = incr_model
-        .get("correlations")
-        .and_then(|v| v.as_array());
+    let batch_corrs = batch_model.get("correlations").and_then(|v| v.as_array());
+    let incr_corrs = incr_model.get("correlations").and_then(|v| v.as_array());
 
     assert!(
         batch_corrs.is_some(),
@@ -3253,7 +3246,8 @@ fn incremental_correlation_parity_with_batch() {
             let fields = c
                 .get("fields")
                 .and_then(|f| f.as_array())
-                .map(|v| v.as_slice()).unwrap_or(&[])
+                .map(|v| v.as_slice())
+                .unwrap_or(&[])
                 .iter()
                 .filter_map(|v| v.as_str())
                 .collect::<Vec<_>>();
@@ -3342,16 +3336,14 @@ fn incremental_correlation_multi_chunk() {
         let fields = c
             .get("fields")
             .and_then(|f| f.as_array())
-            .map(|v| v.as_slice()).unwrap_or(&[])
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
             .iter()
             .filter_map(|v| v.as_str())
             .collect::<Vec<_>>();
         fields.contains(&"x") && fields.contains(&"y")
     });
-    assert!(
-        has_xy,
-        "Multi-chunk should detect x/y correlation"
-    );
+    assert!(has_xy, "Multi-chunk should detect x/y correlation");
 }
 
 #[test]
@@ -3405,7 +3397,8 @@ fn incremental_correlation_no_false_positives() {
             let fields = c
                 .get("fields")
                 .and_then(|f| f.as_array())
-                .map(|v| v.as_slice()).unwrap_or(&[])
+                .map(|v| v.as_slice())
+                .unwrap_or(&[])
                 .iter()
                 .filter_map(|v| v.as_str())
                 .collect::<Vec<_>>();

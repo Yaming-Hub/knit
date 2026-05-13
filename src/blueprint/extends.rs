@@ -256,8 +256,8 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
-                stats: None,
-                traits: None,
+                        stats: None,
+                        traits: None,
                     },
                     Field {
                         name: "email".to_string(),
@@ -269,8 +269,8 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
-                stats: None,
-                traits: None,
+                        stats: None,
+                        traits: None,
                     },
                 ],
                 constraints: vec![],
@@ -279,8 +279,8 @@ mod tests {
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
-        output: None,
-        stats: None,
+                output: None,
+                stats: None,
                 scaling: None,
             }],
             relationships: vec![Relationship {
@@ -307,7 +307,7 @@ mod tests {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
-        companion_files: Vec::new(),
+            companion_files: Vec::new(),
         }
     }
 
@@ -328,7 +328,7 @@ mod tests {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
-        companion_files: Vec::new(),
+            companion_files: Vec::new(),
         }
     }
 
@@ -359,8 +359,8 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
+            mixin_refs: None,
+            output: None,
             scaling: None,
         });
         let merged = merge_models(&parent, &child);
@@ -384,8 +384,8 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
+            mixin_refs: None,
+            output: None,
             scaling: None,
         });
         let merged = merge_models(&parent, &child);
@@ -420,9 +420,9 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         });
         let merged = merge_models(&parent, &child);
@@ -457,9 +457,9 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         });
         let merged = merge_models(&parent, &child);
@@ -545,8 +545,8 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
+            mixin_refs: None,
+            output: None,
             scaling: None,
         });
         let merged = merge_models(&parent, &child);

@@ -278,9 +278,9 @@ mod tests {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    use arrow::array::StringArray;
     use crate::core::Value;
     use crate::plan::GeneratorPlan;
+    use arrow::array::StringArray;
 
     #[test]
     fn test_conditional_branches_on_string_field() {

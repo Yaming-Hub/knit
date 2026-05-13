@@ -36,11 +36,12 @@ pub fn run(
 
     // Validate --output-format value
     let fmt = if let Some(fmt_str) = output_format {
-        let parsed = crate::tokenize::scanner::FileFormat::parse(fmt_str)
-            .ok_or_else(|| anyhow::anyhow!(
+        let parsed = crate::tokenize::scanner::FileFormat::parse(fmt_str).ok_or_else(|| {
+            anyhow::anyhow!(
                 "invalid output format '{}': expected csv, tsv, json, jsonl, or parquet",
                 fmt_str
-            ))?;
+            )
+        })?;
         Some(parsed)
     } else {
         None
@@ -48,8 +49,10 @@ pub fn run(
 
     // Column filter flags are not valid in restore or verify mode
     if restore_mode && (tokenize_columns.is_some() || preserve_columns.is_some()) {
-        bail!("--tokenize-columns and --preserve-columns cannot be used with --restore; \
-               the column filter is read from the token dictionary automatically");
+        bail!(
+            "--tokenize-columns and --preserve-columns cannot be used with --restore; \
+               the column filter is read from the token dictionary automatically"
+        );
     }
     if verify_path.is_some() && (tokenize_columns.is_some() || preserve_columns.is_some()) {
         bail!("--tokenize-columns and --preserve-columns cannot be used with --verify");
@@ -132,12 +135,20 @@ fn run_tokenize(
     let result = tokenize::tokenize(input, output, &dict_path, &config)?;
 
     let report_data = if report {
-        Some(crate::tokenize::report::generate_report(output, &dict_path)?)
+        Some(crate::tokenize::report::generate_report(
+            output, &dict_path,
+        )?)
     } else {
         None
     };
 
-    print_result(&result, &dict_path, &config, report_data.as_ref(), json_output);
+    print_result(
+        &result,
+        &dict_path,
+        &config,
+        report_data.as_ref(),
+        json_output,
+    );
 
     // Print text-format report separately (JSON report is merged into main output)
     if let Some(ref rpt) = report_data {
@@ -149,7 +160,12 @@ fn run_tokenize(
     Ok(())
 }
 
-fn run_restore(input: &Path, output: &Path, dictionary: Option<&str>, json_output: bool) -> Result<()> {
+fn run_restore(
+    input: &Path,
+    output: &Path,
+    dictionary: Option<&str>,
+    json_output: bool,
+) -> Result<()> {
     let dict_path = dictionary
         .map(PathBuf::from)
         .unwrap_or_else(|| input.join(".knit-tokens.json"));
@@ -164,15 +180,18 @@ fn run_restore(input: &Path, output: &Path, dictionary: Option<&str>, json_outpu
     let result = tokenize::restore(input, output, &dict_path)?;
 
     if json_output {
-        println!("{}", serde_json::json!({
-            "event": "restore_complete",
-            "data_files": result.data_files,
-            "schema_files": result.schema_files,
-            "dictionary_files": result.dictionary_files,
-            "companion_files": result.companion_files,
-            "unique_tokens": result.unique_tokens,
-            "output": output.display().to_string(),
-        }));
+        println!(
+            "{}",
+            serde_json::json!({
+                "event": "restore_complete",
+                "data_files": result.data_files,
+                "schema_files": result.schema_files,
+                "dictionary_files": result.dictionary_files,
+                "companion_files": result.companion_files,
+                "unique_tokens": result.unique_tokens,
+                "output": output.display().to_string(),
+            })
+        );
     } else {
         println!("═══ Restore Complete ═══");
         println!("  data files:       {}", result.data_files);
@@ -197,7 +216,10 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
     let tok_entries = scan_directory(tokenized)?;
 
     // Compare data file sets by relative path (not just counts)
-    let orig_data: Vec<_> = orig_entries.iter().filter(|e| e.kind == FileKind::Data).collect();
+    let orig_data: Vec<_> = orig_entries
+        .iter()
+        .filter(|e| e.kind == FileKind::Data)
+        .collect();
     let tok_data: Vec<_> = tok_entries
         .iter()
         .filter(|e| e.kind == FileKind::Data)
@@ -239,8 +261,14 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
     }
 
     // Compare schema file sets by relative path
-    let orig_schemas: Vec<_> = orig_entries.iter().filter(|e| e.kind == FileKind::Schema).collect();
-    let tok_schemas: Vec<_> = tok_entries.iter().filter(|e| e.kind == FileKind::Schema).collect();
+    let orig_schemas: Vec<_> = orig_entries
+        .iter()
+        .filter(|e| e.kind == FileKind::Schema)
+        .collect();
+    let tok_schemas: Vec<_> = tok_entries
+        .iter()
+        .filter(|e| e.kind == FileKind::Schema)
+        .collect();
     let orig_schema_paths: std::collections::HashSet<String> = orig_schemas
         .iter()
         .map(|e| e.rel_path.to_string_lossy().to_string())
@@ -295,7 +323,10 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
             );
         }
         println!("  row counts:        {}", if row_match { "✓" } else { "✗" });
-        println!("  schema files:      {}", if schema_match { "✓" } else { "✗" });
+        println!(
+            "  schema files:      {}",
+            if schema_match { "✓" } else { "✗" }
+        );
 
         if passed {
             println!("\n  Structure verification passed.");
@@ -354,7 +385,10 @@ fn print_result(
             "  files:       {} data, {} schema, {} dictionary, {} companion",
             result.data_files, result.schema_files, result.dictionary_files, result.companion_files
         );
-        println!("  tokens:      {} unique string values → tokenized", result.unique_tokens);
+        println!(
+            "  tokens:      {} unique string values → tokenized",
+            result.unique_tokens
+        );
 
         if let Some(ref cols) = config.tokenize_columns {
             let mut sorted: Vec<&str> = cols.iter().map(|s| s.as_str()).collect();

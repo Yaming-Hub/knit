@@ -87,7 +87,11 @@ impl Perturbator for TruncateInjector {
                 })
                 .collect();
 
-            trace!(column = field.name(), truncated = count, "truncated strings");
+            trace!(
+                column = field.name(),
+                truncated = count,
+                "truncated strings"
+            );
             columns.push(Arc::new(result));
         }
 

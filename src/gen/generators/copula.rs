@@ -116,11 +116,7 @@ fn generate_gaussian_copula(
 
 /// Generate bivariate Clayton copula samples.
 /// Clayton(θ): C(u,v) = (u^{-θ} + v^{-θ} - 1)^{-1/θ}, θ > 0
-fn generate_clayton_copula(
-    plan: &CopulaPlan,
-    rng: &mut ChaCha8Rng,
-    count: usize,
-) -> Vec<Vec<f64>> {
+fn generate_clayton_copula(plan: &CopulaPlan, rng: &mut ChaCha8Rng, count: usize) -> Vec<Vec<f64>> {
     let theta = plan.theta.unwrap_or(1.0);
     let mut u1 = Vec::with_capacity(count);
     let mut u2 = Vec::with_capacity(count);
@@ -143,11 +139,7 @@ fn generate_clayton_copula(
 
 /// Generate bivariate Frank copula samples.
 /// Frank(θ): C(u,v) = -1/θ · ln(1 + (e^{-θu}-1)(e^{-θv}-1)/(e^{-θ}-1))
-fn generate_frank_copula(
-    plan: &CopulaPlan,
-    rng: &mut ChaCha8Rng,
-    count: usize,
-) -> Vec<Vec<f64>> {
+fn generate_frank_copula(plan: &CopulaPlan, rng: &mut ChaCha8Rng, count: usize) -> Vec<Vec<f64>> {
     let theta = plan.theta.unwrap_or(1.0);
     let mut u1 = Vec::with_capacity(count);
     let mut u2 = Vec::with_capacity(count);
@@ -180,11 +172,7 @@ fn generate_frank_copula(
 
 /// Generate bivariate Gumbel copula samples.
 /// Uses the Marshall-Olkin algorithm with stable distribution.
-fn generate_gumbel_copula(
-    plan: &CopulaPlan,
-    rng: &mut ChaCha8Rng,
-    count: usize,
-) -> Vec<Vec<f64>> {
+fn generate_gumbel_copula(plan: &CopulaPlan, rng: &mut ChaCha8Rng, count: usize) -> Vec<Vec<f64>> {
     let theta = plan.theta.unwrap_or(1.0);
     let mut u1_out = Vec::with_capacity(count);
     let mut u2_out = Vec::with_capacity(count);
@@ -245,8 +233,7 @@ fn inverse_cdf(u: f64, marginal: &MarginalInfo) -> f64 {
         DistributionKind::LogNormal => {
             let mu = marginal.params.get("mu").copied().unwrap_or(0.0);
             let sigma = marginal.params.get("sigma").copied().unwrap_or(1.0);
-            let d =
-                LogNormal::new(mu, sigma).unwrap_or_else(|_| LogNormal::new(0.0, 1.0).unwrap());
+            let d = LogNormal::new(mu, sigma).unwrap_or_else(|_| LogNormal::new(0.0, 1.0).unwrap());
             d.inverse_cdf(u)
         }
         DistributionKind::Uniform => {

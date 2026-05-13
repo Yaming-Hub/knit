@@ -118,8 +118,7 @@ impl TokenDictionary {
 
     /// Write the dictionary to a JSON file.
     pub fn write(&self, path: &Path) -> Result<()> {
-        let json = serde_json::to_string_pretty(self)
-            .context("serializing token dictionary")?;
+        let json = serde_json::to_string_pretty(self).context("serializing token dictionary")?;
         std::fs::write(path, json)
             .with_context(|| format!("writing dictionary to {}", path.display()))?;
         Ok(())
@@ -193,7 +192,10 @@ mod tests {
         dict.write(&path).unwrap();
         let loaded = TokenDictionary::read(&path).unwrap();
 
-        assert_eq!(loaded.column_filter.tokenize_columns.unwrap(), vec!["name", "email"]);
+        assert_eq!(
+            loaded.column_filter.tokenize_columns.unwrap(),
+            vec!["name", "email"]
+        );
         assert!(loaded.column_filter.preserve_columns.is_none());
     }
 

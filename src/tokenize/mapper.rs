@@ -59,7 +59,8 @@ impl TokenMapper {
             return;
         }
         self.used_tokens.insert(replacement.to_string());
-        self.map.insert(original.to_string(), replacement.to_string());
+        self.map
+            .insert(original.to_string(), replacement.to_string());
     }
 
     /// Look up the token for an original value.
@@ -107,7 +108,11 @@ impl TokenMapper {
             'x'
         };
         for extra in 1..=5 {
-            let padded = format!("{}{}", original, std::iter::repeat_n(dominant_class, extra).collect::<String>());
+            let padded = format!(
+                "{}{}",
+                original,
+                std::iter::repeat_n(dominant_class, extra).collect::<String>()
+            );
             let token = self.generate_shape_token(&padded);
             if !self.used_tokens.contains(&token) && !self.map.contains_key(&token) {
                 return token;

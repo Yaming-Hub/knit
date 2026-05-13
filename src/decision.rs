@@ -235,7 +235,11 @@ impl DecisionLogger {
 
     /// Get the number of recorded decisions.
     pub fn count(&self) -> usize {
-        self.inner.lock().unwrap_or_else(|e| e.into_inner()).decisions.len()
+        self.inner
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .decisions
+            .len()
     }
 
     /// Get all low-confidence decisions for summary display.
@@ -258,19 +262,9 @@ impl DecisionLogger {
     /// Set entity and column on the most recently logged decision of a given kind.
     ///
     /// Used to enrich decisions logged by lower-level code that lacks context.
-    pub fn set_last_context(
-        &self,
-        kind: DecisionKind,
-        entity: &str,
-        column: &str,
-    ) {
+    pub fn set_last_context(&self, kind: DecisionKind, entity: &str, column: &str) {
         let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(d) = inner
-            .decisions
-            .iter_mut()
-            .rev()
-            .find(|d| d.kind == kind)
-        {
+        if let Some(d) = inner.decisions.iter_mut().rev().find(|d| d.kind == kind) {
             d.entity = Some(entity.to_string());
             d.column = Some(column.to_string());
         }
@@ -357,7 +351,12 @@ impl DecisionBuilder {
         self
     }
 
-    pub fn alternative(mut self, label: impl Into<String>, reason: impl Into<String>, score: Option<f64>) -> Self {
+    pub fn alternative(
+        mut self,
+        label: impl Into<String>,
+        reason: impl Into<String>,
+        score: Option<f64>,
+    ) -> Self {
         self.alternatives.push(Alternative {
             label: label.into(),
             reason: reason.into(),

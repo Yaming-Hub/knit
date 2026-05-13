@@ -262,13 +262,15 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         actor_relationships,
         custom_types: Vec::new(),
         mixins: Vec::new(),
-    companion_files: Vec::new(),
+        companion_files: Vec::new(),
     }
 }
 
 /// Build an [`Entity`] from a `TableAnalysis`, extracting relationships
 /// and correlations as separate top-level items.
-fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate::core::Correlation>) {
+fn build_entity(
+    table: &TableAnalysis,
+) -> (Entity, Vec<Relationship>, Vec<crate::core::Correlation>) {
     let mut fields = Vec::with_capacity(table.columns.len());
 
     // Pre-compute row-type discriminator info from companion schema
@@ -312,9 +314,7 @@ fn build_entity(table: &TableAnalysis) -> (Entity, Vec<Relationship>, Vec<crate:
         };
 
         // Row-type conditional generation: wrap generator with discriminator check
-        if let (Some(ref disc_col), Some(ref companion)) =
-            (&discriminator_col, &table.companion)
-        {
+        if let (Some(ref disc_col), Some(ref companion)) = (&discriminator_col, &table.companion) {
             if let Some(row_type) = companion.row_type_for_column(&col.name) {
                 // This column should only have values when discriminator == row_type.
                 // Wrap the learned generator in a Conditional.
@@ -730,7 +730,10 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
     gen
 }
 
-fn build_generator_inner(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> GeneratorSpec {
+fn build_generator_inner(
+    col: &ColumnAnalysis,
+    fk: Option<&RelationshipCandidate>,
+) -> GeneratorSpec {
     // FK → Lookup (only for non-string sources; string FKs use categorical)
     if let Some(rel) = fk {
         let source_is_string = matches!(
@@ -1661,7 +1664,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1709,7 +1712,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: Some(vec![("active".into(), 0.7), ("inactive".into(), 0.3)]),
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1756,7 +1759,7 @@ mod tests {
                 }),
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1883,7 +1886,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 1.0,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -1923,7 +1926,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
@@ -1967,7 +1970,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.95,
             inferred_type: Some(InferredType::Uuid),
             string_patterns: vec![],
@@ -1993,7 +1996,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: Some(InferredType::Boolean),
             string_patterns: vec![],
@@ -2019,7 +2022,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: Some(InferredType::Text),
             string_patterns: vec![(StringPattern::Email, 0.95)],
@@ -2049,7 +2052,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: Some(InferredType::Text),
             string_patterns: vec![(StringPattern::Phone, 0.9)],
@@ -2081,7 +2084,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.95,
                 inferred_type: Some(InferredType::Uuid),
                 string_patterns: vec![],
@@ -2120,7 +2123,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: Some(InferredType::Text),
                 string_patterns: vec![(StringPattern::Email, 0.95)],
@@ -2188,7 +2191,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2213,7 +2216,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2238,7 +2241,7 @@ mod tests {
             temporal_pattern: None,
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2269,7 +2272,7 @@ mod tests {
             }),
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2285,7 +2288,10 @@ mod tests {
             stats: None,
             traits: None,
         };
-        assert_eq!(infer_data_type(&col, None), crate::core::DataType::DatetimeUs);
+        assert_eq!(
+            infer_data_type(&col, None),
+            crate::core::DataType::DatetimeUs
+        );
     }
 
     #[test]
@@ -2303,7 +2309,7 @@ mod tests {
             }),
             categorical_weights: None,
             null_rate: 0.0,
-                    empty_string_rate: 0.0,
+            empty_string_rate: 0.0,
             confidence: 0.9,
             inferred_type: None,
             string_patterns: vec![],
@@ -2408,7 +2414,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -2428,7 +2434,7 @@ mod tests {
                 temporal_pattern: None,
                 categorical_weights: None,
                 null_rate: 0.0,
-                    empty_string_rate: 0.0,
+                empty_string_rate: 0.0,
                 confidence: 0.9,
                 inferred_type: None,
                 string_patterns: vec![],
@@ -2793,12 +2799,20 @@ mod tests {
         let (entity, _, _) = build_entity(&table);
 
         // The all-null column should have NullSpec::Always and no generator
-        let null_field = entity.fields.iter().find(|f| f.name == "all_null_col").unwrap();
+        let null_field = entity
+            .fields
+            .iter()
+            .find(|f| f.name == "all_null_col")
+            .unwrap();
         assert!(matches!(null_field.nullable, NullSpec::Always));
         assert!(null_field.generator.is_none());
 
         // The all-empty-string column should also have NullSpec::Always and no generator
-        let empty_field = entity.fields.iter().find(|f| f.name == "all_empty_col").unwrap();
+        let empty_field = entity
+            .fields
+            .iter()
+            .find(|f| f.name == "all_empty_col")
+            .unwrap();
         assert!(matches!(empty_field.nullable, NullSpec::Always));
         assert!(empty_field.generator.is_none());
 
@@ -2891,15 +2905,23 @@ mod tests {
         );
         table.partition_by = Some("date".into());
         table.partition_values = vec![
-            crate::core::PartitionValue { value: "2024-01-01".into(), weight: 0.6 },
-            crate::core::PartitionValue { value: "2024-01-02".into(), weight: 0.4 },
+            crate::core::PartitionValue {
+                value: "2024-01-01".into(),
+                weight: 0.6,
+            },
+            crate::core::PartitionValue {
+                value: "2024-01-02".into(),
+                weight: 0.4,
+            },
         ];
 
         let (entity, _, _) = build_entity(&table);
 
         let stats = entity.stats.expect("table stats should be populated");
         assert_eq!(stats.source_rows, 1000);
-        let rpp = stats.rows_per_partition.expect("should have rows_per_partition");
+        let rpp = stats
+            .rows_per_partition
+            .expect("should have rows_per_partition");
         assert!((rpp.min - 400.0).abs() < 0.01);
         assert!((rpp.max - 600.0).abs() < 0.01);
         assert!((rpp.mean - 500.0).abs() < 0.01);
@@ -2929,7 +2951,10 @@ mod tests {
         let table = TableAnalysis::new("orders".into(), vec![col], 500);
         let (entity, _, _) = build_entity(&table);
 
-        let field_stats = entity.fields[0].stats.as_ref().expect("field should have stats");
+        let field_stats = entity.fields[0]
+            .stats
+            .as_ref()
+            .expect("field should have stats");
         assert_eq!(field_stats.distinct_count, Some(450));
         assert_eq!(field_stats.min, Some(10.0));
         assert_eq!(field_stats.max, Some(500.0));

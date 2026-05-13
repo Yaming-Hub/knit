@@ -21,9 +21,9 @@ use arrow::record_batch::RecordBatch;
 use minijinja::{context, Environment, Value};
 use tracing::debug;
 
-use crate::bind::json::downcast_col;
 use crate::bind::error::BindError;
 use crate::bind::helpers;
+use crate::bind::json::downcast_col;
 use crate::bind::traits::{Sink, SinkStats};
 
 /// Rendering mode for the template sink.

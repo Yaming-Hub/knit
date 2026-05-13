@@ -55,11 +55,7 @@ pub struct EventStreamGenerator {
 
 impl EventStreamGenerator {
     /// Create a new event stream generator.
-    pub fn new(
-        start_ms: i64,
-        lambda_per_ms: f64,
-        components: Vec<EventStreamComponent>,
-    ) -> Self {
+    pub fn new(start_ms: i64, lambda_per_ms: f64, components: Vec<EventStreamComponent>) -> Self {
         // Compute the envelope upper bound for thinning.
         let max_multiplier = compute_max_multiplier(&components);
         let lambda_max = lambda_per_ms * max_multiplier;
@@ -124,7 +120,8 @@ impl FieldGenerator for EventStreamGenerator {
                     .last_timestamp_ms
                     .saturating_add(gap_ms.max(1.0) as i64);
 
-                let rate_at_t = self.lambda_per_ms * rate_multiplier(candidate_ms, &self.components, &self.holiday_dates);
+                let rate_at_t = self.lambda_per_ms
+                    * rate_multiplier(candidate_ms, &self.components, &self.holiday_dates);
                 let accept_prob = rate_at_t / self.lambda_max;
 
                 // Always advance time (for thinning correctness).
@@ -196,7 +193,11 @@ fn compute_max_multiplier(components: &[EventStreamComponent]) -> f64 {
 /// Evaluate the instantaneous rate multiplier at a given timestamp.
 ///
 /// Returns a value in (0, max_multiplier] that modulates the base rate.
-fn rate_multiplier(timestamp_ms: i64, components: &[EventStreamComponent], holiday_dates: &[(HashSet<NaiveDate>, f64)]) -> f64 {
+fn rate_multiplier(
+    timestamp_ms: i64,
+    components: &[EventStreamComponent],
+    holiday_dates: &[(HashSet<NaiveDate>, f64)],
+) -> f64 {
     let dt = DateTime::<Utc>::from_timestamp_millis(timestamp_ms);
 
     let mut multiplier = 1.0;
@@ -381,10 +382,16 @@ mod tests {
             .map(|i| ts.value(i) - ts.value(i - 1))
             .collect();
         let mean_gap = gaps.iter().sum::<i64>() as f64 / gaps.len() as f64;
-        let variance = gaps.iter().map(|g| (*g as f64 - mean_gap).powi(2)).sum::<f64>()
+        let variance = gaps
+            .iter()
+            .map(|g| (*g as f64 - mean_gap).powi(2))
+            .sum::<f64>()
             / gaps.len() as f64;
         // With seasonality, variance should be substantially higher than pure exponential.
-        assert!(variance > 0.0, "expected non-zero variance with seasonality");
+        assert!(
+            variance > 0.0,
+            "expected non-zero variance with seasonality"
+        );
     }
 
     #[test]

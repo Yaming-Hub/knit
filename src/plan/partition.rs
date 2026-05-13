@@ -66,7 +66,8 @@ pub fn resolve_count(count: &CountSpec, params: &BTreeMap<String, Value>) -> Res
 fn evaluate_count_expr(expr: &str, params: &BTreeMap<String, Value>) -> Result<u64, String> {
     use crate::gen::expr::{eval, parser};
 
-    let ast = parser::parse(expr).map_err(|e| format!("count expression parse error: {}", e.message))?;
+    let ast =
+        parser::parse(expr).map_err(|e| format!("count expression parse error: {}", e.message))?;
 
     // Validate: reject field refs, random functions, row_number
     validate_count_ast(&ast)?;
@@ -100,7 +101,9 @@ fn evaluate_count_expr(expr: &str, params: &BTreeMap<String, Value>) -> Result<u
     } else if let Some(arr) = result.as_any().downcast_ref::<Float64Array>() {
         let v = arr.value(0);
         if !v.is_finite() || v <= 0.0 {
-            return Err(format!("count expression evaluated to {v}, must be a finite value > 0"));
+            return Err(format!(
+                "count expression evaluated to {v}, must be a finite value > 0"
+            ));
         }
         Ok(v.round() as u64)
     } else {
@@ -113,9 +116,9 @@ pub fn validate_count_ast(expr: &crate::gen::expr::ast::Expr) -> Result<(), Stri
     use crate::gen::expr::ast::Expr;
     match expr {
         Expr::Literal(_) | Expr::ParamRef(_) => Ok(()),
-        Expr::FieldRef(name) => {
-            Err(format!("field reference '${{{name}}}' is not allowed in count expressions"))
-        }
+        Expr::FieldRef(name) => Err(format!(
+            "field reference '${{{name}}}' is not allowed in count expressions"
+        )),
         Expr::BinaryOp { left, right, .. } => {
             validate_count_ast(left)?;
             validate_count_ast(right)
@@ -124,8 +127,12 @@ pub fn validate_count_ast(expr: &crate::gen::expr::ast::Expr) -> Result<(), Stri
         Expr::FuncCall { name, args } => {
             // Reject non-deterministic / row-dependent functions.
             let forbidden = [
-                "row_number", "random_int", "random_float", "random_normal",
-                "random_choice", "random_string",
+                "row_number",
+                "random_int",
+                "random_float",
+                "random_normal",
+                "random_choice",
+                "random_string",
             ];
             if forbidden.contains(&name.as_str()) {
                 return Err(format!(
@@ -213,20 +220,24 @@ mod tests {
     #[test]
     fn test_resolve_fixed() {
         let empty = BTreeMap::new();
-        assert_eq!(resolve_count(&CountSpec::Fixed(5000), &empty).unwrap(), 5000);
+        assert_eq!(
+            resolve_count(&CountSpec::Fixed(5000), &empty).unwrap(),
+            5000
+        );
     }
 
     #[test]
     fn test_resolve_range() {
         let empty = BTreeMap::new();
-        assert_eq!(resolve_count(&CountSpec::Range { min: 100, max: 500 }, &empty).unwrap(), 500);
+        assert_eq!(
+            resolve_count(&CountSpec::Range { min: 100, max: 500 }, &empty).unwrap(),
+            500
+        );
     }
 
     #[test]
     fn test_resolve_expression_simple() {
-        let params = BTreeMap::from([
-            ("user_count".to_string(), Value::Int(500)),
-        ]);
+        let params = BTreeMap::from([("user_count".to_string(), Value::Int(500))]);
         let count = CountSpec::Expression {
             expr: "${param.user_count}".to_string(),
         };
@@ -260,9 +271,7 @@ mod tests {
 
     #[test]
     fn test_resolve_expression_rejects_negative() {
-        let params = BTreeMap::from([
-            ("x".to_string(), Value::Int(-5)),
-        ]);
+        let params = BTreeMap::from([("x".to_string(), Value::Int(-5))]);
         let count = CountSpec::Expression {
             expr: "${param.x}".to_string(),
         };

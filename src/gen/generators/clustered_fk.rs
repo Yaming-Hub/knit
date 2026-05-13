@@ -42,8 +42,8 @@ impl ClusteredForeignKeyGenerator {
         }
         // Map child position proportionally into parent range:
         // center = (global_row * parent_count) / total_child_rows
-        let center = (global_row as u128 * parent_count as u128
-            / self.total_child_rows as u128) as i64;
+        let center =
+            (global_row as u128 * parent_count as u128 / self.total_child_rows as u128) as i64;
 
         let half = (self.cluster_size / 2) as i64;
         let lo = (center - half).max(0) as u64;
@@ -98,7 +98,11 @@ pub struct ClusteredStringForeignKeyGenerator {
 
 impl ClusteredStringForeignKeyGenerator {
     /// Create a new clustered string FK generator.
-    pub fn new(key_store: Arc<dyn StringKeyStore>, cluster_size: u64, total_child_rows: u64) -> Self {
+    pub fn new(
+        key_store: Arc<dyn StringKeyStore>,
+        cluster_size: u64,
+        total_child_rows: u64,
+    ) -> Self {
         Self {
             key_store,
             cluster_size: cluster_size.max(1),
@@ -110,8 +114,8 @@ impl ClusteredStringForeignKeyGenerator {
         if parent_count == 0 {
             return 0;
         }
-        let center = (global_row as u128 * parent_count as u128
-            / self.total_child_rows as u128) as i64;
+        let center =
+            (global_row as u128 * parent_count as u128 / self.total_child_rows as u128) as i64;
 
         let half = (self.cluster_size / 2) as i64;
         let lo = (center - half).max(0) as u64;
