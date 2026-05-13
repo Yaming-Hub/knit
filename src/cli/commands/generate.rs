@@ -29,7 +29,12 @@ use crate::cli::{Cli, CompressionArg, Format};
 ///
 /// Loads the schema, validates, compiles a plan, generates data in batches,
 /// and writes output files to the specified directory.
-pub fn run(blueprint_path: &str, output_dir: &str, entity_filter: &[String], cli: &Cli) -> Result<()> {
+pub fn run(
+    blueprint_path: &str,
+    output_dir: &str,
+    entity_filter: &[String],
+    cli: &Cli,
+) -> Result<()> {
     let _gen_span = tracing::info_span!("generate", schema = %blueprint_path).entered();
 
     // ── Load WASM plugins (if any) ──────────────────────────────────
@@ -882,7 +887,10 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
     }
 
     // Plugins cannot declare their output type at plan time — use the field's declared data_type.
-    if matches!(&fp.generator_plan, crate::plan::GeneratorPlan::Plugin { .. }) {
+    if matches!(
+        &fp.generator_plan,
+        crate::plan::GeneratorPlan::Plugin { .. }
+    ) {
         return default_arrow_for_data_type(&fp.data_type);
     }
 
@@ -890,7 +898,8 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
 
     // If declared type is String/Uuid but generator produces non-string (e.g. FK generator
     // that now produces StringArray, or sequence for numeric-string columns), force Utf8 output
-    if (fp.data_type == crate::core::DataType::String || fp.data_type == crate::core::DataType::Uuid)
+    if (fp.data_type == crate::core::DataType::String
+        || fp.data_type == crate::core::DataType::Uuid)
         && generator_type != ArrowDataType::Utf8
     {
         return ArrowDataType::Utf8;
@@ -1349,7 +1358,9 @@ fn default_arrow_for_data_type(dt: &crate::core::DataType) -> ArrowDataType {
         crate::core::DataType::String => ArrowDataType::Utf8,
         crate::core::DataType::Uuid => ArrowDataType::Utf8,
         crate::core::DataType::Date => ArrowDataType::Date32,
-        crate::core::DataType::Time => ArrowDataType::Time64(arrow::datatypes::TimeUnit::Nanosecond),
+        crate::core::DataType::Time => {
+            ArrowDataType::Time64(arrow::datatypes::TimeUnit::Nanosecond)
+        }
         crate::core::DataType::Datetime => {
             ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
         }
@@ -1363,9 +1374,11 @@ fn default_arrow_for_data_type(dt: &crate::core::DataType) -> ArrowDataType {
             ArrowDataType::Duration(arrow::datatypes::TimeUnit::Millisecond)
         }
         crate::core::DataType::Bytes => ArrowDataType::Binary,
-        crate::core::DataType::Array => {
-            ArrowDataType::List(Arc::new(ArrowField::new("element", ArrowDataType::Utf8, true)))
-        }
+        crate::core::DataType::Array => ArrowDataType::List(Arc::new(ArrowField::new(
+            "element",
+            ArrowDataType::Utf8,
+            true,
+        ))),
         crate::core::DataType::Map => ArrowDataType::Utf8,
         crate::core::DataType::Object => ArrowDataType::Utf8, // struct handled at plan level
         crate::core::DataType::Custom(ref name) => {
@@ -1508,9 +1521,9 @@ fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<
                     "failed to parse scope expression, ignoring scope"
                 );
                 // Return a constant-true expression as fallback
-                crate::gen::expr::ast::Expr::Literal(
-                    crate::gen::expr::ast::LiteralValue::Bool(true),
-                )
+                crate::gen::expr::ast::Expr::Literal(crate::gen::expr::ast::LiteralValue::Bool(
+                    true,
+                ))
             })
         });
 
@@ -1699,7 +1712,9 @@ fn flatten_schema_for_csv(schema: &Schema) -> Schema {
 
 /// Convert nested columns (List, Map, Struct) to JSON string representation
 /// for formats that don't support nested structures (e.g. CSV).
-pub(crate) fn flatten_nested_columns(batch: &RecordBatch) -> Result<RecordBatch, crate::gen::GenError> {
+pub(crate) fn flatten_nested_columns(
+    batch: &RecordBatch,
+) -> Result<RecordBatch, crate::gen::GenError> {
     use arrow::array::StringArray;
 
     let schema = batch.schema();
@@ -1892,7 +1907,10 @@ pub(crate) fn resolve_dictionary_plans(plan: &mut ExecutionPlan, schema_dir: &Pa
 }
 
 /// Recursively resolve dictionary generators (handles Unique/Conditional wrapping).
-fn resolve_dict_in_generator(plan: &mut crate::plan::GeneratorPlan, schema_dir: &Path) -> Result<()> {
+fn resolve_dict_in_generator(
+    plan: &mut crate::plan::GeneratorPlan,
+    schema_dir: &Path,
+) -> Result<()> {
     use std::io::BufRead;
 
     match plan {
@@ -1965,7 +1983,10 @@ fn resolve_dict_in_generator(plan: &mut crate::plan::GeneratorPlan, schema_dir: 
 /// Walks all entity plans and loads external lookup source files from disk,
 /// populating the `entries` and `weights` vecs. File paths are resolved
 /// relative to the schema directory.
-pub(crate) fn resolve_external_lookup_plans(plan: &mut ExecutionPlan, schema_dir: &Path) -> Result<()> {
+pub(crate) fn resolve_external_lookup_plans(
+    plan: &mut ExecutionPlan,
+    schema_dir: &Path,
+) -> Result<()> {
     for phase in &mut plan.phases {
         for entity_plan in &mut phase.entity_plans {
             for field_plan in &mut entity_plan.field_plans {
@@ -2275,24 +2296,19 @@ fn load_lookup_parquet(
         )
     })?;
 
-    let builder = ParquetRecordBatchReaderBuilder::try_new(file).with_context(|| {
-        format!(
-            "failed to read Parquet metadata from '{}'",
-            display_path
-        )
-    })?;
+    let builder = ParquetRecordBatchReaderBuilder::try_new(file)
+        .with_context(|| format!("failed to read Parquet metadata from '{}'", display_path))?;
 
-    let reader = builder.build().with_context(|| {
-        format!("failed to build Parquet reader for '{}'", display_path)
-    })?;
+    let reader = builder
+        .build()
+        .with_context(|| format!("failed to build Parquet reader for '{}'", display_path))?;
 
     let mut entries = Vec::new();
     let mut weights: Option<Vec<f64>> = weight_column.map(|_| Vec::new());
 
     for batch_result in reader {
-        let batch = batch_result.with_context(|| {
-            format!("failed to read Parquet batch from '{}'", display_path)
-        })?;
+        let batch = batch_result
+            .with_context(|| format!("failed to read Parquet batch from '{}'", display_path))?;
 
         let col_idx = batch.schema().index_of(column).map_err(|_| {
             anyhow::anyhow!(
@@ -2334,8 +2350,7 @@ fn load_lookup_parquet(
             if col.is_null(i) {
                 continue;
             }
-            let val = arrow::util::display::array_value_to_string(col, i)
-                .unwrap_or_default();
+            let val = arrow::util::display::array_value_to_string(col, i).unwrap_or_default();
             let trimmed = val.trim().to_string();
             if trimmed.is_empty() {
                 continue;

@@ -240,10 +240,7 @@ mod tests {
 
     #[test]
     fn confirm_reject_all() {
-        let mappings = vec![
-            make_mapping("x", "y", 0.6),
-            make_mapping("a", "b", 0.5),
-        ];
+        let mappings = vec![make_mapping("x", "y", 0.6), make_mapping("a", "b", 0.5)];
         let reader = Cursor::new(b"r\nr\n");
         let result = confirm_mappings_with_reader(mappings, reader).unwrap();
         assert!(result.is_empty());
@@ -264,4 +261,3 @@ mod tests {
         assert_eq!(result[0].ref_col_index, 3);
     }
 }
-

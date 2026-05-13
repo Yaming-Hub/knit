@@ -48,7 +48,11 @@ impl MergeOutcome {
 /// Merge enrichment data into a field's generator.
 ///
 /// Returns the outcome indicating success or specific failure reason.
-pub fn merge_enrichment(field: &mut Field, enrichment: &FieldEnrichment, ref_row_count: u64) -> MergeOutcome {
+pub fn merge_enrichment(
+    field: &mut Field,
+    enrichment: &FieldEnrichment,
+    ref_row_count: u64,
+) -> MergeOutcome {
     let Some(ref mut gen) = field.generator else {
         debug!(field = %field.name, "no generator to enrich");
         return MergeOutcome::NoGenerator;
@@ -100,7 +104,10 @@ fn merge_distribution(
         ),
         Distribution::Gamma(shape, rate) => (
             DistributionKind::Gamma,
-            BTreeMap::from([("shape".to_string(), *shape), ("scale".to_string(), 1.0 / rate)]),
+            BTreeMap::from([
+                ("shape".to_string(), *shape),
+                ("scale".to_string(), 1.0 / rate),
+            ]),
         ),
         Distribution::Beta(alpha, beta) => (
             DistributionKind::Beta,
@@ -141,16 +148,23 @@ fn merge_distribution(
 
     // Special case for Normal: use combined variance formula that accounts for mean difference
     if spec.kind == DistributionKind::Normal {
-        if let (Some(base_mean), Some(base_std)) = (spec.params.get("mean").copied(), spec.params.get("std_dev").copied()) {
-            if let (Some(&ref_mean), Some(&ref_std)) = (ref_params.get("mean"), ref_params.get("std_dev")) {
+        if let (Some(base_mean), Some(base_std)) = (
+            spec.params.get("mean").copied(),
+            spec.params.get("std_dev").copied(),
+        ) {
+            if let (Some(&ref_mean), Some(&ref_std)) =
+                (ref_params.get("mean"), ref_params.get("std_dev"))
+            {
                 let merged_mean = (base_weight * base_mean + ref_weight * ref_mean) / total;
                 // Combined variance includes between-mean variance
                 let base_var = base_std * base_std;
                 let ref_var = ref_std * ref_std;
                 let combined_var = (base_weight * (base_var + (base_mean - merged_mean).powi(2))
-                    + ref_weight * (ref_var + (ref_mean - merged_mean).powi(2))) / total;
+                    + ref_weight * (ref_var + (ref_mean - merged_mean).powi(2)))
+                    / total;
                 spec.params.insert("mean".to_string(), merged_mean);
-                spec.params.insert("std_dev".to_string(), combined_var.sqrt());
+                spec.params
+                    .insert("std_dev".to_string(), combined_var.sqrt());
                 updated = true;
             }
         }
@@ -214,7 +228,9 @@ fn merge_oneof(
         };
 
         let base_frac = choice.weight / base_total;
-        let ref_frac = cat_fit.weights.get(&val_str)
+        let ref_frac = cat_fit
+            .weights
+            .get(&val_str)
             .map(|&w| w / ref_total.max(1.0))
             .unwrap_or(0.0);
 
@@ -222,13 +238,16 @@ fn merge_oneof(
     }
 
     // Add new values from reference that aren't in base
-    let existing_vals: Vec<String> = choices.iter().map(|c| match &c.value {
-        Value::String(s) => s.clone(),
-        Value::Int(i) => i.to_string(),
-        Value::Float(f) => f.to_string(),
-        Value::Bool(b) => b.to_string(),
-        _ => String::new(),
-    }).collect();
+    let existing_vals: Vec<String> = choices
+        .iter()
+        .map(|c| match &c.value {
+            Value::String(s) => s.clone(),
+            Value::Int(i) => i.to_string(),
+            Value::Float(f) => f.to_string(),
+            Value::Bool(b) => b.to_string(),
+            _ => String::new(),
+        })
+        .collect();
 
     let mut added = 0;
     for (val, &weight) in &cat_fit.weights {
@@ -280,8 +299,8 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
-                stats: None,
-                traits: None,
+            stats: None,
+            traits: None,
         }
     }
 
@@ -325,7 +344,11 @@ mod tests {
         // Check that mean moved toward 60
         if let Some(GeneratorSpec::Distribution { spec }) = &field.generator {
             let mean = spec.params["mean"];
-            assert!(mean > 50.0 && mean < 60.0, "mean should be between 50 and 60, got {}", mean);
+            assert!(
+                mean > 50.0 && mean < 60.0,
+                "mean should be between 50 and 60, got {}",
+                mean
+            );
         } else {
             panic!("expected Distribution generator");
         }
@@ -376,8 +399,14 @@ mod tests {
             DataType::String,
             GeneratorSpec::OneOf {
                 choices: vec![
-                    WeightedChoice { value: Value::String("US".into()), weight: 0.6 },
-                    WeightedChoice { value: Value::String("EU".into()), weight: 0.4 },
+                    WeightedChoice {
+                        value: Value::String("US".into()),
+                        weight: 0.6,
+                    },
+                    WeightedChoice {
+                        value: Value::String("EU".into()),
+                        weight: 0.4,
+                    },
                 ],
             },
         );
@@ -390,7 +419,10 @@ mod tests {
 
         let enrichment = FieldEnrichment {
             distribution: None,
-            categorical: Some(CategoricalFit { weights, cardinality: 4 }),
+            categorical: Some(CategoricalFit {
+                weights,
+                cardinality: 4,
+            }),
             null_rate: 0.0,
             sample_size: 200,
         };
@@ -400,10 +432,13 @@ mod tests {
 
         if let Some(GeneratorSpec::OneOf { choices }) = &field.generator {
             // Should have added APAC and LATAM
-            let vals: Vec<String> = choices.iter().map(|c| match &c.value {
-                Value::String(s) => s.clone(),
-                _ => String::new(),
-            }).collect();
+            let vals: Vec<String> = choices
+                .iter()
+                .map(|c| match &c.value {
+                    Value::String(s) => s.clone(),
+                    _ => String::new(),
+                })
+                .collect();
             assert!(vals.contains(&"APAC".to_string()));
             assert!(vals.contains(&"LATAM".to_string()));
             // Weights should sum to ~1.0

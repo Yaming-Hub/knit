@@ -122,10 +122,20 @@ pub fn tokenize(
     let entries = scan_directory(input_dir)?;
     info!(
         data = entries.iter().filter(|e| e.kind == FileKind::Data).count(),
-        schema = entries.iter().filter(|e| e.kind == FileKind::Schema).count(),
-        dictionary = entries.iter().filter(|e| e.kind == FileKind::Dictionary).count(),
-        companion = entries.iter().filter(|e| e.kind == FileKind::Companion).count(),
-        "scanned {} files", entries.len()
+        schema = entries
+            .iter()
+            .filter(|e| e.kind == FileKind::Schema)
+            .count(),
+        dictionary = entries
+            .iter()
+            .filter(|e| e.kind == FileKind::Dictionary)
+            .count(),
+        companion = entries
+            .iter()
+            .filter(|e| e.kind == FileKind::Companion)
+            .count(),
+        "scanned {} files",
+        entries.len()
     );
 
     // Phase 2: Build token map by scanning all string values
@@ -285,7 +295,8 @@ fn tokenize_rel_path(
                 let ext = path.extension().and_then(|e| e.to_str());
                 let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
-                let tokenized_stem = mapper.get(stem)
+                let tokenized_stem = mapper
+                    .get(stem)
                     .map(|t| t.to_string())
                     .unwrap_or_else(|| stem.to_string());
 
@@ -296,7 +307,8 @@ fn tokenize_rel_path(
                 }
             } else {
                 // Directory component: tokenize the folder name
-                let tokenized = mapper.get(&s)
+                let tokenized = mapper
+                    .get(&s)
                     .map(|t| t.to_string())
                     .unwrap_or_else(|| s.to_string());
                 result.push(tokenized);
@@ -309,11 +321,7 @@ fn tokenize_rel_path(
 }
 
 /// Restore a tokenized dataset using a token dictionary.
-pub fn restore(
-    input_dir: &Path,
-    output_dir: &Path,
-    dict_path: &Path,
-) -> Result<TokenizeResult> {
+pub fn restore(input_dir: &Path, output_dir: &Path, dict_path: &Path) -> Result<TokenizeResult> {
     info!(input = %input_dir.display(), dict = %dict_path.display(), "restoring from tokens");
 
     let dict = TokenDictionary::read(dict_path)?;
@@ -331,12 +339,14 @@ pub fn restore(
 
     // Restore the column filter from the dictionary so that restore only
     // replaces values in the columns that were originally tokenized.
-    let tokenize_columns = dict.column_filter.tokenize_columns.map(|v| {
-        v.into_iter().collect::<HashSet<String>>()
-    });
-    let preserve_columns = dict.column_filter.preserve_columns.map(|v| {
-        v.into_iter().collect::<HashSet<String>>()
-    });
+    let tokenize_columns = dict
+        .column_filter
+        .tokenize_columns
+        .map(|v| v.into_iter().collect::<HashSet<String>>());
+    let preserve_columns = dict
+        .column_filter
+        .preserve_columns
+        .map(|v| v.into_iter().collect::<HashSet<String>>());
 
     // Always enable header and number rewriting during restore — if they weren't
     // tokenized, they won't be in the inverse map and remain unchanged.
@@ -428,7 +438,10 @@ mod tests {
         writeln!(f, "1,John Smith,john@example.com").unwrap();
         writeln!(f, "2,Jane Doe,jane@example.com").unwrap();
 
-        let config = TokenizeConfig { seed: 123, ..Default::default() };
+        let config = TokenizeConfig {
+            seed: 123,
+            ..Default::default()
+        };
         let dict_path = output.path().join(".knit-tokens.json");
 
         // Tokenize
@@ -470,7 +483,10 @@ mod tests {
         writeln!(f2, "1,US").unwrap();
         writeln!(f2, "2,JP").unwrap();
 
-        let config = TokenizeConfig { seed: 42, ..Default::default() };
+        let config = TokenizeConfig {
+            seed: 42,
+            ..Default::default()
+        };
         let dict_path = output.path().join(".knit-tokens.json");
 
         tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
@@ -535,12 +551,18 @@ mod tests {
         // Output should be .parquet, not .csv
         let parquet_out = output.path().join("data.parquet");
         assert!(parquet_out.exists(), "Expected data.parquet to exist");
-        assert!(!output.path().join("data.csv").exists(), "data.csv should NOT exist");
+        assert!(
+            !output.path().join("data.csv").exists(),
+            "data.csv should NOT exist"
+        );
 
         // Read and verify content is tokenized
         use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
         let file = std::fs::File::open(&parquet_out).unwrap();
-        let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
         let batches: Vec<_> = reader.map(|r| r.unwrap()).collect();
         assert_eq!(batches[0].num_rows(), 2);
 
@@ -606,8 +628,10 @@ mod tests {
         tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
 
         // Original directory name should be tokenized
-        assert!(!output.path().join("mydata").exists(),
-            "mydata directory should be renamed");
+        assert!(
+            !output.path().join("mydata").exists(),
+            "mydata directory should be renamed"
+        );
 
         // Find the output directory
         let dirs: Vec<_> = std::fs::read_dir(output.path())
@@ -642,12 +666,16 @@ mod tests {
         tokenize(input.path(), output.path(), &dict_path, &config).unwrap();
 
         // Partition folder should be preserved
-        assert!(output.path().join("region=US").exists(),
-            "partition folder region=US should be preserved");
+        assert!(
+            output.path().join("region=US").exists(),
+            "partition folder region=US should be preserved"
+        );
 
         // But the file stem should be tokenized
-        assert!(!output.path().join("region=US").join("data.csv").exists(),
-            "data.csv should be renamed");
+        assert!(
+            !output.path().join("region=US").join("data.csv").exists(),
+            "data.csv should be renamed"
+        );
     }
 
     #[test]

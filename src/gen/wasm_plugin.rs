@@ -280,8 +280,8 @@ impl FieldGenerator for WasmFieldGenerator {
             // Note: the host does NOT free the result buffer — the guest owns it
             // and may reuse it across calls (e.g., via a thread-local Vec).
 
-            let json_str = std::str::from_utf8(&buf)
-                .map_err(|e| format!("invalid UTF-8 from WASM: {e}"))?;
+            let json_str =
+                std::str::from_utf8(&buf).map_err(|e| format!("invalid UTF-8 from WASM: {e}"))?;
 
             // Parse JSON array into Arrow ArrayRef.
             parse_json_to_array(json_str, &self.output_type, count)
@@ -304,9 +304,9 @@ impl FieldGenerator for WasmFieldGenerator {
 impl Drop for WasmFieldGenerator {
     fn drop(&mut self) {
         if let Ok(mut store) = self.store.lock() {
-            if let Ok(destroy_fn) =
-                self.instance
-                    .get_typed_func::<(i32,), ()>(&mut *store, "knit_destroy")
+            if let Ok(destroy_fn) = self
+                .instance
+                .get_typed_func::<(i32,), ()>(&mut *store, "knit_destroy")
             {
                 let _ = destroy_fn.call(&mut *store, (self.handle,));
             }
@@ -331,7 +331,9 @@ fn read_plugin_name(
     let name_len = name_len_fn.call(&mut *store, ())?;
 
     if name_len <= 0 || name_ptr < 0 {
-        return Err(WasmPluginError::Creation("invalid name pointer/length".into()));
+        return Err(WasmPluginError::Creation(
+            "invalid name pointer/length".into(),
+        ));
     }
 
     let memory = instance
@@ -394,31 +396,19 @@ fn parse_json_to_array(
 
     match data_type {
         DataType::Int64 => {
-            let arr: arrow::array::Int64Array = values
-                .iter()
-                .map(|v| v.as_i64())
-                .collect();
+            let arr: arrow::array::Int64Array = values.iter().map(|v| v.as_i64()).collect();
             Ok(Arc::new(arr))
         }
         DataType::Float64 => {
-            let arr: arrow::array::Float64Array = values
-                .iter()
-                .map(|v| v.as_f64())
-                .collect();
+            let arr: arrow::array::Float64Array = values.iter().map(|v| v.as_f64()).collect();
             Ok(Arc::new(arr))
         }
         DataType::Utf8 => {
-            let arr: arrow::array::StringArray = values
-                .iter()
-                .map(|v| v.as_str())
-                .collect();
+            let arr: arrow::array::StringArray = values.iter().map(|v| v.as_str()).collect();
             Ok(Arc::new(arr))
         }
         DataType::Boolean => {
-            let arr: arrow::array::BooleanArray = values
-                .iter()
-                .map(|v| v.as_bool())
-                .collect();
+            let arr: arrow::array::BooleanArray = values.iter().map(|v| v.as_bool()).collect();
             Ok(Arc::new(arr))
         }
         _ => Err(format!("unsupported WASM output type: {data_type}")),
@@ -436,13 +426,11 @@ fn null_array(data_type: &DataType, count: usize) -> ArrayRef {
             Arc::new(arr)
         }
         DataType::Utf8 => {
-            let arr: arrow::array::StringArray =
-                vec![None::<&str>; count].into_iter().collect();
+            let arr: arrow::array::StringArray = vec![None::<&str>; count].into_iter().collect();
             Arc::new(arr)
         }
         DataType::Boolean => {
-            let arr: arrow::array::BooleanArray =
-                vec![None; count].into_iter().collect();
+            let arr: arrow::array::BooleanArray = vec![None; count].into_iter().collect();
             Arc::new(arr)
         }
         _ => {
@@ -464,9 +452,8 @@ pub fn load_wasm_plugins_from_dir(dir: &Path) -> Result<Vec<String>, WasmPluginE
     let mut loaded = Vec::new();
     let mut seen_names = std::collections::HashSet::new();
 
-    let entries = std::fs::read_dir(dir).map_err(|e| {
-        WasmPluginError::Creation(format!("failed to read plugin directory: {e}"))
-    })?;
+    let entries = std::fs::read_dir(dir)
+        .map_err(|e| WasmPluginError::Creation(format!("failed to read plugin directory: {e}")))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| {
@@ -546,8 +533,7 @@ mod tests {
 
     #[test]
     fn parse_json_utf8_array() {
-        let arr =
-            parse_json_to_array(r#"["hello", "world"]"#, &DataType::Utf8, 2).unwrap();
+        let arr = parse_json_to_array(r#"["hello", "world"]"#, &DataType::Utf8, 2).unwrap();
         let s_arr = arr
             .as_any()
             .downcast_ref::<arrow::array::StringArray>()
@@ -558,8 +544,7 @@ mod tests {
 
     #[test]
     fn parse_json_boolean_array() {
-        let arr =
-            parse_json_to_array("[true, false, true]", &DataType::Boolean, 3).unwrap();
+        let arr = parse_json_to_array("[true, false, true]", &DataType::Boolean, 3).unwrap();
         let b_arr = arr
             .as_any()
             .downcast_ref::<arrow::array::BooleanArray>()

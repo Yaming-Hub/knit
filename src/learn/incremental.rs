@@ -158,16 +158,12 @@ pub fn update_relationship_evidence(state: &mut LearnState) {
 /// For each numeric column pair in the table, extracts paired non-null values
 /// and feeds them into a `PairwiseCorrelation` tracker stored on `TableState`.
 /// Pair keys are canonicalized (lexicographic order) to avoid duplicates.
-pub fn update_correlation_evidence(
-    state: &mut LearnState,
-    entity: &str,
-    batches: &[RecordBatch],
-) {
+pub fn update_correlation_evidence(state: &mut LearnState, entity: &str, batches: &[RecordBatch]) {
+    use crate::learn::streaming::relationships::PairwiseCorrelation;
     use arrow::array::{
         Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, UInt16Array,
         UInt32Array, UInt64Array, UInt8Array,
     };
-    use crate::learn::streaming::relationships::PairwiseCorrelation;
 
     if batches.is_empty() {
         return;
@@ -218,10 +214,9 @@ pub fn update_correlation_evidence(
             let tracker_idx = match tracker_pos {
                 Some(idx) => idx,
                 None => {
-                    table.correlations.push(PairwiseCorrelation::new(
-                        canon_a.clone(),
-                        canon_b.clone(),
-                    ));
+                    table
+                        .correlations
+                        .push(PairwiseCorrelation::new(canon_a.clone(), canon_b.clone()));
                     table.correlations.len() - 1
                 }
             };
@@ -566,8 +561,9 @@ pub fn finalize_state(
         analyses.push(analysis);
     }
 
-    let relationships =
-        crate::learn::streaming::relationships::finalize_relationships(&state.relationship_evidence);
+    let relationships = crate::learn::streaming::relationships::finalize_relationships(
+        &state.relationship_evidence,
+    );
 
     (analyses, relationships)
 }

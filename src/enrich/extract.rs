@@ -44,7 +44,8 @@ pub fn extract_field_enrichment(
     };
 
     // Try categorical fit
-    let categorical = if profile.string.is_some() && profile.cardinality_ratio.unwrap_or(1.0) < 0.5 {
+    let categorical = if profile.string.is_some() && profile.cardinality_ratio.unwrap_or(1.0) < 0.5
+    {
         let values = extract_string_values(batches, col_index);
         if values.len() >= 2 {
             Some(fit_categorical(&values))
@@ -140,15 +141,21 @@ mod tests {
 
     #[test]
     fn test_extract_numeric_values() {
-        let schema = Arc::new(Schema::new(vec![
-            ArrowField::new("score", DataType::Float64, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![ArrowField::new(
+            "score",
+            DataType::Float64,
+            true,
+        )]));
         let batch = RecordBatch::try_new(
             schema.clone(),
             vec![Arc::new(Float64Array::from(vec![
-                Some(1.0), Some(2.0), None, Some(3.0),
+                Some(1.0),
+                Some(2.0),
+                None,
+                Some(3.0),
             ]))],
-        ).unwrap();
+        )
+        .unwrap();
 
         let values = extract_numeric_values(&[batch], 0);
         assert_eq!(values, vec![1.0, 2.0, 3.0]);
@@ -156,15 +163,21 @@ mod tests {
 
     #[test]
     fn test_extract_string_values() {
-        let schema = Arc::new(Schema::new(vec![
-            ArrowField::new("name", DataType::Utf8, true),
-        ]));
+        let schema = Arc::new(Schema::new(vec![ArrowField::new(
+            "name",
+            DataType::Utf8,
+            true,
+        )]));
         let batch = RecordBatch::try_new(
             schema.clone(),
             vec![Arc::new(StringArray::from(vec![
-                Some("Alice"), Some("Bob"), None, Some("Carol"),
+                Some("Alice"),
+                Some("Bob"),
+                None,
+                Some("Carol"),
             ]))],
-        ).unwrap();
+        )
+        .unwrap();
 
         let values = extract_string_values(&[batch], 0);
         assert_eq!(values, vec!["Alice", "Bob", "Carol"]);

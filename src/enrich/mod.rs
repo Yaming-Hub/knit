@@ -18,7 +18,7 @@ use crate::core::DataModel;
 use crate::learn::ingest::read_auto_with_limit;
 use crate::learn::profile::compute_profiles;
 
-use self::mapper::{ColumnMapping, map_columns};
+use self::mapper::{map_columns, ColumnMapping};
 use self::merge::merge_enrichment;
 
 /// Configuration for an enrichment run.
@@ -84,22 +84,26 @@ pub fn enrich(
     }
 
     // Phase 2: Profile reference columns
-    let profiles = compute_profiles(&batches)
-        .with_context(|| "profiling reference data")?;
+    let profiles = compute_profiles(&batches).with_context(|| "profiling reference data")?;
     info!(columns = profiles.len(), "reference profiled");
 
     // Phase 3: Determine target entity
     let target_entity_name = resolve_target_entity(model, ref_path, config)?;
     info!(entity = %target_entity_name, "target entity for enrichment");
 
-    let entity = model.entities.iter()
+    let entity = model
+        .entities
+        .iter()
         .find(|e| e.name == target_entity_name)
         .ok_or_else(|| anyhow::anyhow!("entity '{}' not found in model", target_entity_name))?
         .clone();
 
     // Phase 4: Map reference columns to entity fields
     let mappings = map_columns(&profiles, &entity, config.min_confidence);
-    let mapped_count = mappings.iter().filter(|m| m.confidence >= config.min_confidence).count();
+    let mapped_count = mappings
+        .iter()
+        .filter(|m| m.confidence >= config.min_confidence)
+        .count();
     let unmapped_count = profiles.len() - mapped_count;
 
     info!(
@@ -114,7 +118,10 @@ pub fn enrich(
     } else {
         mappings
     };
-    let mapped_count = mappings.iter().filter(|m| m.confidence >= config.min_confidence).count();
+    let mapped_count = mappings
+        .iter()
+        .filter(|m| m.confidence >= config.min_confidence)
+        .count();
     let unmapped_count = profiles.len() - mapped_count;
 
     if config.dry_run {
@@ -135,7 +142,8 @@ pub fn enrich(
     let mut skipped_fields = 0;
     let mut field_scores = Vec::new();
 
-    let accepted_mappings: Vec<&ColumnMapping> = mappings.iter()
+    let accepted_mappings: Vec<&ColumnMapping> = mappings
+        .iter()
         .filter(|m| m.confidence >= config.min_confidence)
         .collect();
 
@@ -146,11 +154,15 @@ pub fn enrich(
         let profile = &profiles[mapping.ref_col_index];
 
         // Find the field in the entity
-        let entity_mut = model.entities.iter_mut()
+        let entity_mut = model
+            .entities
+            .iter_mut()
             .find(|e| e.name == target_entity_name)
             .unwrap();
 
-        let field = entity_mut.fields.iter_mut()
+        let field = entity_mut
+            .fields
+            .iter_mut()
             .find(|f| f.name == mapping.target_field);
 
         let Some(field) = field else {
@@ -159,12 +171,8 @@ pub fn enrich(
         };
 
         // Extract enrichment from reference profile
-        let enrichment = extract::extract_field_enrichment(
-            profile,
-            &batches,
-            &schema,
-            mapping.ref_col_index,
-        );
+        let enrichment =
+            extract::extract_field_enrichment(profile, &batches, &schema, mapping.ref_col_index);
 
         // Merge into the field's generator
         let outcome = merge_enrichment(field, &enrichment, ref_row_count);
@@ -207,9 +215,7 @@ fn resolve_target_entity(
     }
 
     // Try matching by filename stem
-    let stem = ref_path.file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("");
+    let stem = ref_path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
     let stem_lower = stem.to_lowercase();
     for entity in &model.entities {
@@ -219,7 +225,9 @@ fn resolve_target_entity(
     }
 
     // Default to the entity with the most fields (likely the main data entity)
-    model.entities.iter()
+    model
+        .entities
+        .iter()
         .max_by_key(|e| e.fields.len())
         .map(|e| e.name.clone())
         .ok_or_else(|| anyhow::anyhow!("model has no entities"))
@@ -250,8 +258,14 @@ mod tests {
                         data_type: DataType::String,
                         generator: Some(GeneratorSpec::OneOf {
                             choices: vec![
-                                WeightedChoice { value: Value::String("Alice".into()), weight: 0.5 },
-                                WeightedChoice { value: Value::String("Bob".into()), weight: 0.5 },
+                                WeightedChoice {
+                                    value: Value::String("Alice".into()),
+                                    weight: 0.5,
+                                },
+                                WeightedChoice {
+                                    value: Value::String("Bob".into()),
+                                    weight: 0.5,
+                                },
                             ],
                         }),
                         nullable: NullSpec::Never,
@@ -259,8 +273,8 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
-                stats: None,
-                traits: None,
+                        stats: None,
+                        traits: None,
                     },
                     Field {
                         name: "score".to_string(),
@@ -282,8 +296,8 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
-                stats: None,
-                traits: None,
+                        stats: None,
+                        traits: None,
                     },
                 ],
                 constraints: vec![],

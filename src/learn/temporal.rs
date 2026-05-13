@@ -89,7 +89,10 @@ pub fn detect_temporal_pattern(timestamps_secs: &[f64]) -> Option<TemporalPatter
     let _span = debug_span!("temporal", n = timestamps_secs.len()).entered();
     let ts = filter_sorted(timestamps_secs);
     if ts.len() < 3 {
-        warn!(count = ts.len(), "fewer than 3 timestamps, skipping temporal detection");
+        warn!(
+            count = ts.len(),
+            "fewer than 3 timestamps, skipping temporal detection"
+        );
         return None;
     }
 

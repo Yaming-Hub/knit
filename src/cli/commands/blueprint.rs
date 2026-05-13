@@ -8,9 +8,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::core::{DataModel, Entity, Field};
 use anyhow::{Context, Result};
 use colored::Colorize;
-use crate::core::{DataModel, Entity, Field};
 
 use super::{load_blueprint, validate_model};
 
@@ -19,7 +19,8 @@ use super::{load_blueprint, validate_model};
 /// Loads a blueprint file (resolving any `extends` chain via the schema module),
 /// then serializes the fully resolved model back to TOML.
 pub fn run_expand(path: &str, json: bool) -> Result<()> {
-    let model = load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&model)?);
@@ -35,7 +36,8 @@ pub fn run_expand(path: &str, json: bool) -> Result<()> {
 /// Parses a schema and re-serializes it in canonical TOML form with
 /// sorted keys and consistent formatting.
 pub fn run_normalize(path: &str, json: bool) -> Result<()> {
-    let model = load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     if json {
         println!("{}", serde_json::to_string_pretty(&model)?);
@@ -76,7 +78,8 @@ pub fn run_diff(path_a: &str, path_b: &str) -> Result<()> {
 /// Generates markdown documentation for the schema including entity descriptions,
 /// field tables, relationships, and generator info.
 pub fn run_doc(path: &str, output: Option<&str>) -> Result<()> {
-    let model = load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load schema `{}`", path))?;
 
     let markdown = generate_schema_doc(&model);
 
@@ -107,7 +110,10 @@ pub fn generate_schema_doc(model: &DataModel) -> String {
     // Overview table
     doc.push_str("## Overview\n\n");
     doc.push_str("| Property | Value |\n|---|---|\n");
-    doc.push_str(&format!("| Schema version | {} |\n", model.blueprint_version));
+    doc.push_str(&format!(
+        "| Schema version | {} |\n",
+        model.blueprint_version
+    ));
     doc.push_str(&format!("| Seed | {} |\n", model.seed));
     doc.push_str(&format!("| Locale | {} |\n", model.locale));
     doc.push_str(&format!("| Entities | {} |\n", model.entities.len()));
@@ -347,7 +353,10 @@ fn format_generator_spec(gen: &crate::core::GeneratorSpec) -> String {
         }
         crate::core::GeneratorSpec::Plugin { name, .. } => format!("plugin({})", name),
         crate::core::GeneratorSpec::ExternalLookup {
-            source, column, format, ..
+            source,
+            column,
+            format,
+            ..
         } => {
             format!("external_lookup({}, {}, {})", source, column, format)
         }
@@ -658,7 +667,11 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
             out.push_str(&format!("description = \"{}\"\n", toml_escape(desc)));
         }
         if !entity.tags.is_empty() {
-            let tags_str: Vec<String> = entity.tags.iter().map(|t| format!("\"{}\"", toml_escape(t))).collect();
+            let tags_str: Vec<String> = entity
+                .tags
+                .iter()
+                .map(|t| format!("\"{}\"", toml_escape(t)))
+                .collect();
             out.push_str(&format!("tags = [{}]\n", tags_str.join(", ")));
         }
         if entity.actor {
@@ -876,9 +889,7 @@ fn collect_generator_usage(field: &Field, usage: &mut BTreeMap<String, usize>) {
 }
 
 fn collect_data_type_usage(field: &Field, usage: &mut BTreeMap<String, usize>) {
-    *usage
-        .entry(field.data_type.to_string())
-        .or_insert(0) += 1;
+    *usage.entry(field.data_type.to_string()).or_insert(0) += 1;
     for sub in &field.fields {
         collect_data_type_usage(sub, usage);
     }
@@ -896,11 +907,7 @@ pub fn run_stats(path: &str, json: bool) -> Result<()> {
     }
 
     // ── Header ──────────────────────────────────────────────────────
-    println!(
-        "{} {}",
-        "Blueprint:".bold(),
-        model.name.cyan()
-    );
+    println!("{} {}", "Blueprint:".bold(), model.name.cyan());
     if let Some(ref desc) = model.description {
         println!("  {}", desc.dimmed());
     }
@@ -915,20 +922,12 @@ pub fn run_stats(path: &str, json: bool) -> Result<()> {
         "Estimated rows:".dimmed(),
         format_count(stats.estimated_rows)
     );
-    println!(
-        "  {} {}",
-        "Relationships:".dimmed(),
-        stats.relationships
-    );
+    println!("  {} {}", "Relationships:".dimmed(), stats.relationships);
     if stats.correlations > 0 {
         println!("  {} {}", "Correlations:".dimmed(), stats.correlations);
     }
     if stats.noise_profiles > 0 {
-        println!(
-            "  {} {}",
-            "Noise profiles:".dimmed(),
-            stats.noise_profiles
-        );
+        println!("  {} {}", "Noise profiles:".dimmed(), stats.noise_profiles);
     }
     if stats.personas > 0 {
         println!("  {} {}", "Personas:".dimmed(), stats.personas);
@@ -1048,7 +1047,10 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
     };
 
     for overlay_entity in &overlay.entities {
-        if let Some(base_entity) = result.entities.iter_mut().find(|e| e.name == overlay_entity.name)
+        if let Some(base_entity) = result
+            .entities
+            .iter_mut()
+            .find(|e| e.name == overlay_entity.name)
         {
             // Warn about entity-level metadata differences (base version is kept).
             if overlay_entity.count != base_entity.count {
@@ -1132,8 +1134,11 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
     }
 
     // Merge noise profiles (dedup by name).
-    let existing_noise: BTreeSet<String> =
-        result.noise_profiles.iter().map(|n| n.name.clone()).collect();
+    let existing_noise: BTreeSet<String> = result
+        .noise_profiles
+        .iter()
+        .map(|n| n.name.clone())
+        .collect();
     for np in &overlay.noise_profiles {
         if !existing_noise.contains(&np.name) {
             result.noise_profiles.push(np.clone());
@@ -1188,8 +1193,7 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
     }
 
     // Merge mixins (dedup by name).
-    let existing_mixins: BTreeSet<String> =
-        result.mixins.iter().map(|m| m.name.clone()).collect();
+    let existing_mixins: BTreeSet<String> = result.mixins.iter().map(|m| m.name.clone()).collect();
     for mixin in &overlay.mixins {
         if !existing_mixins.contains(&mixin.name) {
             result.mixins.push(mixin.clone());
@@ -1199,17 +1203,15 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
     // Merge params (overlay wins on conflict).
     for (k, v) in &overlay.params {
         if result.params.contains_key(k) {
-            report.warnings.push(format!(
-                "param `{}` exists in both, overlay value used",
-                k
-            ));
+            report
+                .warnings
+                .push(format!("param `{}` exists in both, overlay value used", k));
         }
         result.params.insert(k.clone(), v.clone());
     }
 
     // Merge companion_files (dedup).
-    let existing_companions: BTreeSet<String> =
-        result.companion_files.iter().cloned().collect();
+    let existing_companions: BTreeSet<String> = result.companion_files.iter().cloned().collect();
     for cf in &overlay.companion_files {
         if !existing_companions.contains(cf) {
             result.companion_files.push(cf.clone());
@@ -1220,7 +1222,12 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
 }
 
 /// Run `knit blueprint merge`.
-pub fn run_merge(base_path: &str, overlay_path: &str, output: Option<&str>, json: bool) -> Result<()> {
+pub fn run_merge(
+    base_path: &str,
+    overlay_path: &str,
+    output: Option<&str>,
+    json: bool,
+) -> Result<()> {
     let base = load_blueprint(base_path)
         .with_context(|| format!("failed to load base blueprint `{}`", base_path))?;
     let overlay = load_blueprint(overlay_path)
@@ -1229,8 +1236,8 @@ pub fn run_merge(base_path: &str, overlay_path: &str, output: Option<&str>, json
     let (merged, report) = merge_models(&base, &overlay);
 
     // Serialize merged model in canonical blueprint format.
-    let toml_output = serialize_model_to_toml(&merged)
-        .context("failed to serialize merged blueprint")?;
+    let toml_output =
+        serialize_model_to_toml(&merged).context("failed to serialize merged blueprint")?;
 
     // Write or print.
     if let Some(out_path) = output {
@@ -1287,11 +1294,7 @@ pub fn run_merge(base_path: &str, overlay_path: &str, output: Option<&str>, json
             );
         }
         if report.personas_added > 0 {
-            println!(
-                "  {} {}",
-                "Personas added:".dimmed(),
-                report.personas_added
-            );
+            println!("  {} {}", "Personas added:".dimmed(), report.personas_added);
         }
         for w in &report.warnings {
             println!("  {} {}", "⚠".yellow(), w);
@@ -1437,7 +1440,11 @@ fn render_dot(model: &DataModel, graph: &GraphOutput) -> String {
         };
         out.push_str(&format!(
             "  \"{}\" -> \"{}\" [label=\"{}{}\"{}];\n",
-            dot_escape(&edge.from), dot_escape(&edge.to), label, fk_label, style
+            dot_escape(&edge.from),
+            dot_escape(&edge.to),
+            label,
+            fk_label,
+            style
         ));
     }
 
@@ -1463,10 +1470,7 @@ fn render_mermaid(model: &DataModel, _graph: &GraphOutput) -> String {
 
     // Entity blocks with fields.
     for entity in &model.entities {
-        out.push_str(&format!(
-            "    {} {{\n",
-            mermaid_ident(&entity.name)
-        ));
+        out.push_str(&format!("    {} {{\n", mermaid_ident(&entity.name)));
         for field in &entity.fields {
             let type_str = mermaid_type(&field.data_type);
             let is_pk = field.primary_key == Some(true);
@@ -1511,10 +1515,7 @@ fn render_mermaid(model: &DataModel, _graph: &GraphOutput) -> String {
     for ar in &model.actor_relationships {
         let from = mermaid_ident(&ar.from_entity);
         let to = mermaid_ident(&ar.to_entity);
-        out.push_str(&format!(
-            "    {} ||--o{{ {} : \"{}\"\n",
-            from, to, ar.name
-        ));
+        out.push_str(&format!("    {} ||--o{{ {} : \"{}\"\n", from, to, ar.name));
     }
 
     out
@@ -1558,11 +1559,7 @@ fn mermaid_cardinality_directed(kind: &crate::core::RelationshipKind) -> &'stati
 /// If the name is purely alphanumeric/underscore, use as-is.
 /// Otherwise, wrap in double quotes to preserve the original name.
 fn mermaid_ident(name: &str) -> String {
-    if name
-        .chars()
-        .all(|c| c.is_alphanumeric() || c == '_')
-        && !name.is_empty()
-    {
+    if name.chars().all(|c| c.is_alphanumeric() || c == '_') && !name.is_empty() {
         name.to_string()
     } else {
         // Mermaid supports quoted identifiers
@@ -1572,8 +1569,8 @@ fn mermaid_ident(name: &str) -> String {
 
 /// Run `knit blueprint graph`.
 pub fn run_graph(path: &str, format: &str) -> Result<()> {
-    let model = load_blueprint(path)
-        .with_context(|| format!("failed to load blueprint `{}`", path))?;
+    let model =
+        load_blueprint(path).with_context(|| format!("failed to load blueprint `{}`", path))?;
     let graph = build_graph(&model);
 
     match format {
@@ -1587,7 +1584,10 @@ pub fn run_graph(path: &str, format: &str) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&graph)?);
         }
         other => {
-            anyhow::bail!("unsupported graph format `{}` (use `dot`, `mermaid`, or `json`)", other);
+            anyhow::bail!(
+                "unsupported graph format `{}` (use `dot`, `mermaid`, or `json`)",
+                other
+            );
         }
     }
 
@@ -1647,10 +1647,7 @@ pub fn lint_model(model: &DataModel) -> Vec<LintFinding> {
         }
 
         // 3. Orphan entity (not referenced by any relationship and not an actor).
-        if model.entities.len() > 1
-            && !referenced.contains(entity.name.as_str())
-            && !entity.actor
-        {
+        if model.entities.len() > 1 && !referenced.contains(entity.name.as_str()) && !entity.actor {
             findings.push(LintFinding {
                 severity: LintSeverity::Info,
                 entity: Some(entity.name.clone()),
@@ -1957,13 +1954,12 @@ pub fn rename_in_model(
     };
 
     // Helper: rename a field name if there's a matching rename for this entity.
-    let rename_field =
-        |orig_entity: &str, name: &mut String, count: &mut usize| {
-            if let Some(new) = field_renames.get(&(orig_entity.to_string(), name.clone())) {
-                *name = new.clone();
-                *count += 1;
-            }
-        };
+    let rename_field = |orig_entity: &str, name: &mut String, count: &mut usize| {
+        if let Some(new) = field_renames.get(&(orig_entity.to_string(), name.clone())) {
+            *name = new.clone();
+            *count += 1;
+        }
+    };
 
     // Collect original entity names before renaming.
     let orig_entity_names: Vec<String> = m.entities.iter().map(|e| e.name.clone()).collect();
@@ -2070,13 +2066,12 @@ fn rename_generator_spec(
 ) {
     use crate::core::GeneratorSpec;
 
-    let rename_field =
-        |entity: &str, name: &mut String, count: &mut usize| {
-            if let Some(new) = field_renames.get(&(entity.to_string(), name.clone())) {
-                *name = new.clone();
-                *count += 1;
-            }
-        };
+    let rename_field = |entity: &str, name: &mut String, count: &mut usize| {
+        if let Some(new) = field_renames.get(&(entity.to_string(), name.clone())) {
+            *name = new.clone();
+            *count += 1;
+        }
+    };
 
     match gen {
         GeneratorSpec::Lookup { entity, field } => {
@@ -2105,7 +2100,10 @@ fn rename_generator_spec(
             rename_field(&orig, &mut ta.field, updates);
             rename_field(owner_entity, &mut ta.fk, updates);
         }
-        GeneratorSpec::ActorTemporal { temporal_after: None, .. } => {}
+        GeneratorSpec::ActorTemporal {
+            temporal_after: None,
+            ..
+        } => {}
         GeneratorSpec::Relative { anchor, .. } => {
             rename_field(owner_entity, anchor, updates);
         }
@@ -2115,7 +2113,9 @@ fn rename_generator_spec(
         } => {
             rename_field(owner_entity, sf, updates);
         }
-        GeneratorSpec::RelationshipRef { source_field: None, .. } => {}
+        GeneratorSpec::RelationshipRef {
+            source_field: None, ..
+        } => {}
         GeneratorSpec::Unique { inner, .. } => {
             rename_generator_spec(inner, owner_entity, entity_renames, field_renames, updates);
         }
@@ -2180,20 +2180,22 @@ pub fn run_rename(
         let (old, new) = parse_rename_spec(spec)?;
         // Verify the old entity exists.
         if !model.entities.iter().any(|e| e.name == old) {
-            anyhow::bail!(
-                "entity `{}` not found in blueprint",
-                old
-            );
+            anyhow::bail!("entity `{}` not found in blueprint", old);
         }
         // Check for collision: new name must not conflict with an existing
         // entity that isn't itself being renamed away.
         let conflicts = model.entities.iter().any(|e| {
-            e.name == new && !entity_specs.iter().any(|s| s.starts_with(&format!("{}=", e.name)))
+            e.name == new
+                && !entity_specs
+                    .iter()
+                    .any(|s| s.starts_with(&format!("{}=", e.name)))
         });
         if conflicts {
             anyhow::bail!(
                 "cannot rename `{}` to `{}`: entity `{}` already exists",
-                old, new, new
+                old,
+                new,
+                new
             );
         }
         entity_renames.insert(old, new);
@@ -2214,7 +2216,11 @@ pub fn run_rename(
                 if e.fields.iter().any(|f| f.name == new) {
                     anyhow::bail!(
                         "cannot rename `{}.{}` to `{}`: field `{}` already exists in `{}`",
-                        entity, old, new, new, entity
+                        entity,
+                        old,
+                        new,
+                        new,
+                        entity
                     );
                 }
             }
@@ -2314,7 +2320,10 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
     let mut out = String::new();
 
     // Header comment.
-    out.push_str(&format!("-- Generated by knit from model: {}\n", model.name));
+    out.push_str(&format!(
+        "-- Generated by knit from model: {}\n",
+        model.name
+    ));
     out.push_str(&format!("-- Dialect: {:?}\n\n", dialect));
 
     // Build a map of entity → primary key field name for FK references.
@@ -2347,14 +2356,11 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
                 .get(rel.to.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| "id".to_string());
-            fk_map
-                .entry(rel.from.clone())
-                .or_default()
-                .push(FkInfo {
-                    fk_col,
-                    to_entity: rel.to.clone(),
-                    to_pk,
-                });
+            fk_map.entry(rel.from.clone()).or_default().push(FkInfo {
+                fk_col,
+                to_entity: rel.to.clone(),
+                to_pk,
+            });
         }
     }
 
@@ -2385,11 +2391,7 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
             }
 
             let col_type = sql_type(&field.data_type, dialect);
-            let mut col_def = format!(
-                "    {} {}",
-                sql_quote_ident(&field.name, dialect),
-                col_type
-            );
+            let mut col_def = format!("    {} {}", sql_quote_ident(&field.name, dialect), col_type);
             if field.primary_key == Some(true) {
                 col_def.push_str(" PRIMARY KEY");
                 // SQLite needs explicit NOT NULL on PKs (unlike PG/MySQL).
@@ -2460,12 +2462,7 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
 }
 
 /// Flatten nested fields into SQL columns with dotted prefix.
-fn flatten_fields(
-    fields: &[Field],
-    prefix: &str,
-    dialect: SqlDialect,
-    columns: &mut Vec<String>,
-) {
+fn flatten_fields(fields: &[Field], prefix: &str, dialect: SqlDialect, columns: &mut Vec<String>) {
     for field in fields {
         let col_name = format!("{}_{}", prefix, field.name);
         if field.data_type == crate::core::DataType::Object && !field.fields.is_empty() {
@@ -2506,10 +2503,7 @@ pub fn run_export(
             let d = SqlDialect::from_str(dialect)?;
             export_sql(&model, d, include_fks)
         }
-        _ => anyhow::bail!(
-            "unsupported export format `{}`; supported: sql",
-            format
-        ),
+        _ => anyhow::bail!("unsupported export format `{}`; supported: sql", format),
     };
 
     if let Some(out_path) = output {
@@ -2573,8 +2567,7 @@ fn parse_entity_spec(spec: &str) -> Result<(String, u64, Vec<Field>)> {
         let dt_str = if ft.len() > 1 { ft[1].trim() } else { "string" };
         let data_type = parse_scaffold_type(dt_str)?;
 
-        let is_pk = field_name == "id"
-            || field_name.ends_with("_id") && fields.is_empty();
+        let is_pk = field_name == "id" || field_name.ends_with("_id") && fields.is_empty();
 
         fields.push(Field {
             name: field_name.to_string(),
@@ -2822,8 +2815,9 @@ fn sql_type_to_data_type(sql: &str) -> crate::core::DataType {
         "INTEGER" | "INT" | "INT4" | "SMALLINT" | "INT2" | "TINYINT" | "SERIAL" | "MEDIUMINT" => {
             DataType::Int32
         }
-        "DOUBLE" | "FLOAT" | "REAL" | "FLOAT4" | "FLOAT8" | "DECIMAL" | "NUMERIC"
-        | "MONEY" => DataType::Float,
+        "DOUBLE" | "FLOAT" | "REAL" | "FLOAT4" | "FLOAT8" | "DECIMAL" | "NUMERIC" | "MONEY" => {
+            DataType::Float
+        }
         "DOUBLE PRECISION" => DataType::Float,
         "TEXT" | "VARCHAR" | "CHAR" | "CHARACTER" | "NVARCHAR" | "CLOB" | "LONGTEXT"
         | "MEDIUMTEXT" | "TINYTEXT" | "CHARACTER VARYING" | "NCHAR" => DataType::String,
@@ -3071,7 +3065,10 @@ fn parse_create_table(
         );
     }
     if let Some(first_pk) = table_pk_cols.first() {
-        if let Some(f) = fields.iter_mut().find(|f| f.name.eq_ignore_ascii_case(first_pk)) {
+        if let Some(f) = fields
+            .iter_mut()
+            .find(|f| f.name.eq_ignore_ascii_case(first_pk))
+        {
             f.primary_key = Some(true);
         }
     }
@@ -3098,9 +3095,7 @@ fn parse_create_table(
 
 /// Extract the body between matching outermost parentheses.
 fn extract_paren_body(s: &str) -> Result<String> {
-    let start = s
-        .find('(')
-        .ok_or_else(|| anyhow::anyhow!("expected '('"))?;
+    let start = s.find('(').ok_or_else(|| anyhow::anyhow!("expected '('"))?;
     let mut depth = 0;
     let mut end = start;
     for (i, ch) in s[start..].char_indices() {
@@ -3368,10 +3363,7 @@ fn parse_inline_references(
 }
 
 /// Parse a table-level FOREIGN KEY constraint or CONSTRAINT ... FOREIGN KEY.
-fn parse_inline_fk_constraint(
-    def: &str,
-    table_name: &str,
-) -> Option<crate::core::Relationship> {
+fn parse_inline_fk_constraint(def: &str, table_name: &str) -> Option<crate::core::Relationship> {
     let upper = def.to_uppercase();
     // Find FOREIGN KEY (...) REFERENCES ... (...)
     let fk_idx = upper.find("FOREIGN KEY")?;
@@ -3429,9 +3421,7 @@ fn parse_alter_table_fk(
     };
 
     // Table name is next token (before ADD/FOREIGN)
-    let name_end = rest
-        .find(|c: char| c.is_whitespace())
-        .unwrap_or(rest.len());
+    let name_end = rest.find(|c: char| c.is_whitespace()).unwrap_or(rest.len());
     let table_name = unquote_ident(&rest[..name_end]);
 
     if let Some(fk) = parse_inline_fk_constraint(stmt, &table_name) {
@@ -3442,14 +3432,9 @@ fn parse_alter_table_fk(
 }
 
 /// Run the `blueprint import` command.
-pub fn run_import(
-    file: &str,
-    name: Option<&str>,
-    output: Option<&str>,
-    json: bool,
-) -> Result<()> {
-    let sql_text = std::fs::read_to_string(file)
-        .with_context(|| format!("failed to read `{}`", file))?;
+pub fn run_import(file: &str, name: Option<&str>, output: Option<&str>, json: bool) -> Result<()> {
+    let sql_text =
+        std::fs::read_to_string(file).with_context(|| format!("failed to read `{}`", file))?;
 
     let model_name = name.unwrap_or_else(|| {
         std::path::Path::new(file)
@@ -3509,15 +3494,9 @@ enum UpdateOp {
         desc: String,
     },
     /// Add tags to an entity: `Entity=tag1,tag2`
-    AddTags {
-        entity: String,
-        tags: Vec<String>,
-    },
+    AddTags { entity: String, tags: Vec<String> },
     /// Remove tags from an entity: `Entity=tag1,tag2`
-    RemoveTags {
-        entity: String,
-        tags: Vec<String>,
-    },
+    RemoveTags { entity: String, tags: Vec<String> },
     /// Set model seed: `N`
     SetSeed { seed: u64 },
     /// Set model locale: `en_US`
@@ -3558,7 +3537,11 @@ fn parse_describe_spec(spec: &str) -> Result<UpdateOp> {
 /// Parse a `--tag Entity=tag1,tag2` spec.
 fn parse_tag_spec(spec: &str) -> Result<UpdateOp> {
     let (entity, val) = split_kv(spec, "tag")?;
-    let tags: Vec<String> = val.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    let tags: Vec<String> = val
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
     if tags.is_empty() {
         anyhow::bail!("no tags specified for entity `{}`", entity);
     }
@@ -3568,7 +3551,11 @@ fn parse_tag_spec(spec: &str) -> Result<UpdateOp> {
 /// Parse a `--untag Entity=tag1,tag2` spec.
 fn parse_untag_spec(spec: &str) -> Result<UpdateOp> {
     let (entity, val) = split_kv(spec, "untag")?;
-    let tags: Vec<String> = val.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    let tags: Vec<String> = val
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
     if tags.is_empty() {
         anyhow::bail!("no tags specified for entity `{}`", entity);
     }
@@ -3654,11 +3641,7 @@ fn update_model(model: &mut DataModel, ops: &[UpdateOp]) -> Result<Vec<String>> 
                         ent.tags.push(tag.clone());
                     }
                 }
-                changes.push(format!(
-                    "{}.tags += [{}]",
-                    entity,
-                    tags.join(", ")
-                ));
+                changes.push(format!("{}.tags += [{}]", entity, tags.join(", ")));
             }
             UpdateOp::RemoveTags { entity, tags } => {
                 let ent = model
@@ -3667,11 +3650,7 @@ fn update_model(model: &mut DataModel, ops: &[UpdateOp]) -> Result<Vec<String>> 
                     .find(|e| e.name == *entity)
                     .ok_or_else(|| anyhow::anyhow!("entity `{}` not found", entity))?;
                 ent.tags.retain(|t| !tags.contains(t));
-                changes.push(format!(
-                    "{}.tags -= [{}]",
-                    entity,
-                    tags.join(", ")
-                ));
+                changes.push(format!("{}.tags -= [{}]", entity, tags.join(", ")));
             }
             UpdateOp::SetSeed { seed } => {
                 let old = model.seed;
@@ -3702,8 +3681,7 @@ pub fn run_update(
     output: Option<&str>,
     json: bool,
 ) -> Result<()> {
-    let mut model = load_blueprint(file)
-        .with_context(|| format!("failed to load `{}`", file))?;
+    let mut model = load_blueprint(file).with_context(|| format!("failed to load `{}`", file))?;
 
     // Parse all update operations.
     let mut ops: Vec<UpdateOp> = Vec::new();
@@ -3802,11 +3780,20 @@ impl Finding {
 
 /// Map a knit DataType to the expected Arrow DataType(s).
 fn expected_arrow_types(dt: &crate::core::DataType) -> Vec<arrow::datatypes::DataType> {
-    use arrow::datatypes::DataType as A;
     use crate::core::DataType as K;
+    use arrow::datatypes::DataType as A;
     match dt {
         K::Bool => vec![A::Boolean],
-        K::Int => vec![A::Int64, A::Int32, A::Int16, A::Int8, A::UInt64, A::UInt32, A::UInt16, A::UInt8],
+        K::Int => vec![
+            A::Int64,
+            A::Int32,
+            A::Int16,
+            A::Int8,
+            A::UInt64,
+            A::UInt32,
+            A::UInt16,
+            A::UInt8,
+        ],
         K::Int32 => vec![A::Int32, A::Int16, A::Int8, A::UInt32, A::UInt16, A::UInt8],
         K::Float => vec![A::Float64, A::Float32],
         K::String => vec![A::Utf8, A::LargeUtf8],
@@ -3924,11 +3911,7 @@ fn validate_data(
     // entity name -> (schema, row_count, pk_values)
     let mut entity_data: BTreeMap<
         String,
-        (
-            arrow::datatypes::Schema,
-            usize,
-            Option<HashSet<String>>,
-        ),
+        (arrow::datatypes::Schema, usize, Option<HashSet<String>>),
     > = BTreeMap::new();
 
     for entity in &entities {
@@ -3964,11 +3947,7 @@ fn validate_data(
         let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
 
         // --- Column presence ---
-        let data_cols: HashSet<String> = schema
-            .fields()
-            .iter()
-            .map(|f| f.name().clone())
-            .collect();
+        let data_cols: HashSet<String> = schema.fields().iter().map(|f| f.name().clone()).collect();
 
         for field in &entity.fields {
             if !data_cols.contains(&field.name) {
@@ -4017,7 +3996,9 @@ fn validate_data(
                         &entity.name,
                         format!(
                             "column `{}`: expected {:?}, got {:?}",
-                            field.name, field.data_type, arrow_field.data_type()
+                            field.name,
+                            field.data_type,
+                            arrow_field.data_type()
                         ),
                     ));
                 }
@@ -4066,11 +4047,12 @@ fn validate_data(
                                 break;
                             }
                             let val = arrow::util::display::ArrayFormatter::try_new(
-                                    col.as_ref(),
-                                    &arrow::util::display::FormatOptions::default()
-                                )
-                                .map(|f| f.value(i).to_string())
-                                .unwrap_or_default().to_string();
+                                col.as_ref(),
+                                &arrow::util::display::FormatOptions::default(),
+                            )
+                            .map(|f| f.value(i).to_string())
+                            .unwrap_or_default()
+                            .to_string();
                             if !seen.insert(val) {
                                 dup_count += 1;
                             }
@@ -4097,10 +4079,7 @@ fn validate_data(
                 if total_rows != *expected as usize {
                     findings.push(Finding::warning(
                         &entity.name,
-                        format!(
-                            "row count: expected {}, got {}",
-                            expected, total_rows
-                        ),
+                        format!("row count: expected {}, got {}", expected, total_rows),
                     ));
                 }
             }
@@ -4127,9 +4106,7 @@ fn validate_data(
     // --- FK referential integrity ---
     for rel in &model.relationships {
         // Skip if child entity is filtered out
-        if !filter_entities.is_empty()
-            && !filter_entities.iter().any(|e| e == &rel.from)
-        {
+        if !filter_entities.is_empty() && !filter_entities.iter().any(|e| e == &rel.from) {
             continue;
         }
 
@@ -4157,37 +4134,34 @@ fn validate_data(
         } else {
             // Parent not loaded yet (filtered out) — load on demand
             let parent_entity = model.entities.iter().find(|e| e.name == rel.to);
-            let pk_field = parent_entity.and_then(|e| {
-                e.fields.iter().find(|f| f.primary_key == Some(true))
-            });
+            let pk_field =
+                parent_entity.and_then(|e| e.fields.iter().find(|f| f.primary_key == Some(true)));
             match (find_entity_file(data_dir, &rel.to), pk_field) {
-                (Some(file), Some(pk)) => {
-                    match read_data_file(&file) {
-                        Ok(batches) if !batches.is_empty() => {
-                            let schema = batches[0].schema();
-                            let mut pks = HashSet::new();
-                            if let Ok(col_idx) = schema.index_of(&pk.name) {
-                                for batch in &batches {
-                                    let col = batch.column(col_idx);
-                                    for i in 0..col.len() {
-                                        use arrow::array::Array;
-                                        if !col.is_null(i) {
-                                            let val = arrow::util::display::ArrayFormatter::try_new(
-                                                col.as_ref(),
-                                                &arrow::util::display::FormatOptions::default(),
-                                            )
-                                            .map(|f| f.value(i).to_string())
-                                            .unwrap_or_default();
-                                            pks.insert(val);
-                                        }
+                (Some(file), Some(pk)) => match read_data_file(&file) {
+                    Ok(batches) if !batches.is_empty() => {
+                        let schema = batches[0].schema();
+                        let mut pks = HashSet::new();
+                        if let Ok(col_idx) = schema.index_of(&pk.name) {
+                            for batch in &batches {
+                                let col = batch.column(col_idx);
+                                for i in 0..col.len() {
+                                    use arrow::array::Array;
+                                    if !col.is_null(i) {
+                                        let val = arrow::util::display::ArrayFormatter::try_new(
+                                            col.as_ref(),
+                                            &arrow::util::display::FormatOptions::default(),
+                                        )
+                                        .map(|f| f.value(i).to_string())
+                                        .unwrap_or_default();
+                                        pks.insert(val);
                                     }
                                 }
                             }
-                            pks
                         }
-                        _ => continue,
+                        pks
                     }
-                }
+                    _ => continue,
+                },
                 _ => continue,
             }
         };
@@ -4261,8 +4235,7 @@ pub fn run_validate(
     strict: bool,
     json: bool,
 ) -> Result<()> {
-    let model = load_blueprint(file)
-        .with_context(|| format!("failed to load `{}`", file))?;
+    let model = load_blueprint(file).with_context(|| format!("failed to load `{}`", file))?;
 
     let data_dir = std::path::Path::new(data);
     if !data_dir.is_dir() {
@@ -4271,7 +4244,10 @@ pub fn run_validate(
 
     let findings = validate_data(&model, data_dir, entities)?;
 
-    let errors = findings.iter().filter(|f| f.severity == Severity::Error).count();
+    let errors = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Error)
+        .count();
     let warnings = findings
         .iter()
         .filter(|f| f.severity == Severity::Warning)
@@ -4305,15 +4281,15 @@ pub fn run_validate(
             eprintln!("  {} [{}] {}: {}", icon, label, f.entity, f.message);
         }
         if findings.is_empty() {
-            eprintln!(
-                "{} all checks passed for {}",
-                "✓".green(),
-                file
-            );
+            eprintln!("{} all checks passed for {}", "✓".green(), file);
         } else {
             eprintln!(
                 "\n{} {} error(s), {} warning(s)",
-                if errors > 0 { "✗".red() } else { "✓".green() },
+                if errors > 0 {
+                    "✗".red()
+                } else {
+                    "✓".green()
+                },
                 errors,
                 warnings
             );
@@ -4338,11 +4314,17 @@ pub fn run_validate(
 /// Parse a scale factor spec like `10x`, `0.5x`, `2.5x`.
 fn parse_scale_factor(spec: &str) -> Result<f64> {
     let trimmed = spec.trim().trim_end_matches('x').trim_end_matches('X');
-    let factor: f64 = trimmed
-        .parse()
-        .with_context(|| format!("invalid scale factor `{}`: expected format like `10x`", spec))?;
+    let factor: f64 = trimmed.parse().with_context(|| {
+        format!(
+            "invalid scale factor `{}`: expected format like `10x`",
+            spec
+        )
+    })?;
     if !factor.is_finite() || factor <= 0.0 {
-        anyhow::bail!("scale factor must be a positive finite number, got `{}`", spec);
+        anyhow::bail!(
+            "scale factor must be a positive finite number, got `{}`",
+            spec
+        );
     }
     Ok(factor)
 }
@@ -4362,10 +4344,7 @@ pub fn derive_model(
 
     // Apply variant name to description
     if let Some(v) = variant {
-        let base_desc = derived
-            .description
-            .as_deref()
-            .unwrap_or(&derived.name);
+        let base_desc = derived.description.as_deref().unwrap_or(&derived.name);
         derived.description = Some(format!("{} [variant: {}]", base_desc, v));
         changes.push(format!("variant = \"{}\"", v));
     }
@@ -4403,7 +4382,10 @@ pub fn derive_model(
                     let new_count = ((*n as f64) * factor).round().max(1.0) as u64;
                     let old = *n;
                     entity.count = crate::core::CountSpec::Fixed(new_count);
-                    changes.push(format!("{}.count: {} → {} (×{})", entity.name, old, new_count, factor));
+                    changes.push(format!(
+                        "{}.count: {} → {} (×{})",
+                        entity.name, old, new_count, factor
+                    ));
                 }
                 crate::core::CountSpec::Range { min, max } => {
                     let old_min = *min;
@@ -4442,7 +4424,10 @@ pub fn derive_model(
             other => format!("{:?}", other),
         };
         entity.count = crate::core::CountSpec::Fixed(*count);
-        changes.push(format!("{}.count: {} → {} (override)", entity_name, old, count));
+        changes.push(format!(
+            "{}.count: {} → {} (override)",
+            entity_name, old, count
+        ));
     }
 
     Ok((derived, changes))
@@ -4461,8 +4446,7 @@ pub fn run_derive(
     output: Option<&str>,
     json: bool,
 ) -> Result<()> {
-    let model = load_blueprint(file)
-        .with_context(|| format!("failed to load `{}`", file))?;
+    let model = load_blueprint(file).with_context(|| format!("failed to load `{}`", file))?;
 
     let scale_factor = match scale {
         Some(s) => Some(parse_scale_factor(s)?),
@@ -4482,10 +4466,15 @@ pub fn run_derive(
         count_overrides.push((entity, count));
     }
 
-    if scale_factor.is_none() && count_overrides.is_empty() && seed.is_none()
-        && locale.is_none() && variant.is_none()
+    if scale_factor.is_none()
+        && count_overrides.is_empty()
+        && seed.is_none()
+        && locale.is_none()
+        && variant.is_none()
     {
-        anyhow::bail!("no derive operations specified (use --scale, --count, --seed, --locale, or --variant)");
+        anyhow::bail!(
+            "no derive operations specified (use --scale, --count, --seed, --locale, or --variant)"
+        );
     }
 
     let (derived, changes) = derive_model(
@@ -4633,8 +4622,7 @@ pub fn run_sample(
 ) -> Result<()> {
     use std::collections::HashMap;
 
-    let mut model = load_blueprint(file)
-        .with_context(|| format!("failed to load `{}`", file))?;
+    let mut model = load_blueprint(file).with_context(|| format!("failed to load `{}`", file))?;
 
     // Override counts to sample size
     for entity in &mut model.entities {
@@ -4705,8 +4693,7 @@ pub fn run_sample(
     }
 
     // Collect batches per entity
-    let mut entity_batches: HashMap<String, Vec<arrow::record_batch::RecordBatch>> =
-        HashMap::new();
+    let mut entity_batches: HashMap<String, Vec<arrow::record_batch::RecordBatch>> = HashMap::new();
 
     engine
         .execute(&plan, |entity_name, batch| {
@@ -4749,9 +4736,7 @@ pub fn run_sample(
         let mut display_order: Vec<String> = Vec::new();
         for phase in &plan.phases {
             for ep in &phase.entity_plans {
-                if !entity_filter.is_empty()
-                    && !entity_filter.contains(ep.entity_name.as_str())
-                {
+                if !entity_filter.is_empty() && !entity_filter.contains(ep.entity_name.as_str()) {
                     continue;
                 }
                 if !display_order.contains(&ep.entity_name) {
@@ -4764,8 +4749,9 @@ pub fn run_sample(
             if let Some(batches) = entity_batches.get(name) {
                 eprintln!("\n{} {} ({} rows):", "─".dimmed(), name.bold(), rows);
                 for batch in batches {
-                    let table = arrow::util::pretty::pretty_format_batches(std::slice::from_ref(batch))
-                        .map_err(|e| anyhow::anyhow!("format error: {}", e))?;
+                    let table =
+                        arrow::util::pretty::pretty_format_batches(std::slice::from_ref(batch))
+                            .map_err(|e| anyhow::anyhow!("format error: {}", e))?;
                     println!("{}", table);
                 }
             }
@@ -4800,8 +4786,7 @@ pub fn run_test(
         anyhow::bail!("--rows must be at least 1");
     }
 
-    let mut model = load_blueprint(file)
-        .with_context(|| format!("failed to load `{}`", file))?;
+    let mut model = load_blueprint(file).with_context(|| format!("failed to load `{}`", file))?;
 
     // Apply CLI params to model
     for (k, v) in params {
@@ -4874,10 +4859,7 @@ pub fn run_test(
     for phase in &plan.phases {
         for ep in &phase.entity_plans {
             let arrow_schema = super::generate::build_arrow_schema(ep);
-            entity_schemas.insert(
-                ep.entity_name.clone(),
-                std::sync::Arc::new(arrow_schema),
-            );
+            entity_schemas.insert(ep.entity_name.clone(), std::sync::Arc::new(arrow_schema));
         }
     }
 
@@ -4943,17 +4925,17 @@ pub fn run_test(
         .map_err(|e| anyhow::anyhow!("generation failed: {}", e))?;
 
     if !json {
-        eprintln!(
-            "{} generation complete, validating...",
-            "✓".green().bold()
-        );
+        eprintln!("{} generation complete, validating...", "✓".green().bold());
     }
 
     // Run validation against generated data
     let filter: Vec<String> = entities.to_vec();
     let findings = validate_data(&model, tmp_dir.path(), &filter)?;
 
-    let error_count = findings.iter().filter(|f| f.severity == Severity::Error).count();
+    let error_count = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Error)
+        .count();
     let warning_count = findings
         .iter()
         .filter(|f| f.severity == Severity::Warning)
@@ -5000,8 +4982,16 @@ pub fn run_test(
         } else {
             eprintln!(
                 "\n{} blueprint test {}: {} error(s), {} warning(s)",
-                if error_count > 0 { "✗".red() } else { "⚠".yellow() },
-                if error_count > 0 { "FAILED" } else { "passed with warnings" },
+                if error_count > 0 {
+                    "✗".red()
+                } else {
+                    "⚠".yellow()
+                },
+                if error_count > 0 {
+                    "FAILED"
+                } else {
+                    "passed with warnings"
+                },
                 error_count,
                 warning_count
             );
@@ -5031,13 +5021,8 @@ pub fn run_test(
 ///
 /// Note: conversion resolves `extends`, `include`, mixins, and custom types. The output
 /// is a fully-expanded standalone blueprint. Use this for interchange, not editing.
-pub fn run_convert(
-    file: &str,
-    output: Option<&str>,
-    format: &str,
-) -> Result<()> {
-    let model = load_blueprint(file)
-        .with_context(|| format!("failed to load `{}`", file))?;
+pub fn run_convert(file: &str, output: Option<&str>, format: &str) -> Result<()> {
+    let model = load_blueprint(file).with_context(|| format!("failed to load `{}`", file))?;
 
     let target_format = match format.to_lowercase().as_str() {
         "toml" => "toml",
@@ -5114,7 +5099,10 @@ fn serialize_model_to_json(model: &DataModel) -> Result<String> {
 
     // Entities
     if !model.entities.is_empty() {
-        obj.insert("entities".to_string(), serde_json::to_value(&model.entities)?);
+        obj.insert(
+            "entities".to_string(),
+            serde_json::to_value(&model.entities)?,
+        );
     }
 
     // Relationships
@@ -5127,7 +5115,10 @@ fn serialize_model_to_json(model: &DataModel) -> Result<String> {
 
     // Noise profiles
     if !model.noise_profiles.is_empty() {
-        obj.insert("noise".to_string(), serde_json::to_value(&model.noise_profiles)?);
+        obj.insert(
+            "noise".to_string(),
+            serde_json::to_value(&model.noise_profiles)?,
+        );
     }
 
     // Correlations
@@ -5140,7 +5131,10 @@ fn serialize_model_to_json(model: &DataModel) -> Result<String> {
 
     // Personas
     if !model.personas.is_empty() {
-        obj.insert("personas".to_string(), serde_json::to_value(&model.personas)?);
+        obj.insert(
+            "personas".to_string(),
+            serde_json::to_value(&model.personas)?,
+        );
     }
 
     // Actor relationships
@@ -5153,7 +5147,10 @@ fn serialize_model_to_json(model: &DataModel) -> Result<String> {
 
     // Custom types
     if !model.custom_types.is_empty() {
-        obj.insert("types".to_string(), serde_json::to_value(&model.custom_types)?);
+        obj.insert(
+            "types".to_string(),
+            serde_json::to_value(&model.custom_types)?,
+        );
     }
 
     // Mixins
@@ -5175,8 +5172,8 @@ fn serialize_model_to_json(model: &DataModel) -> Result<String> {
 
 /// Serialize a DataModel to TOML string using serde.
 fn serialize_model_to_toml_string(model: &DataModel) -> Result<String> {
-    use super::FlatSchemaOutput;
     use super::FlatModelMeta;
+    use super::FlatSchemaOutput;
 
     let raw = FlatSchemaOutput {
         blueprint_version: model.blueprint_version.clone(),
@@ -5224,7 +5221,7 @@ mod tests {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
-        companion_files: Vec::new(),
+            companion_files: Vec::new(),
         }
     }
 
@@ -5240,9 +5237,9 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         }
     }
@@ -5258,8 +5255,8 @@ mod tests {
             precision: None,
             actor_column: false,
             fields: vec![],
-                stats: None,
-                traits: None,
+            stats: None,
+            traits: None,
         }
     }
 
@@ -5650,10 +5647,7 @@ mod tests {
         nf.nullable = NullSpec::Probability(0.5);
         let model = make_model(
             "test",
-            vec![make_entity(
-                "t",
-                vec![make_field("id", DataType::Int), nf],
-            )],
+            vec![make_entity("t", vec![make_field("id", DataType::Int), nf])],
         );
         let stats = compute_stats(&model);
         assert_eq!(stats.entity_details[0].nullable_fields, 1);
@@ -5701,8 +5695,17 @@ mod tests {
 
     #[test]
     fn merge_adds_new_entity() {
-        let base = make_model("base", vec![make_entity("users", vec![make_field("id", DataType::Int)])]);
-        let overlay = make_model("overlay", vec![make_entity("orders", vec![make_field("oid", DataType::Int)])]);
+        let base = make_model(
+            "base",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        let overlay = make_model(
+            "overlay",
+            vec![make_entity(
+                "orders",
+                vec![make_field("oid", DataType::Int)],
+            )],
+        );
         let (merged, report) = merge_models(&base, &overlay);
         assert_eq!(merged.entities.len(), 2);
         assert_eq!(report.entities_added, vec!["orders"]);
@@ -5711,11 +5714,20 @@ mod tests {
 
     #[test]
     fn merge_appends_new_fields_to_existing_entity() {
-        let base = make_model("base", vec![make_entity("users", vec![make_field("id", DataType::Int)])]);
-        let overlay = make_model("overlay", vec![make_entity("users", vec![
-            make_field("id", DataType::Int),
-            make_field("email", DataType::String),
-        ])]);
+        let base = make_model(
+            "base",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
+        let overlay = make_model(
+            "overlay",
+            vec![make_entity(
+                "users",
+                vec![
+                    make_field("id", DataType::Int),
+                    make_field("email", DataType::String),
+                ],
+            )],
+        );
         let (merged, report) = merge_models(&base, &overlay);
         assert_eq!(merged.entities.len(), 1);
         assert_eq!(merged.entities[0].fields.len(), 2);
@@ -5728,10 +5740,13 @@ mod tests {
     #[test]
     fn merge_deduplicates_relationships() {
         use crate::core::types::{Relationship, RelationshipKind};
-        let mut base = make_model("base", vec![
-            make_entity("users", vec![make_field("id", DataType::Int)]),
-            make_entity("orders", vec![make_field("id", DataType::Int)]),
-        ]);
+        let mut base = make_model(
+            "base",
+            vec![
+                make_entity("users", vec![make_field("id", DataType::Int)]),
+                make_entity("orders", vec![make_field("id", DataType::Int)]),
+            ],
+        );
         base.relationships.push(Relationship {
             name: "orders_users".into(),
             from: "orders".into(),
@@ -5786,21 +5801,33 @@ mod tests {
     #[test]
     fn merge_params_overlay_wins() {
         let mut base = make_model("base", vec![]);
-        base.params.insert("scale".into(), crate::core::types::Value::Int(10));
+        base.params
+            .insert("scale".into(), crate::core::types::Value::Int(10));
         let mut overlay = make_model("overlay", vec![]);
-        overlay.params.insert("scale".into(), crate::core::types::Value::Int(100));
-        overlay.params.insert("new_param".into(), crate::core::types::Value::Int(5));
+        overlay
+            .params
+            .insert("scale".into(), crate::core::types::Value::Int(100));
+        overlay
+            .params
+            .insert("new_param".into(), crate::core::types::Value::Int(5));
         let (merged, report) = merge_models(&base, &overlay);
-        assert_eq!(merged.params.get("scale"), Some(&crate::core::types::Value::Int(100)));
-        assert_eq!(merged.params.get("new_param"), Some(&crate::core::types::Value::Int(5)));
+        assert_eq!(
+            merged.params.get("scale"),
+            Some(&crate::core::types::Value::Int(100))
+        );
+        assert_eq!(
+            merged.params.get("new_param"),
+            Some(&crate::core::types::Value::Int(5))
+        );
         assert!(report.warnings.iter().any(|w| w.contains("param `scale`")));
     }
 
     #[test]
     fn merge_empty_overlay_is_identity() {
-        let base = make_model("base", vec![
-            make_entity("users", vec![make_field("id", DataType::Int)]),
-        ]);
+        let base = make_model(
+            "base",
+            vec![make_entity("users", vec![make_field("id", DataType::Int)])],
+        );
         let overlay = make_model("overlay", vec![]);
         let (merged, report) = merge_models(&base, &overlay);
         assert_eq!(merged.entities.len(), 1);
@@ -5812,8 +5839,14 @@ mod tests {
 
     #[test]
     fn merge_report_json_serializable() {
-        let base = make_model("base", vec![make_entity("a", vec![make_field("x", DataType::Int)])]);
-        let overlay = make_model("overlay", vec![make_entity("b", vec![make_field("y", DataType::String)])]);
+        let base = make_model(
+            "base",
+            vec![make_entity("a", vec![make_field("x", DataType::Int)])],
+        );
+        let overlay = make_model(
+            "overlay",
+            vec![make_entity("b", vec![make_field("y", DataType::String)])],
+        );
         let (_, report) = merge_models(&base, &overlay);
         let json = serde_json::to_string(&report).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
@@ -5835,7 +5868,13 @@ mod tests {
         let model = make_model(
             "test",
             vec![
-                make_entity("users", vec![make_field("id", DataType::Int), make_field("name", DataType::String)]),
+                make_entity(
+                    "users",
+                    vec![
+                        make_field("id", DataType::Int),
+                        make_field("name", DataType::String),
+                    ],
+                ),
                 make_entity("orders", vec![make_field("oid", DataType::Int)]),
             ],
         );
@@ -5920,7 +5959,10 @@ mod tests {
         use crate::core::types::{Relationship, RelationshipKind};
         let mut model = make_model(
             "test",
-            vec![make_entity("categories", vec![make_field("id", DataType::Int)])],
+            vec![make_entity(
+                "categories",
+                vec![make_field("id", DataType::Int)],
+            )],
         );
         model.relationships.push(Relationship {
             name: "self_ref".into(),
@@ -5999,7 +6041,10 @@ mod tests {
     fn graph_dot_escapes_special_chars() {
         let model = make_model(
             "my|schema",
-            vec![make_entity("user\"data", vec![make_field("id", DataType::Int)])],
+            vec![make_entity(
+                "user\"data",
+                vec![make_field("id", DataType::Int)],
+            )],
         );
         let graph = build_graph(&model);
         let dot = render_dot(&model, &graph);
@@ -6056,7 +6101,9 @@ mod tests {
                 make_entity("orders", vec![make_field("user_id", DataType::Int)]),
             ],
         );
-        model.relationships.push(make_relationship("r1", "orders", "users"));
+        model
+            .relationships
+            .push(make_relationship("r1", "orders", "users"));
         model.relationships[0].foreign_key = Some("user_id".into());
         let graph = build_graph(&model);
         let mermaid = render_mermaid(&model, &graph);
@@ -6080,7 +6127,9 @@ mod tests {
                 ),
             ],
         );
-        model.relationships.push(make_relationship("r1", "orders", "users"));
+        model
+            .relationships
+            .push(make_relationship("r1", "orders", "users"));
         model.relationships[0].foreign_key = Some("user_id".into());
         let graph = build_graph(&model);
         let mermaid = render_mermaid(&model, &graph);
@@ -6104,7 +6153,9 @@ mod tests {
                 ),
             ],
         );
-        model.relationships.push(make_relationship("r1", "orders", "users"));
+        model
+            .relationships
+            .push(make_relationship("r1", "orders", "users"));
         // foreign_key is None → defaults to "users_id"
         let graph = build_graph(&model);
         let mermaid = render_mermaid(&model, &graph);
@@ -6118,7 +6169,10 @@ mod tests {
     fn graph_mermaid_special_chars() {
         let model = make_model(
             "test",
-            vec![make_entity("user data", vec![make_field("first name", DataType::String)])],
+            vec![make_entity(
+                "user data",
+                vec![make_field("first name", DataType::String)],
+            )],
         );
         let graph = build_graph(&model);
         let mermaid = render_mermaid(&model, &graph);
@@ -6155,7 +6209,9 @@ mod tests {
             vec![make_entity("users", vec![make_field("id", DataType::Int)])],
         );
         let findings = lint_model(&model);
-        assert!(findings.iter().any(|f| f.message.contains("no description")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("no description")));
     }
 
     #[test]
@@ -6219,8 +6275,12 @@ mod tests {
             properties: Vec::new(),
         });
         let findings = lint_model(&model);
-        assert!(findings.iter().any(|f| f.message.contains("`orders` does not exist")));
-        assert!(findings.iter().any(|f| f.message.contains("`products` does not exist")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("`orders` does not exist")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("`products` does not exist")));
     }
 
     #[test]
@@ -6228,7 +6288,10 @@ mod tests {
         use crate::core::types::{Relationship, RelationshipKind};
         let mut model = make_model(
             "test",
-            vec![make_entity("categories", vec![make_field("id", DataType::Int)])],
+            vec![make_entity(
+                "categories",
+                vec![make_field("id", DataType::Int)],
+            )],
         );
         model.relationships.push(Relationship {
             name: "self_ref".into(),
@@ -6452,10 +6515,7 @@ mod tests {
     fn rename_entity_updates_correlations() {
         let mut model = make_model(
             "test",
-            vec![make_entity(
-                "users",
-                vec![make_field("age", DataType::Int)],
-            )],
+            vec![make_entity("users", vec![make_field("age", DataType::Int)])],
         );
         model.correlations = vec![crate::core::Correlation {
             entity: "users".into(),
@@ -6513,14 +6573,17 @@ mod tests {
             "test",
             vec![
                 make_entity("users", vec![make_field("id", DataType::Int)]),
-                make_entity("orders", vec![{
-                    let mut f = make_field("user_name", DataType::String);
-                    f.generator = Some(crate::core::GeneratorSpec::Lookup {
-                        entity: "users".into(),
-                        field: "name".into(),
-                    });
-                    f
-                }]),
+                make_entity(
+                    "orders",
+                    vec![{
+                        let mut f = make_field("user_name", DataType::String);
+                        f.generator = Some(crate::core::GeneratorSpec::Lookup {
+                            entity: "users".into(),
+                            field: "name".into(),
+                        });
+                        f
+                    }],
+                ),
             ],
         );
 
@@ -6581,17 +6644,16 @@ mod tests {
             "test",
             vec![make_entity(
                 "events",
-                vec![
-                    make_field("start_time", DataType::Datetime),
-                    {
-                        let mut f = make_field("end_time", DataType::Datetime);
-                        f.generator = Some(crate::core::GeneratorSpec::Relative {
-                            anchor: "start_time".into(),
-                            offset: crate::core::types::RelativeOffset::Simple(crate::core::Value::Float(3600.0)),
-                        });
-                        f
-                    },
-                ],
+                vec![make_field("start_time", DataType::Datetime), {
+                    let mut f = make_field("end_time", DataType::Datetime);
+                    f.generator = Some(crate::core::GeneratorSpec::Relative {
+                        anchor: "start_time".into(),
+                        offset: crate::core::types::RelativeOffset::Simple(
+                            crate::core::Value::Float(3600.0),
+                        ),
+                    });
+                    f
+                }],
             )],
         );
 
@@ -6644,25 +6706,33 @@ mod tests {
         let mut model = make_model(
             "test",
             vec![
-                make_entity("users", vec![{
-                    let mut f = make_field("id", DataType::Int);
-                    f.primary_key = Some(true);
-                    f
-                }]),
-                make_entity("orders", vec![
-                    {
+                make_entity(
+                    "users",
+                    vec![{
                         let mut f = make_field("id", DataType::Int);
                         f.primary_key = Some(true);
                         f
-                    },
-                    make_field("user_id", DataType::Int),
-                ]),
+                    }],
+                ),
+                make_entity(
+                    "orders",
+                    vec![
+                        {
+                            let mut f = make_field("id", DataType::Int);
+                            f.primary_key = Some(true);
+                            f
+                        },
+                        make_field("user_id", DataType::Int),
+                    ],
+                ),
             ],
         );
         model.relationships = vec![make_relationship("orders_users", "orders", "users")];
 
         let sql = export_sql(&model, SqlDialect::Postgres, true);
-        assert!(sql.contains("ALTER TABLE \"orders\" ADD FOREIGN KEY (\"users_id\") REFERENCES \"users\" (\"id\")"));
+        assert!(sql.contains(
+            "ALTER TABLE \"orders\" ADD FOREIGN KEY (\"users_id\") REFERENCES \"users\" (\"id\")"
+        ));
     }
 
     #[test]
@@ -6728,7 +6798,7 @@ mod tests {
 
         let sl = export_sql(&model, SqlDialect::Sqlite, false);
         assert!(sl.contains("CHAR(36)")); // UUID → CHAR(36)
-        assert!(sl.contains("BLOB"));     // Bytes → BLOB
+        assert!(sl.contains("BLOB")); // Bytes → BLOB
     }
 
     #[test]
@@ -6800,10 +6870,7 @@ mod tests {
     fn scaffold_implicit_relationship() {
         let model = scaffold_model(
             "test",
-            &[
-                "Users:id:int".into(),
-                "Orders:id:int".into(),
-            ],
+            &["Users:id:int".into(), "Orders:id:int".into()],
             &["Orders=Users".into()],
         )
         .unwrap();
@@ -7283,10 +7350,7 @@ mod tests {
         let changes = update_model(&mut model, &ops).unwrap();
         assert_eq!(changes.len(), 4);
         assert_eq!(model.entities[0].count, CountSpec::Fixed(5000));
-        assert_eq!(
-            model.entities[0].description.as_deref(),
-            Some("User table")
-        );
+        assert_eq!(model.entities[0].description.as_deref(), Some("User table"));
         assert_eq!(model.entities[0].tags, vec!["core"]);
         assert_eq!(model.seed, 99);
     }
@@ -7352,11 +7416,7 @@ mod tests {
             dir.path(),
             "Users",
             &["id", "name"],
-            &[
-                vec!["1", "Alice"],
-                vec!["2", "Bob"],
-                vec!["3", "Carol"],
-            ],
+            &[vec!["1", "Alice"], vec!["2", "Bob"], vec!["3", "Carol"]],
         );
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
         let errors: Vec<_> = findings
@@ -7382,9 +7442,12 @@ mod tests {
         // CSV only has "id" column, missing "email"
         write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"]]);
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
-        assert!(findings
-            .iter()
-            .any(|f| f.severity == Severity::Error && f.message.contains("missing column `email`")));
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.severity == Severity::Error
+                    && f.message.contains("missing column `email`"))
+        );
     }
 
     #[test]
@@ -7484,9 +7547,9 @@ mod tests {
         );
 
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
-        assert!(findings.iter().any(|f| {
-            f.severity == Severity::Error && f.message.contains("orphan")
-        }));
+        assert!(findings
+            .iter()
+            .any(|f| { f.severity == Severity::Error && f.message.contains("orphan") }));
     }
 
     #[test]
@@ -7556,16 +7619,9 @@ mod tests {
         );
         // Only write Users data — Orders should not be checked
         write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"]]);
-        let findings = validate_data(
-            &model,
-            dir.path(),
-            &["Users".to_string()],
-        )
-        .unwrap();
+        let findings = validate_data(&model, dir.path(), &["Users".to_string()]).unwrap();
         // No error for missing Orders file since it's filtered out
-        assert!(!findings
-            .iter()
-            .any(|f| f.entity == "Orders"));
+        assert!(!findings.iter().any(|f| f.entity == "Orders"));
     }
 
     #[test]
@@ -7616,15 +7672,10 @@ mod tests {
         );
 
         // Filter to Orders only — should still detect FK orphans
-        let findings = validate_data(
-            &model,
-            dir.path(),
-            &["Orders".to_string()],
-        )
-        .unwrap();
-        assert!(findings.iter().any(|f| {
-            f.severity == Severity::Error && f.message.contains("orphan")
-        }));
+        let findings = validate_data(&model, dir.path(), &["Orders".to_string()]).unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| { f.severity == Severity::Error && f.message.contains("orphan") }));
     }
 
     #[test]
@@ -7641,10 +7692,7 @@ mod tests {
                         f
                     }],
                 ),
-                make_entity(
-                    "Orders",
-                    vec![make_field("id", DataType::Int)],
-                ),
+                make_entity("Orders", vec![make_field("id", DataType::Int)]),
             ],
         );
         // Relationship with implicit FK (Users_id)
@@ -7666,18 +7714,13 @@ mod tests {
 
         // Data has the implicit FK column
         write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"]]);
-        write_test_csv(
-            dir.path(),
-            "Orders",
-            &["id", "Users_id"],
-            &[vec!["1", "1"]],
-        );
+        write_test_csv(dir.path(), "Orders", &["id", "Users_id"], &[vec!["1", "1"]]);
 
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
         // Users_id should NOT be flagged as unexpected
-        assert!(!findings.iter().any(|f| {
-            f.message.contains("unexpected column `Users_id`")
-        }));
+        assert!(!findings
+            .iter()
+            .any(|f| { f.message.contains("unexpected column `Users_id`") }));
     }
 
     // -----------------------------------------------------------------------
@@ -7693,7 +7736,8 @@ mod tests {
                 make_entity("Orders", vec![make_field("id", DataType::Int)]),
             ],
         );
-        let (derived, changes) = derive_model(&model, Some(10.0), &[], &[], None, None, None).unwrap();
+        let (derived, changes) =
+            derive_model(&model, Some(10.0), &[], &[], None, None, None).unwrap();
         assert_eq!(derived.entities[0].count, CountSpec::Fixed(1000));
         assert_eq!(derived.entities[1].count, CountSpec::Fixed(1000));
         assert_eq!(changes.len(), 2);
@@ -7762,7 +7806,8 @@ mod tests {
         );
         // Scale 10x then override Users to exactly 50
         let overrides = vec![("Users".to_string(), 50u64)];
-        let (derived, _) = derive_model(&model, Some(10.0), &overrides, &[], None, None, None).unwrap();
+        let (derived, _) =
+            derive_model(&model, Some(10.0), &overrides, &[], None, None, None).unwrap();
         assert_eq!(derived.entities[0].count, CountSpec::Fixed(50)); // override wins
         assert_eq!(derived.entities[1].count, CountSpec::Fixed(1000)); // scaled 100*10
     }
@@ -7776,8 +7821,16 @@ mod tests {
                 make_entity("Config", vec![make_field("id", DataType::Int)]),
             ],
         );
-        let (derived, _) =
-            derive_model(&model, Some(10.0), &[], &["Config".to_string()], None, None, None).unwrap();
+        let (derived, _) = derive_model(
+            &model,
+            Some(10.0),
+            &[],
+            &["Config".to_string()],
+            None,
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(derived.entities[0].count, CountSpec::Fixed(1000)); // scaled 100*10
         assert_eq!(derived.entities[1].count, CountSpec::Fixed(100)); // excluded, unchanged
     }
@@ -7822,9 +7875,16 @@ mod tests {
             "test",
             vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
         );
-        assert!(
-            derive_model(&model, Some(2.0), &[], &["Bad".to_string()], None, None, None).is_err()
-        );
+        assert!(derive_model(
+            &model,
+            Some(2.0),
+            &[],
+            &["Bad".to_string()],
+            None,
+            None,
+            None
+        )
+        .is_err());
     }
 
     #[test]
@@ -7875,13 +7935,7 @@ data_type = "string"
         .unwrap();
 
         // run_sample should succeed with 3 rows
-        let result = run_sample(
-            blueprint_path.to_str().unwrap(),
-            3,
-            &[],
-            Some(99),
-            false,
-        );
+        let result = run_sample(blueprint_path.to_str().unwrap(), 3, &[], Some(99), false);
         assert!(result.is_ok(), "sample failed: {:?}", result.err());
     }
 
@@ -8050,14 +8104,12 @@ data_type = "bool"
         )
         .unwrap();
 
-        let result = run_sample(
-            blueprint_path.to_str().unwrap(),
-            2,
-            &[],
-            Some(42),
-            true,
+        let result = run_sample(blueprint_path.to_str().unwrap(), 2, &[], Some(42), true);
+        assert!(
+            result.is_ok(),
+            "sample json typed failed: {:?}",
+            result.err()
         );
-        assert!(result.is_ok(), "sample json typed failed: {:?}", result.err());
     }
 
     #[test]
@@ -8187,7 +8239,11 @@ primary_key = true
             false,
             &[],
         );
-        assert!(result.is_ok(), "test entity filter failed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "test entity filter failed: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -8273,7 +8329,11 @@ primary_key = true
         );
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("--rows must be at least 1"), "unexpected: {}", msg);
+        assert!(
+            msg.contains("--rows must be at least 1"),
+            "unexpected: {}",
+            msg
+        );
     }
 
     #[test]
@@ -8418,7 +8478,10 @@ data_type = "string"
         assert!(result.is_ok(), "convert to toml failed: {:?}", result.err());
 
         let content = std::fs::read_to_string(&out_path).unwrap();
-        assert!(content.contains("json_model"), "TOML should contain model name");
+        assert!(
+            content.contains("json_model"),
+            "TOML should contain model name"
+        );
         assert!(content.contains("Items"), "TOML should contain entity name");
     }
 
@@ -8449,14 +8512,14 @@ primary_key = true
         )
         .unwrap();
 
-        let result = run_convert(
-            blueprint_path.to_str().unwrap(),
-            None,
-            "yaml",
-        );
+        let result = run_convert(blueprint_path.to_str().unwrap(), None, "yaml");
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("unsupported output format"), "unexpected: {}", msg);
+        assert!(
+            msg.contains("unsupported output format"),
+            "unexpected: {}",
+            msg
+        );
     }
 
     #[test]
@@ -8517,6 +8580,9 @@ data_type = "float"
         assert_eq!(original.timezone, roundtripped.timezone);
         assert_eq!(original.entities.len(), roundtripped.entities.len());
         assert_eq!(original.entities[0].name, roundtripped.entities[0].name);
-        assert_eq!(original.entities[0].fields.len(), roundtripped.entities[0].fields.len());
+        assert_eq!(
+            original.entities[0].fields.len(),
+            roundtripped.entities[0].fields.len()
+        );
     }
 }

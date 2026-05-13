@@ -17,14 +17,16 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
     // Actor dimension
     if let Some(actor) = &analysis.actor {
         // Mark the actor root entity
-        if let Some(entity) = model.entities.iter_mut().find(|e| e.name == actor.entity_name) {
-            let ann = entity
-                .scaling
-                .get_or_insert_with(|| DimensionAnnotation {
-                    actor: None,
-                    time: None,
-                    custom: vec![],
-                });
+        if let Some(entity) = model
+            .entities
+            .iter_mut()
+            .find(|e| e.name == actor.entity_name)
+        {
+            let ann = entity.scaling.get_or_insert_with(|| DimensionAnnotation {
+                actor: None,
+                time: None,
+                custom: vec![],
+            });
             ann.actor = Some(ActorAnnotation {
                 is_root: true,
                 root_entity: None,
@@ -35,13 +37,11 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
         // Mark dependent entities
         for (dep_name, ratio) in &actor.dependents {
             if let Some(entity) = model.entities.iter_mut().find(|e| e.name == *dep_name) {
-                let ann = entity
-                    .scaling
-                    .get_or_insert_with(|| DimensionAnnotation {
-                        actor: None,
-                        time: None,
-                        custom: vec![],
-                    });
+                let ann = entity.scaling.get_or_insert_with(|| DimensionAnnotation {
+                    actor: None,
+                    time: None,
+                    custom: vec![],
+                });
                 ann.actor = Some(ActorAnnotation {
                     is_root: false,
                     root_entity: Some(actor.entity_name.clone()),
@@ -53,14 +53,16 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
 
     // Time dimension
     if let Some(time) = &analysis.time {
-        if let Some(entity) = model.entities.iter_mut().find(|e| e.name == time.entity_name) {
-            let ann = entity
-                .scaling
-                .get_or_insert_with(|| DimensionAnnotation {
-                    actor: None,
-                    time: None,
-                    custom: vec![],
-                });
+        if let Some(entity) = model
+            .entities
+            .iter_mut()
+            .find(|e| e.name == time.entity_name)
+        {
+            let ann = entity.scaling.get_or_insert_with(|| DimensionAnnotation {
+                actor: None,
+                time: None,
+                custom: vec![],
+            });
             ann.time = Some(TimeAnnotation {
                 partition_column: time.partition_field.clone(),
                 cadence: time.cadence.map(format_cadence),
@@ -72,14 +74,16 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
 
     // Custom dimensions
     for dim in &analysis.custom {
-        if let Some(entity) = model.entities.iter_mut().find(|e| e.name == dim.entity_name) {
-            let ann = entity
-                .scaling
-                .get_or_insert_with(|| DimensionAnnotation {
-                    actor: None,
-                    time: None,
-                    custom: vec![],
-                });
+        if let Some(entity) = model
+            .entities
+            .iter_mut()
+            .find(|e| e.name == dim.entity_name)
+        {
+            let ann = entity.scaling.get_or_insert_with(|| DimensionAnnotation {
+                actor: None,
+                time: None,
+                custom: vec![],
+            });
             ann.custom.push(CustomDimensionAnnotation {
                 name: dim.field_name.clone(),
                 field: dim.field_name.clone(),
@@ -135,7 +139,10 @@ mod tests {
     #[test]
     fn empty_analysis_no_annotations() {
         let mut model = DataModel {
-            name: "test".into(), description: None, blueprint_version: "2.0".into(), entities: vec![make_entity("Users")],
+            name: "test".into(),
+            description: None,
+            blueprint_version: "2.0".into(),
+            entities: vec![make_entity("Users")],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],
@@ -157,7 +164,10 @@ mod tests {
     #[test]
     fn actor_root_annotated() {
         let mut model = DataModel {
-            name: "test".into(), description: None, blueprint_version: "2.0".into(), entities: vec![make_entity("Users"), make_entity("Events")],
+            name: "test".into(),
+            description: None,
+            blueprint_version: "2.0".into(),
+            entities: vec![make_entity("Users"), make_entity("Events")],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],
@@ -199,7 +209,10 @@ mod tests {
     #[test]
     fn time_dimension_annotated() {
         let mut model = DataModel {
-            name: "test".into(), description: None, blueprint_version: "2.0".into(), entities: vec![make_entity("Events")],
+            name: "test".into(),
+            description: None,
+            blueprint_version: "2.0".into(),
+            entities: vec![make_entity("Events")],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],
@@ -246,7 +259,10 @@ mod tests {
     #[test]
     fn custom_dimension_annotated() {
         let mut model = DataModel {
-            name: "test".into(), description: None, blueprint_version: "2.0".into(), entities: vec![make_entity("Products")],
+            name: "test".into(),
+            description: None,
+            blueprint_version: "2.0".into(),
+            entities: vec![make_entity("Products")],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],
@@ -265,11 +281,7 @@ mod tests {
             custom: vec![CustomDimension {
                 entity_name: "Products".into(),
                 field_name: "category".into(),
-                current_values: vec![
-                    ("A".into(), 0.5),
-                    ("B".into(), 0.3),
-                    ("C".into(), 0.2),
-                ],
+                current_values: vec![("A".into(), 0.5), ("B".into(), 0.3), ("C".into(), 0.2)],
                 is_condition_key: false,
             }],
             ..empty_analysis()
@@ -277,11 +289,7 @@ mod tests {
 
         annotate_dimensions(&mut model, &analysis);
 
-        let custom = &model.entities[0]
-            .scaling
-            .as_ref()
-            .unwrap()
-            .custom;
+        let custom = &model.entities[0].scaling.as_ref().unwrap().custom;
         assert_eq!(custom.len(), 1);
         assert_eq!(custom[0].name, "category");
         assert_eq!(custom[0].cardinality, 3);
@@ -290,7 +298,10 @@ mod tests {
     #[test]
     fn combined_dimensions_on_same_entity() {
         let mut model = DataModel {
-            name: "test".into(), description: None, blueprint_version: "2.0".into(), entities: vec![make_entity("Events")],
+            name: "test".into(),
+            description: None,
+            blueprint_version: "2.0".into(),
+            entities: vec![make_entity("Events")],
             relationships: vec![],
             noise_profiles: vec![],
             correlations: vec![],

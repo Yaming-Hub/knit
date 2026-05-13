@@ -59,10 +59,7 @@ pub struct TokenStats {
 }
 
 /// Generate a tokenization report from the output directory and dictionary.
-pub fn generate_report(
-    output_dir: &Path,
-    dict_path: &Path,
-) -> Result<TokenizeReport> {
+pub fn generate_report(output_dir: &Path, dict_path: &Path) -> Result<TokenizeReport> {
     let dict = TokenDictionary::read(dict_path)
         .with_context(|| format!("reading dictionary from {}", dict_path.display()))?;
 
@@ -172,7 +169,9 @@ fn count_jsonl_rows(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
         }
         rows += 1;
         if columns.is_none() {
-            if let Ok(val) = serde_json::from_str::<serde_json::Value>(trimmed.trim_end_matches(',')) {
+            if let Ok(val) =
+                serde_json::from_str::<serde_json::Value>(trimmed.trim_end_matches(','))
+            {
                 if let Some(obj) = val.as_object() {
                     columns = Some(obj.len());
                 }
@@ -188,14 +187,10 @@ fn count_json_rows_cols(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
     match val {
         serde_json::Value::Array(arr) => {
             let rows = arr.len();
-            let columns = arr.first()
-                .and_then(|v| v.as_object())
-                .map(|obj| obj.len());
+            let columns = arr.first().and_then(|v| v.as_object()).map(|obj| obj.len());
             Ok((Some(rows), columns))
         }
-        serde_json::Value::Object(obj) => {
-            Ok((Some(1), Some(obj.len())))
-        }
+        serde_json::Value::Object(obj) => Ok((Some(1), Some(obj.len()))),
         _ => Ok((None, None)),
     }
 }
@@ -220,7 +215,11 @@ pub fn format_text(report: &TokenizeReport) -> String {
     // File summary
     let data_count = report.files.iter().filter(|f| f.kind == "data").count();
     let schema_count = report.files.iter().filter(|f| f.kind == "schema").count();
-    let companion_count = report.files.iter().filter(|f| f.kind == "companion").count();
+    let companion_count = report
+        .files
+        .iter()
+        .filter(|f| f.kind == "companion")
+        .count();
     out.push_str(&format!(
         "  Files: {} data, {} schema, {} companion\n\n",
         data_count, schema_count, companion_count
@@ -240,8 +239,14 @@ pub fn format_text(report: &TokenizeReport) -> String {
             if f.kind != "data" {
                 continue;
             }
-            let rows = f.rows.map(|r| r.to_string()).unwrap_or_else(|| "—".to_string());
-            let cols = f.columns.map(|c| c.to_string()).unwrap_or_else(|| "—".to_string());
+            let rows = f
+                .rows
+                .map(|r| r.to_string())
+                .unwrap_or_else(|| "—".to_string());
+            let cols = f
+                .columns
+                .map(|c| c.to_string())
+                .unwrap_or_else(|| "—".to_string());
             out.push_str(&format!(
                 "    {:<40} {:>8} {:>8} {:>8}\n",
                 truncate_path(&f.path, 40),
@@ -255,20 +260,33 @@ pub fn format_text(report: &TokenizeReport) -> String {
 
     // Token statistics
     out.push_str("  Token Statistics:\n");
-    out.push_str(&format!("    unique tokens:       {}\n", report.token_stats.unique_tokens));
-    out.push_str(&format!("    length preserved:    {} ({:.0}%)\n",
+    out.push_str(&format!(
+        "    unique tokens:       {}\n",
+        report.token_stats.unique_tokens
+    ));
+    out.push_str(&format!(
+        "    length preserved:    {} ({:.0}%)\n",
         report.token_stats.length_preserved_count,
         if report.token_stats.unique_tokens > 0 {
-            report.token_stats.length_preserved_count as f64 / report.token_stats.unique_tokens as f64 * 100.0
+            report.token_stats.length_preserved_count as f64
+                / report.token_stats.unique_tokens as f64
+                * 100.0
         } else {
             0.0
         }
     ));
-    out.push_str(&format!("    seed:                {}\n", report.token_stats.seed));
+    out.push_str(&format!(
+        "    seed:                {}\n",
+        report.token_stats.seed
+    ));
 
     // Length distribution summary (top 5 most common)
     if !report.token_stats.original_length_distribution.is_empty() {
-        let mut sorted: Vec<_> = report.token_stats.original_length_distribution.iter().collect();
+        let mut sorted: Vec<_> = report
+            .token_stats
+            .original_length_distribution
+            .iter()
+            .collect();
         sorted.sort_by(|a, b| b.1.cmp(a.1));
         out.push_str("    value length distribution (top 5):\n");
         for (len, count) in sorted.iter().take(5) {
@@ -280,14 +298,18 @@ pub fn format_text(report: &TokenizeReport) -> String {
     // Native column handling
     out.push_str("  Native Column Handling:\n");
     if report.date_shift_applied {
-        out.push_str(&format!("    temporal shift:  {} days\n",
-            report.date_shift_days.unwrap_or(0)));
+        out.push_str(&format!(
+            "    temporal shift:  {} days\n",
+            report.date_shift_days.unwrap_or(0)
+        ));
     } else {
         out.push_str("    temporal shift:  not applied\n");
     }
     if report.numeric_shift_applied {
-        out.push_str(&format!("    numeric shift:   offset {}\n",
-            report.numeric_shift.unwrap_or(0)));
+        out.push_str(&format!(
+            "    numeric shift:   offset {}\n",
+            report.numeric_shift.unwrap_or(0)
+        ));
     } else {
         out.push_str("    numeric shift:   not applied\n");
     }
@@ -464,7 +486,8 @@ mod tests {
         std::fs::write(
             data_dir.join("users.csv"),
             "name,age,city\nAlice,30,NYC\nBob,25,LA\n",
-        ).unwrap();
+        )
+        .unwrap();
 
         // Create a minimal dictionary
         let dict = TokenDictionary {
@@ -496,7 +519,7 @@ mod tests {
     #[test]
     fn test_generate_report_parquet() {
         use arrow::array::StringArray;
-        use arrow::datatypes::{Field, Schema, DataType};
+        use arrow::datatypes::{DataType, Field, Schema};
         use arrow::record_batch::RecordBatch;
         use parquet::arrow::ArrowWriter;
         use std::sync::Arc;
@@ -516,7 +539,8 @@ mod tests {
                 Arc::new(StringArray::from(vec!["Alice", "Bob", "Carol"])),
                 Arc::new(StringArray::from(vec!["NYC", "LA", "SF"])),
             ],
-        ).unwrap();
+        )
+        .unwrap();
         let pq_path = data_dir.join("users.parquet");
         let file = std::fs::File::create(&pq_path).unwrap();
         let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();

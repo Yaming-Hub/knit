@@ -67,7 +67,8 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
     for entity in &model.entities {
         let from_idx = entity_index[entity.name.as_str()];
         for field in &entity.fields {
-            if let Some(crate::core::GeneratorSpec::ActorRef { entity: ref target }) = field.generator
+            if let Some(crate::core::GeneratorSpec::ActorRef { entity: ref target }) =
+                field.generator
             {
                 if let Some(&to_idx) = entity_index.get(target.as_str()) {
                     if from_idx != to_idx {
@@ -242,8 +243,8 @@ pub fn resolve_row_counts(model: &DataModel) -> Result<BTreeMap<String, u64>, St
 mod tests {
     use super::*;
     use crate::core::{
-        CountSpec, DistributionKind, DistributionSpec, Entity, Relationship, RelationshipKind,
-        IntOrString,
+        CountSpec, DistributionKind, DistributionSpec, Entity, IntOrString, Relationship,
+        RelationshipKind,
     };
     use std::collections::BTreeMap;
 
@@ -261,8 +262,8 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
+            mixin_refs: None,
+            output: None,
             scaling: None,
         }
     }
@@ -304,7 +305,7 @@ mod tests {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
-        companion_files: Vec::new(),
+            companion_files: Vec::new(),
         }
     }
 
@@ -530,7 +531,7 @@ mod tests {
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
-        output: None,
+                output: None,
                 scaling: None,
             }],
             vec![],
@@ -564,7 +565,7 @@ mod tests {
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
-        output: None,
+                output: None,
                 scaling: None,
             }],
             vec![],
@@ -591,9 +592,9 @@ mod tests {
                     start: IntOrString::Int(1),
                     step: IntOrString::Int(1),
                     prefix: None,
-                values: None,
-                cycle: None,
-                jitter: None,
+                    values: None,
+                    cycle: None,
+                    jitter: None,
                 }),
                 nullable: NullSpec::Never,
                 primary_key: Some(true),
@@ -608,9 +609,9 @@ mod tests {
             actor: true,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         };
         let events = Entity {
@@ -638,9 +639,9 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         };
         // No explicit relationship — only ActorRef generator
@@ -695,9 +696,9 @@ mod tests {
             actor: true,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         };
         let model = model_with(vec![users], vec![]);

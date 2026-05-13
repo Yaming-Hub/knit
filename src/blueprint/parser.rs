@@ -144,8 +144,12 @@ pub(crate) fn parse_toml_file_raw(path: &std::path::Path) -> Result<DataModel, B
             let canonical = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
             let mut stack = vec![canonical.clone()];
             visited.insert(canonical);
-            let included =
-                crate::blueprint::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
+            let included = crate::blueprint::includes::resolve_includes(
+                path,
+                &inc_vec,
+                &mut visited,
+                &mut stack,
+            )?;
             crate::blueprint::includes::merge_main_over_includes(&included, &model)
         }
     } else {
@@ -192,8 +196,12 @@ pub(crate) fn parse_json_file_raw(path: &std::path::Path) -> Result<DataModel, B
             let canonical = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
             let mut stack = vec![canonical.clone()];
             visited.insert(canonical);
-            let included =
-                crate::blueprint::includes::resolve_includes(path, &inc_vec, &mut visited, &mut stack)?;
+            let included = crate::blueprint::includes::resolve_includes(
+                path,
+                &inc_vec,
+                &mut visited,
+                &mut stack,
+            )?;
             crate::blueprint::includes::merge_main_over_includes(&included, &model)
         }
     } else {
@@ -314,9 +322,22 @@ use crate::core::{CustomType, DataType, Field, NullSpec};
 
 /// Built-in type names that custom types must not shadow.
 const BUILTIN_TYPES: &[&str] = &[
-    "bool", "int", "int32", "float", "string", "uuid", "date", "time",
-    "datetime", "datetime_us", "datetimetz", "duration", "bytes", "array",
-    "map", "object",
+    "bool",
+    "int",
+    "int32",
+    "float",
+    "string",
+    "uuid",
+    "date",
+    "time",
+    "datetime",
+    "datetime_us",
+    "datetimetz",
+    "duration",
+    "bytes",
+    "array",
+    "map",
+    "object",
 ];
 
 /// Resolve all `DataType::Custom(name)` references in the model.
@@ -372,8 +393,11 @@ pub fn resolve_custom_types(model: &mut DataModel) -> Result<(), BlueprintError>
     }
 
     // Build lookup map
-    let type_map: std::collections::HashMap<&str, &CustomType> =
-        model.custom_types.iter().map(|ct| (ct.name.as_str(), ct)).collect();
+    let type_map: std::collections::HashMap<&str, &CustomType> = model
+        .custom_types
+        .iter()
+        .map(|ct| (ct.name.as_str(), ct))
+        .collect();
 
     // Resolve fields in all entities
     for entity in &mut model.entities {
@@ -391,12 +415,12 @@ fn resolve_fields(
 ) -> Result<(), BlueprintError> {
     for field in fields.iter_mut() {
         if let DataType::Custom(ref name) = field.data_type {
-            let ct = type_map.get(name.as_str()).ok_or_else(|| {
-                BlueprintError::Validation {
+            let ct = type_map
+                .get(name.as_str())
+                .ok_or_else(|| BlueprintError::Validation {
                     path: format!("{}.{}", entity_name, field.name),
                     message: format!("references undefined type '{}'", name),
-                }
-            })?;
+                })?;
 
             // Replace data_type with the custom type's base
             field.data_type = ct.base.clone();
@@ -448,8 +472,8 @@ fn check_undefined_custom_refs(fields: &[Field], entity_name: &str) -> Result<()
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::{CountSpec, GeneratorSpec, IntOrString, NullSpec};
     use indoc::indoc;
-    use crate::core::{CountSpec, GeneratorSpec, NullSpec, IntOrString};
 
     #[test]
     fn test_parse_minimal_schema() {
@@ -1016,7 +1040,10 @@ mod tests {
         let result = parse_toml(input);
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("undefined type"), "expected undefined type error, got: {err}");
+        assert!(
+            err.contains("undefined type"),
+            "expected undefined type error, got: {err}"
+        );
     }
 
     #[test]
@@ -1036,7 +1063,10 @@ mod tests {
         let result = parse_toml(input);
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("built-in"), "expected built-in name conflict error, got: {err}");
+        assert!(
+            err.contains("built-in"),
+            "expected built-in name conflict error, got: {err}"
+        );
     }
 
     #[test]
@@ -1060,7 +1090,10 @@ mod tests {
         let result = parse_toml(input);
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("duplicate"), "expected duplicate name error, got: {err}");
+        assert!(
+            err.contains("duplicate"),
+            "expected duplicate name error, got: {err}"
+        );
     }
 
     #[test]
@@ -1080,7 +1113,10 @@ mod tests {
         let result = parse_toml(input);
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("complex base type"), "expected complex base type error, got: {err}");
+        assert!(
+            err.contains("complex base type"),
+            "expected complex base type error, got: {err}"
+        );
     }
 
     #[test]
@@ -1266,7 +1302,10 @@ mod tests {
         let result = parse_toml(input);
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("conflicts with field from another mixin"), "got: {err}");
+        assert!(
+            err.contains("conflicts with field from another mixin"),
+            "got: {err}"
+        );
     }
 
     #[test]

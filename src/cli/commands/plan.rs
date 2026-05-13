@@ -187,12 +187,14 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         } => {
             format!("faker({}, {})", category, locale)
         }
-        crate::plan::GeneratorPlan::Sequence { start, step, jitter_ms } => {
-            match jitter_ms {
-                Some(j) => format!("seq(start={}, step={}, jitter={}ms)", start, step, j),
-                None => format!("seq(start={}, step={})", start, step),
-            }
-        }
+        crate::plan::GeneratorPlan::Sequence {
+            start,
+            step,
+            jitter_ms,
+        } => match jitter_ms {
+            Some(j) => format!("seq(start={}, step={}, jitter={}ms)", start, step, j),
+            None => format!("seq(start={}, step={})", start, step),
+        },
         crate::plan::GeneratorPlan::CyclicValues { values } => {
             format!("cyclic({} values)", values.len())
         }

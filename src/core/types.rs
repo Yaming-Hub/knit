@@ -2225,7 +2225,12 @@ mod tests {
         let json = r#"{"type": "sequence", "start": 0, "step": 86400000, "jitter": "30m"}"#;
         let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
         match &gen {
-            GeneratorSpec::Sequence { start, step, jitter, .. } => {
+            GeneratorSpec::Sequence {
+                start,
+                step,
+                jitter,
+                ..
+            } => {
                 assert_eq!(*start, IntOrString::Int(0));
                 assert_eq!(*step, IntOrString::Int(86_400_000));
                 assert_eq!(jitter, &Some("30m".into()));
@@ -2366,9 +2371,9 @@ step = "7d"
                             start: IntOrString::Int(1),
                             step: IntOrString::Int(1),
                             prefix: None,
-                        values: None,
-                        cycle: None,
-                        jitter: None,
+                            values: None,
+                            cycle: None,
+                            jitter: None,
                         }),
                         nullable: NullSpec::Never,
                         primary_key: Some(true),
@@ -2403,8 +2408,8 @@ step = "7d"
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
-        output: None,
-        stats: None,
+                output: None,
+                stats: None,
                 scaling: None,
             }],
             relationships: vec![],
@@ -2579,8 +2584,8 @@ step = "7d"
             actor: true,
             persona_distribution: Some("personas".into()),
             activity_count: None,
-                mixin_refs: None,
-        output: None,
+            mixin_refs: None,
+            output: None,
             scaling: None,
         };
         let json = serde_json::to_string(&entity).unwrap();

@@ -101,7 +101,10 @@ fn write_model_output(
         let tables_dir = output_path.join("tables");
         if tables_dir.is_dir() {
             std::fs::remove_dir_all(&tables_dir).with_context(|| {
-                format!("failed to clean stale tables directory: {}", tables_dir.display())
+                format!(
+                    "failed to clean stale tables directory: {}",
+                    tables_dir.display()
+                )
             })?;
         }
         crate::model::writer::write_model_directory(data_model, output_path)
@@ -194,7 +197,16 @@ pub fn run(
 
     // Batch mode (original behavior)
     let source = source.unwrap();
-    run_batch(source, output, sample, &entity_filter, actors_opts, model_format, review, cli)
+    run_batch(
+        source,
+        output,
+        sample,
+        &entity_filter,
+        actors_opts,
+        model_format,
+        review,
+        cli,
+    )
 }
 
 /// Batch mode: load all data, profile, fit, emit blueprint (original behavior).
@@ -477,11 +489,8 @@ fn run_batch(
         } else {
             vec![]
         };
-        let overrides = crate::learn::review::interactive_review(
-            &mut data_model,
-            &all_decisions,
-            cli.quiet,
-        );
+        let overrides =
+            crate::learn::review::interactive_review(&mut data_model, &all_decisions, cli.quiet);
         if overrides > 0 && !cli.quiet {
             eprintln!();
         }
@@ -852,11 +861,8 @@ fn emit_blueprint_from_state(
         } else {
             vec![]
         };
-        let overrides = crate::learn::review::interactive_review(
-            &mut data_model,
-            &all_decisions,
-            cli.quiet,
-        );
+        let overrides =
+            crate::learn::review::interactive_review(&mut data_model, &all_decisions, cli.quiet);
         if overrides > 0 && !cli.quiet {
             eprintln!();
         }
@@ -1338,10 +1344,14 @@ fn detect_field_traits(
             // Fall back to arrow type for natively-typed columns
             match &profile.data_type {
                 DataType::Boolean => Some("boolean".to_string()),
-                DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64
-                | DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64 => {
-                    Some("integer".to_string())
-                }
+                DataType::Int8
+                | DataType::Int16
+                | DataType::Int32
+                | DataType::Int64
+                | DataType::UInt8
+                | DataType::UInt16
+                | DataType::UInt32
+                | DataType::UInt64 => Some("integer".to_string()),
                 DataType::Float16 | DataType::Float32 | DataType::Float64 => {
                     Some("float".to_string())
                 }
@@ -2018,9 +2028,9 @@ fn copy_companion_dictionaries(
             // Reject unsafe paths (absolute or containing ".." components)
             let dict_path = std::path::Path::new(&dict.path);
             if dict_path.is_absolute()
-                || dict_path.components().any(|c| {
-                    matches!(c, std::path::Component::ParentDir)
-                })
+                || dict_path
+                    .components()
+                    .any(|c| matches!(c, std::path::Component::ParentDir))
             {
                 warn!(
                     dict = %dict.name,
@@ -2147,9 +2157,8 @@ fn copy_companion_files(
 
             // Create parent directories
             if let Some(parent) = dst.parent() {
-                std::fs::create_dir_all(parent).with_context(|| {
-                    format!("failed to create directory {}", parent.display())
-                })?;
+                std::fs::create_dir_all(parent)
+                    .with_context(|| format!("failed to create directory {}", parent.display()))?;
             }
 
             std::fs::copy(&path, &dst).with_context(|| {
@@ -3362,8 +3371,14 @@ mod tests {
             false,
             &quiet_cli(),
         );
-        assert!(result.is_ok(), "learn --model-format structured failed: {result:?}");
-        assert!(output_dir.join("knit.toml").exists(), "should have knit.toml");
+        assert!(
+            result.is_ok(),
+            "learn --model-format structured failed: {result:?}"
+        );
+        assert!(
+            output_dir.join("knit.toml").exists(),
+            "should have knit.toml"
+        );
         assert!(output_dir.join("tables").exists(), "should have tables/");
         assert!(
             output_dir.join("tables").join("data.toml").exists(),
@@ -3481,14 +3496,24 @@ mod tests {
             skewness: 0.1,
             kurtosis: 0.0,
             percentiles: Percentiles {
-                p1: 15.0, p5: 20.0, p10: 25.0, p25: 38.0, p50: 50.0,
-                p75: 62.0, p90: 75.0, p95: 80.0, p99: 85.0,
+                p1: 15.0,
+                p5: 20.0,
+                p10: 25.0,
+                p25: 38.0,
+                p50: 50.0,
+                p75: 62.0,
+                p90: 75.0,
+                p95: 80.0,
+                p99: 85.0,
             },
             max_decimal_places: Some(2),
         });
         let analysis = make_analysis("score");
         let traits = detect_field_traits(&profile, &analysis);
-        assert_eq!(traits.distribution_shape, Some(crate::core::DistributionShape::Normal));
+        assert_eq!(
+            traits.distribution_shape,
+            Some(crate::core::DistributionShape::Normal)
+        );
     }
 
     #[test]
@@ -3505,14 +3530,24 @@ mod tests {
             skewness: 2.5,
             kurtosis: 1.0,
             percentiles: Percentiles {
-                p1: 1000.0, p5: 5000.0, p10: 10000.0, p25: 20000.0, p50: 35000.0,
-                p75: 60000.0, p90: 100000.0, p95: 150000.0, p99: 500000.0,
+                p1: 1000.0,
+                p5: 5000.0,
+                p10: 10000.0,
+                p25: 20000.0,
+                p50: 35000.0,
+                p75: 60000.0,
+                p90: 100000.0,
+                p95: 150000.0,
+                p99: 500000.0,
             },
             max_decimal_places: Some(2),
         });
         let analysis = make_analysis("income");
         let traits = detect_field_traits(&profile, &analysis);
-        assert_eq!(traits.distribution_shape, Some(crate::core::DistributionShape::Skewed));
+        assert_eq!(
+            traits.distribution_shape,
+            Some(crate::core::DistributionShape::Skewed)
+        );
     }
 
     #[test]
@@ -3529,14 +3564,24 @@ mod tests {
             skewness: 5.0,
             kurtosis: 50.0,
             percentiles: Percentiles {
-                p1: 0.0, p5: 0.0, p10: 1.0, p25: 3.0, p50: 10.0,
-                p75: 50.0, p90: 200.0, p95: 1000.0, p99: 50000.0,
+                p1: 0.0,
+                p5: 0.0,
+                p10: 1.0,
+                p25: 3.0,
+                p50: 10.0,
+                p75: 50.0,
+                p90: 200.0,
+                p95: 1000.0,
+                p99: 50000.0,
             },
             max_decimal_places: None,
         });
         let analysis = make_analysis("views");
         let traits = detect_field_traits(&profile, &analysis);
-        assert_eq!(traits.distribution_shape, Some(crate::core::DistributionShape::LongTail));
+        assert_eq!(
+            traits.distribution_shape,
+            Some(crate::core::DistributionShape::LongTail)
+        );
     }
 
     #[test]

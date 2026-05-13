@@ -16,10 +16,12 @@ pub mod correlation;
 pub mod derived;
 pub mod dictionary;
 pub mod distribution;
+pub mod event_stream;
 pub mod external_lookup;
 pub mod faker;
 pub mod fk;
 pub mod graph_fk;
+pub mod numeric_time_series;
 pub mod one_of;
 pub mod pattern;
 pub mod persona_field;
@@ -30,8 +32,6 @@ pub mod struct_gen;
 pub mod temporal;
 pub mod thread_ref;
 pub mod topology;
-pub mod numeric_time_series;
-pub mod event_stream;
 pub mod unique;
 pub mod uuid_gen;
 pub mod weighted_fk;
@@ -80,9 +80,11 @@ pub fn create_generator_with_seen(
             *clamp_max,
             *round,
         )),
-        GeneratorPlan::Sequence { start, step, jitter_ms } => {
-            Box::new(sequence::SequenceGenerator::new(*start, *step, *jitter_ms))
-        }
+        GeneratorPlan::Sequence {
+            start,
+            step,
+            jitter_ms,
+        } => Box::new(sequence::SequenceGenerator::new(*start, *step, *jitter_ms)),
         GeneratorPlan::CyclicValues { values } => {
             Box::new(sequence::CyclicValuesGenerator::new(values.clone()))
         }
@@ -99,13 +101,9 @@ pub fn create_generator_with_seen(
             expr.clone(),
             depends_on.clone(),
         )),
-        GeneratorPlan::Composite { element, length } => {
-            Box::new(composite::CompositeGenerator::new_with_seen(
-                element,
-                length,
-                shared_seen,
-            ))
-        }
+        GeneratorPlan::Composite { element, length } => Box::new(
+            composite::CompositeGenerator::new_with_seen(element, length, shared_seen),
+        ),
         GeneratorPlan::Faker {
             category,
             locale,
@@ -133,7 +131,11 @@ pub fn create_generator_with_seen(
         } => match kind {
             crate::plan::TemporalKind::Relative => {
                 let base = base_field.clone().unwrap_or_default();
-                Box::new(temporal::RelativeGenerator::new(base, params, string_params))
+                Box::new(temporal::RelativeGenerator::new(
+                    base,
+                    params,
+                    string_params,
+                ))
             }
             crate::plan::TemporalKind::TimeSeries => {
                 Box::new(temporal::TimeSeriesGenerator::new(params))
@@ -306,10 +308,7 @@ pub fn plan_contains_unique(plan: &GeneratorPlan) -> bool {
         GeneratorPlan::Unique { .. } => true,
         GeneratorPlan::Conditional {
             branches, default, ..
-        } => {
-            branches.iter().any(|(_, p)| plan_contains_unique(p))
-                || plan_contains_unique(default)
-        }
+        } => branches.iter().any(|(_, p)| plan_contains_unique(p)) || plan_contains_unique(default),
         GeneratorPlan::Composite { element, length } => {
             plan_contains_unique(element) || plan_contains_unique(length)
         }

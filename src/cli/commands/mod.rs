@@ -1,5 +1,6 @@
 //! Subcommand implementations for the knit CLI.
 
+pub mod blueprint;
 pub mod enrich;
 pub mod generate;
 pub mod generators;
@@ -9,7 +10,6 @@ pub mod learn;
 pub mod model;
 pub mod plan;
 pub mod scale;
-pub mod blueprint;
 pub mod tokenize;
 pub mod validate;
 
@@ -18,9 +18,9 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde::Serialize;
 
+use crate::blueprint::BlueprintError;
 use crate::core::DataModel;
 use crate::model as model_dir;
-use crate::blueprint::BlueprintError;
 
 /// Load and parse a schema file or structured model directory.
 ///
@@ -76,7 +76,10 @@ pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
         let tables_dir = effective_path.join("tables");
         if tables_dir.is_dir() {
             std::fs::remove_dir_all(&tables_dir).with_context(|| {
-                format!("failed to clean stale tables directory: {}", tables_dir.display())
+                format!(
+                    "failed to clean stale tables directory: {}",
+                    tables_dir.display()
+                )
             })?;
         }
         model_dir::writer::write_model_directory(model, effective_path)
@@ -87,8 +90,16 @@ pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
             model: FlatModelMeta {
                 name: model.name.clone(),
                 description: model.description.clone(),
-                seed: if model.seed != 0 { Some(model.seed) } else { None },
-                locale: if model.locale != "en" { Some(model.locale.clone()) } else { None },
+                seed: if model.seed != 0 {
+                    Some(model.seed)
+                } else {
+                    None
+                },
+                locale: if model.locale != "en" {
+                    Some(model.locale.clone())
+                } else {
+                    None
+                },
                 timezone: if model.timezone != "UTC" {
                     Some(model.timezone.clone())
                 } else {

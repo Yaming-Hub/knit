@@ -201,9 +201,9 @@ fn categorical_recovers_weights() {
 
 #[test]
 fn schema_assembly_produces_valid_model() {
+    use knit::blueprint::validate;
     use knit::learn::fitting::fit_distribution;
     use knit::learn::schema_assembly::{assemble_data_model, ColumnAnalysis, TableAnalysis};
-    use knit::blueprint::validate;
 
     let data = generate_from_toml(ROUNDTRIP_SCHEMA);
     let batches = data.get("samples").expect("samples entity");

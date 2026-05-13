@@ -39,9 +39,7 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
         let mut entries: Vec<_> = std::fs::read_dir(&tables_dir)
             .with_context(|| format!("reading {}", tables_dir.display()))?
             .filter_map(|e| e.ok())
-            .filter(|e| {
-                e.path().extension().and_then(|x| x.to_str()) == Some("toml")
-            })
+            .filter(|e| e.path().extension().and_then(|x| x.to_str()) == Some("toml"))
             .collect();
         entries.sort_by_key(|e| e.file_name());
 
@@ -59,9 +57,12 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
     let (relationships, actor_relationships) = if rels_path.is_file() {
         let s = std::fs::read_to_string(&rels_path)
             .with_context(|| format!("reading {}", rels_path.display()))?;
-        let rf: RelationshipsFile = toml::from_str(&s)
-            .with_context(|| format!("parsing {}", rels_path.display()))?;
-        (rf.foreign_keys.unwrap_or_default(), rf.actor_graphs.unwrap_or_default())
+        let rf: RelationshipsFile =
+            toml::from_str(&s).with_context(|| format!("parsing {}", rels_path.display()))?;
+        (
+            rf.foreign_keys.unwrap_or_default(),
+            rf.actor_graphs.unwrap_or_default(),
+        )
     } else {
         (vec![], vec![])
     };
@@ -71,8 +72,8 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
     let correlations = if corr_path.is_file() {
         let s = std::fs::read_to_string(&corr_path)
             .with_context(|| format!("reading {}", corr_path.display()))?;
-        let cf: CorrelationsFile = toml::from_str(&s)
-            .with_context(|| format!("parsing {}", corr_path.display()))?;
+        let cf: CorrelationsFile =
+            toml::from_str(&s).with_context(|| format!("parsing {}", corr_path.display()))?;
         cf.correlations.unwrap_or_default()
     } else {
         vec![]
@@ -83,8 +84,8 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
     let (custom_types, mixins, personas) = if shared_path.is_file() {
         let s = std::fs::read_to_string(&shared_path)
             .with_context(|| format!("reading {}", shared_path.display()))?;
-        let sf: SharedFile = toml::from_str(&s)
-            .with_context(|| format!("parsing {}", shared_path.display()))?;
+        let sf: SharedFile =
+            toml::from_str(&s).with_context(|| format!("parsing {}", shared_path.display()))?;
         (
             sf.types.unwrap_or_default(),
             sf.mixins.unwrap_or_default(),
@@ -119,7 +120,9 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
         noise_profiles,
         correlations,
         params: manifest.model.params.unwrap_or_default(),
-        blueprint_version: manifest.blueprint_version.unwrap_or_else(|| "2.0".to_string()),
+        blueprint_version: manifest
+            .blueprint_version
+            .unwrap_or_else(|| "2.0".to_string()),
         personas,
         actor_relationships,
         custom_types,
@@ -252,25 +255,40 @@ struct SharedFile {
 /// Convert a TableFile into an Entity, applying layout info.
 fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
     let folder = layout.as_ref().and_then(|l| {
-        l.folders.as_ref().and_then(|fs| {
-            fs.iter().find(|f| f.table == table.table.name)
-        })
+        l.folders
+            .as_ref()
+            .and_then(|fs| fs.iter().find(|f| f.table == table.table.name))
     });
 
     let output = folder.map(|f| {
-        let partition_values = f.partition.as_ref().map(|p| {
-            p.values.iter().enumerate().map(|(i, v)| {
-                let weight = if let Some(&w) = p.weights.get(i) {
-                    w
-                } else if let Some(&count) = p.counts.get(i) {
-                    let total: u64 = p.counts.iter().sum();
-                    if total > 0 { count as f64 / total as f64 } else { 1.0 / p.values.len() as f64 }
-                } else {
-                    1.0 / p.values.len().max(1) as f64
-                };
-                PartitionValue { value: v.clone(), weight }
-            }).collect()
-        }).unwrap_or_default();
+        let partition_values = f
+            .partition
+            .as_ref()
+            .map(|p| {
+                p.values
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| {
+                        let weight = if let Some(&w) = p.weights.get(i) {
+                            w
+                        } else if let Some(&count) = p.counts.get(i) {
+                            let total: u64 = p.counts.iter().sum();
+                            if total > 0 {
+                                count as f64 / total as f64
+                            } else {
+                                1.0 / p.values.len() as f64
+                            }
+                        } else {
+                            1.0 / p.values.len().max(1) as f64
+                        };
+                        PartitionValue {
+                            value: v.clone(),
+                            weight,
+                        }
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
 
         OutputLayout {
             path: f.path.clone(),
@@ -309,17 +327,23 @@ mod tests {
         let root = dir.path();
 
         // Create knit.toml
-        fs::write(root.join("knit.toml"), r#"
+        fs::write(
+            root.join("knit.toml"),
+            r#"
 blueprint_version = "2.0"
 
 [model]
 name = "test_model"
 seed = 123
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         // Create tables directory
         fs::create_dir(root.join("tables")).unwrap();
-        fs::write(root.join("tables").join("Users.toml"), r#"
+        fs::write(
+            root.join("tables").join("Users.toml"),
+            r#"
 [table]
 name = "Users"
 count = 100
@@ -336,7 +360,9 @@ step = 1
 [[columns]]
 name = "email"
 data_type = "string"
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         let model = load_model_directory(root).unwrap();
         assert_eq!(model.name, "test_model");
@@ -351,13 +377,19 @@ data_type = "string"
         let dir = TempDir::new().unwrap();
         let root = dir.path();
 
-        fs::write(root.join("knit.toml"), r#"
+        fs::write(
+            root.join("knit.toml"),
+            r#"
 [model]
 name = "reltest"
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         fs::create_dir(root.join("tables")).unwrap();
-        fs::write(root.join("tables").join("Orders.toml"), r#"
+        fs::write(
+            root.join("tables").join("Orders.toml"),
+            r#"
 [table]
 name = "Orders"
 count = 50
@@ -365,15 +397,21 @@ count = 50
 [[columns]]
 name = "user_id"
 data_type = "int"
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
-        fs::write(root.join("relationships.toml"), r#"
+        fs::write(
+            root.join("relationships.toml"),
+            r#"
 [[foreign_keys]]
 name = "orders_to_users"
 from = "Orders.user_id"
 to = "Users.id"
 kind = "many_to_one"
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         let model = load_model_directory(root).unwrap();
         assert_eq!(model.relationships.len(), 1);

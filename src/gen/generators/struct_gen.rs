@@ -69,18 +69,14 @@ fn apply_precision(arr: ArrayRef, precision: Option<u8>) -> ArrayRef {
 }
 
 /// Coerce a generated array to match the declared logical data type.
-fn coerce_to_logical_type(
-    arr: ArrayRef,
-    data_type: &crate::core::DataType,
-) -> ArrayRef {
+fn coerce_to_logical_type(arr: ArrayRef, data_type: &crate::core::DataType) -> ArrayRef {
     match data_type {
         crate::core::DataType::Bool => {
             if arr.as_any().is::<BooleanArray>() {
                 return arr;
             }
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
-                let bools: BooleanArray =
-                    i64_arr.iter().map(|v| v.map(|x| x != 0)).collect();
+                let bools: BooleanArray = i64_arr.iter().map(|v| v.map(|x| x != 0)).collect();
                 return Arc::new(bools);
             }
             arr
@@ -126,8 +122,8 @@ impl FieldGenerator for StructGenerator {
             .map(|(name, arr)| ArrowField::new(name, arr.data_type().clone(), true))
             .collect();
 
-        let struct_array =
-            StructArray::try_new(arrow_fields.into(), child_arrays, None).unwrap_or_else(|e| {
+        let struct_array = StructArray::try_new(arrow_fields.into(), child_arrays, None)
+            .unwrap_or_else(|e| {
                 tracing::error!("Failed to create StructArray: {}", e);
                 // Fallback: empty struct
                 StructArray::new_empty_fields(count, None)
@@ -219,10 +215,14 @@ mod tests {
             ))),
         ];
         let names = vec!["count".to_string(), "label".to_string()];
-        let gen = StructGenerator::new(children, names, vec![
-            make_pp(None, crate::core::DataType::Int),
-            make_pp(None, crate::core::DataType::String),
-        ]);
+        let gen = StructGenerator::new(
+            children,
+            names,
+            vec![
+                make_pp(None, crate::core::DataType::Int),
+                make_pp(None, crate::core::DataType::String),
+            ],
+        );
 
         let dt = gen.output_type();
         assert!(matches!(dt, DataType::Struct(_)));

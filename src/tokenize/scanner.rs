@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use chrono::{NaiveDate, NaiveDateTime, Duration};
+use chrono::{Duration, NaiveDate, NaiveDateTime};
 
 use crate::tokenize::mapper::TokenMapper;
 use crate::tokenize::TokenizeConfig;
@@ -99,17 +99,17 @@ fn walk_dir(root: &Path, current: &Path, entries: &mut Vec<FileEntry>) -> Result
         if path.is_dir() {
             walk_dir(root, &path, entries)?;
         } else {
-            let rel_path = path.strip_prefix(root)
-                .unwrap_or(&path)
-                .to_path_buf();
+            let rel_path = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
 
             let kind = classify_file(&rel_path);
-            let ext = path.extension()
-                .and_then(|e| e.to_str())
-                .unwrap_or("");
+            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
             let format = FileFormat::from_extension(ext);
 
-            entries.push(FileEntry { rel_path, kind, format });
+            entries.push(FileEntry {
+                rel_path,
+                kind,
+                format,
+            });
         }
     }
     Ok(())
@@ -118,7 +118,8 @@ fn walk_dir(root: &Path, current: &Path, entries: &mut Vec<FileEntry>) -> Result
 /// Classify a file based on its path and name.
 fn classify_file(rel_path: &Path) -> FileKind {
     let path_str = rel_path.to_string_lossy().to_lowercase();
-    let file_name = rel_path.file_name()
+    let file_name = rel_path
+        .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("")
         .to_lowercase();
@@ -129,12 +130,18 @@ fn classify_file(rel_path: &Path) -> FileKind {
     }
 
     // Dictionary/mapping files
-    if path_str.starts_with("mappings") || path_str.starts_with("dictionaries")
-        || path_str.contains("\\mappings\\") || path_str.contains("/mappings/")
-        || path_str.contains("\\dictionaries\\") || path_str.contains("/dictionaries/")
+    if path_str.starts_with("mappings")
+        || path_str.starts_with("dictionaries")
+        || path_str.contains("\\mappings\\")
+        || path_str.contains("/mappings/")
+        || path_str.contains("\\dictionaries\\")
+        || path_str.contains("/dictionaries/")
     {
         let ext = rel_path.extension().and_then(|e| e.to_str()).unwrap_or("");
-        if matches!(FileFormat::from_extension(ext), FileFormat::Csv | FileFormat::Tsv | FileFormat::Json) {
+        if matches!(
+            FileFormat::from_extension(ext),
+            FileFormat::Csv | FileFormat::Tsv | FileFormat::Json
+        ) {
             return FileKind::Dictionary;
         }
     }
@@ -142,9 +149,11 @@ fn classify_file(rel_path: &Path) -> FileKind {
     // Data files by extension
     let ext = rel_path.extension().and_then(|e| e.to_str()).unwrap_or("");
     match FileFormat::from_extension(ext) {
-        FileFormat::Csv | FileFormat::Tsv | FileFormat::Parquet | FileFormat::Json | FileFormat::Jsonl => {
-            FileKind::Data
-        }
+        FileFormat::Csv
+        | FileFormat::Tsv
+        | FileFormat::Parquet
+        | FileFormat::Json
+        | FileFormat::Jsonl => FileKind::Data,
         FileFormat::Other => FileKind::Companion,
     }
 }
@@ -159,8 +168,12 @@ pub fn extract_strings(
     let path = root.join(&entry.rel_path);
 
     match entry.format {
-        FileFormat::Csv | FileFormat::Tsv => extract_csv_strings(&path, entry.format, mapper, config),
-        FileFormat::Json | FileFormat::Jsonl => extract_json_strings(&path, entry.kind, mapper, config),
+        FileFormat::Csv | FileFormat::Tsv => {
+            extract_csv_strings(&path, entry.format, mapper, config)
+        }
+        FileFormat::Json | FileFormat::Jsonl => {
+            extract_json_strings(&path, entry.kind, mapper, config)
+        }
         FileFormat::Parquet => extract_parquet_strings(&path, mapper, config),
         FileFormat::Other => Ok(()),
     }
@@ -172,7 +185,11 @@ fn extract_csv_strings(
     mapper: &mut TokenMapper,
     config: &TokenizeConfig,
 ) -> Result<()> {
-    let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+    let delimiter = if format == FileFormat::Tsv {
+        b'\t'
+    } else {
+        b','
+    };
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(delimiter)
         .has_headers(true)
@@ -230,8 +247,8 @@ fn extract_json_strings(
     mapper: &mut TokenMapper,
     config: &TokenizeConfig,
 ) -> Result<()> {
-    let content = std::fs::read_to_string(path)
-        .with_context(|| format!("reading {}", path.display()))?;
+    let content =
+        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
 
     let date_shift = if config.tokenize_dates {
         Some(compute_date_shift(config.seed))
@@ -244,9 +261,7 @@ fn extract_json_strings(
         if kind == FileKind::Schema {
             extract_schema_json_strings(&value, mapper);
         } else {
-            extract_data_json_strings(
-                &value, mapper, config, date_shift, true, false,
-            );
+            extract_data_json_strings(&value, mapper, config, date_shift, true, false);
         }
         return Ok(());
     }
@@ -259,9 +274,7 @@ fn extract_json_strings(
         }
         let value: serde_json::Value = serde_json::from_str(trimmed)
             .with_context(|| format!("parsing JSONL line in {}", path.display()))?;
-        extract_data_json_strings(
-            &value, mapper, config, date_shift, true, false,
-        );
+        extract_data_json_strings(&value, mapper, config, date_shift, true, false);
     }
     Ok(())
 }
@@ -274,8 +287,10 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
             for (key, val) in map {
                 // Only tokenize display/description fields, not structural ones
                 let key_lower = key.to_lowercase();
-                if key_lower == "description" || key_lower == "displayname"
-                    || key_lower == "display_name" || key_lower == "tablename"
+                if key_lower == "description"
+                    || key_lower == "displayname"
+                    || key_lower == "display_name"
+                    || key_lower == "tablename"
                     || key_lower == "table_name"
                 {
                     if let serde_json::Value::String(s) = val {
@@ -334,21 +349,36 @@ fn extract_data_json_strings(
         serde_json::Value::Object(map) => {
             for (key, val) in map {
                 // Apply column filter only at the first object level
-                let (child_tokenize, child_filter_applied) = if !filter_applied && config.has_column_filter() {
-                    (config.should_tokenize_column(key), true)
-                } else {
-                    (should_tokenize, filter_applied)
-                };
+                let (child_tokenize, child_filter_applied) =
+                    if !filter_applied && config.has_column_filter() {
+                        (config.should_tokenize_column(key), true)
+                    } else {
+                        (should_tokenize, filter_applied)
+                    };
 
                 if config.tokenize_headers && child_tokenize && should_tokenize_value(key) {
                     mapper.register(key);
                 }
-                extract_data_json_strings(val, mapper, config, date_shift, child_tokenize, child_filter_applied);
+                extract_data_json_strings(
+                    val,
+                    mapper,
+                    config,
+                    date_shift,
+                    child_tokenize,
+                    child_filter_applied,
+                );
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                extract_data_json_strings(item, mapper, config, date_shift, should_tokenize, filter_applied);
+                extract_data_json_strings(
+                    item,
+                    mapper,
+                    config,
+                    date_shift,
+                    should_tokenize,
+                    filter_applied,
+                );
             }
         }
         _ => {}
@@ -363,8 +393,8 @@ fn extract_parquet_strings(
     use arrow::array::{Array, AsArray};
     use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
-    let file = std::fs::File::open(path)
-        .with_context(|| format!("opening parquet {}", path.display()))?;
+    let file =
+        std::fs::File::open(path).with_context(|| format!("opening parquet {}", path.display()))?;
     let builder = ParquetRecordBatchReaderBuilder::try_new(file)?;
 
     // Build per-column tokenization flags from schema
@@ -452,7 +482,10 @@ fn should_tokenize_value_with_config(s: &str, tokenize_numbers: bool) -> bool {
         return false;
     }
     // Skip booleans
-    if matches!(trimmed.to_lowercase().as_str(), "true" | "false" | "yes" | "no") {
+    if matches!(
+        trimmed.to_lowercase().as_str(),
+        "true" | "false" | "yes" | "no"
+    ) {
         return false;
     }
     // Skip date/timestamp strings — handled separately by --tokenize-dates
@@ -476,7 +509,10 @@ fn is_numeric_string(s: &str) -> bool {
     }
     // Reject NaN, inf, -inf — these are not "numbers" for tokenization purposes
     let lower = trimmed.to_lowercase();
-    if matches!(lower.as_str(), "nan" | "inf" | "-inf" | "+inf" | "infinity" | "-infinity" | "+infinity") {
+    if matches!(
+        lower.as_str(),
+        "nan" | "inf" | "-inf" | "+inf" | "infinity" | "-infinity" | "+infinity"
+    ) {
         return false;
     }
     trimmed.parse::<f64>().is_ok()
@@ -569,17 +605,19 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     }
 
     // Try compact: YYYYMMDD (only 8 digits, starts with 19 or 20)
-    if trimmed.len() == 8 && trimmed.chars().all(|c| c.is_ascii_digit())
-        && (trimmed.starts_with("19") || trimmed.starts_with("20")) {
-            if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
-                return Some(DateInfo {
-                    datetime: d.and_hms_opt(0, 0, 0).unwrap(),
-                    format: DateFormat::Compact,
-                    tz_suffix: String::new(),
-                    frac_seconds: String::new(),
-                });
-            }
+    if trimmed.len() == 8
+        && trimmed.chars().all(|c| c.is_ascii_digit())
+        && (trimmed.starts_with("19") || trimmed.starts_with("20"))
+    {
+        if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
+            return Some(DateInfo {
+                datetime: d.and_hms_opt(0, 0, 0).unwrap(),
+                format: DateFormat::Compact,
+                tz_suffix: String::new(),
+                frac_seconds: String::new(),
+            });
         }
+    }
 
     None
 }
@@ -628,21 +666,15 @@ fn extract_frac_seconds(s: &str) -> (&str, &str) {
 fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
     let base = match info.format {
         DateFormat::IsoDate => dt.format("%Y-%m-%d").to_string(),
-        DateFormat::IsoDateTimeT => format!(
-            "{}{}",
-            dt.format("%Y-%m-%dT%H:%M:%S"),
-            info.frac_seconds,
-        ),
-        DateFormat::IsoDateTimeSpace => format!(
-            "{}{}",
-            dt.format("%Y-%m-%d %H:%M:%S"),
-            info.frac_seconds,
-        ),
-        DateFormat::IsoDateTimeZ => format!(
-            "{}{}Z",
-            dt.format("%Y-%m-%dT%H:%M:%S"),
-            info.frac_seconds,
-        ),
+        DateFormat::IsoDateTimeT => {
+            format!("{}{}", dt.format("%Y-%m-%dT%H:%M:%S"), info.frac_seconds,)
+        }
+        DateFormat::IsoDateTimeSpace => {
+            format!("{}{}", dt.format("%Y-%m-%d %H:%M:%S"), info.frac_seconds,)
+        }
+        DateFormat::IsoDateTimeZ => {
+            format!("{}{}Z", dt.format("%Y-%m-%dT%H:%M:%S"), info.frac_seconds,)
+        }
         DateFormat::IsoDateTimeOffset => {
             format!(
                 "{}{}{}",
@@ -663,7 +695,11 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
     let offset: i64 = rng.gen_range(-1825..=1825);
-    if offset == 0 { 1 } else { offset }
+    if offset == 0 {
+        1
+    } else {
+        offset
+    }
 }
 
 /// Compute a deterministic numeric shift for native numeric tokenization.
@@ -674,16 +710,16 @@ pub(crate) fn compute_numeric_shift(seed: u64) -> i64 {
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
     let offset: i64 = rng.gen_range(-10_000..=10_000);
-    if offset == 0 { 1 } else { offset }
+    if offset == 0 {
+        1
+    } else {
+        offset
+    }
 }
 
 /// Register a date string with its shifted value in the mapper.
 /// Returns true if the value was detected as a date and registered.
-fn try_register_shifted_date(
-    s: &str,
-    mapper: &mut TokenMapper,
-    shift_days: i64,
-) -> bool {
+fn try_register_shifted_date(s: &str, mapper: &mut TokenMapper, shift_days: i64) -> bool {
     if let Some(info) = is_date_string(s) {
         let shifted = info.datetime + Duration::days(shift_days);
         let shifted_str = format_shifted_date(&shifted, &info);
@@ -703,20 +739,32 @@ mod tests {
     #[test]
     fn test_classify_data_files() {
         assert_eq!(classify_file(Path::new("data.csv")), FileKind::Data);
-        assert_eq!(classify_file(Path::new("folder/events.parquet")), FileKind::Data);
+        assert_eq!(
+            classify_file(Path::new("folder/events.parquet")),
+            FileKind::Data
+        );
         assert_eq!(classify_file(Path::new("logs.jsonl")), FileKind::Data);
     }
 
     #[test]
     fn test_classify_schema_files() {
-        assert_eq!(classify_file(Path::new("Schema/schema.json")), FileKind::Schema);
+        assert_eq!(
+            classify_file(Path::new("Schema/schema.json")),
+            FileKind::Schema
+        );
         assert_eq!(classify_file(Path::new("schema.json")), FileKind::Schema);
     }
 
     #[test]
     fn test_classify_dictionary_files() {
-        assert_eq!(classify_file(Path::new("Mappings/regions.csv")), FileKind::Dictionary);
-        assert_eq!(classify_file(Path::new("Dictionaries/codes.json")), FileKind::Dictionary);
+        assert_eq!(
+            classify_file(Path::new("Mappings/regions.csv")),
+            FileKind::Dictionary
+        );
+        assert_eq!(
+            classify_file(Path::new("Dictionaries/codes.json")),
+            FileKind::Dictionary
+        );
     }
 
     #[test]
@@ -763,7 +811,13 @@ mod tests {
         writeln!(f, "2,Bob,200").unwrap();
 
         let mut mapper = TokenMapper::new(42);
-        extract_csv_strings(&path, FileFormat::Csv, &mut mapper, &TokenizeConfig::default()).unwrap();
+        extract_csv_strings(
+            &path,
+            FileFormat::Csv,
+            &mut mapper,
+            &TokenizeConfig::default(),
+        )
+        .unwrap();
 
         // "Alice" and "Bob" should be registered, but not "1", "2", "100", "200" (numeric)
         assert!(mapper.contains("Alice"));
@@ -780,7 +834,13 @@ mod tests {
         writeln!(f, r#"{{"name": "Bob", "score": 20}}"#).unwrap();
 
         let mut mapper = TokenMapper::new(42);
-        extract_json_strings(&path, FileKind::Data, &mut mapper, &TokenizeConfig::default()).unwrap();
+        extract_json_strings(
+            &path,
+            FileKind::Data,
+            &mut mapper,
+            &TokenizeConfig::default(),
+        )
+        .unwrap();
 
         assert!(mapper.contains("Alice"));
         assert!(mapper.contains("Bob"));
@@ -848,7 +908,10 @@ mod tests {
     fn test_is_date_string_iso_date() {
         let info = is_date_string("2024-01-15").unwrap();
         assert_eq!(info.format, DateFormat::IsoDate);
-        assert_eq!(info.datetime.date(), NaiveDate::from_ymd_opt(2024, 1, 15).unwrap());
+        assert_eq!(
+            info.datetime.date(),
+            NaiveDate::from_ymd_opt(2024, 1, 15).unwrap()
+        );
     }
 
     #[test]
@@ -1029,7 +1092,11 @@ mod tests {
 
         // Whitelist — only listed columns tokenized
         let config = TokenizeConfig {
-            tokenize_columns: Some(["name".to_string(), "email".to_string()].into_iter().collect()),
+            tokenize_columns: Some(
+                ["name".to_string(), "email".to_string()]
+                    .into_iter()
+                    .collect(),
+            ),
             ..Default::default()
         };
         assert!(config.should_tokenize_column("name"));

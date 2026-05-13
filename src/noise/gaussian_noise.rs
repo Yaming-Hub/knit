@@ -81,13 +81,7 @@ impl Perturbator for GaussianNoise {
                 continue;
             }
 
-            let noisy = add_noise(
-                col.as_ref(),
-                rng,
-                config,
-                self.stddev,
-                self.relative,
-            )?;
+            let noisy = add_noise(col.as_ref(), rng, config, self.stddev, self.relative)?;
             trace!(
                 column = field.name(),
                 stddev = self.stddev,

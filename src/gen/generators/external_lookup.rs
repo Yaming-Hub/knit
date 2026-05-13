@@ -31,11 +31,7 @@ pub struct ExternalLookupGenerator {
 
 impl ExternalLookupGenerator {
     /// Create a new external lookup generator from loaded entries.
-    pub fn new(
-        entries: Vec<String>,
-        weights: Option<Vec<f64>>,
-        sampling: SamplingMode,
-    ) -> Self {
+    pub fn new(entries: Vec<String>, weights: Option<Vec<f64>>, sampling: SamplingMode) -> Self {
         let weighted_index = if sampling == SamplingMode::Weighted {
             weights
                 .as_ref()
@@ -152,11 +148,8 @@ mod tests {
     fn weighted_sampling_respects_weights() {
         // Give 99% weight to "Tokyo"
         let weights = vec![99.0, 0.25, 0.25, 0.25, 0.25];
-        let gen = ExternalLookupGenerator::new(
-            sample_entries(),
-            Some(weights),
-            SamplingMode::Weighted,
-        );
+        let gen =
+            ExternalLookupGenerator::new(sample_entries(), Some(weights), SamplingMode::Weighted);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
         let arr = gen.generate(&mut rng, 100, &ctx);
@@ -164,11 +157,7 @@ mod tests {
 
         let tokyo_count = (0..100).filter(|&i| str_arr.value(i) == "Tokyo").count();
         // With 99% weight, Tokyo should appear in the vast majority
-        assert!(
-            tokyo_count > 80,
-            "expected >80 Tokyo, got {}",
-            tokyo_count
-        );
+        assert!(tokyo_count > 80, "expected >80 Tokyo, got {}", tokyo_count);
     }
 
     #[test]

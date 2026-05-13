@@ -153,8 +153,11 @@ pub fn build_report(field_scores: Vec<FieldQuality>) -> QualityReport {
 
     let n = field_scores.len() as f64;
 
-    let avg_mapping_confidence =
-        field_scores.iter().map(|f| f.mapping_confidence).sum::<f64>() / n;
+    let avg_mapping_confidence = field_scores
+        .iter()
+        .map(|f| f.mapping_confidence)
+        .sum::<f64>()
+        / n;
 
     let fit_scores: Vec<f64> = field_scores.iter().filter_map(|f| f.fit_quality).collect();
     let avg_fit_quality = if fit_scores.is_empty() {
@@ -175,7 +178,10 @@ pub fn build_report(field_scores: Vec<FieldQuality>) -> QualityReport {
             concerns.push(QualityConcern {
                 severity: "medium",
                 field: f.field_name.clone(),
-                message: format!("low mapping confidence ({:.0}%)", f.mapping_confidence * 100.0),
+                message: format!(
+                    "low mapping confidence ({:.0}%)",
+                    f.mapping_confidence * 100.0
+                ),
             });
         }
         if let Some(fq) = f.fit_quality {
@@ -196,10 +202,7 @@ pub fn build_report(field_scores: Vec<FieldQuality>) -> QualityReport {
                 concerns.push(QualityConcern {
                     severity: "high",
                     field: f.field_name.clone(),
-                    message: format!(
-                        "KS test rejects fit (p={:.4})",
-                        pv
-                    ),
+                    message: format!("KS test rejects fit (p={:.4})", pv),
                 });
             }
         }
@@ -309,7 +312,11 @@ impl fmt::Display for QualityReport {
                     "medium" => "●",
                     _ => "○",
                 };
-                writeln!(f, "    {} [{}] {}: {}", icon, c.severity, c.field, c.message)?;
+                writeln!(
+                    f,
+                    "    {} [{}] {}: {}",
+                    icon, c.severity, c.field, c.message
+                )?;
             }
         }
 
@@ -373,7 +380,11 @@ mod tests {
         let enrichment = make_numeric_enrichment(0.03, 0.85, 500);
         let fq = score_field(&mapping, &enrichment, &MergeOutcome::Success);
 
-        assert!(fq.score > 0.8, "high-quality field score should be >0.8, got {}", fq.score);
+        assert!(
+            fq.score > 0.8,
+            "high-quality field score should be >0.8, got {}",
+            fq.score
+        );
         assert_eq!(fq.fit_quality, Some(0.97));
         assert_eq!(fq.p_value, Some(0.85));
         assert!(fq.merge_succeeded);
@@ -436,9 +447,16 @@ mod tests {
 
         let report = build_report(vec![fq]);
 
-        assert!(report.concerns.len() >= 3, "expected multiple concerns, got {}", report.concerns.len());
+        assert!(
+            report.concerns.len() >= 3,
+            "expected multiple concerns, got {}",
+            report.concerns.len()
+        );
         let severities: Vec<&str> = report.concerns.iter().map(|c| c.severity).collect();
-        assert!(severities.contains(&"high"), "expected high severity concern");
+        assert!(
+            severities.contains(&"high"),
+            "expected high severity concern"
+        );
     }
 
     #[test]

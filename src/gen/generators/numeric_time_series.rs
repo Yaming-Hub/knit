@@ -194,16 +194,15 @@ impl FieldGenerator for NumericTimeSeriesGenerator {
                     } => {
                         let period_val = if let Some(ts) = ts_micros {
                             // Calendar-aware: period in micros
-                            let p =
-                                parse_duration_to_micros(period).unwrap_or(1_000_000.0);
+                            let p = parse_duration_to_micros(period).unwrap_or(1_000_000.0);
                             ts as f64 / p
                         } else {
                             // Row-index based: period as number of rows
                             let p = period.parse::<f64>().unwrap_or(100.0);
                             global_idx / p
                         };
-                        value += amplitude
-                            * (2.0 * std::f64::consts::PI * period_val + phase).sin();
+                        value +=
+                            amplitude * (2.0 * std::f64::consts::PI * period_val + phase).sin();
                     }
                     TimeSeriesComponent::Noise { std_dev } => {
                         if *std_dev > 0.0 {
@@ -549,8 +548,7 @@ mod tests {
             .and_utc()
             .timestamp_micros();
 
-        let ts_arr: ArrayRef =
-            Arc::new(TimestampMicrosecondArray::from(vec![ts_dec25, ts_dec26]));
+        let ts_arr: ArrayRef = Arc::new(TimestampMicrosecondArray::from(vec![ts_dec25, ts_dec26]));
         let mut cols = HashMap::new();
         cols.insert("ts".to_string(), ts_arr);
         let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));

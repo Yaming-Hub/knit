@@ -1207,9 +1207,7 @@ static STREET_SUFFIXES: &[&str] = &[
 
 // ── Person extras ──────────────────────────────────────────────────────
 
-static NAME_PREFIXES: &[&str] = &[
-    "Mr.", "Mrs.", "Ms.", "Dr.", "Prof.", "Rev.", "Hon.", "Sir",
-];
+static NAME_PREFIXES: &[&str] = &["Mr.", "Mrs.", "Ms.", "Dr.", "Prof.", "Rev.", "Hon.", "Sir"];
 
 static NAME_SUFFIXES: &[&str] = &[
     "Jr.", "Sr.", "II", "III", "IV", "MD", "PhD", "Esq.", "DDS", "DVM",
@@ -1231,155 +1229,442 @@ static USER_AGENTS: &[&str] = &[
 // ── Finance ────────────────────────────────────────────────────────────
 
 static COUNTRY_CODES: &[&str] = &[
-    "US", "GB", "DE", "FR", "JP", "CN", "AU", "CA", "BR", "IN",
-    "IT", "ES", "MX", "KR", "RU", "NL", "SE", "CH", "AT", "BE",
-    "NO", "DK", "FI", "PL", "PT", "IE", "NZ", "SG", "HK", "TW",
+    "US", "GB", "DE", "FR", "JP", "CN", "AU", "CA", "BR", "IN", "IT", "ES", "MX", "KR", "RU", "NL",
+    "SE", "CH", "AT", "BE", "NO", "DK", "FI", "PL", "PT", "IE", "NZ", "SG", "HK", "TW",
 ];
 
 static CURRENCY_CODES: &[&str] = &[
-    "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD",
-    "MXN", "SGD", "HKD", "NOK", "KRW", "TRY", "INR", "RUB", "BRL", "ZAR",
-    "DKK", "PLN", "TWD", "THB", "IDR",
+    "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD", "MXN", "SGD", "HKD",
+    "NOK", "KRW", "TRY", "INR", "RUB", "BRL", "ZAR", "DKK", "PLN", "TWD", "THB", "IDR",
 ];
 
 // ── Datetime extras ────────────────────────────────────────────────────
 
 static MONTHS: &[&str] = &[
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 ];
 
 static WEEKDAYS: &[&str] = &[
-    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
 ];
 
 static TIMEZONES: &[&str] = &[
-    "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-    "Europe/London", "Europe/Berlin", "Europe/Paris", "Europe/Moscow",
-    "Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata", "Asia/Dubai",
-    "Australia/Sydney", "Pacific/Auckland", "America/Sao_Paulo", "Africa/Cairo",
-    "America/Toronto", "Europe/Amsterdam", "Asia/Singapore", "Asia/Seoul",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "Europe/London",
+    "Europe/Berlin",
+    "Europe/Paris",
+    "Europe/Moscow",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Asia/Kolkata",
+    "Asia/Dubai",
+    "Australia/Sydney",
+    "Pacific/Auckland",
+    "America/Sao_Paulo",
+    "Africa/Cairo",
+    "America/Toronto",
+    "Europe/Amsterdam",
+    "Asia/Singapore",
+    "Asia/Seoul",
 ];
 
 // ── File ───────────────────────────────────────────────────────────────
 
 static FILE_EXTENSIONS: &[&str] = &[
-    "pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "json", "xml",
-    "png", "jpg", "gif", "mp4", "mp3", "zip", "gz", "tar", "html", "css",
-    "js", "ts", "py", "rs", "go", "java", "cpp", "h", "md", "yaml",
+    "pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "json", "xml", "png", "jpg", "gif", "mp4",
+    "mp3", "zip", "gz", "tar", "html", "css", "js", "ts", "py", "rs", "go", "java", "cpp", "h",
+    "md", "yaml",
 ];
 
 static MIME_TYPES: &[&str] = &[
-    "application/pdf", "application/json", "application/xml",
-    "application/zip", "application/octet-stream",
-    "text/plain", "text/html", "text/css", "text/csv",
-    "image/png", "image/jpeg", "image/gif", "image/svg+xml",
-    "audio/mpeg", "video/mp4",
+    "application/pdf",
+    "application/json",
+    "application/xml",
+    "application/zip",
+    "application/octet-stream",
+    "text/plain",
+    "text/html",
+    "text/css",
+    "text/csv",
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/svg+xml",
+    "audio/mpeg",
+    "video/mp4",
 ];
 
 static FILE_DIRS: &[&str] = &[
-    "/home/user/documents", "/var/log", "/tmp", "/opt/data",
-    "/usr/local/share", "/etc/config", "C:/Users/user/Documents",
-    "/home/user/projects", "/data/exports", "/var/www/html",
+    "/home/user/documents",
+    "/var/log",
+    "/tmp",
+    "/opt/data",
+    "/usr/local/share",
+    "/etc/config",
+    "C:/Users/user/Documents",
+    "/home/user/projects",
+    "/data/exports",
+    "/var/www/html",
 ];
 
 // ── Vehicle ────────────────────────────────────────────────────────────
 
 static VEHICLE_MAKES: &[&str] = &[
-    "Toyota", "Honda", "Ford", "Chevrolet", "BMW", "Mercedes-Benz",
-    "Audi", "Volkswagen", "Tesla", "Hyundai", "Kia", "Nissan",
-    "Subaru", "Mazda", "Lexus", "Volvo", "Porsche", "Jeep",
-    "Land Rover", "Jaguar",
+    "Toyota",
+    "Honda",
+    "Ford",
+    "Chevrolet",
+    "BMW",
+    "Mercedes-Benz",
+    "Audi",
+    "Volkswagen",
+    "Tesla",
+    "Hyundai",
+    "Kia",
+    "Nissan",
+    "Subaru",
+    "Mazda",
+    "Lexus",
+    "Volvo",
+    "Porsche",
+    "Jeep",
+    "Land Rover",
+    "Jaguar",
 ];
 
 static VEHICLE_MODELS: &[&str] = &[
-    "Camry", "Civic", "F-150", "Silverado", "3 Series", "C-Class",
-    "A4", "Golf", "Model 3", "Tucson", "Sportage", "Altima",
-    "Outback", "CX-5", "RX", "XC90", "911", "Wrangler",
-    "Range Rover", "F-Type",
+    "Camry",
+    "Civic",
+    "F-150",
+    "Silverado",
+    "3 Series",
+    "C-Class",
+    "A4",
+    "Golf",
+    "Model 3",
+    "Tucson",
+    "Sportage",
+    "Altima",
+    "Outback",
+    "CX-5",
+    "RX",
+    "XC90",
+    "911",
+    "Wrangler",
+    "Range Rover",
+    "F-Type",
 ];
 
 // ── Medical ────────────────────────────────────────────────────────────
 
-static BLOOD_TYPES: &[&str] = &[
-    "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-",
-];
+static BLOOD_TYPES: &[&str] = &["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 // ── Company extras ─────────────────────────────────────────────────────
 
 static INDUSTRIES: &[&str] = &[
-    "Technology", "Healthcare", "Finance", "Education", "Manufacturing",
-    "Retail", "Energy", "Transportation", "Telecommunications", "Agriculture",
-    "Construction", "Entertainment", "Real Estate", "Hospitality", "Legal",
-    "Consulting", "Pharmaceuticals", "Insurance", "Aerospace", "Automotive",
+    "Technology",
+    "Healthcare",
+    "Finance",
+    "Education",
+    "Manufacturing",
+    "Retail",
+    "Energy",
+    "Transportation",
+    "Telecommunications",
+    "Agriculture",
+    "Construction",
+    "Entertainment",
+    "Real Estate",
+    "Hospitality",
+    "Legal",
+    "Consulting",
+    "Pharmaceuticals",
+    "Insurance",
+    "Aerospace",
+    "Automotive",
 ];
 
 static CATCH_PHRASE_ADJECTIVES: &[&str] = &[
-    "Adaptive", "Advanced", "Automated", "Balanced", "Centralized",
-    "Compatible", "Configurable", "Cross-platform", "Decentralized",
-    "Digitized", "Distributed", "Enhanced", "Ergonomic", "Exclusive",
-    "Extended", "Focused", "Horizontal", "Innovative", "Integrated",
-    "Intuitive", "Managed", "Multi-layered", "Networked", "Open-source",
-    "Optimized", "Persistent", "Proactive", "Programmable", "Progressive",
-    "Reactive", "Realigned", "Reduced", "Robust", "Seamless",
-    "Secured", "Streamlined", "Switchable", "Synchronized", "Universal",
-    "Upgradable", "Versatile", "Virtual",
+    "Adaptive",
+    "Advanced",
+    "Automated",
+    "Balanced",
+    "Centralized",
+    "Compatible",
+    "Configurable",
+    "Cross-platform",
+    "Decentralized",
+    "Digitized",
+    "Distributed",
+    "Enhanced",
+    "Ergonomic",
+    "Exclusive",
+    "Extended",
+    "Focused",
+    "Horizontal",
+    "Innovative",
+    "Integrated",
+    "Intuitive",
+    "Managed",
+    "Multi-layered",
+    "Networked",
+    "Open-source",
+    "Optimized",
+    "Persistent",
+    "Proactive",
+    "Programmable",
+    "Progressive",
+    "Reactive",
+    "Realigned",
+    "Reduced",
+    "Robust",
+    "Seamless",
+    "Secured",
+    "Streamlined",
+    "Switchable",
+    "Synchronized",
+    "Universal",
+    "Upgradable",
+    "Versatile",
+    "Virtual",
 ];
 
 static CATCH_PHRASE_DESCRIPTORS: &[&str] = &[
-    "24/7", "actuating", "analyzing", "asymmetric", "asynchronous",
-    "attitude-oriented", "background", "bandwidth-monitored", "bi-directional",
-    "bottom-line", "client-driven", "client-server", "coherent", "cohesive",
-    "composite", "context-sensitive", "contextually-based", "content-based",
-    "dedicated", "demand-driven", "didactic", "directional", "discrete",
-    "dynamic", "eco-centric", "empowering", "encompassing", "even-keeled",
-    "executive", "explicit", "exuding", "fault-tolerant", "foreground",
-    "fresh-thinking", "full-range", "global", "grid-enabled", "heuristic",
-    "high-level", "holistic", "homogeneous", "human-resource", "hybrid",
-    "impactful", "incremental", "intangible", "interactive", "intermediate",
-    "leading edge", "local", "logistical", "maximized", "methodical",
-    "mission-critical", "mobile", "modular", "motivating", "multi-state",
-    "multi-tasking", "national", "needs-based", "neutral", "next generation",
-    "non-volatile", "object-oriented", "optimal", "optimizing",
+    "24/7",
+    "actuating",
+    "analyzing",
+    "asymmetric",
+    "asynchronous",
+    "attitude-oriented",
+    "background",
+    "bandwidth-monitored",
+    "bi-directional",
+    "bottom-line",
+    "client-driven",
+    "client-server",
+    "coherent",
+    "cohesive",
+    "composite",
+    "context-sensitive",
+    "contextually-based",
+    "content-based",
+    "dedicated",
+    "demand-driven",
+    "didactic",
+    "directional",
+    "discrete",
+    "dynamic",
+    "eco-centric",
+    "empowering",
+    "encompassing",
+    "even-keeled",
+    "executive",
+    "explicit",
+    "exuding",
+    "fault-tolerant",
+    "foreground",
+    "fresh-thinking",
+    "full-range",
+    "global",
+    "grid-enabled",
+    "heuristic",
+    "high-level",
+    "holistic",
+    "homogeneous",
+    "human-resource",
+    "hybrid",
+    "impactful",
+    "incremental",
+    "intangible",
+    "interactive",
+    "intermediate",
+    "leading edge",
+    "local",
+    "logistical",
+    "maximized",
+    "methodical",
+    "mission-critical",
+    "mobile",
+    "modular",
+    "motivating",
+    "multi-state",
+    "multi-tasking",
+    "national",
+    "needs-based",
+    "neutral",
+    "next generation",
+    "non-volatile",
+    "object-oriented",
+    "optimal",
+    "optimizing",
 ];
 
 static CATCH_PHRASE_NOUNS: &[&str] = &[
-    "ability", "access", "adapter", "algorithm", "alliance",
-    "analyzer", "application", "approach", "architecture", "archive",
-    "benchmark", "budgetary management", "capability", "capacity", "challenge",
-    "circuit", "collaboration", "complexity", "concept", "conglomeration",
-    "contingency", "core", "customer loyalty", "data-warehouse", "database",
-    "definition", "emulation", "encoding", "encryption", "extranet",
-    "firmware", "flexibility", "focus group", "forecast", "frame",
-    "framework", "function", "graphic interface", "groupware", "hardware",
-    "help-desk", "hierarchy", "hub", "implementation", "infrastructure",
-    "initiative", "installation", "instruction set", "interface", "intranet",
-    "knowledge base", "leverage", "local area network", "matrices", "methodology",
-    "middleware", "migration", "model", "moderator", "monitoring", "moratorium",
+    "ability",
+    "access",
+    "adapter",
+    "algorithm",
+    "alliance",
+    "analyzer",
+    "application",
+    "approach",
+    "architecture",
+    "archive",
+    "benchmark",
+    "budgetary management",
+    "capability",
+    "capacity",
+    "challenge",
+    "circuit",
+    "collaboration",
+    "complexity",
+    "concept",
+    "conglomeration",
+    "contingency",
+    "core",
+    "customer loyalty",
+    "data-warehouse",
+    "database",
+    "definition",
+    "emulation",
+    "encoding",
+    "encryption",
+    "extranet",
+    "firmware",
+    "flexibility",
+    "focus group",
+    "forecast",
+    "frame",
+    "framework",
+    "function",
+    "graphic interface",
+    "groupware",
+    "hardware",
+    "help-desk",
+    "hierarchy",
+    "hub",
+    "implementation",
+    "infrastructure",
+    "initiative",
+    "installation",
+    "instruction set",
+    "interface",
+    "intranet",
+    "knowledge base",
+    "leverage",
+    "local area network",
+    "matrices",
+    "methodology",
+    "middleware",
+    "migration",
+    "model",
+    "moderator",
+    "monitoring",
+    "moratorium",
 ];
 
 static BS_VERBS: &[&str] = &[
-    "implement", "utilize", "integrate", "streamline", "optimize",
-    "evolve", "transform", "embrace", "enable", "orchestrate",
-    "leverage", "reinvent", "aggregate", "architect", "benchmark",
-    "brand", "cultivate", "deliver", "deploy", "disintermediate",
-    "drive", "e-enable", "empower", "engage", "engineer",
+    "implement",
+    "utilize",
+    "integrate",
+    "streamline",
+    "optimize",
+    "evolve",
+    "transform",
+    "embrace",
+    "enable",
+    "orchestrate",
+    "leverage",
+    "reinvent",
+    "aggregate",
+    "architect",
+    "benchmark",
+    "brand",
+    "cultivate",
+    "deliver",
+    "deploy",
+    "disintermediate",
+    "drive",
+    "e-enable",
+    "empower",
+    "engage",
+    "engineer",
 ];
 
 static BS_ADJECTIVES: &[&str] = &[
-    "clicks-and-mortar", "value-added", "vertical", "proactive", "robust",
-    "revolutionary", "scalable", "leading-edge", "innovative", "intuitive",
-    "strategic", "e-business", "mission-critical", "sticky", "one-to-one",
-    "24/7", "end-to-end", "global", "B2B", "B2C",
-    "granular", "frictionless", "virtual", "viral", "dynamic",
+    "clicks-and-mortar",
+    "value-added",
+    "vertical",
+    "proactive",
+    "robust",
+    "revolutionary",
+    "scalable",
+    "leading-edge",
+    "innovative",
+    "intuitive",
+    "strategic",
+    "e-business",
+    "mission-critical",
+    "sticky",
+    "one-to-one",
+    "24/7",
+    "end-to-end",
+    "global",
+    "B2B",
+    "B2C",
+    "granular",
+    "frictionless",
+    "virtual",
+    "viral",
+    "dynamic",
 ];
 
 static BS_NOUNS: &[&str] = &[
-    "synergies", "web-readiness", "paradigms", "markets", "partnerships",
-    "infrastructures", "platforms", "initiatives", "channels", "eyeballs",
-    "communities", "ROI", "solutions", "e-tailers", "e-services",
-    "action-items", "portals", "niches", "technologies", "content",
-    "supply-chains", "convergence", "relationships", "architectures", "interfaces",
+    "synergies",
+    "web-readiness",
+    "paradigms",
+    "markets",
+    "partnerships",
+    "infrastructures",
+    "platforms",
+    "initiatives",
+    "channels",
+    "eyeballs",
+    "communities",
+    "ROI",
+    "solutions",
+    "e-tailers",
+    "e-services",
+    "action-items",
+    "portals",
+    "niches",
+    "technologies",
+    "content",
+    "supply-chains",
+    "convergence",
+    "relationships",
+    "architectures",
+    "interfaces",
 ];
 
 // ---------------------------------------------------------------------------
@@ -1396,13 +1681,17 @@ fn pick<'a>(rng: &mut dyn RngCore, list: &'a [&str]) -> &'a str {
 fn generate_credit_card(rng: &mut dyn RngCore) -> String {
     let choice = rng.next_u32() % 3;
     let (prefix, total_len) = match choice {
-        0 => ("4", 16usize),       // Visa
+        0 => ("4", 16usize), // Visa
         1 => {
             let mc = 51 + rng.next_u32() % 5;
             return generate_cc_with_prefix(&mc.to_string(), 16, rng);
         }
         _ => {
-            let amex = if rng.next_u32().is_multiple_of(2) { "34" } else { "37" };
+            let amex = if rng.next_u32().is_multiple_of(2) {
+                "34"
+            } else {
+                "37"
+            };
             return generate_cc_with_prefix(amex, 15, rng);
         }
     };
@@ -1443,13 +1732,13 @@ fn generate_iban(rng: &mut dyn RngCore) -> String {
     // Countries with all-numeric BBANs (no embedded letters)
     let country = pick(rng, &["DE", "FR", "AT", "ES", "FI", "PT", "NO"]);
     let bban_len = match country {
-        "DE" => 18,  // 8 bank + 10 account
-        "FR" => 23,  // 5 bank + 5 branch + 11 account + 2 check
-        "AT" => 16,  // 5 bank + 11 account
-        "ES" => 20,  // 4 bank + 4 branch + 2 check + 10 account
-        "FI" => 14,  // 3 bank + 11 account (includes check)
-        "PT" => 21,  // 4 bank + 4 branch + 11 account + 2 check
-        "NO" => 11,  // 4 bank + 6 account + 1 check
+        "DE" => 18, // 8 bank + 10 account
+        "FR" => 23, // 5 bank + 5 branch + 11 account + 2 check
+        "AT" => 16, // 5 bank + 11 account
+        "ES" => 20, // 4 bank + 4 branch + 2 check + 10 account
+        "FI" => 14, // 3 bank + 11 account (includes check)
+        "PT" => 21, // 4 bank + 4 branch + 11 account + 2 check
+        "NO" => 11, // 4 bank + 6 account + 1 check
         _ => 16,
     };
     let bban: String = (0..bban_len)
@@ -1498,7 +1787,11 @@ fn generate_ean13(rng: &mut dyn RngCore) -> String {
 
 /// Generate a valid ISBN-13 with 978/979 prefix and check digit.
 fn generate_isbn13(rng: &mut dyn RngCore) -> String {
-    let prefix = if rng.next_u32().is_multiple_of(2) { [9, 7, 8] } else { [9, 7, 9] };
+    let prefix = if rng.next_u32().is_multiple_of(2) {
+        [9, 7, 8]
+    } else {
+        [9, 7, 9]
+    };
     let mut digits: Vec<u8> = prefix.to_vec();
     for _ in 0..9 {
         digits.push((rng.next_u32() % 10) as u8);
@@ -1512,13 +1805,7 @@ fn ean_check_digit(digits: &[u8]) -> u8 {
     let sum: u32 = digits
         .iter()
         .enumerate()
-        .map(|(i, &d)| {
-            if i % 2 == 0 {
-                d as u32
-            } else {
-                d as u32 * 3
-            }
-        })
+        .map(|(i, &d)| if i % 2 == 0 { d as u32 } else { d as u32 * 3 })
         .sum();
     ((10 - (sum % 10)) % 10) as u8
 }
@@ -2550,13 +2837,7 @@ mod tests {
             let sum: u32 = digits
                 .iter()
                 .enumerate()
-                .map(|(i, &d)| {
-                    if i % 2 == 0 {
-                        d as u32
-                    } else {
-                        d as u32 * 3
-                    }
-                })
+                .map(|(i, &d)| if i % 2 == 0 { d as u32 } else { d as u32 * 3 })
                 .sum();
             assert_eq!(sum % 10, 0, "EAN-13 check digit failed for {v}");
         }
@@ -2657,7 +2938,10 @@ mod tests {
     fn user_agent_nonempty() {
         let arr = gen("user_agent", 50, 117);
         for v in strings(&arr) {
-            assert!(v.contains("Mozilla") || v.len() > 10, "user_agent should look real: {v}");
+            assert!(
+                v.contains("Mozilla") || v.len() > 10,
+                "user_agent should look real: {v}"
+            );
         }
     }
 }

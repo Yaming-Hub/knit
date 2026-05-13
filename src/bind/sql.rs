@@ -119,7 +119,12 @@ impl<W: Write + Send> SqlSink<W> {
         let mut buf = String::with_capacity(4096);
 
         // Column list
-        write!(buf, "INSERT INTO {} (", quote_identifier(&self.config.table_name)).unwrap();
+        write!(
+            buf,
+            "INSERT INTO {} (",
+            quote_identifier(&self.config.table_name)
+        )
+        .unwrap();
         for (i, field) in self.schema.fields().iter().enumerate() {
             if i > 0 {
                 buf.push_str(", ");
@@ -207,8 +212,9 @@ fn quote_identifier(name: &str) -> String {
 fn arrow_type_to_sql(dt: &DataType) -> &'static str {
     match dt {
         DataType::Boolean => "BOOLEAN",
-        DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::UInt8
-        | DataType::UInt16 => "INTEGER",
+        DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::UInt8 | DataType::UInt16 => {
+            "INTEGER"
+        }
         DataType::Int64 | DataType::UInt32 | DataType::UInt64 => "BIGINT",
         DataType::Float16 | DataType::Float32 => "REAL",
         DataType::Float64 => "DOUBLE PRECISION",
@@ -220,8 +226,9 @@ fn arrow_type_to_sql(dt: &DataType) -> &'static str {
         DataType::Duration(_) => "TEXT",
         DataType::Decimal128(_, _) | DataType::Decimal256(_, _) => "NUMERIC",
         // Complex types serialized as JSON text
-        DataType::Struct(_) | DataType::List(_) | DataType::LargeList(_)
-        | DataType::Map(_, _) => "TEXT",
+        DataType::Struct(_) | DataType::List(_) | DataType::LargeList(_) | DataType::Map(_, _) => {
+            "TEXT"
+        }
         _ => "TEXT",
     }
 }
@@ -239,52 +246,148 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
             buf.push_str(if v.value(row) { "TRUE" } else { "FALSE" });
         }
         DataType::Int8 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<Int8Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<Int8Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::Int16 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<Int16Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<Int16Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::Int32 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<Int32Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<Int32Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::Int64 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<Int64Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::UInt8 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<UInt8Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<UInt8Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::UInt16 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<UInt16Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<UInt16Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::UInt32 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<UInt32Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<UInt32Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::UInt64 => {
-            write!(buf, "{}", array.as_any().downcast_ref::<UInt64Array>().unwrap().value(row)).unwrap();
+            write!(
+                buf,
+                "{}",
+                array
+                    .as_any()
+                    .downcast_ref::<UInt64Array>()
+                    .unwrap()
+                    .value(row)
+            )
+            .unwrap();
         }
         DataType::Float32 => {
-            let v = array.as_any().downcast_ref::<Float32Array>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<Float32Array>()
+                .unwrap()
+                .value(row);
             write_float(buf, v as f64);
         }
         DataType::Float16 => {
             // Float16 → cast to f64 for SQL literal
-            let v = array.as_any().downcast_ref::<Float16Array>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<Float16Array>()
+                .unwrap()
+                .value(row);
             write_float(buf, f64::from(v));
         }
         DataType::Float64 => {
-            let v = array.as_any().downcast_ref::<Float64Array>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .unwrap()
+                .value(row);
             write_float(buf, v);
         }
         DataType::Utf8 => {
-            let v = array.as_any().downcast_ref::<StringArray>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap()
+                .value(row);
             write_sql_string(buf, v);
         }
         DataType::LargeUtf8 => {
-            let v = array.as_any().downcast_ref::<LargeStringArray>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<LargeStringArray>()
+                .unwrap()
+                .value(row);
             write_sql_string(buf, v);
         }
         DataType::Date32 => {
-            let v = array.as_any().downcast_ref::<Date32Array>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<Date32Array>()
+                .unwrap()
+                .value(row);
             // Date32 is days since epoch
             let date = chrono::NaiveDate::from_num_days_from_ce_opt(v + 719_163);
             if let Some(d) = date {
@@ -294,7 +397,11 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
             }
         }
         DataType::Date64 => {
-            let v = array.as_any().downcast_ref::<Date64Array>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<Date64Array>()
+                .unwrap()
+                .value(row);
             let date = chrono::DateTime::from_timestamp_millis(v);
             if let Some(d) = date {
                 write!(buf, "'{}'", d.format("%Y-%m-%d")).unwrap();
@@ -305,19 +412,31 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
         DataType::Timestamp(unit, _tz) => {
             let v = match unit {
                 TimeUnit::Second => {
-                    let arr = array.as_any().downcast_ref::<TimestampSecondArray>().unwrap();
+                    let arr = array
+                        .as_any()
+                        .downcast_ref::<TimestampSecondArray>()
+                        .unwrap();
                     chrono::DateTime::from_timestamp(arr.value(row), 0)
                 }
                 TimeUnit::Millisecond => {
-                    let arr = array.as_any().downcast_ref::<TimestampMillisecondArray>().unwrap();
+                    let arr = array
+                        .as_any()
+                        .downcast_ref::<TimestampMillisecondArray>()
+                        .unwrap();
                     chrono::DateTime::from_timestamp_millis(arr.value(row))
                 }
                 TimeUnit::Microsecond => {
-                    let arr = array.as_any().downcast_ref::<TimestampMicrosecondArray>().unwrap();
+                    let arr = array
+                        .as_any()
+                        .downcast_ref::<TimestampMicrosecondArray>()
+                        .unwrap();
                     chrono::DateTime::from_timestamp_micros(arr.value(row))
                 }
                 TimeUnit::Nanosecond => {
-                    let arr = array.as_any().downcast_ref::<TimestampNanosecondArray>().unwrap();
+                    let arr = array
+                        .as_any()
+                        .downcast_ref::<TimestampNanosecondArray>()
+                        .unwrap();
                     let nanos = arr.value(row);
                     // Use Euclidean division to handle negative timestamps correctly
                     let secs = nanos.div_euclid(1_000_000_000);
@@ -333,11 +452,17 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
         }
         DataType::Time32(unit) => {
             let secs = match unit {
-                TimeUnit::Second => {
-                    array.as_any().downcast_ref::<Time32SecondArray>().unwrap().value(row) as i64
-                }
+                TimeUnit::Second => array
+                    .as_any()
+                    .downcast_ref::<Time32SecondArray>()
+                    .unwrap()
+                    .value(row) as i64,
                 TimeUnit::Millisecond => {
-                    let ms = array.as_any().downcast_ref::<Time32MillisecondArray>().unwrap().value(row) as i64;
+                    let ms = array
+                        .as_any()
+                        .downcast_ref::<Time32MillisecondArray>()
+                        .unwrap()
+                        .value(row) as i64;
                     ms / 1000
                 }
                 _ => 0,
@@ -349,11 +474,18 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
         }
         DataType::Time64(unit) => {
             let micros = match unit {
-                TimeUnit::Microsecond => {
-                    array.as_any().downcast_ref::<Time64MicrosecondArray>().unwrap().value(row)
-                }
+                TimeUnit::Microsecond => array
+                    .as_any()
+                    .downcast_ref::<Time64MicrosecondArray>()
+                    .unwrap()
+                    .value(row),
                 TimeUnit::Nanosecond => {
-                    array.as_any().downcast_ref::<Time64NanosecondArray>().unwrap().value(row) / 1000
+                    array
+                        .as_any()
+                        .downcast_ref::<Time64NanosecondArray>()
+                        .unwrap()
+                        .value(row)
+                        / 1000
                 }
                 _ => 0,
             };
@@ -365,19 +497,35 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
             write!(buf, "'{:02}:{:02}:{:02}.{:06}'", h, m, s, us).unwrap();
         }
         DataType::Binary => {
-            let v = array.as_any().downcast_ref::<BinaryArray>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<BinaryArray>()
+                .unwrap()
+                .value(row);
             write_hex_string(buf, v);
         }
         DataType::LargeBinary => {
-            let v = array.as_any().downcast_ref::<LargeBinaryArray>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<LargeBinaryArray>()
+                .unwrap()
+                .value(row);
             write_hex_string(buf, v);
         }
         DataType::FixedSizeBinary(_) => {
-            let v = array.as_any().downcast_ref::<FixedSizeBinaryArray>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<FixedSizeBinaryArray>()
+                .unwrap()
+                .value(row);
             write_hex_string(buf, v);
         }
         DataType::Decimal128(_, scale) => {
-            let v = array.as_any().downcast_ref::<Decimal128Array>().unwrap().value(row);
+            let v = array
+                .as_any()
+                .downcast_ref::<Decimal128Array>()
+                .unwrap()
+                .value(row);
             let s = *scale as u32;
             if s == 0 {
                 write!(buf, "{}", v).unwrap();
@@ -387,7 +535,15 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
                 let abs_v = v.unsigned_abs();
                 let integer = abs_v / divisor as u128;
                 let frac = abs_v % divisor as u128;
-                write!(buf, "{}{}.{:0>width$}", sign, integer, frac, width = s as usize).unwrap();
+                write!(
+                    buf,
+                    "{}{}.{:0>width$}",
+                    sign,
+                    integer,
+                    frac,
+                    width = s as usize
+                )
+                .unwrap();
             }
         }
         DataType::Decimal256(_, _) => {
@@ -513,11 +669,7 @@ mod tests {
             sample_schema(),
             vec![
                 Arc::new(Int32Array::from(vec![1, 2, 3])),
-                Arc::new(StringArray::from(vec![
-                    Some("alice"),
-                    Some("bob"),
-                    None,
-                ])),
+                Arc::new(StringArray::from(vec![Some("alice"), Some("bob"), None])),
             ],
         )
         .unwrap()
@@ -638,11 +790,9 @@ mod tests {
             DataType::Int32,
             false,
         )]));
-        let batch = RecordBatch::try_new(
-            schema.clone(),
-            vec![Arc::new(Int32Array::from(vec![42]))],
-        )
-        .unwrap();
+        let batch =
+            RecordBatch::try_new(schema.clone(), vec![Arc::new(Int32Array::from(vec![42]))])
+                .unwrap();
 
         let buf = SharedBuf::new();
         let config = SqlConfig {
@@ -689,7 +839,11 @@ mod tests {
 
         let output = buf.to_string();
         assert!(output.contains("3.14"), "should have decimal: {}", output);
-        assert!(output.contains("42.0"), "whole floats should have .0: {}", output);
+        assert!(
+            output.contains("42.0"),
+            "whole floats should have .0: {}",
+            output
+        );
         // NaN → NULL
         let values_part = output.split("VALUES").nth(1).unwrap();
         // Count NULLs in the values section (NaN + actual NULL = 2)
@@ -766,9 +920,7 @@ mod tests {
         let ms = 1705321845000i64;
         let batch = RecordBatch::try_new(
             schema.clone(),
-            vec![Arc::new(
-                TimestampMillisecondArray::from(vec![ms]),
-            )],
+            vec![Arc::new(TimestampMillisecondArray::from(vec![ms]))],
         )
         .unwrap();
 

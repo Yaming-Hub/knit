@@ -39,12 +39,10 @@ pub fn compute_new_partitions(
     } else if spec.contains("..") {
         // Explicit range: 2024-01-01..2025-12-31
         let parts: Vec<&str> = spec.splitn(2, "..").collect();
-        let start = parse_date(parts[0]).ok_or_else(|| {
-            anyhow::anyhow!("invalid start date in range: '{}'", parts[0])
-        })?;
-        let end = parse_date(parts[1]).ok_or_else(|| {
-            anyhow::anyhow!("invalid end date in range: '{}'", parts[1])
-        })?;
+        let start = parse_date(parts[0])
+            .ok_or_else(|| anyhow::anyhow!("invalid start date in range: '{}'", parts[0]))?;
+        let end = parse_date(parts[1])
+            .ok_or_else(|| anyhow::anyhow!("invalid end date in range: '{}'", parts[1]))?;
         (start, end)
     } else {
         // Duration from the original start: 52w, 6m, 365d, 2y
@@ -101,7 +99,8 @@ fn step_dates(
             loop {
                 let d = if is_eom {
                     // End-of-month: always use the last day
-                    let total = start.year() * 12 + (start.month() as i32 - 1) + months_offset as i32;
+                    let total =
+                        start.year() * 12 + (start.month() as i32 - 1) + months_offset as i32;
                     let y = total / 12;
                     let m = (total % 12) as u32 + 1;
                     chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap()
@@ -219,22 +218,40 @@ mod tests {
     #[test]
     fn test_apply_duration() {
         let base = chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap();
-        assert_eq!(apply_duration(base, "52w").unwrap(), base + chrono::Duration::days(364));
-        assert_eq!(apply_duration(base, "7d").unwrap(), base + chrono::Duration::days(7));
+        assert_eq!(
+            apply_duration(base, "52w").unwrap(),
+            base + chrono::Duration::days(364)
+        );
+        assert_eq!(
+            apply_duration(base, "7d").unwrap(),
+            base + chrono::Duration::days(7)
+        );
         // 6m from Jan 1 = Jul 1 (calendar month addition)
-        assert_eq!(apply_duration(base, "6m").unwrap(), chrono::NaiveDate::from_ymd_opt(2024, 7, 1).unwrap());
+        assert_eq!(
+            apply_duration(base, "6m").unwrap(),
+            chrono::NaiveDate::from_ymd_opt(2024, 7, 1).unwrap()
+        );
         // 2y from Jan 1 = Jan 1 two years later
-        assert_eq!(apply_duration(base, "2y").unwrap(), chrono::NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
+        assert_eq!(
+            apply_duration(base, "2y").unwrap(),
+            chrono::NaiveDate::from_ymd_opt(2026, 1, 1).unwrap()
+        );
     }
 
     #[test]
     fn test_apply_duration_eom() {
         // 6m from Jan 31 = Jul 31 (end-of-month aware)
         let jan31 = chrono::NaiveDate::from_ymd_opt(2024, 1, 31).unwrap();
-        assert_eq!(apply_duration(jan31, "6m").unwrap(), chrono::NaiveDate::from_ymd_opt(2024, 7, 31).unwrap());
+        assert_eq!(
+            apply_duration(jan31, "6m").unwrap(),
+            chrono::NaiveDate::from_ymd_opt(2024, 7, 31).unwrap()
+        );
         // 1m from Feb 29 (leap year, EOM) = Mar 31 (last day of March)
         let feb29 = chrono::NaiveDate::from_ymd_opt(2024, 2, 29).unwrap();
-        assert_eq!(apply_duration(feb29, "1m").unwrap(), chrono::NaiveDate::from_ymd_opt(2024, 3, 31).unwrap());
+        assert_eq!(
+            apply_duration(feb29, "1m").unwrap(),
+            chrono::NaiveDate::from_ymd_opt(2024, 3, 31).unwrap()
+        );
     }
 
     #[test]
@@ -399,27 +416,48 @@ mod tests {
     #[test]
     fn test_add_months_anchored_basic() {
         let d = chrono::NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
-        assert_eq!(add_months_anchored(d, 1, 15), chrono::NaiveDate::from_ymd_opt(2024, 2, 15).unwrap());
-        assert_eq!(add_months_anchored(d, 12, 15), chrono::NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
+        assert_eq!(
+            add_months_anchored(d, 1, 15),
+            chrono::NaiveDate::from_ymd_opt(2024, 2, 15).unwrap()
+        );
+        assert_eq!(
+            add_months_anchored(d, 12, 15),
+            chrono::NaiveDate::from_ymd_opt(2025, 1, 15).unwrap()
+        );
     }
 
     #[test]
     fn test_add_months_anchored_clamp() {
         let jan31 = chrono::NaiveDate::from_ymd_opt(2024, 1, 31).unwrap();
         // Feb has 29 days in 2024 (leap year), but anchor 31 clamps to 29
-        assert_eq!(add_months_anchored(jan31, 1, 31), chrono::NaiveDate::from_ymd_opt(2024, 2, 29).unwrap());
+        assert_eq!(
+            add_months_anchored(jan31, 1, 31),
+            chrono::NaiveDate::from_ymd_opt(2024, 2, 29).unwrap()
+        );
         // Mar has 31 days — anchor 31 fits
-        assert_eq!(add_months_anchored(jan31, 2, 31), chrono::NaiveDate::from_ymd_opt(2024, 3, 31).unwrap());
+        assert_eq!(
+            add_months_anchored(jan31, 2, 31),
+            chrono::NaiveDate::from_ymd_opt(2024, 3, 31).unwrap()
+        );
         // Non-leap year
         let jan31_2023 = chrono::NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
-        assert_eq!(add_months_anchored(jan31_2023, 1, 31), chrono::NaiveDate::from_ymd_opt(2023, 2, 28).unwrap());
+        assert_eq!(
+            add_months_anchored(jan31_2023, 1, 31),
+            chrono::NaiveDate::from_ymd_opt(2023, 2, 28).unwrap()
+        );
     }
 
     #[test]
     fn test_add_months_anchored_year_boundary() {
         let dec = chrono::NaiveDate::from_ymd_opt(2024, 12, 15).unwrap();
-        assert_eq!(add_months_anchored(dec, 1, 15), chrono::NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
-        assert_eq!(add_months_anchored(dec, 13, 15), chrono::NaiveDate::from_ymd_opt(2026, 1, 15).unwrap());
+        assert_eq!(
+            add_months_anchored(dec, 1, 15),
+            chrono::NaiveDate::from_ymd_opt(2025, 1, 15).unwrap()
+        );
+        assert_eq!(
+            add_months_anchored(dec, 13, 15),
+            chrono::NaiveDate::from_ymd_opt(2026, 1, 15).unwrap()
+        );
     }
 
     #[test]

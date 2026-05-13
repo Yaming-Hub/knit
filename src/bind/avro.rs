@@ -73,7 +73,9 @@ impl<W: Write + Send> AvroSink<W> {
 
         let avro_codec = match codec {
             AvroCodec::Null => apache_avro::Codec::Null,
-            AvroCodec::Deflate => apache_avro::Codec::Deflate(apache_avro::DeflateSettings::default()),
+            AvroCodec::Deflate => {
+                apache_avro::Codec::Deflate(apache_avro::DeflateSettings::default())
+            }
             AvroCodec::Snappy => apache_avro::Codec::Snappy,
         };
 
@@ -181,11 +183,8 @@ fn arrow_schema_to_avro(schema: &Schema, record_name: &str) -> Result<AvroSchema
         let field_schema = if field.is_nullable() {
             // Avro union: ["null", type]
             AvroSchema::Union(
-                apache_avro::schema::UnionSchema::new(vec![
-                    AvroSchema::Null,
-                    base_schema,
-                ])
-                .map_err(|e| BindError::Other(format!("Avro union error: {e}")))?,
+                apache_avro::schema::UnionSchema::new(vec![AvroSchema::Null, base_schema])
+                    .map_err(|e| BindError::Other(format!("Avro union error: {e}")))?,
             )
         } else {
             base_schema
@@ -225,11 +224,8 @@ fn avro_schema_to_json(schema: &AvroSchema) -> serde_json::Value {
         AvroSchema::String => serde_json::json!("string"),
         AvroSchema::Bytes => serde_json::json!("bytes"),
         AvroSchema::Union(union) => {
-            let variants: Vec<serde_json::Value> = union
-                .variants()
-                .iter()
-                .map(avro_schema_to_json)
-                .collect();
+            let variants: Vec<serde_json::Value> =
+                union.variants().iter().map(avro_schema_to_json).collect();
             serde_json::json!(variants)
         }
         AvroSchema::Array(inner) => {
@@ -557,7 +553,11 @@ mod tests {
             schema,
             vec![
                 Arc::new(Int64Array::from(vec![1, 2, 3])),
-                Arc::new(StringArray::from(vec![Some("alice"), None, Some("charlie")])),
+                Arc::new(StringArray::from(vec![
+                    Some("alice"),
+                    None,
+                    Some("charlie"),
+                ])),
                 Arc::new(Float64Array::from(vec![95.5, 87.3, 91.0])),
                 Arc::new(BooleanArray::from(vec![Some(true), Some(false), None])),
             ],
@@ -612,10 +612,7 @@ mod tests {
 
         // Verify null handling in second record
         if let AvroValue::Record(fields) = &records[1] {
-            assert_eq!(
-                fields[1].1,
-                AvroValue::Union(0, Box::new(AvroValue::Null))
-            );
+            assert_eq!(fields[1].1, AvroValue::Union(0, Box::new(AvroValue::Null)));
         } else {
             panic!("expected Record");
         }
@@ -696,15 +693,21 @@ mod tests {
     #[test]
     fn empty_batch() {
         let schema = Arc::new(Schema::new(vec![Field::new("x", DataType::Int32, false)]));
-        let batch =
-            RecordBatch::try_new(schema.clone(), vec![Arc::new(Int32Array::from(Vec::<i32>::new()))])
-                .unwrap();
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(Int32Array::from(Vec::<i32>::new()))],
+        )
+        .unwrap();
 
         let mut buf = Vec::new();
         {
-            let sink =
-                AvroSink::new(Cursor::new(&mut buf), schema, "EmptyRecord", AvroCodec::Null)
-                    .unwrap();
+            let sink = AvroSink::new(
+                Cursor::new(&mut buf),
+                schema,
+                "EmptyRecord",
+                AvroCodec::Null,
+            )
+            .unwrap();
             let mut sink: Box<dyn Sink> = Box::new(sink);
             sink.write_batch(&batch).unwrap();
             let stats = sink.finish().unwrap();
@@ -770,18 +773,12 @@ mod tests {
             None,
         );
 
-        let batch =
-            RecordBatch::try_new(schema.clone(), vec![Arc::new(list)]).unwrap();
+        let batch = RecordBatch::try_new(schema.clone(), vec![Arc::new(list)]).unwrap();
 
         let mut buf = Vec::new();
         {
-            let sink = AvroSink::new(
-                Cursor::new(&mut buf),
-                schema,
-                "ListRecord",
-                AvroCodec::Null,
-            )
-            .unwrap();
+            let sink = AvroSink::new(Cursor::new(&mut buf), schema, "ListRecord", AvroCodec::Null)
+                .unwrap();
             let mut sink: Box<dyn Sink> = Box::new(sink);
             sink.write_batch(&batch).unwrap();
             sink.finish().unwrap();

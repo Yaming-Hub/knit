@@ -30,9 +30,7 @@ pub fn apply_data_file(
             FileFormat::Json | FileFormat::Jsonl => {
                 apply_json(&src, out_path, entry.format, mapper, config)
             }
-            FileFormat::Parquet => {
-                apply_parquet(&src, out_path, mapper, config)
-            }
+            FileFormat::Parquet => apply_parquet(&src, out_path, mapper, config),
             FileFormat::Other => {
                 std::fs::copy(&src, out_path)?;
                 Ok(())
@@ -72,7 +70,11 @@ fn apply_csv(
     mapper: &TokenMapper,
     config: &TokenizeConfig,
 ) -> Result<()> {
-    let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+    let delimiter = if format == FileFormat::Tsv {
+        b'\t'
+    } else {
+        b','
+    };
 
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(delimiter)
@@ -138,7 +140,8 @@ fn apply_csv(
                 if idx < col_flags.len() && !col_flags[idx] {
                     return field.to_string();
                 }
-                mapper.get(field)
+                mapper
+                    .get(field)
                     .map(|t| t.to_string())
                     .unwrap_or_else(|| field.to_string())
             })
@@ -276,18 +279,19 @@ fn tokenize_json_value(
             let keys: Vec<String> = map.keys().cloned().collect();
             for key in keys {
                 // Apply column filter only at the first object level
-                let (child_tokenize, child_filter_applied) = if !filter_applied && config.has_column_filter() {
-                    let should = if config.should_tokenize_column(&key) {
-                        true
-                    } else if let Some(orig) = mapper.get(&key) {
-                        config.should_tokenize_column(orig)
+                let (child_tokenize, child_filter_applied) =
+                    if !filter_applied && config.has_column_filter() {
+                        let should = if config.should_tokenize_column(&key) {
+                            true
+                        } else if let Some(orig) = mapper.get(&key) {
+                            config.should_tokenize_column(orig)
+                        } else {
+                            false
+                        };
+                        (should, true)
                     } else {
-                        false
+                        (should_tokenize, filter_applied)
                     };
-                    (should, true)
-                } else {
-                    (should_tokenize, filter_applied)
-                };
                 if let Some(val) = map.get_mut(&key) {
                     tokenize_json_value(val, mapper, config, child_tokenize, child_filter_applied);
                 }
@@ -308,8 +312,10 @@ fn tokenize_schema_value(value: &mut serde_json::Value, mapper: &TokenMapper) {
         serde_json::Value::Object(map) => {
             for (key, val) in map.iter_mut() {
                 let key_lower = key.to_lowercase();
-                if key_lower == "description" || key_lower == "displayname"
-                    || key_lower == "display_name" || key_lower == "tablename"
+                if key_lower == "description"
+                    || key_lower == "displayname"
+                    || key_lower == "display_name"
+                    || key_lower == "tablename"
                     || key_lower == "table_name"
                 {
                     if let serde_json::Value::String(s) = val {
@@ -382,7 +388,10 @@ fn apply_parquet(
                 }
             })
             .collect();
-        Arc::new(Schema::new_with_metadata(new_fields, schema.metadata().clone()))
+        Arc::new(Schema::new_with_metadata(
+            new_fields,
+            schema.metadata().clone(),
+        ))
     } else {
         schema.clone()
     };
@@ -427,11 +436,7 @@ fn apply_parquet(
             if let Some(str_arr) = col.as_string_opt::<i32>() {
                 let tokenized: StringArray = str_arr
                     .iter()
-                    .map(|opt| {
-                        opt.map(|val| {
-                            mapper.get(val).unwrap_or(val).to_string()
-                        })
-                    })
+                    .map(|opt| opt.map(|val| mapper.get(val).unwrap_or(val).to_string()))
                     .collect();
                 columns.push(Arc::new(tokenized));
             } else if let Some(str_arr) = col.as_string_opt::<i64>() {
@@ -439,21 +444,14 @@ fn apply_parquet(
                 use arrow::array::LargeStringArray;
                 let tokenized: LargeStringArray = str_arr
                     .iter()
-                    .map(|opt| {
-                        opt.map(|val| {
-                            mapper.get(val).unwrap_or(val).to_string()
-                        })
-                    })
+                    .map(|opt| opt.map(|val| mapper.get(val).unwrap_or(val).to_string()))
                     .collect();
                 columns.push(Arc::new(tokenized));
             } else {
                 // Try native temporal shifting, then numeric shifting, then pass through
                 let shifted = date_shift
                     .and_then(|shift| shift_native_temporal(col, shift))
-                    .or_else(|| {
-                        numeric_shift
-                            .and_then(|offset| shift_native_numeric(col, offset))
-                    });
+                    .or_else(|| numeric_shift.and_then(|offset| shift_native_numeric(col, offset)));
                 columns.push(shifted.unwrap_or_else(|| col.clone()));
             }
         }
@@ -556,8 +554,8 @@ fn shift_native_numeric(
     offset: i64,
 ) -> Option<std::sync::Arc<dyn arrow::array::Array>> {
     use arrow::array::{
-        Float32Array, Float64Array, Int8Array, Int16Array, Int32Array, Int64Array,
-        UInt8Array, UInt16Array, UInt32Array, UInt64Array,
+        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, UInt16Array,
+        UInt32Array, UInt64Array, UInt8Array,
     };
     use arrow::datatypes::DataType;
     use std::sync::Arc;
@@ -707,7 +705,10 @@ fn convert_with_tokenization(
                 }
             })
             .collect();
-        Arc::new(Schema::new_with_metadata(new_fields, schema.metadata().clone()))
+        Arc::new(Schema::new_with_metadata(
+            new_fields,
+            schema.metadata().clone(),
+        ))
     } else {
         schema.clone()
     };
@@ -724,8 +725,6 @@ fn read_as_batches(
     src: &Path,
     format: FileFormat,
 ) -> Result<Vec<arrow::record_batch::RecordBatch>> {
-    
-
     match format {
         FileFormat::Csv | FileFormat::Tsv => read_csv_as_batches(src, format),
         FileFormat::Json => read_json_as_batches(src),
@@ -735,11 +734,18 @@ fn read_as_batches(
     }
 }
 
-fn read_csv_as_batches(src: &Path, format: FileFormat) -> Result<Vec<arrow::record_batch::RecordBatch>> {
+fn read_csv_as_batches(
+    src: &Path,
+    format: FileFormat,
+) -> Result<Vec<arrow::record_batch::RecordBatch>> {
     use arrow_csv::ReaderBuilder;
     use std::fs::File;
 
-    let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+    let delimiter = if format == FileFormat::Tsv {
+        b'\t'
+    } else {
+        b','
+    };
     let file = File::open(src)?;
     // Infer schema from all rows to handle mixed-type columns correctly
     let (schema, _) = arrow_csv::reader::Format::default()
@@ -772,8 +778,7 @@ fn read_json_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::RecordBat
 
     let schema = std::sync::Arc::new(schema.0);
     let file = std::fs::File::open(src)?;
-    let reader = ReaderBuilder::new(schema)
-        .build(std::io::BufReader::new(file))?;
+    let reader = ReaderBuilder::new(schema).build(std::io::BufReader::new(file))?;
     let mut batches = Vec::new();
     for batch in reader {
         batches.push(batch?);
@@ -791,8 +796,7 @@ fn read_jsonl_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::RecordBa
     let schema = std::sync::Arc::new(schema.0);
 
     let file = std::fs::File::open(src)?;
-    let reader = ReaderBuilder::new(schema)
-        .build(std::io::BufReader::new(file))?;
+    let reader = ReaderBuilder::new(schema).build(std::io::BufReader::new(file))?;
     let mut batches = Vec::new();
     for batch in reader {
         batches.push(batch?);
@@ -817,7 +821,11 @@ fn read_parquet_as_batches(src: &Path) -> Result<Vec<arrow::record_batch::Record
 fn infer_schema_only(src: &Path, format: FileFormat) -> Result<arrow::datatypes::Schema> {
     match format {
         FileFormat::Csv | FileFormat::Tsv => {
-            let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+            let delimiter = if format == FileFormat::Tsv {
+                b'\t'
+            } else {
+                b','
+            };
             let file = std::fs::File::open(src)?;
             let (schema, _) = arrow_csv::reader::Format::default()
                 .with_delimiter(delimiter)
@@ -872,7 +880,8 @@ fn tokenize_batches(
 
     let mut result = Vec::with_capacity(batches.len());
     for batch in batches {
-        let mut columns: Vec<Arc<dyn arrow::array::Array>> = Vec::with_capacity(batch.num_columns());
+        let mut columns: Vec<Arc<dyn arrow::array::Array>> =
+            Vec::with_capacity(batch.num_columns());
 
         for col_idx in 0..batch.num_columns() {
             let col = batch.column(col_idx);
@@ -898,7 +907,9 @@ fn tokenize_batches(
             } else {
                 let shifted = date_shift
                     .and_then(|shift| shift_native_temporal(col.as_ref(), shift))
-                    .or_else(|| numeric_shift.and_then(|offset| shift_native_numeric(col.as_ref(), offset)));
+                    .or_else(|| {
+                        numeric_shift.and_then(|offset| shift_native_numeric(col.as_ref(), offset))
+                    });
                 columns.push(shifted.unwrap_or_else(|| col.clone()));
             }
         }
@@ -932,7 +943,11 @@ fn write_batches_csv(
     use arrow_csv::WriterBuilder;
     use std::fs::File;
 
-    let delimiter = if format == FileFormat::Tsv { b'\t' } else { b',' };
+    let delimiter = if format == FileFormat::Tsv {
+        b'\t'
+    } else {
+        b','
+    };
     let file = File::create(out)?;
     let mut writer = WriterBuilder::new()
         .with_delimiter(delimiter)
@@ -945,10 +960,7 @@ fn write_batches_csv(
     Ok(())
 }
 
-fn write_batches_json(
-    out: &Path,
-    batches: &[arrow::record_batch::RecordBatch],
-) -> Result<()> {
+fn write_batches_json(out: &Path, batches: &[arrow::record_batch::RecordBatch]) -> Result<()> {
     use arrow_json::ArrayWriter;
     use std::fs::File;
 
@@ -961,10 +973,7 @@ fn write_batches_json(
     Ok(())
 }
 
-fn write_batches_jsonl(
-    out: &Path,
-    batches: &[arrow::record_batch::RecordBatch],
-) -> Result<()> {
+fn write_batches_jsonl(out: &Path, batches: &[arrow::record_batch::RecordBatch]) -> Result<()> {
     use arrow_json::LineDelimitedWriter;
     use std::fs::File;
 
@@ -996,8 +1005,8 @@ fn write_batches_parquet(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::array::Array as _;
     use crate::tokenize::mapper::TokenMapper;
+    use arrow::array::Array as _;
     use std::io::Write;
     use tempfile::TempDir;
 
@@ -1039,7 +1048,11 @@ mod tests {
         let src = dir.path().join("data.json");
         let out = dir.path().join("output.json");
 
-        std::fs::write(&src, r#"[{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]"#).unwrap();
+        std::fs::write(
+            &src,
+            r#"[{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]"#,
+        )
+        .unwrap();
 
         let mut mapper = TokenMapper::new(42);
         mapper.register("Alice");
@@ -1222,7 +1235,8 @@ mod tests {
         ]));
         let names = StringArray::from(vec!["Alice", "Bob"]);
         let cities = StringArray::from(vec!["Seattle", "Portland"]);
-        let batch = RecordBatch::try_new(schema.clone(), vec![Arc::new(names), Arc::new(cities)]).unwrap();
+        let batch =
+            RecordBatch::try_new(schema.clone(), vec![Arc::new(names), Arc::new(cities)]).unwrap();
         let file = std::fs::File::create(&src).unwrap();
         let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
         writer.write(&batch).unwrap();
@@ -1250,14 +1264,21 @@ mod tests {
         // Read back and verify column names are tokenized
         use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
         let file = std::fs::File::open(&out).unwrap();
-        let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
         let batches: Vec<_> = reader.into_iter().collect::<Result<Vec<_>, _>>().unwrap();
         let out_schema = batches[0].schema();
         // Column names should NOT be the originals
         assert_ne!(out_schema.field(0).name(), "username");
         assert_ne!(out_schema.field(1).name(), "city");
         // Values should also be tokenized
-        let col0 = batches[0].column(0).as_any().downcast_ref::<StringArray>().unwrap();
+        let col0 = batches[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
         assert_ne!(col0.value(0), "Alice");
         assert_ne!(col0.value(1), "Bob");
     }
@@ -1617,10 +1638,7 @@ mod tests {
         use arrow::array::{Array, Date32Array};
         let arr = Date32Array::from(vec![Some(19000), Some(19100), None]);
         let shifted = shift_native_temporal(&arr, 10).unwrap();
-        let result = shifted
-            .as_any()
-            .downcast_ref::<Date32Array>()
-            .unwrap();
+        let result = shifted.as_any().downcast_ref::<Date32Array>().unwrap();
         assert_eq!(result.value(0), 19010);
         assert_eq!(result.value(1), 19110);
         assert!(result.is_null(2));
@@ -1632,10 +1650,7 @@ mod tests {
         let ms_per_day = 86_400_000i64;
         let arr = Date64Array::from(vec![Some(1_000 * ms_per_day), None]);
         let shifted = shift_native_temporal(&arr, -5).unwrap();
-        let result = shifted
-            .as_any()
-            .downcast_ref::<Date64Array>()
-            .unwrap();
+        let result = shifted.as_any().downcast_ref::<Date64Array>().unwrap();
         assert_eq!(result.value(0), 995 * ms_per_day);
         assert!(result.is_null(1));
     }
@@ -1644,7 +1659,8 @@ mod tests {
     fn test_shift_native_timestamp_us() {
         use arrow::array::TimestampMicrosecondArray;
         let us_per_day = 86_400_000_000i64;
-        let arr = TimestampMicrosecondArray::from(vec![Some(100 * us_per_day), Some(200 * us_per_day)]);
+        let arr =
+            TimestampMicrosecondArray::from(vec![Some(100 * us_per_day), Some(200 * us_per_day)]);
         let shifted = shift_native_temporal(&arr, 7).unwrap();
         let result = shifted
             .as_any()
@@ -1676,16 +1692,18 @@ mod tests {
         let schema = Arc::new(Schema::new(vec![
             Field::new("name", DataType::Utf8, false),
             Field::new("birth_date", DataType::Date32, true),
-            Field::new("created_at", DataType::Timestamp(TimeUnit::Microsecond, None), true),
+            Field::new(
+                "created_at",
+                DataType::Timestamp(TimeUnit::Microsecond, None),
+                true,
+            ),
         ]));
 
         let names = StringArray::from(vec!["Alice", "Bob"]);
         let dates = Date32Array::from(vec![Some(19000), Some(19100)]);
         let us_per_day = 86_400_000_000i64;
-        let timestamps = TimestampMicrosecondArray::from(vec![
-            Some(100 * us_per_day),
-            Some(200 * us_per_day),
-        ]);
+        let timestamps =
+            TimestampMicrosecondArray::from(vec![Some(100 * us_per_day), Some(200 * us_per_day)]);
 
         let batch = RecordBatch::try_new(
             schema.clone(),
@@ -1835,11 +1853,11 @@ mod tests {
 
     #[test]
     fn test_apply_parquet_native_numeric_shift() {
-        use arrow::array::{Int32Array, Float64Array, StringArray};
+        use arrow::array::{Float64Array, Int32Array, StringArray};
         use arrow::datatypes::{Field, Schema};
         use arrow::record_batch::RecordBatch;
-        use parquet::arrow::ArrowWriter;
         use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+        use parquet::arrow::ArrowWriter;
         use std::sync::Arc;
 
         let dir = TempDir::new().unwrap();
@@ -1859,7 +1877,8 @@ mod tests {
                 Arc::new(Int32Array::from(vec![100, 200])),
                 Arc::new(Float64Array::from(vec![1.5, 2.5])),
             ],
-        ).unwrap();
+        )
+        .unwrap();
 
         let file = std::fs::File::create(&input).unwrap();
         let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
@@ -1878,7 +1897,10 @@ mod tests {
         apply_parquet(&input, &output, &mapper, &config).unwrap();
 
         let file = std::fs::File::open(&output).unwrap();
-        let reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
 
         let offset = super::super::scanner::compute_numeric_shift(42);
 
@@ -1981,7 +2003,8 @@ mod tests {
         ]));
         let names = StringArray::from(vec!["Alice", "Bob"]);
         let cities = StringArray::from(vec!["Seattle", "Portland"]);
-        let batch = RecordBatch::try_new(schema.clone(), vec![Arc::new(names), Arc::new(cities)]).unwrap();
+        let batch =
+            RecordBatch::try_new(schema.clone(), vec![Arc::new(names), Arc::new(cities)]).unwrap();
 
         let file = std::fs::File::create(&pq_path).unwrap();
         let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
@@ -2092,10 +2115,7 @@ mod tests {
             p.with_extension("parquet"),
             Path::new("/foo/bar/data.parquet")
         );
-        assert_eq!(
-            p.with_extension("jsonl"),
-            Path::new("/foo/bar/data.jsonl")
-        );
+        assert_eq!(p.with_extension("jsonl"), Path::new("/foo/bar/data.jsonl"));
     }
 
     #[test]

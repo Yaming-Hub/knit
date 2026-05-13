@@ -19,7 +19,7 @@ use std::sync::Arc;
 use tracing::{debug, info, instrument};
 
 use crate::gen::expr::ast::Expr;
-use crate::gen::expr::eval::{EvalContext, evaluate};
+use crate::gen::expr::eval::{evaluate, EvalContext};
 use crate::noise::error::NoiseError;
 use crate::noise::traits::{ColumnFilter, InvariantSet, PerturbConfig, Perturbator};
 
@@ -412,16 +412,10 @@ mod tests {
         use crate::noise::NullInjector;
 
         // Create a batch with 100 rows, scope mask only allows rows 0-9
-        let schema = Arc::new(Schema::new(vec![Field::new(
-            "val",
-            DataType::Int32,
-            true,
-        )]));
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int32, true)]));
         let batch = RecordBatch::try_new(
             schema,
-            vec![Arc::new(Int32Array::from(
-                (0..100).collect::<Vec<i32>>(),
-            ))],
+            vec![Arc::new(Int32Array::from((0..100).collect::<Vec<i32>>()))],
         )
         .unwrap();
 
@@ -468,11 +462,7 @@ mod tests {
             vec![
                 Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
                 Arc::new(arrow::array::StringArray::from(vec![
-                    "active",
-                    "refunded",
-                    "active",
-                    "refunded",
-                    "active",
+                    "active", "refunded", "active", "refunded", "active",
                 ])),
             ],
         )
@@ -517,11 +507,7 @@ mod tests {
         use crate::noise::SwapInjector;
 
         // 10 rows, scope only rows 0-4
-        let schema = Arc::new(Schema::new(vec![Field::new(
-            "val",
-            DataType::Int32,
-            false,
-        )]));
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int32, false)]));
         let original_vals: Vec<i32> = (0..10).collect();
         let batch = RecordBatch::try_new(
             schema,
@@ -567,11 +553,7 @@ mod tests {
         use crate::noise::DuplicateInjector;
 
         // 10 rows, scope only rows 0-2
-        let schema = Arc::new(Schema::new(vec![Field::new(
-            "val",
-            DataType::Int32,
-            false,
-        )]));
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Int32, false)]));
         let batch = RecordBatch::try_new(
             schema,
             vec![Arc::new(Int32Array::from(vec![

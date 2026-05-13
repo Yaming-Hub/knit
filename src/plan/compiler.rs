@@ -35,8 +35,7 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
     let assignment = graph::assign_phases(model)?;
 
     // 2. Resolve row counts (static).
-    let mut row_counts = graph::resolve_row_counts(model)
-        .map_err(PlanError::Other)?;
+    let mut row_counts = graph::resolve_row_counts(model).map_err(PlanError::Other)?;
 
     // 2b. Build actor pool plan early to compute dynamic row counts.
     let actor_pool = compile_actor_pool(model, &row_counts);
@@ -467,26 +466,19 @@ fn compile_field_plans(
                     let target_rows = row_counts.get(target_entity).copied().unwrap_or(1000);
                     let key_store_kind = select_key_store_kind(target_rows);
                     // Look up degree distribution from the relationship definition.
-                    let rel_match = model
-                        .relationships
-                        .iter()
-                        .find(|r| {
-                            r.from == entity.name
-                                && r.to == target_entity
-                                && r.foreign_key
-                                    .as_deref()
-                                    .unwrap_or(&format!("{}_id", r.to))
-                                    == field.name
-                        });
-                    let degree = rel_match
-                        .and_then(|r| r.degree.as_ref())
-                        .map(|spec| {
-                            crate::plan::DegreePlan {
-                                kind: spec.kind.clone(),
-                                params: spec.params.clone(),
-                                parent_count: target_rows,
-                            }
-                        });
+                    let rel_match = model.relationships.iter().find(|r| {
+                        r.from == entity.name
+                            && r.to == target_entity
+                            && r.foreign_key.as_deref().unwrap_or(&format!("{}_id", r.to))
+                                == field.name
+                    });
+                    let degree = rel_match.and_then(|r| r.degree.as_ref()).map(|spec| {
+                        crate::plan::DegreePlan {
+                            kind: spec.kind.clone(),
+                            params: spec.params.clone(),
+                            parent_count: target_rows,
+                        }
+                    });
                     let selection = rel_match
                         .and_then(|r| r.selection.as_ref())
                         .and_then(|s| {
@@ -731,9 +723,9 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                 } else {
                     let start_ms = resolve_int_or_string_to_i64(start);
                     let step_ms = resolve_step_to_i64(step);
-                    let jitter_ms = jitter.as_deref().map(|s| {
-                        crate::gen::generators::event_stream::parse_duration_ms(s)
-                    });
+                    let jitter_ms = jitter
+                        .as_deref()
+                        .map(|s| crate::gen::generators::event_stream::parse_duration_ms(s));
                     GeneratorPlan::Sequence {
                         start: start_ms,
                         step: step_ms,
@@ -807,9 +799,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     max_retries: *max_retries,
                 }
             }
-            GeneratorSpec::Relative { anchor, offset } => {
-                compile_relative_offset(anchor, offset)
-            }
+            GeneratorSpec::Relative { anchor, offset } => compile_relative_offset(anchor, offset),
             GeneratorSpec::BusinessHours {
                 start_hour,
                 end_hour,
@@ -850,19 +840,13 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     if let Ok(d) = chrono::NaiveDate::parse_from_str(&dr.min, "%Y-%m-%d") {
                         params.insert(
                             "date_range_min_ms".into(),
-                            d.and_hms_opt(0, 0, 0)
-                                .unwrap()
-                                .and_utc()
-                                .timestamp_millis() as f64,
+                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp_millis() as f64,
                         );
                     }
                     if let Ok(d) = chrono::NaiveDate::parse_from_str(&dr.max, "%Y-%m-%d") {
                         params.insert(
                             "date_range_max_ms".into(),
-                            d.and_hms_opt(0, 0, 0)
-                                .unwrap()
-                                .and_utc()
-                                .timestamp_millis() as f64,
+                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp_millis() as f64,
                         );
                     }
                 }
@@ -1066,7 +1050,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     timestamp_field: timestamp_field.clone(),
                     needs_sequential,
                 }
-            },
+            }
             GeneratorSpec::EventStream {
                 start,
                 arrival,
@@ -1103,14 +1087,19 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     lambda_per_ms,
                     components: components.clone(),
                 }
-            },
+            }
         },
         None => {
             // No generator specified — provide a sensible default based on data_type.
-            if field.primary_key.unwrap_or(false) && field.data_type == crate::core::DataType::Uuid {
+            if field.primary_key.unwrap_or(false) && field.data_type == crate::core::DataType::Uuid
+            {
                 GeneratorPlan::Uuid
             } else if field.primary_key.unwrap_or(false) {
-                GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None }
+                GeneratorPlan::Sequence {
+                    start: 1,
+                    step: 1,
+                    jitter_ms: None,
+                }
             } else {
                 default_generator_for_type(&field.data_type)
             }
@@ -1328,9 +1317,7 @@ fn compile_edge_property_generator(
     entity_fields: &[Field],
 ) -> GeneratorPlan {
     match &prop.generator {
-        Some(spec) => {
-            compile_generator_from_spec(spec, entity_fields, &prop.data_type)
-        }
+        Some(spec) => compile_generator_from_spec(spec, entity_fields, &prop.data_type),
         None => default_generator_for_type(&prop.data_type),
     }
 }
@@ -1585,14 +1572,12 @@ fn build_index_strategy(row_counts: &BTreeMap<String, u64>) -> IndexStrategy {
             let kind = select_key_store_kind(count);
             if let Some(logger) = crate::decision::global_logger() {
                 let (chosen, reason) = match &kind {
-                    KeyStoreKind::InMemoryVec => (
-                        "InMemoryVec",
-                        format!("{count} rows < 10M threshold"),
-                    ),
-                    KeyStoreKind::MemoryMapped => (
-                        "MemoryMapped",
-                        format!("{count} rows between 10M and 100M"),
-                    ),
+                    KeyStoreKind::InMemoryVec => {
+                        ("InMemoryVec", format!("{count} rows < 10M threshold"))
+                    }
+                    KeyStoreKind::MemoryMapped => {
+                        ("MemoryMapped", format!("{count} rows between 10M and 100M"))
+                    }
                     KeyStoreKind::SampledSubset { sample_size } => (
                         "SampledSubset",
                         format!("{count} rows >= 100M, sampling {sample_size} keys"),
@@ -1702,7 +1687,12 @@ fn cholesky_decompose(matrix: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
 
     for i in 0..n {
         for j in 0..=i {
-            let sum: f64 = l[i].iter().zip(l[j].iter()).take(j).map(|(a, b)| a * b).sum();
+            let sum: f64 = l[i]
+                .iter()
+                .zip(l[j].iter())
+                .take(j)
+                .map(|(a, b)| a * b)
+                .sum();
             if i == j {
                 let diag = matrix[i][i] - sum;
                 if diag < -1e-10 {
@@ -1804,7 +1794,10 @@ fn apply_conditional_distribution_overrides(
             .find(|fp| fp.field_name == *given)
             .map(|fp| fp.dependency_order)
             .unwrap_or(0);
-        if let Some(fp) = field_plans.iter_mut().find(|fp| fp.field_name == *dependent) {
+        if let Some(fp) = field_plans
+            .iter_mut()
+            .find(|fp| fp.field_name == *dependent)
+        {
             fp.generator_plan = conditional_plan;
             if fp.dependency_order <= given_order {
                 fp.dependency_order = given_order + 1;
@@ -1850,7 +1843,7 @@ fn resolve_step_to_i64(v: &crate::core::IntOrString) -> i64 {
 /// - `"2024-01-01T00:00:00Z"` — explicit UTC
 /// - `"2024-01-01T00:00:00+05:00"` — offset-aware datetime
 fn parse_datetime_to_epoch_ms(s: &str) -> i64 {
-    use chrono::{NaiveDate, NaiveDateTime, DateTime};
+    use chrono::{DateTime, NaiveDate, NaiveDateTime};
 
     let s = s.trim();
 
@@ -1900,9 +1893,9 @@ mod tests {
                         start: IntOrString::Int(1),
                         step: IntOrString::Int(1),
                         prefix: None,
-                    values: None,
-                    cycle: None,
-                    jitter: None,
+                        values: None,
+                        cycle: None,
+                        jitter: None,
                     }),
                     nullable: NullSpec::Never,
                     primary_key: Some(true),
@@ -1934,9 +1927,9 @@ mod tests {
             actor: false,
             persona_distribution: None,
             activity_count: None,
-                mixin_refs: None,
-        output: None,
-        stats: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
             scaling: None,
         }
     }
@@ -1962,7 +1955,7 @@ mod tests {
             actor_relationships: Vec::new(),
             custom_types: Vec::new(),
             mixins: Vec::new(),
-        companion_files: Vec::new(),
+            companion_files: Vec::new(),
         }
     }
 
@@ -2426,7 +2419,11 @@ mod tests {
             .unwrap();
         assert!(matches!(
             id_plan.generator_plan,
-            GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None }
+            GeneratorPlan::Sequence {
+                start: 1,
+                step: 1,
+                jitter_ms: None
+            }
         ));
     }
 
@@ -2849,8 +2846,8 @@ mod tests {
                 persona_distribution: None,
                 activity_count: None,
                 mixin_refs: None,
-        output: None,
-        stats: None,
+                output: None,
+                stats: None,
                 scaling: None,
             }],
             vec![],
@@ -2918,9 +2915,9 @@ mod tests {
             start: IntOrString::Int(1),
             step: IntOrString::Int(1),
             prefix: None,
-        values: None,
-        cycle: None,
-        jitter: None,
+            values: None,
+            cycle: None,
+            jitter: None,
         };
         let spec = GeneratorSpec::Unique {
             inner: Box::new(inner_spec),
@@ -2932,7 +2929,11 @@ mod tests {
                 assert_eq!(max_retries, 50);
                 assert!(matches!(
                     *inner,
-                    GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None }
+                    GeneratorPlan::Sequence {
+                        start: 1,
+                        step: 1,
+                        jitter_ms: None
+                    }
                 ));
             }
             other => panic!("expected GeneratorPlan::Unique, got {other:?}"),

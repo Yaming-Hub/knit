@@ -91,9 +91,9 @@ impl FieldGenerator for ActorForeignKeyGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Value;
     use crate::gen::context::GenContext;
     use crate::gen::keystore::InMemoryKeyStore;
-    use crate::core::Value;
     use crate::plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;

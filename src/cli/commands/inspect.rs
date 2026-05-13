@@ -7,9 +7,9 @@
 
 use std::path::Path;
 
+use crate::learn::streaming::state::LearnState;
 use anyhow::{Context, Result};
 use colored::Colorize;
-use crate::learn::streaming::state::LearnState;
 
 use crate::cli::Cli;
 
@@ -213,7 +213,9 @@ fn print_schema_human(model: &crate::core::DataModel, show_actors: bool) {
             e.fields.iter().filter_map(move |f| {
                 let gen_type = f.generator.as_ref().and_then(|g| match g {
                     crate::core::types::GeneratorSpec::ActorRef { .. } => Some("actor_ref"),
-                    crate::core::types::GeneratorSpec::ActorTemporal { .. } => Some("actor_temporal"),
+                    crate::core::types::GeneratorSpec::ActorTemporal { .. } => {
+                        Some("actor_temporal")
+                    }
                     crate::core::types::GeneratorSpec::PersonaField { .. } => Some("persona_field"),
                     crate::core::types::GeneratorSpec::RelationshipRef { .. } => {
                         Some("relationship_ref")

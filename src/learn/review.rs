@@ -25,11 +25,7 @@ enum ReviewAction {
 /// Run interactive review of decisions, modifying the model in place.
 ///
 /// Returns the number of decisions that were overridden.
-pub fn interactive_review(
-    model: &mut DataModel,
-    decisions: &[Decision],
-    quiet: bool,
-) -> usize {
+pub fn interactive_review(model: &mut DataModel, decisions: &[Decision], quiet: bool) -> usize {
     // Filter to reviewable decisions: low/medium confidence with alternatives
     let reviewable: Vec<&Decision> = decisions
         .iter()
@@ -139,10 +135,7 @@ pub fn interactive_review(
                 overrides,
             );
         } else {
-            eprintln!(
-                "{} No changes made.",
-                "info:".cyan().bold(),
-            );
+            eprintln!("{} No changes made.", "info:".cyan().bold(),);
         }
     }
 
@@ -282,9 +275,7 @@ fn parse_distribution_kind(label: &str) -> Option<DistributionKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::types::{
-        CountSpec, DataType, DistributionSpec, Entity, Field, NullSpec,
-    };
+    use crate::core::types::{CountSpec, DataType, DistributionSpec, Entity, Field, NullSpec};
     use crate::decision::Alternative;
 
     fn make_test_model() -> DataModel {
@@ -359,10 +350,22 @@ mod tests {
 
     #[test]
     fn parse_distribution_kinds() {
-        assert_eq!(parse_distribution_kind("normal"), Some(DistributionKind::Normal));
-        assert_eq!(parse_distribution_kind("log_normal"), Some(DistributionKind::LogNormal));
-        assert_eq!(parse_distribution_kind("exponential"), Some(DistributionKind::Exponential));
-        assert_eq!(parse_distribution_kind("gamma"), Some(DistributionKind::Gamma));
+        assert_eq!(
+            parse_distribution_kind("normal"),
+            Some(DistributionKind::Normal)
+        );
+        assert_eq!(
+            parse_distribution_kind("log_normal"),
+            Some(DistributionKind::LogNormal)
+        );
+        assert_eq!(
+            parse_distribution_kind("exponential"),
+            Some(DistributionKind::Exponential)
+        );
+        assert_eq!(
+            parse_distribution_kind("gamma"),
+            Some(DistributionKind::Gamma)
+        );
         assert_eq!(parse_distribution_kind("unknown"), None);
     }
 
@@ -386,7 +389,11 @@ mod tests {
         let mut model = make_test_model();
         let decision = make_distribution_decision("Users", "age");
 
-        assert!(apply_distribution_override(&mut model, &decision, "log_normal|mu=3.4,sigma=0.4"));
+        assert!(apply_distribution_override(
+            &mut model,
+            &decision,
+            "log_normal|mu=3.4,sigma=0.4"
+        ));
 
         // Verify the field's generator was updated with correct kind and params
         let field = &model.entities[0].fields[0];
@@ -403,14 +410,22 @@ mod tests {
     fn apply_override_returns_false_for_missing_entity() {
         let mut model = make_test_model();
         let decision = make_distribution_decision("NonExistent", "age");
-        assert!(!apply_distribution_override(&mut model, &decision, "gamma|shape=2.0,scale=0.5"));
+        assert!(!apply_distribution_override(
+            &mut model,
+            &decision,
+            "gamma|shape=2.0,scale=0.5"
+        ));
     }
 
     #[test]
     fn apply_override_returns_false_for_missing_column() {
         let mut model = make_test_model();
         let decision = make_distribution_decision("Users", "nonexistent");
-        assert!(!apply_distribution_override(&mut model, &decision, "gamma|shape=2.0,scale=0.5"));
+        assert!(!apply_distribution_override(
+            &mut model,
+            &decision,
+            "gamma|shape=2.0,scale=0.5"
+        ));
     }
 
     #[test]

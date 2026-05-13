@@ -300,9 +300,7 @@ mod tests {
                 right,
                 ..
             } => match *right {
-                Expr::BinaryOp {
-                    op: BinOp::Mul, ..
-                } => {}
+                Expr::BinaryOp { op: BinOp::Mul, .. } => {}
                 other => panic!("expected Mul, got {other:?}"),
             },
             other => panic!("expected Add, got {other:?}"),
@@ -319,9 +317,7 @@ mod tests {
                 left,
                 ..
             } => match *left {
-                Expr::BinaryOp {
-                    op: BinOp::Add, ..
-                } => {}
+                Expr::BinaryOp { op: BinOp::Add, .. } => {}
                 other => panic!("expected Add, got {other:?}"),
             },
             other => panic!("expected Mul, got {other:?}"),
@@ -381,9 +377,7 @@ mod tests {
     fn comparison_and_logical() {
         let expr = parse("${x} > 0 && ${y} <= 100").unwrap();
         match expr {
-            Expr::BinaryOp {
-                op: BinOp::And, ..
-            } => {}
+            Expr::BinaryOp { op: BinOp::And, .. } => {}
             other => panic!("expected And, got {other:?}"),
         }
     }
@@ -425,10 +419,8 @@ mod tests {
     #[test]
     fn complex_expression() {
         // if(${qty} > 0, round(${price} * ${qty} * (1.0 + ${param.tax}), 2), 0.0)
-        let expr = parse(
-            "if(${qty} > 0, round(${price} * ${qty} * (1.0 + ${param.tax}), 2), 0.0)",
-        )
-        .unwrap();
+        let expr = parse("if(${qty} > 0, round(${price} * ${qty} * (1.0 + ${param.tax}), 2), 0.0)")
+            .unwrap();
         match expr {
             Expr::FuncCall { name, args } => {
                 assert_eq!(name, "if");

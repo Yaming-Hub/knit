@@ -194,10 +194,7 @@ fn extract_millis(col: &Arc<dyn Array>, unit: &TimeUnit) -> Vec<Option<i64>> {
             }
             match unit {
                 TimeUnit::Second => {
-                    let arr = col
-                        .as_any()
-                        .downcast_ref::<TimestampSecondArray>()
-                        .unwrap();
+                    let arr = col.as_any().downcast_ref::<TimestampSecondArray>().unwrap();
                     Some(arr.value(i))
                 }
                 TimeUnit::Millisecond => {

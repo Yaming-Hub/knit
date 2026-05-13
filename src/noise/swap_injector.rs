@@ -138,8 +138,7 @@ fn swap_bool(col: &Arc<dyn Array>, perm: &[usize]) -> Result<Arc<dyn Array>, Noi
 
 fn swap_via_take(col: &Arc<dyn Array>, perm: &[usize]) -> Result<Arc<dyn Array>, NoiseError> {
     let indices = UInt32Array::from(perm.iter().map(|&i| i as u32).collect::<Vec<_>>());
-    arrow::compute::take(col.as_ref(), &indices, None)
-        .map_err(NoiseError::Arrow)
+    arrow::compute::take(col.as_ref(), &indices, None).map_err(NoiseError::Arrow)
 }
 
 #[cfg(test)]
@@ -164,7 +163,9 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let config = PerturbConfig::default().with_probability(1.0);
-        let result = SwapInjector::new().perturb(batch, &mut rng, &config).unwrap();
+        let result = SwapInjector::new()
+            .perturb(batch, &mut rng, &config)
+            .unwrap();
 
         let col = result
             .column(0)
@@ -192,7 +193,9 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let config = PerturbConfig::default().with_probability(1.0);
-        let result = SwapInjector::new().perturb(batch, &mut rng, &config).unwrap();
+        let result = SwapInjector::new()
+            .perturb(batch, &mut rng, &config)
+            .unwrap();
 
         assert_eq!(result.column(0).null_count(), 2);
     }
@@ -213,7 +216,9 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(99);
         let config = PerturbConfig::default().with_probability(1.0);
-        let result = SwapInjector::new().perturb(batch, &mut rng, &config).unwrap();
+        let result = SwapInjector::new()
+            .perturb(batch, &mut rng, &config)
+            .unwrap();
 
         let col = result
             .column(0)
@@ -241,7 +246,9 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let config = PerturbConfig::default().with_probability(0.0);
-        let result = SwapInjector::new().perturb(batch, &mut rng, &config).unwrap();
+        let result = SwapInjector::new()
+            .perturb(batch, &mut rng, &config)
+            .unwrap();
 
         let col = result
             .column(0)

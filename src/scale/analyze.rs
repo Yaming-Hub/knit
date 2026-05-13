@@ -31,8 +31,8 @@ pub fn analyze_or_from_annotations(model: &DataModel) -> (ScalingAnalysis, bool)
     let entity_counts = collect_entity_counts(model);
 
     // Try annotation reconstruction per dimension, fall back to heuristics
-    let actor = reconstruct_actor(model, &entity_counts)
-        .or_else(|| detect_actor(model, &entity_counts));
+    let actor =
+        reconstruct_actor(model, &entity_counts).or_else(|| detect_actor(model, &entity_counts));
 
     let time = reconstruct_time(model).or_else(|| detect_time(model));
 
@@ -89,10 +89,7 @@ fn reconstruct_actor(
             .is_some_and(|a| a.is_root)
     })?;
 
-    let current_count = entity_counts
-        .get(&root_entity.name)
-        .copied()
-        .unwrap_or(1);
+    let current_count = entity_counts.get(&root_entity.name).copied().unwrap_or(1);
 
     // Find dependents
     let dependents: Vec<(String, f64)> = model
@@ -118,12 +115,10 @@ fn reconstruct_actor(
 
 /// Reconstruct TimeDimension from annotations.
 fn reconstruct_time(model: &DataModel) -> Option<TimeDimension> {
-    let entity = model.entities.iter().find(|e| {
-        e.scaling
-            .as_ref()
-            .and_then(|s| s.time.as_ref())
-            .is_some()
-    })?;
+    let entity = model
+        .entities
+        .iter()
+        .find(|e| e.scaling.as_ref().and_then(|s| s.time.as_ref()).is_some())?;
 
     let time_ann = entity.scaling.as_ref().unwrap().time.as_ref().unwrap();
 
@@ -257,8 +252,7 @@ fn collect_entity_counts(model: &DataModel) -> BTreeMap<String, u64> {
                 CountSpec::Range { min, max } => (min + max) / 2,
                 CountSpec::Distribution(_) => 1000,
                 CountSpec::Expression { .. } => {
-                    crate::plan::partition::resolve_count(&e.count, &model.params)
-                        .unwrap_or(1000)
+                    crate::plan::partition::resolve_count(&e.count, &model.params).unwrap_or(1000)
                 }
             };
             (e.name.clone(), count)
@@ -276,10 +270,7 @@ fn detect_actor(
     // 1. Explicit actor entity
     if let Some(actor_entity) = model.entities.iter().find(|e| e.actor) {
         let dependents = find_dependents(model, &actor_entity.name, entity_counts);
-        let count = entity_counts
-            .get(&actor_entity.name)
-            .copied()
-            .unwrap_or(1);
+        let count = entity_counts.get(&actor_entity.name).copied().unwrap_or(1);
         return Some(ActorDimension {
             entity_name: actor_entity.name.clone(),
             current_count: count,
@@ -299,7 +290,8 @@ fn detect_actor(
         for field in &entity.fields {
             if field.actor_column {
                 // Find the FK target
-                if let Some(GeneratorSpec::Lookup { entity: target, .. }) = field.generator.as_ref() {
+                if let Some(GeneratorSpec::Lookup { entity: target, .. }) = field.generator.as_ref()
+                {
                     *ref_counts.entry(target.as_str()).or_insert(0) += 1;
                 }
             }
@@ -420,9 +412,9 @@ fn detect_cadence(values: &[String]) -> (Option<super::Cadence>, f64) {
     let is_monthly = if gaps_in_range && dates.len() >= 3 {
         use chrono::Datelike;
         let all_same_day = dates.windows(2).all(|w| w[0].day() == w[1].day());
-        let all_eom = dates.iter().all(|d| {
-            d.day() == super::time::days_in_month(d.year(), d.month())
-        });
+        let all_eom = dates
+            .iter()
+            .all(|d| d.day() == super::time::days_in_month(d.year(), d.month()));
         all_same_day || all_eom
     } else {
         false
@@ -473,10 +465,7 @@ fn detect_custom_dimensions(
     }
 
     for entity in &model.entities {
-        let partition_field = entity
-            .output
-            .as_ref()
-            .and_then(|o| o.partition_by.as_ref());
+        let partition_field = entity.output.as_ref().and_then(|o| o.partition_by.as_ref());
 
         for field in &entity.fields {
             // Skip PK, FK, partition, and actor fields
@@ -496,8 +485,7 @@ fn detect_custom_dimensions(
             // Check if this field uses OneOf with low cardinality
             if let Some(GeneratorSpec::OneOf { ref choices }) = field.generator {
                 if choices.len() >= 2 && choices.len() <= 50 {
-                    let entity_count =
-                        entity_counts.get(&entity.name).copied().unwrap_or(1);
+                    let entity_count = entity_counts.get(&entity.name).copied().unwrap_or(1);
                     let ratio = choices.len() as f64 / entity_count as f64;
                     if ratio < 0.1 || choices.len() <= 20 {
                         // Check if this field is used as a condition key
@@ -579,8 +567,8 @@ mod tests {
                         precision: None,
                         actor_column: false,
                         fields: vec![],
-                stats: None,
-                traits: None,
+                        stats: None,
+                        traits: None,
                     }],
                     constraints: vec![],
                     topology: None,
@@ -615,8 +603,8 @@ mod tests {
                             precision: None,
                             actor_column: false,
                             fields: vec![],
-                stats: None,
-                traits: None,
+                            stats: None,
+                            traits: None,
                         },
                         Field {
                             name: "user_id".into(),
@@ -631,8 +619,8 @@ mod tests {
                             precision: None,
                             actor_column: false,
                             fields: vec![],
-                stats: None,
-                traits: None,
+                            stats: None,
+                            traits: None,
                         },
                         Field {
                             name: "Region".into(),
@@ -659,8 +647,8 @@ mod tests {
                             precision: None,
                             actor_column: false,
                             fields: vec![],
-                stats: None,
-                traits: None,
+                            stats: None,
+                            traits: None,
                         },
                     ],
                     constraints: vec![],
@@ -727,7 +715,11 @@ mod tests {
     #[test]
     fn test_cadence_detection_weekly() {
         let values: Vec<String> = vec![
-            "2024-01-01", "2024-01-08", "2024-01-15", "2024-01-22", "2024-01-29",
+            "2024-01-01",
+            "2024-01-08",
+            "2024-01-15",
+            "2024-01-22",
+            "2024-01-29",
         ]
         .into_iter()
         .map(String::from)
@@ -740,7 +732,11 @@ mod tests {
     #[test]
     fn test_cadence_detection_monthly() {
         let values: Vec<String> = vec![
-            "2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01",
+            "2024-01-01",
+            "2024-02-01",
+            "2024-03-01",
+            "2024-04-01",
+            "2024-05-01",
         ]
         .into_iter()
         .map(String::from)
@@ -753,12 +749,10 @@ mod tests {
     #[test]
     fn test_cadence_detection_4week_not_monthly() {
         // Every 28 days, but NOT same day-of-month or EOM — should be Days(28)
-        let values: Vec<String> = vec![
-            "2024-01-01", "2024-01-29", "2024-02-26", "2024-03-25",
-        ]
-        .into_iter()
-        .map(String::from)
-        .collect();
+        let values: Vec<String> = vec!["2024-01-01", "2024-01-29", "2024-02-26", "2024-03-25"]
+            .into_iter()
+            .map(String::from)
+            .collect();
         let (cadence, _confidence) = detect_cadence(&values);
         assert_eq!(cadence, Some(crate::scale::Cadence::Days(28)));
     }
@@ -767,7 +761,11 @@ mod tests {
     fn test_cadence_detection_monthly_eom() {
         // End-of-month dates: 31, 29, 31, 30, 31 — should detect as monthly
         let values: Vec<String> = vec![
-            "2024-01-31", "2024-02-29", "2024-03-31", "2024-04-30", "2024-05-31",
+            "2024-01-31",
+            "2024-02-29",
+            "2024-03-31",
+            "2024-04-30",
+            "2024-05-31",
         ]
         .into_iter()
         .map(String::from)

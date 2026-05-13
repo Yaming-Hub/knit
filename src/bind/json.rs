@@ -696,7 +696,10 @@ mod tests {
             let output = String::from_utf8(sink.writer.into_inner()).unwrap();
             outputs.push(output);
         }
-        assert_eq!(outputs[0], outputs[1], "same seed should produce identical output");
+        assert_eq!(
+            outputs[0], outputs[1],
+            "same seed should produce identical output"
+        );
     }
 
     #[test]

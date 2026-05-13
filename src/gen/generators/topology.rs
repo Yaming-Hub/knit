@@ -455,11 +455,7 @@ pub struct StochasticBlockGenerator {
 impl StochasticBlockGenerator {
     /// Creates a new Stochastic Block Model generator.
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
-        let communities = params
-            .get("communities")
-            .copied()
-            .unwrap_or(3.0)
-            .max(1.0) as usize;
+        let communities = params.get("communities").copied().unwrap_or(3.0).max(1.0) as usize;
         let p_intra = params
             .get("p_intra")
             .copied()
@@ -576,17 +572,9 @@ pub struct ConfigurationGenerator {
 impl ConfigurationGenerator {
     /// Creates a new Configuration Model generator.
     pub fn new(params: &BTreeMap<String, f64>) -> Self {
-        let mean_degree = params
-            .get("mean_degree")
-            .copied()
-            .unwrap_or(4.0)
-            .max(0.1);
+        let mean_degree = params.get("mean_degree").copied().unwrap_or(4.0).max(0.1);
         let exponent = params.get("exponent").copied();
-        let min_degree = params
-            .get("min_degree")
-            .copied()
-            .unwrap_or(1.0)
-            .max(0.0) as usize;
+        let min_degree = params.get("min_degree").copied().unwrap_or(1.0).max(0.0) as usize;
         let max_degree_param = params.get("max_degree").map(|&v| v.max(1.0) as usize);
         Self {
             mean_degree,
@@ -619,9 +607,8 @@ impl ConfigurationGenerator {
             return k.clamp(min_k, max_k);
         }
 
-        let k = ((min_f.powf(exp1) + u * (max_f.powf(exp1) - min_f.powf(exp1)))
-            .powf(1.0 / exp1))
-        .round() as usize;
+        let k = ((min_f.powf(exp1) + u * (max_f.powf(exp1) - min_f.powf(exp1))).powf(1.0 / exp1))
+            .round() as usize;
         k.clamp(min_k, max_k)
     }
 }
@@ -1078,9 +1065,7 @@ mod tests {
         }
 
         // With mean_degree=4, most nodes should have at least one neighbor
-        let non_self = (0..200)
-            .filter(|&i| targets.value(i) != i as i64)
-            .count();
+        let non_self = (0..200).filter(|&i| targets.value(i) != i as i64).count();
         assert!(
             non_self > 100,
             "expected most nodes to have neighbors, got {non_self}/200"

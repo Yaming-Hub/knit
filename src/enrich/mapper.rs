@@ -120,8 +120,7 @@ fn name_similarity(ref_name: &str, field_name: &str) -> f64 {
 
 /// Normalize a column/field name for comparison.
 fn normalize_name(name: &str) -> String {
-    name.to_lowercase()
-        .replace(['-', '_', ' ', '.'], "")
+    name.to_lowercase().replace(['-', '_', ' ', '.'], "")
 }
 
 /// Expand common abbreviations found as components in the name.
@@ -158,9 +157,11 @@ fn type_compatible(profile: &ColumnProfile, field: &Field) -> bool {
     match &field.data_type {
         DataType::String | DataType::Uuid => is_ref_string || !is_ref_numeric,
         DataType::Int | DataType::Int32 | DataType::Float => is_ref_numeric,
-        DataType::Date | DataType::Datetime | DataType::DatetimeUs | DataType::Datetimetz | DataType::Time => {
-            is_ref_temporal || is_ref_string
-        }
+        DataType::Date
+        | DataType::Datetime
+        | DataType::DatetimeUs
+        | DataType::Datetimetz
+        | DataType::Time => is_ref_temporal || is_ref_string,
         DataType::Bool => true,
         _ => true,
     }
@@ -182,7 +183,11 @@ fn levenshtein(a: &str, b: &str) -> usize {
     }
     for i in 1..=m {
         for j in 1..=n {
-            let cost = if a_chars[i - 1] == b_chars[j - 1] { 0 } else { 1 };
+            let cost = if a_chars[i - 1] == b_chars[j - 1] {
+                0
+            } else {
+                1
+            };
             dp[i][j] = (dp[i - 1][j] + 1)
                 .min(dp[i][j - 1] + 1)
                 .min(dp[i - 1][j - 1] + cost);
@@ -204,7 +209,11 @@ mod tests {
     #[test]
     fn test_name_similarity_abbreviation() {
         let score = name_similarity("msg_count", "message_count");
-        assert!(score > 0.7, "abbreviation similarity should be high, got {}", score);
+        assert!(
+            score > 0.7,
+            "abbreviation similarity should be high, got {}",
+            score
+        );
     }
 
     #[test]

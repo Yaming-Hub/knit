@@ -56,9 +56,21 @@ pub fn run_convert(input: &str, output: &str) -> Result<()> {
             model: FlatModelMeta {
                 name: model.name.clone(),
                 description: model.description.clone(),
-                seed: if model.seed != 0 { Some(model.seed) } else { None },
-                locale: if model.locale != "en" { Some(model.locale.clone()) } else { None },
-                timezone: if model.timezone != "UTC" { Some(model.timezone.clone()) } else { None },
+                seed: if model.seed != 0 {
+                    Some(model.seed)
+                } else {
+                    None
+                },
+                locale: if model.locale != "en" {
+                    Some(model.locale.clone())
+                } else {
+                    None
+                },
+                timezone: if model.timezone != "UTC" {
+                    Some(model.timezone.clone())
+                } else {
+                    None
+                },
             },
             entities: model.entities.clone(),
             relationships: model.relationships.clone(),
@@ -86,7 +98,10 @@ pub fn run_info(input: &str) -> Result<()> {
     let input_path = Path::new(input);
 
     let (model, format_name) = if is_structured_model(input_path) {
-        (reader::load_model_directory(input_path)?, "structured directory")
+        (
+            reader::load_model_directory(input_path)?,
+            "structured directory",
+        )
     } else {
         (load_blueprint(input)?, "flat schema file")
     };

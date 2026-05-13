@@ -349,8 +349,16 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
 
     let best = candidates[0].clone();
     if tracing::enabled!(tracing::Level::DEBUG) {
-        let alt_summary: Vec<String> = candidates.iter()
-            .map(|c| format!("{}(ks={:.3},aic={:.1})", c.distribution.name(), c.ks_stat, c.aic))
+        let alt_summary: Vec<String> = candidates
+            .iter()
+            .map(|c| {
+                format!(
+                    "{}(ks={:.3},aic={:.1})",
+                    c.distribution.name(),
+                    c.ks_stat,
+                    c.aic
+                )
+            })
             .collect();
         debug!(
             best_dist = best.distribution.name(),
@@ -381,7 +389,11 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
 
         for alt in candidates.iter().skip(1).take(3) {
             builder = builder.alternative(
-                format!("{}|{}", alt.distribution.name(), alt.distribution.params_str()),
+                format!(
+                    "{}|{}",
+                    alt.distribution.name(),
+                    alt.distribution.params_str()
+                ),
                 format!("aic={:.1}, ks={:.4}", alt.aic, alt.ks_stat),
                 Some(1.0 - alt.ks_stat),
             );

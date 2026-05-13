@@ -170,7 +170,11 @@ impl RelativeGenerator {
                         RelativeDistKind::LogNormal(mu, sigma)
                     }
                     "uniform" => {
-                        let lo = params.get("min").or(params.get("low")).copied().unwrap_or(0.0);
+                        let lo = params
+                            .get("min")
+                            .or(params.get("low"))
+                            .copied()
+                            .unwrap_or(0.0);
                         let hi = params
                             .get("max")
                             .or(params.get("high"))
@@ -273,7 +277,7 @@ impl RelativeGenerator {
                 };
                 let offset_ms = (raw * factor) as i64;
                 // Apply min/max clamping
-                
+
                 match (min_ms, max_ms) {
                     (Some(lo), Some(hi)) => offset_ms.max(*lo as i64).min(*hi as i64),
                     (Some(lo), None) => offset_ms.max(*lo as i64),
@@ -488,10 +492,7 @@ impl BusinessHoursGenerator {
     /// Numeric keys: `start_hour`, `end_hour`, `days_mask`,
     /// `date_range_min_ms`, `date_range_max_ms`, `start_date`.
     /// String keys: `timezone`, `timezone_field`, `exclude_dates`.
-    pub fn new(
-        params: &BTreeMap<String, f64>,
-        string_params: &BTreeMap<String, String>,
-    ) -> Self {
+    pub fn new(params: &BTreeMap<String, f64>, string_params: &BTreeMap<String, String>) -> Self {
         let start_hour = (params.get("start_hour").copied().unwrap_or(9.0) as u8).min(23);
         let end_hour = (params.get("end_hour").copied().unwrap_or(17.0) as u8).min(24);
         let end_hour = end_hour.max(start_hour + 1).min(24);
@@ -548,11 +549,7 @@ impl BusinessHoursGenerator {
 
     /// Resolve timezone for a given row from batch_columns, falling back to
     /// the fixed timezone or UTC.
-    fn resolve_tz(
-        &self,
-        row_idx: usize,
-        ctx: &crate::gen::context::GenContext,
-    ) -> chrono_tz::Tz {
+    fn resolve_tz(&self, row_idx: usize, ctx: &crate::gen::context::GenContext) -> chrono_tz::Tz {
         if let Some(ref tz_field) = self.timezone_field {
             if let Some(col) = ctx.batch_columns.get(tz_field) {
                 if let Some(arr) = col.as_any().downcast_ref::<arrow::array::StringArray>() {
@@ -606,9 +603,7 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .unwrap_or_else(|| {
                         // Nonexistent (DST spring-forward): try +1h
                         tz.from_local_datetime(
-                            &date
-                                .and_hms_opt((sh as u32 + 1).min(23), 0, 0)
-                                .unwrap(),
+                            &date.and_hms_opt((sh as u32 + 1).min(23), 0, 0).unwrap(),
                         )
                         .earliest()
                         .unwrap_or_else(|| {
@@ -625,9 +620,7 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .earliest()
                     .unwrap_or_else(|| {
                         tz.from_local_datetime(
-                            &date
-                                .and_hms_opt((eh as u32).min(23), 0, 0)
-                                .unwrap(),
+                            &date.and_hms_opt((eh as u32).min(23), 0, 0).unwrap(),
                         )
                         .earliest()
                         .unwrap_or_else(|| {
@@ -1390,10 +1383,7 @@ mod tests {
         params.insert("days_mask".into(), 127.0); // all days
         let mut string_params = BTreeMap::new();
         // Exclude Jan 2 and Jan 3
-        string_params.insert(
-            "exclude_dates".into(),
-            "2024-01-02,2024-01-03".into(),
-        );
+        string_params.insert("exclude_dates".into(), "2024-01-02,2024-01-03".into());
         let gen = BusinessHoursGenerator::new(&params, &string_params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
@@ -1426,7 +1416,7 @@ mod tests {
         params.insert("start_hour".into(), 0.0);
         params.insert("end_hour".into(), 24.0);
         params.insert("days_mask".into(), 127.0); // all days
-        // 2024-01-01 to 2024-01-05 (5 days)
+                                                  // 2024-01-01 to 2024-01-05 (5 days)
         let min_ms = NaiveDate::from_ymd_opt(2024, 1, 1)
             .unwrap()
             .and_hms_opt(0, 0, 0)

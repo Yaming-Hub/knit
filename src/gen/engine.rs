@@ -28,8 +28,8 @@ use crate::gen::generators::actor_temporal::{ActorTemporalGenerator, CausalTimes
 use crate::gen::generators::create_generator_with_seen;
 use crate::gen::generators::fk::ForeignKeyGenerator;
 use crate::gen::generators::graph_fk::GraphTargetFkGenerator;
-use crate::gen::generators::plan_contains_unique;
 use crate::gen::generators::persona_field::PersonaFieldGenerator;
+use crate::gen::generators::plan_contains_unique;
 use crate::gen::generators::string_fk::StringForeignKeyGenerator;
 use crate::gen::keystore::InMemoryKeyStore;
 use crate::gen::null_mask::apply_null_mask;
@@ -48,7 +48,9 @@ fn knit_data_type_to_arrow(dt: &crate::core::DataType) -> arrow::datatypes::Data
         crate::core::DataType::Int => arrow::datatypes::DataType::Int64,
         crate::core::DataType::Int32 => arrow::datatypes::DataType::Int32,
         crate::core::DataType::Float => arrow::datatypes::DataType::Float64,
-        crate::core::DataType::String | crate::core::DataType::Uuid => arrow::datatypes::DataType::Utf8,
+        crate::core::DataType::String | crate::core::DataType::Uuid => {
+            arrow::datatypes::DataType::Utf8
+        }
         crate::core::DataType::Date => arrow::datatypes::DataType::Date32,
         crate::core::DataType::Datetime
         | crate::core::DataType::DatetimeUs
@@ -125,9 +127,7 @@ fn coerce_to_logical_type(
             }
             // Int64 values are epoch milliseconds — convert to Timestamp(Millisecond)
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
-                let ts: arrow::array::TimestampMillisecondArray = i64_arr
-                    .iter()
-                    .collect();
+                let ts: arrow::array::TimestampMillisecondArray = i64_arr.iter().collect();
                 return Arc::new(ts);
             }
             arr
@@ -230,7 +230,8 @@ impl GenerationEngine {
         };
 
         for graph_plan in &plan.actor_pool.graph_plans {
-            let graph = crate::gen::graph::generate_graph(graph_plan, pool, plan.rng_tree.global_seed);
+            let graph =
+                crate::gen::graph::generate_graph(graph_plan, pool, plan.rng_tree.global_seed);
 
             // Build outbound adjacency list (Vec<Vec<usize>> indexed by source actor)
             let source_count = graph.source_count as usize;
@@ -416,7 +417,12 @@ impl GenerationEngine {
         }
 
         for (phase_idx, phase) in plan.phases.iter().enumerate() {
-            let _phase_span = tracing::info_span!("phase", idx = phase_idx, entities = phase.entity_plans.len()).entered();
+            let _phase_span = tracing::info_span!(
+                "phase",
+                idx = phase_idx,
+                entities = phase.entity_plans.len()
+            )
+            .entered();
             tracing::info!(
                 phase = phase_idx,
                 entities = phase.entity_plans.len(),
@@ -608,32 +614,30 @@ impl GenerationEngine {
 
         // When shared seen-sets exist we must generate partitions sequentially
         // so the dedup order is deterministic across runs.
-        let partition_results: Vec<Result<Vec<(String, RecordBatch)>, GenError>> = if force_sequential {
-            // Build generators once and reuse across all partitions so that
-            // stateful components (AR, level_shift, spike, mean_reversion)
-            // maintain continuity across partition boundaries.
-            let shared_generators =
-                Some(self.build_field_generators(ep, plan, &shared_seen));
-            ep.partitions
-                .iter()
-                .map(|part| {
-                    self.generate_partition_batches(
-                        plan,
-                        ep,
-                        part,
-                        &shared_seen,
-                        shared_generators.as_ref(),
-                    )
-                })
-                .collect()
-        } else {
-            ep.partitions
-                .par_iter()
-                .map(|part| {
-                    self.generate_partition_batches(plan, ep, part, &shared_seen, None)
-                })
-                .collect()
-        };
+        let partition_results: Vec<Result<Vec<(String, RecordBatch)>, GenError>> =
+            if force_sequential {
+                // Build generators once and reuse across all partitions so that
+                // stateful components (AR, level_shift, spike, mean_reversion)
+                // maintain continuity across partition boundaries.
+                let shared_generators = Some(self.build_field_generators(ep, plan, &shared_seen));
+                ep.partitions
+                    .iter()
+                    .map(|part| {
+                        self.generate_partition_batches(
+                            plan,
+                            ep,
+                            part,
+                            &shared_seen,
+                            shared_generators.as_ref(),
+                        )
+                    })
+                    .collect()
+            } else {
+                ep.partitions
+                    .par_iter()
+                    .map(|part| self.generate_partition_batches(plan, ep, part, &shared_seen, None))
+                    .collect()
+            };
 
         let mut entity_batches = Vec::new();
         for r in partition_results {
@@ -1035,7 +1039,9 @@ impl GenerationEngine {
         }
 
         Box::new(crate::gen::generators::struct_gen::StructGenerator::new(
-            children, names, post_process,
+            children,
+            names,
+            post_process,
         ))
     }
 
@@ -1275,10 +1281,12 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
         let bh_fallback = || -> Box<dyn FieldGenerator> {
-            Box::new(crate::gen::generators::temporal::BusinessHoursGenerator::new(
-                &std::collections::BTreeMap::new(),
-                &std::collections::BTreeMap::new(),
-            ))
+            Box::new(
+                crate::gen::generators::temporal::BusinessHoursGenerator::new(
+                    &std::collections::BTreeMap::new(),
+                    &std::collections::BTreeMap::new(),
+                ),
+            )
         };
 
         // Safety: actor entity must be single-partition
@@ -1598,53 +1606,50 @@ impl GenerationEngine {
                 };
 
                 let count = batch.num_rows();
-                let fk_values: Vec<Option<i64>> = if let Some(ref assignments) = hierarchy_assignments
-                {
-                    // Hierarchical: look up each row's PK and use precomputed assignment
-                    match batch.schema().index_of(&dr.to_field) {
-                        Ok(pk_idx) => {
-                            let pk_array = batch
-                                .column(pk_idx)
-                                .as_any()
-                                .downcast_ref::<Int64Array>();
-                            match pk_array {
-                                Some(pks) => (0..count)
-                                    .map(|i| {
-                                        let pk = pks.value(i);
-                                        assignments.get(&pk).copied().flatten()
-                                    })
-                                    .collect(),
-                                None => vec![None; count],
+                let fk_values: Vec<Option<i64>> =
+                    if let Some(ref assignments) = hierarchy_assignments {
+                        // Hierarchical: look up each row's PK and use precomputed assignment
+                        match batch.schema().index_of(&dr.to_field) {
+                            Ok(pk_idx) => {
+                                let pk_array =
+                                    batch.column(pk_idx).as_any().downcast_ref::<Int64Array>();
+                                match pk_array {
+                                    Some(pks) => (0..count)
+                                        .map(|i| {
+                                            let pk = pks.value(i);
+                                            assignments.get(&pk).copied().flatten()
+                                        })
+                                        .collect(),
+                                    None => vec![None; count],
+                                }
                             }
+                            Err(_) => vec![None; count],
                         }
-                        Err(_) => vec![None; count],
-                    }
-                } else {
-                    // Per-batch deterministic seed
-                    let mut rng =
-                        ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
-                    batch_counter += 1;
+                    } else {
+                        // Per-batch deterministic seed
+                        let mut rng = ChaCha8Rng::seed_from_u64(base_seed ^ (batch_counter as u64));
+                        batch_counter += 1;
 
-                    match &dr.strategy {
-                        DeferralStrategy::SelfReference {
-                            nullable_root_probability,
-                            ..
-                        } => {
-                            let p = *nullable_root_probability;
-                            (0..count)
-                                .map(|_| {
-                                    let r = (rng.next_u64() as f64) / (u64::MAX as f64);
-                                    if r < p {
-                                        None // root node — null FK
-                                    } else {
-                                        target_ks.sample(&mut rng)
-                                    }
-                                })
-                                .collect()
+                        match &dr.strategy {
+                            DeferralStrategy::SelfReference {
+                                nullable_root_probability,
+                                ..
+                            } => {
+                                let p = *nullable_root_probability;
+                                (0..count)
+                                    .map(|_| {
+                                        let r = (rng.next_u64() as f64) / (u64::MAX as f64);
+                                        if r < p {
+                                            None // root node — null FK
+                                        } else {
+                                            target_ks.sample(&mut rng)
+                                        }
+                                    })
+                                    .collect()
+                            }
+                            _ => (0..count).map(|_| target_ks.sample(&mut rng)).collect(),
                         }
-                        _ => (0..count).map(|_| target_ks.sample(&mut rng)).collect(),
-                    }
-                };
+                    };
 
                 // Replace the FK column in the batch
                 let new_arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(fk_values));
@@ -1850,7 +1855,11 @@ mod tests {
                             FieldPlan {
                                 field_name: "id".into(),
                                 data_type: crate::core::DataType::Int,
-                                generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
+                                generator_plan: GeneratorPlan::Sequence {
+                                    start: 1,
+                                    step: 1,
+                                    jitter_ms: None,
+                                },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
                                 precision: None,
@@ -1862,7 +1871,9 @@ mod tests {
                             FieldPlan {
                                 field_name: "value".into(),
                                 data_type: crate::core::DataType::Int,
-                                generator_plan: GeneratorPlan::Constant(crate::core::Value::Int(99)),
+                                generator_plan: GeneratorPlan::Constant(crate::core::Value::Int(
+                                    99,
+                                )),
                                 null_plan: NullPlan::Never,
                                 dependency_order: 1,
                                 precision: None,
@@ -1875,7 +1886,7 @@ mod tests {
                         estimated_row_count: 100,
                         estimated_byte_size: 800,
                         primary_key_field_index: Some(0),
-                    copula_plans: vec![],
+                        copula_plans: vec![],
                     }],
                     deferred_refs: vec![],
                 },
@@ -1893,7 +1904,11 @@ mod tests {
                             FieldPlan {
                                 field_name: "id".into(),
                                 data_type: crate::core::DataType::Int,
-                                generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
+                                generator_plan: GeneratorPlan::Sequence {
+                                    start: 1,
+                                    step: 1,
+                                    jitter_ms: None,
+                                },
                                 null_plan: NullPlan::Never,
                                 dependency_order: 0,
                                 precision: None,
@@ -1925,7 +1940,7 @@ mod tests {
                         estimated_row_count: 500,
                         estimated_byte_size: 4000,
                         primary_key_field_index: Some(0),
-                    copula_plans: vec![],
+                        copula_plans: vec![],
                     }],
                     deferred_refs: vec![],
                 },
@@ -2081,7 +2096,11 @@ mod tests {
                         FieldPlan {
                             field_name: "id".into(),
                             data_type: crate::core::DataType::Int,
-                            generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
+                            generator_plan: GeneratorPlan::Sequence {
+                                start: 1,
+                                step: 1,
+                                jitter_ms: None,
+                            },
                             null_plan: NullPlan::Never,
                             dependency_order: 0,
                             precision: None,
@@ -2265,7 +2284,11 @@ mod tests {
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
                         data_type: crate::core::DataType::Int,
-                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
+                        generator_plan: GeneratorPlan::Sequence {
+                            start: 1,
+                            step: 1,
+                            jitter_ms: None,
+                        },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
                         precision: None,
@@ -2353,7 +2376,11 @@ mod tests {
                     field_plans: vec![FieldPlan {
                         field_name: "id".into(),
                         data_type: crate::core::DataType::Int,
-                        generator_plan: GeneratorPlan::Sequence { start: 1, step: 1, jitter_ms: None },
+                        generator_plan: GeneratorPlan::Sequence {
+                            start: 1,
+                            step: 1,
+                            jitter_ms: None,
+                        },
                         null_plan: NullPlan::Never,
                         dependency_order: 0,
                         precision: None,
@@ -2623,8 +2650,7 @@ mod tests {
     fn null_array_converted_to_utf8_in_reorder() {
         // Verify that NullArray columns are converted to all-null Utf8
         // arrays during Phase 4 reorder (Parquet can't write DataType::Null).
-        let null_arr: arrow::array::ArrayRef =
-            Arc::new(arrow::array::NullArray::new(5));
+        let null_arr: arrow::array::ArrayRef = Arc::new(arrow::array::NullArray::new(5));
         assert_eq!(*null_arr.data_type(), arrow::datatypes::DataType::Null);
 
         // Simulate the Phase 4 conversion logic

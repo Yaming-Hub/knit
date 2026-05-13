@@ -28,13 +28,13 @@ pub mod interaction;
 pub mod keystore;
 pub mod null_mask;
 pub mod plugin;
-#[cfg(feature = "wasm-plugins")]
-pub mod wasm_plugin;
 pub mod sampled_key_store;
 pub mod string_keystore;
 pub mod temporal_sort;
 pub mod temporal_store;
 pub mod traits;
+#[cfg(feature = "wasm-plugins")]
+pub mod wasm_plugin;
 
 pub use actor_pool::ActorPool;
 pub use batch::assemble_batch;
@@ -58,10 +58,10 @@ pub use traits::{FieldGenerator, KeyStore, StringKeyStore};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::array::*;
-    use arrow::datatypes::DataType;
     use crate::core::{DistributionKind, Value};
     use crate::plan::{GeneratorPlan, NullPlan};
+    use arrow::array::*;
+    use arrow::datatypes::DataType;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::{BTreeMap, HashMap};
@@ -144,7 +144,11 @@ mod tests {
 
     #[test]
     fn sequence_correctness() {
-        let plan = GeneratorPlan::Sequence { start: 10, step: 3, jitter_ms: None };
+        let plan = GeneratorPlan::Sequence {
+            start: 10,
+            step: 3,
+            jitter_ms: None,
+        };
         let gen = create_generator(&plan);
         let ctx = make_ctx();
         let arr = gen.generate(&mut make_rng(), 5, &ctx);
@@ -157,7 +161,11 @@ mod tests {
 
     #[test]
     fn sequence_with_offset() {
-        let plan = GeneratorPlan::Sequence { start: 0, step: 1, jitter_ms: None };
+        let plan = GeneratorPlan::Sequence {
+            start: 0,
+            step: 1,
+            jitter_ms: None,
+        };
         let gen = create_generator(&plan);
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
         let ctx = GenContext::new(map, 100, 1, 2, "test");

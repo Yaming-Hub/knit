@@ -8,6 +8,7 @@
 //! - Configurable noise and anomaly injection
 
 pub mod bind;
+pub mod blueprint;
 pub mod cli;
 pub mod core;
 pub mod decision;
@@ -18,5 +19,4 @@ pub mod model;
 pub mod noise;
 pub mod plan;
 pub mod scale;
-pub mod blueprint;
 pub mod tokenize;
