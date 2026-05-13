@@ -725,7 +725,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     let step_ms = resolve_step_to_i64(step);
                     let jitter_ms = jitter
                         .as_deref()
-                        .map(|s| crate::gen::generators::event_stream::parse_duration_ms(s));
+                        .map(crate::gen::generators::event_stream::parse_duration_ms);
                     GeneratorPlan::Sequence {
                         start: start_ms,
                         step: step_ms,

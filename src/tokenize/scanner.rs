@@ -35,11 +35,17 @@ pub struct FileEntry {
 /// Supported file formats.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileFormat {
+    /// Comma-separated values.
     Csv,
+    /// Tab-separated values.
     Tsv,
+    /// Apache Parquet columnar format.
     Parquet,
+    /// JSON format.
     Json,
+    /// Newline-delimited JSON.
     Jsonl,
+    /// Unrecognized or unsupported format.
     Other,
 }
 

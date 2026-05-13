@@ -61,6 +61,7 @@ pub fn parse_dim_spec(s: &str) -> Result<(String, u64), String> {
     long_about = None,
 )]
 pub struct Cli {
+    /// The subcommand to execute.
     #[command(subcommand)]
     pub command: Command,
 
@@ -154,23 +155,35 @@ pub struct Cli {
 /// Supported output formats for generated data.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum Format {
+    /// Apache Parquet columnar format.
     Parquet,
+    /// Comma-separated values.
     Csv,
+    /// JSON array of objects.
     Json,
+    /// Newline-delimited JSON (one object per line).
     Jsonl,
+    /// Arrow IPC (Feather) format.
     #[value(name = "arrow")]
     ArrowIpc,
+    /// Apache Avro format.
     Avro,
+    /// SQL INSERT statements.
     Sql,
 }
 
 /// Compression algorithms.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum CompressionArg {
+    /// No compression.
     None,
+    /// Snappy compression (fast, moderate ratio).
     Snappy,
+    /// Gzip compression (slower, better ratio).
     Gzip,
+    /// LZ4 compression (very fast, lower ratio).
     Lz4,
+    /// Zstandard compression (good balance of speed and ratio).
     Zstd,
 }
 
@@ -219,6 +232,7 @@ pub enum Command {
     },
     /// Blueprint manipulation operations.
     Blueprint {
+        /// The blueprint subcommand to execute.
         #[command(subcommand)]
         action: BlueprintAction,
     },
@@ -396,6 +410,7 @@ pub enum Command {
     },
     /// Model directory operations (convert, info).
     Model {
+        /// The model subcommand to execute.
         #[command(subcommand)]
         action: ModelAction,
     },

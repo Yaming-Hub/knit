@@ -41,29 +41,41 @@ pub struct ScalingAnalysis {
 /// Actor/root entity dimension.
 #[derive(Debug, Clone)]
 pub struct ActorDimension {
+    /// Name of the actor/root entity.
     pub entity_name: String,
+    /// Current row count for this entity.
     pub current_count: u64,
     /// Dependent entities with their cardinality ratio (child_rows / actor_rows).
     pub dependents: Vec<(String, f64)>,
+    /// Confidence score for this dimension detection.
     pub confidence: f64,
 }
 
 /// Time (partition-based) dimension.
 #[derive(Debug, Clone)]
 pub struct TimeDimension {
+    /// Entity that contains the time partition field.
     pub entity_name: String,
+    /// Name of the partition field.
     pub partition_field: String,
+    /// Existing partition values.
     pub partition_values: Vec<String>,
+    /// Detected time cadence (daily, weekly, monthly, etc.).
     pub cadence: Option<Cadence>,
+    /// Confidence score for cadence detection.
     pub cadence_confidence: f64,
 }
 
 /// Custom categorical dimension.
 #[derive(Debug, Clone)]
 pub struct CustomDimension {
+    /// Entity that contains the dimension field.
     pub entity_name: String,
+    /// Name of the dimension field.
     pub field_name: String,
+    /// Current values with their weight/proportion.
     pub current_values: Vec<(String, f64)>,
+    /// Whether this field is used as a condition key elsewhere.
     pub is_condition_key: bool,
 }
 
@@ -83,16 +95,22 @@ pub struct ScalingPlan {
 /// New partition values for time scaling.
 #[derive(Debug, Clone)]
 pub struct NewPartitions {
+    /// Entity that contains the partition field.
     pub entity_name: String,
+    /// Name of the partition field.
     pub field_name: String,
+    /// Computed partition values for the scaled time range.
     pub values: Vec<crate::core::types::PartitionValue>,
 }
 
 /// Override for a custom dimension's OneOf values.
 #[derive(Debug, Clone)]
 pub struct DimOverride {
+    /// Entity that contains the dimension field.
     pub entity_name: String,
+    /// Name of the dimension field.
     pub field_name: String,
+    /// New weighted values for the dimension.
     pub new_values: Vec<(String, f64)>,
 }
 
@@ -434,7 +452,9 @@ fn expand_oneof_values(existing: &[(String, f64)], target_count: u64) -> Vec<(St
 /// Estimated output size per entity.
 #[derive(Debug, Clone)]
 pub struct EntitySizeEstimate {
+    /// Name of the entity.
     pub entity_name: String,
+    /// Number of rows to generate.
     pub rows: u64,
     /// Estimated bytes in CSV format.
     pub csv_bytes: u64,
