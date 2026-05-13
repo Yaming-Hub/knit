@@ -4339,8 +4339,8 @@ fn parse_scale_factor(spec: &str) -> Result<f64> {
     let factor: f64 = trimmed
         .parse()
         .with_context(|| format!("invalid scale factor `{}`: expected format like `10x`", spec))?;
-    if factor <= 0.0 {
-        anyhow::bail!("scale factor must be positive, got `{}`", spec);
+    if !factor.is_finite() || factor <= 0.0 {
+        anyhow::bail!("scale factor must be a positive finite number, got `{}`", spec);
     }
     Ok(factor)
 }
@@ -4473,6 +4473,9 @@ pub fn run_derive(
         let count: u64 = val
             .parse()
             .with_context(|| format!("invalid count `{}` for entity `{}`", val, entity))?;
+        if count == 0 {
+            anyhow::bail!("count must be > 0 for entity `{}`", entity);
+        }
         count_overrides.push((entity, count));
     }
 
@@ -4492,13 +4495,15 @@ pub fn run_derive(
         variant,
     )?;
 
-    // Serialize output — always TOML for file, JSON for --json stdout
-    let output_str = serialize_model_to_toml(&derived)?;
-
+    // Serialize: TOML for file output, JSON for --json stdout
     if let Some(out_path) = output {
+        let output_str = serialize_model_to_toml(&derived)?;
         std::fs::write(out_path, &output_str)
             .with_context(|| format!("failed to write `{}`", out_path))?;
+    } else if json {
+        println!("{}", serde_json::to_string_pretty(&derived)?);
     } else {
+        let output_str = serialize_model_to_toml(&derived)?;
         print!("{}", output_str);
     }
 
@@ -7155,5 +7160,7 @@ mod tests {
         assert!(parse_scale_factor("0x").is_err());
         assert!(parse_scale_factor("-1x").is_err());
         assert!(parse_scale_factor("abc").is_err());
+        assert!(parse_scale_factor("infx").is_err());
+        assert!(parse_scale_factor("NaNx").is_err());
     }
 }
