@@ -4528,6 +4528,92 @@ pub fn run_derive(
 }
 
 // ---------------------------------------------------------------------------
+// Arrow → JSON typed value conversion
+// ---------------------------------------------------------------------------
+
+/// Convert an Arrow array value at a given row index to a typed serde_json::Value.
+fn arrow_value_to_json(array: &dyn arrow::array::Array, row: usize) -> serde_json::Value {
+    use arrow::array::*;
+    use arrow::datatypes::DataType;
+
+    if array.is_null(row) {
+        return serde_json::Value::Null;
+    }
+
+    match array.data_type() {
+        DataType::Boolean => {
+            let a = array.as_any().downcast_ref::<BooleanArray>().unwrap();
+            serde_json::Value::Bool(a.value(row))
+        }
+        DataType::Int8 => {
+            let a = array.as_any().downcast_ref::<Int8Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::Int16 => {
+            let a = array.as_any().downcast_ref::<Int16Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::Int32 => {
+            let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::Int64 => {
+            let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::UInt8 => {
+            let a = array.as_any().downcast_ref::<UInt8Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::UInt16 => {
+            let a = array.as_any().downcast_ref::<UInt16Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::UInt32 => {
+            let a = array.as_any().downcast_ref::<UInt32Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::UInt64 => {
+            let a = array.as_any().downcast_ref::<UInt64Array>().unwrap();
+            serde_json::json!(a.value(row))
+        }
+        DataType::Float32 => {
+            let a = array.as_any().downcast_ref::<Float32Array>().unwrap();
+            let v = a.value(row) as f64;
+            serde_json::Number::from_f64(v)
+                .map(serde_json::Value::Number)
+                .unwrap_or(serde_json::Value::Null)
+        }
+        DataType::Float64 => {
+            let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
+            let v = a.value(row);
+            serde_json::Number::from_f64(v)
+                .map(serde_json::Value::Number)
+                .unwrap_or(serde_json::Value::Null)
+        }
+        DataType::Utf8 => {
+            let a = array.as_any().downcast_ref::<StringArray>().unwrap();
+            serde_json::Value::String(a.value(row).to_string())
+        }
+        DataType::LargeUtf8 => {
+            let a = array.as_any().downcast_ref::<LargeStringArray>().unwrap();
+            serde_json::Value::String(a.value(row).to_string())
+        }
+        _ => {
+            // Fallback: format as string for dates, timestamps, etc.
+            let formatter = arrow::util::display::ArrayFormatter::try_new(
+                array,
+                &arrow::util::display::FormatOptions::default(),
+            );
+            match formatter {
+                Ok(f) => serde_json::Value::String(f.value(row).to_string()),
+                Err(_) => serde_json::Value::Null,
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Blueprint sample — quick preview of generated data
 // ---------------------------------------------------------------------------
 
@@ -4564,6 +4650,21 @@ pub fn run_sample(
             eprintln!("{} {}", "error:".red().bold(), err);
         }
         anyhow::bail!("blueprint has {} validation error(s)", errors.len());
+    }
+
+    // Validate entity filter names
+    if !entities.is_empty() {
+        let known: std::collections::HashSet<&str> =
+            model.entities.iter().map(|e| e.name.as_str()).collect();
+        for name in entities {
+            if !known.contains(name.as_str()) {
+                anyhow::bail!(
+                    "unknown entity `{}` in --entity filter (available: {})",
+                    name,
+                    known.iter().copied().collect::<Vec<_>>().join(", ")
+                );
+            }
+        }
     }
 
     // Filter entities if specified
@@ -4614,6 +4715,9 @@ pub fn run_sample(
         })
         .map_err(|e| anyhow::anyhow!("generation failed: {}", e))?;
 
+    // Note: noise pipelines are intentionally skipped for sample preview.
+    // The sample command shows the clean data structure for quick inspection.
+
     // Display results
     if json {
         let mut output = serde_json::Map::new();
@@ -4628,16 +4732,8 @@ pub fn run_sample(
                     let mut row = serde_json::Map::new();
                     for (col_idx, field) in schema.fields().iter().enumerate() {
                         let col = batch.column(col_idx);
-                        let val = arrow::util::display::ArrayFormatter::try_new(
-                            col.as_ref(),
-                            &arrow::util::display::FormatOptions::default(),
-                        )
-                        .map(|f| f.value(row_idx).to_string())
-                        .unwrap_or_default();
-                        row.insert(
-                            field.name().clone(),
-                            serde_json::Value::String(val),
-                        );
+                        let val = arrow_value_to_json(col.as_ref(), row_idx);
+                        row.insert(field.name().clone(), val);
                     }
                     rows_json.push(serde_json::Value::Object(row));
                 }
@@ -7444,5 +7540,93 @@ primary_key = true
             false,
         );
         assert!(result.is_ok(), "sample filter failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn sample_unknown_entity_filter_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "sample_test"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Users"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_sample(
+            blueprint_path.to_str().unwrap(),
+            3,
+            &["NonExistent".to_string()],
+            None,
+            false,
+        );
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("unknown entity `NonExistent`"),
+            "unexpected error: {}",
+            msg
+        );
+    }
+
+    #[test]
+    fn sample_json_typed_values() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "typed_test"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Data"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "score"
+data_type = "float"
+
+[[entities.fields]]
+name = "active"
+data_type = "bool"
+"#,
+        )
+        .unwrap();
+
+        let result = run_sample(
+            blueprint_path.to_str().unwrap(),
+            2,
+            &[],
+            Some(42),
+            true,
+        );
+        assert!(result.is_ok(), "sample json typed failed: {:?}", result.err());
     }
 }
