@@ -202,6 +202,12 @@ fn main() -> anyhow::Result<()> {
                 output.as_deref(),
                 cli.json,
             ),
+            BlueprintAction::Validate {
+                file,
+                data,
+                entities,
+                strict,
+            } => blueprint::run_validate(&file, &data, &entities, *strict, cli.json),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {
