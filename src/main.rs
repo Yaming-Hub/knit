@@ -101,6 +101,25 @@ fn init_tracing(cli: &Cli) -> _TracingGuard {
 }
 
 fn main() -> anyhow::Result<()> {
+    // Spawn the real main on a thread with a larger stack to avoid overflow.
+    // The Cli struct (with 20+ blueprint subcommands) exceeds the default 1-2 MB stack.
+    const STACK_SIZE: usize = 16 * 1024 * 1024; // 16 MB
+
+    let result = std::thread::Builder::new()
+        .stack_size(STACK_SIZE)
+        .name("knit-main".to_string())
+        .spawn(run)
+        .expect("failed to spawn main thread")
+        .join()
+        .unwrap_or_else(|e| {
+            eprintln!("thread panicked: {:?}", e);
+            std::process::exit(1);
+        });
+
+    result
+}
+
+fn run() -> anyhow::Result<()> {
     let mut cli = Cli::parse();
     let _tracing_guard = init_tracing(&cli);
 
