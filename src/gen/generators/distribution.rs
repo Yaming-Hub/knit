@@ -384,14 +384,14 @@ impl FieldGenerator for DistributionGenerator {
                 for _ in 0..count {
                     let mut remaining = n;
                     let mut p_remaining = 1.0;
-                    for j in 0..k {
+                    for (j, probability) in p.iter().enumerate().take(k) {
                         if j == k - 1 {
                             // Last bucket gets the remainder.
                             flat_values.push(remaining);
                         } else if p_remaining <= 0.0 || remaining <= 0 {
                             flat_values.push(0);
                         } else {
-                            let p_cond = (p[j] / p_remaining).clamp(0.0, 1.0);
+                            let p_cond = (*probability / p_remaining).clamp(0.0, 1.0);
                             let binom = rand_distr::Binomial::new(remaining as u64, p_cond)
                                 .unwrap_or_else(|_| {
                                     rand_distr::Binomial::new(remaining as u64, 0.5).unwrap()
@@ -399,7 +399,7 @@ impl FieldGenerator for DistributionGenerator {
                             let x = binom.sample(rng) as i64;
                             flat_values.push(x);
                             remaining -= x;
-                            p_remaining -= p[j];
+                            p_remaining -= probability;
                         }
                     }
                 }

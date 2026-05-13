@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use chrono::{NaiveDate, NaiveDateTime, Duration};
-use tracing::debug;
 
 use crate::tokenize::mapper::TokenMapper;
 use crate::tokenize::TokenizeConfig;
@@ -570,8 +569,8 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     }
 
     // Try compact: YYYYMMDD (only 8 digits, starts with 19 or 20)
-    if trimmed.len() == 8 && trimmed.chars().all(|c| c.is_ascii_digit()) {
-        if trimmed.starts_with("19") || trimmed.starts_with("20") {
+    if trimmed.len() == 8 && trimmed.chars().all(|c| c.is_ascii_digit())
+        && (trimmed.starts_with("19") || trimmed.starts_with("20")) {
             if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
                 return Some(DateInfo {
                     datetime: d.and_hms_opt(0, 0, 0).unwrap(),
@@ -581,7 +580,6 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
                 });
             }
         }
-    }
 
     None
 }
@@ -589,8 +587,8 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
 /// Strip timezone suffix (Z, +HH:MM, -HH:MM, +HHMM, -HHMM) from a datetime string.
 /// Returns (base, tz_suffix).
 fn strip_tz_suffix(s: &str) -> (&str, &str) {
-    if s.ends_with('Z') {
-        (&s[..s.len() - 1], "Z")
+    if let Some(stripped) = s.strip_suffix('Z') {
+        (stripped, "Z")
     } else if s.len() > 6 {
         // Try +HH:MM or -HH:MM (6 chars)
         let last6 = &s[s.len() - 6..];

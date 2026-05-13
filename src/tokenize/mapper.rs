@@ -77,6 +77,11 @@ impl TokenMapper {
         self.map.len()
     }
 
+    /// Return whether no tokens have been registered.
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
     /// Get all mappings (for dictionary serialization).
     pub fn mappings(&self) -> &HashMap<String, String> {
         &self.map
@@ -102,7 +107,7 @@ impl TokenMapper {
             'x'
         };
         for extra in 1..=5 {
-            let padded = format!("{}{}", original, std::iter::repeat(dominant_class).take(extra).collect::<String>());
+            let padded = format!("{}{}", original, std::iter::repeat_n(dominant_class, extra).collect::<String>());
             let token = self.generate_shape_token(&padded);
             if !self.used_tokens.contains(&token) && !self.map.contains_key(&token) {
                 return token;

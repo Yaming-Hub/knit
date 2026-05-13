@@ -191,6 +191,12 @@ struct LoggerInner {
     start: Instant,
 }
 
+impl Default for DecisionLogger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DecisionLogger {
     /// Create a new decision logger.
     pub fn new() -> Self {

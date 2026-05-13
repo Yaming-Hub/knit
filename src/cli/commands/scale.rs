@@ -10,6 +10,7 @@ use crate::cli::Cli;
 use crate::scale::{self, analyze, ScaleTargets};
 
 /// Run the `knit scale` command.
+#[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.
 pub fn run(
     blueprint_path: &str,
     output_dir: Option<&str>,
@@ -170,8 +171,8 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
         "Description".bold()
     );
     println!(
-        "  {:<16}{:<12}{:<20}{}",
-        "─────────", "────", "───────", "───────────"
+        "  {:<16}{:<12}{:<20}───────────",
+        "─────────", "────", "───────"
     );
 
     if let Some(ref a) = analysis.actor {
@@ -181,15 +182,11 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
             .map(|(n, _)| n.as_str())
             .collect::<Vec<_>>()
             .join(", ");
+        let current = format!("{} entities", a.current_count);
+        let description = format!("{} (actor entity, dependents: {})", a.entity_name, deps_str);
         println!(
             "  {:<16}{:<12}{:<20}{}",
-            "actors",
-            "built-in",
-            format!("{} entities", a.current_count),
-            format!(
-                "{} (actor entity, dependents: {})",
-                a.entity_name, deps_str
-            )
+            "actors", "built-in", current, description
         );
     }
 
@@ -220,15 +217,14 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
         } else {
             String::new()
         };
+        let current = format!("{} partitions", t.partition_values.len());
+        let description = format!(
+            "{}.{}, cadence ≈ {}{}, {}",
+            t.entity_name, t.partition_field, cadence_str, confidence_hint, range
+        );
         println!(
             "  {:<16}{:<12}{:<20}{}",
-            "time",
-            "built-in",
-            format!("{} partitions", t.partition_values.len()),
-            format!(
-                "{}.{}, cadence ≈ {}{}, {}",
-                t.entity_name, t.partition_field, cadence_str, confidence_hint, range
-            )
+            "time", "built-in", current, description
         );
     }
 
@@ -245,25 +241,23 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
         } else {
             String::new()
         };
+        let current = format!("{} values", c.current_values.len());
+        let description = format!(
+            "{}.{} one_of: [{}{}]",
+            c.entity_name, c.field_name, values_str, suffix
+        );
         println!(
             "  {:<16}{:<12}{:<20}{}",
-            c.field_name,
-            "custom",
-            format!("{} values", c.current_values.len()),
-            format!(
-                "{}.{} one_of: [{}{}]",
-                c.entity_name, c.field_name, values_str, suffix
-            )
+            c.field_name, "custom", current, description
         );
     }
 
     let total: u64 = analysis.entity_counts.values().sum();
     println!(
-        "  {:<16}{:<12}{:<20}{}",
+        "  {:<16}{:<12}{:<20}Uniform row scaling (--count)",
         "rows",
         "built-in",
-        format!("{} total", total),
-        "Uniform row scaling (--count)"
+        format!("{} total", total)
     );
 
     // Suggestions
@@ -332,7 +326,7 @@ fn print_dry_run(
                 let est = entity_estimates
                     .iter()
                     .find(|e| e.entity_name == *name)
-                    .map(|e| entity_bytes(e))
+                    .map(&entity_bytes)
                     .unwrap_or(0);
                 serde_json::json!({
                     "entity": name,
@@ -377,8 +371,8 @@ fn print_dry_run(
         "Est. Size".bold(),
     );
     println!(
-        "  {:<20}{:<12}{:<12}{:<10}{}",
-        "──────", "───────", "──────", "──────", "─────────"
+        "  {:<20}{:<12}{:<12}{:<10}─────────",
+        "──────", "───────", "──────", "──────"
     );
 
     for (name, &current) in &analysis.entity_counts {

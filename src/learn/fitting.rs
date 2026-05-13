@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 use statrs::distribution::{Beta, ContinuousCDF, Exp, Gamma, LogNormal, Normal, Uniform};
-use tracing::{debug, debug_span, warn};
+use tracing::{debug, warn};
 
 /// A named distribution with its fitted parameters.
 #[derive(Debug, Clone)]
@@ -381,7 +381,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
 
         for alt in candidates.iter().skip(1).take(3) {
             builder = builder.alternative(
-                &format!("{}|{}", alt.distribution.name(), alt.distribution.params_str()),
+                format!("{}|{}", alt.distribution.name(), alt.distribution.params_str()),
                 format!("aic={:.1}, ks={:.4}", alt.aic, alt.ks_stat),
                 Some(1.0 - alt.ks_stat),
             );

@@ -724,7 +724,7 @@ fn read_as_batches(
     src: &Path,
     format: FileFormat,
 ) -> Result<Vec<arrow::record_batch::RecordBatch>> {
-    use arrow::array::RecordBatch;
+    
 
     match format {
         FileFormat::Csv | FileFormat::Tsv => read_csv_as_batches(src, format),
@@ -850,7 +850,7 @@ fn tokenize_batches(
     mapper: &TokenMapper,
     config: &TokenizeConfig,
 ) -> Result<Vec<arrow::record_batch::RecordBatch>> {
-    use arrow::array::{Array, AsArray, StringArray};
+    use arrow::array::{AsArray, StringArray};
     use arrow::record_batch::RecordBatch;
     use std::sync::Arc;
 

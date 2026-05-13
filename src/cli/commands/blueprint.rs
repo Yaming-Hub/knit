@@ -1333,7 +1333,7 @@ struct GraphOutput {
 }
 
 /// Build the graph representation from a DataModel.
-pub fn build_graph(model: &DataModel) -> GraphOutput {
+fn build_graph(model: &DataModel) -> GraphOutput {
     let nodes: Vec<GraphNode> = model
         .entities
         .iter()
@@ -2093,25 +2093,29 @@ fn rename_generator_spec(
                 *updates += 1;
             }
         }
-        GeneratorSpec::ActorTemporal { temporal_after, .. } => {
-            if let Some(ref mut ta) = temporal_after {
-                let orig = ta.entity.clone();
-                if let Some(new) = entity_renames.get(ta.entity.as_str()) {
-                    ta.entity = new.clone();
-                    *updates += 1;
-                }
-                rename_field(&orig, &mut ta.field, updates);
-                rename_field(owner_entity, &mut ta.fk, updates);
+        GeneratorSpec::ActorTemporal {
+            temporal_after: Some(ref mut ta),
+            ..
+        } => {
+            let orig = ta.entity.clone();
+            if let Some(new) = entity_renames.get(ta.entity.as_str()) {
+                ta.entity = new.clone();
+                *updates += 1;
             }
+            rename_field(&orig, &mut ta.field, updates);
+            rename_field(owner_entity, &mut ta.fk, updates);
         }
+        GeneratorSpec::ActorTemporal { temporal_after: None, .. } => {}
         GeneratorSpec::Relative { anchor, .. } => {
             rename_field(owner_entity, anchor, updates);
         }
-        GeneratorSpec::RelationshipRef { source_field, .. } => {
-            if let Some(ref mut sf) = source_field {
-                rename_field(owner_entity, sf, updates);
-            }
+        GeneratorSpec::RelationshipRef {
+            source_field: Some(ref mut sf),
+            ..
+        } => {
+            rename_field(owner_entity, sf, updates);
         }
+        GeneratorSpec::RelationshipRef { source_field: None, .. } => {}
         GeneratorSpec::Unique { inner, .. } => {
             rename_generator_spec(inner, owner_entity, entity_renames, field_renames, updates);
         }
@@ -2404,7 +2408,7 @@ pub fn export_sql(model: &DataModel, dialect: SqlDialect, include_fks: bool) -> 
         if let Some(fks) = fk_map.get(&entity.name) {
             let existing = entity_field_names.get(entity.name.as_str());
             for fk in fks {
-                let has_col = existing.map_or(false, |s| s.contains(fk.fk_col.as_str()));
+                let has_col = existing.is_some_and(|s| s.contains(fk.fk_col.as_str()));
                 if !has_col {
                     // Infer type from referenced PK — look up the target entity.
                     let ref_type = model
@@ -3592,7 +3596,7 @@ fn split_kv(spec: &str, flag_name: &str) -> Result<(String, String)> {
 }
 
 /// Apply a list of update operations to a DataModel.
-pub fn update_model(model: &mut DataModel, ops: &[UpdateOp]) -> Result<Vec<String>> {
+fn update_model(model: &mut DataModel, ops: &[UpdateOp]) -> Result<Vec<String>> {
     let mut changes = Vec::new();
 
     for op in ops {
@@ -3686,6 +3690,7 @@ pub fn update_model(model: &mut DataModel, ops: &[UpdateOp]) -> Result<Vec<Strin
 }
 
 /// Run the `blueprint update` command.
+#[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.
 pub fn run_update(
     file: &str,
     counts: &[String],
@@ -3894,7 +3899,7 @@ fn read_data_file(path: &std::path::Path) -> Result<Vec<arrow::record_batch::Rec
 }
 
 /// Validate generated data files against a blueprint model.
-pub fn validate_data(
+fn validate_data(
     model: &DataModel,
     data_dir: &std::path::Path,
     filter_entities: &[String],
@@ -4005,7 +4010,7 @@ pub fn validate_data(
 
         // --- Data type checks ---
         for field in &entity.fields {
-            if let Some(arrow_field) = schema.field_with_name(&field.name).ok() {
+            if let Ok(arrow_field) = schema.field_with_name(&field.name) {
                 let expected = expected_arrow_types(&field.data_type);
                 if !arrow_type_compatible(arrow_field.data_type(), &expected) {
                     findings.push(Finding::error(
@@ -4025,7 +4030,7 @@ pub fn validate_data(
                 // Check for nulls in non-nullable columns
                 let mut null_count = 0usize;
                 for batch in &batches {
-                    if let Some(col_idx) = schema.index_of(&field.name).ok() {
+                    if let Ok(col_idx) = schema.index_of(&field.name) {
                         let col = batch.column(col_idx);
                         null_count += col.null_count();
                     }
@@ -4049,7 +4054,7 @@ pub fn validate_data(
                 let mut seen = HashSet::new();
                 let mut dup_count = 0usize;
                 for batch in &batches {
-                    if let Some(col_idx) = schema.index_of(&field.name).ok() {
+                    if let Ok(col_idx) = schema.index_of(&field.name) {
                         let col = batch.column(col_idx);
                         for i in 0..col.len() {
                             use arrow::array::Array;
@@ -4060,15 +4065,12 @@ pub fn validate_data(
                                 ));
                                 break;
                             }
-                            let val = format!(
-                                "{}",
-                                arrow::util::display::ArrayFormatter::try_new(
+                            let val = arrow::util::display::ArrayFormatter::try_new(
                                     col.as_ref(),
                                     &arrow::util::display::FormatOptions::default()
                                 )
                                 .map(|f| f.value(i).to_string())
-                                .unwrap_or_default()
-                            );
+                                .unwrap_or_default().to_string();
                             if !seen.insert(val) {
                                 dup_count += 1;
                             }
@@ -4447,6 +4449,7 @@ pub fn derive_model(
 }
 
 /// Run the `blueprint derive` command.
+#[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.
 pub fn run_derive(
     file: &str,
     scale: Option<&str>,
@@ -4761,7 +4764,7 @@ pub fn run_sample(
             if let Some(batches) = entity_batches.get(name) {
                 eprintln!("\n{} {} ({} rows):", "─".dimmed(), name.bold(), rows);
                 for batch in batches {
-                    let table = arrow::util::pretty::pretty_format_batches(&[batch.clone()])
+                    let table = arrow::util::pretty::pretty_format_batches(std::slice::from_ref(batch))
                         .map_err(|e| anyhow::anyhow!("format error: {}", e))?;
                     println!("{}", table);
                 }

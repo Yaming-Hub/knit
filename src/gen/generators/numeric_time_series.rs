@@ -27,16 +27,16 @@ fn parse_duration_to_micros(s: &str) -> Option<f64> {
     if s.is_empty() {
         return None;
     }
-    let (num_str, suffix) = if s.ends_with('h') {
-        (&s[..s.len() - 1], "h")
-    } else if s.ends_with('d') {
-        (&s[..s.len() - 1], "d")
-    } else if s.ends_with('m') {
-        (&s[..s.len() - 1], "m")
-    } else if s.ends_with('s') {
-        (&s[..s.len() - 1], "s")
-    } else if s.ends_with('w') {
-        (&s[..s.len() - 1], "w")
+    let (num_str, suffix) = if let Some(stripped) = s.strip_suffix('h') {
+        (stripped, "h")
+    } else if let Some(stripped) = s.strip_suffix('d') {
+        (stripped, "d")
+    } else if let Some(stripped) = s.strip_suffix('m') {
+        (stripped, "m")
+    } else if let Some(stripped) = s.strip_suffix('s') {
+        (stripped, "s")
+    } else if let Some(stripped) = s.strip_suffix('w') {
+        (stripped, "w")
     } else {
         // Try as raw number (steps)
         return s.parse::<f64>().ok();

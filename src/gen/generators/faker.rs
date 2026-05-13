@@ -1402,7 +1402,7 @@ fn generate_credit_card(rng: &mut dyn RngCore) -> String {
             return generate_cc_with_prefix(&mc.to_string(), 16, rng);
         }
         _ => {
-            let amex = if rng.next_u32() % 2 == 0 { "34" } else { "37" };
+            let amex = if rng.next_u32().is_multiple_of(2) { "34" } else { "37" };
             return generate_cc_with_prefix(amex, 15, rng);
         }
     };
@@ -1498,7 +1498,7 @@ fn generate_ean13(rng: &mut dyn RngCore) -> String {
 
 /// Generate a valid ISBN-13 with 978/979 prefix and check digit.
 fn generate_isbn13(rng: &mut dyn RngCore) -> String {
-    let prefix = if rng.next_u32() % 2 == 0 { [9, 7, 8] } else { [9, 7, 9] };
+    let prefix = if rng.next_u32().is_multiple_of(2) { [9, 7, 8] } else { [9, 7, 9] };
     let mut digits: Vec<u8> = prefix.to_vec();
     for _ in 0..9 {
         digits.push((rng.next_u32() % 10) as u8);

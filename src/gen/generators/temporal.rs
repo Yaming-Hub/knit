@@ -273,13 +273,13 @@ impl RelativeGenerator {
                 };
                 let offset_ms = (raw * factor) as i64;
                 // Apply min/max clamping
-                let clamped = match (min_ms, max_ms) {
+                
+                match (min_ms, max_ms) {
                     (Some(lo), Some(hi)) => offset_ms.max(*lo as i64).min(*hi as i64),
                     (Some(lo), None) => offset_ms.max(*lo as i64),
                     (None, Some(hi)) => offset_ms.min(*hi as i64),
                     (None, None) => offset_ms,
-                };
-                clamped
+                }
             }
             RelativeOffsetMode::Constant { offset_ms } => *offset_ms as i64,
         }
@@ -643,9 +643,9 @@ impl FieldGenerator for BusinessHoursGenerator {
             };
 
         // Max days to search before giving up (prevents infinite loop on impossible configs)
-        let max_search_days: i64 = if self.end_date_ms.is_some() {
+        let max_search_days: i64 = if let Some(end_date_ms) = self.end_date_ms {
             // If date range is set, one full cycle + 7 should suffice
-            let range_days = (self.end_date_ms.unwrap() - self.start_date_ms) / 86_400_000 + 7;
+            let range_days = (end_date_ms - self.start_date_ms) / 86_400_000 + 7;
             range_days.max(14)
         } else {
             // Without date range, 365 days should find at least one valid day

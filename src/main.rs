@@ -6,7 +6,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
 use knit::cli::commands::{enrich, generate, generators, init, inspect, learn, model, plan, scale, blueprint, tokenize, validate};
 use knit::cli::config::resolve_config;
-use knit::cli::{Cli, Command, LogFormat, ModelAction, ModelFormat, BlueprintAction};
+use knit::cli::{Cli, Command, LogFormat, ModelAction, BlueprintAction};
 use knit::decision::{self, DecisionLogger};
 
 /// Guard that must be held for the lifetime of the program to flush async writers.
@@ -169,38 +169,38 @@ fn run() -> anyhow::Result<()> {
                 overlay,
                 output,
             } => blueprint::run_merge(base, overlay, output.as_deref(), cli.json),
-            BlueprintAction::Graph { file, format } => blueprint::run_graph(file, &format),
+            BlueprintAction::Graph { file, format } => blueprint::run_graph(file, format),
             BlueprintAction::Lint { file } => blueprint::run_lint(file, cli.json),
             BlueprintAction::Subset {
                 file,
                 entities,
                 no_deps,
                 output,
-            } => blueprint::run_subset(file, &entities, !no_deps, output.as_deref(), cli.json),
+            } => blueprint::run_subset(file, entities, !no_deps, output.as_deref(), cli.json),
             BlueprintAction::Rename {
                 file,
                 entities,
                 fields,
                 output,
-            } => blueprint::run_rename(file, &entities, &fields, output.as_deref(), cli.json),
+            } => blueprint::run_rename(file, entities, fields, output.as_deref(), cli.json),
             BlueprintAction::Export {
                 file,
                 format,
                 dialect,
                 no_fks,
                 output,
-            } => blueprint::run_export(file, &format, &dialect, !no_fks, output.as_deref()),
+            } => blueprint::run_export(file, format, dialect, !no_fks, output.as_deref()),
             BlueprintAction::Scaffold {
                 name,
                 entities,
                 rels,
                 output,
-            } => blueprint::run_scaffold(&name, &entities, &rels, output.as_deref(), cli.json),
+            } => blueprint::run_scaffold(name, entities, rels, output.as_deref(), cli.json),
             BlueprintAction::Import {
                 file,
                 name,
                 output,
-            } => blueprint::run_import(&file, name.as_deref(), output.as_deref(), cli.json),
+            } => blueprint::run_import(file, name.as_deref(), output.as_deref(), cli.json),
             BlueprintAction::Update {
                 file,
                 counts,
@@ -211,12 +211,12 @@ fn run() -> anyhow::Result<()> {
                 locale,
                 output,
             } => blueprint::run_update(
-                &file,
-                &counts,
-                &describes,
-                &tags,
-                &untags,
-                seed.clone(),
+                file,
+                counts,
+                describes,
+                tags,
+                untags,
+                *seed,
                 locale.as_deref(),
                 output.as_deref(),
                 cli.json,
@@ -226,7 +226,7 @@ fn run() -> anyhow::Result<()> {
                 data,
                 entities,
                 strict,
-            } => blueprint::run_validate(&file, &data, &entities, *strict, cli.json),
+            } => blueprint::run_validate(file, data, entities, *strict, cli.json),
             BlueprintAction::Derive {
                 file,
                 scale,
@@ -237,13 +237,13 @@ fn run() -> anyhow::Result<()> {
                 excludes,
                 output,
             } => blueprint::run_derive(
-                &file,
+                file,
                 scale.as_deref(),
-                &counts,
-                seed.clone(),
+                counts,
+                *seed,
                 locale.as_deref(),
                 variant.as_deref(),
-                &excludes,
+                excludes,
                 output.as_deref(),
                 cli.json,
             ),
@@ -252,19 +252,19 @@ fn run() -> anyhow::Result<()> {
                 rows,
                 entities,
                 seed,
-            } => blueprint::run_sample(&file, *rows, &entities, seed.clone(), cli.json),
+            } => blueprint::run_sample(file, *rows, entities, *seed, cli.json),
             BlueprintAction::Test {
                 file,
                 rows,
                 entities,
                 seed,
                 strict,
-            } => blueprint::run_test(&file, *rows, &entities, seed.clone(), *strict, cli.json, &cli.params),
+            } => blueprint::run_test(file, *rows, entities, *seed, *strict, cli.json, &cli.params),
             BlueprintAction::Convert {
                 file,
                 format,
                 output,
-            } => blueprint::run_convert(&file, output.as_deref(), format),
+            } => blueprint::run_convert(file, output.as_deref(), format),
         },
         Command::Init { output, template } => init::run(output, template.as_deref()),
         Command::Learn {

@@ -3170,7 +3170,7 @@ fn incremental_correlation_detected() {
             .iter()
             .filter_map(|v| v.as_str())
             .collect::<Vec<_>>();
-        (fields.contains(&"x") && fields.contains(&"y"))
+        fields.contains(&"x") && fields.contains(&"y")
     });
     assert!(
         has_xy,
