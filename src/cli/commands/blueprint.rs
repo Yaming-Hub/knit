@@ -3471,6 +3471,272 @@ pub fn run_import(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Blueprint update — programmatic CLI-driven model modifications
+// ---------------------------------------------------------------------------
+
+/// A single update operation to apply to a DataModel.
+#[derive(Debug)]
+enum UpdateOp {
+    /// Set entity row count: `Entity=N`
+    SetCount { entity: String, count: u64 },
+    /// Set entity description: `Entity=text`
+    SetEntityDesc { entity: String, desc: String },
+    /// Set field description: `Entity.field=text`
+    SetFieldDesc {
+        entity: String,
+        field: String,
+        desc: String,
+    },
+    /// Add tags to an entity: `Entity=tag1,tag2`
+    AddTags {
+        entity: String,
+        tags: Vec<String>,
+    },
+    /// Remove tags from an entity: `Entity=tag1,tag2`
+    RemoveTags {
+        entity: String,
+        tags: Vec<String>,
+    },
+    /// Set model seed: `N`
+    SetSeed { seed: u64 },
+    /// Set model locale: `en_US`
+    SetLocale { locale: String },
+}
+
+/// Parse a `--count Entity=N` spec.
+fn parse_count_spec(spec: &str) -> Result<UpdateOp> {
+    let (entity, val) = split_kv(spec, "count")?;
+    let count: u64 = val
+        .parse()
+        .with_context(|| format!("invalid count `{}` for entity `{}`", val, entity))?;
+    Ok(UpdateOp::SetCount { entity, count })
+}
+
+/// Parse a `--describe Entity=text` or `--describe Entity.field=text` spec.
+fn parse_describe_spec(spec: &str) -> Result<UpdateOp> {
+    let (target, desc) = split_kv(spec, "describe")?;
+    if let Some(dot) = target.find('.') {
+        let entity = target[..dot].to_string();
+        let field = target[dot + 1..].to_string();
+        if entity.is_empty() || field.is_empty() {
+            anyhow::bail!("invalid describe target `{}`", target);
+        }
+        Ok(UpdateOp::SetFieldDesc {
+            entity,
+            field,
+            desc: desc.to_string(),
+        })
+    } else {
+        Ok(UpdateOp::SetEntityDesc {
+            entity: target,
+            desc: desc.to_string(),
+        })
+    }
+}
+
+/// Parse a `--tag Entity=tag1,tag2` spec.
+fn parse_tag_spec(spec: &str) -> Result<UpdateOp> {
+    let (entity, val) = split_kv(spec, "tag")?;
+    let tags: Vec<String> = val.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    if tags.is_empty() {
+        anyhow::bail!("no tags specified for entity `{}`", entity);
+    }
+    Ok(UpdateOp::AddTags { entity, tags })
+}
+
+/// Parse a `--untag Entity=tag1,tag2` spec.
+fn parse_untag_spec(spec: &str) -> Result<UpdateOp> {
+    let (entity, val) = split_kv(spec, "untag")?;
+    let tags: Vec<String> = val.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    if tags.is_empty() {
+        anyhow::bail!("no tags specified for entity `{}`", entity);
+    }
+    Ok(UpdateOp::RemoveTags { entity, tags })
+}
+
+/// Split a `key=value` spec, returning `(key, value)` as owned strings.
+fn split_kv(spec: &str, flag_name: &str) -> Result<(String, String)> {
+    let eq_pos = spec.find('=').ok_or_else(|| {
+        anyhow::anyhow!(
+            "invalid --{} spec `{}`: expected `key=value` format",
+            flag_name,
+            spec
+        )
+    })?;
+    let key = spec[..eq_pos].trim().to_string();
+    let val = spec[eq_pos + 1..].trim().to_string();
+    if key.is_empty() {
+        anyhow::bail!("empty key in --{} spec `{}`", flag_name, spec);
+    }
+    if val.is_empty() {
+        anyhow::bail!("empty value in --{} spec `{}`", flag_name, spec);
+    }
+    Ok((key, val))
+}
+
+/// Apply a list of update operations to a DataModel.
+pub fn update_model(model: &mut DataModel, ops: &[UpdateOp]) -> Result<Vec<String>> {
+    let mut changes = Vec::new();
+
+    for op in ops {
+        match op {
+            UpdateOp::SetCount { entity, count } => {
+                let ent = model
+                    .entities
+                    .iter_mut()
+                    .find(|e| e.name == *entity)
+                    .ok_or_else(|| anyhow::anyhow!("entity `{}` not found", entity))?;
+                let old = match &ent.count {
+                    crate::core::CountSpec::Fixed(n) => format!("{}", n),
+                    other => format!("{:?}", other),
+                };
+                ent.count = crate::core::CountSpec::Fixed(*count);
+                changes.push(format!("{}.count: {} → {}", entity, old, count));
+            }
+            UpdateOp::SetEntityDesc { entity, desc } => {
+                let ent = model
+                    .entities
+                    .iter_mut()
+                    .find(|e| e.name == *entity)
+                    .ok_or_else(|| anyhow::anyhow!("entity `{}` not found", entity))?;
+                ent.description = Some(desc.clone());
+                changes.push(format!("{}.description = \"{}\"", entity, desc));
+            }
+            UpdateOp::SetFieldDesc {
+                entity,
+                field,
+                desc,
+            } => {
+                let ent = model
+                    .entities
+                    .iter_mut()
+                    .find(|e| e.name == *entity)
+                    .ok_or_else(|| anyhow::anyhow!("entity `{}` not found", entity))?;
+                let fld = ent
+                    .fields
+                    .iter_mut()
+                    .find(|f| f.name == *field)
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("field `{}` not found in entity `{}`", field, entity)
+                    })?;
+                fld.description = Some(desc.clone());
+                changes.push(format!("{}.{}.description = \"{}\"", entity, field, desc));
+            }
+            UpdateOp::AddTags { entity, tags } => {
+                let ent = model
+                    .entities
+                    .iter_mut()
+                    .find(|e| e.name == *entity)
+                    .ok_or_else(|| anyhow::anyhow!("entity `{}` not found", entity))?;
+                for tag in tags {
+                    if !ent.tags.contains(tag) {
+                        ent.tags.push(tag.clone());
+                    }
+                }
+                changes.push(format!(
+                    "{}.tags += [{}]",
+                    entity,
+                    tags.join(", ")
+                ));
+            }
+            UpdateOp::RemoveTags { entity, tags } => {
+                let ent = model
+                    .entities
+                    .iter_mut()
+                    .find(|e| e.name == *entity)
+                    .ok_or_else(|| anyhow::anyhow!("entity `{}` not found", entity))?;
+                ent.tags.retain(|t| !tags.contains(t));
+                changes.push(format!(
+                    "{}.tags -= [{}]",
+                    entity,
+                    tags.join(", ")
+                ));
+            }
+            UpdateOp::SetSeed { seed } => {
+                let old = model.seed;
+                model.seed = *seed;
+                changes.push(format!("seed: {} → {}", old, seed));
+            }
+            UpdateOp::SetLocale { locale } => {
+                let old = model.locale.clone();
+                model.locale = locale.clone();
+                changes.push(format!("locale: {} → {}", old, locale));
+            }
+        }
+    }
+
+    Ok(changes)
+}
+
+/// Run the `blueprint update` command.
+pub fn run_update(
+    file: &str,
+    counts: &[String],
+    describes: &[String],
+    tags: &[String],
+    untags: &[String],
+    seed: Option<u64>,
+    locale: Option<&str>,
+    output: Option<&str>,
+    json: bool,
+) -> Result<()> {
+    let mut model = load_blueprint(file)
+        .with_context(|| format!("failed to load `{}`", file))?;
+
+    // Parse all update operations.
+    let mut ops: Vec<UpdateOp> = Vec::new();
+    for spec in counts {
+        ops.push(parse_count_spec(spec)?);
+    }
+    for spec in describes {
+        ops.push(parse_describe_spec(spec)?);
+    }
+    for spec in tags {
+        ops.push(parse_tag_spec(spec)?);
+    }
+    for spec in untags {
+        ops.push(parse_untag_spec(spec)?);
+    }
+    if let Some(s) = seed {
+        ops.push(UpdateOp::SetSeed { seed: s });
+    }
+    if let Some(loc) = locale {
+        ops.push(UpdateOp::SetLocale {
+            locale: loc.to_string(),
+        });
+    }
+
+    if ops.is_empty() {
+        anyhow::bail!("no update operations specified");
+    }
+
+    let changes = update_model(&mut model, &ops)?;
+
+    // Serialize output.
+    let output_str = if json {
+        serde_json::to_string_pretty(&model)?
+    } else {
+        serialize_model_to_toml(&model)?
+    };
+
+    let out_path = output.unwrap_or(file);
+    std::fs::write(out_path, &output_str)
+        .with_context(|| format!("failed to write `{}`", out_path))?;
+
+    for change in &changes {
+        eprintln!("  {} {}", "▸".green(), change);
+    }
+    eprintln!(
+        "{} applied {} update(s) to {}",
+        "✓".green(),
+        changes.len(),
+        out_path
+    );
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5381,5 +5647,207 @@ mod tests {
         assert_eq!(model.relationships.len(), 2);
         // Names should be unique
         assert_ne!(model.relationships[0].name, model.relationships[1].name);
+    }
+
+    // -----------------------------------------------------------------------
+    // Update tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn update_set_count() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let ops = vec![UpdateOp::SetCount {
+            entity: "Users".into(),
+            count: 5000,
+        }];
+        let changes = update_model(&mut model, &ops).unwrap();
+        assert_eq!(model.entities[0].count, CountSpec::Fixed(5000));
+        assert_eq!(changes.len(), 1);
+        assert!(changes[0].contains("5000"));
+    }
+
+    #[test]
+    fn update_set_entity_description() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let ops = vec![UpdateOp::SetEntityDesc {
+            entity: "Users".into(),
+            desc: "User accounts".into(),
+        }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(
+            model.entities[0].description.as_deref(),
+            Some("User accounts")
+        );
+    }
+
+    #[test]
+    fn update_set_field_description() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity(
+                "Users",
+                vec![make_field("email", DataType::String)],
+            )],
+        );
+        let ops = vec![UpdateOp::SetFieldDesc {
+            entity: "Users".into(),
+            field: "email".into(),
+            desc: "Primary email address".into(),
+        }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(
+            model.entities[0].fields[0].description.as_deref(),
+            Some("Primary email address")
+        );
+    }
+
+    #[test]
+    fn update_add_tags() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let ops = vec![UpdateOp::AddTags {
+            entity: "Users".into(),
+            tags: vec!["pii".into(), "core".into()],
+        }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(model.entities[0].tags, vec!["pii", "core"]);
+    }
+
+    #[test]
+    fn update_add_tags_no_duplicates() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].tags = vec!["core".into()];
+        let ops = vec![UpdateOp::AddTags {
+            entity: "Users".into(),
+            tags: vec!["core".into(), "pii".into()],
+        }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(model.entities[0].tags, vec!["core", "pii"]);
+    }
+
+    #[test]
+    fn update_remove_tags() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        model.entities[0].tags = vec!["pii".into(), "core".into(), "test".into()];
+        let ops = vec![UpdateOp::RemoveTags {
+            entity: "Users".into(),
+            tags: vec!["pii".into(), "test".into()],
+        }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(model.entities[0].tags, vec!["core"]);
+    }
+
+    #[test]
+    fn update_set_seed() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let ops = vec![UpdateOp::SetSeed { seed: 12345 }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(model.seed, 12345);
+    }
+
+    #[test]
+    fn update_set_locale() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let ops = vec![UpdateOp::SetLocale {
+            locale: "de_DE".into(),
+        }];
+        update_model(&mut model, &ops).unwrap();
+        assert_eq!(model.locale, "de_DE");
+    }
+
+    #[test]
+    fn update_unknown_entity_fails() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
+        );
+        let ops = vec![UpdateOp::SetCount {
+            entity: "NonExistent".into(),
+            count: 100,
+        }];
+        assert!(update_model(&mut model, &ops).is_err());
+    }
+
+    #[test]
+    fn update_multiple_ops() {
+        let mut model = make_model(
+            "test",
+            vec![make_entity(
+                "Users",
+                vec![
+                    make_field("id", DataType::Int),
+                    make_field("name", DataType::String),
+                ],
+            )],
+        );
+        let ops = vec![
+            UpdateOp::SetCount {
+                entity: "Users".into(),
+                count: 5000,
+            },
+            UpdateOp::SetEntityDesc {
+                entity: "Users".into(),
+                desc: "User table".into(),
+            },
+            UpdateOp::AddTags {
+                entity: "Users".into(),
+                tags: vec!["core".into()],
+            },
+            UpdateOp::SetSeed { seed: 99 },
+        ];
+        let changes = update_model(&mut model, &ops).unwrap();
+        assert_eq!(changes.len(), 4);
+        assert_eq!(model.entities[0].count, CountSpec::Fixed(5000));
+        assert_eq!(
+            model.entities[0].description.as_deref(),
+            Some("User table")
+        );
+        assert_eq!(model.entities[0].tags, vec!["core"]);
+        assert_eq!(model.seed, 99);
+    }
+
+    #[test]
+    fn update_parse_count_spec() {
+        let op = parse_count_spec("Users=5000").unwrap();
+        matches!(op, UpdateOp::SetCount { entity, count } if entity == "Users" && count == 5000);
+        assert!(parse_count_spec("bad").is_err());
+        assert!(parse_count_spec("Users=abc").is_err());
+    }
+
+    #[test]
+    fn update_parse_describe_spec() {
+        let op = parse_describe_spec("Users=A user table").unwrap();
+        matches!(op, UpdateOp::SetEntityDesc { entity, desc } if entity == "Users" && desc == "A user table");
+
+        let op2 = parse_describe_spec("Users.email=Primary email").unwrap();
+        matches!(op2, UpdateOp::SetFieldDesc { entity, field, desc }
+            if entity == "Users" && field == "email" && desc == "Primary email");
+    }
+
+    #[test]
+    fn update_parse_tag_spec() {
+        let op = parse_tag_spec("Users=pii,core").unwrap();
+        matches!(op, UpdateOp::AddTags { entity, tags }
+            if entity == "Users" && tags == vec!["pii", "core"]);
     }
 }

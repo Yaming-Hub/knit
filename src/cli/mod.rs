@@ -529,6 +529,32 @@ pub enum BlueprintAction {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// Programmatically update blueprint properties (counts, descriptions, tags).
+    Update {
+        /// Path to the blueprint file.
+        file: String,
+        /// Set entity row count: `Entity=N` (repeatable).
+        #[arg(long = "count")]
+        counts: Vec<String>,
+        /// Set description: `Entity=text` or `Entity.field=text` (repeatable).
+        #[arg(long = "describe")]
+        describes: Vec<String>,
+        /// Add tags to an entity: `Entity=tag1,tag2` (repeatable).
+        #[arg(long = "tag")]
+        tags: Vec<String>,
+        /// Remove tags from an entity: `Entity=tag1,tag2` (repeatable).
+        #[arg(long = "untag")]
+        untags: Vec<String>,
+        /// Override global random seed.
+        #[arg(long)]
+        seed: Option<u64>,
+        /// Override global locale.
+        #[arg(long)]
+        locale: Option<String>,
+        /// Output file path (default: overwrite input).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 /// Model directory subcommands.
