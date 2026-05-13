@@ -4772,6 +4772,250 @@ pub fn run_sample(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Blueprint test — generate + validate round-trip check
+// ---------------------------------------------------------------------------
+
+/// Run the `blueprint test` command — generate data and validate it matches the schema.
+///
+/// This is a one-step verification that a blueprint can produce correct data:
+/// 1. Generate a small dataset (default 10 rows per entity) to a temp directory
+/// 2. Run validation checks against the generated output
+/// 3. Report pass/fail with details
+pub fn run_test(
+    file: &str,
+    rows: u64,
+    entities: &[String],
+    seed: Option<u64>,
+    strict: bool,
+    json: bool,
+    params: &[(String, String)],
+) -> Result<()> {
+    use std::collections::HashMap;
+
+    if rows == 0 {
+        anyhow::bail!("--rows must be at least 1");
+    }
+
+    let mut model = load_blueprint(file)
+        .with_context(|| format!("failed to load `{}`", file))?;
+
+    // Apply CLI params to model
+    for (k, v) in params {
+        model
+            .params
+            .insert(k.clone(), crate::core::Value::String(v.clone()));
+    }
+
+    // Override counts to test size
+    for entity in &mut model.entities {
+        entity.count = crate::core::CountSpec::Fixed(rows);
+    }
+
+    // Override seed if specified
+    if let Some(s) = seed {
+        model.seed = s;
+    }
+
+    // Validate model structure first
+    let errors = validate_model(&model);
+    if !errors.is_empty() {
+        for err in &errors {
+            eprintln!("{} {}", "error:".red().bold(), err);
+        }
+        anyhow::bail!("blueprint has {} validation error(s)", errors.len());
+    }
+
+    // Validate entity filter names
+    if !entities.is_empty() {
+        let known: std::collections::HashSet<&str> =
+            model.entities.iter().map(|e| e.name.as_str()).collect();
+        for name in entities {
+            if !known.contains(name.as_str()) {
+                anyhow::bail!(
+                    "unknown entity `{}` in --entity filter (available: {})",
+                    name,
+                    known.iter().copied().collect::<Vec<_>>().join(", ")
+                );
+            }
+        }
+    }
+
+    // Create temp directory for generation output
+    let tmp_dir = tempfile::tempdir()
+        .with_context(|| "failed to create temporary directory for test output")?;
+
+    if !json {
+        eprintln!(
+            "{} generating {} rows per entity from {}...",
+            "⟳".cyan().bold(),
+            rows,
+            file
+        );
+    }
+
+    // Compile plan
+    let mut plan = crate::plan::compile(&model)
+        .map_err(|e| anyhow::anyhow!("plan compilation failed: {}", e))?;
+
+    // Resolve dictionaries relative to schema dir
+    let schema_dir = std::path::Path::new(file)
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new("."));
+    super::generate::resolve_dictionary_plans(&mut plan, schema_dir)?;
+    super::generate::resolve_external_lookup_plans(&mut plan, schema_dir)?;
+
+    // Build Arrow schemas for each entity (for cast step)
+    let mut entity_schemas: HashMap<String, std::sync::Arc<arrow::datatypes::Schema>> =
+        HashMap::new();
+    for phase in &plan.phases {
+        for ep in &phase.entity_plans {
+            let arrow_schema = super::generate::build_arrow_schema(ep);
+            entity_schemas.insert(
+                ep.entity_name.clone(),
+                std::sync::Arc::new(arrow_schema),
+            );
+        }
+    }
+
+    // Run generation engine
+    let gen_params: HashMap<String, String> = model
+        .params
+        .iter()
+        .map(|(k, v)| (k.clone(), super::generate::value_to_string(v)))
+        .collect();
+    let batch_size = rows as usize;
+    let mut engine =
+        crate::gen::GenerationEngine::with_batch_size(batch_size).with_params(gen_params);
+    engine.build_graphs(&plan);
+
+    // Build actor pool if needed
+    if !plan.actor_pool.pools.is_empty() {
+        let pool = crate::gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
+        engine = engine.with_actor_pool(std::sync::Arc::new(pool));
+    }
+
+    // Write generated data as CSV files to temp directory
+    engine
+        .execute(&plan, |entity_name, batch| {
+            // Cast columns to match declared Arrow schema
+            let target_schema = entity_schemas
+                .get(entity_name)
+                .cloned()
+                .unwrap_or_else(|| batch.schema());
+            let batch = super::generate::cast_batch_to_schema(&batch, &target_schema)?;
+
+            // Flatten nested columns (List, Map, Object) to JSON strings for CSV
+            let batch = super::generate::flatten_nested_columns(&batch)?;
+
+            let csv_path = tmp_dir.path().join(format!("{}.csv", entity_name));
+            let file_handle = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&csv_path)
+                .map_err(|e| {
+                    crate::gen::GenError::Generation(format!(
+                        "failed to open {}: {}",
+                        csv_path.display(),
+                        e
+                    ))
+                })?;
+
+            let mut writer = arrow::csv::WriterBuilder::new()
+                .with_header(
+                    // Only write header for the first batch (file is empty)
+                    std::fs::metadata(&csv_path)
+                        .map(|m| m.len() == 0)
+                        .unwrap_or(true),
+                )
+                .build(file_handle);
+            writer.write(&batch).map_err(|e| {
+                crate::gen::GenError::Generation(format!(
+                    "failed to write CSV for '{}': {}",
+                    entity_name, e
+                ))
+            })?;
+            Ok(())
+        })
+        .map_err(|e| anyhow::anyhow!("generation failed: {}", e))?;
+
+    if !json {
+        eprintln!(
+            "{} generation complete, validating...",
+            "✓".green().bold()
+        );
+    }
+
+    // Run validation against generated data
+    let filter: Vec<String> = entities.to_vec();
+    let findings = validate_data(&model, tmp_dir.path(), &filter)?;
+
+    let error_count = findings.iter().filter(|f| f.severity == Severity::Error).count();
+    let warning_count = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Warning)
+        .count();
+
+    // Report results
+    if json {
+        let items: Vec<serde_json::Value> = findings
+            .iter()
+            .map(|f| {
+                serde_json::json!({
+                    "severity": if f.severity == Severity::Error { "error" } else { "warning" },
+                    "entity": f.entity,
+                    "message": f.message,
+                })
+            })
+            .collect();
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "passed": error_count == 0 && (!strict || warning_count == 0),
+                "rows_per_entity": rows,
+                "errors": error_count,
+                "warnings": warning_count,
+                "findings": items,
+            }))?
+        );
+    } else {
+        for f in &findings {
+            let (icon, label) = match f.severity {
+                Severity::Error => ("✗".red(), "ERROR".red()),
+                Severity::Warning => ("⚠".yellow(), "WARN ".yellow()),
+            };
+            eprintln!("  {} [{}] {}: {}", icon, label, f.entity, f.message);
+        }
+
+        if findings.is_empty() {
+            eprintln!(
+                "\n{} blueprint test passed ({} rows/entity, {} entities)",
+                "✓".green().bold(),
+                rows,
+                model.entities.len()
+            );
+        } else {
+            eprintln!(
+                "\n{} blueprint test {}: {} error(s), {} warning(s)",
+                if error_count > 0 { "✗".red() } else { "⚠".yellow() },
+                if error_count > 0 { "FAILED" } else { "passed with warnings" },
+                error_count,
+                warning_count
+            );
+        }
+    }
+
+    if error_count > 0 || (strict && warning_count > 0) {
+        anyhow::bail!(
+            "blueprint test failed: {} error(s), {} warning(s)",
+            error_count,
+            warning_count
+        );
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -7628,5 +7872,280 @@ data_type = "bool"
             true,
         );
         assert!(result.is_ok(), "sample json typed failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_basic_pass() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_check"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Items"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "label"
+data_type = "string"
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            5,
+            &[],
+            Some(42),
+            false,
+            false,
+            &[],
+        );
+        assert!(result.is_ok(), "test command failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_json_output() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_json"
+seed = 99
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Things"
+count = 50
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            3,
+            &[],
+            Some(99),
+            false,
+            true,
+            &[],
+        );
+        assert!(result.is_ok(), "test json failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_entity_filter() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_filter"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Alpha"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities]]
+name = "Beta"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            5,
+            &["Alpha".to_string()],
+            None,
+            false,
+            false,
+            &[],
+        );
+        assert!(result.is_ok(), "test entity filter failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_unknown_entity_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_err"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Foo"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            5,
+            &["NonExistent".to_string()],
+            None,
+            false,
+            false,
+            &[],
+        );
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("unknown entity `NonExistent`"),
+            "unexpected error: {}",
+            msg
+        );
+    }
+
+    #[test]
+    fn test_zero_rows_rejected() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_zero"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "X"
+count = 10
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            0,
+            &[],
+            None,
+            false,
+            false,
+            &[],
+        );
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("--rows must be at least 1"), "unexpected: {}", msg);
+    }
+
+    #[test]
+    fn test_with_fk_relationship() {
+        let dir = tempfile::tempdir().unwrap();
+        let blueprint_path = dir.path().join("test.knit.toml");
+        std::fs::write(
+            &blueprint_path,
+            r#"
+blueprint_version = "1"
+
+[model]
+name = "test_fk"
+seed = 42
+locale = "en_US"
+timezone = "UTC"
+
+[[entities]]
+name = "Parents"
+count = 100
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities]]
+name = "Children"
+count = 200
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+primary_key = true
+
+[[entities.fields]]
+name = "Parents_id"
+data_type = "int"
+
+[[relationships]]
+name = "children_to_parents"
+from = "Children"
+to = "Parents"
+from_field = "Parents_id"
+to_field = "id"
+"#,
+        )
+        .unwrap();
+
+        let result = run_test(
+            blueprint_path.to_str().unwrap(),
+            10,
+            &[],
+            Some(42),
+            true,
+            false,
+            &[],
+        );
+        assert!(result.is_ok(), "test with FK failed: {:?}", result.err());
     }
 }

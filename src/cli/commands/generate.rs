@@ -818,7 +818,7 @@ fn map_avro_codec(c: CompressionArg) -> crate::bind::AvroCodec {
 /// Build an Arrow schema from an EntityPlan's field plans.
 ///
 /// Uses the generator plan to infer the Arrow data type for each field.
-fn build_arrow_schema(ep: &crate::plan::EntityPlan) -> Schema {
+pub(crate) fn build_arrow_schema(ep: &crate::plan::EntityPlan) -> Schema {
     // Sort field plans by schema_position so the Arrow schema matches
     // the declared column order (not dependency order).
     let mut sorted: Vec<&crate::plan::FieldPlan> = ep.field_plans.iter().collect();
@@ -1182,7 +1182,7 @@ fn string_to_map_array(
 
 /// Cast columns in a batch to match the target schema types.
 /// Only casts when types differ and the cast is supported (e.g., Int64 → Int32).
-fn cast_batch_to_schema(
+pub(crate) fn cast_batch_to_schema(
     batch: &RecordBatch,
     target_schema: &Arc<Schema>,
 ) -> Result<RecordBatch, crate::gen::GenError> {
@@ -1699,7 +1699,7 @@ fn flatten_schema_for_csv(schema: &Schema) -> Schema {
 
 /// Convert nested columns (List, Map, Struct) to JSON string representation
 /// for formats that don't support nested structures (e.g. CSV).
-fn flatten_nested_columns(batch: &RecordBatch) -> Result<RecordBatch, crate::gen::GenError> {
+pub(crate) fn flatten_nested_columns(batch: &RecordBatch) -> Result<RecordBatch, crate::gen::GenError> {
     use arrow::array::StringArray;
 
     let schema = batch.schema();

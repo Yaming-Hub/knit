@@ -609,6 +609,23 @@ pub enum BlueprintAction {
         #[arg(long)]
         seed: Option<u64>,
     },
+    /// Generate data and validate it matches the schema (round-trip test).
+    Test {
+        /// Path to the blueprint file.
+        file: String,
+        /// Number of rows to generate per entity (default: 10).
+        #[arg(short, long, default_value = "10")]
+        rows: u64,
+        /// Only test these entities (repeatable, default: all).
+        #[arg(long = "entity")]
+        entities: Vec<String>,
+        /// Override random seed.
+        #[arg(long)]
+        seed: Option<u64>,
+        /// Treat warnings as errors.
+        #[arg(long)]
+        strict: bool,
+    },
 }
 
 /// Model directory subcommands.
