@@ -51,7 +51,7 @@ cargo fmt --check   # CI verification
 ### Documentation
 
 ```bash
-cargo doc --no-deps --open
+cargo doc --all-features --no-deps --open
 ```
 
 ## Code Conventions
