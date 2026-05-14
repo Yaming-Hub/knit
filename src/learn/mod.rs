@@ -17,8 +17,6 @@
 //! let profiles = compute_profiles(&batches).unwrap();
 //! ```
 
-#![warn(missing_docs)]
-
 pub mod actor_graph;
 pub mod actor_registry;
 pub mod annotate;

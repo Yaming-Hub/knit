@@ -34,8 +34,6 @@
 //! The `missing_field` noise type is handled at the JSON serialization layer
 //! (see [`crate::bind::json::MissingFieldSpec`]), not as a `Perturbator`.
 
-#![warn(missing_docs)]
-
 pub mod error;
 pub mod pipeline;
 pub mod traits;
