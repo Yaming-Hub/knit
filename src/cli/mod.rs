@@ -549,7 +549,7 @@ pub enum BlueprintAction {
         /// Path to the blueprint file.
         file: String,
         /// Set entity row count: `Entity=N` (repeatable).
-        #[arg(long = "count")]
+        #[arg(long = "entity-count")]
         counts: Vec<String>,
         /// Set description: `Entity=text` or `Entity.field=text` (repeatable).
         #[arg(long = "describe")]
@@ -592,7 +592,7 @@ pub enum BlueprintAction {
         #[arg(long)]
         scale: Option<String>,
         /// Override specific entity counts: `Entity=N` (repeatable).
-        #[arg(long = "count")]
+        #[arg(long = "entity-count")]
         counts: Vec<String>,
         /// Override global seed.
         #[arg(long)]
@@ -720,5 +720,13 @@ mod tests {
     #[test]
     fn parse_density_spec_inf_rejected() {
         assert!(parse_density_spec("X=inf").is_err());
+    }
+
+    /// Regression test: ensure all CLI argument names are unique and don't
+    /// conflict with global options (previously `--count` collided).
+    #[test]
+    fn cli_debug_assert_no_arg_conflicts() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert();
     }
 }
