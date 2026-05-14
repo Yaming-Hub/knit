@@ -14,7 +14,10 @@ pub enum NamingStrategy {
     /// Capitalized English words (likely category names).
     CapitalizedWord,
     /// Numeric suffix pattern (e.g., "Type_1", "Type_2").
-    IndexedSuffix { prefix: String },
+    IndexedSuffix {
+        /// The common prefix before the numeric index.
+        prefix: String,
+    },
     /// Fallback: generic indexed values.
     Generic,
 }

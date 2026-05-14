@@ -377,25 +377,44 @@ pub enum DiffEntry {
     /// Entity present only in the second schema.
     EntityAdded(String),
     /// Field removed from an entity.
-    FieldRemoved { entity: String, field: String },
+    FieldRemoved {
+        /// Name of the entity containing the removed field.
+        entity: String,
+        /// Name of the removed field.
+        field: String,
+    },
     /// Field added to an entity.
-    FieldAdded { entity: String, field: String },
+    FieldAdded {
+        /// Name of the entity containing the added field.
+        entity: String,
+        /// Name of the added field.
+        field: String,
+    },
     /// Field changed between schemas.
     FieldChanged {
+        /// Name of the entity containing the changed field.
         entity: String,
+        /// Name of the changed field.
         field: String,
+        /// Description of what changed.
         detail: String,
     },
     /// Top-level model property changed.
     PropertyChanged {
+        /// Property key that changed.
         key: String,
+        /// Previous value.
         old_val: String,
+        /// New value.
         new_val: String,
     },
     /// Entity count changed.
     EntityCountChanged {
+        /// Name of the entity whose count changed.
         entity: String,
+        /// Previous count value.
         old_val: String,
+        /// New count value.
         new_val: String,
     },
 }
@@ -776,30 +795,50 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
 /// Collected statistics about a blueprint's structure and complexity.
 #[derive(Debug, serde::Serialize)]
 pub struct BlueprintStats {
+    /// Number of entities defined.
     pub entities: usize,
+    /// Total number of fields across all entities.
     pub total_fields: usize,
+    /// Number of foreign-key relationships.
     pub relationships: usize,
+    /// Number of field correlations defined.
     pub correlations: usize,
+    /// Number of noise profiles configured.
     pub noise_profiles: usize,
+    /// Number of persona definitions.
     pub personas: usize,
+    /// Number of actor relationships.
     pub actor_relationships: usize,
+    /// Estimated total rows across all entities.
     pub estimated_rows: u64,
+    /// Generator type usage counts.
     pub generator_usage: BTreeMap<String, usize>,
+    /// Data type usage counts.
     pub data_type_usage: BTreeMap<String, usize>,
+    /// Per-entity statistics.
     pub entity_details: Vec<EntityStats>,
+    /// Number of entities with scaling annotations.
     pub scaling_annotated: usize,
 }
 
 /// Per-entity statistics.
 #[derive(Debug, serde::Serialize)]
 pub struct EntityStats {
+    /// Name of the entity.
     pub name: String,
+    /// Number of fields in this entity.
     pub fields: usize,
+    /// Estimated row count for this entity.
     pub estimated_rows: u64,
+    /// Number of constraints on this entity.
     pub constraints: usize,
+    /// Whether this entity represents an actor (a person or population entity).
     pub is_actor: bool,
+    /// Whether this entity has scaling configuration.
     pub has_scaling: bool,
+    /// Whether this entity uses topology generation.
     pub has_topology: bool,
+    /// Number of nullable fields.
     pub nullable_fields: usize,
 }
 
@@ -1600,16 +1639,22 @@ pub fn run_graph(path: &str, format: &str) -> Result<()> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LintSeverity {
+    /// A structural problem such as empty entities, dangling references, or invalid configuration.
     Warning,
+    /// An informational suggestion for improvement.
     Info,
 }
 
 /// A single lint finding.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct LintFinding {
+    /// Severity level of this finding.
     pub severity: LintSeverity,
+    /// Entity that the finding relates to, if any.
     pub entity: Option<String>,
+    /// Field that the finding relates to, if any.
     pub field: Option<String>,
+    /// Human-readable description of the finding.
     pub message: String,
 }
 

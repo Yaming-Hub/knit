@@ -173,9 +173,13 @@ pub struct DecisionReport {
 /// Summary statistics for the report.
 #[derive(Debug, Clone, Serialize)]
 pub struct ReportSummary {
+    /// Total number of decisions recorded.
     pub total_decisions: usize,
+    /// Number of high-confidence decisions.
     pub high_confidence: usize,
+    /// Number of medium-confidence decisions.
     pub medium_confidence: usize,
+    /// Number of low-confidence decisions.
     pub low_confidence: usize,
 }
 
@@ -315,42 +319,50 @@ pub struct DecisionBuilder {
 }
 
 impl DecisionBuilder {
+    /// Set the pipeline phase where this decision was made.
     pub fn phase(mut self, phase: impl Into<String>) -> Self {
         self.phase = phase.into();
         self
     }
 
+    /// Set the entity context for this decision.
     pub fn entity(mut self, entity: impl Into<String>) -> Self {
         self.entity = Some(entity.into());
         self
     }
 
+    /// Set the column context for this decision.
     pub fn column(mut self, column: impl Into<String>) -> Self {
         self.column = Some(column.into());
         self
     }
 
+    /// Set the chosen option for this decision.
     pub fn chosen(mut self, chosen: impl Into<String>) -> Self {
         self.chosen = chosen.into();
         self
     }
 
+    /// Set the reason for this decision.
     pub fn reason(mut self, reason: impl Into<String>) -> Self {
         self.reason = reason.into();
         self
     }
 
+    /// Set the confidence level for this decision.
     pub fn confidence(mut self, confidence: Confidence) -> Self {
         self.confidence = confidence;
         self
     }
 
+    /// Set the confidence score (0.0–1.0) and derive confidence level.
     pub fn confidence_score(mut self, score: f64) -> Self {
         self.confidence_score = Some(score);
         self.confidence = Confidence::from_score(score);
         self
     }
 
+    /// Add a considered alternative to this decision.
     pub fn alternative(
         mut self,
         label: impl Into<String>,
