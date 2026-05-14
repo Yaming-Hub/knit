@@ -1,4 +1,4 @@
-//! # knit-learn
+//! # learn — Schema Inference
 //!
 //! Schema inference from existing data sources. Provides data ingestion
 //! (CSV, Parquet, JSON/JSONL), sampling strategies, column profiling,

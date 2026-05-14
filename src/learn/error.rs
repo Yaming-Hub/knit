@@ -1,4 +1,4 @@
-//! Error types for the knit-learn crate.
+//! Error types for the learn module.
 
 use std::fmt;
 
@@ -60,7 +60,7 @@ impl From<parquet::errors::ParquetError> for LearnError {
     }
 }
 
-/// Result type alias for knit-learn operations.
+/// Result type alias for [`learn`](crate::learn) operations.
 pub type LearnResult<T> = Result<T, LearnError>;
 
 #[cfg(test)]

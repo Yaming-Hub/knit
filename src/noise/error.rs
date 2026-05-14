@@ -1,4 +1,4 @@
-//! Error types for the knit-noise crate.
+//! Error types for the noise module.
 
 use thiserror::Error;
 

@@ -102,9 +102,10 @@ pub enum Value {
 
 /// The root data model describing an entire synthetic dataset.
 ///
-/// A `DataModel` is produced by `knit-blueprint`'s parser and consumed by the
-/// `knit-plan` compiler. It contains all entities, relationships, noise
-/// profiles, and correlations needed to generate data.
+/// A `DataModel` is produced by the [`blueprint`](crate::blueprint) parser or
+/// the [`learn`](crate::learn) inference engine, and consumed by the
+/// [`plan`](crate::plan) compiler. It contains all entities,
+/// relationships, noise profiles, and correlations needed to generate data.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataModel {
     /// Human-readable name for this model (e.g. `"ecommerce"`).
@@ -549,8 +550,8 @@ pub enum DistributionShape {
 /// A single field (column) within an [`Entity`].
 ///
 /// Each field has a data type, an optional generator that produces values, and
-/// a null specification. The `knit-plan` compiler translates the `generator`
-/// into a fully resolved `GeneratorPlan` for execution.
+/// a null specification. The [`plan`](crate::plan) compiler translates the
+/// `generator` into a fully resolved `GeneratorPlan` for execution.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field {
     /// Column name.
@@ -675,8 +676,9 @@ impl std::fmt::Display for DataType {
 
 /// Specifies how to generate values for a field.
 ///
-/// Each variant corresponds to a generation strategy. The `knit-plan` compiler
-/// translates supported variants into `GeneratorPlan` entries for `knit-gen`.
+/// Each variant corresponds to a generation strategy. The
+/// [`plan`](crate::plan) compiler translates supported variants into
+/// `GeneratorPlan` entries for [`gen`](crate::gen).
 ///
 /// All variants are fully supported in the planner and generator: `Distribution`,
 /// `Sequence`, `Uuid`, `OneOf`, `Pattern`, `Ref`, `TimestampRange`, `Expression`,
@@ -1304,7 +1306,8 @@ pub enum RelativeOffset {
 /// Configuration for a statistical distribution generator.
 ///
 /// Pairs a [`DistributionKind`] with named parameters (e.g. `mean`, `std_dev`).
-/// Parameter requirements vary by distribution; `knit-blueprint` validates them.
+/// Parameter requirements vary by distribution; [`blueprint`](crate::blueprint)
+/// validates them.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DistributionSpec {
     /// Which distribution family to sample from.
@@ -1542,9 +1545,9 @@ pub struct ActivityCount {
 
 /// A foreign-key or association relationship between two entities.
 ///
-/// Relationships drive the dependency graph in `knit-plan`: the `to` entity
-/// must be generated before the `from` entity so foreign keys can reference
-/// valid primary keys.
+/// Relationships drive the dependency graph in [`plan`](crate::plan): the `to`
+/// entity must be generated before the `from` entity so foreign keys can
+/// reference valid primary keys.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Relationship {
     /// Unique relationship name (for merging and diagnostics).
@@ -1691,9 +1694,9 @@ impl std::fmt::Display for RelationshipKind {
 /// A noise injection profile that degrades generated data to simulate
 /// real-world imperfections (nulls, duplicates, typos, outliers).
 ///
-/// Stored as schema metadata and consumed by `knit-noise` perturbators
-/// (not `knit-gen` directly). The CLI orchestrates noise application as
-/// a post-generation step.
+/// Stored as schema metadata and consumed by [`noise`](crate::noise)
+/// perturbators (not [`gen`](crate::gen) directly). The CLI orchestrates noise
+/// application as a post-generation step.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NoiseProfile {
     /// Unique profile name (for merging).

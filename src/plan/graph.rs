@@ -5,7 +5,8 @@
 //! to generation phases via topological sorting of the condensation DAG.
 //!
 //! Cyclic relationships (self-referential or mutual) produce [`DeferredRef`]
-//! entries that `knit-gen` backpatches after the initial generation phase.
+//! entries that [`gen`](crate::gen) backpatches after the initial generation
+//! phase.
 
 use std::collections::{BTreeMap, HashMap};
 

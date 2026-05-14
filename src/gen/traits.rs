@@ -1,6 +1,6 @@
 //! Core traits for field generation and key storage.
 //!
-//! These traits define the extension points for `knit-gen`. Concrete
+//! These traits define the extension points for [`gen`](crate::gen). Concrete
 //! implementations live in the [`generators`](crate::gen::generators) and
 //! [`keystore`](crate::gen::keystore) modules.
 
@@ -12,8 +12,8 @@ use crate::gen::context::GenContext;
 
 /// Generate a column of synthetic values as an Arrow array.
 ///
-/// This is the primary extension point for `knit-gen`. Each field in an entity
-/// is backed by one `FieldGenerator` instance, created by
+/// This is the primary extension point for [`gen`](crate::gen). Each field in
+/// an entity is backed by one `FieldGenerator` instance, created by
 /// [`create_generator`](crate::gen::create_generator) from a
 /// [`GeneratorPlan`](crate::plan::GeneratorPlan).
 ///

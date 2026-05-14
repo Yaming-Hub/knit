@@ -2,7 +2,7 @@
 //!
 //! Called once per batch after all field generators have run. The resulting
 //! `RecordBatch` is handed to the output sink (Parquet writer, JSON serializer,
-//! etc.) in downstream pipeline stages (`knit-bind`).
+//! etc.) in downstream pipeline stages ([`bind`](crate::bind)).
 
 use arrow::array::ArrayRef;
 use arrow::datatypes::{Field, Schema};

@@ -1,4 +1,4 @@
-//! Unit tests for knit-core types: serde round-trips, Display impls, custom
+//! Unit tests for core types: serde round-trips, Display impls, custom
 //! deserialization, and error formatting.
 
 use std::collections::BTreeMap;

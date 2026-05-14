@@ -763,7 +763,7 @@ pub fn run_from_model(
     Ok(())
 }
 
-/// Map CLI format enum to knit-bind OutputFormat.
+/// Map the CLI format enum to [`bind`](crate::bind) `OutputFormat`.
 fn map_format(f: Format) -> OutputFormat {
     match f {
         Format::Parquet => OutputFormat::Parquet,
@@ -776,7 +776,7 @@ fn map_format(f: Format) -> OutputFormat {
     }
 }
 
-/// Map CLI compression enum to knit-bind Compression.
+/// Map the CLI compression enum to [`bind`](crate::bind) `Compression`.
 fn map_compression(c: CompressionArg) -> Compression {
     match c {
         CompressionArg::None => Compression::None,
