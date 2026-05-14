@@ -1,4 +1,4 @@
-//! Error types for the knit-bind crate.
+//! Error types for the bind module.
 
 /// Errors that can occur during sink operations.
 #[derive(Debug, thiserror::Error)]

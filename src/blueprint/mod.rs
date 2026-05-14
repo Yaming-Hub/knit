@@ -1,13 +1,13 @@
-//! # knit-blueprint — Parser and Validator for the Knit Blueprint Language
+//! # blueprint — Parser and Validator for the Knit Blueprint Language
 //!
-//! This crate converts TOML or JSON blueprint files into a validated
+//! This module converts TOML or JSON blueprint files into a validated
 //! [`DataModel`](crate::core::DataModel), the canonical in-memory representation
 //! consumed by the rest of the knit pipeline.
 //!
 //! ## Pipeline Position
 //!
 //! ```text
-//! Knit Blueprint (TOML/JSON) → knit-blueprint → DataModel → knit-plan → knit-gen
+//! Knit Blueprint (TOML/JSON) → blueprint → DataModel → plan → gen
 //! ```
 //!
 //! ## Key Entry Points

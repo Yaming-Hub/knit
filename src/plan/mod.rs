@@ -1,12 +1,12 @@
-//! # knit-plan — Execution Planner
+//! # plan — Execution Planner
 //!
 //! Compiles a validated [`DataModel`](crate::core::DataModel) into an [`ExecutionPlan`]
-//! that drives parallel data generation in `knit-gen`.
+//! that drives parallel data generation in [`gen`](crate::gen).
 //!
 //! ## Pipeline Position
 //!
 //! ```text
-//! Weave Schema → knit-schema → DataModel → knit-plan → ExecutionPlan → knit-gen
+//! Weave Schema → blueprint → DataModel → plan → ExecutionPlan → gen
 //! ```
 //!
 //! ## Key Entry Point

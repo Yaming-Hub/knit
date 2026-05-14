@@ -1,4 +1,4 @@
-//! knit-bind: Output sinks for serializing Arrow `RecordBatch`es to various formats.
+//! Output sinks for serializing Arrow `RecordBatch`es to various formats.
 //!
 //! Supported formats: Parquet, JSON, JSONL, CSV, Arrow IPC (Feather v2), Avro,
 //! and MiniJinja templates.

@@ -1,7 +1,7 @@
-//! # knit-gen — Synthetic data generation engine
+//! # gen — Synthetic data generation engine
 //!
-//! This crate provides the core generation engine for knit. It consumes an
-//! [`ExecutionPlan`](crate::plan::ExecutionPlan) produced by `knit-plan` and
+//! This module provides the core generation engine for knit. It consumes an
+//! [`ExecutionPlan`](crate::plan::ExecutionPlan) produced by [`plan`](crate::plan) and
 //! materialises synthetic data as Arrow [`RecordBatch`](arrow::record_batch::RecordBatch)es.
 //!
 //! ## Key components

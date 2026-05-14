@@ -1,4 +1,4 @@
-//! Plan type definitions consumed by `knit-gen` to drive data generation.
+//! Plan type definitions consumed by [`gen`](crate::gen) to drive data generation.
 //!
 //! All types in this module derive `Serialize`/`Deserialize` so the plan can be
 //! inspected as JSON (via `knit plan --json`) or cached to disk.
@@ -14,9 +14,9 @@ use crate::core::{DistributionKind, Value, WeightedChoice};
 /// A complete execution plan produced by [`compile()`](crate::plan::compile) from a
 /// validated [`DataModel`](crate::core::DataModel).
 ///
-/// The plan is consumed by `knit-gen` to drive parallel data generation. It
-/// contains phase ordering, partition assignments, generator plans, and the
-/// deterministic RNG seed tree.
+/// The plan is consumed by [`gen`](crate::gen) to drive parallel data
+/// generation. It contains phase ordering, partition assignments, generator
+/// plans, and the deterministic RNG seed tree.
 ///
 /// # Determinism
 ///
@@ -208,7 +208,8 @@ fn default_data_type() -> crate::core::DataType {
 /// This is the plan-time counterpart of the schema-level
 /// [`GeneratorSpec`](crate::core::GeneratorSpec).
 ///
-/// `knit-gen` maps each variant to a concrete `FieldGenerator` implementation.
+/// [`gen`](crate::gen) maps each variant to a concrete `FieldGenerator`
+/// implementation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GeneratorPlan {
     /// Statistical distribution with resolved, validated parameters.
@@ -705,7 +706,7 @@ pub struct IndexStrategy {
     pub per_entity: BTreeMap<String, KeyStoreKind>,
 }
 
-/// How to store primary keys for foreign key sampling in `knit-gen`.
+/// How to store primary keys for foreign key sampling in [`gen`](crate::gen).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyStoreKind {
     /// In-memory `Vec<PK>` — fast random access, used for entities < 10M rows.

@@ -1,8 +1,9 @@
 //! Main compilation logic: [`DataModel`] → [`ExecutionPlan`].
 //!
 //! This module contains the [`compile()`] function — the primary entry point for
-//! `knit-plan`. It orchestrates dependency analysis, partition planning, RNG tree
-//! construction, and field plan compilation into a single coherent execution plan.
+//! [`plan`](crate::plan). It orchestrates dependency analysis, partition
+//! planning, RNG tree construction, and field plan compilation into a single
+//! coherent execution plan.
 
 use std::collections::{BTreeMap, HashMap};
 

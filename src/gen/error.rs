@@ -1,6 +1,6 @@
 //! Error types for the generation engine.
 //!
-//! All fallible operations in `knit-gen` return [`GenError`]. The error is
+//! All fallible operations in [`gen`](crate::gen) return [`GenError`]. The error is
 //! propagated up to the CLI or integration-test harness for reporting.
 
 /// Errors that can occur during data generation.
