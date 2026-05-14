@@ -1060,7 +1060,7 @@ mod tests {
         for i in 0..200 {
             let v = ts.value(i);
             assert!(
-                v >= 2_000 && v <= 10_000,
+                (2_000..=10_000).contains(&v),
                 "row {i}: value {} not in [2000, 10000]",
                 v
             );

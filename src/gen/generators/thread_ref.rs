@@ -239,7 +239,7 @@ mod tests {
 
         // Subsequent rows should reference PKs that appeared before them
         let mut seen_pks = vec![pks[0]];
-        for i in 1..100 {
+        for (i, pk) in pks.iter().enumerate().skip(1) {
             if !arr.is_null(i) {
                 let parent_pk = arr.value(i);
                 assert!(
@@ -247,7 +247,7 @@ mod tests {
                     "row {i} references PK {parent_pk} which hasn't been generated yet"
                 );
             }
-            seen_pks.push(pks[i]);
+            seen_pks.push(*pk);
         }
     }
 
@@ -261,8 +261,7 @@ mod tests {
 
         // Build depth map
         let mut depths: HashMap<i64, u32> = HashMap::new();
-        for i in 0..200 {
-            let pk = pks[i];
+        for (i, pk) in pks.iter().copied().enumerate() {
             let depth = if arr.is_null(i) {
                 0
             } else {

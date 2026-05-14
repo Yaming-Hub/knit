@@ -2685,11 +2685,14 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert(
             "x".into(),
-            Arc::new(Float64Array::from(vec![3.14159, 2.71828])) as ArrayRef,
+            Arc::new(Float64Array::from(vec![std::f64::consts::PI, std::f64::consts::E]))
+                as ArrayRef,
         );
         let result = eval_expr("round(${x}, 2)", cols);
         let fa = as_f64(&result).unwrap();
-        assert!((fa.value(0) - 3.14).abs() < 1e-10);
+        assert!(
+            (fa.value(0) - (std::f64::consts::PI * 100.0).round() / 100.0).abs() < 1e-10
+        );
         assert!((fa.value(1) - 2.72).abs() < 1e-10);
     }
 
@@ -2948,8 +2951,8 @@ mod tests {
         );
         let result = eval_expr("coalesce(${a}, ${b})", cols);
         let ba = as_bool(&result).unwrap();
-        assert_eq!(ba.value(0), true);
-        assert_eq!(ba.value(1), false);
+        assert!(ba.value(0));
+        assert!(!ba.value(1));
     }
 
     #[test]
@@ -2962,7 +2965,7 @@ mod tests {
         let result = eval_expr("nullif(${x}, true)", cols);
         let ba = as_bool(&result).unwrap();
         assert!(ba.is_null(0));
-        assert_eq!(ba.value(1), false);
+        assert!(!ba.value(1));
         assert!(ba.is_null(2));
     }
 
@@ -3731,7 +3734,7 @@ mod tests {
         let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..100 {
             let v = arr.value(i);
-            assert!(v >= 1 && v <= 10, "value {v} out of range [1, 10]");
+            assert!((1..=10).contains(&v), "value {v} out of range [1, 10]");
         }
     }
 
@@ -3763,7 +3766,7 @@ mod tests {
         let arr = r.as_any().downcast_ref::<Float64Array>().unwrap();
         for i in 0..100 {
             let v = arr.value(i);
-            assert!(v >= 0.0 && v < 1.0, "value {v} out of range [0, 1)");
+            assert!((0.0..1.0).contains(&v), "value {v} out of range [0, 1)");
         }
     }
 
@@ -3858,7 +3861,7 @@ mod tests {
         let arr = r.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..50 {
             let v = arr.value(i);
-            assert!(v >= 0 && v <= 86_400_000, "duration {v} out of range");
+            assert!((0..=86_400_000).contains(&v), "duration {v} out of range");
         }
     }
 

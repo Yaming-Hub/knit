@@ -420,7 +420,7 @@ mod tests {
         .unwrap();
 
         // Scope mask: first 10 rows in scope, rest out
-        let mut mask_vals = vec![false; 100];
+        let mut mask_vals = [false; 100];
         for v in mask_vals.iter_mut().take(10) {
             *v = true;
         }
@@ -515,7 +515,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut mask_vals = vec![false; 10];
+        let mut mask_vals = [false; 10];
         for v in mask_vals.iter_mut().take(5) {
             *v = true;
         }
@@ -539,12 +539,8 @@ mod tests {
             .unwrap();
 
         // Out-of-scope rows 5-9 should be unchanged
-        for i in 5..10 {
-            assert_eq!(
-                arr.value(i),
-                original_vals[i],
-                "row {i} should be unchanged"
-            );
+        for (i, expected) in original_vals.iter().enumerate().skip(5) {
+            assert_eq!(arr.value(i), *expected, "row {i} should be unchanged");
         }
     }
 
@@ -562,7 +558,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut mask_vals = vec![false; 10];
+        let mut mask_vals = [false; 10];
         for v in mask_vals.iter_mut().take(3) {
             *v = true;
         }
@@ -581,7 +577,7 @@ mod tests {
 
         // Should have duplicated up to 3 rows (in-scope), so 10 + [1..3] rows
         assert!(
-            result.num_rows() >= 10 && result.num_rows() <= 13,
+            (10..=13).contains(&result.num_rows()),
             "expected 10-13 rows, got {}",
             result.num_rows()
         );

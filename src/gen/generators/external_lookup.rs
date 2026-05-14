@@ -170,8 +170,8 @@ mod tests {
         let ctx = test_ctx_with_offset(0);
         let arr = gen.generate(&mut rng, 5, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
-        for i in 0..5 {
-            assert_eq!(str_arr.value(i), entries[i]);
+        for (i, entry) in entries.iter().take(5).enumerate() {
+            assert_eq!(str_arr.value(i), *entry);
         }
 
         // Second batch: offset=5 wraps around

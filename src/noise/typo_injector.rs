@@ -276,8 +276,8 @@ mod tests {
             .downcast_ref::<StringArray>()
             .unwrap();
         let orig = ["hello", "world", "testing", "typos", "here"];
-        for i in 0..5 {
-            assert_eq!(arr.value(i), orig[i]);
+        for (i, original) in orig.iter().enumerate() {
+            assert_eq!(arr.value(i), *original);
         }
     }
 

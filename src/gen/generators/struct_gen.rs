@@ -164,7 +164,7 @@ mod tests {
     fn test_struct_generator_produces_struct_array() {
         let children: Vec<Box<dyn FieldGenerator>> = vec![
             Box::new(SequenceGenerator::new(1, 1, None)),
-            Box::new(ConstantGenerator::new(crate::core::Value::Float(2.718))),
+            Box::new(ConstantGenerator::new(crate::core::Value::Float(std::f64::consts::E))),
         ];
         let names = vec!["id".to_string(), "value".to_string()];
         let post_process = vec![

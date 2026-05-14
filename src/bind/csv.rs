@@ -128,7 +128,7 @@ mod tests {
         fn new() -> Self {
             Self(Arc::new(Mutex::new(Vec::new())))
         }
-        fn to_string(&self) -> String {
+        fn content(&self) -> String {
             String::from_utf8(self.0.lock().clone()).unwrap()
         }
     }
@@ -168,7 +168,7 @@ mod tests {
         assert_eq!(stats.rows_written, 3);
         assert!(stats.bytes_written > 0);
         assert_eq!(stats.files_created, 1);
-        let content = buf.to_string();
+        let content = buf.content();
         assert!(content.contains("id,name"), "should contain CSV header");
         assert!(content.contains("1,alice"), "should contain first data row");
     }
@@ -195,7 +195,7 @@ mod tests {
         let mut sink = CsvSink::new(buf.clone(), &config);
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
-        let content = buf.to_string();
+        let content = buf.content();
         assert!(
             content.contains("id\tname"),
             "header should use tab delimiter"
@@ -220,7 +220,7 @@ mod tests {
         let mut sink = CsvSink::new(buf.clone(), &config);
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
-        let content = buf.to_string();
+        let content = buf.content();
         assert!(
             !content.contains("id,name"),
             "should not contain header row"

@@ -339,7 +339,7 @@ mod tests {
         let mut s = NumericState::new();
         s.update(1.5);
         s.update(2.33);
-        s.update(3.141);
+        s.update((std::f64::consts::PI * 1_000.0).round() / 1_000.0);
         assert!(!s.all_integer());
         assert_eq!(s.max_decimal_places(), 3);
     }
