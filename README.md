@@ -206,7 +206,12 @@ Knit is published as a single crate. Internally it is organized into modules:
 | `knit::noise` | Post-generation perturbation pipeline (11 perturbators) |
 | `knit::bind` | Output sinks: Parquet, CSV, JSON, JSONL, Arrow IPC, Avro, SQL |
 | `knit::learn` | Data ingestion, profiling, distribution fitting, blueprint inference, behavioral persona discovery |
-| `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `blueprint`, `init`, `learn`, `inspect`, `completions`, `generators` |
+| `knit::scale` | Multi-dimensional scaling: actor, time, and custom categorical dimensions |
+| `knit::tokenize` | Dataset tokenization for safe sharing (string replacement, numeric/temporal shifts) |
+| `knit::enrich` | Enrich models with statistical knowledge from reference data samples |
+| `knit::model` | Serialization and conversion of learned model directories |
+| `knit::decision` | Decision logging and reporting for pipeline transparency |
+| `knit::cli` | Binary commands: `validate`, `plan`, `generate`, `blueprint`, `init`, `learn`, `inspect`, `completions`, `generators`, `scale`, `tokenize`, `enrich`, `model` |
 
 ## Examples
 
