@@ -22,7 +22,7 @@ path = "src/lib.rs"
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-toml = "0.8"
+toml = "1.1"
 csv = "1"
 
 # Arrow / Parquet / Avro
