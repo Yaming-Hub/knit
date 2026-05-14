@@ -834,7 +834,12 @@ mod tests {
     fn test_ingest_detects_duplicate() {
         let mut state = LearnState::new(42);
         let batch = make_test_batch();
-        let dup1 = ingest_batches_to_state(&mut state, "users", &[batch.clone()], "test.csv");
+        let dup1 = ingest_batches_to_state(
+            &mut state,
+            "users",
+            std::slice::from_ref(&batch),
+            "test.csv",
+        );
         let dup2 = ingest_batches_to_state(&mut state, "users", &[batch], "test.csv");
 
         assert!(!dup1);

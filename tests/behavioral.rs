@@ -320,8 +320,7 @@ fn social_platform_activity_after_signup() {
     // Build user_id → signup_date map
     let user_ids = collect_i64_column(&batches["users"], "id");
     let signup_dates = collect_timestamp_column(&batches["users"], "signup_date");
-    let signup_map: HashMap<i64, i64> =
-        user_ids.into_iter().zip(signup_dates.into_iter()).collect();
+    let signup_map: HashMap<i64, i64> = user_ids.into_iter().zip(signup_dates).collect();
 
     // Posts: created_at >= author's signup_date
     let post_pairs = collect_fk_timestamp_pairs(&batches["posts"], "author_id", "created_at");
@@ -508,10 +507,7 @@ fn social_platform_comment_after_post() {
     // Build post PK → created_at map
     let post_ids = collect_i64_column(&batches["posts"], "id");
     let post_timestamps = collect_timestamp_column(&batches["posts"], "created_at");
-    let post_ts_map: HashMap<i64, i64> = post_ids
-        .into_iter()
-        .zip(post_timestamps.into_iter())
-        .collect();
+    let post_ts_map: HashMap<i64, i64> = post_ids.into_iter().zip(post_timestamps).collect();
 
     // Check each comment's created_at >= referenced post's created_at
     let comment_post_ids = collect_i64_column(&batches["comments"], "post_id");

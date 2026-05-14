@@ -418,7 +418,7 @@ mod tests {
         assert_eq!(cell_to_json(&arr, 0).unwrap(), serde_json::json!(42));
 
         // Float64
-        let arr = Float64Array::from(vec![3.14]);
+        let arr = Float64Array::from(vec![std::f64::consts::PI]);
         let val = cell_to_json(&arr, 0).unwrap();
         assert!(val.is_number());
 
@@ -486,7 +486,7 @@ mod tests {
 
         let names = StringArray::from(vec!["alice"]);
         let ages = Int64Array::from(vec![30i64]);
-        let fields = vec![
+        let fields = [
             Arc::new(Field::new("name", DataType::Utf8, false)),
             Arc::new(Field::new("age", DataType::Int64, false)),
         ];
@@ -516,7 +516,7 @@ mod tests {
         );
         let struct_name = StringArray::from(vec!["bob"]);
         let struct_age = Int64Array::from(vec![25i64]);
-        let struct_fields = vec![
+        let struct_fields = [
             Arc::new(Field::new("name", DataType::Utf8, false)),
             Arc::new(Field::new("age", DataType::Int64, false)),
         ];

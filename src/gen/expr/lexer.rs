@@ -354,7 +354,7 @@ mod tests {
         assert_eq!(
             tok_types("3.14 + 1e5"),
             vec![
-                Token::Float(3.14),
+                Token::Float((std::f64::consts::PI * 100.0).round() / 100.0),
                 Token::Plus,
                 Token::Float(1e5),
                 Token::Eof

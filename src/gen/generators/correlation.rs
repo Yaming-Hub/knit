@@ -195,8 +195,8 @@ mod tests {
         let mean = source.iter().sum::<f64>() / n as f64;
         let var = source.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
         let std = var.sqrt();
-        for i in 0..n {
-            let expected = (source[i] - mean) / std;
+        for (i, source_value) in source.iter().enumerate() {
+            let expected = (*source_value - mean) / std;
             assert!(
                 (y.value(i) - expected).abs() < 1e-10,
                 "row {i}: expected exactly x_norm={expected}, got {}",
@@ -225,8 +225,8 @@ mod tests {
         let mean = source.iter().sum::<f64>() / n as f64;
         let var = source.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n as f64;
         let std = var.sqrt();
-        for i in 0..n {
-            let expected = -1.0 * (source[i] - mean) / std;
+        for (i, source_value) in source.iter().enumerate() {
+            let expected = -((*source_value - mean) / std);
             assert!(
                 (y.value(i) - expected).abs() < 1e-10,
                 "row {i}: expected exactly -x_norm={expected}, got {}",

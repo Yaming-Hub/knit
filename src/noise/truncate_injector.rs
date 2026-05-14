@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(col.value(0), "");
         assert_eq!(col.value(1), "x");
         // "ab" could be truncated to "a"
-        assert!(col.value(2).len() >= 1);
+        assert!(!col.value(2).is_empty());
     }
 
     #[test]

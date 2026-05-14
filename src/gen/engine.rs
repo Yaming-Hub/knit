@@ -2604,11 +2604,14 @@ mod tests {
     fn apply_precision_preserves_nulls() {
         use arrow::array::Float64Array;
 
-        let arr: arrow::array::ArrayRef =
-            Arc::new(Float64Array::from(vec![Some(3.14159), None, Some(2.71828)]));
+        let arr: arrow::array::ArrayRef = Arc::new(Float64Array::from(vec![
+            Some(std::f64::consts::PI),
+            None,
+            Some(std::f64::consts::E),
+        ]));
         let result = apply_precision(arr, Some(2));
         let float_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
-        assert_eq!(float_arr.value(0), 3.14);
+        assert_eq!(float_arr.value(0), (std::f64::consts::PI * 100.0).round() / 100.0);
         assert!(float_arr.is_null(1));
         assert_eq!(float_arr.value(2), 2.72);
     }
@@ -2620,10 +2623,10 @@ mod tests {
         let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(vec![1, 0, 1, 0]));
         let result = coerce_to_logical_type(arr, &crate::core::DataType::Bool);
         let bool_arr = result.as_any().downcast_ref::<BooleanArray>().unwrap();
-        assert_eq!(bool_arr.value(0), true);
-        assert_eq!(bool_arr.value(1), false);
-        assert_eq!(bool_arr.value(2), true);
-        assert_eq!(bool_arr.value(3), false);
+        assert!(bool_arr.value(0));
+        assert!(!bool_arr.value(1));
+        assert!(bool_arr.value(2));
+        assert!(!bool_arr.value(3));
     }
 
     #[test]
@@ -2633,9 +2636,9 @@ mod tests {
         let arr: arrow::array::ArrayRef = Arc::new(Int64Array::from(vec![Some(1), None, Some(0)]));
         let result = coerce_to_logical_type(arr, &crate::core::DataType::Bool);
         let bool_arr = result.as_any().downcast_ref::<BooleanArray>().unwrap();
-        assert_eq!(bool_arr.value(0), true);
+        assert!(bool_arr.value(0));
         assert!(bool_arr.is_null(1));
-        assert_eq!(bool_arr.value(2), false);
+        assert!(!bool_arr.value(2));
     }
 
     #[test]

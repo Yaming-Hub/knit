@@ -164,7 +164,7 @@ mod tests {
         fn bytes(&self) -> Vec<u8> {
             self.0.lock().clone()
         }
-        fn to_string(&self) -> String {
+        fn content(&self) -> String {
             String::from_utf8(self.bytes()).unwrap()
         }
     }
@@ -209,7 +209,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
-        let content = buf.to_string();
+        let content = buf.content();
         assert!(
             content.contains("id,name"),
             "CSV output should contain header"
@@ -229,7 +229,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
-        let content = buf.to_string();
+        let content = buf.content();
         assert!(
             content.contains('['),
             "JSON array output should start with ["
@@ -252,7 +252,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
-        let content = buf.to_string();
+        let content = buf.content();
         let lines: Vec<&str> = content.trim().lines().collect();
         assert_eq!(lines.len(), 2, "JSONL should have one line per record");
         assert!(
@@ -318,7 +318,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         let stats = sink.finish().unwrap();
         assert_eq!(stats.rows_written, 2);
-        let content = buf.to_string();
+        let content = buf.content();
         assert!(
             content.contains("ROW:1,a"),
             "template output should contain rendered row"

@@ -613,13 +613,9 @@ mod tests {
             Field::new("amount", DataType::Float64, false),
         ]));
 
-        let actor_arr = Arc::new(StringArray::from(
-            actor_ids.iter().map(|s| *s).collect::<Vec<_>>(),
-        ));
+        let actor_arr = Arc::new(StringArray::from(actor_ids.to_vec()));
         let ts_arr = Arc::new(TimestampSecondArray::from(timestamps.to_vec()));
-        let status_arr = Arc::new(StringArray::from(
-            statuses.iter().map(|s| *s).collect::<Vec<_>>(),
-        ));
+        let status_arr = Arc::new(StringArray::from(statuses.to_vec()));
         let amount_arr = Arc::new(Float64Array::from(amounts.to_vec()));
 
         RecordBatch::try_new(schema, vec![actor_arr, ts_arr, status_arr, amount_arr]).unwrap()

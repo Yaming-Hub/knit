@@ -213,7 +213,7 @@ mod tests {
         // Should fall back to uniform — all values in [1, 50]
         for i in 0..100 {
             let v = int_arr.value(i);
-            assert!(v >= 1 && v <= 50, "value {v} out of range");
+            assert!((1..=50).contains(&v), "value {v} out of range");
         }
     }
 
@@ -241,7 +241,7 @@ mod tests {
         // Should fall back to uniform — all values in [1, 10]
         for i in 0..50 {
             let v = int_arr.value(i);
-            assert!(v >= 1 && v <= 10, "value {v} out of range");
+            assert!((1..=10).contains(&v), "value {v} out of range");
         }
     }
 }

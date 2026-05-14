@@ -642,7 +642,7 @@ mod tests {
         fn new() -> Self {
             Self(Arc::new(Mutex::new(Vec::new())))
         }
-        fn to_string(&self) -> String {
+        fn content(&self) -> String {
             String::from_utf8(self.0.lock().clone()).unwrap()
         }
     }
@@ -689,7 +689,7 @@ mod tests {
         let stats = Box::new(sink).finish().unwrap();
         assert_eq!(stats.rows_written, 3);
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(output.contains("INSERT INTO \"users\""));
         assert!(output.contains("\"id\", \"name\""));
         assert!(output.contains("1, 'alice'"));
@@ -710,7 +710,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(output.contains("CREATE TABLE \"users\""));
         assert!(output.contains("\"id\" INTEGER NOT NULL"));
         assert!(output.contains("\"name\" TEXT"));
@@ -729,7 +729,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(output.starts_with("BEGIN;"));
         assert!(output.contains("COMMIT;"));
     }
@@ -747,7 +747,7 @@ mod tests {
         sink.write_batch(&sample_batch()).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         // 3 rows with chunk size 2 → 2 INSERT statements
         let insert_count = output.matches("INSERT INTO").count();
         assert_eq!(insert_count, 2);
@@ -775,7 +775,7 @@ mod tests {
         sink.write_batch(&batch).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(
             output.contains("'it''s a test'"),
             "single quotes should be doubled: {}",
@@ -804,7 +804,7 @@ mod tests {
         sink.write_batch(&batch).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         // Reserved words should be safely quoted
         assert!(output.contains("\"order\""));
         assert!(output.contains("\"select\""));
@@ -820,7 +820,7 @@ mod tests {
         let batch = RecordBatch::try_new(
             schema.clone(),
             vec![Arc::new(Float64Array::from(vec![
-                Some(3.14),
+                Some(std::f64::consts::PI),
                 Some(42.0),
                 Some(f64::NAN),
                 None,
@@ -837,7 +837,7 @@ mod tests {
         sink.write_batch(&batch).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(output.contains("3.14"), "should have decimal: {}", output);
         assert!(
             output.contains("42.0"),
@@ -873,7 +873,7 @@ mod tests {
         sink.write_batch(&batch).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(output.contains("TRUE"));
         assert!(output.contains("FALSE"));
     }
@@ -901,7 +901,7 @@ mod tests {
         sink.write_batch(&batch).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(
             output.contains("'2024-01-15'"),
             "date should be ISO format: {}",
@@ -933,7 +933,7 @@ mod tests {
         sink.write_batch(&batch).unwrap();
         Box::new(sink).finish().unwrap();
 
-        let output = buf.to_string();
+        let output = buf.content();
         assert!(
             output.contains("'2024-01-15 12:30:45"),
             "timestamp should be readable: {}",
@@ -956,7 +956,7 @@ mod tests {
         assert_eq!(stats.rows_written, 6);
         assert!(stats.bytes_written > 0);
 
-        let output = buf.to_string();
+        let output = buf.content();
         let insert_count = output.matches("INSERT INTO").count();
         assert_eq!(insert_count, 2);
     }
@@ -977,7 +977,7 @@ mod tests {
         let stats = Box::new(sink).finish().unwrap();
         assert_eq!(stats.rows_written, 0);
 
-        let output = buf.to_string();
+        let output = buf.content();
         // DDL still emitted
         assert!(output.contains("CREATE TABLE"));
         // No INSERT

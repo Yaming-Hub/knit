@@ -227,7 +227,7 @@ mod tests {
         let nulls = result.column(0).null_count();
         // Expect ~50% nulls (allow 40-60%)
         assert!(
-            nulls >= 400 && nulls <= 600,
+            (400..=600).contains(&nulls),
             "expected ~500 nulls, got {nulls}"
         );
     }

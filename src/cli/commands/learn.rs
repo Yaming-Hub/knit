@@ -2932,6 +2932,17 @@ fn run_behavioral_pipeline(
     Ok(stats)
 }
 
+/// Format a count in human-readable form (e.g., 1.2M, 3.5K).
+fn format_count(n: u64) -> String {
+    if n >= 1_000_000 {
+        format!("{:.1}M", n as f64 / 1_000_000.0)
+    } else if n >= 1_000 {
+        format!("{:.1}K", n as f64 / 1_000.0)
+    } else {
+        n.to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3599,16 +3610,5 @@ mod tests {
         let analysis = make_analysis("age");
         let traits = detect_field_traits(&profile, &analysis);
         assert_eq!(traits.semantic.as_deref(), Some("integer"));
-    }
-}
-
-/// Format a count in human-readable form (e.g., 1.2M, 3.5K).
-fn format_count(n: u64) -> String {
-    if n >= 1_000_000 {
-        format!("{:.1}M", n as f64 / 1_000_000.0)
-    } else if n >= 1_000 {
-        format!("{:.1}K", n as f64 / 1_000.0)
-    } else {
-        n.to_string()
     }
 }

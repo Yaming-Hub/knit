@@ -112,11 +112,11 @@ mod tests {
 
     #[test]
     fn constant_float() {
-        let gen = ConstantGenerator::new(Value::Float(3.14));
+        let gen = ConstantGenerator::new(Value::Float(std::f64::consts::PI));
         let arr = gen.generate(&mut make_rng(), 4, &make_ctx());
         let f_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         for i in 0..4 {
-            assert!((f_arr.value(i) - 3.14).abs() < f64::EPSILON);
+            assert!((f_arr.value(i) - std::f64::consts::PI).abs() < f64::EPSILON);
         }
         assert_eq!(gen.output_type(), DataType::Float64);
     }

@@ -461,7 +461,7 @@ mod tests {
         for i in 0..ts.len() {
             if let Some(dt) = DateTime::<Utc>::from_timestamp_millis(ts.value(i)) {
                 let hour = dt.hour() as u8;
-                if hour >= 8 && hour < 22 {
+                if (8..22).contains(&hour) {
                     bh_count += 1;
                 }
             }

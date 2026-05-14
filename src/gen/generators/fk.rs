@@ -168,7 +168,7 @@ mod tests {
         // Each key expected ~100 times; allow 60-140 (generous but rejects severe bias)
         for (&key, &count) in &counts {
             assert!(
-                count >= 60 && count <= 140,
+                (60..=140).contains(&count),
                 "key {key} sampled {count} times, expected ~100 (60-140 range)"
             );
         }

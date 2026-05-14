@@ -5,7 +5,6 @@
 
 use assert_cmd::Command;
 use predicates::prelude::*;
-use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;

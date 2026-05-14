@@ -319,9 +319,9 @@ mod tests {
             .downcast_ref::<Float64Array>()
             .unwrap();
         let originals = [10.0, 20.0, 30.0, 40.0, 50.0];
-        for i in 0..5 {
+        for (i, original) in originals.iter().enumerate() {
             assert!(
-                (arr.value(i) - originals[i]).abs() < 1e-10,
+                (arr.value(i) - *original).abs() < 1e-10,
                 "row {i} should be unchanged"
             );
         }

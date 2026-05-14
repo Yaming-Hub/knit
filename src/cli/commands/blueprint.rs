@@ -6363,7 +6363,7 @@ mod tests {
         let findings = lint_model(&model);
         let json = serde_json::to_string(&findings).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-        assert!(parsed.as_array().unwrap().len() > 0);
+        assert!(!parsed.as_array().unwrap().is_empty());
         assert!(parsed[0]["severity"].is_string());
         assert!(parsed[0]["message"].is_string());
     }

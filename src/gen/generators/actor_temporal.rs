@@ -541,15 +541,9 @@ mod tests {
 
         // Generate 300 rows: 100 per actor
         let mut user_ids_vec = Vec::new();
-        for _ in 0..100 {
-            user_ids_vec.push(100i64);
-        }
-        for _ in 0..100 {
-            user_ids_vec.push(200i64);
-        }
-        for _ in 0..100 {
-            user_ids_vec.push(300i64);
-        }
+        user_ids_vec.extend([100i64; 100]);
+        user_ids_vec.extend([200i64; 100]);
+        user_ids_vec.extend([300i64; 100]);
 
         let mut batch_columns = HashMap::new();
         let user_ids = Arc::new(Int64Array::from(user_ids_vec)) as ArrayRef;

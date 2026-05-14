@@ -170,7 +170,7 @@ mod tests {
         }
         for (i, &c) in counts.iter().enumerate() {
             assert!(
-                c >= 850 && c <= 1150,
+                (850..=1150).contains(&c),
                 "key {i} sampled {c} times, expected ~1000 (850-1150)"
             );
         }

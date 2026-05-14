@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn composite_with_floats() {
         let gen = CompositeGenerator::new(
-            &GeneratorPlan::Constant(Value::Float(3.14)),
+            &GeneratorPlan::Constant(Value::Float(std::f64::consts::PI)),
             &GeneratorPlan::Constant(Value::Int(2)),
         );
         let ctx = make_ctx();
