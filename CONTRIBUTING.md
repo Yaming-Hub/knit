@@ -86,14 +86,18 @@ cargo doc --no-deps --open
 Knit is a single Cargo crate with a library (`src/lib.rs`) and a binary
 (`src/main.rs`). Internally it is organized into focused modules:
 
-```
-core → blueprint → plan → gen → noise → bind
-                                          ↑
-                                         cli
+```mermaid
+flowchart LR
+    core[core] --> blueprint[blueprint]
+    blueprint --> plan[plan]
+    plan --> gen[gen]
+    gen --> noise[noise]
+    noise --> bind[bind]
+    cli[cli] --> gen
 ```
 
-Each module has a single responsibility. Dependencies flow left to right —
-downstream modules never depend on upstream ones. See the
+Each module has a single responsibility. Each module depends only on modules to
+its left — upstream modules never depend on downstream ones. See the
 [README module table](README.md#module-structure) for descriptions of all
 modules including `learn`, `scale`, `tokenize`, `enrich`, `model`, and
 `decision`.
