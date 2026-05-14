@@ -30,6 +30,8 @@ These flags can be used with any command:
 | `--log-file <PATH>` | string | — | Write all log events to file (always JSON) |
 | `--log-filter <DIR>` | string | — | Tracing filter (e.g. `learn=debug,gen=info`) |
 | `--decision-report <PATH>` | string | — | Write JSON decision report to file |
+| `--plugin <PATH>` | string | — | Load a WASM generator plugin (repeatable, requires `wasm-plugins` feature) |
+| `--plugin-dir <PATH>` | string | — | Load all `.wasm` plugins from a directory (requires `wasm-plugins` feature) |
 | `--version` | — | — | Print version and exit |
 | `--help` | — | — | Print help and exit |
 
@@ -328,6 +330,63 @@ knit learn batch2/ --state model.state --finalize -o blueprint.toml
 
 ---
 
+## `knit inspect`
+
+Inspect a learning state file or blueprint file.
+
+```bash
+knit inspect <file> [OPTIONS]
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--columns` | Show per-column details (cardinality, nulls, top values) |
+| `--actors` | Show actor, persona, and relationship summary (blueprint files only) |
+| `--json` | Machine-readable JSON output |
+
+### Examples
+
+```bash
+# Inspect a blueprint
+knit inspect ecommerce.knit.toml
+
+# Inspect a learning state file with column details
+knit inspect model.state.json --columns
+
+# Inspect actor/persona info
+knit inspect ecommerce.knit.toml --actors
+```
+
+---
+
+## `knit generators`
+
+List all available generator types with descriptions and examples.
+
+```bash
+knit generators [OPTIONS]
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Machine-readable JSON output |
+
+### Example
+
+```bash
+# List all generators
+knit generators
+
+# JSON output for scripting
+knit generators --json
+```
+
+---
+
 ## `knit blueprint` Subcommands
 
 Utilities for manipulating blueprint files.
@@ -529,7 +588,7 @@ knit blueprint rename schema.knit.toml \
 
 ### `knit blueprint export`
 
-Export blueprint as SQL DDL or other external schema format.
+Export blueprint as SQL DDL.
 
 ```bash
 knit blueprint export <blueprint-file> [OPTIONS]
@@ -537,7 +596,7 @@ knit blueprint export <blueprint-file> [OPTIONS]
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `-f`, `--format <fmt>` | `sql` | Export format (currently: `sql`) |
+| `-f`, `--format <fmt>` | `sql` | Export format |
 | `--dialect <dialect>` | `postgres` | SQL dialect: `postgres`, `mysql`, `sqlite` |
 | `--no-fks` | — | Omit FOREIGN KEY constraints |
 | `-o`, `--output <path>` | stdout | Output file path |
