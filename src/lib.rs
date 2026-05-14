@@ -7,6 +7,9 @@
 //! - A machine-learning tool to extract data models from existing datasets
 //! - Configurable noise and anomaly injection
 
+#![warn(missing_docs)]
+#![deny(unsafe_code)]
+
 pub mod bind;
 pub mod blueprint;
 pub mod cli;

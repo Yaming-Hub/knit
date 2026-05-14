@@ -14,8 +14,6 @@
 //! - [`create_generator`] — factory that maps a [`GeneratorPlan`](crate::plan::GeneratorPlan)
 //!   to a concrete `FieldGenerator`.
 
-#![warn(missing_docs)]
-
 pub mod actor_pool;
 pub mod batch;
 pub mod context;
@@ -34,6 +32,7 @@ pub mod temporal_sort;
 pub mod temporal_store;
 pub mod traits;
 #[cfg(feature = "wasm-plugins")]
+#[allow(unsafe_code)]
 pub mod wasm_plugin;
 
 pub use actor_pool::ActorPool;

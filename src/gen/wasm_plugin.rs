@@ -75,7 +75,12 @@ pub enum WasmPluginError {
 
     /// ABI version mismatch.
     #[error("ABI version mismatch: expected {expected}, got {actual}")]
-    AbiMismatch { expected: i32, actual: i32 },
+    AbiMismatch {
+        /// Expected ABI version.
+        expected: i32,
+        /// Actual ABI version reported by the plugin.
+        actual: i32,
+    },
 
     /// Unknown output type code.
     #[error("unknown output type code: {0}")]

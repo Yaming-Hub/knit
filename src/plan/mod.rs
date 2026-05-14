@@ -1,6 +1,5 @@
 //! # knit-plan — Execution Planner
 //!
-#![warn(missing_docs)]
 //! Compiles a validated [`DataModel`](crate::core::DataModel) into an [`ExecutionPlan`]
 //! that drives parallel data generation in `knit-gen`.
 //!
