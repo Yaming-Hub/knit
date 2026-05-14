@@ -12,9 +12,9 @@
 
 <!-- How was this tested? -->
 
-- [ ] `cargo test --all-features` passes
-- [ ] `cargo clippy --all-features --all-targets --locked -- -D warnings` is clean
-- [ ] `cargo fmt --check` passes
+- [ ] `cargo test --locked --all-features` passes
+- [ ] `cargo clippy --locked --all-targets --all-features -- -D warnings` is clean
+- [ ] `cargo fmt --all -- --check` passes
 
 ## Related Issues
 

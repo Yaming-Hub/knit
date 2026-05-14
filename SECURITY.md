@@ -12,7 +12,7 @@
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public GitHub issue.
-2. Email the maintainer directly or use
+2. Use
    [GitHub's private vulnerability reporting](https://github.com/Yaming-Hub/knit/security/advisories/new).
 3. Include a description of the vulnerability, steps to reproduce, and any
    potential impact.
@@ -26,6 +26,6 @@ Knit is a data generation tool. Security concerns include:
 
 - **Blueprint injection** — Malicious blueprint files causing unintended
   behavior (e.g., path traversal in output paths).
-- **WASM plugin safety** — Untrusted WASM plugins loaded via `--plugin`
-  (sandboxed by Wasmtime, but still worth reporting issues).
+- **WASM plugin safety** — WASM plugins loaded via `--plugin` run as trusted
+  local code with no sandboxing or resource limits. Only load modules you trust.
 - **Dependency vulnerabilities** — Issues in upstream crates that affect Knit.
