@@ -47,15 +47,15 @@ knit learn data/
 The learning process runs through 9 phases:
 
 ```mermaid
-graph TD
-    A[1. Ingest] --> B[2. Profile]
-    B --> C[3. Infer Types]
-    C --> D[4. Fit Distributions]
-    D --> E[5. Detect Temporal Patterns]
-    E --> F[6. Detect Relationships]
-    F --> G[7. Analyze Relationships]
-    G --> H[8. Detect Correlations]
-    H --> I[9. Assemble Blueprint]
+flowchart TD
+    ingest[1. Ingest] --> profile[2. Profile]
+    profile --> infer[3. Infer Types]
+    infer --> fit[4. Fit Distributions]
+    fit --> temporal[5. Detect Temporal Patterns]
+    temporal --> rels[6. Detect Relationships]
+    rels --> analyze[7. Analyze Relationships]
+    analyze --> corr[8. Detect Correlations]
+    corr --> assemble[9. Assemble Blueprint]
 ```
 
 ### Phase 1: Ingestion

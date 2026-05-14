@@ -11,7 +11,7 @@ pipelines. No prior experience with Knit is required.
 
 ## Prerequisites
 
-- **Rust 1.75+** and Cargo (for building from source), _or_ a pre-built `knit` binary
+- **Rust 1.87+** and Cargo (for building from source), _or_ a pre-built `knit` binary
 - A terminal / command line
 - A text editor for writing `.knit.toml` blueprint files
 

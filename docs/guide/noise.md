@@ -30,14 +30,14 @@ defects.
 Knit applies noise in three stages, from least to most destructive:
 
 ```mermaid
-graph LR
-    A[Clean Data] --> B[Stage 1: Clean]
-    B --> C[Stage 2: Constrained]
-    C --> D[Stage 3: Breaking]
+flowchart LR
+    clean[Clean Data] --> stage1[Stage 1: Clean]
+    stage1 --> stage2[Stage 2: Constrained]
+    stage2 --> stage3[Stage 3: Breaking]
 
-    style B fill:#2d8a4e,color:#fff
-    style C fill:#c9a500,color:#000
-    style D fill:#c93c37,color:#fff
+    style stage1 fill:#2d8a4e,color:#fff
+    style stage2 fill:#c9a500,color:#000
+    style stage3 fill:#c93c37,color:#fff
 ```
 
 | Stage | What It Does | What It Preserves |

@@ -76,14 +76,14 @@ cargo build --release
 ## Architecture
 
 ```mermaid
-graph LR
-    A[Blueprint TOML/JSON] -->|blueprint| B[DataModel]
-    B -->|plan| C[ExecutionPlan]
-    C -->|gen| D[RecordBatches]
-    D -->|noise| E[Perturbed Batches]
-    E -->|bind| F[Parquet / CSV / JSON / Arrow]
-    G[learn] -->|ingest + profile| B
-    H[cli] --> A
+flowchart LR
+    blueprint([Blueprint TOML/JSON]) -->|blueprint| model[DataModel]
+    model -->|plan| plan[ExecutionPlan]
+    plan -->|gen| batches[RecordBatches]
+    batches -->|noise| perturbed[Perturbed Batches]
+    perturbed -->|bind| output([Parquet / CSV / JSON / Arrow])
+    learn[learn] -->|ingest + profile| model
+    cli[cli] --> blueprint
 ```
 
 ## Quick Start
