@@ -80,14 +80,14 @@ flowchart LR
     bind --> output([Output Files])
 ```
 
-| Stage | Input | Output | Crate |
-|-------|-------|--------|-------|
-| **Parse** | `.knit.toml` / `.weave.json` | `DataModel` (AST) | `knit-blueprint` |
-| **Validate** | `DataModel` | Validated `DataModel` + diagnostics | `knit-blueprint` |
-| **Plan** | Validated `DataModel` | `ExecutionPlan` | `knit-plan` |
-| **Generate** | `ExecutionPlan` | `RecordBatch` stream | `knit-gen` |
-| **Perturb** | `RecordBatch` stream | Perturbed `RecordBatch` stream | `knit-noise` |
-| **Bind** | `RecordBatch` stream | Output files (Parquet, JSON, CSV, etc.) | `knit-bind` |
+| Stage | Input | Output | Module |
+|-------|-------|--------|--------|
+| **Parse** | `.knit.toml` / `.weave.json` | `DataModel` (AST) | `blueprint` |
+| **Validate** | `DataModel` | Validated `DataModel` + diagnostics | `blueprint` |
+| **Plan** | Validated `DataModel` | `ExecutionPlan` | `plan` |
+| **Generate** | `ExecutionPlan` | `RecordBatch` stream | `gen` |
+| **Perturb** | `RecordBatch` stream | Perturbed `RecordBatch` stream | `noise` |
+| **Bind** | `RecordBatch` stream | Output files (Parquet, JSON, CSV, etc.) | `bind` |
 
 ### 3.2 Reverse Pipeline (Data → Blueprint)
 
@@ -102,59 +102,73 @@ flowchart LR
     emit --> blueprint([Candidate Blueprint])
 ```
 
-| Stage | Description | Crate |
-|-------|-------------|-------|
-| **Ingest** | Read CSV / Parquet / JSON via Arrow readers | `knit-learn` |
-| **Infer** | Type detection, distribution fitting, FK discovery | `knit-learn` |
-| **Score** | Confidence scoring for every inferred element | `knit-learn` |
-| **Emit** | Output a candidate `DataModel` for human/AI review | `knit-learn` |
+| Stage | Description | Module |
+|-------|-------------|--------|
+| **Ingest** | Read CSV / Parquet / JSON via Arrow readers | `learn` |
+| **Infer** | Type detection, distribution fitting, FK discovery | `learn` |
+| **Score** | Confidence scoring for every inferred element | `learn` |
+| **Emit** | Output a candidate `DataModel` for human/AI review | `learn` |
 
 ---
 
-## 4. Crate Map
+## 4. Module Map
+
+Knit is a single Cargo crate with a library (`src/lib.rs`) and a binary
+(`src/main.rs`). Internally it is organized into focused modules:
 
 ```
 knit/
-├── crates/
-│   ├── knit-core/       Semantic data model types (Value, DataModel, Entity, Field, …)
-│   ├── knit-blueprint/     Weave parser (TOML + JSON) and validator
-│   ├── knit-plan/       Execution planner / compiler
-│   ├── knit-gen/        Data generation engine
-│   ├── knit-noise/      Perturbation pipeline
-│   ├── knit-bind/       Output serialization (sinks + templates)
-│   ├── knit-learn/      Blueprint extraction from existing data
-│   └── knit-cli/        CLI binary
+├── src/
+│   ├── lib.rs           Crate root (re-exports all modules)
+│   ├── main.rs          CLI binary entry point
+│   ├── core/            Semantic data model types (Value, DataModel, Entity, Field, …)
+│   ├── blueprint/       Weave parser (TOML + JSON) and validator
+│   ├── plan/            Execution planner / compiler
+│   ├── gen/             Data generation engine
+│   ├── noise/           Perturbation pipeline
+│   ├── bind/            Output serialization (sinks + templates)
+│   ├── learn/           Blueprint extraction from existing data
+│   ├── scale/           Multi-dimensional scaling
+│   ├── tokenize/        Dataset tokenization
+│   ├── enrich/          Model enrichment from reference data
+│   ├── model/           Model serialization and conversion
+│   ├── decision.rs      Decision logging and reporting
+│   └── cli/             CLI commands and configuration
 ├── docs/                Design documents and language spec
 ├── examples/            Example knit blueprints
 └── tests/               Integration tests
 ```
 
-### Dependency Graph
+### Core Pipeline Dependencies
+
+The following graph shows the primary pipeline dependencies between modules.
+Auxiliary modules (`scale`, `tokenize`, `enrich`, `model`, `decision`) are used
+by various pipeline stages and by `cli` but are omitted for clarity.
 
 ```mermaid
 flowchart BT
-    core[knit-core]
-    blueprint[knit-blueprint] --> core
-    plan[knit-plan] --> core & blueprint
-    gen[knit-gen] --> plan
-    noise[knit-noise] --> gen
-    bind[knit-bind] --> noise
-    learn[knit-learn] --> blueprint
-    cli[knit-cli] --> gen & learn & bind
+    core[core]
+    blueprint[blueprint] --> core
+    plan[plan] --> core & blueprint
+    gen[gen] --> plan
+    noise[noise] --> gen
+    bind[bind] --> noise
+    learn[learn] --> blueprint
+    cli[cli] --> gen & learn & bind
 ```
 
-`knit-core` is the only crate that every other crate depends on. It contains no
+`core` is the foundational module that every other module depends on. It contains no
 engine logic — only the shared type definitions that flow between stages.
 
 ---
 
-## 5. Tools
+## 5. Modules
 
-Each crate corresponds to a tool with a specific role in the architecture. Dedicated
-design documents will cover each tool in detail; this section provides the high-level
-purpose, responsibilities, and key design points.
+Each module has a specific role in the architecture. Dedicated design documents
+cover each module in detail; this section provides the high-level purpose,
+responsibilities, and key design points.
 
-### 5.1 knit-core — Semantic Model
+### 5.1 core — Semantic Model
 
 **Role:** Define the shared vocabulary for the entire toolset.
 
@@ -167,12 +181,12 @@ purpose, responsibilities, and key design points.
 - Temporal types: `date`, `time`, `datetime`, `datetimetz`, `duration`
 
 **Design principle:** Narrow and stable. No engine traits, no I/O, no external
-dependencies beyond `serde` and `chrono`. Changes to `knit-core` ripple across all
-crates, so the bar for additions is high.
+dependencies beyond `serde` and `chrono`. Changes to `core` ripple across all
+modules, so the bar for additions is high.
 
 ---
 
-### 5.2 knit-blueprint — Parser & Validator
+### 5.2 blueprint — Parser & Validator
 
 **Role:** Transform Weave text into a validated `DataModel`.
 
@@ -192,7 +206,7 @@ crates, so the bar for additions is high.
 
 ---
 
-### 5.3 knit-plan — Execution Planner
+### 5.3 plan — Execution Planner
 
 **Role:** Compile a validated `DataModel` into an `ExecutionPlan` that the generation
 engine can execute efficiently.
@@ -227,7 +241,7 @@ ExecutionPlan
 
 ---
 
-### 5.4 knit-gen — Generation Engine
+### 5.4 gen — Generation Engine
 
 **Role:** Execute the plan to produce Arrow `RecordBatch` streams.
 
@@ -253,7 +267,7 @@ ExecutionPlan
 
 ---
 
-### 5.5 knit-noise — Perturbation Pipeline
+### 5.5 noise — Perturbation Pipeline
 
 **Role:** Inject controlled imperfections into generated data.
 
@@ -274,7 +288,7 @@ ExecutionPlan
 
 ---
 
-### 5.6 knit-bind — Output Serialization
+### 5.6 bind — Output Serialization
 
 **Role:** Write `RecordBatch` streams to output files.
 
@@ -296,7 +310,7 @@ ExecutionPlan
 
 ---
 
-### 5.7 knit-learn — Blueprint Extraction
+### 5.7 learn — Blueprint Extraction
 
 **Role:** Reverse-engineer a knit blueprint from an existing dataset.
 
@@ -317,14 +331,14 @@ ExecutionPlan
 
 ---
 
-### 5.8 knit-cli — Command-Line Interface
+### 5.8 cli — Command-Line Interface
 
-**Role:** User-facing binary that orchestrates all tools.
+**Role:** User-facing binary that orchestrates all modules.
 
 **Commands:**
 
-| Command | Tools Used | Description |
-|---------|-----------|-------------|
+| Command | Modules Used | Description |
+|---------|-------------|-------------|
 | `knit init` | blueprint | Create a starter knit blueprint (interactive) |
 | `knit validate <blueprint>` | blueprint | Parse and validate, report errors |
 | `knit plan <blueprint>` | blueprint, plan | Show execution plan (dry run) |
@@ -466,15 +480,16 @@ crate at compile time:
 
 ```mermaid
 flowchart LR
-    user[User crate] --> impl[Implements FieldGenerator trait]
+    user[User code] --> impl[Implements FieldGenerator trait]
     impl --> reg["inventory::submit! { GeneratorPlugin }"]
-    reg --> bin[Links into custom knit-cli binary]
+    reg --> bin[Links into knit binary]
 ```
 
 ### 8.2 Future: WASM Plugins
 
 Dynamic extension without recompilation. WASM modules implement a stable ABI and are
-loaded at runtime from a plugin directory.
+loaded at runtime via `--plugin` / `--plugin-dir` flags. Plugins currently run as
+trusted local code without sandboxing.
 
 ---
 
@@ -484,12 +499,19 @@ loaded at runtime from a plugin directory.
 |----------|------|--------|
 | Knit Language Specification | [`docs/knit-spec.md`](knit-spec.md) | Draft |
 | Architecture (this document) | [`docs/architecture.md`](architecture.md) | Draft |
-| knit-core Design | [`docs/design-core.md`](design-core.md) | Draft |
-| knit-blueprint Design | [`docs/design-blueprint.md`](design-blueprint.md) | Draft |
-| knit-plan Design | [`docs/design-plan.md`](design-plan.md) | Draft |
-| knit-gen Design | [`docs/design-gen.md`](design-gen.md) | Draft |
-| knit-noise Design | [`docs/design-noise.md`](design-noise.md) | Draft |
-| knit-bind Design | [`docs/design-bind.md`](design-bind.md) | Draft |
-| knit-learn Design | [`docs/design-learn.md`](design-learn.md) | Draft |
-| knit-cli Design | [`docs/design-cli.md`](design-cli.md) | Draft |
+| core Design | [`docs/design-core.md`](design-core.md) | Draft |
+| blueprint Design | [`docs/design-blueprint.md`](design-blueprint.md) | Draft |
+| plan Design | [`docs/design-plan.md`](design-plan.md) | Draft |
+| gen Design | [`docs/design-gen.md`](design-gen.md) | Draft |
+| noise Design | [`docs/design-noise.md`](design-noise.md) | Draft |
+| bind Design | [`docs/design-bind.md`](design-bind.md) | Draft |
+| learn Design | [`docs/design-learn.md`](design-learn.md) | Draft |
+| cli Design | [`docs/design-cli.md`](design-cli.md) | Draft |
+| scale Design | [`docs/design-scale.md`](design-scale.md) | Draft |
+| tokenize Design | [`docs/design-tokenize.md`](design-tokenize.md) | Draft |
+| enrich Design | [`docs/design-enrich.md`](design-enrich.md) | Draft |
+| model Design | [`docs/design-model.md`](design-model.md) | Draft |
+| Human Behavior Design | [`docs/design-human-behavior.md`](design-human-behavior.md) | Draft |
+| Logging Design | [`docs/design-logging.md`](design-logging.md) | Draft |
+| Incremental Learn Design | [`docs/design-incremental-learn.md`](design-incremental-learn.md) | Draft |
 | Development Plan | [`docs/dev-plan.md`](dev-plan.md) | Draft |
