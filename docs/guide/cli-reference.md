@@ -13,7 +13,7 @@ These flags can be used with any command:
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--seed <N>` | u64 | Blueprint's seed | Override the RNG seed |
-| `--format <FMT>` | enum | `parquet` | Output format: `parquet`, `csv`, `json`, `jsonl`, `arrow` |
+| `--format <FMT>` | enum | `parquet` | Output format: `parquet`, `csv`, `json`, `jsonl`, `arrow`, `avro`, `sql` |
 | `--compression <ALG>` | enum | `snappy` | Compression: `none`, `snappy`, `gzip`, `lz4`, `zstd` |
 | `--parallel <N>` | int | auto (CPU count) | Worker thread count (`0` = auto) |
 | `--batch-size <N>` | int | `8192` | Rows per Arrow batch |
@@ -24,6 +24,8 @@ These flags can be used with any command:
 | `-q`, `--quiet` | bool | `false` | Suppress all non-error output |
 | `-v`, `--verbose` | bool | `false` | Extra diagnostic logging |
 | `--count <SPEC>` | string | — | Override row count for `plan`/`generate` (e.g. `1000`, `0.1x`, `10x`) |
+| `--sql-create-table` | bool | `false` | Include CREATE TABLE DDL in SQL output |
+| `--sql-transaction` | bool | `false` | Wrap SQL output in BEGIN/COMMIT transaction |
 | `--log-format <FMT>` | enum | auto | Log format: `text` (terminals), `json` (pipes) |
 | `--log-file <PATH>` | string | — | Write all log events to file (always JSON) |
 | `--log-filter <DIR>` | string | — | Tracing filter (e.g. `learn=debug,gen=info`) |
@@ -214,6 +216,8 @@ reviews    [waiting]
 | `json` | `.json` | One JSON array per entity |
 | `jsonl` | `.jsonl` | One JSON object per line (streaming) |
 | `arrow` | `.arrow` | Arrow IPC format (zero-copy reads) |
+| `avro` | `.avro` | Apache Avro format |
+| `sql` | `.sql` | SQL INSERT statements |
 
 ### Noise Injection
 
@@ -388,6 +392,365 @@ knit blueprint doc ecommerce.knit.toml
 
 # Write to file
 knit blueprint doc ecommerce.knit.toml --output docs/blueprint.md
+```
+
+### `knit blueprint stats`
+
+Show statistics and complexity summary for a blueprint.
+
+```bash
+knit blueprint stats <blueprint-file>
+```
+
+Displays entity counts, field counts, generator complexity, and other summary
+metrics. Use `--json` for machine-readable output.
+
+```bash
+knit blueprint stats ecommerce.knit.toml
+knit blueprint stats ecommerce.knit.toml --json
+```
+
+### `knit blueprint merge`
+
+Merge two blueprints into one combined schema.
+
+```bash
+knit blueprint merge <base> <overlay> [--output <path>]
+```
+
+| Argument/Option | Description |
+|-----------------|-------------|
+| `<base>` | Path to the base blueprint file |
+| `<overlay>` | Path to the overlay blueprint file to merge in |
+| `-o`, `--output <path>` | Output file path (prints to stdout if omitted) |
+
+The overlay's entities and fields are merged into the base. Conflicting
+definitions in the overlay take precedence.
+
+```bash
+knit blueprint merge base.knit.toml overlay.knit.toml -o combined.knit.toml
+```
+
+### `knit blueprint graph`
+
+Visualize entity relationships as a dependency graph.
+
+```bash
+knit blueprint graph <blueprint-file> [--format <fmt>]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-f`, `--format <fmt>` | `dot` | Output format: `dot` (GraphViz) or `json` |
+
+```bash
+# Generate GraphViz DOT output
+knit blueprint graph ecommerce.knit.toml
+
+# Render as PNG (requires GraphViz)
+knit blueprint graph ecommerce.knit.toml | dot -Tpng -o graph.png
+
+# JSON format for programmatic use
+knit blueprint graph ecommerce.knit.toml --format json
+```
+
+### `knit blueprint lint`
+
+Check for potential issues and best-practice violations.
+
+```bash
+knit blueprint lint <blueprint-file>
+```
+
+Analyzes the blueprint for common problems such as missing descriptions,
+unused entities, suspicious generator configurations, and naming inconsistencies.
+Use `--json` for machine-readable output.
+
+```bash
+knit blueprint lint ecommerce.knit.toml
+knit blueprint lint ecommerce.knit.toml --json
+```
+
+### `knit blueprint subset`
+
+Extract a subset of entities (with dependencies) into a smaller blueprint.
+
+```bash
+knit blueprint subset <blueprint-file> --entity <name> [--entity <name>...] [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--entity <name>` | Entities to include (repeatable) |
+| `--no-deps` | Skip automatic dependency inclusion (only emit named entities) |
+| `-o`, `--output <path>` | Output file path (prints to stdout if omitted) |
+
+By default, any entities referenced via foreign keys are automatically included.
+Use `--no-deps` to emit only the explicitly named entities.
+
+```bash
+# Extract orders and its dependencies (e.g. customers)
+knit blueprint subset ecommerce.knit.toml --entity orders -o orders_only.knit.toml
+
+# Extract without pulling in FK dependencies
+knit blueprint subset ecommerce.knit.toml --entity orders --no-deps
+```
+
+### `knit blueprint rename`
+
+Rename entities or fields with automatic cross-reference updates.
+
+```bash
+knit blueprint rename <blueprint-file> [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--entity <OLD=NEW>` | Rename an entity (repeatable) |
+| `--field <Entity.OLD=NEW>` | Rename a field (repeatable) |
+| `-o`, `--output <path>` | Output file path (prints to stdout if omitted) |
+
+All foreign key references, relationship definitions, and cross-references are
+automatically updated to reflect the new names.
+
+```bash
+# Rename an entity
+knit blueprint rename schema.knit.toml --entity User=Customer
+
+# Rename a field
+knit blueprint rename schema.knit.toml --field Order.user_id=customer_id
+
+# Combine renames
+knit blueprint rename schema.knit.toml \
+  --entity User=Customer \
+  --field Order.user_id=customer_id \
+  -o renamed.knit.toml
+```
+
+### `knit blueprint export`
+
+Export blueprint as SQL DDL or other external schema format.
+
+```bash
+knit blueprint export <blueprint-file> [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-f`, `--format <fmt>` | `sql` | Export format (currently: `sql`) |
+| `--dialect <dialect>` | `postgres` | SQL dialect: `postgres`, `mysql`, `sqlite` |
+| `--no-fks` | — | Omit FOREIGN KEY constraints |
+| `-o`, `--output <path>` | stdout | Output file path |
+
+```bash
+# Export as PostgreSQL DDL
+knit blueprint export schema.knit.toml -o schema.sql
+
+# Export for MySQL without foreign keys
+knit blueprint export schema.knit.toml --dialect mysql --no-fks
+```
+
+### `knit blueprint import`
+
+Import a SQL DDL file (CREATE TABLE statements) into a knit blueprint.
+
+```bash
+knit blueprint import <sql-file> [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--name <name>` | derived from filename | Model name |
+| `-o`, `--output <path>` | stdout | Output file path |
+
+```bash
+# Import from SQL DDL
+knit blueprint import schema.sql -o blueprint.knit.toml
+
+# Import with custom model name
+knit blueprint import schema.sql --name ecommerce -o blueprint.knit.toml
+```
+
+### `knit blueprint scaffold`
+
+Generate a starter blueprint from entity/field specs on the command line.
+
+```bash
+knit blueprint scaffold --entity <SPEC> [--entity <SPEC>...] [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--name <name>` | `scaffold` | Model name |
+| `--entity <spec>` | — | Entity spec: `Name:field1:type1,field2:type2,...` (repeatable). Prefix with count: `Name:1000:field1:type1,...` |
+| `--rel <spec>` | — | Relationship spec: `From.fk_col=To.pk_col` or `From=To` (repeatable) |
+| `-o`, `--output <path>` | stdout | Output file path |
+
+```bash
+# Quick two-entity blueprint
+knit blueprint scaffold \
+  --entity "User:1000:name:string,email:string" \
+  --entity "Order:5000:amount:float,status:string" \
+  --rel "Order.user_id=User.id" \
+  -o scaffold.knit.toml
+```
+
+### `knit blueprint update`
+
+Programmatically update blueprint properties (counts, descriptions, tags).
+
+```bash
+knit blueprint update <blueprint-file> [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--entity-count <Entity=N>` | Set entity row count (repeatable) |
+| `--describe <Entity=text>` | Set entity description (repeatable) |
+| `--describe <Entity.field=text>` | Set field description (repeatable) |
+| `--tag <Entity=tag1,tag2>` | Add tags to an entity (repeatable) |
+| `--untag <Entity=tag1,tag2>` | Remove tags from an entity (repeatable) |
+| `--seed <N>` | Override global random seed |
+| `--locale <locale>` | Override global locale |
+| `-o`, `--output <path>` | Output file path (default: overwrite input) |
+
+```bash
+# Update entity counts
+knit blueprint update schema.knit.toml --entity-count User=10000 --entity-count Order=50000
+
+# Add descriptions and tags
+knit blueprint update schema.knit.toml \
+  --describe "User=Core user accounts" \
+  --tag "User=pii,core"
+```
+
+### `knit blueprint validate`
+
+Validate generated data files against a blueprint schema.
+
+```bash
+knit blueprint validate <blueprint-file> --data <data-dir> [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `-d`, `--data <path>` | Path to the data directory containing generated files |
+| `--entity <name>` | Check only these entities (repeatable, default: all) |
+| `--strict` | Treat warnings as errors |
+
+Checks that the generated data in `<data-dir>` matches the schema defined in
+the blueprint: column names, types, nullability, row counts, and FK integrity.
+
+```bash
+# Validate all entities
+knit blueprint validate schema.knit.toml --data ./output
+
+# Validate specific entities with strict mode
+knit blueprint validate schema.knit.toml --data ./output --entity User --strict
+```
+
+### `knit blueprint derive`
+
+Create a variant blueprint by applying scale/override operations.
+
+```bash
+knit blueprint derive <blueprint-file> [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--scale <Nx>` | Multiply all entity counts by a factor (e.g. `10x`, `0.1x`) |
+| `--entity-count <Entity=N>` | Override specific entity counts (repeatable) |
+| `--seed <N>` | Override global seed |
+| `--locale <locale>` | Override global locale |
+| `--variant <name>` | Set variant name (stored in model description) |
+| `--exclude <entity>` | Exclude entities from scaling (repeatable) |
+| `-o`, `--output <path>` | Output file path (prints to stdout if omitted) |
+
+```bash
+# Create a 10x scaled variant
+knit blueprint derive base.knit.toml --scale 10x -o large.knit.toml
+
+# Create a variant with specific overrides
+knit blueprint derive base.knit.toml \
+  --scale 2x \
+  --entity-count Config=1 \
+  --exclude Metadata \
+  --variant "load-test" \
+  -o loadtest.knit.toml
+```
+
+### `knit blueprint sample`
+
+Generate a small sample preview from a blueprint.
+
+```bash
+knit blueprint sample <blueprint-file> [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-r`, `--rows <N>` | `5` | Number of rows to generate per entity |
+| `--entity <name>` | all | Only sample these entities (repeatable) |
+| `--seed <N>` | blueprint seed | Override random seed |
+
+Generates a small number of rows per entity and prints them in a human-readable
+table format. Useful for quickly previewing what a blueprint will produce
+without running a full generation.
+
+```bash
+# Preview 5 rows per entity
+knit blueprint sample ecommerce.knit.toml
+
+# Preview 10 rows for a specific entity
+knit blueprint sample ecommerce.knit.toml --rows 10 --entity orders
+```
+
+### `knit blueprint test`
+
+Generate data and validate it matches the schema (round-trip test).
+
+```bash
+knit blueprint test <blueprint-file> [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-r`, `--rows <N>` | `10` | Number of rows to generate per entity |
+| `--entity <name>` | all | Only test these entities (repeatable) |
+| `--seed <N>` | blueprint seed | Override random seed |
+| `--strict` | — | Treat warnings as errors |
+
+Performs a full round-trip: generates data into a temporary directory, then
+validates the output against the blueprint schema. Returns non-zero on failure.
+
+```bash
+# Quick round-trip test
+knit blueprint test ecommerce.knit.toml
+
+# Strict test with more rows
+knit blueprint test ecommerce.knit.toml --rows 100 --strict
+```
+
+### `knit blueprint convert`
+
+Convert blueprint between TOML and JSON formats.
+
+```bash
+knit blueprint convert <blueprint-file> [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-f`, `--format <fmt>` | `json` | Output format: `toml` or `json` |
+| `-o`, `--output <path>` | stdout | Output file path |
+
+```bash
+# Convert TOML to JSON
+knit blueprint convert schema.knit.toml -o schema.json
+
+# Convert JSON back to TOML
+knit blueprint convert schema.json --format toml -o schema.knit.toml
 ```
 
 ---
