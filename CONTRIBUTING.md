@@ -14,7 +14,7 @@ workflow, conventions, and expectations for pull requests.
 ```bash
 git clone https://github.com/Yaming-Hub/knit.git
 cd knit
-cargo build --workspace
+cargo build
 ```
 
 ## Development Workflow
@@ -22,31 +22,36 @@ cargo build --workspace
 ### Build
 
 ```bash
-cargo build --workspace
+cargo build
 ```
 
 ### Test
 
 ```bash
-cargo test --workspace
+# Run all tests (default features)
+cargo test
+
+# Run with all features enabled
+cargo test --all-features
 ```
 
 ### Lint
 
 ```bash
-cargo clippy --workspace -- -D warnings
+cargo clippy --all-features --all-targets --locked -- -D warnings
 ```
 
 ### Format
 
 ```bash
-cargo fmt --all
+cargo fmt
+cargo fmt --check   # CI verification
 ```
 
 ### Documentation
 
 ```bash
-cargo doc --workspace --no-deps --open
+cargo doc --no-deps --open
 ```
 
 ## Code Conventions
@@ -62,7 +67,7 @@ cargo doc --workspace --no-deps --open
 - **Determinism** — Generators must be deterministic for a given RNG state.
   Always derive per-field RNGs from the `RngTree` to ensure reproducibility.
 - **Testing** — Write unit tests in `#[cfg(test)]` modules. Integration tests
-  live in `crates/knit-integration-tests/`.
+  live in `tests/`.
 
 ## Pull Request Guidelines
 
@@ -78,16 +83,20 @@ cargo doc --workspace --no-deps --open
 
 ## Architecture
 
-Knit is organised as a Cargo workspace with focused crates:
+Knit is a single Cargo crate with a library (`src/lib.rs`) and a binary
+(`src/main.rs`). Internally it is organized into focused modules:
 
 ```
-knit-core → knit-blueprint → knit-plan → knit-gen → knit-noise → knit-bind
-                                                                    ↑
-                                                               knit-cli
+core → blueprint → plan → gen → noise → bind
+                                          ↑
+                                         cli
 ```
 
-Each crate has a single responsibility. Cross-crate dependencies flow left to
-right — downstream crates never depend on upstream ones.
+Each module has a single responsibility. Dependencies flow left to right —
+downstream modules never depend on upstream ones. See the
+[README module table](README.md#module-structure) for descriptions of all
+modules including `learn`, `scale`, `tokenize`, `enrich`, `model`, and
+`decision`.
 
 ## Reporting Issues
 
