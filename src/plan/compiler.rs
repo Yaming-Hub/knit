@@ -841,13 +841,19 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     if let Ok(d) = chrono::NaiveDate::parse_from_str(&dr.min, "%Y-%m-%d") {
                         params.insert(
                             "date_range_min_ms".into(),
-                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp_millis() as f64,
+                            d.and_hms_opt(0, 0, 0)
+                                .expect("midnight is always a valid NaiveDateTime")
+                                .and_utc()
+                                .timestamp_millis() as f64,
                         );
                     }
                     if let Ok(d) = chrono::NaiveDate::parse_from_str(&dr.max, "%Y-%m-%d") {
                         params.insert(
                             "date_range_max_ms".into(),
-                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp_millis() as f64,
+                            d.and_hms_opt(0, 0, 0)
+                                .expect("midnight is always a valid NaiveDateTime")
+                                .and_utc()
+                                .timestamp_millis() as f64,
                         );
                     }
                 }
@@ -1624,9 +1630,9 @@ fn compile_copula_plans(
 ) -> Vec<CopulaPlan> {
     correlations
         .iter()
-        .filter(|c| c.entity == entity_name && c.copula.is_some())
+        .filter(|c| c.entity == entity_name)
         .filter_map(|c| {
-            let copula = c.copula.as_ref().unwrap();
+            let copula = c.copula.as_ref()?;
             let n = c.fields.len();
 
             // Build marginal info from field distribution generators
