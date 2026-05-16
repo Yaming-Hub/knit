@@ -21,8 +21,9 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array, Int64Builder};
 use arrow::datatypes::DataType;
+use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
-use rand_distr::{Distribution, Poisson, Uniform};
+use rand_distr::Poisson;
 
 use crate::gen::context::GenContext;
 use crate::gen::traits::FieldGenerator;
@@ -97,7 +98,9 @@ impl FieldGenerator for BarabasiAlbertGenerator {
                 attempts += 1;
                 if stubs.is_empty() {
                     // Fallback: uniform random.
-                    let t = Uniform::new(0, v).sample(rng);
+                    let t = Uniform::new(0, v)
+                        .expect("preferential-attachment fallback requires a non-empty range")
+                        .sample(rng);
                     if !connected.contains(&t) {
                         connected.push(t);
                         degree[v] += 1;
@@ -110,7 +113,9 @@ impl FieldGenerator for BarabasiAlbertGenerator {
                         added += 1;
                     }
                 } else {
-                    let idx = Uniform::new(0, stubs.len()).sample(rng);
+                    let idx = Uniform::new(0, stubs.len())
+                        .expect("stub sampling requires at least one stub")
+                        .sample(rng);
                     let t = stubs[idx];
                     if !connected.contains(&t) && t != v {
                         connected.push(t);
@@ -288,8 +293,8 @@ impl FieldGenerator for WattsStrogatzGenerator {
 
         let n = count;
         let half_k = (self.k / 2).min(n / 2).max(1);
-        let uniform_node = Uniform::new(0, n);
-        let uniform_01 = Uniform::new(0.0f64, 1.0);
+        let uniform_node = Uniform::new(0, n).expect("node range must be non-empty");
+        let uniform_01 = Uniform::new(0.0f64, 1.0).expect("unit interval must be valid");
 
         // Build neighbour lists: for each node, k/2 clockwise neighbours.
         // neighbours[i] = [offset_1_target, offset_2_target, ...]
@@ -371,7 +376,7 @@ impl FieldGenerator for ErdosRenyiGenerator {
         }
 
         let n = count;
-        let uniform_01 = Uniform::new(0.0f64, 1.0);
+        let uniform_01 = Uniform::new(0.0f64, 1.0).expect("unit interval must be valid");
 
         // For each node, find its first neighbour where the edge exists
         let mut targets: Vec<i64> = Vec::with_capacity(n);
@@ -485,7 +490,7 @@ impl FieldGenerator for StochasticBlockGenerator {
 
         let n = count;
         let k = self.communities.min(n).max(1);
-        let uniform_01 = Uniform::new(0.0f64, 1.0);
+        let uniform_01 = Uniform::new(0.0f64, 1.0).expect("unit interval must be valid");
 
         // Assign nodes to communities: community_of[i] = community index
         // Communities are approximately equal-sized. Remainder nodes go to early communities.
@@ -513,7 +518,9 @@ impl FieldGenerator for StochasticBlockGenerator {
 
             // Fisher-Yates shuffle of candidates for unbiased ordering
             for idx in (1..candidates.len()).rev() {
-                let swap = Uniform::new(0, idx + 1).sample(rng);
+                let swap = Uniform::new(0, idx + 1)
+                    .expect("shuffle range must be non-empty")
+                    .sample(rng);
                 candidates.swap(idx, swap);
             }
 
@@ -593,7 +600,7 @@ impl ConfigurationGenerator {
         max_k: usize,
     ) -> usize {
         // Build CDF by rejection: sample uniform, transform
-        let uniform_01 = Uniform::new(0.0f64, 1.0);
+        let uniform_01 = Uniform::new(0.0f64, 1.0).expect("unit interval must be valid");
         let u = uniform_01.sample(rng);
 
         // Continuous power-law inverse CDF, then discretize
@@ -659,14 +666,16 @@ impl FieldGenerator for ConfigurationGenerator {
         // Ensure even number of stubs (can't pair an odd number)
         if stubs.len() % 2 == 1 {
             // Add one more stub to a random node
-            let uniform_node = Uniform::new(0, n);
+            let uniform_node = Uniform::new(0, n).expect("node range must be non-empty");
             stubs.push(uniform_node.sample(rng));
         }
 
         // Shuffle stubs and pair them
         // Fisher-Yates shuffle
         for i in (1..stubs.len()).rev() {
-            let j = Uniform::new(0, i + 1).sample(rng);
+            let j = Uniform::new(0, i + 1)
+                .expect("shuffle range must be non-empty")
+                .sample(rng);
             stubs.swap(i, j);
         }
 
@@ -739,7 +748,9 @@ impl FieldGenerator for CompleteGenerator {
         // Each node picks a uniform random neighbor (any node except itself)
         let targets: Vec<i64> = (0..n)
             .map(|i| {
-                let offset = Uniform::new(1, n).sample(rng);
+                let offset = Uniform::new(1, n)
+                    .expect("complete graph requires at least two nodes")
+                    .sample(rng);
                 ((i + offset) % n) as i64
             })
             .collect();

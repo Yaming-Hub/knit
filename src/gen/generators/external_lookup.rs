@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
 use rand::RngCore;
-use rand_distr::{Distribution, WeightedAliasIndex};
+use rand::distr::{weighted::WeightedIndex, Distribution};
 
 use crate::core::SamplingMode;
 use crate::gen::context::GenContext;
@@ -26,7 +26,7 @@ pub struct ExternalLookupGenerator {
     /// Sampling strategy.
     sampling: SamplingMode,
     /// Pre-built weighted index (only for `Weighted` mode).
-    weighted_index: Option<WeightedAliasIndex<f64>>,
+    weighted_index: Option<WeightedIndex<f64>>,
 }
 
 impl ExternalLookupGenerator {
@@ -35,7 +35,7 @@ impl ExternalLookupGenerator {
         let weighted_index = if sampling == SamplingMode::Weighted {
             weights
                 .as_ref()
-                .and_then(|w| WeightedAliasIndex::new(w.clone()).ok())
+                .and_then(|w| WeightedIndex::new(w.clone()).ok())
         } else {
             None
         };

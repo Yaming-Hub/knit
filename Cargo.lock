@@ -1464,9 +1464,9 @@ dependencies = [
  "parquet",
  "petgraph",
  "predicates",
- "rand 0.8.6",
- "rand_chacha 0.3.1",
- "rand_distr",
+ "rand 0.9.4",
+ "rand_chacha 0.9.0",
+ "rand_distr 0.5.1",
  "rayon",
  "regex",
  "rustfft",
@@ -1706,7 +1706,7 @@ dependencies = [
  "num-rational",
  "num-traits",
  "rand 0.8.6",
- "rand_distr",
+ "rand_distr 0.4.3",
  "simba",
  "typenum",
 ]
@@ -2129,6 +2129,16 @@ checksum = "32cb0b9bc82b0a0876c2dd994a7e7a2683d3e7390ca40e6886785ef0c7e3ee31"
 dependencies = [
  "num-traits",
  "rand 0.8.6",
+]
+
+[[package]]
+name = "rand_distr"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8615d50dcf34fa31f7ab52692afec947c4dd0ab803cc87cb3b0b4570ff7463"
+dependencies = [
+ "num-traits",
+ "rand 0.9.4",
 ]
 
 [[package]]
