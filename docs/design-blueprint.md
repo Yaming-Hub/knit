@@ -1,8 +1,8 @@
-# knit-blueprint — Design Document
+# blueprint module — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-blueprint`
+**Module:** `blueprint module`
 
 ---
 
@@ -24,26 +24,26 @@
 
 ## 1. Overview
 
-`knit-blueprint` is the bridge between textual Weave documents (`.knit.toml` /
-`.weave.json`) and the semantic `DataModel` defined in `knit-core`. It owns
+`blueprint module` is the bridge between textual Weave documents (`.knit.toml` /
+`.weave.json`) and the semantic `DataModel` defined in `core module`. It owns
 everything from the first byte of input to the fully validated, ready-to-plan
-data model that downstream crates consume.
+data model that downstream modules consume.
 
-### Scope Boundary with knit-core
+### Scope Boundary with core module
 
 The responsibility split is deliberate:
 
 | Concern | Owner | Rationale |
 |---------|-------|-----------|
-| Type definitions (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, …) | `knit-core` | Shared vocabulary — every crate needs these |
-| Parsing text → `DataModel` | `knit-blueprint` | Only this crate touches serialization formats |
-| `extends` / `includes` / `params` resolution | `knit-blueprint` | Composition is a blueprint-language concept, invisible to downstream |
-| Structural & semantic validation | `knit-blueprint` | Parse errors and blueprint errors share context (line numbers, paths) |
-| Execution planning, generation, output | Other crates | They receive a validated `DataModel` — no raw text, no parse state |
+| Type definitions (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, …) | `core module` | Shared vocabulary — every module needs these |
+| Parsing text → `DataModel` | `blueprint module` | Only this module touches serialization formats |
+| `extends` / `includes` / `params` resolution | `blueprint module` | Composition is a blueprint-language concept, invisible to downstream |
+| Structural & semantic validation | `blueprint module` | Parse errors and blueprint errors share context (line numbers, paths) |
+| Execution planning, generation, output | Other modules | They receive a validated `DataModel` — no raw text, no parse state |
 
 This separation means **parse errors and model errors live in the same error
 type** (`BlueprintError`), giving users a single diagnostic surface with element
-paths, line numbers, and severity levels. Downstream crates never need to
+paths, line numbers, and severity levels. Downstream modules never need to
 produce parse-level diagnostics; they can assume the `DataModel` is valid.
 
 ### Public API Surface
@@ -74,15 +74,15 @@ pub fn validate(model: &DataModel) -> Vec<BlueprintError>;
 |-------|------|----------|
 | `toml` | TOML deserialization (primary format) | Yes |
 | `serde` / `serde_json` | JSON deserialization + internal serde derives | Yes |
-| `knit-core` | `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value`, and all shared types | Yes |
+| `core module` | `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value`, and all shared types | Yes |
 | `thiserror` | Structured error types (`BlueprintError`) | Yes |
 | `chrono` | Parse temporal literals (`date`, `time`, `datetime`, `duration`) | Yes |
 | `jsonschema` | Validate documents against the Weave JSON Schema | Optional |
 | `url` | Resolve `includes` paths and relative references | Optional |
 
-`knit-blueprint` intentionally has **no runtime dependencies on generation or
-output crates**. It never executes generators, samples distributions, or writes
-files. Its job ends when it hands a validated `DataModel` to `knit-plan`.
+`blueprint module` intentionally has **no runtime dependencies on generation or
+output modules**. It never executes generators, samples distributions, or writes
+files. Its job ends when it hands a validated `DataModel` to `plan module`.
 
 ---
 
@@ -113,7 +113,7 @@ flowchart LR
 |-------|-------|--------|----------------|--------------|
 | **Parse** | Raw text (TOML or JSON) | `serde_json::Value` tree (raw AST) | Syntax errors, encoding errors | No — fatal |
 | **Resolve** | Raw AST | Resolved raw AST (all composition flattened) | Missing files, circular extends, unresolved params | No — fatal |
-| **Lower** | Resolved raw AST | `DataModel` (knit-core types) | Unknown keys, invalid enum variants, type parse failures | Partial — collect all |
+| **Lower** | Resolved raw AST | `DataModel` (core module types) | Unknown keys, invalid enum variants, type parse failures | Partial — collect all |
 | **Validate** | `DataModel` | Validated `DataModel` + diagnostics | Structural, type, referential, semantic violations | Partial — collect all |
 
 The Parse and Resolve phases produce **fatal** errors — a syntax error or
@@ -168,10 +168,10 @@ linting can warn about non-canonical usage.
 Parse-phase errors are **fatal** — the pipeline cannot proceed without a
 syntactically valid document. However, the parser provides helpful context:
 
-1. **TOML parse errors**: The `toml` crate reports line/column numbers. `knit-blueprint`
+1. **TOML parse errors**: The `toml` crate reports line/column numbers. `blueprint module`
    wraps these with file path context and a hint about common mistakes (e.g.,
    "Did you mean to use `[[entities]]` instead of `[entities]`?").
-2. **JSON parse errors**: `serde_json` reports byte offset. `knit-blueprint` converts
+2. **JSON parse errors**: `serde_json` reports byte offset. `blueprint module` converts
    this to a line/column number for consistent error display.
 3. **Format detection**: File extension (`.toml` / `.json`) determines parser. If
    the extension is ambiguous, content sniffing (`{` prefix → JSON, otherwise TOML)
@@ -344,7 +344,7 @@ declared param is a fatal `ResolveError`. This catches typos early.
 ## 6. Lowering Phase
 
 Lowering transforms the resolved raw AST (`serde_json::Value` tree) into the
-typed `DataModel` from `knit-core`. This is where untyped TOML tables become
+typed `DataModel` from `core module`. This is where untyped TOML tables become
 `Entity`, `Field`, `GeneratorSpec`, and other semantic types.
 
 ### Lowering Pipeline
@@ -671,7 +671,7 @@ For CI integration and AI pipelines, errors are emitted as JSON when
 
 ## 9. Blueprint Operations
 
-Beyond parsing and validation, `knit-blueprint` provides three operations for
+Beyond parsing and validation, `blueprint module` provides three operations for
 blueprint tooling.
 
 ### 9.1 `normalize` — Canonical Form Rewrite
@@ -719,7 +719,7 @@ imports, then emits a standalone blueprint with no external references.
 
 ### 9.3 JSON Schema Generation
 
-`knit-blueprint` can generate a JSON Schema document that describes the Weave
+`blueprint module` can generate a JSON Schema document that describes the Weave
 blueprint language. This blueprint is used for:
 
 - **IDE validation**: VS Code, JetBrains, and other editors can validate
@@ -728,7 +728,7 @@ blueprint language. This blueprint is used for:
   full `knit validate` pipeline (faster feedback loop)
 - **Documentation**: Auto-generate documentation from the blueprint
 
-The JSON Schema is generated from the `knit-core` type definitions using
+The JSON Schema is generated from the `core module` type definitions using
 serde reflection, with manual annotations for:
 - Enum variant descriptions
 - Pattern constraints (e.g., entity names must match `[a-z_][a-z0-9_]*`)
@@ -932,10 +932,10 @@ They are not rejected as errors.
   return → order). Rejecting cycles would make Weave less expressive.
 - The constraint is that cyclic FK fields must be `nullable` (so phase 1 can
   leave them NULL and phase 2 can backpatch). This is validated as M-017.
-- The blueprint crate's job is to detect and classify; the plan crate's job is to
+- The blueprint module's job is to detect and classify; the plan module's job is to
   schedule generation phases.
 
-**Tradeoff:** The blueprint crate must perform cycle detection (DFS on the
+**Tradeoff:** The blueprint module must perform cycle detection (DFS on the
 relationship graph) even though it doesn't act on cycles. This is a lightweight
 operation on typical blueprints (< 100 entities).
 

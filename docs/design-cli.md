@@ -1,4 +1,4 @@
-# knit-cli — Design Document
+# cli module — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
@@ -27,20 +27,20 @@
 
 ## 1. Overview
 
-`knit-cli` is the single binary entry point for all Knit operations. It
+`cli module` is the single binary entry point for all Knit operations. It
 orchestrates the full pipeline — from blueprint authoring through validation,
 planning, generation, and learning — while providing consistent progress
 reporting, error handling, and configuration across every command.
 
 ```mermaid
 flowchart LR
-    user([User / CI]) --> cli[knit-cli]
-    cli --> blueprint[knit-blueprint]
-    cli --> plan[knit-plan]
-    cli --> gen[knit-gen]
-    cli --> noise[knit-noise]
-    cli --> bind[knit-bind]
-    cli --> learn[knit-learn]
+    user([User / CI]) --> cli[cli module]
+    cli --> blueprint[blueprint module]
+    cli --> plan[plan module]
+    cli --> gen[gen module]
+    cli --> noise[noise module]
+    cli --> bind[bind module]
+    cli --> learn[learn module]
     gen --> output([Output Files])
     learn --> inferred([Inferred Blueprint])
 ```
@@ -48,7 +48,7 @@ flowchart LR
 **Responsibilities:**
 
 - Parse CLI arguments and dispatch to the appropriate pipeline stage
-- Wire together crate APIs into cohesive workflows
+- Wire together module APIs into cohesive workflows
 - Present human-readable (default) or machine-readable (`--json`) output
 - Report progress via terminal progress bars or JSON events
 - Handle signals for graceful shutdown
@@ -62,13 +62,13 @@ flowchart LR
 
 | Crate | Role |
 |-------|------|
-| `knit-core` | Shared types (`DataModel`, `Value`, `DataType`, etc.) |
-| `knit-blueprint` | Parse and validate knit blueprints |
-| `knit-plan` | Compile `DataModel` into `ExecutionPlan` |
-| `knit-gen` | Execute plan, produce Arrow batches |
-| `knit-noise` | Apply perturbation pipeline |
-| `knit-bind` | Serialize batches to output formats |
-| `knit-learn` | Reverse pipeline (data → inferred blueprint) |
+| `core module` | Shared types (`DataModel`, `Value`, `DataType`, etc.) |
+| `blueprint module` | Parse and validate knit blueprints |
+| `plan module` | Compile `DataModel` into `ExecutionPlan` |
+| `gen module` | Execute plan, produce Arrow batches |
+| `noise module` | Apply perturbation pipeline |
+| `bind module` | Serialize batches to output formats |
+| `learn module` | Reverse pipeline (data → inferred blueprint) |
 
 ### External Crates
 

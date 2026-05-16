@@ -1,4 +1,4 @@
-# knit-plan — Detailed Design Document
+# plan module — Detailed Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
@@ -25,18 +25,18 @@
 
 ## 1. Overview
 
-**knit-plan** is the bridge between blueprint and execution. It takes a validated `DataModel`
-(produced by `knit-blueprint` from a Weave document) and compiles it into an `ExecutionPlan`
-— a complete, self-contained instruction set that tells the generation engine (`knit-gen`)
+**plan module** is the bridge between blueprint and execution. It takes a validated `DataModel`
+(produced by `blueprint module` from a Weave document) and compiles it into an `ExecutionPlan`
+— a complete, self-contained instruction set that tells the generation engine (`gen module`)
 exactly what to do, in what order, and with what parameters.
 
 ```mermaid
 flowchart LR
-    weave([Weave Document]) --> blueprint[knit-blueprint\nParse & Validate]
+    weave([Weave Document]) --> blueprint[blueprint module\nParse & Validate]
     blueprint --> model([DataModel])
-    model --> plan[knit-plan\nCompile]
+    model --> plan[plan module\nCompile]
     plan --> exec([ExecutionPlan])
-    exec --> gen[knit-gen\nExecute]
+    exec --> gen[gen module\nExecute]
     gen --> output([RecordBatch Stream])
 ```
 
@@ -77,18 +77,18 @@ The `ExecutionPlan` is a **pure data structure**:
 
 ## 2. Dependencies
 
-| Crate | Role in knit-plan |
+| Module / Dependency | Role in plan module |
 |-------|-------------------|
-| **knit-core** | Provides the `DataModel`, `Entity`, `Field`, `Relationship`, `GeneratorSpec`, `DistributionSpec`, `CountSpec`, `NullSpec`, and `Value` types that the planner consumes as input. |
-| **knit-blueprint** | Provides the validated `DataModel` — knit-plan does not parse Weave documents directly, it receives the already-parsed and validated model. The blueprint crate also surfaces relationship and constraint metadata that the planner depends on. |
+| **core module** | Provides the `DataModel`, `Entity`, `Field`, `Relationship`, `GeneratorSpec`, `DistributionSpec`, `CountSpec`, `NullSpec`, and `Value` types that the planner consumes as input. |
+| **blueprint module** | Provides the validated `DataModel` — plan module does not parse Weave documents directly, it receives the already-parsed and validated model. The blueprint module also surfaces relationship and constraint metadata that the planner depends on. |
 | **petgraph** | Used to build and analyze directed dependency graphs. Provides topological sorting (`toposort`), strongly connected component detection (Tarjan's algorithm via `tarjan_scc`), and general graph traversal utilities. |
 | **serde** | The `ExecutionPlan` and all sub-types derive `Serialize`/`Deserialize` for plan inspection, caching, and JSON/TOML output. |
 
 ```mermaid
 flowchart BT
-    core[knit-core\nDataModel, Entity, Field,\nRelationship, GeneratorSpec]
-    blueprint[knit-blueprint\nValidated DataModel] --> core
-    plan[knit-plan\nExecutionPlan compiler] --> core
+    core[core module\nDataModel, Entity, Field,\nRelationship, GeneratorSpec]
+    blueprint[blueprint module\nValidated DataModel] --> core
+    plan[plan module\nExecutionPlan compiler] --> core
     plan --> blueprint
     petgraph[petgraph\nGraph algorithms] -.-> plan
     serde[serde\nSerialization] -.-> plan
@@ -469,8 +469,8 @@ common cycle case. The planner handles it as follows:
 
 ```mermaid
 sequenceDiagram
-    participant Planner as knit-plan
-    participant Engine as knit-gen
+    participant Planner as plan module
+    participant Engine as gen module
     participant KS as KeyStore
 
     Note over Planner: Dependency analysis detects cycle:<br/>employee.manager_id → employee.id
@@ -511,7 +511,7 @@ the same phase are generated first when possible. The deferred ref is the one th
 
 Partition planning divides each entity's row space into contiguous, non-overlapping
 ranges (partitions) that can be generated independently and in parallel. Partitions
-are the unit of parallelism in `knit-gen`.
+are the unit of parallelism in `gen module`.
 
 ### Partitioning Algorithm
 

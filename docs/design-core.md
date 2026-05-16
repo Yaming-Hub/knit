@@ -1,8 +1,8 @@
-# knit-core — Design Document
+# core module — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-core`
+**Module:** `core module`
 
 ---
 
@@ -10,46 +10,46 @@
 
 ### Purpose
 
-`knit-core` is the **semantic model** crate — the narrow, stable foundation that every
-other crate in the Knit workspace depends on. It defines the in-memory representation
+`core module` is the **semantic model** module — the narrow, stable foundation that every
+other module in the single crate depends on. It defines the in-memory representation
 of a parsed Weave document: the types that flow between parsing, planning, generation,
 perturbation, and serialization stages.
 
 ```mermaid
 flowchart BT
-    core[knit-core]
-    blueprint[knit-blueprint] --> core
-    plan[knit-plan] --> core
-    gen[knit-gen] --> plan
-    noise[knit-noise] --> gen
-    bind[knit-bind] --> noise
-    learn[knit-learn] --> blueprint
-    cli[knit-cli] --> gen & learn & bind
+    core[core module]
+    blueprint[blueprint module] --> core
+    plan[plan module] --> core
+    gen[gen module] --> plan
+    noise[noise module] --> gen
+    bind[bind module] --> noise
+    learn[learn module] --> blueprint
+    cli[cli module] --> gen & learn & bind
 ```
 
 ### Design Philosophy
 
-**Narrow and stable.** Every addition to `knit-core` ripples across all downstream
-crates. The bar for new types or fields is deliberately high.
+**Narrow and stable.** Every addition to `core module` ripples across all downstream
+modules. The bar for new types or fields is deliberately high.
 
 | Principle | Implication |
 |-----------|-------------|
 | **Data only** | Pure data structures. No engine traits, no I/O, no behavior beyond `Display`/`Default`. |
-| **Minimal surface** | Only types that ≥2 crates need. Single-crate types belong in that crate. |
+| **Minimal surface** | Only types that ≥2 modules need. Single-module types belong in that module. |
 | **Stable contracts** | Field additions are non-breaking (serde `default`); field removals or type changes are breaking. |
 | **No runtime cost** | No allocators, no threads, no async. `Clone` + `Send` + `Sync` everywhere. |
 
 ### What Belongs Here vs. Elsewhere
 
-| Belongs in `knit-core` | Belongs elsewhere |
+| Belongs in `core module` | Belongs elsewhere |
 |-------------------------|-------------------|
-| `DataModel`, `Entity`, `Field` | Parser logic → `knit-blueprint` |
-| `GeneratorSpec`, `DistributionSpec` | `FieldGenerator` trait → `knit-gen` |
-| `Value` enum | Arrow `RecordBatch` operations → `knit-gen` |
-| `Relationship`, `Constraint` | `ExecutionPlan` → `knit-plan` |
-| `NullSpec`, `CountSpec` | `Perturbator` trait → `knit-noise` |
-| `NoiseProfile` | `Sink` trait → `knit-bind` |
-| `ModelError` (validation) | Parse errors (`BlueprintError`) → `knit-blueprint` |
+| `DataModel`, `Entity`, `Field` | Parser logic → `blueprint module` |
+| `GeneratorSpec`, `DistributionSpec` | `FieldGenerator` trait → `gen module` |
+| `Value` enum | Arrow `RecordBatch` operations → `gen module` |
+| `Relationship`, `Constraint` | `ExecutionPlan` → `plan module` |
+| `NullSpec`, `CountSpec` | `Perturbator` trait → `noise module` |
+| `NoiseProfile` | `Sink` trait → `bind module` |
+| `ModelError` (validation) | Parse errors (`BlueprintError`) → `blueprint module` |
 
 ---
 
@@ -72,19 +72,19 @@ uuid = { version = "1", features = ["v4", "v7", "serde"] }
 
 ### Why Minimal Dependencies Matter
 
-`knit-core` sits at the root of the dependency graph. Every dependency added here is
-transitively inherited by every crate in the workspace. This means:
+`core module` sits at the root of the dependency graph. Every dependency added here is
+transitively inherited by every module in the single crate. This means:
 
-- **Compile time** — Adding a crate like `regex` here adds it to 8 crate builds.
+- **Compile time** — Adding a crate like `regex` here adds it to every module build.
 - **Security surface** — Every dependency is an attack vector. Core should be auditable
   by reading a few hundred lines.
-- **MSRV pressure** — Upstream MSRV bumps in core deps force workspace-wide toolchain
+- **MSRV pressure** — Upstream MSRV bumps in core deps force project-wide toolchain
   upgrades.
 - **Reproducibility** — Fewer moving parts means fewer surprising breakages on
   `cargo update`.
 
-If a type needs functionality from a heavier crate (e.g., `arrow`, `petgraph`), that
-logic belongs in the crate that uses it, not in `knit-core`.
+If a type needs functionality from a heavier dependency (e.g., `arrow`, `petgraph`), that
+logic belongs in the module that uses it, not in `core module`.
 
 ---
 
@@ -181,8 +181,8 @@ The top-level container — the in-memory representation of a complete Weave doc
 ```rust
 /// A complete data model parsed from a knit blueprint.
 ///
-/// This is the single artifact that flows from `knit-blueprint` (parsing)
-/// through `knit-plan` (compilation) and into the generation engine.
+/// This is the single artifact that flows from `blueprint module` (parsing)
+/// through `plan module` (compilation) and into the generation engine.
 /// It is fully self-contained: no file paths, no I/O handles, no
 /// references to external state.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -519,7 +519,7 @@ pub struct DistributionSpec {
 ```rust
 /// Supported statistical distribution families.
 ///
-/// Each variant maps to a concrete sampler in `knit-gen`. The `Custom`
+/// Each variant maps to a concrete sampler in `gen module`. The `Custom`
 /// variant is a forward-compatibility escape hatch for plugin-provided
 /// distributions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -800,7 +800,7 @@ pub struct DateRange {
 
 ## 5. Serde Strategy
 
-All `knit-core` types must round-trip through both TOML (primary, user-facing) and JSON
+All `core module` types must round-trip through both TOML (primary, user-facing) and JSON
 (programmatic AI pipelines). The serde strategy is designed for the Weave language's
 "one correct way" philosophy.
 
@@ -832,38 +832,38 @@ All `knit-core` types must round-trip through both TOML (primary, user-facing) a
 
 JSON uses identical structure. No JSON-specific serde attributes. The same
 `Serialize`/`Deserialize` impls work for both `serde_json` and `toml` crates (used
-by `knit-blueprint`, not by `knit-core` directly — core has no parser dependency).
+by `blueprint module`, not by `core module` directly — core has no parser dependency).
 
 ---
 
 ## 6. Trait Implementations
 
-Every public type in `knit-core` derives or implements these standard traits:
+Every public type in `core module` derives or implements these standard traits:
 
 | Trait | Derived / Manual | Notes |
 |-------|-----------------|-------|
-| `Debug` | Derived | Required for error messages and logging across all crates. |
+| `Debug` | Derived | Required for error messages and logging across all modules. |
 | `Clone` | Derived | `DataModel` is cloned when the planner takes ownership. All types are owned, no lifetimes. |
 | `PartialEq` | Derived | Needed for test assertions (`assert_eq!`) and serde round-trip validation. |
 | `Serialize` | Derived | Via `serde`. Every type must serialize to TOML/JSON. |
 | `Deserialize` | Derived | Via `serde`. Every type must deserialize from TOML/JSON. |
-| `Default` | Selective | `NullSpec` defaults to `Never`. `GeneratorSpec` has no blanket `Default` — the appropriate default depends on `DataType` and is resolved by `knit-blueprint`. |
+| `Default` | Selective | `NullSpec` defaults to `Never`. `GeneratorSpec` has no blanket `Default` — the appropriate default depends on `DataType` and is resolved by `blueprint module`. |
 | `Display` | Manual | Implemented on `DataType`, `DistributionKind`, `RelationshipKind`, `Value`, and `NullSpec` for human-readable output in CLI messages and error diagnostics. |
-| `Send + Sync` | Auto | All types are `Send + Sync` because they contain no `Rc`, `Cell`, or raw pointers. This is essential for `rayon` parallelism in `knit-gen`. |
+| `Send + Sync` | Auto | All types are `Send + Sync` because they contain no `Rc`, `Cell`, or raw pointers. This is essential for `rayon` parallelism in `gen module`. |
 
 ### Why No Engine Traits Here
 
 Traits like `FieldGenerator`, `Perturbator`, and `Sink` are **behavioral contracts**
-that depend on heavy crates (`arrow`, `rand`, `rayon`). Placing them in `knit-core`
+that depend on heavy crates (`arrow`, `rand`, `rayon`). Placing them in `core module`
 would:
 
-1. Pull those dependencies into every crate in the workspace.
+1. Pull those dependencies into every module in the single crate.
 2. Couple the spec types to execution concerns — a `GeneratorSpec` describes *what*
    to generate, not *how* to generate it.
-3. Make `knit-core` a moving target: engine trait evolution would force version bumps
-   on the foundation crate.
+3. Make `core module` a moving target: engine trait evolution would force version bumps
+   on the foundation module.
 
-Engine traits live in their respective crates (`knit-gen`, `knit-noise`, `knit-bind`).
+Engine traits live in their respective modules (`gen module`, `noise module`, `bind module`).
 
 ---
 
@@ -875,7 +875,7 @@ Engine traits live in their respective crates (`knit-gen`, `knit-noise`, `knit-b
 /// `ModelError` covers structural and semantic errors that can be
 /// detected by inspecting a `DataModel` without parsing context.
 /// Parse errors (syntax, line numbers, file paths) belong in
-/// `knit-blueprint::BlueprintError`.
+/// `blueprint module::BlueprintError`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ModelError {
     /// A required field is missing (e.g., entity with no name).
@@ -961,10 +961,10 @@ impl std::error::Error for ModelError {}
 
 | Error Kind | Owner Crate | Example |
 |------------|-------------|---------|
-| Model validation (semantic) | `knit-core` (`ModelError`) | "entity 'order' references unknown entity 'usr'" |
-| Parse errors (syntax) | `knit-blueprint` (`BlueprintError`) | "line 42: expected string, found integer" |
-| Plan errors (infeasibility) | `knit-plan` (`PlanError`) | "cycle detected: order → user → order" |
-| Generation errors (runtime) | `knit-gen` (`GenError`) | "unique constraint exhausted after 1000 retries" |
+| Model validation (semantic) | `core module` (`ModelError`) | "entity 'order' references unknown entity 'usr'" |
+| Parse errors (syntax) | `blueprint module` (`BlueprintError`) | "line 42: expected string, found integer" |
+| Plan errors (infeasibility) | `plan module` (`PlanError`) | "cycle detected: order → user → order" |
+| Generation errors (runtime) | `gen module` (`GenError`) | "unique constraint exhausted after 1000 retries" |
 
 ---
 
@@ -972,8 +972,8 @@ impl std::error::Error for ModelError {}
 
 ### SemVer Guarantees
 
-`knit-core` follows Rust/Cargo SemVer strictly. Because it is the foundation crate,
-the version policy is more conservative than downstream crates.
+`core module` follows Rust/Cargo SemVer strictly. Because it is the foundation module,
+the version policy is more conservative than downstream modules.
 
 | Change | SemVer Impact | Example |
 |--------|--------------|---------|
@@ -1011,8 +1011,8 @@ previously valid input** is breaking. Specifically:
 | 1 | **`Value` enum exists alongside Arrow** | `Value` is needed at API boundaries (blueprint params, constants, test assertions) where constructing an Arrow array for a single cell is wasteful. Arrow is used for bulk generation. Two representations serve different granularity needs. | Single `Value`-only approach (too slow for generation); Arrow-only (awkward for single-value contexts). |
 | 2 | **`GeneratorSpec` is an enum, not trait objects** | Generator specs are pure data (serialized in blueprints). Exhaustive matching ensures compile-time coverage when adding new generators. Trait objects would require a registry and lose serde ergonomics. | `Box<dyn GeneratorSpec>` with `typetag` — adds runtime overhead and dynamic dispatch for what is a static, bounded set. |
 | 3 | **`BTreeMap` over `HashMap`** | Deterministic iteration order is essential for reproducibility. Same blueprint → same serialized output, always. `HashMap` randomizes iteration, causing diffs in round-tripped blueprints. | `IndexMap` — adds a dependency for marginal benefit over `BTreeMap`. |
-| 4 | **No engine traits in core** | Engine traits (`FieldGenerator`, `Perturbator`, `Sink`) depend on `arrow`, `rand`, `rayon`. Putting them here would bloat the dependency tree for all crates, including `knit-blueprint` and `knit-learn` which never execute generation. | Lightweight trait-only crate — adds workspace complexity for minimal benefit since traits are only consumed by one or two crates each. |
-| 5 | **`DistributionKind::Custom` variant** | Forward-compatibility for plugin-provided distributions. Without it, adding a distribution requires a `knit-core` release. With it, plugins can use `Custom` and a string identifier in `params`. | Open-ended string type — loses exhaustive matching benefits for the 17 built-in distributions. |
+| 4 | **No engine traits in core** | Engine traits (`FieldGenerator`, `Perturbator`, `Sink`) depend on `arrow`, `rand`, `rayon`. Putting them here would bloat the dependency tree for all modules, including `blueprint module` and `learn module` which never execute generation. | Lightweight trait-only module — adds extra module-boundary complexity for minimal benefit since traits are only consumed by one or two modules each. |
+| 5 | **`DistributionKind::Custom` variant** | Forward-compatibility for plugin-provided distributions. Without it, adding a distribution requires a `core module` release. With it, plugins can use `Custom` and a string identifier in `params`. | Open-ended string type — loses exhaustive matching benefits for the 17 built-in distributions. |
 | 6 | **`NullSpec` as a separate enum** | Null behavior is orthogonal to generation. Combining it into `GeneratorSpec` would duplicate null logic across 14 generator variants. Separating it allows a single null-wrapping pass after generation. | `nullable: bool` — too limited; real data has varied null patterns (5% probability, every-Nth-row, etc.). |
 | 7 | **`CountSpec::Distribution`** | Some blueprints need variable entity sizes (e.g., parameterized stress tests where count follows a distribution). Fixed-only would limit expressiveness. | Always-fixed count — simpler but insufficient for advanced use cases. |
 | 8 | **Temporal types use `chrono`** | `chrono` is the de facto Rust datetime library with comprehensive timezone support, serde integration, and arithmetic. Rolling our own temporal types would be error-prone and poorly tested. | `time` crate — viable but less ecosystem adoption; mixing both causes conversion overhead. |
@@ -1025,7 +1025,7 @@ previously valid input** is breaking. Specifically:
 
 ### Unit Tests
 
-All unit tests live in `knit-core/src/` as `#[cfg(test)] mod tests` blocks, colocated
+All unit tests live in `core module/src/` as `#[cfg(test)] mod tests` blocks, colocated
 with the types they test.
 
 #### Serde Round-Trip Tests
@@ -1110,13 +1110,13 @@ fn model_error_messages_are_readable() {
 
 | Concern | Tested In |
 |---------|-----------|
-| TOML/JSON parsing from files | `knit-blueprint` |
-| Validation rules (referential integrity, distribution params) | `knit-blueprint` |
-| Arrow type mapping | `knit-gen` |
-| Serde compatibility with actual Weave `.toml` files | `knit-blueprint` integration tests |
+| TOML/JSON parsing from files | `blueprint module` |
+| Validation rules (referential integrity, distribution params) | `blueprint module` |
+| Arrow type mapping | `gen module` |
+| Serde compatibility with actual Weave `.toml` files | `blueprint module` integration tests |
 
 ---
 
-*This document covers `knit-core` only. See [`architecture.md`](architecture.md) for
+*This document covers `core module` only. See [`architecture.md`](architecture.md) for
 the full system design and [`knit-spec.md`](knit-spec.md) for the blueprint language
 specification.*

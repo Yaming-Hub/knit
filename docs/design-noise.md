@@ -1,8 +1,8 @@
-# knit-noise — Detailed Design Document
+# noise module — Detailed Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-noise`
+**Module:** `noise module`
 
 ---
 
@@ -14,14 +14,14 @@ that lacks these imperfections is immediately distinguishable from the real thin
 it unsuitable for robustness testing, anomaly detection training, or realistic
 load simulation.
 
-**knit-noise** makes synthetic data realistic by injecting controlled noise, anomalies,
-and outliers into generated data. It sits between the generation stage (`knit-gen`) and
-the serialization stage (`knit-bind`) in the Knit forward pipeline:
+**noise module** makes synthetic data realistic by injecting controlled noise, anomalies,
+and outliers into generated data. It sits between the generation stage (`gen module`) and
+the serialization stage (`bind module`) in the Knit forward pipeline:
 
 ```mermaid
 flowchart LR
-    gen[knit-gen\nGenerate clean data] --> noise[knit-noise\nInject perturbations]
-    noise --> bind[knit-bind\nSerialize output]
+    gen[gen module\nGenerate clean data] --> noise[noise module\nInject perturbations]
+    noise --> bind[bind module\nSerialize output]
 ```
 
 The core innovation is a **three-stage invariant-aware pipeline**. Each perturbation
@@ -38,17 +38,17 @@ at dataset scale.
 
 | Crate | Purpose |
 |-------|---------|
-| `knit-core` | Shared types (`Value`, `DataType`, `DataModel`, `NoiseProfile`) |
-| `knit-gen` | Provides the `RecordBatch` output that knit-noise modifies |
+| `core module` | Shared types (`Value`, `DataType`, `DataModel`, `NoiseProfile`) |
+| `gen module` | Provides the `RecordBatch` output that noise module modifies |
 | `arrow` | Columnar data representation (`RecordBatch`, `ArrayRef`, null bitmasks) |
 | `rand` | Deterministic RNG (`StdRng`, `SeedableRng`, distribution sampling) |
 | `bitflags` | `InvariantSet` flag type |
 
 ```mermaid
 flowchart BT
-    core[knit-core]
-    gen[knit-gen] --> core
-    noise[knit-noise] --> gen
+    core[core module]
+    gen[gen module] --> core
+    noise[noise module] --> gen
     noise --> arrow[arrow]
     noise --> rand[rand]
     noise --> bitflags[bitflags]
@@ -62,7 +62,7 @@ flowchart BT
 
 ```mermaid
 flowchart LR
-    input([RecordBatch\nfrom knit-gen]) --> clean[Stage 1\nClean]
+    input([RecordBatch\nfrom gen module]) --> clean[Stage 1\nClean]
     clean --> constrained[Stage 2\nConstrained]
     constrained --> breaking[Stage 3\nBreaking]
     breaking --> output([Perturbed\nRecordBatch])
@@ -603,7 +603,7 @@ When the pipeline starts, each `NoiseProfile` is resolved to a `(Perturbator, Pe
 
 ### In-Place RecordBatch Modification
 
-knit-noise modifies `RecordBatch` arrays **in-place** rather than allocating new arrays.
+noise module modifies `RecordBatch` arrays **in-place** rather than allocating new arrays.
 This eliminates the allocation and copy overhead that would otherwise dominate at dataset
 scale (100GB+).
 

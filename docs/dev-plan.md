@@ -3,7 +3,7 @@
 **Version:** 0.1.0
 **Status:** Draft
 
-Each PR targets **< 2000 lines** of code changes (excluding generated files, test fixtures, and lockfiles). PRs follow the crate dependency graph bottom-up and are designed to be independently reviewable and testable.
+Each PR targets **< 2000 lines** of code changes (excluding generated files, test fixtures, and lockfiles). PRs follow the module dependency graph bottom-up and are designed to be independently reviewable and testable.
 
 ---
 
@@ -12,29 +12,29 @@ Each PR targets **< 2000 lines** of code changes (excluding generated files, tes
 ```mermaid
 flowchart LR
     subgraph Phase1[Phase 1 — Foundation]
-        PR1[PR 1\nWorkspace +\nknit-core types]
-        PR2[PR 2\nknit-blueprint\nparsing]
-        PR3[PR 3\nknit-blueprint\nvalidation +\nextends]
+        PR1[PR 1\nSingle crate +\ncore module types]
+        PR2[PR 2\nblueprint module\nparsing]
+        PR3[PR 3\nblueprint module\nvalidation +\nextends]
     end
     subgraph Phase2[Phase 2 — Planning & Core Generation]
-        PR4[PR 4\nknit-plan\nexecution planner]
-        PR5[PR 5\nknit-gen\nengine + basic\ngenerators]
-        PR6[PR 6\nknit-gen\nadvanced\ngenerators]
+        PR4[PR 4\nplan module\nexecution planner]
+        PR5[PR 5\ngen module\nengine + basic\ngenerators]
+        PR6[PR 6\ngen module\nadvanced\ngenerators]
     end
     subgraph Phase3[Phase 3 — Relationships & Parallelism]
-        PR7[PR 7\nknit-gen\nFK + parallel\nexecution]
-        PR8[PR 8\nknit-gen\ntemporal +\ncorrelation]
+        PR7[PR 7\ngen module\nFK + parallel\nexecution]
+        PR8[PR 8\ngen module\ntemporal +\ncorrelation]
     end
     subgraph Phase4[Phase 4 — Output & Noise]
-        PR9[PR 9\nknit-bind\noutput sinks]
-        PR10[PR 10\nknit-bind\ntemplates]
-        PR11[PR 11\nknit-noise\nperturbation]
+        PR9[PR 9\nbind module\noutput sinks]
+        PR10[PR 10\nbind module\ntemplates]
+        PR11[PR 11\nnoise module\nperturbation]
     end
     subgraph Phase5[Phase 5 — CLI & Reverse Pipeline]
-        PR12[PR 12\nknit-cli\ncore commands]
-        PR13[PR 13\nknit-cli\nblueprint ops +\ninit]
-        PR14[PR 14\nknit-learn\ningestion +\nprofiling]
-        PR15[PR 15\nknit-learn\nfitting +\nrelationships]
+        PR12[PR 12\ncli module\ncore commands]
+        PR13[PR 13\ncli module\nblueprint ops +\ninit]
+        PR14[PR 14\nlearn module\ningestion +\nprofiling]
+        PR15[PR 15\nlearn module\nfitting +\nrelationships]
     end
     subgraph Phase6[Phase 6 — Integration & Polish]
         PR16[PR 16\nIntegration tests\n+ examples]
@@ -53,15 +53,15 @@ flowchart LR
 
 ## Phase 1 — Foundation
 
-### PR 1: Workspace Scaffold + knit-core Types
+### PR 1: Single-Crate Scaffold + core module Types
 
-**Branch:** `feat/workspace-and-core`
+**Branch:** `feat/core-module-foundation`
 **Est. lines:** ~1200
 **Depends on:** —
 
 **Scope:**
-- Initialize Cargo workspace with 8 crate stubs (Cargo.toml for each, `lib.rs` with module stubs)
-- Implement all `knit-core` types with serde derives:
+- Initialize a single crate with 8 top-level modules under `src/` (shared `Cargo.toml`, `lib.rs`, and module stubs)
+- Implement all `core module` types with serde derives:
   - `DataModel`, `Entity`, `Field`, `DataType` enum
   - `Value` enum (Null, Bool, Int, Float, String, DateTime, Date, Time, Duration, DateTimeTz, Uuid, Bytes, Array, Map)
   - `GeneratorSpec` enum (all 14 variants with param structs)
@@ -73,17 +73,17 @@ flowchart LR
 - Unit tests: serde round-trip (TOML ↔ struct ↔ JSON), `Display` impls, `Default` values
 
 **Deliverables:**
-- `Cargo.toml` (workspace root)
-- `crates/knit-core/` — full implementation
-- `crates/knit-{blueprint,plan,gen,noise,bind,learn,cli}/` — stub `Cargo.toml` + empty `lib.rs`
+- `Cargo.toml` (crate root)
+- `src/core/` — full implementation
+- `src/{blueprint,plan,gen,noise,bind,learn,cli}/` — module stubs
 
 **Acceptance criteria:**
-- `cargo build --workspace` succeeds
-- `cargo test -p knit-core` passes all serde round-trip tests
+- `cargo build` succeeds
+- `cargo test` passes all core module serde round-trip tests
 
 ---
 
-### PR 2: knit-blueprint — TOML & JSON Parsing
+### PR 2: blueprint module — TOML & JSON Parsing
 
 **Branch:** `feat/blueprint-parsing`
 **Est. lines:** ~1500
@@ -110,11 +110,11 @@ BlueprintParser
 **Acceptance criteria:**
 - Parse the e-commerce example blueprint from `design.md`
 - Reject blueprints with unknown generator types, missing required fields
-- `cargo test -p knit-blueprint` passes
+- `cargo test` passes blueprint module tests
 
 ---
 
-### PR 3: knit-blueprint — Validation + Extends Resolution
+### PR 3: blueprint module — Validation + Extends Resolution
 
 **Branch:** `feat/blueprint-validation`
 **Est. lines:** ~1500
@@ -142,7 +142,7 @@ BlueprintParser
 
 ## Phase 2 — Planning & Core Generation
 
-### PR 4: knit-plan — Execution Planner
+### PR 4: plan module — Execution Planner
 
 **Branch:** `feat/execution-planner`
 **Est. lines:** ~1500
@@ -164,11 +164,11 @@ BlueprintParser
 **Acceptance criteria:**
 - E-commerce blueprint produces correct 2-phase plan (employee self-ref → phase 2)
 - Same DataModel always produces identical ExecutionPlan
-- `cargo test -p knit-plan` passes
+- `cargo test` passes plan module tests
 
 ---
 
-### PR 5: knit-gen — Engine Core + Basic Generators
+### PR 5: gen module — Engine Core + Basic Generators
 
 **Branch:** `feat/gen-engine-core`
 **Est. lines:** ~1800
@@ -201,7 +201,7 @@ BlueprintParser
 
 ---
 
-### PR 6: knit-gen — Advanced Generators
+### PR 6: gen module — Advanced Generators
 
 **Branch:** `feat/gen-advanced-generators`
 **Est. lines:** ~1800
@@ -228,7 +228,7 @@ BlueprintParser
 
 ## Phase 3 — Relationships & Parallelism
 
-### PR 7: knit-gen — FK Resolution + Parallel Execution
+### PR 7: gen module — FK Resolution + Parallel Execution
 
 **Branch:** `feat/gen-fk-parallel`
 **Est. lines:** ~1500
@@ -257,7 +257,7 @@ BlueprintParser
 
 ---
 
-### PR 8: knit-gen — Temporal, Correlation & Graph Topology
+### PR 8: gen module — Temporal, Correlation & Graph Topology
 
 **Branch:** `feat/gen-temporal-correlation`
 **Est. lines:** ~1800
@@ -294,7 +294,7 @@ BlueprintParser
 
 ## Phase 4 — Output & Noise
 
-### PR 9: knit-bind — Output Sinks
+### PR 9: bind module — Output Sinks
 
 **Branch:** `feat/bind-sinks`
 **Est. lines:** ~1500
@@ -326,7 +326,7 @@ BlueprintParser
 
 ---
 
-### PR 10: knit-bind — Template Engine
+### PR 10: bind module — Template Engine
 
 **Branch:** `feat/bind-templates`
 **Est. lines:** ~800
@@ -353,7 +353,7 @@ BlueprintParser
 
 ---
 
-### PR 11: knit-noise — Perturbation Pipeline
+### PR 11: noise module — Perturbation Pipeline
 
 **Branch:** `feat/noise-pipeline`
 **Est. lines:** ~1800
@@ -393,7 +393,7 @@ BlueprintParser
 
 ## Phase 5 — CLI & Reverse Pipeline
 
-### PR 12: knit-cli — Core Commands
+### PR 12: cli module — Core Commands
 
 **Branch:** `feat/cli-core`
 **Est. lines:** ~1500
@@ -426,7 +426,7 @@ BlueprintParser
 
 ---
 
-### PR 13: knit-cli — Blueprint Operations + Init
+### PR 13: cli module — Blueprint Operations + Init
 
 **Branch:** `feat/cli-blueprint-ops`
 **Est. lines:** ~1000
@@ -439,7 +439,7 @@ BlueprintParser
 - **`knit init`** — scaffold a minimal `.knit.toml` starter blueprint with documentation comments
   - The data model blueprint is the single source of truth; no domain templates needed
   - Output includes commented examples of all generator types and relationships
-- **`knit learn` command** (wiring only, delegates to knit-learn)
+- **`knit learn` command** (wiring only, delegates to learn module)
 - **Config file support:** `knit.toml` in cwd or `~/.config/knit/config.toml`
 - **Environment variables:** `KNIT_SEED`, `KNIT_PARALLEL`, `KNIT_FORMAT`, etc.
 - Tests: expand/normalize golden tests, diff output tests, init scaffold tests
@@ -451,7 +451,7 @@ BlueprintParser
 
 ---
 
-### PR 14: knit-learn — Ingestion + Profiling + Type Inference
+### PR 14: learn module — Ingestion + Profiling + Type Inference
 
 **Branch:** `feat/learn-profiling`
 **Est. lines:** ~1500
@@ -487,7 +487,7 @@ BlueprintParser
 
 ---
 
-### PR 15: knit-learn — Distribution Fitting + Temporal Patterns + Relationship Analysis
+### PR 15: learn module — Distribution Fitting + Temporal Patterns + Relationship Analysis
 
 **Branch:** `feat/learn-fitting-relationships`
 **Est. lines:** ~1800
@@ -574,7 +574,7 @@ persona-driven data generation.
 **Depends on:** PR 3
 
 **Scope:**
-- Add `Persona` struct to `knit-core`: name, weight, traits map
+- Add `Persona` struct to `core module`: name, weight, traits map
 - Add `ActorRelationship` struct: name, from/to entity, graph type, params
 - Add `GraphType` enum: ScaleFree, SmallWorld, Hierarchical, ErdosRenyi, Custom
 - Extend `DataModel` with `personas: Vec<Persona>`, `actor_relationships: Vec<ActorRelationship>`
@@ -584,7 +584,7 @@ persona-driven data generation.
 - Blueprint parsing and serialization for new sections
 - Validation: persona weights sum to 1.0, actor references exist, graph params valid
 
-### PR 20: Actor Identification in knit-learn
+### PR 20: Actor Identification in learn module
 
 **Branch:** `feat/actor-identification`
 **Est. lines:** ~1200
@@ -718,7 +718,7 @@ persona-driven data generation.
 
 **Acceptance criteria:**
 - Custom generator plugin compiles and is discovered at runtime
-- `cargo doc --workspace --no-deps` produces clean documentation
+- `cargo doc --no-deps` produces clean documentation
 - README quickstart example works end-to-end
 
 ---
@@ -731,17 +731,17 @@ persona-driven data generation.
 
 **Scope:**
 Apply the documentation convention from `agents.md` to all existing code:
-- **knit-core:** Add `///` doc comments to all public types (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `NullSpec`, `CountSpec`, `Relationship`, `NoiseProfile`, `Correlation`, `Constraint`, `Value`, `WeightedChoice`, `TopologySpec`) and `ModelError`. Document each enum variant. Add `//!` crate-level doc.
-- **knit-blueprint:** Add `///` doc comments to all public functions (`parse_toml`, `parse_json`, `parse_toml_file`, `parse_json_file`, `validate`, `merge_models`, `resolve_extends`) and `BlueprintError`. Add `//!` crate-level doc explaining pipeline position.
-- **knit-plan:** Add `///` doc comments to all plan types (`ExecutionPlan`, `Phase`, `EntityPlan`, `FieldPlan`, `GeneratorPlan`, `NullPlan`, `RngTree`, `IndexStrategy`, `KeyStoreKind`, `PlanMetadata`, `DeferredRef`, `DeferralStrategy`), `compile()`, and `PlanError`. Document each type's role and which crate produces/consumes it. Add `//!` crate-level doc.
-- Ensure `cargo doc --workspace --no-deps` produces clean output with no warnings.
+- **core module:** Add `///` doc comments to all public types (`DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `NullSpec`, `CountSpec`, `Relationship`, `NoiseProfile`, `Correlation`, `Constraint`, `Value`, `WeightedChoice`, `TopologySpec`) and `ModelError`. Document each enum variant. Add `//!` module-level docs.
+- **blueprint module:** Add `///` doc comments to all public functions (`parse_toml`, `parse_json`, `parse_toml_file`, `parse_json_file`, `validate`, `merge_models`, `resolve_extends`) and `BlueprintError`. Add `//!` module-level docs explaining pipeline position.
+- **plan module:** Add `///` doc comments to all plan types (`ExecutionPlan`, `Phase`, `EntityPlan`, `FieldPlan`, `GeneratorPlan`, `NullPlan`, `RngTree`, `IndexStrategy`, `KeyStoreKind`, `PlanMetadata`, `DeferredRef`, `DeferralStrategy`), `compile()`, and `PlanError`. Document each type's role and which module produces/consumes it. Add `//!` module-level docs.
+- Ensure `cargo doc --no-deps` produces clean output with no warnings.
 
 **Note:** All new code from PR 5 onward must follow the documentation convention in `agents.md` from the start. This PR retroactively covers PRs 1–4.
 
 **Acceptance criteria:**
-- Every public item in knit-core, knit-blueprint, and knit-plan has a `///` doc comment
-- Key types document their pipeline role and cross-crate interactions
-- `cargo doc --workspace --no-deps` succeeds with no missing-doc warnings
+- Every public item in core module, blueprint module, and plan module has a `///` doc comment
+- Key types document their pipeline role and cross-module interactions
+- `cargo doc --no-deps` succeeds with no missing-doc warnings
 
 ---
 
@@ -749,30 +749,30 @@ Apply the documentation convention from `agents.md` to all existing code:
 
 | PR | Crate | Focus | Est. Lines | Depends On |
 |----|-------|-------|-----------|------------|
-| 1 | knit-core | Workspace scaffold + all model types | ~1200 | — |
-| 2 | knit-blueprint | TOML/JSON parsing → DataModel | ~1500 | PR 1 |
-| 3 | knit-blueprint | Validation + extends/includes/params | ~1500 | PR 2 |
-| 4 | knit-plan | Execution planner + RNG tree | ~1500 | PR 3 |
-| 5 | knit-gen | Engine core + 5 basic generators | ~1800 | PR 4 |
-| 6 | knit-gen | 12 advanced generators + expressions | ~1800 | PR 5 |
-| 7 | knit-gen | FK resolution + parallel execution | ~1500 | PR 6 |
-| 8 | knit-gen | Temporal + correlation + graph topology | ~1800 | PR 7 |
-| 9 | knit-bind | Parquet/JSON/CSV/Arrow IPC sinks | ~1500 | PR 8 |
-| 10 | knit-bind | MiniJinja template engine | ~800 | PR 9 |
-| 11 | knit-noise | Perturbation pipeline + 9 perturbators | ~1800 | PR 8 |
-| 12 | knit-cli | validate/plan/generate commands | ~1500 | PR 10, 11 |
-| 13 | knit-cli | Blueprint ops + init wizard | ~1000 | PR 12 |
-| 14 | knit-learn | Ingestion + profiling + type inference | ~1500 | PR 3 |
-| 15 | knit-learn | Fitting + relationships + correlations | ~1800 | PR 14 |
+| 1 | core module | Workspace scaffold + all model types | ~1200 | — |
+| 2 | blueprint module | TOML/JSON parsing → DataModel | ~1500 | PR 1 |
+| 3 | blueprint module | Validation + extends/includes/params | ~1500 | PR 2 |
+| 4 | plan module | Execution planner + RNG tree | ~1500 | PR 3 |
+| 5 | gen module | Engine core + 5 basic generators | ~1800 | PR 4 |
+| 6 | gen module | 12 advanced generators + expressions | ~1800 | PR 5 |
+| 7 | gen module | FK resolution + parallel execution | ~1500 | PR 6 |
+| 8 | gen module | Temporal + correlation + graph topology | ~1800 | PR 7 |
+| 9 | bind module | Parquet/JSON/CSV/Arrow IPC sinks | ~1500 | PR 8 |
+| 10 | bind module | MiniJinja template engine | ~800 | PR 9 |
+| 11 | noise module | Perturbation pipeline + 9 perturbators | ~1800 | PR 8 |
+| 12 | cli module | validate/plan/generate commands | ~1500 | PR 10, 11 |
+| 13 | cli module | Blueprint ops + init wizard | ~1000 | PR 12 |
+| 14 | learn module | Ingestion + profiling + type inference | ~1500 | PR 3 |
+| 15 | learn module | Fitting + relationships + correlations | ~1800 | PR 14 |
 | 16 | — | Integration tests + example blueprints | ~1500 | PR 13, 15 |
 | 17 | — | Extensions + docs + polish | ~1200 | PR 16 |
 | 18 | — | Retroactive Rustdoc | ~800 | PR 4 |
-| 19 | knit-core | Persona + actor relationship types | ~800 | PR 3 |
-| 20 | knit-learn | Actor identification + resolution | ~1200 | PR 19 |
-| 21 | knit-learn | Behavioral profiling + persona clustering | ~1500 | PR 20 |
-| 22 | knit-learn | Relationship graph discovery | ~1200 | PR 20 |
-| 23 | knit-gen | Profile-driven generation | ~1500 | PR 19, 21 |
-| 24 | knit-gen | Relationship graph generation | ~1200 | PR 22, 23 |
+| 19 | core module | Persona + actor relationship types | ~800 | PR 3 |
+| 20 | learn module | Actor identification + resolution | ~1200 | PR 19 |
+| 21 | learn module | Behavioral profiling + persona clustering | ~1500 | PR 20 |
+| 22 | learn module | Relationship graph discovery | ~1200 | PR 20 |
+| 23 | gen module | Profile-driven generation | ~1500 | PR 19, 21 |
+| 24 | gen module | Relationship graph generation | ~1200 | PR 22, 23 |
 | 25 | — | Human behavior examples + round-trip tests | ~1000 | PR 23, 24 |
 | | | **Total** | **~33,600** | |
 
@@ -785,7 +785,7 @@ flowchart LR
 
 The critical path runs through the forward pipeline: core → blueprint → plan → gen → bind → cli → integration.
 
-`knit-learn` (PR 14–15) and `knit-noise` (PR 11) can be developed in parallel with later forward pipeline PRs once their dependencies are met.
+`learn module` (PR 14–15) and `noise module` (PR 11) can be developed in parallel with later forward pipeline PRs once their dependencies are met.
 
 Phase 7 (Human Behavioral Modeling, PR 19–25) depends on PR 3 (blueprint validation) and can proceed independently of the forward pipeline once core types are in place.
 

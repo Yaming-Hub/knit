@@ -1,23 +1,23 @@
-# knit-bind — Design Document
+# bind module — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-bind`
+**Module:** `bind module`
 
 ---
 
 ## 1. Overview
 
-`knit-bind` is the **final stage** of the forward pipeline. It receives a stream of
+`bind module` is the **final stage** of the forward pipeline. It receives a stream of
 Arrow `RecordBatch` values — one batch at a time, per partition — and writes them to
 output files on disk.
 
 ```mermaid
 flowchart LR
-    gen[knit-gen\nGenerate] --> noise[knit-noise\nPerturb] --> bind[knit-bind\nBind] --> output([Output Files])
+    gen[gen module\nGenerate] --> noise[noise module\nPerturb] --> bind[bind module\nBind] --> output([Output Files])
 ```
 
-The crate supports two complementary output modes:
+The module supports two complementary output modes:
 
 | Mode | Orientation | Use Case | Throughput |
 |------|-------------|----------|------------|
@@ -34,7 +34,7 @@ text — trading throughput for complete format flexibility.
 
 | Dependency | Purpose |
 |------------|---------|
-| `knit-core` | `DataModel`, `Entity`, `Field`, `Value` — shared type vocabulary |
+| `core module` | `DataModel`, `Entity`, `Field`, `Value` — shared type vocabulary |
 | `arrow` | `RecordBatch`, `ArrayRef`, `Schema` — columnar data representation |
 | `parquet` | `ArrowWriter`, compression codecs — Parquet file writing |
 | `apache-avro` | Avro OCF writing with Null/Deflate/Snappy codecs |
@@ -380,7 +380,7 @@ users_0000_02.parquet
 
 ### 6.4 Manifest File
 
-After all sinks are finalized, `knit-bind` writes a `_manifest.json` file summarizing
+After all sinks are finalized, `bind module` writes a `_manifest.json` file summarizing
 the output:
 
 ```json
