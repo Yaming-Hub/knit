@@ -306,7 +306,7 @@ fn update_column_from_array(col: &mut ColumnState, array: &dyn Array, dt: &DataT
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::BooleanArray>()
-                .unwrap();
+                .expect("Boolean array must downcast to BooleanArray");
             for i in 0..len {
                 if arr.is_null(i) {
                     col.update_null();
@@ -334,7 +334,7 @@ fn update_column_from_array(col: &mut ColumnState, array: &dyn Array, dt: &DataT
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::StringArray>()
-                .unwrap();
+                .expect("Utf8 array must downcast to StringArray");
             for i in 0..len {
                 if arr.is_null(i) {
                     col.update_null();
@@ -348,7 +348,7 @@ fn update_column_from_array(col: &mut ColumnState, array: &dyn Array, dt: &DataT
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::LargeStringArray>()
-                .unwrap();
+                .expect("LargeUtf8 array must downcast to LargeStringArray");
             for i in 0..len {
                 if arr.is_null(i) {
                     col.update_null();
@@ -385,7 +385,7 @@ where
     let arr = array
         .as_any()
         .downcast_ref::<arrow::array::PrimitiveArray<T>>()
-        .unwrap();
+        .expect("primitive array must downcast to PrimitiveArray<T>");
     for i in 0..arr.len() {
         if arr.is_null(i) {
             col.update_null();
@@ -403,7 +403,7 @@ fn update_float_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType) {
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::Float32Array>()
-                .unwrap();
+                .expect("Float32 array must downcast to Float32Array");
             for i in 0..arr.len() {
                 if arr.is_null(i) {
                     col.update_null();
@@ -418,7 +418,7 @@ fn update_float_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType) {
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::Float64Array>()
-                .unwrap();
+                .expect("Float64 array must downcast to Float64Array");
             for i in 0..arr.len() {
                 if arr.is_null(i) {
                     col.update_null();
@@ -441,7 +441,7 @@ fn update_temporal_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::Date32Array>()
-                .unwrap();
+                .expect("Date32 array must downcast to Date32Array");
             for i in 0..arr.len() {
                 if arr.is_null(i) {
                     col.update_null();
@@ -457,7 +457,7 @@ fn update_temporal_array(col: &mut ColumnState, array: &dyn Array, dt: &DataType
             let arr = array
                 .as_any()
                 .downcast_ref::<arrow::array::Date64Array>()
-                .unwrap();
+                .expect("Date64 array must downcast to Date64Array");
             for i in 0..arr.len() {
                 if arr.is_null(i) {
                     col.update_null();

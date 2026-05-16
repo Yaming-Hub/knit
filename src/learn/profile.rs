@@ -485,8 +485,14 @@ fn compute_string(data_type: &DataType, array: &dyn Array) -> Option<StringProfi
         return None;
     }
 
-    let min_length = *lengths.iter().min().unwrap();
-    let max_length = *lengths.iter().max().unwrap();
+    let min_length = *lengths
+        .iter()
+        .min()
+        .expect("non-empty lengths must have a minimum");
+    let max_length = *lengths
+        .iter()
+        .max()
+        .expect("non-empty lengths must have a maximum");
     let avg_length = lengths.iter().sum::<usize>() as f64 / lengths.len() as f64;
 
     // Pattern detection
@@ -512,16 +518,27 @@ fn detect_string_patterns(values: &[&str]) -> Vec<(String, f64)> {
     let checks: Vec<(&str, Regex)> = vec![
         (
             "email",
-            Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap(),
+            Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+                .expect("email regex must compile"),
         ),
-        ("phone", Regex::new(r"^\+?[\d\s\-\(\)]{7,15}$").unwrap()),
+        (
+            "phone",
+            Regex::new(r"^\+?[\d\s\-\(\)]{7,15}$")
+                .expect("phone regex must compile"),
+        ),
         (
             "uuid",
             Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-                .unwrap(),
+                .expect("UUID regex must compile"),
         ),
-        ("url", Regex::new(r"^https?://[^\s]+$").unwrap()),
-        ("date", Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap()),
+        (
+            "url",
+            Regex::new(r"^https?://[^\s]+$").expect("URL regex must compile"),
+        ),
+        (
+            "date",
+            Regex::new(r"^\d{4}-\d{2}-\d{2}").expect("date regex must compile"),
+        ),
     ];
 
     let mut results = Vec::new();

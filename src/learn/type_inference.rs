@@ -147,7 +147,8 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
 
     // Try UUID
     let uuid_re =
-        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap();
+        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+            .expect("UUID regex must compile");
     let uuid_count = non_null.iter().filter(|v| uuid_re.is_match(v)).count();
     if uuid_count as f64 / total >= 0.95 {
         return TypeInference {
@@ -280,14 +281,18 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
         return HashMap::new();
     }
 
-    let email_re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
-    let phone_re = Regex::new(r"^\+?\d[\d\s\-\(\)]{6,14}$").unwrap();
+    let email_re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .expect("email regex must compile");
+    let phone_re = Regex::new(r"^\+?\d[\d\s\-\(\)]{6,14}$")
+        .expect("phone regex must compile");
     let uuid_re =
-        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap();
-    let url_re = Regex::new(r"^https?://[^\s]+$").unwrap();
-    let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap();
+        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+            .expect("UUID regex must compile");
+    let url_re = Regex::new(r"^https?://[^\s]+$").expect("URL regex must compile");
+    let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").expect("date regex must compile");
     // Name pattern: 2-4 capitalized words (e.g., "John Smith", "Mary Jane Watson")
-    let name_re = Regex::new(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$").unwrap();
+    let name_re = Regex::new(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$")
+        .expect("name regex must compile");
 
     let checks: Vec<(StringPattern, &Regex)> = vec![
         (StringPattern::Email, &email_re),
@@ -310,8 +315,8 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
     // Detect fixed-length hex strings (e.g., 32-char MD5 hashes, 40-char SHA1)
     // Only if not already matched as UUID (which has dashes).
     if !result.contains_key(&StringPattern::Uuid) {
-        let hex_re = Regex::new(r"(?i)^[0-9a-f]+$").unwrap();
-        let has_alpha_hex = Regex::new(r"(?i)[a-f]").unwrap();
+        let hex_re = Regex::new(r"(?i)^[0-9a-f]+$").expect("hex regex must compile");
+        let has_alpha_hex = Regex::new(r"(?i)[a-f]").expect("hex alpha regex must compile");
         let hex_matches: Vec<usize> = values
             .iter()
             .filter_map(|v| {
@@ -353,9 +358,9 @@ fn detect_date_format(values: &[&str]) -> Option<(DateFormat, f64)> {
         return None;
     }
 
-    let iso_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap();
-    let us_re = Regex::new(r"^\d{1,2}/\d{1,2}/\d{4}$").unwrap();
-    let eu_re = Regex::new(r"^\d{1,2}\.\d{1,2}\.\d{4}$").unwrap();
+    let iso_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").expect("ISO date regex must compile");
+    let us_re = Regex::new(r"^\d{1,2}/\d{1,2}/\d{4}$").expect("US date regex must compile");
+    let eu_re = Regex::new(r"^\d{1,2}\.\d{1,2}\.\d{4}$").expect("EU date regex must compile");
 
     let iso_count = values.iter().filter(|v| iso_re.is_match(v)).count();
     let us_count = values.iter().filter(|v| us_re.is_match(v)).count();
