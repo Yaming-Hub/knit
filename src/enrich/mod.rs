@@ -158,7 +158,7 @@ pub fn enrich(
             .entities
             .iter_mut()
             .find(|e| e.name == target_entity_name)
-            .unwrap();
+            .ok_or_else(|| anyhow::anyhow!("target entity '{}' not found in model", target_entity_name))?;
 
         let field = entity_mut
             .fields

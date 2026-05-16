@@ -28,8 +28,12 @@ pub fn compute_new_partitions(
         anyhow::bail!("no parseable dates in partition values");
     }
 
-    let first = *dates.first().unwrap();
-    let last = *dates.last().unwrap();
+    let first = *dates
+        .first()
+        .expect("non-empty parsed dates must have a first element");
+    let last = *dates
+        .last()
+        .expect("non-empty parsed dates must have a last element");
 
     // Parse the spec into a target date range
     let (target_start, target_end) = if let Some(range_spec) = spec.strip_prefix('+') {
@@ -103,7 +107,8 @@ fn step_dates(
                         start.year() * 12 + (start.month() as i32 - 1) + months_offset as i32;
                     let y = total / 12;
                     let m = (total % 12) as u32 + 1;
-                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap()
+                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
+                        .expect("days_in_month must produce a valid end-of-month date")
                 } else {
                     add_months_anchored(start, months_offset, anchor_day)
                 };
@@ -177,7 +182,10 @@ fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono:
                 let total = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
                 let y = total / 12;
                 let m = (total % 12) as u32 + 1;
-                Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap())
+                Ok(
+                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
+                        .expect("days_in_month must produce a valid month-end date"),
+                )
             } else {
                 Ok(add_months_anchored(base, months, base.day()))
             }
@@ -190,7 +198,10 @@ fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono:
                 let total = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
                 let y = total / 12;
                 let m = (total % 12) as u32 + 1;
-                Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m)).unwrap())
+                Ok(
+                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
+                        .expect("days_in_month must produce a valid year-end date"),
+                )
             } else {
                 Ok(add_months_anchored(base, months, base.day()))
             }
