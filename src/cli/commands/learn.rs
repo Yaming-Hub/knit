@@ -572,15 +572,16 @@ fn run_incremental(
     let state_path = Path::new(state_file);
 
     // Load or create state
-    let mut state = if state_path.exists() {
-        LearnState::load(state_path)
-            .map_err(|e| anyhow::anyhow!("failed to load state: {e}"))?
-            .expect("load() should return Some when file exists")
-    } else {
-        if finalize {
-            anyhow::bail!("state file does not exist: {state_file}");
+    let mut state = match LearnState::load(state_path)
+        .map_err(|e| anyhow::anyhow!("failed to load state: {e}"))?
+    {
+        Some(s) => s,
+        None => {
+            if finalize {
+                anyhow::bail!("state file does not exist: {state_file}");
+            }
+            LearnState::new(42)
         }
-        LearnState::new(42)
     };
 
     // Ingest new data if source is provided

@@ -3028,7 +3028,7 @@ fn parse_create_table(
     let table_start = if upper.contains("IF NOT EXISTS") {
         upper
             .find("IF NOT EXISTS")
-            .ok_or_else(|| anyhow::anyhow!("CREATE TABLE IF NOT EXISTS missing clause"))?
+            .expect("IF NOT EXISTS must be present after contains() check")
             + "IF NOT EXISTS".len()
     } else {
         upper
