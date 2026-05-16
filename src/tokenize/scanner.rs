@@ -563,7 +563,9 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     if trimmed.len() == 10 {
         if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
             return Some(DateInfo {
-                datetime: d.and_hms_opt(0, 0, 0).unwrap(),
+                datetime: d
+                    .and_hms_opt(0, 0, 0)
+                    .expect("midnight must be a valid time for parsed dates"),
                 format: DateFormat::IsoDate,
                 tz_suffix: String::new(),
                 frac_seconds: String::new(),
@@ -617,7 +619,9 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     {
         if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
             return Some(DateInfo {
-                datetime: d.and_hms_opt(0, 0, 0).unwrap(),
+                datetime: d
+                    .and_hms_opt(0, 0, 0)
+                    .expect("midnight must be a valid time for parsed dates"),
                 format: DateFormat::Compact,
                 tz_suffix: String::new(),
                 frac_seconds: String::new(),

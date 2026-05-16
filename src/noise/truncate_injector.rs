@@ -63,7 +63,10 @@ impl Perturbator for TruncateInjector {
                 continue;
             }
 
-            let arr = col.as_any().downcast_ref::<StringArray>().unwrap();
+            let arr = col
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .expect("Utf8 column must downcast to StringArray");
             let mut count = 0usize;
             let result: StringArray = (0..arr.len())
                 .map(|i| {

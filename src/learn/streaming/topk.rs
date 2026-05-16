@@ -59,7 +59,10 @@ impl TopKTracker {
         self.total += 1;
 
         if self.items.contains_key(item) {
-            *self.items.get_mut(item).unwrap() += 1;
+            *self
+                .items
+                .get_mut(item)
+                .expect("existing top-k item must be present in the map") += 1;
             return;
         }
 

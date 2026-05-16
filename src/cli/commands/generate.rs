@@ -525,7 +525,12 @@ pub fn run_from_model(
                     let part_batch = arrow::compute::take_record_batch(&batch, &indices_arr)
                         .map_err(|e| crate::gen::GenError::Generation(format!("partition split error: {}", e)))?;
 
-                    let sink = partition_sinks.get_mut(&key).unwrap();
+                    let sink = partition_sinks.get_mut(&key).ok_or_else(|| {
+                        crate::gen::GenError::Generation(format!(
+                            "missing output sink for partition {:?}",
+                            key
+                        ))
+                    })?;
                     sink.write_batch(&part_batch)
                         .map_err(|e| crate::gen::GenError::Generation(format!("sink write error: {}", e)))?;
                 }
@@ -1773,57 +1778,96 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
         }
         match arr.data_type() {
             ArrowDataType::Utf8 => {
-                let a = arr.as_any().downcast_ref::<StringArray>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .expect("Utf8 array must downcast to StringArray");
                 JVal::String(a.value(row).to_string())
             }
             ArrowDataType::LargeUtf8 => {
-                let a = arr.as_any().downcast_ref::<LargeStringArray>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<LargeStringArray>()
+                    .expect("LargeUtf8 array must downcast to LargeStringArray");
                 JVal::String(a.value(row).to_string())
             }
             ArrowDataType::Int32 => {
-                let a = arr.as_any().downcast_ref::<Int32Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<Int32Array>()
+                    .expect("Int32 array must downcast to Int32Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::Int64 => {
-                let a = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .expect("Int64 array must downcast to Int64Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::Float64 => {
-                let a = arr.as_any().downcast_ref::<Float64Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<Float64Array>()
+                    .expect("Float64 array must downcast to Float64Array");
                 serde_json::Number::from_f64(a.value(row))
                     .map(JVal::Number)
                     .unwrap_or(JVal::Null)
             }
             ArrowDataType::Boolean => {
-                let a = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<BooleanArray>()
+                    .expect("Boolean array must downcast to BooleanArray");
                 JVal::Bool(a.value(row))
             }
             ArrowDataType::Int8 => {
-                let a = arr.as_any().downcast_ref::<Int8Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<Int8Array>()
+                    .expect("Int8 array must downcast to Int8Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::Int16 => {
-                let a = arr.as_any().downcast_ref::<Int16Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<Int16Array>()
+                    .expect("Int16 array must downcast to Int16Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::UInt8 => {
-                let a = arr.as_any().downcast_ref::<UInt8Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<UInt8Array>()
+                    .expect("UInt8 array must downcast to UInt8Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::UInt16 => {
-                let a = arr.as_any().downcast_ref::<UInt16Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<UInt16Array>()
+                    .expect("UInt16 array must downcast to UInt16Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::UInt32 => {
-                let a = arr.as_any().downcast_ref::<UInt32Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<UInt32Array>()
+                    .expect("UInt32 array must downcast to UInt32Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::UInt64 => {
-                let a = arr.as_any().downcast_ref::<UInt64Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<UInt64Array>()
+                    .expect("UInt64 array must downcast to UInt64Array");
                 JVal::Number(a.value(row).into())
             }
             ArrowDataType::Float32 => {
-                let a = arr.as_any().downcast_ref::<Float32Array>().unwrap();
+                let a = arr
+                    .as_any()
+                    .downcast_ref::<Float32Array>()
+                    .expect("Float32 array must downcast to Float32Array");
                 serde_json::Number::from_f64(a.value(row) as f64)
                     .map(JVal::Number)
                     .unwrap_or(JVal::Null)
@@ -1834,7 +1878,10 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
                 JVal::String(formatted)
             }
             ArrowDataType::List(_) => {
-                let list = arr.as_any().downcast_ref::<ListArray>().unwrap();
+                let list = arr
+                    .as_any()
+                    .downcast_ref::<ListArray>()
+                    .expect("List array must downcast to ListArray");
                 let values = list.value(row);
                 let items: Vec<JVal> = (0..values.len())
                     .map(|i| arr_to_json(values.as_ref(), i))
@@ -1842,7 +1889,10 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
                 JVal::Array(items)
             }
             ArrowDataType::LargeList(_) => {
-                let list = arr.as_any().downcast_ref::<LargeListArray>().unwrap();
+                let list = arr
+                    .as_any()
+                    .downcast_ref::<LargeListArray>()
+                    .expect("LargeList array must downcast to LargeListArray");
                 let values = list.value(row);
                 let items: Vec<JVal> = (0..values.len())
                     .map(|i| arr_to_json(values.as_ref(), i))
@@ -1850,9 +1900,15 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
                 JVal::Array(items)
             }
             ArrowDataType::Map(_, _) => {
-                let map = arr.as_any().downcast_ref::<MapArray>().unwrap();
+                let map = arr
+                    .as_any()
+                    .downcast_ref::<MapArray>()
+                    .expect("Map array must downcast to MapArray");
                 let entries = map.value(row);
-                let struct_arr = entries.as_any().downcast_ref::<StructArray>().unwrap();
+                let struct_arr = entries
+                    .as_any()
+                    .downcast_ref::<StructArray>()
+                    .expect("Map entries must downcast to StructArray");
                 let keys = struct_arr.column(0);
                 let vals = struct_arr.column(1);
                 let mut obj = serde_json::Map::new();
@@ -1869,7 +1925,10 @@ fn array_value_to_json_string(arr: &dyn arrow::array::Array, row: usize) -> Stri
                 JVal::Object(obj)
             }
             ArrowDataType::Struct(fields) => {
-                let s = arr.as_any().downcast_ref::<StructArray>().unwrap();
+                let s = arr
+                    .as_any()
+                    .downcast_ref::<StructArray>()
+                    .expect("Struct array must downcast to StructArray");
                 let mut obj = serde_json::Map::new();
                 for (fi, field) in fields.iter().enumerate() {
                     let col = s.column(fi);

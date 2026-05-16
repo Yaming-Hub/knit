@@ -93,7 +93,10 @@ fn inject_outliers(
     let probability = config.probability;
     match array.data_type() {
         DataType::Float64 => {
-            let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .expect("Float64 array must downcast to Float64Array");
             let (min, max) = float_range(a);
             let range = (max - min).max(1.0);
             let vals: Vec<Option<f64>> = (0..a.len())
@@ -112,7 +115,10 @@ fn inject_outliers(
             Ok(Arc::new(Float64Array::from(vals)))
         }
         DataType::Int32 => {
-            let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .expect("Int32 array must downcast to Int32Array");
             let (min, max) = int32_range(a);
             let range = ((max - min) as f64).max(1.0);
             let vals: Vec<Option<i32>> = (0..a.len())
@@ -131,7 +137,10 @@ fn inject_outliers(
             Ok(Arc::new(Int32Array::from(vals)))
         }
         DataType::Int64 => {
-            let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .expect("Int64 array must downcast to Int64Array");
             let (min, max) = int64_range(a);
             let range = ((max - min) as f64).max(1.0);
             let vals: Vec<Option<i64>> = (0..a.len())

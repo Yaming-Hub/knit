@@ -13,8 +13,8 @@
 //! let batches = ingest::read_csv(
 //!     std::path::Path::new("data.csv"),
 //!     &ingest::CsvOptions::default(),
-//! ).unwrap();
-//! let profiles = compute_profiles(&batches).unwrap();
+//! ).expect("example CSV should be readable");
+//! let profiles = compute_profiles(&batches).expect("example profiles should compute");
 //! ```
 
 pub mod actor_graph;

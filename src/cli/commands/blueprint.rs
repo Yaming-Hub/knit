@@ -2961,7 +2961,7 @@ fn remove_sql_comments(sql: &str) -> String {
             if ch == string_char {
                 // Check for escaped quote (doubled)
                 if chars.peek() == Some(&string_char) {
-                    out.push(chars.next().unwrap());
+                    out.push(chars.next().expect("peeked quote must be available"));
                 } else {
                     in_string = false;
                 }
@@ -3026,9 +3026,15 @@ fn parse_create_table(
     // Extract table name: CREATE TABLE [IF NOT EXISTS] <name> (...)
     let upper = stmt.to_uppercase();
     let table_start = if upper.contains("IF NOT EXISTS") {
-        upper.find("IF NOT EXISTS").unwrap() + "IF NOT EXISTS".len()
+        upper
+            .find("IF NOT EXISTS")
+            .expect("IF NOT EXISTS must be present after contains() check")
+            + "IF NOT EXISTS".len()
     } else {
-        upper.find("TABLE").unwrap() + "TABLE".len()
+        upper
+            .find("TABLE")
+            .ok_or_else(|| anyhow::anyhow!("CREATE TABLE missing TABLE keyword"))?
+            + "TABLE".len()
     };
 
     let rest = stmt[table_start..].trim();
@@ -3065,7 +3071,9 @@ fn parse_create_table(
         if upper_def.starts_with("CONSTRAINT") {
             if upper_def.contains("PRIMARY KEY") {
                 // CONSTRAINT pk_name PRIMARY KEY (cols)
-                let pk_idx = upper_def.find("PRIMARY KEY").unwrap();
+                let pk_idx = upper_def
+                    .find("PRIMARY KEY")
+                    .expect("PRIMARY KEY constraint must contain the PRIMARY KEY marker");
                 let after_pk = &trimmed[pk_idx + "PRIMARY KEY".len()..];
                 if let Some(cols) = extract_paren_list(after_pk) {
                     table_pk_cols = cols.iter().map(|c| unquote_ident(c)).collect();
@@ -3175,7 +3183,7 @@ fn split_column_defs(body: &str) -> Vec<String> {
             current.push(ch);
             if ch == string_char {
                 if chars.peek() == Some(&string_char) {
-                    current.push(chars.next().unwrap());
+                    current.push(chars.next().expect("peeked quote must be available"));
                 } else {
                     in_string = false;
                 }
@@ -3455,7 +3463,10 @@ fn parse_alter_table_fk(
 ) -> Result<()> {
     let upper = stmt.to_uppercase();
     // Extract table name: ALTER TABLE <name> ...
-    let table_start = upper.find("TABLE").unwrap() + "TABLE".len();
+    let table_start = upper
+        .find("TABLE")
+        .ok_or_else(|| anyhow::anyhow!("ALTER TABLE statement missing TABLE keyword"))?
+        + "TABLE".len();
     let rest = stmt[table_start..].trim();
 
     // Skip optional "ONLY"
@@ -4579,61 +4590,100 @@ fn arrow_value_to_json(array: &dyn arrow::array::Array, row: usize) -> serde_jso
 
     match array.data_type() {
         DataType::Boolean => {
-            let a = array.as_any().downcast_ref::<BooleanArray>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<BooleanArray>()
+                .expect("Boolean array must downcast to BooleanArray");
             serde_json::Value::Bool(a.value(row))
         }
         DataType::Int8 => {
-            let a = array.as_any().downcast_ref::<Int8Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int8Array>()
+                .expect("Int8 array must downcast to Int8Array");
             serde_json::json!(a.value(row))
         }
         DataType::Int16 => {
-            let a = array.as_any().downcast_ref::<Int16Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int16Array>()
+                .expect("Int16 array must downcast to Int16Array");
             serde_json::json!(a.value(row))
         }
         DataType::Int32 => {
-            let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .expect("Int32 array must downcast to Int32Array");
             serde_json::json!(a.value(row))
         }
         DataType::Int64 => {
-            let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .expect("Int64 array must downcast to Int64Array");
             serde_json::json!(a.value(row))
         }
         DataType::UInt8 => {
-            let a = array.as_any().downcast_ref::<UInt8Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<UInt8Array>()
+                .expect("UInt8 array must downcast to UInt8Array");
             serde_json::json!(a.value(row))
         }
         DataType::UInt16 => {
-            let a = array.as_any().downcast_ref::<UInt16Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<UInt16Array>()
+                .expect("UInt16 array must downcast to UInt16Array");
             serde_json::json!(a.value(row))
         }
         DataType::UInt32 => {
-            let a = array.as_any().downcast_ref::<UInt32Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<UInt32Array>()
+                .expect("UInt32 array must downcast to UInt32Array");
             serde_json::json!(a.value(row))
         }
         DataType::UInt64 => {
-            let a = array.as_any().downcast_ref::<UInt64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<UInt64Array>()
+                .expect("UInt64 array must downcast to UInt64Array");
             serde_json::json!(a.value(row))
         }
         DataType::Float32 => {
-            let a = array.as_any().downcast_ref::<Float32Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Float32Array>()
+                .expect("Float32 array must downcast to Float32Array");
             let v = a.value(row) as f64;
             serde_json::Number::from_f64(v)
                 .map(serde_json::Value::Number)
                 .unwrap_or(serde_json::Value::Null)
         }
         DataType::Float64 => {
-            let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .expect("Float64 array must downcast to Float64Array");
             let v = a.value(row);
             serde_json::Number::from_f64(v)
                 .map(serde_json::Value::Number)
                 .unwrap_or(serde_json::Value::Null)
         }
         DataType::Utf8 => {
-            let a = array.as_any().downcast_ref::<StringArray>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .expect("Utf8 array must downcast to StringArray");
             serde_json::Value::String(a.value(row).to_string())
         }
         DataType::LargeUtf8 => {
-            let a = array.as_any().downcast_ref::<LargeStringArray>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<LargeStringArray>()
+                .expect("LargeUtf8 array must downcast to LargeStringArray");
             serde_json::Value::String(a.value(row).to_string())
         }
         _ => {

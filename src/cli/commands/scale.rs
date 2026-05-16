@@ -207,11 +207,15 @@ fn print_analysis(analysis: &scale::ScalingAnalysis, cli: &Cli) {
             None => "unknown".to_string(),
         };
         let range = if t.partition_values.len() >= 2 {
-            format!(
-                "{} .. {}",
-                t.partition_values.first().unwrap(),
-                t.partition_values.last().unwrap()
-            )
+            let first = t
+                .partition_values
+                .first()
+                .expect("time partition range must have a first value");
+            let last = t
+                .partition_values
+                .last()
+                .expect("time partition range must have a last value");
+            format!("{} .. {}", first, last)
         } else {
             t.partition_values.first().cloned().unwrap_or_default()
         };

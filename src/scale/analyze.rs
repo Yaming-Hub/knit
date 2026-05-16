@@ -120,7 +120,7 @@ fn reconstruct_time(model: &DataModel) -> Option<TimeDimension> {
         .iter()
         .find(|e| e.scaling.as_ref().and_then(|s| s.time.as_ref()).is_some())?;
 
-    let time_ann = entity.scaling.as_ref().unwrap().time.as_ref().unwrap();
+    let time_ann = entity.scaling.as_ref()?.time.as_ref()?;
 
     let cadence = time_ann.cadence.as_deref().and_then(parse_cadence);
 

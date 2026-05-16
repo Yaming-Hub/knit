@@ -194,28 +194,31 @@ fn extract_millis(col: &Arc<dyn Array>, unit: &TimeUnit) -> Vec<Option<i64>> {
             }
             match unit {
                 TimeUnit::Second => {
-                    let arr = col.as_any().downcast_ref::<TimestampSecondArray>().unwrap();
+                    let arr = col
+                        .as_any()
+                        .downcast_ref::<TimestampSecondArray>()
+                        .expect("second timestamp column must downcast to TimestampSecondArray");
                     Some(arr.value(i))
                 }
                 TimeUnit::Millisecond => {
                     let arr = col
                         .as_any()
                         .downcast_ref::<TimestampMillisecondArray>()
-                        .unwrap();
+                        .expect("millisecond timestamp column must downcast to TimestampMillisecondArray");
                     Some(arr.value(i))
                 }
                 TimeUnit::Microsecond => {
                     let arr = col
                         .as_any()
                         .downcast_ref::<TimestampMicrosecondArray>()
-                        .unwrap();
+                        .expect("microsecond timestamp column must downcast to TimestampMicrosecondArray");
                     Some(arr.value(i))
                 }
                 TimeUnit::Nanosecond => {
                     let arr = col
                         .as_any()
                         .downcast_ref::<TimestampNanosecondArray>()
-                        .unwrap();
+                        .expect("nanosecond timestamp column must downcast to TimestampNanosecondArray");
                     Some(arr.value(i))
                 }
             }

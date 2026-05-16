@@ -85,7 +85,9 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
 
             // Also copy sibling files (dictionaries, etc.) from same directory
             if let Some(src_dir) = src.parent() {
-                let src_name = src.file_name().unwrap();
+                let src_name = src.file_name().ok_or_else(|| {
+                    anyhow::anyhow!("template path '{}' has no file name", src.display())
+                })?;
                 let dest_dir = dest.parent().unwrap_or(Path::new("."));
                 for entry in fs::read_dir(src_dir).into_iter().flatten().flatten() {
                     let name = entry.file_name();

@@ -91,7 +91,9 @@ fn is_capitalized_word(s: &str) -> bool {
         return false; // Too short to be a word
     }
     let mut chars = s.chars();
-    let first = chars.next().unwrap();
+    let first = chars
+        .next()
+        .expect("non-empty candidate word must have a first character");
     if !first.is_ascii_uppercase() {
         return false;
     }

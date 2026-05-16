@@ -118,7 +118,10 @@ fn add_noise(
     let probability = config.probability;
     match array.data_type() {
         DataType::Float64 => {
-            let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .expect("Float64 array must downcast to Float64Array");
             let vals: Vec<Option<f64>> = (0..a.len())
                 .map(|i| {
                     if !a.is_valid(i) {
@@ -129,14 +132,18 @@ fn add_noise(
                         return Some(v);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
-                    let dist = Normal::new(0.0, sd.max(1e-15)).unwrap();
+                    let dist = Normal::new(0.0, sd.max(1e-15))
+                        .expect("positive standard deviation must produce a normal distribution");
                     Some(v + dist.sample(rng))
                 })
                 .collect();
             Ok(Arc::new(Float64Array::from(vals)))
         }
         DataType::Int32 => {
-            let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .expect("Int32 array must downcast to Int32Array");
             let vals: Vec<Option<i32>> = (0..a.len())
                 .map(|i| {
                     if !a.is_valid(i) {
@@ -147,14 +154,18 @@ fn add_noise(
                         return Some(v as i32);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
-                    let dist = Normal::new(0.0, sd.max(1e-15)).unwrap();
+                    let dist = Normal::new(0.0, sd.max(1e-15))
+                        .expect("positive standard deviation must produce a normal distribution");
                     Some((v + dist.sample(rng)).round() as i32)
                 })
                 .collect();
             Ok(Arc::new(Int32Array::from(vals)))
         }
         DataType::Int64 => {
-            let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .expect("Int64 array must downcast to Int64Array");
             let vals: Vec<Option<i64>> = (0..a.len())
                 .map(|i| {
                     if !a.is_valid(i) {
@@ -165,7 +176,8 @@ fn add_noise(
                         return Some(v as i64);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
-                    let dist = Normal::new(0.0, sd.max(1e-15)).unwrap();
+                    let dist = Normal::new(0.0, sd.max(1e-15))
+                        .expect("positive standard deviation must produce a normal distribution");
                     Some((v + dist.sample(rng)).round() as i64)
                 })
                 .collect();

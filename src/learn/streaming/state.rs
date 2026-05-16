@@ -176,7 +176,9 @@ impl LearnState {
                 TableState::new(name.to_string(), self.seed),
             );
         }
-        self.tables.get_mut(name).unwrap()
+        self.tables
+            .get_mut(name)
+            .expect("table must exist immediately after insertion")
     }
 
     /// Number of tables in the state.
@@ -237,7 +239,9 @@ impl TableState {
                     .wrapping_add((self.columns.len() as u64).wrapping_mul(0x9e3779b97f4a7c15));
                 self.columns
                     .push(ColumnState::new(name.to_string(), data_type, col_seed));
-                self.columns.last_mut().unwrap()
+                self.columns
+                    .last_mut()
+                    .expect("column must exist immediately after insertion")
             }
         }
     }

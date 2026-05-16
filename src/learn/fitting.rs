@@ -120,7 +120,10 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         return None;
     }
 
-    clean.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    clean.sort_by(|a, b| {
+        a.partial_cmp(b)
+            .expect("finite values must have a total order")
+    });
     let n = clean.len();
 
     let mean = clean.iter().sum::<f64>() / n as f64;

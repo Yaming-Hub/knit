@@ -196,7 +196,8 @@ pub fn run(
     }
 
     // Batch mode (original behavior)
-    let source = source.unwrap();
+    let source = source
+        .ok_or_else(|| anyhow::anyhow!("source path is required in batch mode"))?;
     run_batch(
         source,
         output,
@@ -571,15 +572,16 @@ fn run_incremental(
     let state_path = Path::new(state_file);
 
     // Load or create state
-    let mut state = if state_path.exists() {
-        LearnState::load(state_path)
-            .map_err(|e| anyhow::anyhow!("failed to load state: {e}"))?
-            .expect("load() should return Some when file exists")
-    } else {
-        if finalize {
-            anyhow::bail!("state file does not exist: {state_file}");
+    let mut state = match LearnState::load(state_path)
+        .map_err(|e| anyhow::anyhow!("failed to load state: {e}"))?
+    {
+        Some(s) => s,
+        None => {
+            if finalize {
+                anyhow::bail!("state file does not exist: {state_file}");
+            }
+            LearnState::new(42)
         }
-        LearnState::new(42)
     };
 
     // Ingest new data if source is provided
@@ -2469,7 +2471,10 @@ fn extract_unique_strings_from_batches(batches: &[RecordBatch], col_name: &str) 
 
         match col.data_type() {
             DataType::Utf8 => {
-                let arr = col.as_any().downcast_ref::<StringArray>().unwrap();
+                let arr = col
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .expect("Utf8 column must downcast to StringArray");
                 for i in 0..arr.len() {
                     if values.len() >= MAX_DICTIONARY_ENTRIES {
                         break 'outer;
@@ -2483,7 +2488,10 @@ fn extract_unique_strings_from_batches(batches: &[RecordBatch], col_name: &str) 
                 }
             }
             DataType::LargeUtf8 => {
-                let arr = col.as_any().downcast_ref::<LargeStringArray>().unwrap();
+                let arr = col
+                    .as_any()
+                    .downcast_ref::<LargeStringArray>()
+                    .expect("LargeUtf8 column must downcast to LargeStringArray");
                 for i in 0..arr.len() {
                     if values.len() >= MAX_DICTIONARY_ENTRIES {
                         break 'outer;

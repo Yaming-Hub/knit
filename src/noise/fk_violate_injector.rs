@@ -78,7 +78,10 @@ impl Perturbator for FkViolateInjector {
 
             match col.data_type() {
                 DataType::Int64 => {
-                    let arr = col.as_any().downcast_ref::<Int64Array>().unwrap();
+                    let arr = col
+                        .as_any()
+                        .downcast_ref::<Int64Array>()
+                        .expect("Int64 column must downcast to Int64Array");
                     let observed_max = (0..arr.len())
                         .filter(|&i| !arr.is_null(i))
                         .map(|i| arr.value(i))
@@ -110,7 +113,10 @@ impl Perturbator for FkViolateInjector {
                     columns.push(Arc::new(result));
                 }
                 DataType::Utf8 => {
-                    let arr = col.as_any().downcast_ref::<StringArray>().unwrap();
+                    let arr = col
+                        .as_any()
+                        .downcast_ref::<StringArray>()
+                        .expect("Utf8 column must downcast to StringArray");
                     let mut count = 0usize;
                     let result: StringArray = (0..arr.len())
                         .map(|i| {

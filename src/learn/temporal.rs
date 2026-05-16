@@ -239,7 +239,7 @@ pub fn hour_of_day_distribution(timestamps_secs: &[f64]) -> HodDistribution {
 
 fn filter_sorted(ts: &[f64]) -> Vec<f64> {
     let mut v: Vec<f64> = ts.iter().copied().filter(|t| t.is_finite()).collect();
-    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    v.sort_by(|a, b| a.partial_cmp(b).expect("finite timestamps must have a total order"));
     v
 }
 
