@@ -53,7 +53,7 @@ impl<W: Write + Send> ParquetSink<W> {
 
         let mut props_builder = WriterProperties::builder().set_compression(pq_compression);
         if let Some(rg_size) = row_group_size {
-            props_builder = props_builder.set_max_row_group_size(rg_size);
+            props_builder = props_builder.set_max_row_group_row_count(Some(rg_size));
         }
         let props = props_builder.build();
 
