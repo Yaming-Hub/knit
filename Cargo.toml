@@ -75,7 +75,7 @@ tempfile = "3"
 indoc = "2"
 
 # WASM plugin support (optional)
-wasmtime = { version = "21", optional = true }
+wasmtime = { version = "44", optional = true }
 
 [features]
 default = []
