@@ -111,7 +111,7 @@ fn evaluate_scope_mask(expr: &Expr, batch: &RecordBatch) -> Result<BooleanArray,
 /// pipe.add(Box::new(GaussianNoise::default()));
 /// pipe.add_with_rate(Box::new(NullInjector::default()), 0.10);
 /// # let batch = arrow::record_batch::RecordBatch::new_empty(std::sync::Arc::new(arrow::datatypes::Schema::empty()));
-/// let noisy = pipe.run(batch).unwrap();
+/// let noisy = pipe.run(batch).expect("example pipeline should succeed");
 /// ```
 pub struct Pipeline {
     perturbators: Vec<(Box<dyn Perturbator>, PerturbOverrides)>,

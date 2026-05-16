@@ -98,7 +98,10 @@ impl Perturbator for FormatCorruptor {
                 continue;
             }
 
-            let a = col.as_any().downcast_ref::<StringArray>().unwrap();
+            let a = col
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .expect("Utf8 column must downcast to StringArray");
             let vals: Vec<Option<String>> = (0..a.len())
                 .map(|i| {
                     if !a.is_valid(i) {

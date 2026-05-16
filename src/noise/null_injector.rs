@@ -89,7 +89,10 @@ fn inject_nulls(
     // Rebuild by data type
     match array.data_type() {
         DataType::Int32 => {
-            let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .expect("Int32 array must downcast to Int32Array");
             let vals: Vec<Option<i32>> = (0..len)
                 .map(|i| {
                     if null_buf[i] {
@@ -102,7 +105,10 @@ fn inject_nulls(
             Ok(Arc::new(Int32Array::from(vals)))
         }
         DataType::Int64 => {
-            let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .expect("Int64 array must downcast to Int64Array");
             let vals: Vec<Option<i64>> = (0..len)
                 .map(|i| {
                     if null_buf[i] {
@@ -115,7 +121,10 @@ fn inject_nulls(
             Ok(Arc::new(Int64Array::from(vals)))
         }
         DataType::Float64 => {
-            let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .expect("Float64 array must downcast to Float64Array");
             let vals: Vec<Option<f64>> = (0..len)
                 .map(|i| {
                     if null_buf[i] {
@@ -128,7 +137,10 @@ fn inject_nulls(
             Ok(Arc::new(Float64Array::from(vals)))
         }
         DataType::Utf8 => {
-            let a = array.as_any().downcast_ref::<StringArray>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .expect("Utf8 array must downcast to StringArray");
             let vals: Vec<Option<&str>> = (0..len)
                 .map(|i| {
                     if null_buf[i] {
@@ -141,7 +153,10 @@ fn inject_nulls(
             Ok(Arc::new(StringArray::from(vals)))
         }
         DataType::Boolean => {
-            let a = array.as_any().downcast_ref::<BooleanArray>().unwrap();
+            let a = array
+                .as_any()
+                .downcast_ref::<BooleanArray>()
+                .expect("Boolean array must downcast to BooleanArray");
             let vals: Vec<Option<bool>> = (0..len)
                 .map(|i| {
                     if null_buf[i] {

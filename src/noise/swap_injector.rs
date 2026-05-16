@@ -122,7 +122,10 @@ fn swap_array(
 }
 
 fn swap_bool(col: &Arc<dyn Array>, perm: &[usize]) -> Result<Arc<dyn Array>, NoiseError> {
-    let arr = col.as_any().downcast_ref::<BooleanArray>().unwrap();
+    let arr = col
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .expect("Boolean column must downcast to BooleanArray");
     let result: BooleanArray = perm
         .iter()
         .map(|&i| {
