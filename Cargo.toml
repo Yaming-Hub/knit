@@ -22,7 +22,7 @@ path = "src/lib.rs"
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-toml = "0.8"
+toml = "1"
 csv = "1"
 
 # Arrow / Parquet / Avro
@@ -36,7 +36,7 @@ apache-avro = { version = "0.21", features = ["snappy"] }
 rand = "0.8"
 rand_chacha = "0.3"
 rand_distr = "0.4"
-statrs = "0.17"
+statrs = "0.18"
 rustfft = "6"
 
 # Concurrency
@@ -50,7 +50,7 @@ anyhow = "1"
 # CLI
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
-colored = "2"
+colored = "3"
 indicatif = "0.18"
 
 # Logging
@@ -65,12 +65,12 @@ chrono-tz = "0.10"
 # Utilities
 uuid = { version = "1", features = ["v4", "serde"] }
 regex = "1"
-petgraph = "0.7"
+petgraph = "0.8"
 siphasher = "1"
 bitflags = "2"
 minijinja = "2"
 bytes = "1"
-dirs = "5"
+dirs = "6"
 tempfile = "3"
 indoc = "2"
 
