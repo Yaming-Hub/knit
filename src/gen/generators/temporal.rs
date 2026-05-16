@@ -589,13 +589,16 @@ impl FieldGenerator for BusinessHoursGenerator {
         // On DST transition days the real interval may differ from the nominal span.
         let compute_utc_interval =
             |date: &NaiveDate, tz: chrono_tz::Tz, sh: u8, eh: u8| -> (i64, i64) {
-                let local_start = date.and_hms_opt(sh as u32, 0, 0).unwrap();
+                let local_start = date
+                    .and_hms_opt(sh as u32, 0, 0)
+                    .expect("business-hours start hour is clamped to 0–23");
                 let local_end = if eh == 24 {
                     (*date + chrono::Duration::days(1))
                         .and_hms_opt(0, 0, 0)
-                        .unwrap()
+                        .expect("midnight is always a valid local time")
                 } else {
-                    date.and_hms_opt(eh as u32, 0, 0).unwrap()
+                    date.and_hms_opt(eh as u32, 0, 0)
+                        .expect("business-hours end hour is clamped to 0–23")
                 };
                 let utc_start = tz
                     .from_local_datetime(&local_start)
@@ -603,13 +606,14 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .unwrap_or_else(|| {
                         // Nonexistent (DST spring-forward): try +1h
                         tz.from_local_datetime(
-                            &date.and_hms_opt((sh as u32 + 1).min(23), 0, 0).unwrap(),
+                            &date.and_hms_opt((sh as u32 + 1).min(23), 0, 0)
+                                .expect("DST fallback hour is clamped to 0–23"),
                         )
                         .earliest()
                         .unwrap_or_else(|| {
                             Utc.timestamp_millis_opt(0)
                                 .single()
-                                .unwrap()
+                                .expect("epoch 0 is always valid")
                                 .with_timezone(&tz)
                         })
                     })
@@ -620,13 +624,14 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .earliest()
                     .unwrap_or_else(|| {
                         tz.from_local_datetime(
-                            &date.and_hms_opt((eh as u32).min(23), 0, 0).unwrap(),
+                            &date.and_hms_opt((eh as u32).min(23), 0, 0)
+                                .expect("DST fallback hour is clamped to 0–23"),
                         )
                         .earliest()
                         .unwrap_or_else(|| {
                             Utc.timestamp_millis_opt(0)
                                 .single()
-                                .unwrap()
+                                .expect("epoch 0 is always valid")
                                 .with_timezone(&tz)
                         })
                     })
@@ -658,7 +663,7 @@ impl FieldGenerator for BusinessHoursGenerator {
                 if let Some(end_ms) = self.end_date_ms {
                     let day_ms = day_cursor
                         .and_hms_opt(0, 0, 0)
-                        .unwrap()
+                        .expect("midnight is always a valid NaiveDateTime")
                         .and_utc()
                         .timestamp_millis();
                     if day_ms > end_ms {
@@ -687,7 +692,7 @@ impl FieldGenerator for BusinessHoursGenerator {
                 if let Some(end_ms) = self.end_date_ms {
                     let day_ms = day_cursor
                         .and_hms_opt(0, 0, 0)
-                        .unwrap()
+                        .expect("midnight is always a valid NaiveDateTime")
                         .and_utc()
                         .timestamp_millis();
                     if day_ms > end_ms {
@@ -729,7 +734,7 @@ impl FieldGenerator for BusinessHoursGenerator {
             if let Some(end_ms) = self.end_date_ms {
                 let day_ms = day_cursor
                     .and_hms_opt(0, 0, 0)
-                    .unwrap()
+                    .expect("midnight is always a valid NaiveDateTime")
                     .and_utc()
                     .timestamp_millis();
                 if day_ms > end_ms {

@@ -228,7 +228,7 @@ fn sample_from_cumulative(cum_weights: &[f64], rng: &mut impl Rng) -> usize {
     if cum_weights.is_empty() {
         return 0;
     }
-    let total = *cum_weights.last().unwrap();
+    let total = cum_weights[cum_weights.len() - 1];
     if total <= 0.0 {
         return 0;
     }

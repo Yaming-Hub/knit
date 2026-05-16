@@ -127,11 +127,17 @@ pub fn enforce_inter_event_gaps(
             }
 
             // Build new timestamp column.
-            let old_ts = batch
+            let Some(old_ts) = batch
                 .column(ts_col_idx)
                 .as_any()
                 .downcast_ref::<TimestampMillisecondArray>()
-                .unwrap();
+            else {
+                tracing::warn!(
+                    column = %timestamp_col,
+                    "timestamp column was not TimestampMillisecond during temporal sort rebuild"
+                );
+                return (entity.clone(), batch.clone());
+            };
 
             let new_values: Vec<Option<i64>> = (0..old_ts.len())
                 .map(|row| {
