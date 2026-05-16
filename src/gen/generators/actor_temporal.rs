@@ -177,7 +177,8 @@ impl ActorTemporalGenerator {
         actor_pks: &[Option<i64>],
         causal_fk_pks: &[Option<i64>],
     ) -> Vec<Option<i64>> {
-        let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
+        let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV)
+            .expect("default actor peak-hour distribution uses valid parameters");
 
         actor_pks
             .iter()
@@ -227,7 +228,10 @@ impl ActorTemporalGenerator {
         actor_pks: &[Option<i64>],
         causal_fk_pks: &[Option<i64>],
     ) -> Vec<Option<i64>> {
-        let burst_cfg = self.burst.as_ref().unwrap();
+        let Some(burst_cfg) = self.burst.as_ref() else {
+            tracing::warn!("burst configuration missing; falling back to uniform actor timestamps");
+            return self.generate_uniform(rng, count, actor_pks, causal_fk_pks);
+        };
 
         // Group row indices by actor PK (preserving encounter order per actor).
         // Use BTreeMap for deterministic iteration order.
@@ -242,7 +246,8 @@ impl ActorTemporalGenerator {
         }
 
         let mut results = vec![None; count];
-        let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
+        let normal_12 = Normal::new(12.0, PEAK_HOUR_STD_DEV)
+            .expect("default actor burst distribution uses valid parameters");
 
         // For each actor, generate a sequence of burst timestamps.
         for (actor_pk, row_indices) in &actor_rows {
@@ -254,13 +259,18 @@ impl ActorTemporalGenerator {
             let base_lower = self.compute_actor_lower_bound(actor_idx);
 
             // Generate burst event count distribution (Poisson, min 1)
-            let poisson =
-                Poisson::new(burst_cfg.avg_events.max(1.0)).unwrap_or(Poisson::new(3.0).unwrap());
+            let poisson = Poisson::new(burst_cfg.avg_events.max(1.0)).unwrap_or(
+                Poisson::new(3.0).expect("burst fallback Poisson uses a valid rate"),
+            );
             // Exponential for inter-burst idle and intra-burst gap
-            let gap_exp = Exp::new(1.0 / (burst_cfg.avg_gap_ms as f64).max(1.0))
-                .unwrap_or(Exp::new(1.0 / 180_000.0).unwrap());
-            let idle_exp = Exp::new(1.0 / (burst_cfg.avg_idle_ms as f64).max(1.0))
-                .unwrap_or(Exp::new(1.0 / 28_800_000.0).unwrap());
+            let gap_exp = Exp::new(1.0 / (burst_cfg.avg_gap_ms as f64).max(1.0)).unwrap_or(
+                Exp::new(1.0 / 180_000.0)
+                    .expect("burst fallback gap exponential uses a valid rate"),
+            );
+            let idle_exp = Exp::new(1.0 / (burst_cfg.avg_idle_ms as f64).max(1.0)).unwrap_or(
+                Exp::new(1.0 / 28_800_000.0)
+                    .expect("burst fallback idle exponential uses a valid rate"),
+            );
 
             let mut cursor = base_lower;
             let mut events_remaining_in_burst: u32 = 0;
@@ -307,7 +317,8 @@ impl ActorTemporalGenerator {
         }
 
         // Handle rows with no actor (fallback: uniform with lower bound respect)
-        let normal_fallback = Normal::new(12.0, PEAK_HOUR_STD_DEV).unwrap();
+        let normal_fallback = Normal::new(12.0, PEAK_HOUR_STD_DEV)
+            .expect("fallback actor peak-hour distribution uses valid parameters");
         for row_idx in no_actor_rows {
             let lower_bound = self.compute_lower_bound(None, row_idx, causal_fk_pks);
             let day_start = (lower_bound / (24 * 3_600_000)) * (24 * 3_600_000);

@@ -206,8 +206,10 @@ impl FieldGenerator for NumericTimeSeriesGenerator {
                     }
                     TimeSeriesComponent::Noise { std_dev } => {
                         if *std_dev > 0.0 {
-                            let dist = Normal::new(0.0, *std_dev)
-                                .unwrap_or_else(|_| Normal::new(0.0, 1.0).unwrap());
+                            let dist = Normal::new(0.0, *std_dev).unwrap_or_else(|_| {
+                                Normal::new(0.0, 1.0)
+                                    .expect("fallback normal noise uses valid parameters")
+                            });
                             value += dist.sample(rng);
                         }
                     }

@@ -98,7 +98,7 @@ impl ThreadState {
                 return Some(*entry);
             }
         }
-        Some(eligible.last().unwrap().0)
+        eligible.last().map(|(entry, _)| *entry)
     }
 }
 
@@ -162,7 +162,10 @@ impl FieldGenerator for ThreadRefGenerator {
             .copied()
             .collect();
 
-        let mut state = self.state.lock().unwrap();
+        let mut state = self
+            .state
+            .lock()
+            .expect("thread_ref state mutex poisoned; cross-batch state may be corrupt");
         let mut values: Vec<Option<i64>> = Vec::with_capacity(count);
 
         for &pk in &pks[..count] {

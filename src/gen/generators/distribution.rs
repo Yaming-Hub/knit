@@ -133,7 +133,8 @@ impl FieldGenerator for DistributionGenerator {
                         std_dev,
                         "invalid Normal params, falling back to N(0,1)"
                     );
-                    rand_distr::Normal::new(0.0, 1.0).unwrap()
+                    rand_distr::Normal::new(0.0, 1.0)
+                        .expect("Normal fallback N(0,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -147,7 +148,8 @@ impl FieldGenerator for DistributionGenerator {
                         sigma,
                         "invalid LogNormal params, falling back to LN(0,1)"
                     );
-                    rand_distr::LogNormal::new(0.0, 1.0).unwrap()
+                    rand_distr::LogNormal::new(0.0, 1.0)
+                        .expect("LogNormal fallback LN(0,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -156,7 +158,8 @@ impl FieldGenerator for DistributionGenerator {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Exp::new(lambda).unwrap_or_else(|_| {
                     tracing::warn!(lambda, "invalid Exponential params, falling back to Exp(1)");
-                    rand_distr::Exp::new(1.0).unwrap()
+                    rand_distr::Exp::new(1.0)
+                        .expect("Exponential fallback Exp(1) uses a valid rate")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -165,7 +168,8 @@ impl FieldGenerator for DistributionGenerator {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Poisson::new(lambda).unwrap_or_else(|_| {
                     tracing::warn!(lambda, "invalid Poisson params, falling back to Poisson(1)");
-                    rand_distr::Poisson::new(1.0).unwrap()
+                    rand_distr::Poisson::new(1.0)
+                        .expect("Poisson fallback λ=1 uses a valid rate")
                 });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
@@ -180,7 +184,8 @@ impl FieldGenerator for DistributionGenerator {
                 let p = self.param("p", 0.5).clamp(0.0, 1.0);
                 let dist = rand_distr::Bernoulli::new(p).unwrap_or_else(|_| {
                     tracing::warn!(p, "invalid Bernoulli params, falling back to p=0.5");
-                    rand_distr::Bernoulli::new(0.5).unwrap()
+                    rand_distr::Bernoulli::new(0.5)
+                        .expect("Bernoulli fallback p=0.5 uses a valid probability")
                 });
                 let values: Vec<i64> = (0..count)
                     .map(|_| if dist.sample(rng) { 1 } else { 0 })
@@ -192,7 +197,8 @@ impl FieldGenerator for DistributionGenerator {
                 let p = self.param("p", 0.5).clamp(0.0, 1.0);
                 let dist = rand_distr::Binomial::new(n, p).unwrap_or_else(|_| {
                     tracing::warn!(n, p, "invalid Binomial params, falling back to B(10,0.5)");
-                    rand_distr::Binomial::new(10, 0.5).unwrap()
+                    rand_distr::Binomial::new(10, 0.5)
+                        .expect("Binomial fallback B(10,0.5) uses valid parameters")
                 });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
@@ -206,7 +212,8 @@ impl FieldGenerator for DistributionGenerator {
                 let p = self.param("p", 0.5).clamp(f64::EPSILON, 1.0);
                 let dist = rand_distr::Geometric::new(p).unwrap_or_else(|_| {
                     tracing::warn!(p, "invalid Geometric params, falling back to p=0.5");
-                    rand_distr::Geometric::new(0.5).unwrap()
+                    rand_distr::Geometric::new(0.5)
+                        .expect("Geometric fallback p=0.5 uses a valid probability")
                 });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
@@ -225,7 +232,8 @@ impl FieldGenerator for DistributionGenerator {
                         shape,
                         "invalid Pareto params, falling back to Pareto(1,1)"
                     );
-                    rand_distr::Pareto::new(1.0, 1.0).unwrap()
+                    rand_distr::Pareto::new(1.0, 1.0)
+                        .expect("Pareto fallback (1,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -239,7 +247,8 @@ impl FieldGenerator for DistributionGenerator {
                         shape,
                         "invalid Weibull params, falling back to Weibull(1,1)"
                     );
-                    rand_distr::Weibull::new(1.0, 1.0).unwrap()
+                    rand_distr::Weibull::new(1.0, 1.0)
+                        .expect("Weibull fallback (1,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -253,7 +262,8 @@ impl FieldGenerator for DistributionGenerator {
                         scale,
                         "invalid Gamma params, falling back to Gamma(1,1)"
                     );
-                    rand_distr::Gamma::new(1.0, 1.0).unwrap()
+                    rand_distr::Gamma::new(1.0, 1.0)
+                        .expect("Gamma fallback (1,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -267,7 +277,8 @@ impl FieldGenerator for DistributionGenerator {
                         beta,
                         "invalid Beta params, falling back to Beta(2,2)"
                     );
-                    rand_distr::Beta::new(2.0, 2.0).unwrap()
+                    rand_distr::Beta::new(2.0, 2.0)
+                        .expect("Beta fallback (2,2) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -281,7 +292,8 @@ impl FieldGenerator for DistributionGenerator {
                         scale,
                         "invalid Cauchy params, falling back to Cauchy(0,1)"
                     );
-                    rand_distr::Cauchy::new(0.0, 1.0).unwrap()
+                    rand_distr::Cauchy::new(0.0, 1.0)
+                        .expect("Cauchy fallback (0,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -293,7 +305,8 @@ impl FieldGenerator for DistributionGenerator {
                         k,
                         "invalid ChiSquared params, falling back to ChiSquared(1)"
                     );
-                    rand_distr::ChiSquared::new(1.0).unwrap()
+                    rand_distr::ChiSquared::new(1.0)
+                        .expect("ChiSquared fallback k=1 uses a valid parameter")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -302,7 +315,8 @@ impl FieldGenerator for DistributionGenerator {
                 let n = self.param("n", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::StudentT::new(n).unwrap_or_else(|_| {
                     tracing::warn!(n, "invalid StudentT params, falling back to StudentT(1)");
-                    rand_distr::StudentT::new(1.0).unwrap()
+                    rand_distr::StudentT::new(1.0)
+                        .expect("StudentT fallback ν=1 uses a valid parameter")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -320,7 +334,8 @@ impl FieldGenerator for DistributionGenerator {
                         mode,
                         "invalid Triangular params, falling back to Tri(0,1,0.5)"
                     );
-                    rand_distr::Triangular::new(0.0, 1.0, 0.5).unwrap()
+                    rand_distr::Triangular::new(0.0, 1.0, 0.5)
+                        .expect("Triangular fallback (0,1,0.5) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
@@ -330,7 +345,8 @@ impl FieldGenerator for DistributionGenerator {
                 let s = self.param("s", 1.0).max(f64::EPSILON);
                 let dist = rand_distr::Zipf::new(n, s).unwrap_or_else(|_| {
                     tracing::warn!(n, s, "invalid Zipf params, falling back to Zipf(100,1)");
-                    rand_distr::Zipf::new(100, 1.0).unwrap()
+                    rand_distr::Zipf::new(100, 1.0)
+                        .expect("Zipf fallback (100,1) uses valid parameters")
                 });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
@@ -353,7 +369,8 @@ impl FieldGenerator for DistributionGenerator {
                         "invalid Dirichlet alpha, falling back to symmetric(1.0, k={})",
                         k
                     );
-                    rand_distr::Dirichlet::new(&vec![1.0; k.max(2)]).unwrap()
+                    rand_distr::Dirichlet::new(&vec![1.0; k.max(2)])
+                        .expect("Dirichlet fallback with positive symmetric alpha is valid")
                 });
                 // Sample k floats per row, flatten into a single values array.
                 let mut flat_values = Vec::with_capacity(count * k);
@@ -394,7 +411,9 @@ impl FieldGenerator for DistributionGenerator {
                             let p_cond = (*probability / p_remaining).clamp(0.0, 1.0);
                             let binom = rand_distr::Binomial::new(remaining as u64, p_cond)
                                 .unwrap_or_else(|_| {
-                                    rand_distr::Binomial::new(remaining as u64, 0.5).unwrap()
+                                    rand_distr::Binomial::new(remaining as u64, 0.5).expect(
+                                        "Multinomial fallback Binomial uses valid parameters",
+                                    )
                                 });
                             let x = binom.sample(rng) as i64;
                             flat_values.push(x);

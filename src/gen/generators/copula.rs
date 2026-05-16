@@ -90,7 +90,8 @@ fn generate_gaussian_copula(
         }
     };
 
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0)
+        .expect("standard normal distribution uses valid parameters");
     let mut result = vec![vec![0.0f64; count]; n];
 
     #[allow(clippy::needless_range_loop)]
@@ -227,13 +228,19 @@ fn inverse_cdf(u: f64, marginal: &MarginalInfo) -> f64 {
         DistributionKind::Normal => {
             let mean = marginal.params.get("mean").copied().unwrap_or(0.0);
             let std_dev = marginal.params.get("std_dev").copied().unwrap_or(1.0);
-            let d = Normal::new(mean, std_dev).unwrap_or_else(|_| Normal::new(0.0, 1.0).unwrap());
+            let d = Normal::new(mean, std_dev).unwrap_or_else(|_| {
+                Normal::new(0.0, 1.0)
+                    .expect("fallback normal distribution uses valid parameters")
+            });
             d.inverse_cdf(u)
         }
         DistributionKind::LogNormal => {
             let mu = marginal.params.get("mu").copied().unwrap_or(0.0);
             let sigma = marginal.params.get("sigma").copied().unwrap_or(1.0);
-            let d = LogNormal::new(mu, sigma).unwrap_or_else(|_| LogNormal::new(0.0, 1.0).unwrap());
+            let d = LogNormal::new(mu, sigma).unwrap_or_else(|_| {
+                LogNormal::new(0.0, 1.0)
+                    .expect("fallback log-normal distribution uses valid parameters")
+            });
             d.inverse_cdf(u)
         }
         DistributionKind::Uniform => {
@@ -249,8 +256,10 @@ fn inverse_cdf(u: f64, marginal: &MarginalInfo) -> f64 {
         _ => {
             let mean = marginal.params.get("mean").copied().unwrap_or(0.0);
             let std_dev = marginal.params.get("std_dev").copied().unwrap_or(1.0);
-            let d = Normal::new(mean, std_dev.max(0.01))
-                .unwrap_or_else(|_| Normal::new(0.0, 1.0).unwrap());
+            let d = Normal::new(mean, std_dev.max(0.01)).unwrap_or_else(|_| {
+                Normal::new(0.0, 1.0)
+                    .expect("fallback normal approximation uses valid parameters")
+            });
             d.inverse_cdf(u)
         }
     };

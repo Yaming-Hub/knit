@@ -170,7 +170,10 @@ pub fn tokenize(input: &str) -> Result<Vec<SpannedToken>, LexError> {
                 } else {
                     // Decode a full UTF-8 character from the byte stream
                     let remaining = &input[i..];
-                    let ch = remaining.chars().next().unwrap();
+                    let ch = remaining.chars().next().ok_or_else(|| LexError {
+                        message: "invalid UTF-8 in string literal".into(),
+                        pos: i,
+                    })?;
                     s.push(ch);
                     i += ch.len_utf8();
                 }

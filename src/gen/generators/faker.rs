@@ -1774,7 +1774,7 @@ fn generate_vin(rng: &mut dyn RngCore) -> String {
         .collect();
     // Position 9 is the check digit (simplified: random digit)
     vin[8] = b'0' + (rng.next_u32() % 10) as u8;
-    String::from_utf8(vin).unwrap()
+    String::from_utf8(vin).expect("VIN bytes are generated from ASCII characters only")
 }
 
 /// Generate a valid EAN-13 barcode with check digit.

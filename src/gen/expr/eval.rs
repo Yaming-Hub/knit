@@ -187,6 +187,18 @@ fn require_bool(arr: &ArrayRef) -> Result<&BooleanArray, EvalError> {
     })
 }
 
+fn require_i64(arr: &ArrayRef) -> Result<&Int64Array, EvalError> {
+    as_i64(arr).ok_or_else(|| EvalError {
+        message: format!("expected Int64, got {:?}", arr.data_type()),
+    })
+}
+
+fn require_str(arr: &ArrayRef) -> Result<&StringArray, EvalError> {
+    as_str(arr).ok_or_else(|| EvalError {
+        message: format!("expected Utf8, got {:?}", arr.data_type()),
+    })
+}
+
 // ─── Literal ────────────────────────────────────────────────────────────────
 
 fn eval_literal(lit: &LiteralValue, count: usize) -> Result<ArrayRef, EvalError> {
@@ -314,8 +326,8 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
         && left.data_type() == &DataType::Utf8
         && right.data_type() == &DataType::Utf8
     {
-        let l = as_str(left).unwrap();
-        let r = as_str(right).unwrap();
+        let l = require_str(left)?;
+        let r = require_str(right)?;
         let result: StringArray = (0..l.len())
             .map(|i| {
                 if l.is_null(i) || r.is_null(i) {
@@ -354,8 +366,8 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
 
 fn eval_mod(left: &ArrayRef, right: &ArrayRef) -> Result<ArrayRef, EvalError> {
     if left.data_type() == &DataType::Int64 && right.data_type() == &DataType::Int64 {
-        let la = as_i64(left).unwrap();
-        let ra = as_i64(right).unwrap();
+        let la = require_i64(left)?;
+        let ra = require_i64(right)?;
         let result: Int64Array = (0..la.len())
             .map(|i| {
                 if la.is_null(i) || ra.is_null(i) {
@@ -414,8 +426,8 @@ fn eval_cmp(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, Ev
     }
 
     if left.data_type() == &DataType::Utf8 && right.data_type() == &DataType::Utf8 {
-        let l = as_str(left).unwrap();
-        let r = as_str(right).unwrap();
+        let l = require_str(left)?;
+        let r = require_str(right)?;
         let result: BooleanArray = (0..l.len())
             .map(|i| {
                 if l.is_null(i) || r.is_null(i) {
@@ -440,8 +452,8 @@ fn eval_cmp(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, Ev
 
     // Boolean comparison (equality only)
     if left.data_type() == &DataType::Boolean && right.data_type() == &DataType::Boolean {
-        let l = as_bool(left).unwrap();
-        let r = as_bool(right).unwrap();
+        let l = require_bool(left)?;
+        let r = require_bool(right)?;
         let result: BooleanArray = (0..l.len())
             .map(|i| {
                 if l.is_null(i) || r.is_null(i) {
@@ -1419,7 +1431,10 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
         branches.push((cond, val));
     }
     let default_val = if has_default {
-        Some(evaluate(args.last().unwrap(), ctx)?)
+        let default_expr = args.last().ok_or_else(|| EvalError {
+            message: "case: missing default expression".into(),
+        })?;
+        Some(evaluate(default_expr, ctx)?)
     } else {
         None
     };
@@ -1446,7 +1461,7 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
         DataType::Float64 => {
             let mut result: Vec<Option<f64>> = vec![None; count];
             for (cond, val) in &branches {
-                let ba = as_bool(cond).unwrap();
+                let ba = require_bool(cond)?;
                 let fv = to_f64_vec(val)?;
                 for i in 0..count {
                     if !assigned[i] && !ba.is_null(i) && ba.value(i) {
@@ -1468,7 +1483,7 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
         DataType::Int64 => {
             let mut result: Vec<Option<i64>> = vec![None; count];
             for (cond, val) in &branches {
-                let ba = as_bool(cond).unwrap();
+                let ba = require_bool(cond)?;
                 let ia = as_i64(val).ok_or_else(|| EvalError {
                     message: "case: type mismatch in value branch".into(),
                 })?;
@@ -1502,7 +1517,7 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
         DataType::Boolean => {
             let mut result: Vec<Option<bool>> = vec![None; count];
             for (cond, val) in &branches {
-                let ba = as_bool(cond).unwrap();
+                let ba = require_bool(cond)?;
                 let va = as_bool(val).ok_or_else(|| EvalError {
                     message: "case: type mismatch in value branch".into(),
                 })?;
@@ -1537,7 +1552,7 @@ fn eval_case(args: &[Expr], ctx: &EvalContext<'_>) -> Result<ArrayRef, EvalError
             // String output path
             let mut result: Vec<Option<String>> = vec![None; count];
             for (cond, val) in &branches {
-                let ba = as_bool(cond).unwrap();
+                let ba = require_bool(cond)?;
                 let sv = array_to_strings(val)?;
                 for i in 0..count {
                     if !assigned[i] && !ba.is_null(i) && ba.value(i) {
@@ -1572,11 +1587,11 @@ fn eval_if(cond: &ArrayRef, then: &ArrayRef, otherwise: &ArrayRef) -> Result<Arr
         && is_numeric(otherwise.data_type())
         && then.data_type() != otherwise.data_type()
     {
-        let promote = |arr: &ArrayRef| -> ArrayRef {
+        let promote = |arr: &ArrayRef| -> Result<ArrayRef, EvalError> {
             if arr.data_type() == &DataType::Float64 {
-                arr.clone()
+                Ok(arr.clone())
             } else {
-                let ia = as_i64(arr).unwrap();
+                let ia = require_i64(arr)?;
                 let fa: Float64Array = (0..ia.len())
                     .map(|i| {
                         if ia.is_null(i) {
@@ -1586,17 +1601,17 @@ fn eval_if(cond: &ArrayRef, then: &ArrayRef, otherwise: &ArrayRef) -> Result<Arr
                         }
                     })
                     .collect();
-                Arc::new(fa) as ArrayRef
+                Ok(Arc::new(fa) as ArrayRef)
             }
         };
-        (promote(&then), promote(&otherwise))
+        (promote(&then)?, promote(&otherwise)?)
     } else {
         (then, otherwise)
     };
 
     match then.data_type() {
         DataType::Int64 => {
-            let t_vals = as_i64(&then).unwrap();
+            let t_vals = require_i64(&then)?;
             let o_vals = as_i64(&otherwise).ok_or_else(|| EvalError {
                 message: format!(
                     "if: type mismatch: then is Int64, otherwise is {:?}",
@@ -1656,7 +1671,7 @@ fn eval_if(cond: &ArrayRef, then: &ArrayRef, otherwise: &ArrayRef) -> Result<Arr
             Ok(Arc::new(result))
         }
         DataType::Boolean => {
-            let t = as_bool(&then).unwrap();
+            let t = require_bool(&then)?;
             let o = require_bool(&otherwise)?;
             let result: BooleanArray = (0..count)
                 .map(|i| {
@@ -1703,9 +1718,9 @@ fn eval_coalesce(arrays: &[ArrayRef]) -> Result<ArrayRef, EvalError> {
         .iter()
         .map(|a| {
             if is_null_array(a) {
-                typed_nulls(&result_type, a.len())
+                Ok(typed_nulls(&result_type, a.len()))
             } else if result_type == DataType::Float64 && a.data_type() == &DataType::Int64 {
-                let ia = as_i64(a).unwrap();
+                let ia = require_i64(a)?;
                 let fa: Float64Array = (0..ia.len())
                     .map(|i| {
                         if ia.is_null(i) {
@@ -1715,12 +1730,12 @@ fn eval_coalesce(arrays: &[ArrayRef]) -> Result<ArrayRef, EvalError> {
                         }
                     })
                     .collect();
-                Arc::new(fa) as ArrayRef
+                Ok(Arc::new(fa) as ArrayRef)
             } else {
-                a.clone()
+                Ok(a.clone())
             }
         })
-        .collect();
+        .collect::<Result<_, _>>()?;
 
     match result_type {
         DataType::Int64 => {
@@ -1811,7 +1826,7 @@ fn eval_coalesce(arrays: &[ArrayRef]) -> Result<ArrayRef, EvalError> {
 
 fn eval_nullif(a: &ArrayRef, b: &ArrayRef) -> Result<ArrayRef, EvalError> {
     let eq_arr = eval_cmp(a, b, BinOp::Eq)?;
-    let eq = as_bool(&eq_arr).unwrap();
+    let eq = require_bool(&eq_arr)?;
     let count = eq.len();
 
     if let Some(ia) = as_i64(a) {
