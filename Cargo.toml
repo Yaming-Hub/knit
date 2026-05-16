@@ -33,9 +33,9 @@ parquet = { version = "58", features = ["arrow"] }
 apache-avro = { version = "0.21", features = ["snappy"] }
 
 # Random / Math
-rand = "0.8"
-rand_chacha = "0.3"
-rand_distr = "0.4"
+rand = "0.9"
+rand_chacha = "0.9"
+rand_distr = "0.5"
 statrs = "0.18"
 rustfft = "6"
 

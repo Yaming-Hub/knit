@@ -16,8 +16,9 @@ use arrow::array::{
 };
 use arrow::datatypes::DataType;
 use chrono::{Datelike, NaiveDate, TimeZone, Utc};
+use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
-use rand_distr::{Distribution, Normal, Uniform};
+use rand_distr::Normal;
 
 use crate::gen::context::GenContext;
 use crate::gen::traits::FieldGenerator;
@@ -265,7 +266,8 @@ impl RelativeGenerator {
                         d.sample(rng)
                     }
                     RelativeDistKind::Uniform(lo, hi) => {
-                        let d = Uniform::new(*lo, hi.max(lo + 1e-9));
+                        let d = Uniform::new(*lo, hi.max(lo + 1e-9))
+                            .expect("uniform relative offset requires lo < hi");
                         d.sample(rng)
                     }
                     RelativeDistKind::Exponential(lambda) => {
@@ -710,14 +712,18 @@ impl FieldGenerator for BusinessHoursGenerator {
                 let (utc_start, utc_end) =
                     compute_utc_interval(&day_cursor, tz, self.start_hour, self.end_hour);
                 let range = utc_end - utc_start;
-                let offset_ms = Uniform::new(0i64, range.max(1)).sample(rng);
+                let offset_ms = Uniform::new(0i64, range.max(1))
+                    .expect("business-hours UTC interval must be non-empty")
+                    .sample(rng);
                 values.push(utc_start + offset_ms);
             } else if let Some(tz) = fixed_tz {
                 // Fixed timezone: compute real UTC interval for this day
                 let (utc_start, utc_end) =
                     compute_utc_interval(&day_cursor, tz, self.start_hour, self.end_hour);
                 let range = utc_end - utc_start;
-                let offset_ms = Uniform::new(0i64, range.max(1)).sample(rng);
+                let offset_ms = Uniform::new(0i64, range.max(1))
+                    .expect("business-hours UTC interval must be non-empty")
+                    .sample(rng);
                 values.push(utc_start + offset_ms);
             } else {
                 // No timezone — interpret as UTC (backward compatible)
@@ -725,7 +731,9 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .and_hms_opt(self.start_hour as u32, 0, 0)
                     .expect("start_hour is clamped to 0–23");
                 let day_start_ms = day_start.and_utc().timestamp_millis();
-                let offset_ms = Uniform::new(0i64, nominal_range_ms.max(1)).sample(rng);
+                let offset_ms = Uniform::new(0i64, nominal_range_ms.max(1))
+                    .expect("business-hours nominal interval must be non-empty")
+                    .sample(rng);
                 values.push(day_start_ms + offset_ms);
             }
 

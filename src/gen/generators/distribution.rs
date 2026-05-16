@@ -15,8 +15,8 @@ use std::sync::Arc;
 use arrow::array::{ArrayRef, Float64Array, Int64Array, ListArray};
 use arrow::buffer::OffsetBuffer;
 use arrow::datatypes::{DataType, Field};
+use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
-use rand_distr::Distribution;
 
 use crate::core::DistributionKind;
 
@@ -120,7 +120,8 @@ impl FieldGenerator for DistributionGenerator {
                 } else {
                     (lo, hi)
                 };
-                let dist = rand::distributions::Uniform::new(lo, hi);
+                let dist = Uniform::new(lo, hi)
+                    .expect("uniform distribution requires lo < hi after fallback");
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
                 self.to_array(values)
             }
@@ -341,11 +342,11 @@ impl FieldGenerator for DistributionGenerator {
                 self.to_array(values)
             }
             DistributionKind::Zipf => {
-                let n = self.param("n", 100.0).max(1.0) as u64;
+                let n = self.param("n", 100.0).max(1.0);
                 let s = self.param("s", 1.0).max(f64::EPSILON);
                 let dist = rand_distr::Zipf::new(n, s).unwrap_or_else(|_| {
                     tracing::warn!(n, s, "invalid Zipf params, falling back to Zipf(100,1)");
-                    rand_distr::Zipf::new(100, 1.0)
+                    rand_distr::Zipf::new(100.0, 1.0)
                         .expect("Zipf fallback (100,1) uses valid parameters")
                 });
                 let values: Vec<i64> = (0..count)
@@ -362,21 +363,38 @@ impl FieldGenerator for DistributionGenerator {
                     .get("alpha")
                     .cloned()
                     .unwrap_or_else(|| vec![1.0, 1.0]);
-                let k = alpha.len();
-                let dist = rand_distr::Dirichlet::new(&alpha).unwrap_or_else(|_| {
+                let alpha = if alpha.len() >= 2 && alpha.iter().all(|a| a.is_finite() && *a > 0.0)
+                {
+                    alpha
+                } else {
                     tracing::warn!(
                         ?alpha,
                         "invalid Dirichlet alpha, falling back to symmetric(1.0, k={})",
-                        k
+                        alpha.len().max(2)
                     );
-                    rand_distr::Dirichlet::new(&vec![1.0; k.max(2)])
-                        .expect("Dirichlet fallback with positive symmetric alpha is valid")
-                });
+                    vec![1.0; alpha.len().max(2)]
+                };
+                let k = alpha.len();
+                let gamma_dists: Vec<_> = alpha
+                    .iter()
+                    .map(|&a| {
+                        rand_distr::Gamma::new(a, 1.0)
+                            .expect("Dirichlet alpha must produce a valid gamma distribution")
+                    })
+                    .collect();
                 // Sample k floats per row, flatten into a single values array.
                 let mut flat_values = Vec::with_capacity(count * k);
                 for _ in 0..count {
-                    let sample: Vec<f64> = dist.sample(rng);
-                    flat_values.extend_from_slice(&sample);
+                    let mut sample = Vec::with_capacity(k);
+                    let mut total = 0.0;
+                    for dist in &gamma_dists {
+                        let value: f64 = dist.sample(rng);
+                        total += value;
+                        sample.push(value);
+                    }
+                    for value in sample {
+                        flat_values.push(value / total);
+                    }
                 }
                 let values_array = Arc::new(Float64Array::from(flat_values));
                 let offsets: Vec<i32> = (0..=count).map(|i| (i * k) as i32).collect();

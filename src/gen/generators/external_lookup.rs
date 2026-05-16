@@ -9,7 +9,8 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
 use rand::RngCore;
-use rand_distr::{Distribution, WeightedAliasIndex};
+use rand::distr::Distribution;
+use rand_distr::weighted::WeightedAliasIndex;
 
 use crate::core::SamplingMode;
 use crate::gen::context::GenContext;

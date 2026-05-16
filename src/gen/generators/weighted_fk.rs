@@ -49,7 +49,7 @@ impl WeightedForeignKeyGenerator {
                     .copied()
                     .unwrap_or(1.0);
                 // Zipf::new(n, s) samples ranks in 1..=n.
-                let zipf = Zipf::new(n, exponent).expect("valid Zipf params");
+                let zipf = Zipf::new(n as f64, exponent).expect("valid Zipf params");
                 let rank: f64 = zipf.sample(rng);
                 // Convert 1-based rank to 0-based index, clamped.
 
@@ -123,7 +123,7 @@ impl WeightedStringForeignKeyGenerator {
                     .or_else(|| self.degree.params.get("s"))
                     .copied()
                     .unwrap_or(1.0);
-                let zipf = Zipf::new(n, exponent).expect("valid Zipf params");
+                let zipf = Zipf::new(n as f64, exponent).expect("valid Zipf params");
                 let rank: f64 = zipf.sample(rng);
 
                 (rank as u64).saturating_sub(1).min(n - 1) as usize
