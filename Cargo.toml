@@ -2,7 +2,7 @@
 name = "knit"
 version = "0.4.0"
 edition = "2021"
-rust-version = "1.87"
+rust-version = "1.92"
 license = "MIT"
 repository = "https://github.com/Yaming-Hub/knit"
 description = "Deterministic synthetic data generation toolset"
@@ -75,7 +75,7 @@ tempfile = "3"
 indoc = "2"
 
 # WASM plugin support (optional)
-wasmtime = { version = "44", optional = true }
+wasmtime = { version = "44", optional = true, default-features = false, features = ["cranelift", "runtime"] }
 
 [features]
 default = []
