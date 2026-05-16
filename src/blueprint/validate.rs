@@ -2758,22 +2758,8 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
 
                     // Still validate weight_field for forward compatibility
                     if let Some(parent) = entity_map.get(rel.to.as_str()) {
-                        let has_field = parent.fields.iter().any(|f| f.name == *weight_field);
-                        if !has_field {
-                            errors.push(BlueprintError::Validation {
-                                path: sp.clone(),
-                                message: format!(
-                                    "relationship '{}': weight_field '{}' not found on parent entity '{}'",
-                                    rel.name, weight_field, rel.to
-                                ),
-                            });
-                        } else {
-                            // Check that the field is numeric
-                            let field = parent
-                                .fields
-                                .iter()
-                                .find(|f| f.name == *weight_field)
-                                .unwrap();
+                        if let Some(field) = parent.fields.iter().find(|f| f.name == *weight_field)
+                        {
                             let is_numeric = matches!(
                                 field.data_type,
                                 crate::core::DataType::Int
@@ -2789,6 +2775,14 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                                     ),
                                 });
                             }
+                        } else {
+                            errors.push(BlueprintError::Validation {
+                                path: sp.clone(),
+                                message: format!(
+                                    "relationship '{}': weight_field '{}' not found on parent entity '{}'",
+                                    rel.name, weight_field, rel.to
+                                ),
+                            });
                         }
                     }
                 }
@@ -3153,8 +3147,7 @@ fn validate_correlations(model: &DataModel, errors: &mut Vec<BlueprintError>) {
             .unwrap_or(false);
         if is_cond_dist {
             validate_conditional_distribution(&path, corr, model, errors);
-        } else if corr.correlation_type.is_some() {
-            let ct = corr.correlation_type.as_deref().unwrap();
+        } else if let Some(ct) = corr.correlation_type.as_deref() {
             errors.push(BlueprintError::Validation {
                 path: path.clone(),
                 message: format!(

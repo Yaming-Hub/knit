@@ -122,17 +122,18 @@ impl<W: Write + Send> Sink for AvroSink<W> {
 
         let num_rows = batch.num_rows();
         for row in 0..num_rows {
-            let fields: Vec<(String, AvroValue)> = self
+            let fields: Result<Vec<(String, AvroValue)>, BindError> = self
                 .field_names
                 .iter()
                 .enumerate()
                 .map(|(col, name)| {
                     let array = batch.column(col);
                     let nullable = self.field_nullable[col];
-                    let value = arrow_value_to_avro(array, row, nullable);
-                    (name.clone(), value)
+                    let value = arrow_value_to_avro(array, row, nullable)?;
+                    Ok((name.clone(), value))
                 })
                 .collect();
+            let fields = fields?;
 
             let record = AvroValue::Record(fields);
             writer
@@ -328,210 +329,196 @@ fn arrow_type_to_avro(dt: &DataType) -> Result<AvroSchema, BindError> {
 /// `nullable` is driven by the Arrow schema field's `is_nullable()`, not the
 /// array's runtime null count, ensuring union wrapping is consistent regardless
 /// of whether the current batch contains nulls.
-fn arrow_value_to_avro(array: &ArrayRef, row: usize, nullable: bool) -> AvroValue {
+fn arrow_value_to_avro(array: &ArrayRef, row: usize, nullable: bool) -> Result<AvroValue, BindError> {
     if array.is_null(row) {
-        return if nullable {
+        return Ok(if nullable {
             AvroValue::Union(0, Box::new(AvroValue::Null))
         } else {
             AvroValue::Null
-        };
+        });
     }
 
-    // Wrap non-null values in Union if the field is declared nullable
-    let value = arrow_value_to_avro_inner(array, row);
-    if nullable {
+    let value = arrow_value_to_avro_inner(array, row)?;
+    Ok(if nullable {
         AvroValue::Union(1, Box::new(value))
     } else {
         value
-    }
+    })
 }
 
 /// Convert a non-null Arrow array value at `row` to an Avro value (without union wrapping).
-fn arrow_value_to_avro_inner(array: &ArrayRef, row: usize) -> AvroValue {
-    match array.data_type() {
+fn arrow_value_to_avro_inner(array: &ArrayRef, row: usize) -> Result<AvroValue, BindError> {
+    let value = match array.data_type() {
         DataType::Null => AvroValue::Null,
         DataType::Boolean => {
-            let a = array.as_any().downcast_ref::<BooleanArray>().unwrap();
+            let a = downcast_array::<BooleanArray>(array, "BooleanArray")?;
             AvroValue::Boolean(a.value(row))
         }
         DataType::Int8 => {
-            let a = array.as_any().downcast_ref::<Int8Array>().unwrap();
+            let a = downcast_array::<Int8Array>(array, "Int8Array")?;
             AvroValue::Int(a.value(row) as i32)
         }
         DataType::Int16 => {
-            let a = array.as_any().downcast_ref::<Int16Array>().unwrap();
+            let a = downcast_array::<Int16Array>(array, "Int16Array")?;
             AvroValue::Int(a.value(row) as i32)
         }
         DataType::Int32 => {
-            let a = array.as_any().downcast_ref::<Int32Array>().unwrap();
+            let a = downcast_array::<Int32Array>(array, "Int32Array")?;
             AvroValue::Int(a.value(row))
         }
         DataType::UInt8 => {
-            let a = array.as_any().downcast_ref::<UInt8Array>().unwrap();
+            let a = downcast_array::<UInt8Array>(array, "UInt8Array")?;
             AvroValue::Int(a.value(row) as i32)
         }
         DataType::UInt16 => {
-            let a = array.as_any().downcast_ref::<UInt16Array>().unwrap();
+            let a = downcast_array::<UInt16Array>(array, "UInt16Array")?;
             AvroValue::Int(a.value(row) as i32)
         }
         DataType::UInt32 => {
-            let a = array.as_any().downcast_ref::<UInt32Array>().unwrap();
+            let a = downcast_array::<UInt32Array>(array, "UInt32Array")?;
             AvroValue::Long(a.value(row) as i64)
         }
         DataType::Int64 => {
-            let a = array.as_any().downcast_ref::<Int64Array>().unwrap();
+            let a = downcast_array::<Int64Array>(array, "Int64Array")?;
             AvroValue::Long(a.value(row))
         }
         DataType::UInt64 => {
-            let a = array.as_any().downcast_ref::<UInt64Array>().unwrap();
+            let a = downcast_array::<UInt64Array>(array, "UInt64Array")?;
             AvroValue::Long(a.value(row) as i64)
         }
         DataType::Float16 => {
-            let a = array.as_any().downcast_ref::<Float16Array>().unwrap();
+            let a = downcast_array::<Float16Array>(array, "Float16Array")?;
             AvroValue::Float(a.value(row).to_f32())
         }
         DataType::Float32 => {
-            let a = array.as_any().downcast_ref::<Float32Array>().unwrap();
+            let a = downcast_array::<Float32Array>(array, "Float32Array")?;
             AvroValue::Float(a.value(row))
         }
         DataType::Float64 => {
-            let a = array.as_any().downcast_ref::<Float64Array>().unwrap();
+            let a = downcast_array::<Float64Array>(array, "Float64Array")?;
             AvroValue::Double(a.value(row))
         }
         DataType::Utf8 => {
-            let a = array.as_any().downcast_ref::<StringArray>().unwrap();
+            let a = downcast_array::<StringArray>(array, "StringArray")?;
             AvroValue::String(a.value(row).to_string())
         }
         DataType::LargeUtf8 => {
-            let a = array.as_any().downcast_ref::<LargeStringArray>().unwrap();
+            let a = downcast_array::<LargeStringArray>(array, "LargeStringArray")?;
             AvroValue::String(a.value(row).to_string())
         }
         DataType::Binary => {
-            let a = array.as_any().downcast_ref::<BinaryArray>().unwrap();
+            let a = downcast_array::<BinaryArray>(array, "BinaryArray")?;
             AvroValue::Bytes(a.value(row).to_vec())
         }
         DataType::LargeBinary => {
-            let a = array.as_any().downcast_ref::<LargeBinaryArray>().unwrap();
+            let a = downcast_array::<LargeBinaryArray>(array, "LargeBinaryArray")?;
             AvroValue::Bytes(a.value(row).to_vec())
         }
         DataType::Date32 => {
-            let a = array.as_any().downcast_ref::<Date32Array>().unwrap();
+            let a = downcast_array::<Date32Array>(array, "Date32Array")?;
             AvroValue::Int(a.value(row))
         }
         DataType::Date64 => {
-            let a = array.as_any().downcast_ref::<Date64Array>().unwrap();
+            let a = downcast_array::<Date64Array>(array, "Date64Array")?;
             AvroValue::Long(a.value(row))
         }
-        DataType::Timestamp(unit, _) => {
-            let a = array.as_any().downcast_ref::<TimestampMillisecondArray>();
-            if let Some(a) = a {
-                return AvroValue::Long(a.value(row));
+        DataType::Timestamp(unit, _) => match unit {
+            TimeUnit::Second => {
+                let a = downcast_array::<TimestampSecondArray>(array, "TimestampSecondArray")?;
+                AvroValue::Long(a.value(row) * 1000)
             }
-            let a = array.as_any().downcast_ref::<TimestampMicrosecondArray>();
-            if let Some(a) = a {
-                // Convert micros to millis for Avro
-                return AvroValue::Long(a.value(row) / 1_000);
+            TimeUnit::Millisecond => {
+                let a = downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
+                AvroValue::Long(a.value(row))
             }
-            let a = array.as_any().downcast_ref::<TimestampNanosecondArray>();
-            if let Some(a) = a {
-                // Convert nanos to millis for Avro
-                return AvroValue::Long(a.value(row) / 1_000_000);
+            TimeUnit::Microsecond => {
+                let a = downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
+                AvroValue::Long(a.value(row) / 1_000)
             }
-            let a = array.as_any().downcast_ref::<TimestampSecondArray>();
-            if let Some(a) = a {
-                return AvroValue::Long(a.value(row) * 1000);
+            TimeUnit::Nanosecond => {
+                let a = downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
+                AvroValue::Long(a.value(row) / 1_000_000)
             }
-            // Fallback: use the unit hint
-            match unit {
-                TimeUnit::Second => AvroValue::Long(0),
-                TimeUnit::Millisecond => AvroValue::Long(0),
-                TimeUnit::Microsecond => AvroValue::Long(0),
-                TimeUnit::Nanosecond => AvroValue::Long(0),
+        },
+        DataType::Time32(unit) => match unit {
+            TimeUnit::Second => {
+                let a = downcast_array::<Time32SecondArray>(array, "Time32SecondArray")?;
+                AvroValue::Long(a.value(row) as i64 * 1000)
             }
-        }
-        DataType::Time32(_) => {
-            let a = array
-                .as_any()
-                .downcast_ref::<Time32MillisecondArray>()
-                .map(|a| a.value(row) as i64)
-                .or_else(|| {
-                    array
-                        .as_any()
-                        .downcast_ref::<Time32SecondArray>()
-                        .map(|a| a.value(row) as i64 * 1000)
-                })
-                .unwrap_or(0);
-            AvroValue::Long(a)
-        }
-        DataType::Time64(_) => {
-            let a = array
-                .as_any()
-                .downcast_ref::<Time64NanosecondArray>()
-                .map(|a| a.value(row) / 1_000_000)
-                .or_else(|| {
-                    array
-                        .as_any()
-                        .downcast_ref::<Time64MicrosecondArray>()
-                        .map(|a| a.value(row) / 1000)
-                })
-                .unwrap_or(0);
-            AvroValue::Long(a)
-        }
-        DataType::Duration(_) => {
-            // Encode duration as millis (Long), not Avro logical duration
-            let a = array
-                .as_any()
-                .downcast_ref::<DurationMillisecondArray>()
-                .map(|a| a.value(row))
-                .or_else(|| {
-                    array
-                        .as_any()
-                        .downcast_ref::<DurationSecondArray>()
-                        .map(|a| a.value(row) * 1000)
-                })
-                .or_else(|| {
-                    array
-                        .as_any()
-                        .downcast_ref::<DurationMicrosecondArray>()
-                        .map(|a| a.value(row) / 1000)
-                })
-                .or_else(|| {
-                    array
-                        .as_any()
-                        .downcast_ref::<DurationNanosecondArray>()
-                        .map(|a| a.value(row) / 1_000_000)
-                })
-                .unwrap_or(0);
-            AvroValue::Long(a)
-        }
+            TimeUnit::Millisecond => {
+                let a = downcast_array::<Time32MillisecondArray>(array, "Time32MillisecondArray")?;
+                AvroValue::Long(a.value(row) as i64)
+            }
+            _ => AvroValue::Long(0),
+        },
+        DataType::Time64(unit) => match unit {
+            TimeUnit::Microsecond => {
+                let a = downcast_array::<Time64MicrosecondArray>(array, "Time64MicrosecondArray")?;
+                AvroValue::Long(a.value(row) / 1000)
+            }
+            TimeUnit::Nanosecond => {
+                let a = downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?;
+                AvroValue::Long(a.value(row) / 1_000_000)
+            }
+            _ => AvroValue::Long(0),
+        },
+        DataType::Duration(unit) => match unit {
+            TimeUnit::Second => {
+                let a = downcast_array::<DurationSecondArray>(array, "DurationSecondArray")?;
+                AvroValue::Long(a.value(row) * 1000)
+            }
+            TimeUnit::Millisecond => {
+                let a = downcast_array::<DurationMillisecondArray>(array, "DurationMillisecondArray")?;
+                AvroValue::Long(a.value(row))
+            }
+            TimeUnit::Microsecond => {
+                let a = downcast_array::<DurationMicrosecondArray>(array, "DurationMicrosecondArray")?;
+                AvroValue::Long(a.value(row) / 1000)
+            }
+            TimeUnit::Nanosecond => {
+                let a = downcast_array::<DurationNanosecondArray>(array, "DurationNanosecondArray")?;
+                AvroValue::Long(a.value(row) / 1_000_000)
+            }
+        },
         DataType::List(_) => {
-            let list = array.as_any().downcast_ref::<ListArray>().unwrap();
+            let list = downcast_array::<ListArray>(array, "ListArray")?;
             let inner = list.value(row);
-            let items: Vec<AvroValue> = (0..inner.len())
+            let items: Result<Vec<AvroValue>, BindError> = (0..inner.len())
                 .map(|i| arrow_value_to_avro_inner(&inner, i))
                 .collect();
-            AvroValue::Array(items)
+            AvroValue::Array(items?)
         }
         DataType::Struct(fields) => {
-            let struct_arr = array.as_any().downcast_ref::<StructArray>().unwrap();
-            let record_fields: Vec<(String, AvroValue)> = fields
+            let struct_arr = downcast_array::<StructArray>(array, "StructArray")?;
+            let record_fields: Result<Vec<(String, AvroValue)>, BindError> = fields
                 .iter()
                 .enumerate()
                 .map(|(i, field)| {
                     let col = struct_arr.column(i);
-                    let val = arrow_value_to_avro(col, row, field.is_nullable());
-                    (field.name().clone(), val)
+                    let val = arrow_value_to_avro(col, row, field.is_nullable())?;
+                    Ok((field.name().clone(), val))
                 })
                 .collect();
-            AvroValue::Record(record_fields)
+            AvroValue::Record(record_fields?)
         }
         _ => {
-            // Fallback: convert to string representation
-            let display =
-                arrow::util::display::array_value_to_string(array, row).unwrap_or_default();
+            let display = arrow::util::display::array_value_to_string(array, row)
+                .map_err(|e| BindError::Other(format!("Avro display conversion error: {e}")))?;
             AvroValue::String(display)
         }
-    }
+    };
+
+    Ok(value)
+}
+
+/// Downcast an Arrow array to the expected concrete array type.
+fn downcast_array<'a, T: 'static>(array: &'a ArrayRef, expected: &str) -> Result<&'a T, BindError> {
+    array.as_any().downcast_ref::<T>().ok_or_else(|| {
+        BindError::Other(format!(
+            "avro sink expected {expected} for Arrow type {:?}",
+            array.data_type()
+        ))
+    })
 }
 
 #[cfg(test)]
