@@ -196,7 +196,8 @@ pub fn run(
     }
 
     // Batch mode (original behavior)
-    let source = source.unwrap();
+    let source = source
+        .ok_or_else(|| anyhow::anyhow!("source path is required in batch mode"))?;
     run_batch(
         source,
         output,
@@ -2469,7 +2470,10 @@ fn extract_unique_strings_from_batches(batches: &[RecordBatch], col_name: &str) 
 
         match col.data_type() {
             DataType::Utf8 => {
-                let arr = col.as_any().downcast_ref::<StringArray>().unwrap();
+                let arr = col
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .expect("Utf8 column must downcast to StringArray");
                 for i in 0..arr.len() {
                     if values.len() >= MAX_DICTIONARY_ENTRIES {
                         break 'outer;
@@ -2483,7 +2487,10 @@ fn extract_unique_strings_from_batches(batches: &[RecordBatch], col_name: &str) 
                 }
             }
             DataType::LargeUtf8 => {
-                let arr = col.as_any().downcast_ref::<LargeStringArray>().unwrap();
+                let arr = col
+                    .as_any()
+                    .downcast_ref::<LargeStringArray>()
+                    .expect("LargeUtf8 column must downcast to LargeStringArray");
                 for i in 0..arr.len() {
                     if values.len() >= MAX_DICTIONARY_ENTRIES {
                         break 'outer;

@@ -34,7 +34,7 @@ fn run_schema(blueprint_path: &str, show_actors: bool, cli: &Cli) -> Result<()> 
         .map_err(|e| anyhow::anyhow!("failed to parse schema: {}", e))?;
 
     if cli.json {
-        print_schema_json(&model, show_actors);
+        print_schema_json(&model, show_actors)?;
     } else {
         print_schema_human(&model, show_actors);
     }
@@ -242,7 +242,7 @@ fn print_schema_human(model: &crate::core::DataModel, show_actors: bool) {
     }
 }
 
-fn print_schema_json(model: &crate::core::DataModel, show_actors: bool) {
+fn print_schema_json(model: &crate::core::DataModel, show_actors: bool) -> Result<()> {
     let entities: Vec<serde_json::Value> = model
         .entities
         .iter()
@@ -331,7 +331,8 @@ fn print_schema_json(model: &crate::core::DataModel, show_actors: bool) {
         result["behavioral_generators"] = serde_json::Value::Array(behavioral_gens);
     }
 
-    println!("{}", serde_json::to_string_pretty(&result).unwrap());
+    println!("{}", serde_json::to_string_pretty(&result)?);
+    Ok(())
 }
 
 /// Inspect a learn state file (.json).
@@ -355,7 +356,7 @@ fn run_state(state_path: &str, show_columns: bool, show_actors: bool, cli: &Cli)
     }
 
     if cli.json {
-        print_json(&state, show_columns);
+        print_json(&state, show_columns)?;
     } else {
         print_human(&state, show_columns);
     }
@@ -363,7 +364,7 @@ fn run_state(state_path: &str, show_columns: bool, show_actors: bool, cli: &Cli)
     Ok(())
 }
 
-fn print_json(state: &LearnState, show_columns: bool) {
+fn print_json(state: &LearnState, show_columns: bool) -> Result<()> {
     let tables: Vec<serde_json::Value> = state
         .tables
         .values()
@@ -423,7 +424,8 @@ fn print_json(state: &LearnState, show_columns: bool) {
         "correlations_tracked": state.correlations.len(),
     });
 
-    println!("{}", serde_json::to_string_pretty(&summary).unwrap());
+    println!("{}", serde_json::to_string_pretty(&summary)?);
+    Ok(())
 }
 
 fn print_human(state: &LearnState, show_columns: bool) {
