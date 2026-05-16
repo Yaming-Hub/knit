@@ -1,4 +1,4 @@
-# knit-gen — Design Document
+# gen module — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
@@ -40,12 +40,12 @@
 
 ## 1. Overview
 
-`knit-gen` is the core execution engine of the Knit toolset. It takes a compiled
-`ExecutionPlan` (produced by `knit-plan`) and executes it to produce Arrow
+`gen module` is the core execution engine of the Knit toolset. It takes a compiled
+`ExecutionPlan` (produced by `plan module`) and executes it to produce Arrow
 `RecordBatch` streams — the raw synthetic data that flows downstream to
-`knit-noise` for perturbation and `knit-bind` for serialization.
+`noise module` for perturbation and `bind module` for serialization.
 
-Everything in `knit-gen` is designed around three principles:
+Everything in `gen module` is designed around three principles:
 
 1. **Columnar-first** — All generation produces Arrow arrays, never row-by-row
    `Value` enums. This enables vectorized operations and zero-copy handoff to
@@ -65,8 +65,8 @@ commodity hardware with NVMe storage.
 
 | Crate | Purpose |
 |-------|---------|
-| `knit-plan` | Provides `ExecutionPlan`, `EntityPlan`, `FieldPlan`, `RngTree`, `PartitionRange` |
-| `knit-core` | Shared types: `Value`, `DataModel`, `GeneratorSpec`, `DistributionSpec`, `DataType` |
+| `plan module` | Provides `ExecutionPlan`, `EntityPlan`, `FieldPlan`, `RngTree`, `PartitionRange` |
+| `core module` | Shared types: `Value`, `DataModel`, `GeneratorSpec`, `DistributionSpec`, `DataType` |
 | `arrow` | `RecordBatch`, `ArrayRef`, array builders (`Int64Builder`, `StringBuilder`, etc.) |
 | `rand` | `Rng` trait, core RNG abstractions |
 | `rand_chacha` | `ChaCha8Rng` — deterministic, reproducible PRNG (hierarchical seeding) |
@@ -118,7 +118,7 @@ flowchart TB
         rb --> ch([Output Channel])
     end
 
-    ch --> downstream[knit-noise / knit-bind]
+    ch --> downstream[noise module / bind module]
 ```
 
 **Execution flow:**
@@ -307,7 +307,7 @@ Generates structured, realistic-looking data using categorical generators.
 
 **Locale support:** The `locale` parameter selects a locale-specific generator
 set. The `fake` crate provides locales for `EN`, `FR`, `ZH_CN`, `JA`, etc.
-When the `fake` crate lacks a locale, `knit-gen` falls back to custom
+When the `fake` crate lacks a locale, `gen module` falls back to custom
 locale-aware lookup tables (e.g., locale-specific name lists loaded from
 embedded data files).
 
@@ -882,7 +882,7 @@ fn apply_null_mask(array: ArrayRef, rng: &mut impl Rng, probability: f64) -> Arr
 
 ## 8. Parallel Execution
 
-`knit-gen` uses `rayon` for partition-level parallelism. Within a phase, all
+`gen module` uses `rayon` for partition-level parallelism. Within a phase, all
 partitions across all entities are dispatched to the thread pool.
 
 ### Parallelism Model
@@ -1051,7 +1051,7 @@ series engine for timezone-aware event streams.
 ## 11. Correlation Enforcement
 
 When the blueprint specifies correlations between fields (e.g., `age` and
-`income` have Pearson correlation 0.6), `knit-gen` uses a **Gaussian copula**
+`income` have Pearson correlation 0.6), `gen module` uses a **Gaussian copula**
 to generate jointly distributed values.
 
 **Algorithm:**
@@ -1097,7 +1097,7 @@ correlated fields) and the matrix multiply is dominated by the batch size.
 ## 12. Graph Topology
 
 For relationships with specified graph topologies (e.g., social networks,
-organizational hierarchies), `knit-gen` generates edges using well-known
+organizational hierarchies), `gen module` generates edges using well-known
 graph models via `petgraph`.
 
 ### Supported Models
@@ -1111,7 +1111,7 @@ graph models via `petgraph`.
 ### Execution
 
 1. The planner identifies relationships with a `topology` specification.
-2. `knit-gen` builds the graph in memory using `petgraph`:
+2. `gen module` builds the graph in memory using `petgraph`:
    - Node count = parent entity count (or child entity count for bipartite).
    - Edge generation follows the selected model's algorithm.
 3. Edges are converted to FK assignments: each edge `(u, v)` maps to a child
@@ -1200,8 +1200,8 @@ flowchart LR
         assemble --> send[Send to\nChannel]
         send --> gen
     end
-    send --> noise[knit-noise]
-    noise --> bind[knit-bind\nParquet Writer]
+    send --> noise[noise module]
+    noise --> bind[bind module\nParquet Writer]
 ```
 
 This means peak memory per partition is approximately:

@@ -1,8 +1,8 @@
-# knit-learn — Design Document
+# learn module — Design Document
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-learn`
+**Module:** `learn module`
 
 ---
 
@@ -28,20 +28,20 @@
 
 ## 1. Overview
 
-knit-learn is the **reverse pipeline** of the Knit toolset. Where the forward pipeline
-(`knit-blueprint` → `knit-plan` → `knit-gen` → `knit-bind`) turns a knit blueprint into
-synthetic data, knit-learn does the opposite: it reads an existing dataset and infers a
+learn module is the **reverse pipeline** of the Knit toolset. Where the forward pipeline
+(`blueprint module` → `plan module` → `gen module` → `bind module`) turns a knit blueprint into
+synthetic data, learn module does the opposite: it reads an existing dataset and infers a
 knit blueprint (`DataModel`) that can reproduce data with similar statistical properties.
 
 ### Approach
 
-knit-learn uses **statistical methods only** (v1). There are no heavy ML dependencies —
+learn module uses **statistical methods only** (v1). There are no heavy ML dependencies —
 distribution fitting, hypothesis testing, and heuristic scoring are sufficient to produce
 high-quality blueprint candidates for tabular data.
 
 ### Candidate Output
 
-The output of knit-learn is always a **candidate** blueprint. Every inferred element carries
+The output of learn module is always a **candidate** blueprint. Every inferred element carries
 a confidence score between 0.0 and 1.0. The blueprint is intended for human or AI review,
 not blind adoption. Low-confidence elements are flagged, and alternative interpretations
 are preserved so reviewers can make informed decisions.
@@ -50,8 +50,8 @@ are preserved so reviewers can make informed decisions.
 
 | Use Case | Description |
 |----------|-------------|
-| **Bootstrap from production data** | Point knit-learn at a database export or data lake sample to get a starting knit blueprint, then refine manually or with an AI agent. |
-| **Compare synthetic vs real** | Generate data from a blueprint, then run knit-learn on both real and synthetic datasets to compare inferred distributions and catch drift. |
+| **Bootstrap from production data** | Point learn module at a database export or data lake sample to get a starting knit blueprint, then refine manually or with an AI agent. |
+| **Compare synthetic vs real** | Generate data from a blueprint, then run learn module on both real and synthetic datasets to compare inferred distributions and catch drift. |
 | **Migrate from other tools** | Import data produced by another synthetic data tool and extract a knit blueprint instead of rewriting specifications by hand. |
 
 ---
@@ -60,22 +60,22 @@ are preserved so reviewers can make informed decisions.
 
 | Dependency | Purpose |
 |------------|---------|
-| `knit-core` | Shared types: `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value` |
-| `knit-blueprint` | Serialize the inferred `DataModel` to `.knit.toml` / `.weave.json` |
+| `core module` | Shared types: `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value` |
+| `blueprint module` | Serialize the inferred `DataModel` to `.knit.toml` / `.weave.json` |
 | `arrow` | In-memory columnar format (`RecordBatch`, `ArrayRef`) for all internal processing |
 | `parquet` | Read Parquet input files via `arrow`'s Parquet reader |
 | `csv` | Read CSV input files via `arrow`'s CSV reader with type sniffing |
 | `statrs` | Statistical functions: distribution fitting, KS-test, MLE parameter estimation |
 | `serde` / `serde_json` | JSON/JSONL ingestion and annotation serialization |
 
-knit-learn depends on `knit-blueprint` (not `knit-plan` or `knit-gen`) — it only needs to
+learn module depends on `blueprint module` (not `plan module` or `gen module`) — it only needs to
 build and serialize a `DataModel`, never to execute one.
 
 ```mermaid
 flowchart BT
-    core[knit-core]
-    blueprint[knit-blueprint] --> core
-    learn[knit-learn] --> core
+    core[core module]
+    blueprint[blueprint module] --> core
+    learn[learn module] --> core
     learn --> blueprint
     learn --> arrow[arrow / parquet / csv]
     learn --> statrs[statrs]
@@ -85,7 +85,7 @@ flowchart BT
 
 ## 3. Pipeline Architecture
 
-knit-learn processes data through an **eight-phase pipeline**. Each phase is a pure
+learn module processes data through an **eight-phase pipeline**. Each phase is a pure
 transformation with well-defined inputs and outputs.
 
 ```mermaid
@@ -128,7 +128,7 @@ flowchart LR
 
 ### Sampling Strategy
 
-For large files, reading every row is unnecessary and slow. knit-learn supports
+For large files, reading every row is unnecessary and slow. learn module supports
 configurable sampling:
 
 | Parameter | Default | Description |
@@ -312,7 +312,7 @@ data patterns. Each decision carries a confidence score.
 
 ### Date/Time Format Detection
 
-knit-learn attempts to parse each string value against a prioritized list of date/time
+learn module attempts to parse each string value against a prioritized list of date/time
 formats:
 
 | Priority | Format | Example |
@@ -349,7 +349,7 @@ Example:
 
 ## 7. Distribution Fitting
 
-For each numeric or temporal column, knit-learn fits candidate statistical distributions
+For each numeric or temporal column, learn module fits candidate statistical distributions
 and selects the best fit. For categorical columns, value frequencies are converted
 directly into a `one_of` generator.
 
@@ -440,7 +440,7 @@ pub struct Alternative {
 ## 8. Temporal Pattern Recognition
 
 For every column identified as temporal (date, datetime, timestamp) in Phase 3,
-knit-learn performs dedicated temporal pattern analysis. This goes beyond basic
+learn module performs dedicated temporal pattern analysis. This goes beyond basic
 profiling (min/max/granularity) to detect **recurring patterns, frequencies, and
 cadence** that are critical for producing realistic time-series synthetic data.
 
@@ -580,7 +580,7 @@ timezone = "UTC"
 ### 8.3 Multi-Column Temporal Relationships
 
 When multiple temporal columns exist within one entity (e.g., `created_at`,
-`updated_at`, `completed_at`), knit-learn detects ordering constraints and
+`updated_at`, `completed_at`), learn module detects ordering constraints and
 delay distributions between them:
 
 | Relationship | Detection | Blueprint Output |
@@ -675,7 +675,7 @@ A CV < 0.05 yields confidence > 0.95, indicating a highly regular schedule.
 
 ## 9. Relationship Detection
 
-knit-learn attempts to detect foreign key relationships between entities using a
+learn module attempts to detect foreign key relationships between entities using a
 combination of heuristics. No single heuristic is authoritative — confidence is derived
 from the agreement of multiple signals.
 
@@ -723,7 +723,7 @@ A column is a self-referential FK candidate when:
 ### Composite Key Detection
 
 When no single column produces a high overlap ratio but a combination of columns does,
-knit-learn tests pairs and triples of columns as composite FK candidates. This is
+learn module tests pairs and triples of columns as composite FK candidates. This is
 limited to columns with compatible types and reasonable cardinality.
 
 ### Confidence Scoring
@@ -758,13 +758,13 @@ relationship_confidence =
 
 ## 10. Relationship Analysis
 
-Once candidate relationships are detected (Phase 6), knit-learn performs **deep
+Once candidate relationships are detected (Phase 6), learn module performs **deep
 analysis** on confirmed relationships to extract the statistical and structural
 properties needed to reproduce realistic inter-entity data.
 
 ### 9.1 Cardinality Distribution Fitting
 
-For each detected relationship, knit-learn measures the actual cardinality distribution
+For each detected relationship, learn module measures the actual cardinality distribution
 — how many child records exist per parent record — and fits a statistical distribution.
 
 ```mermaid
@@ -810,7 +810,7 @@ cardinality = { distribution = "zipf", params = { n = 100000, exponent = 1.2 } }
 
 ### 9.2 Temporal Ordering Analysis
 
-When related entities both have temporal fields (datetime, timestamp), knit-learn
+When related entities both have temporal fields (datetime, timestamp), learn module
 analyzes the **temporal relationship** between them.
 
 **Detected patterns:**
@@ -832,7 +832,7 @@ analyzes the **temporal relationship** between them.
 ### 9.3 Graph Topology Inference
 
 For relationships that form graph structures (especially self-referential ones like
-employee→manager or category→parent_category), knit-learn analyzes the graph properties.
+employee→manager or category→parent_category), learn module analyzes the graph properties.
 
 ```mermaid
 flowchart TB
@@ -890,7 +890,7 @@ struct GraphMetrics {
 
 ### 9.4 Junction Table Detection
 
-For `many_to_many` relationships, knit-learn identifies junction (bridge) tables and
+For `many_to_many` relationships, learn module identifies junction (bridge) tables and
 extracts their structure:
 
 1. A table with exactly 2 FK columns and few (or no) additional data columns → junction table
@@ -919,7 +919,7 @@ get reduced confidence.
 
 ## 11. Cross-Entity Correlation Detection
 
-Beyond FK relationships, knit-learn detects **statistical correlations** between fields
+Beyond FK relationships, learn module detects **statistical correlations** between fields
 within and across entities. These correlations are essential for producing realistic
 synthetic data — without them, generated data has implausible combinations
 (e.g., age 18 with 40 years of work experience).
@@ -968,7 +968,7 @@ _confidence = 0.88
 
 ### 10.2 Cross-Entity Correlations
 
-When a FK relationship exists between entities, knit-learn analyzes whether child
+When a FK relationship exists between entities, learn module analyzes whether child
 field values depend on parent field values.
 
 ```mermaid
@@ -1127,7 +1127,7 @@ Thresholds are configurable via CLI flags or configuration file.
 
 ## 13. Output Format
 
-knit-learn emits a standard knit blueprint with additional annotation fields that
+learn module emits a standard knit blueprint with additional annotation fields that
 communicate inference metadata to reviewers.
 
 ### Annotated knit blueprint
@@ -1205,7 +1205,7 @@ _naming_match = true
 
 ### Human-Readable Review Report
 
-In addition to the annotated blueprint, knit-learn can emit a **review report** (Markdown)
+In addition to the annotated blueprint, learn module can emit a **review report** (Markdown)
 summarizing the inference results:
 
 ```
@@ -1237,8 +1237,8 @@ summarizing the inference results:
 
 ### Round-Trip Tests
 
-The strongest validation for knit-learn is the **round-trip test**: generate data from
-a known blueprint, run knit-learn on the generated data, and compare the inferred blueprint
+The strongest validation for learn module is the **round-trip test**: generate data from
+a known blueprint, run learn module on the generated data, and compare the inferred blueprint
 against the original.
 
 ```mermaid
@@ -1269,19 +1269,19 @@ For each supported distribution:
 ### FK Detection Accuracy Tests
 
 - Create datasets with known FK relationships
-- Verify knit-learn detects them with high confidence
+- Verify learn module detects them with high confidence
 - Create datasets with columns that look like FKs but aren't (same type, partial
   overlap) — verify confidence is appropriately low
 
 ### Relationship Analysis Tests
 
 - **Cardinality recovery:** Generate data with known cardinality distributions (e.g., Zipf
-  s=1.2), run knit-learn, assert the fitted distribution family and parameters are within
+  s=1.2), run learn module, assert the fitted distribution family and parameters are within
   tolerance
 - **Temporal ordering:** Generate parent-child pairs with known delay distributions, verify
-  knit-learn recovers the delay distribution and detects causal ordering
+  learn module recovers the delay distribution and detects causal ordering
 - **Graph topology:** Generate tree structures (known depth, branching factor), verify
-  knit-learn identifies tree topology and recovers branching distribution
+  learn module identifies tree topology and recovers branching distribution
 - **Junction table:** Create many-to-many relationships via junction tables, verify
   detection and bilateral cardinality fitting
 
@@ -1337,7 +1337,7 @@ For each supported distribution:
 | **Statistical, not ML** | Use MLE, KS-test, heuristic scoring — no neural networks or gradient-based fitting | Keeps the dependency tree small, builds fast, runs deterministically, and is sufficient for tabular distribution matching in v1. ML-based inference can be added later behind the same trait interface. |
 | **Confidence scores on everything** | Every inferred element carries a 0.0–1.0 confidence score | The output is a candidate for review, not an authoritative blueprint. Confidence scores let reviewers (human or AI) focus on uncertain elements and auto-accept strong inferences. |
 | **Sample, don't full-scan** | Default to 100K-row samples instead of reading entire files | Profiling and fitting scale with sample size. 100K rows is sufficient for stable distribution estimates while keeping inference fast on multi-GB files. Full scan is available as an opt-in. |
-| **Arrow as internal format** | All ingested data is converted to Arrow `RecordBatch` immediately | Consistent columnar representation regardless of input format. Enables efficient vectorized statistics. Same format used by the forward pipeline (`knit-gen`). |
+| **Arrow as internal format** | All ingested data is converted to Arrow `RecordBatch` immediately | Consistent columnar representation regardless of input format. Enables efficient vectorized statistics. Same format used by the forward pipeline (`gen module`). |
 | **AIC for distribution selection** | Use AIC (not BIC or KS alone) as the primary selection criterion | AIC balances goodness-of-fit against model complexity. BIC penalizes parameters more heavily (better for very large samples) and is reported alongside. KS p-value is used for confidence, not selection. |
 | **Multi-heuristic FK detection** | Combine naming, overlap, cardinality, and type heuristics with weighted scoring | No single heuristic is reliable alone. Name matching catches conventions; overlap catches data relationships; cardinality catches directionality. The weighted combination is robust to missing signals. |
 | **Annotations via `_` prefix** | Inference metadata uses underscore-prefixed fields (`_confidence`, `_alternatives`) | Clearly separates inference metadata from the knit blueprint specification. `_`-prefixed fields are ignored by the forward pipeline and can be stripped for production use. |

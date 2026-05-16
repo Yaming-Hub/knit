@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crates:** `knit-learn`, `knit-core`, `knit-plan`, `knit-gen`
+**Modules:** `learn module`, `core module`, `plan module`, `gen module`
 
 ---
 
@@ -663,7 +663,7 @@ deep learning.
 - Interpretable results (users can understand and modify personas)
 - Sufficient for the behavioral patterns we're targeting
 - Fast training time on moderate datasets
-- Consistent with knit-learn's existing philosophy
+- Consistent with learn module's existing philosophy
 
 ### 13.2 Persona Granularity
 

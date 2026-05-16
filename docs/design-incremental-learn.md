@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0
 **Status:** Draft
-**Crate:** `knit-learn` (with CLI integration in `knit-cli`)
+**Module:** `learn module` (with CLI integration in `cli module`)
 
 ---
 
@@ -709,7 +709,7 @@ Add this design document to `docs/`.
 
 ### PR 2: Streaming Statistics Foundation ✅
 
-Create the core streaming statistics types in `knit-learn`:
+Create the core streaming statistics types in `learn module`:
 
 - `NumericState` with Welford's algorithm ✅
 - `ReservoirSample` with deterministic seeding ✅
@@ -801,7 +801,7 @@ gantt
 
 ## Appendix: Crate Dependencies
 
-The incremental learning feature adds these dependencies to `knit-learn`:
+The incremental learning feature adds these dependencies to `learn module`:
 
 | Crate | Purpose | Alternative |
 |-------|---------|-------------|
