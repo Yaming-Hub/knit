@@ -7,7 +7,7 @@ data model in a declarative TOML or JSON blueprint, and Knit handles execution
 planning, deterministic generation, output formatting, and optional noise
 injection — all from a single CLI command.
 
-[![Rust](https://img.shields.io/badge/Rust-1.87%2B-orange)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/Rust-1.92%2B-orange)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![crates.io](https://img.shields.io/crates/v/knit.svg)](https://crates.io/crates/knit)
 
