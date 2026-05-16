@@ -233,10 +233,13 @@ impl FieldGenerator for WasmFieldGenerator {
         let seed_lo = seed as i32;
         let seed_hi = (seed >> 32) as i32;
 
-        let mut store = self.store.lock().expect("WASM store lock poisoned");
-
         // Call knit_generate.
         let result = (|| -> Result<ArrayRef, String> {
+            let mut store = self
+                .store
+                .lock()
+                .map_err(|_| "WASM store lock poisoned".to_string())?;
+
             let generate_fn = self
                 .instance
                 .get_typed_func::<(i32, i32, i32, i32), i32>(&mut *store, "knit_generate")
