@@ -53,7 +53,7 @@ impl<W: Write + Send> ParquetSink<W> {
 
         let mut props_builder = WriterProperties::builder().set_compression(pq_compression);
         if let Some(rg_size) = row_group_size {
-            props_builder = props_builder.set_max_row_group_size(rg_size);
+            props_builder = props_builder.set_max_row_group_row_count(Some(rg_size));
         }
         let props = props_builder.build();
 
@@ -89,9 +89,9 @@ impl<W: Write + Send> Sink for ParquetSink<W> {
             .ok_or_else(|| BindError::Other("sink already finished".into()))?;
         let metadata = writer.close()?;
         let bytes_written = metadata
-            .row_groups
+            .row_groups()
             .iter()
-            .map(|rg| rg.total_byte_size as u64)
+            .map(|rg| rg.total_byte_size() as u64)
             .sum();
         debug!(
             rows = self.rows_written,
@@ -161,12 +161,8 @@ mod tests {
         // Verify the metadata reports snappy compression
         let writer = sink.writer.take().unwrap();
         let metadata = writer.close().unwrap();
-        let codec = metadata.row_groups[0].columns[0]
-            .meta_data
-            .as_ref()
-            .expect("column metadata should be present")
-            .codec;
-        assert_eq!(codec, parquet::format::CompressionCodec::SNAPPY);
+        let codec = metadata.row_groups()[0].column(0).compression();
+        assert_eq!(codec, parquet::basic::Compression::SNAPPY);
     }
 
     #[test]
@@ -189,9 +185,9 @@ mod tests {
         let writer = sink.writer.take().unwrap();
         let metadata = writer.close().unwrap();
         assert!(
-            metadata.row_groups.len() >= 2,
+            metadata.row_groups().len() >= 2,
             "expected >=2 row groups with max_row_group_size=2, got {}",
-            metadata.row_groups.len()
+            metadata.row_groups().len()
         );
     }
 }
