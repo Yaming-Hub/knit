@@ -80,7 +80,7 @@ impl<W: Write + Send> SqlSink<W> {
                 "CREATE TABLE {} (",
                 quote_identifier(&self.config.table_name)
             )
-            .unwrap();
+            .expect("writing SQL header into a String should not fail");
             let fields = self.schema.fields();
             for (i, field) in fields.iter().enumerate() {
                 let sql_type = arrow_type_to_sql(field.data_type());
@@ -94,13 +94,13 @@ impl<W: Write + Send> SqlSink<W> {
                     nullable,
                     comma,
                 )
-                .unwrap();
+                .expect("writing SQL header into a String should not fail");
             }
-            writeln!(buf, ");\n").unwrap();
+            writeln!(buf, ");\n").expect("writing SQL header into a String should not fail");
         }
 
         if self.config.transaction {
-            writeln!(buf, "BEGIN;\n").unwrap();
+            writeln!(buf, "BEGIN;\n").expect("writing SQL header into a String should not fail");
         }
 
         let bytes = buf.as_bytes();
@@ -124,7 +124,7 @@ impl<W: Write + Send> SqlSink<W> {
             "INSERT INTO {} (",
             quote_identifier(&self.config.table_name)
         )
-        .unwrap();
+        .expect("writing SQL statement into a String should not fail");
         for (i, field) in self.schema.fields().iter().enumerate() {
             if i > 0 {
                 buf.push_str(", ");
@@ -144,7 +144,7 @@ impl<W: Write + Send> SqlSink<W> {
                     buf.push_str(", ");
                 }
                 let array = batch.column(col);
-                format_value(&mut buf, array, row, field.data_type());
+                format_value(&mut buf, array, row, field.data_type())?;
             }
             buf.push(')');
         }
@@ -234,177 +234,85 @@ fn arrow_type_to_sql(dt: &DataType) -> &'static str {
 }
 
 /// Format a single cell value as a SQL literal, appending to `buf`.
-fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
+fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -> Result<(), BindError> {
     if array.is_null(row) {
         buf.push_str("NULL");
-        return;
+        return Ok(());
     }
 
     match dt {
         DataType::Boolean => {
-            let v = array.as_any().downcast_ref::<BooleanArray>().unwrap();
+            let v = downcast_array::<BooleanArray>(array, "BooleanArray")?;
             buf.push_str(if v.value(row) { "TRUE" } else { "FALSE" });
         }
         DataType::Int8 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<Int8Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<Int8Array>(array, "Int8Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::Int16 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<Int16Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<Int16Array>(array, "Int16Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::Int32 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<Int32Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<Int32Array>(array, "Int32Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::Int64 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<Int64Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<Int64Array>(array, "Int64Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::UInt8 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<UInt8Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<UInt8Array>(array, "UInt8Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::UInt16 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<UInt16Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<UInt16Array>(array, "UInt16Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::UInt32 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<UInt32Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<UInt32Array>(array, "UInt32Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::UInt64 => {
-            write!(
-                buf,
-                "{}",
-                array
-                    .as_any()
-                    .downcast_ref::<UInt64Array>()
-                    .unwrap()
-                    .value(row)
-            )
-            .unwrap();
+            let value = downcast_array::<UInt64Array>(array, "UInt64Array")?.value(row);
+            write!(buf, "{}", value).expect("writing SQL literal into a String should not fail");
         }
         DataType::Float32 => {
-            let v = array
-                .as_any()
-                .downcast_ref::<Float32Array>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<Float32Array>(array, "Float32Array")?.value(row);
             write_float(buf, v as f64);
         }
         DataType::Float16 => {
-            // Float16 → cast to f64 for SQL literal
-            let v = array
-                .as_any()
-                .downcast_ref::<Float16Array>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<Float16Array>(array, "Float16Array")?.value(row);
             write_float(buf, f64::from(v));
         }
         DataType::Float64 => {
-            let v = array
-                .as_any()
-                .downcast_ref::<Float64Array>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<Float64Array>(array, "Float64Array")?.value(row);
             write_float(buf, v);
         }
         DataType::Utf8 => {
-            let v = array
-                .as_any()
-                .downcast_ref::<StringArray>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<StringArray>(array, "StringArray")?.value(row);
             write_sql_string(buf, v);
         }
         DataType::LargeUtf8 => {
-            let v = array
-                .as_any()
-                .downcast_ref::<LargeStringArray>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<LargeStringArray>(array, "LargeStringArray")?.value(row);
             write_sql_string(buf, v);
         }
         DataType::Date32 => {
-            let v = array
-                .as_any()
-                .downcast_ref::<Date32Array>()
-                .unwrap()
-                .value(row);
-            // Date32 is days since epoch
+            let v = downcast_array::<Date32Array>(array, "Date32Array")?.value(row);
             let date = chrono::NaiveDate::from_num_days_from_ce_opt(v + 719_163);
             if let Some(d) = date {
-                write!(buf, "'{}'", d.format("%Y-%m-%d")).unwrap();
+                write!(buf, "'{}'", d.format("%Y-%m-%d"))
+                    .expect("writing SQL literal into a String should not fail");
             } else {
                 buf.push_str("NULL");
             }
         }
         DataType::Date64 => {
-            let v = array
-                .as_any()
-                .downcast_ref::<Date64Array>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<Date64Array>(array, "Date64Array")?.value(row);
             let date = chrono::DateTime::from_timestamp_millis(v);
             if let Some(d) = date {
-                write!(buf, "'{}'", d.format("%Y-%m-%d")).unwrap();
+                write!(buf, "'{}'", d.format("%Y-%m-%d"))
+                    .expect("writing SQL literal into a String should not fail");
             } else {
                 buf.push_str("NULL");
             }
@@ -412,57 +320,37 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
         DataType::Timestamp(unit, _tz) => {
             let v = match unit {
                 TimeUnit::Second => {
-                    let arr = array
-                        .as_any()
-                        .downcast_ref::<TimestampSecondArray>()
-                        .unwrap();
+                    let arr = downcast_array::<TimestampSecondArray>(array, "TimestampSecondArray")?;
                     chrono::DateTime::from_timestamp(arr.value(row), 0)
                 }
                 TimeUnit::Millisecond => {
-                    let arr = array
-                        .as_any()
-                        .downcast_ref::<TimestampMillisecondArray>()
-                        .unwrap();
+                    let arr = downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
                     chrono::DateTime::from_timestamp_millis(arr.value(row))
                 }
                 TimeUnit::Microsecond => {
-                    let arr = array
-                        .as_any()
-                        .downcast_ref::<TimestampMicrosecondArray>()
-                        .unwrap();
+                    let arr = downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
                     chrono::DateTime::from_timestamp_micros(arr.value(row))
                 }
                 TimeUnit::Nanosecond => {
-                    let arr = array
-                        .as_any()
-                        .downcast_ref::<TimestampNanosecondArray>()
-                        .unwrap();
+                    let arr = downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
                     let nanos = arr.value(row);
-                    // Use Euclidean division to handle negative timestamps correctly
                     let secs = nanos.div_euclid(1_000_000_000);
                     let sub_nanos = nanos.rem_euclid(1_000_000_000) as u32;
                     chrono::DateTime::from_timestamp(secs, sub_nanos)
                 }
             };
             if let Some(dt) = v {
-                write!(buf, "'{}'", dt.format("%Y-%m-%d %H:%M:%S%.f")).unwrap();
+                write!(buf, "'{}'", dt.format("%Y-%m-%d %H:%M:%S%.f"))
+                    .expect("writing SQL literal into a String should not fail");
             } else {
                 buf.push_str("NULL");
             }
         }
         DataType::Time32(unit) => {
             let secs = match unit {
-                TimeUnit::Second => array
-                    .as_any()
-                    .downcast_ref::<Time32SecondArray>()
-                    .unwrap()
-                    .value(row) as i64,
+                TimeUnit::Second => downcast_array::<Time32SecondArray>(array, "Time32SecondArray")?.value(row) as i64,
                 TimeUnit::Millisecond => {
-                    let ms = array
-                        .as_any()
-                        .downcast_ref::<Time32MillisecondArray>()
-                        .unwrap()
-                        .value(row) as i64;
+                    let ms = downcast_array::<Time32MillisecondArray>(array, "Time32MillisecondArray")?.value(row) as i64;
                     ms / 1000
                 }
                 _ => 0,
@@ -470,22 +358,14 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
             let h = secs / 3600;
             let m = (secs % 3600) / 60;
             let s = secs % 60;
-            write!(buf, "'{:02}:{:02}:{:02}'", h, m, s).unwrap();
+            write!(buf, "'{:02}:{:02}:{:02}'", h, m, s)
+                .expect("writing SQL literal into a String should not fail");
         }
         DataType::Time64(unit) => {
             let micros = match unit {
-                TimeUnit::Microsecond => array
-                    .as_any()
-                    .downcast_ref::<Time64MicrosecondArray>()
-                    .unwrap()
-                    .value(row),
+                TimeUnit::Microsecond => downcast_array::<Time64MicrosecondArray>(array, "Time64MicrosecondArray")?.value(row),
                 TimeUnit::Nanosecond => {
-                    array
-                        .as_any()
-                        .downcast_ref::<Time64NanosecondArray>()
-                        .unwrap()
-                        .value(row)
-                        / 1000
+                    downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?.value(row) / 1000
                 }
                 _ => 0,
             };
@@ -494,75 +374,61 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) {
             let m = (total_secs % 3600) / 60;
             let s = total_secs % 60;
             let us = micros % 1_000_000;
-            write!(buf, "'{:02}:{:02}:{:02}.{:06}'", h, m, s, us).unwrap();
+            write!(buf, "'{:02}:{:02}:{:02}.{:06}'", h, m, s, us)
+                .expect("writing SQL literal into a String should not fail");
         }
         DataType::Binary => {
-            let v = array
-                .as_any()
-                .downcast_ref::<BinaryArray>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<BinaryArray>(array, "BinaryArray")?.value(row);
             write_hex_string(buf, v);
         }
         DataType::LargeBinary => {
-            let v = array
-                .as_any()
-                .downcast_ref::<LargeBinaryArray>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<LargeBinaryArray>(array, "LargeBinaryArray")?.value(row);
             write_hex_string(buf, v);
         }
         DataType::FixedSizeBinary(_) => {
-            let v = array
-                .as_any()
-                .downcast_ref::<FixedSizeBinaryArray>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<FixedSizeBinaryArray>(array, "FixedSizeBinaryArray")?.value(row);
             write_hex_string(buf, v);
         }
         DataType::Decimal128(_, scale) => {
-            let v = array
-                .as_any()
-                .downcast_ref::<Decimal128Array>()
-                .unwrap()
-                .value(row);
+            let v = downcast_array::<Decimal128Array>(array, "Decimal128Array")?.value(row);
             let s = *scale as u32;
             if s == 0 {
-                write!(buf, "{}", v).unwrap();
+                write!(buf, "{}", v).expect("writing SQL literal into a String should not fail");
             } else {
                 let divisor = 10i128.pow(s);
                 let sign = if v < 0 { "-" } else { "" };
                 let abs_v = v.unsigned_abs();
                 let integer = abs_v / divisor as u128;
                 let frac = abs_v % divisor as u128;
-                write!(
-                    buf,
-                    "{}{}.{:0>width$}",
-                    sign,
-                    integer,
-                    frac,
-                    width = s as usize
-                )
-                .unwrap();
+                write!(buf, "{}{}.{:0>width$}", sign, integer, frac, width = s as usize)
+                    .expect("writing SQL literal into a String should not fail");
             }
         }
         DataType::Decimal256(_, _) => {
-            // Decimal256: serialize as string literal (rare type)
             let json_val = array_value_to_json(array, row);
             buf.push_str(&json_val);
         }
-        // Complex types: serialize as JSON text
         DataType::Struct(_) | DataType::List(_) | DataType::LargeList(_) | DataType::Map(_, _) => {
-            // Use Arrow's JSON serialization for complex types
             let json_val = array_value_to_json(array, row);
             write_sql_string(buf, &json_val);
         }
-        // Fallback: convert to string display
         _ => {
             let json_val = array_value_to_json(array, row);
             write_sql_string(buf, &json_val);
         }
     }
+
+    Ok(())
+}
+
+/// Downcast an Arrow array to the expected concrete array type.
+fn downcast_array<'a, T: 'static>(array: &'a ArrayRef, expected: &str) -> Result<&'a T, BindError> {
+    array.as_any().downcast_ref::<T>().ok_or_else(|| {
+        BindError::Other(format!(
+            "sql sink expected {expected} for Arrow type {:?}",
+            array.data_type()
+        ))
+    })
 }
 
 /// Write a float value, ensuring it always has a decimal point.
@@ -570,9 +436,9 @@ fn write_float(buf: &mut String, v: f64) {
     if v.is_nan() || v.is_infinite() {
         buf.push_str("NULL");
     } else if v == v.trunc() && v.abs() < 1e15 {
-        write!(buf, "{:.1}", v).unwrap();
+        write!(buf, "{:.1}", v).expect("writing SQL literal into a String should not fail");
     } else {
-        write!(buf, "{}", v).unwrap();
+        write!(buf, "{}", v).expect("writing SQL literal into a String should not fail");
     }
 }
 
@@ -593,7 +459,7 @@ fn write_sql_string(buf: &mut String, s: &str) {
 fn write_hex_string(buf: &mut String, data: &[u8]) {
     buf.push_str("X'");
     for byte in data {
-        write!(buf, "{:02X}", byte).unwrap();
+        write!(buf, "{:02X}", byte).expect("writing SQL literal into a String should not fail");
     }
     buf.push('\'');
 }
