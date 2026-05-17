@@ -1,7 +1,7 @@
 # learn module — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Module:** `learn module`
 
 ---
@@ -61,7 +61,7 @@ are preserved so reviewers can make informed decisions.
 | Dependency | Purpose |
 |------------|---------|
 | `core module` | Shared types: `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value` |
-| `blueprint module` | Serialize the inferred `DataModel` to `.knit.toml` / `.weave.json` |
+| `blueprint module` | Serialize the inferred `DataModel` to `.knit.toml` / `.knit.json` |
 | `arrow` | In-memory columnar format (`RecordBatch`, `ArrayRef`) for all internal processing |
 | `parquet` | Read Parquet input files via `arrow`'s Parquet reader |
 | `csv` | Read CSV input files via `arrow`'s CSV reader with type sniffing |
@@ -795,7 +795,7 @@ struct CardinalityAnalysis {
 }
 ```
 
-This maps directly to the `cardinality` field on Weave `[[relationships]]`:
+This maps directly to the `cardinality` field on Knit `[[relationships]]`:
 
 ```toml
 [[relationships]]
@@ -856,7 +856,7 @@ flowchart TB
 
 **Topology model matching:**
 
-| Observed Properties | Inferred Model | Weave Output |
+| Observed Properties | Inferred Model | Knit Output |
 |--------------------|--------------| --------------|
 | No cycles, single root, bounded depth | `tree` | `topology = { model = "tree", max_depth = 5, branching = { distribution = "poisson", params = { lambda = 3.2 } } }` |
 | No cycles, multiple roots | `forest` | `topology = { model = "forest", tree_count = 12, ... }` |
@@ -1133,10 +1133,10 @@ communicate inference metadata to reviewers.
 ### Annotated knit blueprint
 
 Inferred elements include metadata fields (prefixed with `_`) alongside standard
-Weave fields:
+Knit fields:
 
 ```toml
-weave_version = "0.1"
+blueprint_version = "0.1"
 
 [model]
 name = "inferred_ecommerce"
@@ -1343,7 +1343,7 @@ For each supported distribution:
 | **Annotations via `_` prefix** | Inference metadata uses underscore-prefixed fields (`_confidence`, `_alternatives`) | Clearly separates inference metadata from the knit blueprint specification. `_`-prefixed fields are ignored by the forward pipeline and can be stripped for production use. |
 | **Geometric mean for overall confidence** | Aggregate element confidences via geometric mean, not arithmetic mean | Geometric mean is sensitive to low outliers — one bad inference pulls the overall score down. This encourages reviewers to address every weak element rather than being masked by many strong ones. |
 | **Deep relationship analysis as separate phase** | Phases 5 (detection) and 6 (analysis) are distinct | Detection is cheap (heuristic scoring); analysis is expensive (joins, graph construction, distribution fitting). Separating them lets users skip deep analysis when only FK structure is needed, and lets us gate analysis on detection confidence (only analyze relationships above a threshold). |
-| **Graph topology model matching** | Match observed graph metrics to known topology models (BA, WS, ER, tree) | These models cover the vast majority of real-world relational structures. Model parameters map directly to Weave `topology` configuration, enabling faithful reproduction. Custom graph structures can always be specified manually. |
+| **Graph topology model matching** | Match observed graph metrics to known topology models (BA, WS, ER, tree) | These models cover the vast majority of real-world relational structures. Model parameters map directly to Knit `topology` configuration, enabling faithful reproduction. Custom graph structures can always be specified manually. |
 | **Cross-entity correlation via FK joins** | Only detect cross-entity correlations when a FK relationship exists | Without a FK, joining entities is ambiguous (which row pairs?). FK provides the natural join key. Correlations between unrelated entities are meaningless for generation and would produce false positives. |
 | **Dedicated temporal pattern phase** | Temporal pattern recognition is a separate pipeline phase (Phase 5) between distribution fitting and relationship detection | Temporal patterns require specialized algorithms (ACF, FFT, STL decomposition) that operate differently from scalar distribution fitting. Detecting temporal structure early allows relationship analysis (Phase 7) to leverage temporal patterns when analyzing inter-entity temporal ordering. A dedicated phase keeps the pipeline modular and allows users to disable it for non-temporal datasets. |
 | **ACF + FFT dual confirmation for periodicity** | Require both autocorrelation peaks and FFT harmonic confirmation before declaring periodicity | ACF alone can produce false positives from trend; FFT alone can miss weak seasonality. Dual confirmation reduces false positives while maintaining sensitivity to genuine patterns. |

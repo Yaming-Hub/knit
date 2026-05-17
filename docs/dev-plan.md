@@ -91,7 +91,7 @@ flowchart LR
 
 **Scope:**
 - TOML parser: `.knit.toml` → raw serde `Value` tree → `DataModel`
-- JSON parser: `.weave.json` → same path via `serde_json`
+- JSON parser: `.knit.json` → same path via `serde_json`
 - Generator spec parsing (uniform `{ type, params }` shape → `GeneratorSpec` enum)
 - Distribution parameter parsing and normalization
 - Temporal type parsing (date, time, datetime, datetimetz, duration with shorthand)
@@ -537,7 +537,7 @@ BlueprintParser
 - Weekly schedule detection identifies day-of-week with confidence > 0.9
 - Trend detection recovers linear slope within 10% tolerance
 - FK detection finds known relationships with confidence > 0.8
-- Output blueprint is valid Weave that can be used with `knit generate`
+- Output blueprint is valid Knit blueprint that can be used with `knit generate`
 
 ---
 

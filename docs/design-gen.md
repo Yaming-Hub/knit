@@ -1,7 +1,7 @@
 # gen module — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 
 ---
 
@@ -1285,7 +1285,7 @@ benchmark blocks the PR.
 ### Integration Tests
 
 End-to-end tests that generate a complete small dataset and verify:
-- Output blueprint matches the Weave specification.
+- Output blueprint matches the Knit specification.
 - Row counts match the `count` specification.
 - All FK constraints hold.
 - Output is deterministic across runs.

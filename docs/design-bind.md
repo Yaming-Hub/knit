@@ -1,7 +1,7 @@
 # bind module — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Module:** `bind module`
 
 ---

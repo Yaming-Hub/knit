@@ -217,7 +217,7 @@ Knit is published as a single crate. Internally it is organized into modules:
 
 ## Examples
 
-The `examples/` directory contains 25+ sample blueprints. Highlights:
+The `examples/` directory contains 29 sample blueprints. Highlights:
 
 - `ecommerce.knit.toml` — Users, products, orders, reviews with FK relationships
 - `ecommerce_behavioral.knit.toml` — Persona-driven purchasing: 4 customer

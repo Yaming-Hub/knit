@@ -1,34 +1,34 @@
 # knit blueprint Language Specification
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Project:** Knit — High-Performance Synthetic Data Generation Toolset
 
 ---
 
 ## 1. Introduction
 
-### 1.1 What is Weave?
+### 1.1 What is Knit?
 
-Weave is a declarative blueprint language for specifying synthetic datasets. A Weave
+Knit is a declarative blueprint language for specifying synthetic datasets. A Knit
 document describes the shape, statistical properties, relationships, and quality
-characteristics of data to be generated. The Knit engine reads a Weave document and
+characteristics of data to be generated. The Knit engine reads a Knit document and
 produces datasets at arbitrary scale.
 
 ### 1.2 Design Goals
 
 | Goal | Rationale |
 |------|-----------|
-| **AI-friendly** | LLMs can reliably read, generate, and modify Weave documents. One canonical way to express each concept. |
+| **AI-friendly** | LLMs can reliably read, generate, and modify Knit documents. One canonical way to express each concept. |
 | **Statistically expressive** | First-class support for probability distributions, correlations, and temporal patterns. |
 | **Relationally complete** | Multi-table blueprints with foreign keys, cardinality distributions, and cyclic references. |
 | **Extensible** | Custom types, custom generators, parameterization, and plugin hooks. |
-| **Format-agnostic** | Weave describes *data*, not *output format*. Output binding is a separate concern. |
+| **Format-agnostic** | Knit describes *data*, not *output format*. Output binding is a separate concern. |
 | **High-performance** | Language constructs map to efficient columnar generation (100GB+ in hours). |
 
 ### 1.3 Serialization Format
 
-Weave documents are serialized as **TOML** (primary) or **JSON** (for programmatic / AI
+Knit documents are serialized as **TOML** (primary) or **JSON** (for programmatic / AI
 pipelines). Both formats parse into the same abstract model. The specification uses TOML
 in examples, but every construct has an equivalent JSON representation.
 
@@ -42,7 +42,7 @@ in examples, but every construct has an equivalent JSON representation.
 
 | Term | Definition |
 |------|-----------|
-| **Document** | A complete Weave file describing a dataset |
+| **Document** | A complete Knit file describing a dataset |
 | **Entity** | A logical table or collection (e.g., "users", "orders") |
 | **Field** | A named column within an entity |
 | **Generator** | A rule for producing values for a field |
@@ -57,10 +57,10 @@ in examples, but every construct has an equivalent JSON representation.
 
 ## 2. Document Structure
 
-A Weave document has the following top-level sections, all optional except `[model]`:
+A Knit document has the following top-level sections, all optional except `[model]`:
 
 ```toml
-weave_version = "0.1"
+blueprint_version = "0.1"
 
 [model]            # Required: dataset metadata
 [params]           # Optional: user-configurable parameters
@@ -75,10 +75,10 @@ weave_version = "0.1"
 ### 2.1 Version
 
 ```toml
-weave_version = "0.1"
+blueprint_version = "0.1"
 ```
 
-Every document must declare the Weave version it conforms to. The engine rejects
+Every document must declare the Knit version it conforms to. The engine rejects
 documents with unsupported versions.
 
 ### 2.2 Model Metadata
@@ -103,7 +103,7 @@ specify their own timezone. Accepts IANA timezone names (`"America/New_York"`,
 
 ## 3. Parameters
 
-Parameters make Weave documents configurable. They act as compile-time constants that
+Parameters make Knit documents configurable. They act as compile-time constants that
 can be referenced anywhere a value is expected.
 
 ```toml
@@ -721,7 +721,7 @@ type = "string"
 generator = { type = "derived", params = { expr = "case(${age} < 18, \"minor\", ${age} < 65, \"adult\", \"senior\")" } }
 ```
 
-#### Expression Language (Weave Expressions)
+#### Expression Language (Knit Expressions)
 
 A small, deterministic expression language with explicit scope:
 
@@ -1148,14 +1148,14 @@ generation**:
 1. Phase 1: Generate all records with primary keys; leave cyclic FK fields as NULL
 2. Phase 2: Backpatch FK fields with valid references
 
-Weave documents do not need special syntax for cycles — the engine detects them
+Knit documents do not need special syntax for cycles — the engine detects them
 automatically. However, cyclic FK fields **must** be nullable.
 
 ---
 
 ## 8. Correlations
 
-Real-world data has correlated fields. Weave supports explicit correlation specifications
+Real-world data has correlated fields. Knit supports explicit correlation specifications
 to go beyond independent marginal distributions.
 
 ### 8.1 Field-Pair Correlation
@@ -1220,7 +1220,7 @@ params = { }                      # Copula-specific parameters
 
 ## 9. Time Series & Temporal Patterns
 
-For entities that represent time-indexed data (logs, metrics, events), Weave provides
+For entities that represent time-indexed data (logs, metrics, events), Knit provides
 temporal generators that model trends, seasonality, and autocorrelation.
 
 ### 9.1 Time Series Entity
@@ -1270,7 +1270,7 @@ generator = { type = "time_series", params = {
 | `holiday_effect` | Spikes/dips on specific dates | `dates` (list), `magnitude` |
 | `business_hours` | Day/night pattern | `active_hours` `[start, end]`, `active_multiplier` |
 
-All duration-valued parameters (`period`, `duration`) accept the standard Weave duration
+All duration-valued parameters (`period`, `duration`) accept the standard Knit duration
 shorthand (`"24h"`, `"7d"`, `"15m"`, etc.).
 
 #### Seasonality Details
@@ -1412,7 +1412,7 @@ generator = { type = "derived", params = { expr = "coalesce(resolved_at <= sla_d
 
 ## 10. Graph & Network Topology
 
-For generating graph-structured data (social networks, knowledge graphs), Weave supports
+For generating graph-structured data (social networks, knowledge graphs), Knit supports
 graph topology specifications on relationships.
 
 ### 10.1 Network Topology Models
@@ -1535,10 +1535,10 @@ params = { multiplier = { distribution = "uniform", params = { min = 5.0, max = 
 
 ### 12.1 Extends (Single Inheritance)
 
-A Weave document can extend a base document, overriding or adding elements:
+A Knit document can extend a base document, overriding or adding elements:
 
 ```toml
-weave_version = "0.1"
+blueprint_version = "0.1"
 extends = "base_ecommerce.toml"
 
 [model]
@@ -1616,7 +1616,7 @@ definitions take precedence over included ones.
 A comprehensive example demonstrating most language features:
 
 ```toml
-weave_version = "0.1"
+blueprint_version = "0.1"
 
 includes = ["types/common.toml"]
 
@@ -1958,14 +1958,14 @@ params = { values = [1, 5] }
 
 ## 14. Validation Rules
 
-The Knit engine validates Weave documents before generation. Validation errors are
+The Knit engine validates Knit documents before generation. Validation errors are
 reported with element paths and human-readable messages.
 
 ### 14.1 Structural Validation
 
 - All required fields present (`name`, `type` for fields; `name`, `count` for entities)
 - No duplicate names within scope (entities, fields, types, relationships)
-- Valid `weave_version`
+- Valid `blueprint_version`
 
 ### 14.2 Type Validation
 
@@ -2028,12 +2028,12 @@ relationship resolver, not by their default generator.
 
 ## 16. JSON Representation
 
-Every Weave TOML document has an equivalent JSON form. This enables AI pipelines
+Every Knit TOML document has an equivalent JSON form. This enables AI pipelines
 that prefer JSON output:
 
 ```json
 {
-  "weave_version": "0.1",
+  "blueprint_version": "0.1",
   "model": {
     "name": "example",
     "seed": 42
@@ -2069,10 +2069,10 @@ that prefer JSON output:
 
 ## 17. Comparison with Other Tools
 
-Weave is designed to be a superset of capabilities found in existing data generation
-tools. The following table maps features from popular tools to Weave constructs:
+Knit is designed to be a superset of capabilities found in existing data generation
+tools. The following table maps features from popular tools to Knit constructs:
 
-| Feature | Synth | Mockaroo | SDV | Faker | Weave |
+| Feature | Synth | Mockaroo | SDV | Faker | Knit |
 |---------|-------|---------|-----|-------|-------|
 | Declarative blueprint | JSON | UI/JSON | Python/YAML | Code | TOML/JSON |
 | Statistical distributions | Limited | No | Learned | No | 17+ built-in |
@@ -2154,18 +2154,18 @@ generator = { type = "faker", params = { category = "custom::product_sku", provi
 The following names are reserved and cannot be used as entity, field, type, or mixin names:
 
 `model`, `params`, `types`, `mixins`, `entities`, `relationships`, `correlations`,
-`noise`, `extends`, `includes`, `weave_version`, `remove`, `true`, `false`, `null`.
+`noise`, `extends`, `includes`, `blueprint_version`, `remove`, `true`, `false`, `null`.
 
 ---
 
 ## 20. File Extension
 
-Weave documents use the `.knit.toml` extension (TOML format) or `.weave.json`
+Knit documents use the `.knit.toml` extension (TOML format) or `.knit.json`
 (JSON format). The engine auto-detects format from the extension.
 
 ```
 my_dataset.knit.toml
-my_dataset.weave.json
+my_dataset.knit.json
 ```
 
 ---
@@ -2176,7 +2176,7 @@ my_dataset.weave.json
 Document        = Version Model [Params] {Type} {Mixin} {Entity} {Relationship}
                   {Correlation} {Noise}
 
-Version         = "weave_version" "=" STRING
+Version         = "blueprint_version" "=" STRING
 
 Model           = "[model]" "name" "=" STRING { ModelProp }
 ModelProp       = "description" "=" STRING
@@ -2223,7 +2223,7 @@ Noise           = "[[noise]]" "target" "=" STRING "type" "=" STRING
 
 ## Appendix B: Versioning Policy
 
-Weave follows semantic versioning for the blueprint language:
+Knit follows semantic versioning for the blueprint language:
 
 - **Patch** (0.1.x): Bug fixes, clarifications. All valid documents remain valid.
 - **Minor** (0.x.0): New features (additive). Existing documents remain valid.

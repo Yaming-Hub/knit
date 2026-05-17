@@ -326,7 +326,7 @@ knit learn batch2/ --state model.state --finalize -o blueprint.toml
 5. **Detect temporal patterns** — periodicity and schedule detection
 6. **Detect relationships** — FK inference via naming and value overlap
 7. **Detect correlations** — Pearson, Spearman, and Cramér's V
-8. **Assemble blueprint** — writes a Weave TOML with confidence annotations
+8. **Assemble blueprint** — writes a Knit TOML with confidence annotations
 
 ---
 

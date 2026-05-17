@@ -1,7 +1,7 @@
 # core module — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Module:** `core module`
 
 ---
@@ -12,7 +12,7 @@
 
 `core module` is the **semantic model** module — the narrow, stable foundation that every
 other module in the single crate depends on. It defines the in-memory representation
-of a parsed Weave document: the types that flow between parsing, planning, generation,
+of a parsed Knit document: the types that flow between parsing, planning, generation,
 perturbation, and serialization stages.
 
 ```mermaid
@@ -67,7 +67,7 @@ uuid = { version = "1", features = ["v4", "v7", "serde"] }
 | Dependency | Why |
 |-----------|-----|
 | `serde` | Every model type must round-trip through TOML and JSON. Derive macros keep boilerplate near zero. |
-| `chrono` | Temporal types (`NaiveDate`, `NaiveTime`, `NaiveDateTime`, `DateTime<Tz>`, `Duration`) are first-class in Weave. Reimplementing them would be a liability. |
+| `chrono` | Temporal types (`NaiveDate`, `NaiveTime`, `NaiveDateTime`, `DateTime<Tz>`, `Duration`) are first-class in Knit. Reimplementing them would be a liability. |
 | `uuid` | UUID is a dedicated `DataType` and `Value` variant. The `uuid` crate provides parsing, formatting, and v4/v7 generation. |
 
 ### Why Minimal Dependencies Matter
@@ -176,7 +176,7 @@ classDiagram
 
 ### 4.1 `DataModel`
 
-The top-level container — the in-memory representation of a complete Weave document.
+The top-level container — the in-memory representation of a complete Knit document.
 
 ```rust
 /// A complete data model parsed from a knit blueprint.
@@ -309,7 +309,7 @@ pub struct Field {
 ### 4.4 `DataType`
 
 ```rust
-/// Logical data types supported by Weave.
+/// Logical data types supported by Knit.
 ///
 /// These map to Arrow types during generation and to language-native
 /// types during output binding. The enum is intentionally flat — no
@@ -374,7 +374,7 @@ pub enum Value {
 /// Specification for how a field's values are generated.
 ///
 /// Each variant corresponds to one of the 14 generator types in the
-/// Weave language. The engine maps each `GeneratorSpec` to a concrete
+/// Knit language. The engine maps each `GeneratorSpec` to a concrete
 /// `FieldGenerator` implementation at plan time.
 ///
 /// This is an enum (not trait objects) because:
@@ -801,7 +801,7 @@ pub struct DateRange {
 ## 5. Serde Strategy
 
 All `core module` types must round-trip through both TOML (primary, user-facing) and JSON
-(programmatic AI pipelines). The serde strategy is designed for the Weave language's
+(programmatic AI pipelines). The serde strategy is designed for the Knit language's
 "one correct way" philosophy.
 
 ### Tag Conventions
@@ -822,7 +822,7 @@ All `core module` types must round-trip through both TOML (primary, user-facing)
   are flattened into the generator object. In TOML:
   `{ type = "distribution", distribution = "normal", params = { mean = 35.0 }, min = 18 }`.
 - **`Field.data_type`**: Renamed to `type` via `#[serde(rename = "type")]` to match
-  the Weave language surface.
+  the Knit language surface.
 - **Optional fields**: All `Option<T>` fields use `#[serde(skip_serializing_if = "Option::is_none")]`
   to keep serialized output clean.
 - **Defaults**: All `Vec<T>` and `BTreeMap<K,V>` fields use `#[serde(default)]` so
@@ -1017,7 +1017,7 @@ previously valid input** is breaking. Specifically:
 | 7 | **`CountSpec::Distribution`** | Some blueprints need variable entity sizes (e.g., parameterized stress tests where count follows a distribution). Fixed-only would limit expressiveness. | Always-fixed count — simpler but insufficient for advanced use cases. |
 | 8 | **Temporal types use `chrono`** | `chrono` is the de facto Rust datetime library with comprehensive timezone support, serde integration, and arithmetic. Rolling our own temporal types would be error-prone and poorly tested. | `time` crate — viable but less ecosystem adoption; mixing both causes conversion overhead. |
 | 9 | **`uuid` as a dedicated `DataType`** | UUIDs are extremely common as primary keys in synthetic datasets. A dedicated type (vs. `String` + validation) enables optimized columnar generation and correct Arrow `FixedSizeBinary(16)` mapping. | Treat as `String` with a pattern generator — loses type safety and Arrow optimization. |
-| 10 | **Serde `rename_all = "snake_case"` on enums** | Matches TOML/JSON conventions and the Weave language surface. `ManyToOne` serializes as `"many_to_one"`, which is what users write in blueprints. | PascalCase (Rust default) — requires mental translation when reading blueprints. |
+| 10 | **Serde `rename_all = "snake_case"` on enums** | Matches TOML/JSON conventions and the Knit language surface. `ManyToOne` serializes as `"many_to_one"`, which is what users write in blueprints. | PascalCase (Rust default) — requires mental translation when reading blueprints. |
 
 ---
 
@@ -1113,7 +1113,7 @@ fn model_error_messages_are_readable() {
 | TOML/JSON parsing from files | `blueprint module` |
 | Validation rules (referential integrity, distribution params) | `blueprint module` |
 | Arrow type mapping | `gen module` |
-| Serde compatibility with actual Weave `.toml` files | `blueprint module` integration tests |
+| Serde compatibility with actual Knit `.toml` files | `blueprint module` integration tests |
 
 ---
 

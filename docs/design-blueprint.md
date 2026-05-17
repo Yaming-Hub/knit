@@ -1,7 +1,7 @@
 # blueprint module — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Module:** `blueprint module`
 
 ---
@@ -24,8 +24,8 @@
 
 ## 1. Overview
 
-`blueprint module` is the bridge between textual Weave documents (`.knit.toml` /
-`.weave.json`) and the semantic `DataModel` defined in `core module`. It owns
+`blueprint module` is the bridge between textual Knit documents (`.knit.toml` /
+`.knit.json`) and the semantic `DataModel` defined in `core module`. It owns
 everything from the first byte of input to the fully validated, ready-to-plan
 data model that downstream modules consume.
 
@@ -77,7 +77,7 @@ pub fn validate(model: &DataModel) -> Vec<BlueprintError>;
 | `core module` | `DataModel`, `Entity`, `Field`, `GeneratorSpec`, `DistributionSpec`, `Value`, and all shared types | Yes |
 | `thiserror` | Structured error types (`BlueprintError`) | Yes |
 | `chrono` | Parse temporal literals (`date`, `time`, `datetime`, `duration`) | Yes |
-| `jsonschema` | Validate documents against the Weave JSON Schema | Optional |
+| `jsonschema` | Validate documents against the Knit JSON Schema | Optional |
 | `url` | Resolve `includes` paths and relative references | Optional |
 
 `blueprint module` intentionally has **no runtime dependencies on generation or
@@ -95,7 +95,7 @@ errors.
 
 ```mermaid
 flowchart LR
-    input([".knit.toml\n.weave.json"]) --> parse["Phase 1\n**Parse**\nText → Raw AST"]
+    input([".knit.toml\n.knit.json"]) --> parse["Phase 1\n**Parse**\nText → Raw AST"]
     parse --> resolve["Phase 2\n**Resolve**\nextends / includes / params"]
     resolve --> lower["Phase 3\n**Lower**\nRaw AST → DataModel"]
     lower --> validate["Phase 4\n**Validate**\nStructural + Semantic"]
@@ -145,12 +145,12 @@ has better ergonomics for dynamic manipulation (it supports `Map` natively, is
 widely used in the Rust ecosystem, and avoids maintaining two parallel code
 paths for value inspection). The TOML parser deserializes into
 `serde_json::Value` via serde's data model — no information is lost because
-Weave's restricted TOML subset avoids features (like datetimes-as-native-types)
+Knit's restricted TOML subset avoids features (like datetimes-as-native-types)
 that don't round-trip through JSON.
 
 ### TOML Restrictions
 
-Weave enforces a **restricted canonical TOML subset** for AI reliability:
+Knit enforces a **restricted canonical TOML subset** for AI reliability:
 
 - **No dotted keys** — use `[section.subsection]` form
 - **No inline tables** except for single-line generator specs (e.g.,
@@ -368,7 +368,7 @@ flowchart TB
 
 ### Generator Spec Parsing
 
-Every generator in Weave follows a uniform `{ type, params }` shape. The
+Every generator in Knit follows a uniform `{ type, params }` shape. The
 lowering phase maps this to the `GeneratorSpec` enum:
 
 | TOML `type` | `GeneratorSpec` variant | Key params lowered |
@@ -433,7 +433,7 @@ Temporal literals in generator params are parsed during lowering:
 - **ISO 8601 duration**: `"P1DT12H"` → microseconds
 
 The parser uses `chrono` for date/time parsing and a custom parser for the
-Weave duration shorthand format. Invalid temporal literals produce `LowerError`s
+Knit duration shorthand format. Invalid temporal literals produce `LowerError`s
 with the expected format hint.
 
 ### Unknown Key Detection
@@ -466,7 +466,7 @@ violation before returning.
 | `S-007` | Distribution `distribution` is a recognized distribution name | Error |
 | `S-008` | Required generator params are present | Error |
 | `S-009` | No unknown keys in any table (typo detection) | Warning |
-| `S-010` | `weave_version` is present and supported | Error |
+| `S-010` | `blueprint_version` is present and supported | Error |
 | `S-011` | Enum-valued fields (`kind`, `type`, etc.) use valid variants | Error |
 | `S-012` | Entity `count` is positive (or expression resolves to positive) | Error |
 | `S-013` | Primary key fields are not nullable | Error |
@@ -719,11 +719,11 @@ imports, then emits a standalone blueprint with no external references.
 
 ### 9.3 JSON Schema Generation
 
-`blueprint module` can generate a JSON Schema document that describes the Weave
+`blueprint module` can generate a JSON Schema document that describes the Knit
 blueprint language. This blueprint is used for:
 
 - **IDE validation**: VS Code, JetBrains, and other editors can validate
-  `.knit.toml` / `.weave.json` files in real time
+  `.knit.toml` / `.knit.json` files in real time
 - **AI pipeline pre-checks**: Validate AI-generated blueprints before running the
   full `knit validate` pipeline (faster feedback loop)
 - **Documentation**: Auto-generate documentation from the blueprint
@@ -863,7 +863,7 @@ custom AST type.
   serde's data model.
 - `serde_json::Value` has excellent ecosystem support: pattern matching,
   pointer syntax (`/entities/0/fields`), and merge utilities.
-- Weave's restricted TOML subset avoids TOML-specific features (native datetime
+- Knit's restricted TOML subset avoids TOML-specific features (native datetime
   types, mixed arrays) that would be lossy through JSON's value model.
 
 **Tradeoff:** Line number tracking is lost after deserialization. Source
@@ -878,7 +878,7 @@ TOML/JSON parser.
 **Rationale:**
 - The `toml` crate is well-tested, spec-compliant, and actively maintained.
   Building a custom parser would duplicate effort with no benefit.
-- Weave's restrictions (no dotted keys, limited inline tables) are enforced
+- Knit's restrictions (no dotted keys, limited inline tables) are enforced
   at the **normalize/lint** level, not the parser level. Accepting valid TOML
   and warning about non-canonical forms is friendlier than rejecting at parse.
 - Custom parsers would be needed only for error recovery or incremental parsing
@@ -929,7 +929,7 @@ They are not rejected as errors.
 
 **Rationale:**
 - Real-world data models often contain cycles (employee → manager, order →
-  return → order). Rejecting cycles would make Weave less expressive.
+  return → order). Rejecting cycles would make Knit less expressive.
 - The constraint is that cyclic FK fields must be `nullable` (so phase 1 can
   leave them NULL and phase 2 can backpatch). This is validated as M-017.
 - The blueprint module's job is to detect and classify; the plan module's job is to

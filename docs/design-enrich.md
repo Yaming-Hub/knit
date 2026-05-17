@@ -1,5 +1,8 @@
 # Design: Model Enrichment from Reference Samples (`knit enrich`)
 
+**Version:** 0.4.0
+**Status:** Implemented
+
 ## 1. Motivation
 
 A common workflow with knit is:
