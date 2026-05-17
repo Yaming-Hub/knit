@@ -2723,6 +2723,7 @@ pub fn scaffold_model(
             output: None,
             stats: None,
             scaling: None,
+            sort_by: None,
         });
     }
 
@@ -3139,6 +3140,7 @@ fn parse_create_table(
         output: None,
         stats: None,
         scaling: None,
+        sort_by: None,
         tags: Vec::new(),
     });
 
@@ -5334,6 +5336,7 @@ mod tests {
             output: None,
             stats: None,
             scaling: None,
+            sort_by: None,
         }
     }
 

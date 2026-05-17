@@ -580,6 +580,7 @@ mod tests {
                     output: None,
                     stats: None,
                     scaling: None,
+                    sort_by: None,
                 },
                 Entity {
                     name: "Events".into(),
@@ -661,6 +662,7 @@ mod tests {
                     output: None,
                     stats: None,
                     scaling: None,
+                    sort_by: None,
                 },
             ],
             relationships: vec![Relationship {

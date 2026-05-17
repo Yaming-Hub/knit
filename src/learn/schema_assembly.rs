@@ -53,6 +53,8 @@ pub struct TableAnalysis {
     pub partition_values: Vec<crate::core::PartitionValue>,
     /// Source file format (e.g. `"json"`, `"csv"`, `"parquet"`).
     pub source_format: Option<String>,
+    /// Detected sort order of the source data.
+    pub sort_order: Option<crate::core::SortOrder>,
 }
 
 impl TableAnalysis {
@@ -72,6 +74,7 @@ impl TableAnalysis {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }
     }
 }
@@ -505,6 +508,7 @@ fn build_entity(
         },
         stats: table_stats,
         scaling: None,
+        sort_by: table.sort_order.clone(),
     };
 
     (entity, rels, corrs)
@@ -1690,6 +1694,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1743,6 +1748,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1784,6 +1790,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1832,6 +1839,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1960,6 +1968,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2001,6 +2010,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2160,6 +2170,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2200,6 +2211,7 @@ mod tests {
             partition_by: None,
             partition_values: Vec::new(),
             source_format: None,
+            sort_order: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);

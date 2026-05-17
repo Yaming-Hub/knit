@@ -1938,6 +1938,7 @@ mod tests {
             output: None,
             stats: None,
             scaling: None,
+            sort_by: None,
         }
     }
 
@@ -2862,6 +2863,7 @@ mod tests {
                 output: None,
                 stats: None,
                 scaling: None,
+                sort_by: None,
             }],
             vec![],
         );

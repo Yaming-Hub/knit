@@ -311,6 +311,7 @@ mod tests {
                 output: None,
                 stats: None,
                 scaling: None,
+                sort_by: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],
