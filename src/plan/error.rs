@@ -25,3 +25,38 @@ pub enum PlanError {
     #[error("planning error: {0}")]
     Other(String),
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_unknown_entity() {
+        assert_eq!(
+            PlanError::UnknownEntity {
+                name: "Users".to_string(),
+            }
+            .to_string(),
+            "unknown entity in relationship: Users"
+        );
+    }
+
+    #[test]
+    fn display_unresolvable_cycle() {
+        assert_eq!(
+            PlanError::UnresolvableCycle {
+                entities: vec!["Orders".to_string(), "Users".to_string()],
+            }
+            .to_string(),
+            "dependency cycle cannot be resolved: [\"Orders\", \"Users\"]"
+        );
+    }
+
+    #[test]
+    fn display_other() {
+        assert_eq!(
+            PlanError::Other("unexpected planner state".to_string()).to_string(),
+            "planning error: unexpected planner state"
+        );
+    }
+}

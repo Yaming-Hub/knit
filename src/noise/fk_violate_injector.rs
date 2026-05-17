@@ -279,4 +279,140 @@ mod tests {
             .unwrap();
         assert_eq!(data.values(), &[100, 200, 300]);
     }
+
+    #[test]
+    fn non_eligible_types_unchanged() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let schema = arrow::datatypes::Schema::new(vec![
+            arrow::datatypes::Field::new("score", DataType::Float64, true),
+            arrow::datatypes::Field::new("active", DataType::Boolean, true),
+        ]);
+        let batch = RecordBatch::try_new(
+            schema.into(),
+            vec![
+                Arc::new(Float64Array::from(vec![1.5, 2.5, 3.5])) as Arc<dyn Array>,
+                Arc::new(BooleanArray::from(vec![true, false, true])),
+            ],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = FkViolateInjector::new()
+            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .unwrap();
+
+        let scores = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        let active = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<BooleanArray>()
+            .unwrap();
+
+        assert_eq!(scores.values(), &[1.5, 2.5, 3.5]);
+        assert_eq!(
+            (0..active.len()).map(|i| active.value(i)).collect::<Vec<_>>(),
+            vec![true, false, true]
+        );
+    }
+
+    #[test]
+    fn probability_zero_no_changes() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let schema = arrow::datatypes::Schema::new(vec![
+            arrow::datatypes::Field::new("user_id", DataType::Int64, true),
+            arrow::datatypes::Field::new("ref", DataType::Utf8, true),
+        ]);
+        let batch = RecordBatch::try_new(
+            schema.into(),
+            vec![
+                Arc::new(Int64Array::from(vec![1, 2, 3])) as Arc<dyn Array>,
+                Arc::new(StringArray::from(vec!["a", "b", "c"])),
+            ],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = FkViolateInjector::new()
+            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(0.0))
+            .unwrap();
+
+        let ids = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
+        let refs = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+
+        assert_eq!(ids.values(), &[1, 2, 3]);
+        assert_eq!((0..refs.len()).map(|i| refs.value(i)).collect::<Vec<_>>(), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn all_filter_mutates_multiple_columns() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let schema = arrow::datatypes::Schema::new(vec![
+            arrow::datatypes::Field::new("user_id", DataType::Int64, true),
+            arrow::datatypes::Field::new("ref", DataType::Utf8, true),
+            arrow::datatypes::Field::new("order_id", DataType::Int64, true),
+            arrow::datatypes::Field::new("flag", DataType::Boolean, true),
+        ]);
+        let batch = RecordBatch::try_new(
+            schema.into(),
+            vec![
+                Arc::new(Int64Array::from(vec![1, 2, 3])) as Arc<dyn Array>,
+                Arc::new(StringArray::from(vec!["u1", "u2", "u3"])),
+                Arc::new(Int64Array::from(vec![10, 20, 30])),
+                Arc::new(BooleanArray::from(vec![true, false, true])),
+            ],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = FkViolateInjector::new()
+            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .unwrap();
+
+        let user_ids = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
+        let refs = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        let order_ids = result
+            .column(2)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
+        let flags = result
+            .column(3)
+            .as_any()
+            .downcast_ref::<BooleanArray>()
+            .unwrap();
+
+        assert!((0..user_ids.len()).all(|i| user_ids.value(i) > 3));
+        assert!((0..refs.len()).all(|i| refs.value(i).starts_with("INVALID_FK_")));
+        assert!((0..order_ids.len()).all(|i| order_ids.value(i) > 30));
+        assert_eq!(
+            (0..flags.len()).map(|i| flags.value(i)).collect::<Vec<_>>(),
+            vec![true, false, true]
+        );
+    }
 }

@@ -417,4 +417,110 @@ kind = "many_to_one"
         assert_eq!(model.relationships.len(), 1);
         assert_eq!(model.relationships[0].name, "orders_to_users");
     }
+
+    #[test]
+    fn test_load_without_optional_files() {
+        let dir = TempDir::new().unwrap();
+        let root = dir.path();
+
+        fs::write(
+            root.join("knit.toml"),
+            r#"
+[model]
+name = "minimal"
+"#,
+        )
+        .unwrap();
+        fs::create_dir(root.join("tables")).unwrap();
+        fs::write(
+            root.join("tables").join("Users.toml"),
+            r#"
+[table]
+name = "Users"
+count = 1
+
+[[columns]]
+name = "id"
+data_type = "int"
+"#,
+        )
+        .unwrap();
+
+        let model = load_model_directory(root).unwrap();
+
+        assert_eq!(model.seed, 42);
+        assert_eq!(model.locale, "en_US");
+        assert_eq!(model.timezone, "UTC");
+        assert!(model.relationships.is_empty());
+        assert!(model.noise_profiles.is_empty());
+        assert!(model.correlations.is_empty());
+        assert!(model.custom_types.is_empty());
+        assert!(model.mixins.is_empty());
+        assert!(model.personas.is_empty());
+        assert!(model.actor_relationships.is_empty());
+        assert!(model.companion_files.is_empty());
+    }
+
+    #[test]
+    fn test_load_writer_roundtrip() {
+        let model = DataModel {
+            name: "roundtrip".to_string(),
+            description: Some("reader roundtrip".to_string()),
+            seed: 7,
+            locale: "en_GB".to_string(),
+            timezone: "Europe/London".to_string(),
+            entities: vec![Entity {
+                name: "Users".to_string(),
+                description: Some("people".to_string()),
+                tags: vec!["demo".to_string()],
+                count: CountSpec::Fixed(2),
+                fields: vec![Field {
+                    name: "id".to_string(),
+                    description: None,
+                    data_type: DataType::Int,
+                    generator: Some(GeneratorSpec::Sequence {
+                        start: IntOrString::Int(1),
+                        step: IntOrString::Int(1),
+                        prefix: None,
+                        values: None,
+                        cycle: None,
+                        jitter: None,
+                    }),
+                    nullable: NullSpec::Never,
+                    primary_key: Some(true),
+                    precision: None,
+                    actor_column: false,
+                    fields: vec![],
+                    stats: None,
+                    traits: None,
+                }],
+                constraints: vec![],
+                topology: None,
+                actor: false,
+                persona_distribution: None,
+                activity_count: None,
+                mixin_refs: None,
+                output: None,
+                stats: None,
+                scaling: None,
+            }],
+            relationships: vec![],
+            noise_profiles: vec![],
+            correlations: vec![],
+            params: BTreeMap::new(),
+            blueprint_version: "2.0".to_string(),
+            personas: vec![],
+            actor_relationships: vec![],
+            custom_types: vec![],
+            mixins: vec![],
+            companion_files: vec![],
+        };
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("written_model");
+
+        crate::model::writer::write_model_directory(&model, &out).unwrap();
+        let loaded = load_model_directory(&out).unwrap();
+
+        assert_eq!(loaded, model);
+    }
 }

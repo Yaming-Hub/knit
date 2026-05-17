@@ -19,7 +19,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
 
     // 1. Write knit.toml
     let manifest = ManifestOut {
-        blueprint_version: "2.0".to_string(),
+        blueprint_version: model.blueprint_version.clone(),
         model: ManifestModelOut {
             name: model.name.clone(),
             description: model.description.clone(),
@@ -377,5 +377,54 @@ mod tests {
 
         write_model_directory(&model, &out).unwrap();
         assert!(out.join("knit.toml").is_file());
+    }
+
+    #[test]
+    fn test_write_and_read_roundtrip_equality() {
+        let model = make_simple_model();
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("roundtrip_model");
+
+        write_model_directory(&model, &out).unwrap();
+
+        let loaded = crate::model::reader::load_model_directory(&out).unwrap();
+        assert_eq!(loaded, model);
+    }
+
+    #[test]
+    fn test_empty_optional_sections_omitted() {
+        let model = make_simple_model();
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("optional_sections_model");
+
+        write_model_directory(&model, &out).unwrap();
+
+        assert!(!out.join("layout.toml").exists());
+        assert!(!out.join("relationships.toml").exists());
+        assert!(!out.join("correlations.toml").exists());
+        assert!(!out.join("shared.toml").exists());
+
+        let users_toml = std::fs::read_to_string(out.join("tables").join("Users.toml")).unwrap();
+        assert!(!users_toml.contains("tags ="));
+        assert!(!users_toml.contains("constraints ="));
+    }
+
+    #[test]
+    fn test_blueprint_version_preserved_on_roundtrip() {
+        let mut model = make_simple_model();
+        model.blueprint_version = "1.0".to_string();
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("version_model");
+
+        write_model_directory(&model, &out).unwrap();
+
+        let manifest = std::fs::read_to_string(out.join("knit.toml")).unwrap();
+        assert!(
+            manifest.contains("blueprint_version = \"1.0\""),
+            "writer should serialize the model's version, not hardcode 2.0"
+        );
+
+        let loaded = crate::model::reader::load_model_directory(&out).unwrap();
+        assert_eq!(loaded.blueprint_version, "1.0");
     }
 }

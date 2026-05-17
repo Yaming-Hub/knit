@@ -21,10 +21,12 @@ pub fn is_structured_model(path: &Path) -> bool {
     if path.is_dir() {
         path.join("knit.toml").is_file()
     } else {
-        path.file_name()
-            .and_then(|n| n.to_str())
-            .map(|n| n == "knit.toml")
-            .unwrap_or(false)
+        path.is_file()
+            && path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n == "knit.toml")
+                .unwrap_or(false)
     }
 }
 
@@ -34,5 +36,52 @@ pub fn model_root(path: &Path) -> &Path {
         path.parent().unwrap_or(path)
     } else {
         path
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    #[test]
+    fn is_structured_model_detects_directory_and_manifest_file() {
+        let dir = TempDir::new().unwrap();
+        let root = dir.path();
+        let manifest = root.join("knit.toml");
+        fs::write(&manifest, "[model]\nname = \"demo\"\n").unwrap();
+
+        assert!(is_structured_model(root));
+        assert!(is_structured_model(&manifest));
+    }
+
+    #[test]
+    fn is_structured_model_rejects_non_manifest_paths() {
+        let dir = TempDir::new().unwrap();
+        let root = dir.path();
+        let other = root.join("other.toml");
+        fs::write(&other, "[model]\nname = \"demo\"\n").unwrap();
+
+        assert!(!is_structured_model(root));
+        assert!(!is_structured_model(&other));
+    }
+
+    #[test]
+    fn is_structured_model_rejects_nonexistent_knit_toml() {
+        let dir = TempDir::new().unwrap();
+        let missing = dir.path().join("knit.toml");
+        assert!(!is_structured_model(&missing));
+    }
+
+    #[test]
+    fn model_root_returns_expected_path() {
+        let dir = TempDir::new().unwrap();
+        let root = dir.path();
+        let manifest = root.join("knit.toml");
+        fs::write(&manifest, "[model]\nname = \"demo\"\n").unwrap();
+
+        assert_eq!(model_root(root), root);
+        assert_eq!(model_root(&manifest), root);
     }
 }

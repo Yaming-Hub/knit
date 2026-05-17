@@ -145,3 +145,63 @@ pub trait Perturbator: Send + Sync {
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError>;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_config_values() {
+        let config = PerturbConfig::default();
+
+        assert_eq!(config.probability, 0.05);
+        assert!(matches!(config.columns, ColumnFilter::All));
+        assert_eq!(config.seed, None);
+        assert!(config.scope_mask.is_none());
+    }
+
+    #[test]
+    fn with_seed_sets_seed() {
+        let config = PerturbConfig::default().with_seed(42);
+
+        assert_eq!(config.seed, Some(42));
+    }
+
+    #[test]
+    fn with_columns_sets_filter() {
+        let config = PerturbConfig::default().with_columns(vec!["user_id".to_string()]);
+
+        match &config.columns {
+            ColumnFilter::ByName(names) => assert_eq!(names, &vec!["user_id".to_string()]),
+            ColumnFilter::All => panic!("expected ColumnFilter::ByName"),
+        }
+    }
+
+    #[test]
+    fn in_scope_without_mask_all_true() {
+        let config = PerturbConfig::default();
+
+        assert!(config.in_scope(0));
+        assert!(config.in_scope(10));
+    }
+
+    #[test]
+    fn in_scope_with_mask() {
+        let mask = Arc::new(BooleanArray::from(vec![Some(true), Some(false), None]));
+        let config = PerturbConfig::default().with_scope_mask(mask);
+
+        assert!(config.in_scope(0));
+        assert!(!config.in_scope(1));
+        assert!(!config.in_scope(2));
+    }
+
+    #[test]
+    fn invariant_set_bitflags() {
+        let invariants = InvariantSet::NOT_NULL | InvariantSet::UNIQUE | InvariantSet::FORMAT;
+
+        assert!(invariants.contains(InvariantSet::NOT_NULL));
+        assert!(invariants.contains(InvariantSet::UNIQUE));
+        assert!(invariants.contains(InvariantSet::FORMAT));
+        assert!(!invariants.contains(InvariantSet::FK_INTEGRITY));
+    }
+}

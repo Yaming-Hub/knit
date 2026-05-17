@@ -848,3 +848,129 @@ pub struct MarginalInfo {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub round: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_values_for_key_types() {
+        let actor_pool = ActorPoolPlan::default();
+
+        assert!(actor_pool.pools.is_empty());
+        assert!(actor_pool.graph_plans.is_empty());
+    }
+
+    #[test]
+    fn serde_round_trip() {
+        let mut field_seeds = BTreeMap::new();
+        field_seeds.insert(
+            "id".to_string(),
+            FieldSeedNode {
+                field_seed: 7,
+                partition_seeds: vec![11, 13],
+            },
+        );
+
+        let mut entity_nodes = BTreeMap::new();
+        entity_nodes.insert(
+            "users".to_string(),
+            EntitySeedNode {
+                entity_seed: 5,
+                field_seeds,
+            },
+        );
+
+        let mut per_entity = BTreeMap::new();
+        per_entity.insert("users".to_string(), KeyStoreKind::InMemoryVec);
+
+        let plan = ExecutionPlan {
+            phases: vec![Phase {
+                entity_plans: vec![EntityPlan {
+                    entity_name: "users".to_string(),
+                    partitions: vec![PartitionRange {
+                        partition_id: 0,
+                        start_row: 0,
+                        end_row: 10,
+                        seed: 11,
+                    }],
+                    field_plans: vec![FieldPlan {
+                        field_name: "id".to_string(),
+                        data_type: crate::core::DataType::Int,
+                        generator_plan: GeneratorPlan::Sequence {
+                            start: 1,
+                            step: 1,
+                            jitter_ms: None,
+                        },
+                        null_plan: NullPlan::Never,
+                        dependency_order: 0,
+                        schema_position: 0,
+                        precision: None,
+                        actor_column: false,
+                        sub_field_plans: vec![],
+                    }],
+                    estimated_row_count: 10,
+                    estimated_byte_size: 80,
+                    primary_key_field_index: Some(0),
+                    copula_plans: vec![],
+                }],
+                deferred_refs: vec![],
+            }],
+            rng_tree: RngTree {
+                global_seed: 42,
+                entity_nodes,
+            },
+            index_strategy: IndexStrategy { per_entity },
+            actor_pool: ActorPoolPlan::default(),
+            metadata: PlanMetadata {
+                schema_name: "demo".to_string(),
+                total_entities: 1,
+                total_phases: 1,
+                total_partitions: 1,
+                estimated_total_rows: 10,
+                estimated_total_bytes: 80,
+                has_cycles: false,
+                deferred_ref_count: 0,
+                actor_entity_count: 0,
+                persona_count: 0,
+                actor_relationship_count: 0,
+            },
+        };
+
+        let json = serde_json::to_string(&plan).unwrap();
+        let roundtrip: ExecutionPlan = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(roundtrip.metadata.schema_name, "demo");
+        assert_eq!(roundtrip.phases.len(), 1);
+        assert_eq!(roundtrip.phases[0].entity_plans[0].entity_name, "users");
+        assert_eq!(roundtrip.phases[0].entity_plans[0].partitions[0].seed, 11);
+        assert_eq!(roundtrip.rng_tree.global_seed, 42);
+        assert_eq!(
+            roundtrip
+                .rng_tree
+                .entity_nodes
+                .get("users")
+                .unwrap()
+                .field_seeds
+                .get("id")
+                .unwrap()
+                .partition_seeds,
+            vec![11, 13]
+        );
+        assert!(matches!(
+            roundtrip.index_strategy.per_entity.get("users"),
+            Some(KeyStoreKind::InMemoryVec)
+        ));
+        assert!(roundtrip.actor_pool.pools.is_empty());
+        match &roundtrip.phases[0].entity_plans[0].field_plans[0].generator_plan {
+            GeneratorPlan::Sequence {
+                start,
+                step,
+                jitter_ms,
+            } => {
+                assert_eq!((*start, *step, *jitter_ms), (1, 1, None));
+            }
+            other => panic!("unexpected generator plan: {other:?}"),
+        }
+    }
+}
