@@ -5,7 +5,7 @@ workflow, conventions, and expectations for pull requests.
 
 ## Prerequisites
 
-- **Rust 1.87+** (install via [rustup](https://rustup.rs))
+- **Rust 1.92+** (install via [rustup](https://rustup.rs))
 - **Cargo** (bundled with Rust)
 - Git
 

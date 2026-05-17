@@ -83,4 +83,9 @@ wasm-plugins = ["dep:wasmtime"]
 
 [dev-dependencies]
 assert_cmd = "2.2"
+criterion = { version = "0.5", features = ["html_reports"] }
 predicates = "3.1"
+
+[[bench]]
+name = "generation"
+harness = false
