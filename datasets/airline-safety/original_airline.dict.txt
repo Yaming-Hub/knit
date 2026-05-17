@@ -1,0 +1,56 @@
+Aer Lingus
+Aeroflot*
+Aerolineas Argentinas
+Aeromexico*
+Air Canada
+Air France
+Air India*
+Air New Zealand*
+Alaska Airlines*
+Alitalia
+All Nippon Airways
+American*
+Austrian Airlines
+Avianca
+British Airways*
+Cathay Pacific*
+China Airlines
+Condor
+COPA
+Delta / Northwest*
+Egyptair
+El Al
+Ethiopian Airlines
+Finnair
+Garuda Indonesia
+Gulf Air
+Hawaiian Airlines
+Iberia
+Japan Airlines
+Kenya Airways
+KLM*
+Korean Air
+LAN Airlines
+Lufthansa*
+Malaysia Airlines
+Pakistan International
+Philippine Airlines
+Qantas*
+Royal Air Maroc
+SAS*
+Saudi Arabian
+Singapore Airlines
+South African
+Southwest Airlines
+Sri Lankan / AirLanka
+SWISS*
+TACA
+TAM
+TAP - Air Portugal
+Thai Airways
+Turkish Airlines
+United / Continental*
+US Airways / America West*
+Vietnam Airlines
+Virgin Atlantic
+Xiamen Airlines
