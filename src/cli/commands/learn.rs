@@ -2226,16 +2226,39 @@ fn extract_dictionaries(
         };
 
         for field in &mut entity.fields {
-            // Check if this field uses a fallback faker generator that would benefit
-            // from dictionary extraction. This includes "word" (generic fallback) and
-            // "name" (detected from capitalized multi-word patterns) since the actual
-            // source values are more domain-specific than faker output.
-            let is_extractable_faker = matches!(
-                &field.generator,
-                Some(crate::core::GeneratorSpec::Faker { method, .. })
-                    if method == "word" || method == "name" || method == "product_name"
-            );
-            if !is_extractable_faker {
+            // Check if this field uses a generator that would benefit from
+            // dictionary extraction. This covers:
+            // 1. Faker fallbacks (word, name, product_name, sentence, text, etc.)
+            //    — source values are more domain-specific than faker output
+            // 2. Truncated OneOf generators (≥200 string choices indicates the
+            //    categorical cap was hit and values were lost)
+            let is_extractable = match &field.generator {
+                Some(crate::core::GeneratorSpec::Faker { method, .. }) => {
+                    matches!(
+                        method.as_str(),
+                        "word"
+                            | "name"
+                            | "product_name"
+                            | "sentence"
+                            | "text"
+                            | "paragraph"
+                            | "company"
+                            | "catch_phrase"
+                            | "bs"
+                            | "job"
+                    )
+                }
+                Some(crate::core::GeneratorSpec::OneOf { choices }) => {
+                    // A string-valued OneOf at the 200-choice cap MAY have been truncated.
+                    // We check below whether the source data actually has more unique values.
+                    choices.len() == 200
+                        && choices.iter().all(|c| {
+                            matches!(c.value, crate::core::Value::String(_))
+                        })
+                }
+                _ => false,
+            };
+            if !is_extractable {
                 continue;
             }
 
@@ -2249,6 +2272,16 @@ fn extract_dictionaries(
             // (categorical columns with ≤50 values are handled by one_of already)
             if unique_values.len() <= 50 {
                 continue;
+            }
+
+            // For OneOf generators at the 200-choice cap, only extract if the source
+            // actually has MORE unique values than the OneOf (confirming truncation).
+            // If unique_values.len() == OneOf.len(), the OneOf wasn't truncated and
+            // already preserves frequency weights that a Dictionary would lose.
+            if let Some(crate::core::GeneratorSpec::OneOf { choices }) = &field.generator {
+                if unique_values.len() <= choices.len() {
+                    continue;
+                }
             }
 
             // Write dictionary file (sanitize filename components)
@@ -2325,13 +2358,34 @@ fn extract_dictionaries_from_state(
         };
 
         for field in &mut entity.fields {
-            // Check for extractable faker generators (same criteria as batch mode)
-            let is_extractable_faker = matches!(
-                &field.generator,
-                Some(crate::core::GeneratorSpec::Faker { method, .. })
-                    if method == "word" || method == "name" || method == "product_name"
-            );
-            if !is_extractable_faker {
+            // Check for extractable generators (same criteria as batch mode):
+            // 1. Faker fallbacks (word, name, product_name, sentence, text, etc.)
+            // 2. Truncated OneOf generators (≥200 string choices)
+            let is_extractable = match &field.generator {
+                Some(crate::core::GeneratorSpec::Faker { method, .. }) => {
+                    matches!(
+                        method.as_str(),
+                        "word"
+                            | "name"
+                            | "product_name"
+                            | "sentence"
+                            | "text"
+                            | "paragraph"
+                            | "company"
+                            | "catch_phrase"
+                            | "bs"
+                            | "job"
+                    )
+                }
+                Some(crate::core::GeneratorSpec::OneOf { choices }) => {
+                    choices.len() == 200
+                        && choices.iter().all(|c| {
+                            matches!(c.value, crate::core::Value::String(_))
+                        })
+                }
+                _ => false,
+            };
+            if !is_extractable {
                 continue;
             }
 
@@ -2353,6 +2407,14 @@ fn extract_dictionaries_from_state(
             let estimated_cardinality = cs.estimated_cardinality() as usize;
             if estimated_cardinality <= 50 {
                 continue;
+            }
+
+            // For OneOf generators at the 200-choice cap, only extract if the estimated
+            // cardinality exceeds the OneOf size (confirming truncation).
+            if let Some(crate::core::GeneratorSpec::OneOf { choices }) = &field.generator {
+                if estimated_cardinality <= choices.len() {
+                    continue;
+                }
             }
 
             // Normalize: trim whitespace and skip empty strings (matches batch behavior)
@@ -3616,5 +3678,132 @@ mod tests {
         let analysis = make_analysis("age");
         let traits = detect_field_traits(&profile, &analysis);
         assert_eq!(traits.semantic.as_deref(), Some("integer"));
+    }
+
+    #[test]
+    fn dictionary_extraction_for_high_cardinality_names() {
+        // CSV with 100 unique company names → should extract a dictionary file
+        // Uses "company"-like column name to trigger the new faker("company") path
+        let dir = tempfile::tempdir().unwrap();
+        let csv_path = dir.path().join("organizations.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "id,company").unwrap();
+        for i in 1..=100 {
+            writeln!(f, "{i},Acme Corp Division {i:03}").unwrap();
+        }
+        drop(f);
+
+        let output_path = dir.path().join("blueprint.knit.toml");
+        let result = run(
+            Some(csv_path.to_str().unwrap()),
+            output_path.to_str().unwrap(),
+            None,
+            None,
+            false,
+            false,
+            &[],
+            None,
+            None,
+            false,
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn failed: {result:?}");
+
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        // The company column should use a dictionary generator since it has
+        // 100 unique values — more than the one_of categorical threshold of 50
+        assert!(
+            content.contains("type = \"dictionary\""),
+            "should extract dictionary for high-cardinality string column; got:\n{content}"
+        );
+        // Dictionary file should exist
+        let dict_files: Vec<_> = std::fs::read_dir(dir.path())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
+            .collect();
+        assert!(
+            !dict_files.is_empty(),
+            "should have created at least one .dict.txt file"
+        );
+    }
+
+    #[test]
+    fn dictionary_extraction_for_truncated_oneof() {
+        // CSV with 250 unique categories → OneOf truncates at 200 → dictionary extraction
+        // Source has MORE unique values than the 200 cap, confirming truncation.
+        let dir = tempfile::tempdir().unwrap();
+        let csv_path = dir.path().join("products.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "id,product_type").unwrap();
+        // 250 unique product types, each appearing ~4 times (1000 rows total)
+        for i in 1..=1000 {
+            let product_type = format!("ProductType_{:03}", (i % 250) + 1);
+            writeln!(f, "{i},{product_type}").unwrap();
+        }
+        drop(f);
+
+        let output_path = dir.path().join("blueprint.knit.toml");
+        let result = run(
+            Some(csv_path.to_str().unwrap()),
+            output_path.to_str().unwrap(),
+            None,
+            None,
+            false,
+            false,
+            &[],
+            None,
+            None,
+            false,
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn failed: {result:?}");
+
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        // With 250 unique values, the OneOf cap of 200 truncated data.
+        // Dictionary extraction should replace it since source has more values.
+        assert!(
+            content.contains("type = \"dictionary\""),
+            "should extract dictionary for truncated OneOf; got:\n{content}"
+        );
+    }
+
+    #[test]
+    fn no_dictionary_extraction_for_exact_200_oneof() {
+        // CSV with exactly 200 unique categories → OneOf is NOT truncated → keep OneOf
+        let dir = tempfile::tempdir().unwrap();
+        let csv_path = dir.path().join("categories.csv");
+        let mut f = std::fs::File::create(&csv_path).unwrap();
+        writeln!(f, "id,category").unwrap();
+        // Exactly 200 unique categories, each appearing 5 times (1000 rows total)
+        for i in 1..=1000 {
+            let category = format!("Category_{:03}", (i % 200) + 1);
+            writeln!(f, "{i},{category}").unwrap();
+        }
+        drop(f);
+
+        let output_path = dir.path().join("blueprint.knit.toml");
+        let result = run(
+            Some(csv_path.to_str().unwrap()),
+            output_path.to_str().unwrap(),
+            None,
+            None,
+            false,
+            false,
+            &[],
+            None,
+            None,
+            false,
+            &quiet_cli(),
+        );
+        assert!(result.is_ok(), "learn failed: {result:?}");
+
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        // With exactly 200 unique values, the OneOf was NOT truncated.
+        // Should keep the weighted OneOf, not extract a dictionary.
+        assert!(
+            content.contains("type = \"one_of\""),
+            "should keep OneOf for non-truncated 200-category column; got:\n{content}"
+        );
     }
 }
