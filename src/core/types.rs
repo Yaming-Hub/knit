@@ -357,6 +357,12 @@ pub struct OutputLayout {
     /// of directly in the output root.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
+    /// Source file format detected during `knit learn` (e.g. `"json"`, `"csv"`).
+    ///
+    /// Metadata-only: records the original file format for informational purposes
+    /// and potential future use by `knit generate` for auto-matching output format.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_format: Option<String>,
     /// Hive-style partition column name (e.g. `"PartitionDate"`).
     /// When set, generated output is split into subdirectories named
     /// `partition_by=value` with one file per partition value.
@@ -2655,6 +2661,7 @@ active_days = "uniform"
     fn output_layout_serde_roundtrip() {
         let layout = OutputLayout {
             path: Some("Collab/Results".to_string()),
+            source_format: None,
             partition_by: Some("PartitionDate".to_string()),
             partition_values: vec![
                 PartitionValue {
@@ -2677,6 +2684,7 @@ active_days = "uniform"
         // OutputLayout with only path — partition fields should be absent in TOML
         let layout = OutputLayout {
             path: Some("Users/Results".to_string()),
+            source_format: None,
             partition_by: None,
             partition_values: Vec::new(),
         };

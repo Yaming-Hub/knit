@@ -292,6 +292,7 @@ fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
 
         OutputLayout {
             path: f.path.clone(),
+            source_format: None,
             partition_by: f.partition.as_ref().map(|p| p.by.clone()),
             partition_values,
         }
