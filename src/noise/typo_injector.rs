@@ -8,7 +8,7 @@ use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use std::sync::Arc;
 use tracing::trace;
 
@@ -38,7 +38,7 @@ enum TypoKind {
     Substitute,
 }
 
-fn apply_typo(s: &str, rng: &mut dyn RngCore) -> String {
+fn apply_typo(s: &str, rng: &mut dyn Rng) -> String {
     if s.is_empty() {
         return s.to_string();
     }
@@ -87,7 +87,7 @@ impl Perturbator for TypoInjector {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -141,7 +141,7 @@ mod tests {
     use super::*;
     use arrow::datatypes::{Field, Schema};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     fn string_batch() -> RecordBatch {
         let schema = Arc::new(Schema::new(vec![Field::new("word", DataType::Utf8, true)]));

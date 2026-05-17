@@ -34,9 +34,8 @@ parquet = { version = "58", features = ["arrow"] }
 apache-avro = { version = "0.21", features = ["snappy"] }
 
 # Random / Math
-rand = "0.9"
-rand_chacha = "0.9"
-rand_distr = "0.5"
+rand = { version = "0.10", features = ["chacha"] }
+rand_distr = "0.6"
 statrs = "0.18"
 rustfft = "6"
 
@@ -84,7 +83,7 @@ wasm-plugins = ["dep:wasmtime"]
 
 [dev-dependencies]
 assert_cmd = "2.2"
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 predicates = "3.1"
 
 [[bench]]

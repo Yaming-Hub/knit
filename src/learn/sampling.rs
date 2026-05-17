@@ -5,7 +5,7 @@
 
 use arrow::compute::concat_batches;
 use arrow::record_batch::RecordBatch;
-use rand::Rng;
+use rand::RngExt;
 use std::sync::Arc;
 use tracing::debug;
 

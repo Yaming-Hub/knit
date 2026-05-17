@@ -12,7 +12,7 @@
 use std::collections::BinaryHeap;
 use std::sync::RwLock;
 
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::traits::KeyStore;
 
@@ -119,7 +119,7 @@ impl KeyStore for SampledKeyStore {
         }
     }
 
-    fn sample(&self, rng: &mut dyn RngCore) -> Option<i64> {
+    fn sample(&self, rng: &mut dyn Rng) -> Option<i64> {
         let mut inner = self.inner.write().expect("sampled keystore lock poisoned");
 
         // Lazily flatten heap to vec on first sample call.
@@ -156,7 +156,7 @@ impl KeyStore for SampledKeyStore {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     #[test]
     fn reservoir_stays_within_capacity() {

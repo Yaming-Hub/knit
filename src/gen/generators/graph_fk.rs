@@ -9,13 +9,13 @@ use std::sync::Arc;
 
 use arrow::array::{Array, ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::{FieldGenerator, KeyStore};
 
 /// Generate a uniform usize in [0, n) using rejection sampling (dyn-compatible).
-fn gen_range_usize(rng: &mut dyn RngCore, n: usize) -> usize {
+fn gen_range_usize(rng: &mut dyn Rng, n: usize) -> usize {
     debug_assert!(n > 0);
     let n = n as u64;
     let threshold = u64::MAX - (u64::MAX % n);
@@ -72,7 +72,7 @@ impl GraphTargetFkGenerator {
 }
 
 impl FieldGenerator for GraphTargetFkGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let source_col = ctx.batch_columns.get(&self.source_field);
 
         let values: Vec<Option<i64>> =
@@ -117,7 +117,7 @@ impl GraphTargetFkGenerator {
     /// 2. Look up outbound edges for that actor.
     /// 3. If edges exist, sample one uniformly and convert to PK.
     /// 4. If no edges or unmapped source, fall back to uniform FK.
-    fn sample_target(&self, source_pk: i64, rng: &mut dyn RngCore) -> Option<i64> {
+    fn sample_target(&self, source_pk: i64, rng: &mut dyn Rng) -> Option<i64> {
         // Step 1: reverse lookup
         let actor_idx = match self.pk_to_index.get(&source_pk) {
             Some(&idx) => idx,
@@ -153,7 +153,7 @@ mod tests {
     use super::*;
     use crate::r#gen::keystore::InMemoryKeyStore;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_adjacency() -> AdjacencyList {

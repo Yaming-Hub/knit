@@ -6,7 +6,7 @@
 
 use arrow::array::ArrayRef;
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 
@@ -39,7 +39,7 @@ pub trait FieldGenerator: Send + Sync {
     ///
     /// The returned [`ArrayRef`] must have exactly `count` elements and match
     /// the type declared by [`output_type`](Self::output_type).
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef;
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef;
 
     /// The Arrow data type this generator produces.
     ///
@@ -69,7 +69,7 @@ pub trait KeyStore: Send + Sync {
     /// Sample a random key uniformly from the store.
     ///
     /// Returns `None` if the store is empty (no parent rows generated yet).
-    fn sample(&self, rng: &mut dyn RngCore) -> Option<i64>;
+    fn sample(&self, rng: &mut dyn Rng) -> Option<i64>;
 
     /// Return the number of keys currently stored.
     fn len(&self) -> usize;
@@ -103,7 +103,7 @@ pub trait StringKeyStore: Send + Sync {
     ///
     /// Returns `None` if the store is empty (no parent rows generated yet).
     /// Clones the sampled value to avoid holding a lock across generation.
-    fn sample(&self, rng: &mut dyn RngCore) -> Option<String>;
+    fn sample(&self, rng: &mut dyn Rng) -> Option<String>;
 
     /// Return the number of keys currently stored.
     fn len(&self) -> usize;

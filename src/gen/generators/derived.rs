@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 use arrow::array::{Array, ArrayRef, Float64Array, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::expr::ast::{self, Expr};
@@ -176,7 +176,7 @@ fn resolve_params(expr: &str, params: &std::collections::HashMap<String, String>
 }
 
 impl FieldGenerator for DerivedGenerator {
-    fn generate(&self, _rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, _rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         // If we have a parsed AST, use the expression engine
         if let Some(ref ast) = self.ast {
             // Derive a stable per-partition seed for random_* functions.
@@ -304,7 +304,7 @@ mod tests {
     use super::*;
     use arrow::array::{ArrayRef, Int64Array};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
     use std::sync::Arc;
 

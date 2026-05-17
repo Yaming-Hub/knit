@@ -2,10 +2,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow::record_batch::RecordBatch;
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use criterion::{Criterion, criterion_group, criterion_main};
 use knit::blueprint::{parse_toml, validate};
 use knit::r#gen::{ActorPool, GenerationEngine};
 use knit::plan::compile;
+use std::hint::black_box;
 
 const NUMERIC_BLUEPRINT: &str = r#"
 blueprint_version = "1.0"

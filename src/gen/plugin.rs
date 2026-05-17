@@ -128,7 +128,7 @@ mod tests {
     use super::*;
     use arrow::array::{ArrayRef, Int64Array};
     use arrow::datatypes::DataType;
-    use rand::RngCore;
+    use rand::Rng;
     use std::sync::Arc;
 
     use crate::r#gen::context::GenContext;
@@ -137,7 +137,7 @@ mod tests {
     struct FortyTwoGenerator;
 
     impl FieldGenerator for FortyTwoGenerator {
-        fn generate(&self, _rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+        fn generate(&self, _rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
             let arr: Int64Array = vec![42i64; count].into();
             Arc::new(arr)
         }

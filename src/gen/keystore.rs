@@ -5,7 +5,7 @@
 //! as rows are produced; foreign-key generators in downstream entities sample
 //! from this store to maintain referential integrity.
 
-use rand::RngCore;
+use rand::Rng;
 use std::sync::RwLock;
 
 use crate::r#gen::traits::KeyStore;
@@ -55,7 +55,7 @@ impl KeyStore for InMemoryKeyStore {
         self.keys.write().expect("keystore lock poisoned").push(key);
     }
 
-    fn sample(&self, rng: &mut dyn RngCore) -> Option<i64> {
+    fn sample(&self, rng: &mut dyn Rng) -> Option<i64> {
         let keys = self.keys.read().expect("keystore lock poisoned");
         if keys.is_empty() {
             return None;
@@ -87,7 +87,7 @@ impl KeyStore for InMemoryKeyStore {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     #[test]
     fn empty_store_returns_none() {

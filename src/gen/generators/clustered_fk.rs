@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
@@ -36,7 +36,7 @@ impl ClusteredForeignKeyGenerator {
     }
 
     /// Sample a parent index within the cluster window for the given global row.
-    fn sample_index(&self, rng: &mut dyn RngCore, global_row: u64, parent_count: u64) -> usize {
+    fn sample_index(&self, rng: &mut dyn Rng, global_row: u64, parent_count: u64) -> usize {
         if parent_count == 0 {
             return 0;
         }
@@ -63,7 +63,7 @@ impl ClusteredForeignKeyGenerator {
 }
 
 impl FieldGenerator for ClusteredForeignKeyGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let n = self.key_store.len() as u64;
         if n == 0 {
             tracing::warn!(
@@ -110,7 +110,7 @@ impl ClusteredStringForeignKeyGenerator {
         }
     }
 
-    fn sample_index(&self, rng: &mut dyn RngCore, global_row: u64, parent_count: u64) -> usize {
+    fn sample_index(&self, rng: &mut dyn Rng, global_row: u64, parent_count: u64) -> usize {
         if parent_count == 0 {
             return 0;
         }
@@ -134,7 +134,7 @@ impl ClusteredStringForeignKeyGenerator {
 }
 
 impl FieldGenerator for ClusteredStringForeignKeyGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let n = self.key_store.len() as u64;
         if n == 0 {
             tracing::warn!(
@@ -167,7 +167,7 @@ mod tests {
     use crate::r#gen::keystore::InMemoryKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx_with_offset(offset: u64) -> GenContext<'static> {

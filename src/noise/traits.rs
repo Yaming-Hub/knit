@@ -8,7 +8,7 @@
 use arrow::array::{Array, BooleanArray};
 use arrow::record_batch::RecordBatch;
 use bitflags::bitflags;
-use rand::RngCore;
+use rand::Rng;
 use std::sync::Arc;
 
 use crate::noise::error::NoiseError;
@@ -141,7 +141,7 @@ pub trait Perturbator: Send + Sync {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError>;
 }

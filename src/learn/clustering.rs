@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 
 use crate::core::Value;
 use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 
 use crate::learn::behavioral::ActorProfile;
 

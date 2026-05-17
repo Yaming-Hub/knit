@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::actor_pool::ActorPool;
 use crate::r#gen::context::GenContext;
@@ -47,7 +47,7 @@ impl ActorForeignKeyGenerator {
 }
 
 impl FieldGenerator for ActorForeignKeyGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let pool_count = self
             .actor_pool
             .actor_count(&self.target_entity)
@@ -96,7 +96,7 @@ mod tests {
     use crate::r#gen::keystore::InMemoryKeyStore;
     use crate::plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::BTreeMap;
 
     fn make_test_pool() -> ActorPool {

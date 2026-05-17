@@ -15,7 +15,7 @@ use arrow::array::{ArrayRef, TimestampMillisecondArray};
 use arrow::datatypes::DataType;
 use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc};
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use rand_distr::{Distribution, Exp};
 
 use crate::core::EventStreamComponent;
@@ -88,7 +88,7 @@ impl EventStreamGenerator {
 }
 
 impl FieldGenerator for EventStreamGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         let mut state = self.state.lock().expect("event stream state poisoned");
         let mut timestamps = Vec::with_capacity(count);
 
@@ -280,7 +280,7 @@ pub(crate) fn parse_duration_ms(s: &str) -> i64 {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx(row_offset: u64) -> GenContext<'static> {

@@ -47,7 +47,7 @@ use std::sync::Arc;
 
 use arrow::array::ArrayRef;
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::plugin::GeneratorPlugin;
@@ -228,7 +228,7 @@ pub struct WasmFieldGenerator {
 unsafe impl Sync for WasmFieldGenerator {}
 
 impl FieldGenerator for WasmFieldGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         let seed = rng.next_u64();
         let seed_lo = seed as i32;
         let seed_hi = (seed >> 32) as i32;

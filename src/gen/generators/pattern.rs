@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -38,7 +38,7 @@ impl PatternGenerator {
     }
 
     /// Expand the pattern once using the given RNG.
-    fn expand(&self, rng: &mut dyn RngCore) -> String {
+    fn expand(&self, rng: &mut dyn Rng) -> String {
         let mut result = String::with_capacity(self.pattern.len());
         for ch in self.pattern.chars() {
             match ch {
@@ -62,7 +62,7 @@ impl PatternGenerator {
 }
 
 impl FieldGenerator for PatternGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         let values: Vec<String> = (0..count).map(|_| self.expand(rng)).collect();
         Arc::new(StringArray::from(
             values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     use arrow::array::{Array, ArrayRef};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

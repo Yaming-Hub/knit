@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use arrow::array::{Array, ArrayRef, Int64Array, TimestampMillisecondArray};
 use arrow::datatypes::{DataType, TimeUnit};
-use rand::RngCore;
+use rand::Rng;
 use rand_distr::{Distribution, Exp, Normal, Poisson};
 
 use crate::r#gen::actor_pool::ActorPool;
@@ -109,7 +109,7 @@ impl ActorTemporalGenerator {
 }
 
 impl FieldGenerator for ActorTemporalGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         // Read actor FK column
         let actor_col = ctx.batch_columns.get(&self.actor_field);
 
@@ -172,7 +172,7 @@ impl ActorTemporalGenerator {
     /// Original uniform timestamp generation (non-burst mode).
     fn generate_uniform(
         &self,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         _count: usize,
         actor_pks: &[Option<i64>],
         causal_fk_pks: &[Option<i64>],
@@ -223,7 +223,7 @@ impl ActorTemporalGenerator {
     /// then maps timestamps back to original row positions.
     fn generate_burst(
         &self,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         count: usize,
         actor_pks: &[Option<i64>],
         causal_fk_pks: &[Option<i64>],
@@ -389,7 +389,7 @@ impl ActorTemporalGenerator {
 }
 
 /// Generate a random i64 in [0, max) using the RNG.
-fn gen_range_i64(rng: &mut dyn RngCore, max: i64) -> i64 {
+fn gen_range_i64(rng: &mut dyn Rng, max: i64) -> i64 {
     if max <= 0 {
         return 0;
     }
@@ -449,7 +449,7 @@ mod tests {
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(999);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(999);
         let result = r#gen.generate(&mut rng, 100, &ctx);
 
         let ts_arr = result
@@ -507,7 +507,7 @@ mod tests {
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(123);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(123);
         let result = r#gen.generate(&mut rng, 3, &ctx);
 
         let ts_arr = result
@@ -560,7 +560,7 @@ mod tests {
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(42);
         let result = r#gen.generate(&mut rng, 300, &ctx);
 
         let ts_arr = result

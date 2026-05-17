@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 use rand_distr::{Distribution, Zipf};
 
 use crate::r#gen::context::GenContext;
@@ -35,7 +35,7 @@ impl WeightedForeignKeyGenerator {
     }
 
     /// Sample a parent index using the configured degree distribution.
-    fn sample_index(&self, rng: &mut dyn RngCore, n: u64) -> usize {
+    fn sample_index(&self, rng: &mut dyn Rng, n: u64) -> usize {
         if n == 0 {
             return 0;
         }
@@ -70,7 +70,7 @@ impl WeightedForeignKeyGenerator {
 }
 
 impl FieldGenerator for WeightedForeignKeyGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let n = self.key_store.len() as u64;
         if n == 0 {
             if count > 0 {
@@ -110,7 +110,7 @@ impl WeightedStringForeignKeyGenerator {
     }
 
     /// Sample a parent index using the configured degree distribution.
-    fn sample_index(&self, rng: &mut dyn RngCore, n: u64) -> usize {
+    fn sample_index(&self, rng: &mut dyn Rng, n: u64) -> usize {
         if n == 0 {
             return 0;
         }
@@ -142,7 +142,7 @@ impl WeightedStringForeignKeyGenerator {
 }
 
 impl FieldGenerator for WeightedStringForeignKeyGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let n = self.key_store.len() as u64;
         if n == 0 {
             if count > 0 {
@@ -182,7 +182,7 @@ mod tests {
     use crate::r#gen::string_keystore::InMemoryStringKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

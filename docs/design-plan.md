@@ -630,7 +630,7 @@ SipHash is ~20× faster than HMAC-SHA256 and produces the exact bit width we nee
 ### Leaf Instantiation
 
 Each leaf of the RNG tree (a partition seed) is used to instantiate a **ChaCha8Rng**
-(from the `rand_chacha` crate):
+(from `rand` with the `chacha` feature):
 
 ```rust
 let partition_rng = ChaCha8Rng::seed_from_u64(partition_seed);

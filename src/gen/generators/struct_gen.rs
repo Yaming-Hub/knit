@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, BooleanArray, Int64Array, StructArray};
 use arrow::datatypes::{DataType, Field as ArrowField};
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::null_mask::apply_null_mask;
@@ -99,7 +99,7 @@ fn coerce_to_logical_type(arr: ArrayRef, data_type: &crate::core::DataType) -> A
 }
 
 impl FieldGenerator for StructGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let child_arrays: Vec<ArrayRef> = self
             .children
             .iter()
@@ -149,7 +149,7 @@ mod tests {
     use crate::r#gen::generators::sequence::SequenceGenerator;
     use arrow::array::{Array, Float64Array, Int64Array};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_pp(precision: Option<u8>, data_type: crate::core::DataType) -> ChildPostProcess {

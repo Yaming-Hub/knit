@@ -16,9 +16,8 @@
 use std::collections::{BTreeMap, HashMap};
 
 use crate::core::Value;
-use rand::Rng;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use rand::rngs::ChaCha8Rng;
+use rand::{Rng, RngExt, SeedableRng};
 
 use crate::r#gen::actor_pool::ActorPool;
 use crate::r#gen::graph::{Edge, GeneratedGraph};

@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::{FieldGenerator, StringKeyStore};
@@ -35,7 +35,7 @@ impl StringForeignKeyGenerator {
 }
 
 impl FieldGenerator for StringForeignKeyGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let values: Vec<Option<String>> = (0..count).map(|_| self.key_store.sample(rng)).collect();
 
         // If all values are None, the key store was empty — warn once.
@@ -60,7 +60,7 @@ mod tests {
     use crate::r#gen::string_keystore::InMemoryStringKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn test_ctx() -> GenContext<'static> {

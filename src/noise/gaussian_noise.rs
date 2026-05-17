@@ -7,7 +7,7 @@
 use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
-use rand::RngCore;
+use rand::{Rng, RngExt};
 use rand_distr::{Distribution, Normal};
 use std::sync::Arc;
 use tracing::trace;
@@ -67,7 +67,7 @@ impl Perturbator for GaussianNoise {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -110,7 +110,7 @@ fn should_apply_numeric(name: &str, dt: &DataType, filter: &ColumnFilter) -> boo
 
 fn add_noise(
     array: &dyn Array,
-    rng: &mut dyn RngCore,
+    rng: &mut dyn Rng,
     config: &PerturbConfig,
     stddev: f64,
     relative: bool,
@@ -128,7 +128,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i);
-                    if !config.in_scope(i) || rand::Rng::random::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rng.random::<f64>() >= probability {
                         return Some(v);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -150,7 +150,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i) as f64;
-                    if !config.in_scope(i) || rand::Rng::random::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rng.random::<f64>() >= probability {
                         return Some(v as i32);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -172,7 +172,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i) as f64;
-                    if !config.in_scope(i) || rand::Rng::random::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rng.random::<f64>() >= probability {
                         return Some(v as i64);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -192,7 +192,7 @@ mod tests {
     use super::*;
     use arrow::datatypes::{Field, Schema};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     fn float_batch() -> RecordBatch {
         let schema = Arc::new(Schema::new(vec![Field::new(

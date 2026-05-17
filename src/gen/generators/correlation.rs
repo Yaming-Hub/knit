@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Float64Array, Int64Array};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 use rand_distr::{Distribution, Normal};
 
 use crate::r#gen::context::GenContext;
@@ -58,7 +58,7 @@ fn extract_f64_values(arr: &ArrayRef, count: usize) -> Vec<f64> {
 }
 
 impl FieldGenerator for CorrelatedGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let target = ctx.batch_columns.get(&self.target_field);
 
         let x_raw = match target {
@@ -111,7 +111,7 @@ impl FieldGenerator for CorrelatedGenerator {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     #[test]
