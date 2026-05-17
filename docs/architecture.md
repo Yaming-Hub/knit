@@ -1,19 +1,19 @@
 # Knit — Architecture Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 
 ---
 
 ## 1. Overview
 
 Knit is a high-performance Rust toolset for generating large synthetic datasets
-(100GB+ in hours). It combines a declarative blueprint language (**Weave**) with a
+(100GB+ in hours). It combines a declarative blueprint language (**Knit**) with a
 multi-stage pipeline that compiles, generates, perturbs, and serializes data.
 
 ```mermaid
 flowchart TB
-    user([User / AI Agent]) --> blueprint([knit blueprint\n.knit.toml / .weave.json])
+    user([User / AI Agent]) --> blueprint([knit blueprint\n.knit.toml / .knit.json])
     blueprint --> learn[knit learn\nReverse engineer]
     blueprint --> generate[knit generate\nForward pipeline]
     blueprint --> validate[knit validate\nBlueprint checking]
@@ -23,9 +23,9 @@ flowchart TB
 
 ---
 
-## 2. The Weave Language
+## 2. The Knit Language
 
-Weave is the declarative blueprint language at the center of Knit. A Weave document
+Knit is the declarative blueprint language at the center of the project. A Knit document
 describes **what** data looks like — its structure, statistical properties,
 relationships, and quality characteristics — without specifying **how** to generate it.
 
@@ -35,10 +35,10 @@ relationships, and quality characteristics — without specifying **how** to gen
 
 ```mermaid
 flowchart LR
-    doc([Weave Document]) --> model[DataModel\nin-memory AST] --> stages[Pipeline stages]
+    doc([Knit Document]) --> model[DataModel\nin-memory AST] --> stages[Pipeline stages]
 ```
 
-Weave serves as:
+Knit serves as:
 - **Input** to the forward pipeline (blueprint → data)
 - **Output** of the reverse pipeline (data → blueprint)
 - **Contract** between the user/AI and the engine
@@ -67,7 +67,7 @@ Weave serves as:
 
 ### 3.1 Forward Pipeline (Blueprint → Data)
 
-The forward pipeline transforms a Weave document into output files through five stages:
+The forward pipeline transforms a Knit document into output files through five stages:
 
 ```mermaid
 flowchart LR
@@ -82,7 +82,7 @@ flowchart LR
 
 | Stage | Input | Output | Module |
 |-------|-------|--------|--------|
-| **Parse** | `.knit.toml` / `.weave.json` | `DataModel` (AST) | `blueprint` |
+| **Parse** | `.knit.toml` / `.knit.json` | `DataModel` (AST) | `blueprint` |
 | **Validate** | `DataModel` | Validated `DataModel` + diagnostics | `blueprint` |
 | **Plan** | Validated `DataModel` | `ExecutionPlan` | `plan` |
 | **Generate** | `ExecutionPlan` | `RecordBatch` stream | `gen` |
@@ -91,7 +91,7 @@ flowchart LR
 
 ### 3.2 Reverse Pipeline (Data → Blueprint)
 
-The reverse pipeline infers a Weave document from an existing dataset:
+The reverse pipeline infers a Knit document from an existing dataset:
 
 ```mermaid
 flowchart LR
@@ -122,7 +122,7 @@ knit/
 │   ├── lib.rs           Crate root (re-exports all modules)
 │   ├── main.rs          CLI binary entry point
 │   ├── core/            Semantic data model types (Value, DataModel, Entity, Field, …)
-│   ├── blueprint/       Weave parser (TOML + JSON) and validator
+│   ├── blueprint/       Knit blueprint parser (TOML + JSON) and validator
 │   ├── plan/            Execution planner / compiler
 │   ├── gen/             Data generation engine
 │   ├── noise/           Perturbation pipeline
@@ -173,7 +173,7 @@ responsibilities, and key design points.
 **Role:** Define the shared vocabulary for the entire toolset.
 
 **Responsibilities:**
-- `DataModel` — the in-memory representation of a parsed Weave document
+- `DataModel` — the in-memory representation of a parsed Knit document
 - `Entity`, `Field`, `Relationship`, `Constraint` — structural types
 - `GeneratorSpec`, `DistributionSpec` — generation specifications
 - `Value` enum — typed value representation (used at API boundaries)
@@ -188,7 +188,7 @@ modules, so the bar for additions is high.
 
 ### 5.2 blueprint — Parser & Validator
 
-**Role:** Transform Weave text into a validated `DataModel`.
+**Role:** Transform Knit text into a validated `DataModel`.
 
 **Responsibilities:**
 - Parse TOML and JSON into `DataModel`

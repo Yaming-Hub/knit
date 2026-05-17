@@ -1,5 +1,8 @@
 # Design: Multi-Dimensional Dataset Scaling (`knit scale`)
 
+**Version:** 0.4.0
+**Status:** Implemented
+
 ## 1. Motivation
 
 `knit generate --count 10x` scales all entity row counts uniformly — every table

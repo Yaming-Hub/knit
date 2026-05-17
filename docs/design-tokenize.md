@@ -1,5 +1,8 @@
 # Design: Dataset Tokenization (`knit tokenize`)
 
+**Version:** 0.4.0
+**Status:** Implemented
+
 ## 1. Motivation
 
 When users generate data with knit and encounter issues, troubleshooting requires

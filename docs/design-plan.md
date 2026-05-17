@@ -1,7 +1,7 @@
 # plan module — Detailed Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Project:** Knit — High-Performance Synthetic Data Generation Toolset
 
 ---
@@ -26,13 +26,13 @@
 ## 1. Overview
 
 **plan module** is the bridge between blueprint and execution. It takes a validated `DataModel`
-(produced by `blueprint module` from a Weave document) and compiles it into an `ExecutionPlan`
+(produced by `blueprint module` from a Knit document) and compiles it into an `ExecutionPlan`
 — a complete, self-contained instruction set that tells the generation engine (`gen module`)
 exactly what to do, in what order, and with what parameters.
 
 ```mermaid
 flowchart LR
-    weave([Weave Document]) --> blueprint[blueprint module\nParse & Validate]
+    knit_doc([Knit Document]) --> blueprint[blueprint module\nParse & Validate]
     blueprint --> model([DataModel])
     model --> plan[plan module\nCompile]
     plan --> exec([ExecutionPlan])
@@ -80,7 +80,7 @@ The `ExecutionPlan` is a **pure data structure**:
 | Module / Dependency | Role in plan module |
 |-------|-------------------|
 | **core module** | Provides the `DataModel`, `Entity`, `Field`, `Relationship`, `GeneratorSpec`, `DistributionSpec`, `CountSpec`, `NullSpec`, and `Value` types that the planner consumes as input. |
-| **blueprint module** | Provides the validated `DataModel` — plan module does not parse Weave documents directly, it receives the already-parsed and validated model. The blueprint module also surfaces relationship and constraint metadata that the planner depends on. |
+| **blueprint module** | Provides the validated `DataModel` — plan module does not parse Knit documents directly, it receives the already-parsed and validated model. The blueprint module also surfaces relationship and constraint metadata that the planner depends on. |
 | **petgraph** | Used to build and analyze directed dependency graphs. Provides topological sorting (`toposort`), strongly connected component detection (Tarjan's algorithm via `tarjan_scc`), and general graph traversal utilities. |
 | **serde** | The `ExecutionPlan` and all sub-types derive `Serialize`/`Deserialize` for plan inspection, caching, and JSON/TOML output. |
 
@@ -651,7 +651,7 @@ The hierarchical structure guarantees isolation:
   for `user` only. All other entities are unaffected.
 - **Removing a field** removes a branch. No sibling or cousin seeds change.
 
-This property is critical for blueprint evolution: users can iterate on their Weave
+This property is critical for blueprint evolution: users can iterate on their Knit
 document without invalidating previously validated subsets of the generated data.
 
 ---
@@ -793,7 +793,7 @@ error[E301]: cyclic field dependency in entity "invoice"
 
 ## 10. Plan Inspection
 
-The `knit plan <blueprint>` CLI command compiles a Weave document into an `ExecutionPlan`
+The `knit plan <blueprint>` CLI command compiles a Knit document into an `ExecutionPlan`
 and prints a human-readable summary. This is the primary debugging tool for blueprint
 authors.
 

@@ -1,7 +1,7 @@
 # Human Behavioral Modeling — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 **Modules:** `learn module`, `core module`, `plan module`, `gen module`
 
 ---
@@ -365,7 +365,7 @@ These properties become parameters for the relationship model in the blueprint.
 
 ## 7. Phase 4: Blueprint Modeling (Core/Blueprint)
 
-### 7.1 New Weave Language Constructs
+### 7.1 New Knit Language Constructs
 
 ```toml
 # Persona definitions

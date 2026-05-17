@@ -1,7 +1,7 @@
 # Structured Knit Model — Design Document
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Implemented
 
 ---
 
@@ -764,7 +764,7 @@ knit model flatten my_model/ -o blueprint.knit.toml
 
 ## 14. Implementation Status
 
-**Status:** Phase 1–2 complete (PR #230)
+**Status:** Implemented
 
 ### Completed
 
@@ -781,9 +781,9 @@ knit model flatten my_model/ -o blueprint.knit.toml
 | `save_blueprint` helper | `src/cli/commands/mod.rs` | Format-aware write (structured or flat TOML) |
 | `knit enrich` integration | `src/cli/commands/enrich.rs` | Preserves structured format on output |
 
-### Remaining (Phase 3–4)
+### Remaining (historical)
 
-- Direct table-level update operations (edit single table without full rewrite)
+- ~~Direct table-level update operations (edit single table without full rewrite)~~ ✅
 - ~~Statistics layer (`[columns.stats]`, `[table.stats]`)~~ ✅ (PR #236)
 - ~~Auto-detected traits (semantic, cardinality, trend, distribution shape)~~ ✅ (PR #237)
 
