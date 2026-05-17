@@ -22,10 +22,11 @@ target
 
 # Generated data output
 data/
+output/
 *.knit.toml
 *.weave.toml
 !examples/*.knit.toml
-*.weave.toml
+!examples/**/*.knit.toml
 e2e_test/
 test_full_e2e.toml
 
