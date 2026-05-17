@@ -171,9 +171,43 @@ All notable changes to Knit are documented in this file.
   - Example plugin: `examples/wasm_plugin/` (random float generator)
   - Feature-gated: `cargo install knit --features wasm-plugins`
 
+### Changed
+
+- **Rust edition 2024** — Migrated from edition 2021 to 2024. Key changes: `gen`
+  module uses `r#gen` raw identifier (reserved keyword), collapsible `if let`
+  chains, and `unsafe` env var access in tests replaced with safe alternatives.
+- **MSRV updated to 1.92** — Minimum supported Rust version raised to 1.92
+  (required by edition 2024 and updated dependencies).
+- **Dependencies upgraded** — Arrow ecosystem 54→58, rand ecosystem 0.8→0.9,
+  wasmtime 21→44, indicatif 0.17→0.18, and 5 other dependency updates.
+
 ### Fixed
 
 - Removed unused `Utc` import in compiler.rs
+- **Deprecated rand 0.9 API calls** — Replaced 75 deprecated calls: `thread_rng()`
+  → `rng()`, `.gen()` → `.random()`, `.gen_range()` → `.random_range()`,
+  `.gen_bool()` → `.random_bool()`.
+- **Error handling hardened** — Production `.unwrap()` calls in error-prone paths
+  replaced with proper error propagation across CLI, learn, noise, scale, gen,
+  plan, bind, and blueprint modules. Fallible `.expect()` in WASM plugin
+  converted to `.map_err()?`. Only provably-safe `.expect()` calls remain.
+
+### Infrastructure
+
+- **CI hardening** — 9 CI jobs: check, test, test-default, clippy, fmt, doc,
+  MSRV (1.92), benchmark compilation, and cargo-deny audit. All jobs run with
+  `permissions: { contents: read }` for least-privilege.
+- **Cargo-deny** — License allow-list and vulnerability audit via `deny.toml`.
+- **Dependabot** — Weekly Cargo and GitHub Actions dependency updates.
+- **Criterion benchmarks** — 5 end-to-end pipeline benchmarks (numeric, string,
+  FK resolution, expression evaluation, multi-entity pipeline).
+- **Integration test expansion** — Added 22 new integration tests covering
+  output formats, expression correctness, self-referential hierarchies, scale
+  analysis/planning, learn profiling/type inference/correlation, and tokenize
+  config/mapping/round-trip.
+- **Documentation** — Complete CLI reference with all 13 subcommands, usage
+  examples for scale/tokenize/enrich, benchmark baseline in BENCHMARKS.md,
+  and `documentation` field in Cargo.toml for docs.rs linking.
 
 ## [0.4.0] — 2026-05-10
 
