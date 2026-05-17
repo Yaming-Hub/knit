@@ -999,6 +999,17 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
     analysis.partition_values = table.partition_values.clone();
     analysis.source_format = table.source_format.clone();
 
+    // Detect sort order from source data
+    if let Some(sort_order) = detect_sort_order(&combined, &analysis.columns) {
+        debug!(
+            table = %table.entity,
+            column = %sort_order.column,
+            direction = ?sort_order.direction,
+            "detected sort order"
+        );
+        analysis.sort_order = Some(sort_order);
+    }
+
     let rel_profile = TableProfile {
         name: table.entity.clone(),
         columns: rel_columns,
@@ -1012,6 +1023,161 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
     );
 
     Ok((analysis, rel_profile))
+}
+
+/// Detect if the source data is sorted by any column.
+///
+/// Checks numeric, string, and temporal columns for monotonic ordering.
+/// Returns the first column found to be sorted (preferring temporal columns).
+fn detect_sort_order(
+    batch: &RecordBatch,
+    columns: &[ColumnAnalysis],
+) -> Option<crate::core::SortOrder> {
+    use crate::core::SortOrder;
+
+    if batch.num_rows() < 3 {
+        return None;
+    }
+
+    // Prefer temporal columns, then numeric, then string
+    let mut candidates: Vec<(usize, &str)> = Vec::new();
+    for (i, col) in columns.iter().enumerate() {
+        if col.temporal_pattern.is_some() {
+            // Temporal columns get priority — insert at front
+            candidates.insert(0, (i, &col.name));
+        } else if col.distribution.is_some() || col.categorical_weights.is_some() {
+            candidates.push((i, &col.name));
+        }
+    }
+
+    for (col_idx, col_name) in &candidates {
+        if let Some(arr) = batch.column_by_name(col_name) {
+            if let Some(dir) = check_column_sorted(arr.as_ref()) {
+                let _ = col_idx; // suppress unused warning
+                return Some(SortOrder {
+                    column: col_name.to_string(),
+                    direction: dir,
+                });
+            }
+        }
+    }
+
+    None
+}
+
+/// Check if an Arrow array is monotonically sorted.
+///
+/// Returns `Some(SortDirection)` if values are non-decreasing or non-increasing,
+/// `None` otherwise. Null values are skipped.
+fn check_column_sorted(arr: &dyn arrow::array::Array) -> Option<crate::core::SortDirection> {
+    use arrow::array;
+
+    match arr.data_type() {
+        DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64 => {
+            check_sorted_i64(arr)
+        }
+        DataType::UInt8 | DataType::UInt16 | DataType::UInt32 | DataType::UInt64 => {
+            check_sorted_uint(arr)
+        }
+        DataType::Float32 => {
+            let a = arr.as_any().downcast_ref::<array::Float32Array>()?;
+            check_sorted_float(a.iter().filter_map(|v| v.map(|x| x as f64)))
+        }
+        DataType::Float64 => {
+            let a = arr.as_any().downcast_ref::<array::Float64Array>()?;
+            check_sorted_float(a.iter().filter_map(|v| v.map(|x| x)))
+        }
+        DataType::Utf8 => {
+            let a = arr.as_any().downcast_ref::<array::StringArray>()?;
+            let vals: Vec<&str> = (0..a.len()).filter(|&i| !a.is_null(i)).map(|i| a.value(i)).collect();
+            check_sorted_ord(&vals)
+        }
+        DataType::LargeUtf8 => {
+            let a = arr.as_any().downcast_ref::<array::LargeStringArray>()?;
+            let vals: Vec<&str> = (0..a.len()).filter(|&i| !a.is_null(i)).map(|i| a.value(i)).collect();
+            check_sorted_ord(&vals)
+        }
+        DataType::Timestamp(TimeUnit::Millisecond, _) => {
+            let a = arr.as_any().downcast_ref::<array::TimestampMillisecondArray>()?;
+            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            check_sorted_ord(&vals)
+        }
+        DataType::Timestamp(TimeUnit::Microsecond, _) => {
+            let a = arr.as_any().downcast_ref::<array::TimestampMicrosecondArray>()?;
+            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            check_sorted_ord(&vals)
+        }
+        DataType::Date32 => {
+            let a = arr.as_any().downcast_ref::<array::Date32Array>()?;
+            let vals: Vec<i32> = a.iter().filter_map(|v| v).collect();
+            check_sorted_ord(&vals)
+        }
+        _ => None,
+    }
+}
+
+/// Check if i64-coercible integer values are sorted.
+fn check_sorted_i64(arr: &dyn arrow::array::Array) -> Option<crate::core::SortDirection> {
+    use arrow::array;
+    // Extract as i64 regardless of width
+    let vals: Vec<i64> = match arr.data_type() {
+        DataType::Int8 => arr.as_any().downcast_ref::<array::Int8Array>()?.iter().filter_map(|v| v.map(i64::from)).collect(),
+        DataType::Int16 => arr.as_any().downcast_ref::<array::Int16Array>()?.iter().filter_map(|v| v.map(i64::from)).collect(),
+        DataType::Int32 => arr.as_any().downcast_ref::<array::Int32Array>()?.iter().filter_map(|v| v.map(i64::from)).collect(),
+        DataType::Int64 => arr.as_any().downcast_ref::<array::Int64Array>()?.iter().filter_map(|v| v).collect(),
+        _ => return None,
+    };
+    check_sorted_ord(&vals)
+}
+
+/// Check if unsigned integer values are sorted (handles u64 without lossy cast).
+fn check_sorted_uint(arr: &dyn arrow::array::Array) -> Option<crate::core::SortDirection> {
+    use arrow::array;
+    let vals: Vec<u64> = match arr.data_type() {
+        DataType::UInt8 => arr.as_any().downcast_ref::<array::UInt8Array>()?.iter().filter_map(|v| v.map(u64::from)).collect(),
+        DataType::UInt16 => arr.as_any().downcast_ref::<array::UInt16Array>()?.iter().filter_map(|v| v.map(u64::from)).collect(),
+        DataType::UInt32 => arr.as_any().downcast_ref::<array::UInt32Array>()?.iter().filter_map(|v| v.map(u64::from)).collect(),
+        DataType::UInt64 => arr.as_any().downcast_ref::<array::UInt64Array>()?.iter().filter_map(|v| v).collect(),
+        _ => return None,
+    };
+    check_sorted_ord(&vals)
+}
+
+/// Check if an ordered sequence is sorted (ascending or descending).
+fn check_sorted_ord<T: Ord>(vals: &[T]) -> Option<crate::core::SortDirection> {
+    use crate::core::SortDirection;
+    if vals.len() < 3 {
+        return None;
+    }
+    let is_asc = vals.windows(2).all(|w| w[0] <= w[1]);
+    if is_asc {
+        return Some(SortDirection::Asc);
+    }
+    let is_desc = vals.windows(2).all(|w| w[0] >= w[1]);
+    if is_desc {
+        return Some(SortDirection::Desc);
+    }
+    None
+}
+
+/// Check if float values are sorted.
+///
+/// Uses simple `<=`/`>=` comparisons (NaN values are filtered out upstream).
+fn check_sorted_float(iter: impl Iterator<Item = f64>) -> Option<crate::core::SortDirection> {
+    use crate::core::SortDirection;
+    let vals: Vec<f64> = iter.collect();
+    if vals.len() < 3 {
+        return None;
+    }
+    let is_asc = vals.windows(2).all(|w| w[0] <= w[1]);
+    if is_asc {
+        return Some(SortDirection::Asc);
+    }
+    let is_desc = vals.windows(2).all(|w| w[0] >= w[1]);
+    if is_desc {
+        return Some(SortDirection::Desc);
+    }
+    None
 }
 
 /// Analyse a single column: fit distributions, detect temporal patterns,
@@ -3811,5 +3977,89 @@ mod tests {
             content.contains("type = \"one_of\""),
             "should keep OneOf for non-truncated 200-category column; got:\n{content}"
         );
+    }
+
+    #[test]
+    fn detect_sort_order_ascending_int() {
+        use arrow::array::Int64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![Field::new("id", DataType::Int64, false)]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int64Array::from(vec![1, 2, 3, 4, 5]))],
+        )
+        .unwrap();
+
+        let mut col = ColumnAnalysis::new("id".to_string(), 0.0, 1.0);
+        col.categorical_weights = Some(vec![("1".into(), 0.2), ("2".into(), 0.2)]);
+        let cols = vec![col];
+        let result = super::detect_sort_order(&batch, &cols);
+        assert!(result.is_some(), "should detect sorted int column");
+        let so = result.unwrap();
+        assert_eq!(so.column, "id");
+        assert_eq!(so.direction, crate::core::SortDirection::Asc);
+    }
+
+    #[test]
+    fn detect_sort_order_descending_float() {
+        use arrow::array::Float64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![Field::new("val", DataType::Float64, false)]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Float64Array::from(vec![9.0, 7.5, 3.2, 1.0]))],
+        )
+        .unwrap();
+
+        let mut col = ColumnAnalysis::new("val".to_string(), 0.0, 1.0);
+        // Mark as numeric candidate so detect_sort_order considers it
+        col.categorical_weights = Some(vec![("9.0".into(), 0.25), ("7.5".into(), 0.25)]);
+        let result = super::detect_sort_order(&batch, &[col]);
+        assert!(result.is_some(), "should detect descending float column");
+        let so = result.unwrap();
+        assert_eq!(so.column, "val");
+        assert_eq!(so.direction, crate::core::SortDirection::Desc);
+    }
+
+    #[test]
+    fn detect_sort_order_unsorted_returns_none() {
+        use arrow::array::Int64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![Field::new("x", DataType::Int64, false)]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int64Array::from(vec![3, 1, 4, 1, 5]))],
+        )
+        .unwrap();
+
+        let mut col = ColumnAnalysis::new("x".to_string(), 0.0, 1.0);
+        col.categorical_weights = Some(vec![("3".into(), 0.2)]);
+        let cols = vec![col];
+        let result = super::detect_sort_order(&batch, &cols);
+        assert!(result.is_none(), "unsorted column should return None");
+    }
+
+    #[test]
+    fn detect_sort_order_too_few_rows_returns_none() {
+        use arrow::array::Int64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![Field::new("x", DataType::Int64, false)]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Int64Array::from(vec![1, 2]))],
+        )
+        .unwrap();
+
+        let cols = vec![ColumnAnalysis::new("x".to_string(), 0.0, 1.0)];
+        let result = super::detect_sort_order(&batch, &cols);
+        assert!(result.is_none(), "fewer than 3 rows should return None");
     }
 }

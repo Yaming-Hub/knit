@@ -377,6 +377,29 @@ pub fn run_from_model(
     // Track cumulative row index per entity for deterministic partition assignment
     let mut partition_row_idx: HashMap<String, usize> = HashMap::new();
 
+    // Collect sort-by metadata: entities that need post-generation sorting.
+    // Partitioned entities are excluded — sorting across partitions is not
+    // supported; each partition is written independently.
+    let sort_entities: HashMap<String, crate::core::SortOrder> = model
+        .entities
+        .iter()
+        .filter_map(|e| {
+            let sort = e.sort_by.as_ref()?;
+            if partition_configs.contains_key(&e.name) {
+                tracing::warn!(
+                    entity = %e.name,
+                    column = %sort.column,
+                    "sort_by ignored for partitioned entity"
+                );
+                None
+            } else {
+                Some((e.name.clone(), sort.clone()))
+            }
+        })
+        .collect();
+    // Buffer batches for entities that need sorting
+    let mut sort_buffers: HashMap<String, Vec<RecordBatch>> = HashMap::new();
+
     // Execute generation
     let mut batch_counters: HashMap<String, u64> = HashMap::new();
     engine
@@ -601,8 +624,16 @@ pub fn run_from_model(
                 let sink = sinks.get_mut(entity_name).ok_or_else(|| {
                     crate::r#gen::GenError::Generation(format!("sink for entity '{}' not found", entity_name))
                 })?;
-                sink.write_batch(&batch)
-                    .map_err(|e| crate::r#gen::GenError::Generation(format!("sink write error: {}", e)))?;
+                // If this entity needs sorting, buffer instead of writing immediately
+                if sort_entities.contains_key(entity_name) {
+                    sort_buffers
+                        .entry(entity_name.to_string())
+                        .or_default()
+                        .push(batch.clone());
+                } else {
+                    sink.write_batch(&batch)
+                        .map_err(|e| crate::r#gen::GenError::Generation(format!("sink write error: {}", e)))?;
+                }
             }
 
             // Emit JSON progress event only after successful write
@@ -625,6 +656,26 @@ pub fn run_from_model(
             Ok(())
         })
         .context("generation failed")?;
+
+    // ── Sort and flush buffered entities ─────────────────────────────
+    for (entity_name, sort_order) in &sort_entities {
+        if let Some(buffers) = sort_buffers.remove(entity_name) {
+            if let Some(sink) = sinks.get_mut(entity_name) {
+                let sorted = sort_batches(&buffers, sort_order)
+                    .map_err(|e| anyhow::anyhow!("sort failed for '{}': {}", entity_name, e))?;
+                for batch in &sorted {
+                    sink.write_batch(batch)
+                        .map_err(|e| anyhow::anyhow!("sink write error after sort: {}", e))?;
+                }
+                tracing::info!(
+                    entity = %entity_name,
+                    column = %sort_order.column,
+                    direction = ?sort_order.direction,
+                    "applied post-generation sort"
+                );
+            }
+        }
+    }
 
     // ── Finish sinks ────────────────────────────────────────────────
     for (entity_name, sink) in sinks {
@@ -765,6 +816,51 @@ pub fn run_from_model(
     }
 
     Ok(())
+}
+
+/// Sort record batches by a column, concatenating and re-splitting as needed.
+///
+/// Concatenates all input batches, sorts by the specified column, and returns
+/// a single batch with all rows in the requested order.
+fn sort_batches(
+    batches: &[RecordBatch],
+    sort_order: &crate::core::SortOrder,
+) -> Result<Vec<RecordBatch>> {
+    use arrow::compute::{concat_batches, sort_to_indices, take};
+
+    if batches.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let schema = batches[0].schema();
+    let combined = concat_batches(&schema, batches)
+        .context("failed to concatenate batches for sorting")?;
+
+    let col_idx = combined
+        .schema()
+        .index_of(&sort_order.column)
+        .map_err(|_| anyhow::anyhow!("sort column '{}' not found", sort_order.column))?;
+
+    let sort_col = combined.column(col_idx);
+    let options = arrow::compute::SortOptions {
+        descending: matches!(sort_order.direction, crate::core::SortDirection::Desc),
+        nulls_first: true,
+    };
+
+    let indices = sort_to_indices(sort_col.as_ref(), Some(options), None)
+        .context("failed to compute sort indices")?;
+
+    // Reorder all columns
+    let sorted_columns: Vec<arrow::array::ArrayRef> = combined
+        .columns()
+        .iter()
+        .map(|col| take(col.as_ref(), &indices, None).map_err(|e| anyhow::anyhow!("{e}")))
+        .collect::<Result<Vec<_>>>()?;
+
+    let sorted_batch = RecordBatch::try_new(schema, sorted_columns)
+        .context("failed to build sorted batch")?;
+
+    Ok(vec![sorted_batch])
 }
 
 /// Map the CLI format enum to [`bind`](crate::bind) `OutputFormat`.

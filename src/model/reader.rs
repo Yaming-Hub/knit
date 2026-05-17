@@ -223,6 +223,8 @@ struct TableMeta {
     stats: Option<TableStats>,
     #[serde(default)]
     scaling: Option<DimensionAnnotation>,
+    #[serde(default)]
+    sort_by: Option<SortOrder>,
 }
 #[derive(Debug, Deserialize)]
 struct RelationshipsFile {
@@ -313,6 +315,7 @@ fn table_to_entity(table: TableFile, layout: &Option<LayoutFile>) -> Entity {
         output,
         stats: table.table.stats,
         scaling: table.table.scaling,
+        sort_by: table.table.sort_by,
     }
 }
 
@@ -504,6 +507,7 @@ data_type = "int"
                 output: None,
                 stats: None,
                 scaling: None,
+                sort_by: None,
             }],
             relationships: vec![],
             noise_profiles: vec![],

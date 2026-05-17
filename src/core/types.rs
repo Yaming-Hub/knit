@@ -288,6 +288,36 @@ pub struct Entity {
     /// participates in, so `knit scale` can skip re-analysis.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scaling: Option<DimensionAnnotation>,
+    /// Sort order detected during `knit learn`.
+    ///
+    /// When set, `knit generate` sorts the output rows by this column so that
+    /// generated data preserves the same ordering as the source.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sort_by: Option<SortOrder>,
+}
+
+/// Sort order specification detected during `knit learn`.
+///
+/// Records which column the source data was sorted by and in which direction,
+/// so that `knit generate` can reproduce the same ordering.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SortOrder {
+    /// Column name to sort by.
+    pub column: String,
+    /// Sort direction.
+    #[serde(default)]
+    pub direction: SortDirection,
+}
+
+/// Sort direction for output ordering.
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SortDirection {
+    /// Ascending order (smallest first).
+    #[default]
+    Asc,
+    /// Descending order (largest first).
+    Desc,
 }
 
 /// Scaling dimension metadata attached to an entity during `knit learn`.
@@ -2420,6 +2450,7 @@ step = "7d"
                 output: None,
                 stats: None,
                 scaling: None,
+                sort_by: None,
             }],
             relationships: vec![],
             noise_profiles: vec![NoiseProfile {
@@ -2596,6 +2627,7 @@ step = "7d"
             mixin_refs: None,
             output: None,
             scaling: None,
+            sort_by: None,
         };
         let json = serde_json::to_string(&entity).unwrap();
         assert!(json.contains("\"actor\":true"));
@@ -2756,5 +2788,59 @@ active_days = "uniform"
         for (r#gen, expected) in cases {
             assert_eq!(r#gen.type_name(), expected);
         }
+    }
+
+    #[test]
+    fn sort_order_serde_roundtrip() {
+        let order = SortOrder {
+            column: "timestamp".to_string(),
+            direction: SortDirection::Desc,
+        };
+        let toml = toml::to_string(&order).unwrap();
+        assert!(toml.contains("timestamp"));
+        assert!(toml.contains("desc"));
+        let parsed: SortOrder = toml::from_str(&toml).unwrap();
+        assert_eq!(parsed, order);
+    }
+
+    #[test]
+    fn sort_order_default_direction_is_asc() {
+        let toml_str = r#"column = "id""#;
+        let parsed: SortOrder = toml::from_str(toml_str).unwrap();
+        assert_eq!(parsed.direction, SortDirection::Asc);
+    }
+
+    #[test]
+    fn entity_sort_by_roundtrip() {
+        let entity = Entity {
+            name: "test".to_string(),
+            description: None,
+            tags: Vec::new(),
+            count: CountSpec::default(),
+            fields: Vec::new(),
+            constraints: Vec::new(),
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+            output: Some(OutputLayout {
+                path: None,
+                source_format: None,
+                partition_by: None,
+                partition_values: Vec::new(),
+            }),
+            stats: None,
+            scaling: None,
+            sort_by: Some(SortOrder {
+                column: "created_at".to_string(),
+                direction: SortDirection::Asc,
+            }),
+        };
+        let toml = toml::to_string(&entity).unwrap();
+        assert!(toml.contains("[sort_by]"));
+        assert!(toml.contains("created_at"));
+        let parsed: Entity = toml::from_str(&toml).unwrap();
+        assert_eq!(parsed.sort_by, entity.sort_by);
     }
 }

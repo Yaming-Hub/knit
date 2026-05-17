@@ -763,6 +763,7 @@ mod tests {
                 output: None,
                 stats: None,
                 scaling: None,
+                sort_by: None,
             }],
             ..DataModel::default()
         };
