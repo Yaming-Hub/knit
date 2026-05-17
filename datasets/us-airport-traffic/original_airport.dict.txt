@@ -1,0 +1,221 @@
+Chicago O'Hare International
+William B Hartsfield-Atlanta Intl
+Dallas-Fort Worth International
+Phoenix Sky Harbor International
+Denver Intl
+George Bush Intercontinental
+San Francisco International
+Los Angeles International
+Orlando International
+Charlotte/Douglas International
+Salt Lake City Intl
+Tampa International
+Newark Intl
+McCarran International
+Philadelphia Intl
+Minneapolis-St Paul Intl
+Seattle-Tacoma Intl
+LaGuardia
+Chicago Midway
+Washington Dulles International
+San Diego International-Lindbergh
+Lambert-St Louis International
+Detroit Metropolitan-Wayne County
+John F Kennedy Intl
+Miami International
+Gen Edw L Logan Intl
+Sacramento International
+Baltimore-Washington International
+John Wayne /Orange Co
+New Orleans International
+San Jose International
+Ronald Reagan Washington National
+Portland Intl
+Southwest Florida International
+Palm Beach International
+Raleigh-Durham International
+William P Hobby
+San Antonio International
+Fort Lauderdale-Hollywood Int'l
+Kansas City International
+Metropolitan Oakland International
+Pittsburgh International
+Memphis International
+General Mitchell International
+Cleveland-Hopkins Intl
+Jacksonville International
+Tucson International
+Indianapolis International
+Reno/Tahoe International
+Will Rogers World
+Theodore F Green State
+Tulsa International
+Cincinnati Northern Kentucky Intl
+Port Columbus Intl
+Louisville International-Standiford
+Ontario International
+Adams
+Dallas Love
+Eppley Airfield
+Norfolk International
+James M Cox Dayton Intl
+Greater Rochester Int'l
+Northwest Arkansas Regional
+Nashville International
+Albuquerque International
+Jackson International
+El Paso International
+Richmond International
+Bradley International
+Midland International
+Baton Rouge Metropolitan, Ryan
+McGhee-Tyson
+City of Colorado Springs Muni
+Pensacola Regional
+Syracuse-Hancock Intl
+Birmingham International
+Manchester
+Palm Springs International
+Sarasota Bradenton International
+Corpus Christi International
+Huntsville International
+Columbia Metropolitan
+Lafayette Regional
+Santa Barbara Municipal
+Spokane Intl
+Mobile Regional
+Wichita Mid-Continent
+Buffalo Niagara Intl
+Des Moines International
+Harrisburg Intl
+Portland International Jetport
+Montgomery Regional Apt
+Newport News/Williamsburg International
+Westchester Cty
+Monterey Peninsula
+Kent County International
+Florida Beach
+Yuma MCAS-Yuma International
+Aspen-Pitkin Co/Sardy
+Tallahassee Regional
+Gulfport-Biloxi Regional
+Rapid City Regional
+Long Beach (Daugherty )
+Wilmington International
+Blue Grass
+Dane County Regional
+Mahlon Sweet
+Savannah International
+Lubbock International
+Eastern Iowa
+Greenville-Spartanburg
+Piedmont Triad International
+Long Island - MacArthur
+Quad City
+Asheville Regional
+Akron-Canton Regional
+Central Illinois Regional
+Valley International
+Eglin Air Force Base
+Shreveport Regional
+Hector International
+Yampa Valley
+Rogue Valley International
+Greater Peoria Regional
+Laredo International
+Austin-Bergstrom International
+Abilene Regional
+Springfield-Branson Regional
+Bishop
+Tri-Cities Regional
+Robert Gray AAF
+Charleston AFB/International
+Austin Straubel International
+Roberts
+Columbus Metropolitan
+South Bend Regional
+Boise Air Terminal
+Myrtle Beach International
+Minot International
+University of Illinois-Willard
+Roanoke Regional/ Woodrum
+Eagle County Regional
+Jackson Hole
+Gallatin
+Walker
+Burbank-Glendale-Pasadena
+Evansville Regional
+Gunnison County
+Idaho Falls Regional
+Fresno Yosemite International
+Capital
+McAllen Miller International
+Redding Municipal
+Grand Forks International
+Joe Foss
+Joslin Field - Magic Valley
+Santa Maria Pub/Capt G Allan Hancock
+Pocatello Regional
+Dothan
+Albert J Ellis
+Montrose Regional
+Bismarck Municipal
+Natrona County Intl
+Cherry Capital
+Monroe Regional
+Tri-Cities
+Manhattan Regional
+Alexandria International
+North Bend Muni
+Santa Fe Municipal
+Klamath Falls International
+Stewart
+Charlottesville-Albermarle
+Valdosta Regional
+Central Wisconsin
+Inyokern
+Arcata
+Glynco Jetport
+Lincoln Municipal
+Fort Wayne International
+Yellowstone Regional
+Barkley Regional
+San Luis Obispo Co-McChesney
+Wilkes-Barre/Scranton Intl
+Golden Triangle Regional
+Gillette-Campbell County
+Craven County Regional
+Bush
+Fort Smith Regional
+Tyler Pounds
+Helena Regional
+Great Falls Intl
+Key
+Marquette County Airport
+Telluride Regional
+Lovell
+Lewiston-Nez Perce County
+Cedar City Muni
+Albany Cty
+Burlington International
+Glacier Park Intl
+Melbourne International
+Daytona Beach International
+Lehigh Valley International
+Duluth International
+Cheyenne
+Rock Springs-Sweetwater County
+Greenbrier Valley
+Yeager
+Bellingham Intl
+Mammoth Yosemite
+Outagamie County Regional
+Branson Airport
+St. Petersburg-Clearwater International
+Sheppard AFB/Wichita Falls Municipal
+Fayetteville Municipal
+Chippewa Valley Regional
+Dubuque Municipal
+Rochester International
+Tunica Municipal Airport
+Billings Logan Intl

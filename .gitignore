@@ -27,6 +27,7 @@ output/
 *.weave.toml
 !examples/*.knit.toml
 !examples/**/*.knit.toml
+!datasets/**/*.knit.toml
 e2e_test/
 test_full_e2e.toml
 

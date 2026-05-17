@@ -787,14 +787,24 @@ fn build_generator_inner(
 
     // Distribution
     if let Some(fit) = &col.distribution {
-        // For string sources with low-cardinality numeric content, prefer categorical
-        // to preserve exact source values (e.g., "1", "2", "3" stay as-is)
+        // For string sources with numeric content, prefer categorical or string handling
+        // to preserve exact source values (e.g., "1", "2", "3" stay as-is, "NA" stays "NA").
+        // Distribution generators produce numeric output incompatible with data_type string.
         let source_is_string = matches!(
             col.source_arrow_type,
             Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
         );
-        if source_is_string && col.categorical_weights.is_some() {
-            // Fall through to categorical handling below
+        if source_is_string {
+            // For high-cardinality string-source numeric columns without categorical weights,
+            // use faker("word") to produce string output instead of falling through to
+            // Sequence (which produces Int64, incompatible with data_type string).
+            if col.categorical_weights.is_none() {
+                return GeneratorSpec::Faker {
+                    method: "word".into(),
+                    args: vec![],
+                };
+            }
+            // Low-cardinality: fall through to categorical handling below
         } else {
             return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
         }
