@@ -795,7 +795,16 @@ fn build_generator_inner(
             Some(arrow::datatypes::DataType::Utf8) | Some(arrow::datatypes::DataType::LargeUtf8)
         );
         if source_is_string {
-            // Fall through to categorical/string handling below
+            // For high-cardinality string-source numeric columns without categorical weights,
+            // use faker("word") to produce string output instead of falling through to
+            // Sequence (which produces Int64, incompatible with data_type string).
+            if col.categorical_weights.is_none() {
+                return GeneratorSpec::Faker {
+                    method: "word".into(),
+                    args: vec![],
+                };
+            }
+            // Low-cardinality: fall through to categorical handling below
         } else {
             return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
         }

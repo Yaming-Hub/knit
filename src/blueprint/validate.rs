@@ -1413,14 +1413,22 @@ fn check_generator_type_compat(r#gen: &GeneratorSpec, data_type: &DataType) -> O
         GeneratorSpec::Faker { method, .. } => {
             // Most faker methods produce strings, but "date" produces Date32 values
             // and "datetime"/"timestamp" produce Timestamp values.
-            let compatible = match method.as_str() {
+            // Normalize dotted names (e.g., "provider.date" → "date") to match
+            // the same logic used in FakerGenerator::new and validate_generator.
+            let base_method = method
+                .split_once('.')
+                .map_or(method.as_str(), |(_, m)| m);
+            let compatible = match base_method {
                 "date" => matches!(
                     data_type,
                     DataType::Date | DataType::String
                 ),
                 "datetime" | "timestamp" => matches!(
                     data_type,
-                    DataType::Datetime | DataType::DatetimeUs | DataType::String
+                    DataType::Datetime
+                        | DataType::DatetimeUs
+                        | DataType::Datetimetz
+                        | DataType::String
                 ),
                 _ => *data_type == DataType::String,
             };
@@ -5841,6 +5849,66 @@ mod tests {
         assert!(errors.iter().any(|e| {
             matches!(e, BlueprintError::Validation { message, .. } if message.contains("is not compatible with data_type"))
         }));
+    }
+
+    #[test]
+    fn test_generator_type_compat_faker_datetime_on_datetimetz_accepted() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "ts".to_string(),
+            description: None,
+            data_type: DataType::Datetimetz,
+            generator: Some(GeneratorSpec::Faker {
+                method: "datetime".to_string(),
+                args: vec![],
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+            stats: None,
+            traits: None,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| matches!(
+                e,
+                BlueprintError::Validation { message, .. }
+                    if message.contains("is not compatible with data_type")
+            )),
+            "faker(datetime) should be accepted for data_type Datetimetz"
+        );
+    }
+
+    #[test]
+    fn test_generator_type_compat_dotted_faker_date_accepted() {
+        let mut model = minimal_model();
+        model.entities[0].fields.push(Field {
+            name: "dt".to_string(),
+            description: None,
+            data_type: DataType::Date,
+            generator: Some(GeneratorSpec::Faker {
+                method: "provider.date".to_string(),
+                args: vec![],
+            }),
+            nullable: NullSpec::Never,
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: vec![],
+            stats: None,
+            traits: None,
+        });
+        let errors = validate(&model);
+        assert!(
+            !errors.iter().any(|e| matches!(
+                e,
+                BlueprintError::Validation { message, .. }
+                    if message.contains("is not compatible with data_type")
+            )),
+            "faker(provider.date) should be accepted for data_type Date"
+        );
     }
 
     #[test]
