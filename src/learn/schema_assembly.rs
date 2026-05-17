@@ -55,6 +55,8 @@ pub struct TableAnalysis {
     pub source_format: Option<String>,
     /// Detected sort order of the source data.
     pub sort_order: Option<crate::core::SortOrder>,
+    /// Detected integrity constraints (range bounds, column ordering).
+    pub constraints: Vec<crate::core::Constraint>,
 }
 
 impl TableAnalysis {
@@ -75,6 +77,7 @@ impl TableAnalysis {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }
     }
 }
@@ -487,7 +490,7 @@ fn build_entity(
         tags: Vec::new(),
         count: CountSpec::Fixed(table.row_count),
         fields,
-        constraints: Vec::new(),
+        constraints: table.constraints.clone(),
         topology: None,
         actor: is_actor,
         persona_distribution: None,
@@ -1695,6 +1698,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1749,6 +1753,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1791,6 +1796,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1840,6 +1846,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1969,6 +1976,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2011,6 +2019,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2171,6 +2180,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2212,6 +2222,7 @@ mod tests {
             partition_values: Vec::new(),
             source_format: None,
             sort_order: None,
+            constraints: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
