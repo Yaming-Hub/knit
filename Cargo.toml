@@ -34,7 +34,7 @@ apache-avro = { version = "0.21", features = ["snappy"] }
 
 # Random / Math
 rand = "0.9"
-rand_chacha = "0.9"
+rand_chacha = "0.10"
 rand_distr = "0.5"
 statrs = "0.18"
 rustfft = "6"
