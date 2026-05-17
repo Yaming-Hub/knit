@@ -911,6 +911,10 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
             .first()
             .map(|b| b.schema())
             .ok_or_else(|| anyhow::anyhow!("file produced no data"))?;
+        let source_format = path
+            .extension()
+            .and_then(|s| s.to_str())
+            .map(|s| s.to_lowercase());
         Ok(vec![IngestionResult {
             entity,
             schema,
@@ -920,6 +924,7 @@ fn ingest_source(path: &Path, max_rows: Option<usize>) -> Result<Vec<IngestionRe
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format,
         }])
     }
 }
@@ -992,6 +997,7 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
     analysis.source_layout = table.source_layout.clone();
     analysis.partition_by = table.partition_by.clone();
     analysis.partition_values = table.partition_values.clone();
+    analysis.source_format = table.source_format.clone();
 
     let rel_profile = TableProfile {
         name: table.entity.clone(),

@@ -51,6 +51,8 @@ pub struct TableAnalysis {
     pub partition_by: Option<String>,
     /// Observed partition values with row proportions.
     pub partition_values: Vec<crate::core::PartitionValue>,
+    /// Source file format (e.g. `"json"`, `"csv"`, `"parquet"`).
+    pub source_format: Option<String>,
 }
 
 impl TableAnalysis {
@@ -69,6 +71,7 @@ impl TableAnalysis {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }
     }
 }
@@ -487,9 +490,13 @@ fn build_entity(
         persona_distribution: None,
         activity_count: None,
         mixin_refs: None,
-        output: if table.source_layout.is_some() || table.partition_by.is_some() {
+        output: if table.source_layout.is_some()
+            || table.partition_by.is_some()
+            || table.source_format.is_some()
+        {
             Some(crate::core::OutputLayout {
                 path: table.source_layout.clone(),
+                source_format: table.source_format.clone(),
                 partition_by: table.partition_by.clone(),
                 partition_values: table.partition_values.clone(),
             })
@@ -860,7 +867,7 @@ fn build_generator_inner(
 
     // Categorical
     if let Some(weights) = &col.categorical_weights {
-        // For numeric source types, produce integer-valued categoricals
+        // For numeric source types, produce typed categoricals
         let is_int_source = is_narrow_int_source(col)
             || matches!(
                 col.source_arrow_type,
@@ -870,6 +877,14 @@ fn build_generator_inner(
             );
         if is_int_source {
             return build_int_categorical_generator(weights);
+        }
+        let is_float_source = matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Float32)
+                | Some(arrow::datatypes::DataType::Float64)
+        );
+        if is_float_source {
+            return build_float_categorical_generator(weights);
         }
         return build_categorical_generator(weights);
     }
@@ -1055,6 +1070,24 @@ fn build_int_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
             let int_val = val.parse::<i64>().unwrap_or(0);
             WeightedChoice {
                 value: Value::Int(int_val),
+                weight: *w,
+            }
+        })
+        .collect();
+
+    GeneratorSpec::OneOf { choices }
+}
+
+/// Build a categorical generator that produces float values.
+/// Used when source column is a float type with few distinct values.
+fn build_float_categorical_generator(weights: &[(String, f64)]) -> GeneratorSpec {
+    let choices: Vec<WeightedChoice> = weights
+        .iter()
+        .take(200)
+        .map(|(val, w)| {
+            let float_val = val.parse::<f64>().unwrap_or(0.0);
+            WeightedChoice {
+                value: Value::Float(float_val),
                 weight: *w,
             }
         })
@@ -1388,6 +1421,14 @@ fn infer_data_type(
         ) {
             return crate::core::DataType::Int;
         }
+        // Float-sourced categoricals preserve Float type
+        if matches!(
+            col.source_arrow_type,
+            Some(arrow::datatypes::DataType::Float32)
+                | Some(arrow::datatypes::DataType::Float64)
+        ) {
+            return crate::core::DataType::Float;
+        }
         return crate::core::DataType::String;
     }
     // Fallback for numeric source types that didn't match any other pattern
@@ -1648,6 +1689,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1700,6 +1742,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1740,6 +1783,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1787,6 +1831,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
 
         let schema = assemble_schema(&tables);
@@ -1914,6 +1959,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -1954,6 +2000,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2112,6 +2159,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2151,6 +2199,7 @@ mod tests {
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format: None,
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
@@ -2963,5 +3012,75 @@ mod tests {
         assert_eq!(field_stats.distinct_count, Some(450));
         assert_eq!(field_stats.min, Some(10.0));
         assert_eq!(field_stats.max, Some(500.0));
+    }
+
+    #[test]
+    fn float_categorical_preserves_float_type() {
+        let weights = vec![
+            ("10.0".to_string(), 0.25),
+            ("8.0".to_string(), 0.25),
+            ("13.0".to_string(), 0.25),
+            ("9.0".to_string(), 0.25),
+        ];
+        let tables = vec![TableAnalysis::new(
+            "measurements".into(),
+            vec![ColumnAnalysis {
+                name: "x_val".into(),
+                categorical_weights: Some(weights),
+                source_arrow_type: Some(arrow::datatypes::DataType::Float64),
+                null_rate: 0.0,
+                empty_string_rate: 0.0,
+                confidence: 1.0,
+                ..ColumnAnalysis::new("x_val".into(), 0.0, 1.0)
+            }],
+            100,
+        )];
+        let model = assemble_data_model("test", &tables);
+        let field = &model.entities[0].fields[0];
+
+        // data_type should be Float, not String
+        assert_eq!(
+            field.data_type,
+            crate::core::DataType::Float,
+            "float-sourced categorical should preserve Float data_type"
+        );
+
+        // Generator should produce Float-valued OneOf choices
+        match &field.generator {
+            Some(GeneratorSpec::OneOf { choices }) => {
+                for c in choices {
+                    assert!(
+                        matches!(c.value, crate::core::Value::Float(_)),
+                        "expected Float value, got {:?}",
+                        c.value
+                    );
+                }
+            }
+            other => panic!("expected OneOf generator, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn source_format_recorded_in_output_layout() {
+        let mut table = TableAnalysis::new(
+            "data".into(),
+            vec![ColumnAnalysis {
+                name: "id".into(),
+                null_rate: 0.0,
+                empty_string_rate: 0.0,
+                confidence: 1.0,
+                ..ColumnAnalysis::new("id".into(), 0.0, 1.0)
+            }],
+            100,
+        );
+        table.source_format = Some("json".to_string());
+
+        let model = assemble_data_model("test", &[table]);
+        let entity = &model.entities[0];
+        let output = entity
+            .output
+            .as_ref()
+            .expect("entity should have output layout when source_format is set");
+        assert_eq!(output.source_format.as_deref(), Some("json"));
     }
 }

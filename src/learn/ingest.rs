@@ -412,6 +412,8 @@ pub struct IngestionResult {
     pub partition_by: Option<String>,
     /// Observed partition values with row proportions.
     pub partition_values: Vec<crate::core::PartitionValue>,
+    /// Source file format (e.g. `"json"`, `"csv"`, `"parquet"`).
+    pub source_format: Option<String>,
 }
 
 /// Truncate a list of record batches to at most `max_rows` total rows.
@@ -730,6 +732,13 @@ fn try_structured_ingest(
             Vec::new()
         };
 
+        // Detect source format from the first data file extension
+        let source_format = data_files.first().and_then(|f| {
+            f.extension()
+                .and_then(|e| e.to_str())
+                .map(|e| e.to_lowercase())
+        });
+
         results.push(IngestionResult {
             entity: entity_name,
             schema,
@@ -739,6 +748,7 @@ fn try_structured_ingest(
             source_layout,
             partition_by: partition_key,
             partition_values,
+            source_format,
         });
     }
 
@@ -887,6 +897,12 @@ fn ingest_directory_flat(dir: &Path, max_rows: Option<usize>) -> LearnResult<Vec
             continue;
         };
 
+        // Detect source format from file extension
+        let source_format = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e.to_lowercase());
+
         results.push(IngestionResult {
             entity,
             schema,
@@ -896,6 +912,7 @@ fn ingest_directory_flat(dir: &Path, max_rows: Option<usize>) -> LearnResult<Vec
             source_layout: None,
             partition_by: None,
             partition_values: Vec::new(),
+            source_format,
         });
     }
 
