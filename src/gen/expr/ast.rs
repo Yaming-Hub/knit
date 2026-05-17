@@ -252,4 +252,35 @@ mod tests {
         assert!(BinOp::Eq.binding_power().0 > BinOp::And.binding_power().0);
         assert!(BinOp::And.binding_power().0 > BinOp::Or.binding_power().0);
     }
+
+    #[test]
+    fn extract_field_refs_deduplicates() {
+        let expr = Expr::BinaryOp {
+            left: Box::new(Expr::FieldRef("price".into())),
+            op: BinOp::Add,
+            right: Box::new(Expr::FuncCall {
+                name: "coalesce".into(),
+                args: vec![
+                    Expr::FieldRef("price".into()),
+                    Expr::FieldRef("price".into()),
+                ],
+            }),
+        };
+
+        assert_eq!(extract_field_refs(&expr), vec!["price"]);
+    }
+
+    #[test]
+    fn binding_power_mul_gt_add() {
+        let (mul_left, mul_right) = BinOp::Mul.binding_power();
+        let (add_left, add_right) = BinOp::Add.binding_power();
+
+        assert!(mul_left > add_left);
+        assert!(mul_right > add_right);
+    }
+
+    #[test]
+    fn literal_null_display() {
+        assert_eq!(LiteralValue::Null.to_string(), "null");
+    }
 }

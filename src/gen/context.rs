@@ -72,3 +72,41 @@ impl<'a> GenContext<'a> {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_creates_context_with_expected_fields() {
+        let batch_columns = HashMap::new();
+        let ctx = GenContext::new(&batch_columns, 12, 2, 8, "users");
+
+        assert!(ctx.batch_columns.is_empty());
+        assert_eq!(ctx.row_offset, 12);
+        assert_eq!(ctx.partition_index, 2);
+        assert_eq!(ctx.partition_count, 8);
+        assert_eq!(ctx.entity_name, "users");
+        assert!(ctx.params.is_empty());
+    }
+
+    #[test]
+    fn with_params_overrides_default() {
+        let batch_columns = HashMap::new();
+        let params = HashMap::from([("region".to_string(), "emea".to_string())]);
+
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "accounts").with_params(&params);
+
+        assert_eq!(ctx.params.get("region"), Some(&"emea".to_string()));
+        assert!(!std::ptr::eq(ctx.params, &*EMPTY_PARAMS));
+    }
+
+    #[test]
+    fn default_params_is_empty() {
+        let batch_columns = HashMap::new();
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "accounts");
+
+        assert!(ctx.params.is_empty());
+        assert!(std::ptr::eq(ctx.params, &*EMPTY_PARAMS));
+    }
+}

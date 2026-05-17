@@ -274,4 +274,16 @@ mod tests {
         assert!(result_arr.is_null(3)); // source null → null
         assert!(!result_arr.is_null(4)); // source 500 → non-null
     }
+
+    #[test]
+    fn output_type_is_int64() {
+        let r#gen = GraphTargetFkGenerator::new(
+            Arc::new(make_adjacency()),
+            Arc::new(make_pk_to_index()),
+            make_key_store(),
+            "sender_id".to_string(),
+        );
+
+        assert_eq!(r#gen.output_type(), DataType::Int64);
+    }
 }

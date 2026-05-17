@@ -136,7 +136,17 @@ impl FieldGenerator for StructGenerator {
             .children
             .iter()
             .zip(self.field_names.iter())
-            .map(|(r#gen, name)| ArrowField::new(name, r#gen.output_type(), true))
+            .zip(self.post_process.iter())
+            .map(|((r#gen, name), pp)| {
+                // Use the post-processed type when coercion will change the
+                // child generator's raw Arrow type at generation time.
+                let arrow_type = match pp.data_type {
+                    crate::core::DataType::Bool => DataType::Boolean,
+                    crate::core::DataType::Int32 => DataType::Int32,
+                    _ => r#gen.output_type(),
+                };
+                ArrowField::new(name, arrow_type, true)
+            })
             .collect();
         DataType::Struct(fields.into())
     }
@@ -228,5 +238,109 @@ mod tests {
 
         let dt = r#gen.output_type();
         assert!(matches!(dt, DataType::Struct(_)));
+    }
+
+    #[test]
+    fn output_type_reflects_children() {
+        let r#gen = StructGenerator::new(
+            vec![
+                Box::new(SequenceGenerator::new(1, 1, None)),
+                Box::new(ConstantGenerator::new(crate::core::Value::Bool(true))),
+            ],
+            vec!["id".to_string(), "active".to_string()],
+            vec![
+                make_pp(None, crate::core::DataType::Int),
+                make_pp(None, crate::core::DataType::Bool),
+            ],
+        );
+
+        let DataType::Struct(fields) = r#gen.output_type() else {
+            panic!("expected struct output type");
+        };
+
+        assert_eq!(fields.len(), 2);
+        assert_eq!(fields[0].name(), "id");
+        assert_eq!(fields[0].data_type(), &DataType::Int64);
+        assert_eq!(fields[1].name(), "active");
+        assert_eq!(fields[1].data_type(), &DataType::Boolean);
+    }
+
+    #[test]
+    fn bool_coercion_path_converts_int64_values() {
+        let r#gen = StructGenerator::new(
+            vec![Box::new(SequenceGenerator::new(0, 1, None))],
+            vec!["flag".to_string()],
+            vec![make_pp(None, crate::core::DataType::Bool)],
+        );
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let batch_columns = HashMap::new();
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "test");
+        let result = r#gen.generate(&mut rng, 3, &ctx);
+        let struct_arr = result.as_any().downcast_ref::<StructArray>().unwrap();
+        let bools = struct_arr
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::BooleanArray>()
+            .unwrap();
+
+        assert!(!bools.value(0));
+        assert!(bools.value(1));
+        assert!(bools.value(2));
+    }
+
+    #[test]
+    fn int32_coercion_path_clamps_int64_values() {
+        let r#gen = StructGenerator::new(
+            vec![Box::new(SequenceGenerator::new(i32::MAX as i64 - 1, 1, None))],
+            vec!["score".to_string()],
+            vec![make_pp(None, crate::core::DataType::Int32)],
+        );
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let batch_columns = HashMap::new();
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "test");
+        let result = r#gen.generate(&mut rng, 3, &ctx);
+        let struct_arr = result.as_any().downcast_ref::<StructArray>().unwrap();
+        let ints = struct_arr
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::Int32Array>()
+            .unwrap();
+
+        assert_eq!(ints.value(0), i32::MAX - 1);
+        assert_eq!(ints.value(1), i32::MAX);
+        assert_eq!(ints.value(2), i32::MAX);
+    }
+
+    #[test]
+    fn output_type_reflects_coerced_types() {
+        // SequenceGenerator emits Int64, but post-process declares Bool and Int32.
+        // output_type() must reflect the coerced types, not the raw generator types.
+        let r#gen = StructGenerator::new(
+            vec![
+                Box::new(SequenceGenerator::new(0, 1, None)),
+                Box::new(SequenceGenerator::new(0, 1, None)),
+            ],
+            vec!["flag".to_string(), "score".to_string()],
+            vec![
+                make_pp(None, crate::core::DataType::Bool),
+                make_pp(None, crate::core::DataType::Int32),
+            ],
+        );
+
+        let DataType::Struct(fields) = r#gen.output_type() else {
+            panic!("expected struct output type");
+        };
+
+        assert_eq!(fields.len(), 2);
+        assert_eq!(
+            fields[0].data_type(),
+            &DataType::Boolean,
+            "Bool post-process should report Boolean, not Int64"
+        );
+        assert_eq!(
+            fields[1].data_type(),
+            &DataType::Int32,
+            "Int32 post-process should report Int32, not Int64"
+        );
     }
 }

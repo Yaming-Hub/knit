@@ -21,3 +21,33 @@ pub enum GenError {
     #[error("unsupported generator plan: {0}")]
     UnsupportedPlan(String),
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generation_error_display_formats_message() {
+        let err = GenError::Generation("missing dependency".to_string());
+
+        assert_eq!(err.to_string(), "generation error: missing dependency");
+    }
+
+    #[test]
+    fn arrow_error_display_formats_message() {
+        let err = GenError::from(arrow::error::ArrowError::InvalidArgumentError(
+            "bad column".to_string(),
+        ));
+        let message = err.to_string();
+
+        assert!(message.starts_with("arrow error: "));
+        assert!(message.contains("bad column"));
+    }
+
+    #[test]
+    fn unsupported_plan_display_formats_message() {
+        let err = GenError::UnsupportedPlan("Plugin".to_string());
+
+        assert_eq!(err.to_string(), "unsupported generator plan: Plugin");
+    }
+}
