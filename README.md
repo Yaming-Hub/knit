@@ -405,6 +405,65 @@ knit generate schema.knit.toml -o out/ --param domain=example.com
 
 Unresolved params stay as literal `${param.key}` in the output.
 
+### Dataset Scaling
+
+Scale a learned blueprint along discovered dimensions (actors, time, custom
+categories) to generate larger or smaller datasets while preserving
+statistical proportions:
+
+```bash
+# Analyze a blueprint to discover scaling dimensions
+knit scale schema.knit.toml --analyze
+
+# Scale to 10,000 actors (dependents scale proportionally)
+knit scale schema.knit.toml --actors 10000 -o ./scaled-data
+
+# Scale time range to 1 year of weekly data
+knit scale schema.knit.toml --time 52w --cadence 1w -o ./scaled-data
+
+# Combine scaling dimensions
+knit scale schema.knit.toml --actors 5000 --time 26w --count 2.0 -o ./scaled-data
+
+# Increase density for a specific entity without changing other dimensions
+knit scale schema.knit.toml --density orders=3.0 -o ./scaled-data
+```
+
+### Dataset Tokenization
+
+Replace sensitive string values with opaque tokens for safe data sharing.
+Preserves dataset structure, relationships, and statistical properties:
+
+```bash
+# Tokenize all string columns in a dataset
+knit tokenize ./data/ -o ./tokenized/
+
+# Only tokenize specific columns
+knit tokenize ./data/ -o ./tokenized/ --tokenize-columns email,name,phone
+
+# Also shift numeric and date values
+knit tokenize ./data/ -o ./tokenized/ --tokenize-numbers --tokenize-dates
+
+# Restore original data using the generated dictionary
+knit tokenize ./tokenized/ -o ./restored/ --restore --dictionary ./tokenized/.knit-tokens.json
+```
+
+### Model Enrichment
+
+Enrich a blueprint with statistical knowledge from reference data samples.
+Automatically maps columns between the reference data and blueprint entities,
+then updates generator parameters to match the reference distribution:
+
+```bash
+# Enrich a blueprint with reference data (auto-detect entity)
+knit enrich schema.knit.toml --ref reference.csv -o enriched.knit.toml
+
+# Enrich a specific entity with interactive confirmation
+knit enrich schema.knit.toml --ref sales.parquet --entity orders --interactive
+
+# Dry run to preview column mappings without modifying the blueprint
+knit enrich schema.knit.toml --ref reference.csv --dry-run
+```
+
 ## CLI Reference
 
 ```
@@ -412,29 +471,41 @@ knit [OPTIONS] <COMMAND>
 
 Commands:
   validate     Parse and validate a blueprint file
-  plan         Show execution plan (dry run)
-  generate     Generate synthetic data
-  blueprint    Blueprint manipulation (expand, normalize, diff)
-  init         Create a starter blueprint
-  learn        Infer blueprint from data
-  inspect      Inspect state files or blueprint summaries
-  generators   List available generator types
-  completions  Generate shell completions
+  plan         Show the execution plan without generating data
+  generate     Generate synthetic data from a blueprint
+  blueprint    Blueprint manipulation operations
+  init         Initialize a new knit project with a starter blueprint
+  learn        Infer a knit blueprint from existing data files or directories
+  inspect      Inspect a learning state file or blueprint file
+  generators   List available generator types with descriptions and examples
+  completions  Generate shell completion scripts
+  scale        Scale a learned blueprint along discovered dimensions
+  tokenize     Tokenize a dataset for safe sharing (replace strings with opaque tokens)
+  enrich       Enrich a model with statistical knowledge from reference samples
+  model        Model directory operations (convert, info)
 
 Global options:
-  --seed <N>            Override blueprint seed
-  --format <FMT>        Output format (parquet|csv|json|jsonl|arrow|avro|sql)
-  --compression <ALG>   Compression (none|snappy|gzip|lz4|zstd)
-  --parallel <N>        Worker threads (0 = auto)
-  --batch-size <N>      Rows per batch (default: 8192)
-  --count <N|Nx>        Override row count (absolute or multiplier, e.g. 100, 0.1x, 10x)
-  --param key=value     Override blueprint parameter (repeatable)
-  --json                Machine-readable JSON output
-  --dry-run             Validate and plan only
-  --no-noise            Skip noise injection
-  -q, --quiet           Suppress non-error output
-  -v, --verbose         Debug logging
-  --version             Show version
+  --seed <N>              Override blueprint seed
+  --format <FMT>          Output format (parquet|csv|json|jsonl|arrow|avro|sql)
+  --compression <ALG>     Compression (none|snappy|gzip|lz4|zstd)
+  --parallel <N>          Worker threads (0 = auto)
+  --batch-size <N>        Rows per batch (default: 8192)
+  --count <N|Nx>          Override row count (absolute or multiplier, e.g. 100, 0.1x, 10x)
+  --param key=value       Override blueprint parameter (repeatable)
+  --json                  Machine-readable JSON output
+  --dry-run               Validate and plan only
+  --no-noise              Skip noise injection
+  --sql-create-table      Include CREATE TABLE DDL in SQL output
+  --sql-transaction       Wrap SQL output in BEGIN/COMMIT transaction
+  --plugin <PATH>         Load a WASM generator plugin (repeatable)
+  --plugin-dir <DIR>      Load all .wasm plugins from a directory
+  --log-format <FMT>      Log format: text (default) or json
+  --log-file <PATH>       Write all log events to a file (JSON format)
+  --log-filter <FILTER>   Tracing filter directive (e.g. "learn=debug,gen=info")
+  --decision-report <PATH>  Write a JSON decision report capturing pipeline decisions
+  -q, --quiet             Suppress non-error output
+  -v, --verbose           Debug logging
+  --version               Show version
 
 Learn-specific options:
   --sample <N>          Limit rows per table (faster profiling on large data)
@@ -443,8 +514,43 @@ Learn-specific options:
   --strict              Error on reprocessing same source into same state (default: warn)
   --actors              Enable behavioral modeling (persona discovery, actor graphs)
 
+Scale-specific options:
+  --analyze             Show discovered dimensions without generating
+  --actors <N>          Target actor count (e.g. 100)
+  --time <SPEC>         Target time range (e.g. "52w", "6m", "2024-01-01..2025-12-31")
+  --dim name=count      Scale custom dimension (repeatable)
+  --count <N>           Additional uniform row multiplier (e.g. 2.0)
+  --cadence <SPEC>      Override detected time cadence (e.g. "7d", "1w")
+  --density Entity=N    Per-entity density multiplier (repeatable)
+
+Tokenize-specific options:
+  -o, --output <PATH>   Output directory (required)
+  --restore             Restore tokenized dataset to original using dictionary
+  --verify <PATH>       Verify tokenized dataset matches original structure
+  --dictionary <PATH>   Token dictionary path (default: <output>/.knit-tokens.json)
+  --tokenize-numbers    Also tokenize numeric values
+  --tokenize-dates      Also tokenize date/timestamp values
+  --tokenize-headers    Also tokenize column headers
+  --tokenize-paths      Also tokenize file and folder names
+  --tokenize-columns <COLS>   Only tokenize these columns (comma-separated)
+  --preserve-columns <COLS>   Tokenize all except these columns (comma-separated)
+  --preserve-partitions       Keep partition folder values as-is
+  --report              Generate a detailed tokenization report
+  --output-format <FMT> Convert output files to this format
+
+Enrich-specific options:
+  --ref <PATH>          Path to reference data file (CSV, Parquet, JSON)
+  --entity <NAME>       Only enrich this entity (default: auto-detect)
+  --min-confidence <N>  Minimum confidence for column mapping (0.0-1.0, default: 0.7)
+  --max-rows <N>        Maximum rows to read from reference
+  --interactive         Interactively confirm each column mapping
+
 Inspect options:
   --actors              Show behavioral summary (personas, relationships, generators)
+
+Model subcommands:
+  model convert         Convert between flat blueprint and structured model directory
+  model info            Show summary information about a model
 ```
 
 ## Contributing
