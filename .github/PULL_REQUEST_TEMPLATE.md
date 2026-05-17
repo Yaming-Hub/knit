@@ -8,13 +8,18 @@
 
 -
 
-## Testing
-
-<!-- How was this tested? -->
+## Checklist
 
 - [ ] `cargo test --locked --all-features` passes
 - [ ] `cargo clippy --locked --all-targets --all-features -- -D warnings` is clean
 - [ ] `cargo fmt --all -- --check` passes
+- [ ] `cargo deny --locked --all-features check` passes (if dependencies changed)
+- [ ] New public APIs have `///` doc comments
+- [ ] CHANGELOG.md updated (for user-facing changes)
+
+## Testing
+
+<!-- How was this tested? Include new tests, manual verification, etc. -->
 
 ## Related Issues
 

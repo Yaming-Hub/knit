@@ -64,6 +64,23 @@ cargo install cargo-llvm-cov
 cargo llvm-cov --all-features --html --open
 ```
 
+### Dependency Audit
+
+```bash
+cargo install cargo-deny
+cargo deny --locked --all-features check
+```
+
+### Benchmarks
+
+```bash
+# Compile benchmarks (CI does this to catch regressions)
+cargo bench --locked --all-features --no-run
+
+# Run benchmarks locally
+cargo bench --locked --all-features
+```
+
 ## Code Conventions
 
 - **Doc comments** — All public structs, enums, traits, and functions must have
