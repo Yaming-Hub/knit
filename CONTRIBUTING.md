@@ -54,6 +54,16 @@ cargo fmt --check   # CI verification
 cargo doc --all-features --no-deps --open
 ```
 
+### Coverage
+
+Coverage reports are generated in CI using `cargo-llvm-cov`. To run locally:
+
+```bash
+rustup component add llvm-tools-preview
+cargo install cargo-llvm-cov
+cargo llvm-cov --all-features --html --open
+```
+
 ## Code Conventions
 
 - **Doc comments** — All public structs, enums, traits, and functions must have

@@ -10,6 +10,8 @@ injection — all from a single CLI command.
 [![Rust](https://img.shields.io/badge/Rust-1.92%2B-orange)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![crates.io](https://img.shields.io/crates/v/knit.svg)](https://crates.io/crates/knit)
+[![CI](https://github.com/Yaming-Hub/knit/actions/workflows/ci.yml/badge.svg)](https://github.com/Yaming-Hub/knit/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Yaming-Hub/knit/graph/badge.svg)](https://codecov.io/gh/Yaming-Hub/knit)
 
 ---
 
