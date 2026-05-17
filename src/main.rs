@@ -2,7 +2,7 @@
 
 use clap::{CommandFactory, Parser};
 use colored::Colorize;
-use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, Registry, fmt, prelude::*};
 
 use knit::cli::commands::{
     blueprint, enrich, generate, generators, init, inspect, learn, model, plan, scale, tokenize,
@@ -104,8 +104,6 @@ fn main() -> anyhow::Result<()> {
     // The Cli struct (with 20+ blueprint subcommands) exceeds the default 1-2 MB stack.
     const STACK_SIZE: usize = 16 * 1024 * 1024; // 16 MB
 
-    
-
     std::thread::Builder::new()
         .stack_size(STACK_SIZE)
         .name("knit-main".to_string())
@@ -139,13 +137,15 @@ fn run() -> anyhow::Result<()> {
         cli.seed = config.seed;
     }
     if cli.parallel == 0
-        && let Some(p) = config.parallel {
-            cli.parallel = p;
-        }
+        && let Some(p) = config.parallel
+    {
+        cli.parallel = p;
+    }
     if cli.batch_size == 8192
-        && let Some(bs) = config.batch_size {
-            cli.batch_size = bs;
-        }
+        && let Some(bs) = config.batch_size
+    {
+        cli.batch_size = bs;
+    }
 
     let result: anyhow::Result<()> = match &cli.command {
         Command::Validate { blueprint } => validate::run(blueprint, &cli),

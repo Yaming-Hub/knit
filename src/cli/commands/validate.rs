@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use colored::Colorize;
 
 use super::{load_blueprint, validate_model};

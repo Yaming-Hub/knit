@@ -18,7 +18,7 @@ use std::io::Write;
 use arrow::array::{self, Array};
 use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
-use minijinja::{context, Environment, Value};
+use minijinja::{Environment, Value, context};
 use tracing::debug;
 
 use crate::bind::error::BindError;

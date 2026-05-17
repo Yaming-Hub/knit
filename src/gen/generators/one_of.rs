@@ -78,11 +78,7 @@ impl OneOfGenerator {
         let i = (u1 * n as f64) as usize;
         let i = i.min(n - 1);
         let u2 = next_f64(rng);
-        if u2 < self.prob[i] {
-            i
-        } else {
-            self.alias[i]
-        }
+        if u2 < self.prob[i] { i } else { self.alias[i] }
     }
 }
 

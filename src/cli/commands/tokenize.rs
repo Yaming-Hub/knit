@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use crate::tokenize::{self, TokenizeConfig, TokenizeResult};
 
@@ -152,9 +152,10 @@ fn run_tokenize(
 
     // Print text-format report separately (JSON report is merged into main output)
     if let Some(ref rpt) = report_data
-        && !json_output {
-            print!("{}", crate::tokenize::report::format_text(rpt));
-        }
+        && !json_output
+    {
+        print!("{}", crate::tokenize::report::format_text(rpt));
+    }
 
     Ok(())
 }
@@ -205,7 +206,7 @@ fn run_restore(
 }
 
 fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()> {
-    use crate::tokenize::scanner::{scan_directory, FileKind};
+    use crate::tokenize::scanner::{FileKind, scan_directory};
 
     if !tokenized.exists() {
         bail!("tokenized path does not exist: {}", tokenized.display());
@@ -247,14 +248,15 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
         let tok_path = tokenized.join(&orig.rel_path);
         if tok_path.exists()
             && let (Ok(o_count), Ok(t_count)) = (count_lines(&orig_path), count_lines(&tok_path))
-                && o_count != t_count {
-                    row_match = false;
-                    row_mismatches.push(serde_json::json!({
-                        "file": orig.rel_path.display().to_string(),
-                        "original": o_count,
-                        "tokenized": t_count,
-                    }));
-                }
+            && o_count != t_count
+        {
+            row_match = false;
+            row_mismatches.push(serde_json::json!({
+                "file": orig.rel_path.display().to_string(),
+                "original": o_count,
+                "tokenized": t_count,
+            }));
+        }
     }
 
     // Compare schema file sets by relative path

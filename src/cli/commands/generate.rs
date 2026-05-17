@@ -9,7 +9,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use arrow::array::ArrayRef;
 use arrow::datatypes::{DataType as ArrowDataType, Field as ArrowField, Schema};
 use arrow::record_batch::RecordBatch;
@@ -18,7 +18,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use crate::bind::{Compression, OutputFormat, Sink, SinkConfig};
 use crate::core::{CountSpec, DataModel, NoiseProfile};
-use crate::r#gen::{generate_graph, ActorPool, GenerationEngine};
+use crate::r#gen::{ActorPool, GenerationEngine, generate_graph};
 use crate::noise::{ColumnFilter, PerturbConfig, Pipeline};
 use crate::plan::ExecutionPlan;
 
@@ -350,25 +350,26 @@ pub fn run_from_model(
     for entity in &model.entities {
         if let Some(output) = &entity.output
             && let Some(partition_key) = &output.partition_by
-                && !output.partition_values.is_empty() {
-                    let mut cumulative = 0.0;
-                    let values: Vec<(String, f64)> = output
-                        .partition_values
-                        .iter()
-                        .map(|pv| {
-                            cumulative += pv.weight;
-                            (pv.value.clone(), cumulative)
-                        })
-                        .collect();
-                    partition_configs.insert(
-                        entity.name.clone(),
-                        PartitionConfig {
-                            partition_key: partition_key.clone(),
-                            base_path: output.path.clone(),
-                            values,
-                        },
-                    );
-                }
+            && !output.partition_values.is_empty()
+        {
+            let mut cumulative = 0.0;
+            let values: Vec<(String, f64)> = output
+                .partition_values
+                .iter()
+                .map(|pv| {
+                    cumulative += pv.weight;
+                    (pv.value.clone(), cumulative)
+                })
+                .collect();
+            partition_configs.insert(
+                entity.name.clone(),
+                PartitionConfig {
+                    partition_key: partition_key.clone(),
+                    base_path: output.path.clone(),
+                    values,
+                },
+            );
+        }
     }
 
     // For partitioned entities, use separate sinks keyed by (entity, partition_value)
@@ -849,10 +850,10 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
         crate::core::DataType::Bool => return ArrowDataType::Boolean,
         crate::core::DataType::Int32 => return ArrowDataType::Int32,
         crate::core::DataType::Datetime => {
-            return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None)
+            return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None);
         }
         crate::core::DataType::DatetimeUs => {
-            return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None)
+            return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None);
         }
         crate::core::DataType::Array => {
             // Detect element type from OneOf choices if possible
@@ -940,9 +941,10 @@ fn detect_list_element_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
                             if n.is_f64() && !n.is_i64() && !n.is_u64() {
                                 is_float = true;
                             } else if let Some(v) = n.as_i64()
-                                && (v < i32::MIN as i64 || v > i32::MAX as i64) {
-                                    fits_i32 = false;
-                                }
+                                && (v < i32::MIN as i64 || v > i32::MAX as i64)
+                            {
+                                fits_i32 = false;
+                            }
                         }
                         serde_json::Value::Null => {}
                         _ => return ArrowDataType::Utf8,
@@ -972,19 +974,20 @@ fn detect_map_kv_types(fp: &crate::plan::FieldPlan) -> (ArrowDataType, ArrowData
                 _ => continue,
             };
             if let Ok(map) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&s)
-                && let Some(val) = map.values().next() {
-                    let val_type = match val {
-                        serde_json::Value::Number(n) => {
-                            if n.is_i64() || n.is_u64() {
-                                ArrowDataType::Int32
-                            } else {
-                                ArrowDataType::Float64
-                            }
+                && let Some(val) = map.values().next()
+            {
+                let val_type = match val {
+                    serde_json::Value::Number(n) => {
+                        if n.is_i64() || n.is_u64() {
+                            ArrowDataType::Int32
+                        } else {
+                            ArrowDataType::Float64
                         }
-                        _ => ArrowDataType::Utf8,
-                    };
-                    return (ArrowDataType::Utf8, val_type);
-                }
+                    }
+                    _ => ArrowDataType::Utf8,
+                };
+                return (ArrowDataType::Utf8, val_type);
+            }
         }
     }
     (ArrowDataType::Utf8, ArrowDataType::Utf8)
@@ -997,8 +1000,8 @@ fn string_to_list_array(
     element_field_name: &str,
 ) -> Option<ArrayRef> {
     use arrow::array::{
-        as_string_array, Array, GenericListArray, Int32Builder, Int64Builder, ListBuilder,
-        StringBuilder,
+        Array, GenericListArray, Int32Builder, Int64Builder, ListBuilder, StringBuilder,
+        as_string_array,
     };
 
     // Only attempt conversion if source column is actually a string array
@@ -1110,7 +1113,7 @@ fn string_to_map_array(
     value_type: &ArrowDataType,
     field_names: Option<arrow::array::MapFieldNames>,
 ) -> Option<ArrayRef> {
-    use arrow::array::{as_string_array, Array, Int32Builder, MapBuilder, StringBuilder};
+    use arrow::array::{Array, Int32Builder, MapBuilder, StringBuilder, as_string_array};
 
     // Only attempt conversion if source column is actually a string array
     if !matches!(
@@ -2093,13 +2096,13 @@ fn resolve_lookup_in_generator(
                 if let (Ok(canonical_dir), Ok(canonical_file)) = (
                     std::fs::canonicalize(schema_dir),
                     std::fs::canonicalize(&full_path),
-                )
-                    && !canonical_file.starts_with(&canonical_dir) {
-                        bail!(
-                            "external lookup source '{}' resolves outside schema directory",
-                            file_path
-                        );
-                    }
+                ) && !canonical_file.starts_with(&canonical_dir)
+                {
+                    bail!(
+                        "external lookup source '{}' resolves outside schema directory",
+                        file_path
+                    );
+                }
                 // If canonicalize fails (e.g. file doesn't exist), the open call
                 // below will produce a clear error message.
                 let wc = weight_column.take();

@@ -515,9 +515,11 @@ mod tests {
 
         let candidates = detect_candidates(&columns, &[]);
         assert!(!candidates.is_empty());
-        assert!(candidates
-            .iter()
-            .any(|c| c.from_column == "user_id" && c.to_table == "users"));
+        assert!(
+            candidates
+                .iter()
+                .any(|c| c.from_column == "user_id" && c.to_table == "users")
+        );
     }
 
     #[test]

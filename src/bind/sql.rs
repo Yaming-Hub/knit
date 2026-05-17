@@ -234,7 +234,12 @@ fn arrow_type_to_sql(dt: &DataType) -> &'static str {
 }
 
 /// Format a single cell value as a SQL literal, appending to `buf`.
-fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -> Result<(), BindError> {
+fn format_value(
+    buf: &mut String,
+    array: &ArrayRef,
+    row: usize,
+    dt: &DataType,
+) -> Result<(), BindError> {
     if array.is_null(row) {
         buf.push_str("NULL");
         return Ok(());
@@ -320,19 +325,29 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -
         DataType::Timestamp(unit, _tz) => {
             let v = match unit {
                 TimeUnit::Second => {
-                    let arr = downcast_array::<TimestampSecondArray>(array, "TimestampSecondArray")?;
+                    let arr =
+                        downcast_array::<TimestampSecondArray>(array, "TimestampSecondArray")?;
                     chrono::DateTime::from_timestamp(arr.value(row), 0)
                 }
                 TimeUnit::Millisecond => {
-                    let arr = downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
+                    let arr = downcast_array::<TimestampMillisecondArray>(
+                        array,
+                        "TimestampMillisecondArray",
+                    )?;
                     chrono::DateTime::from_timestamp_millis(arr.value(row))
                 }
                 TimeUnit::Microsecond => {
-                    let arr = downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
+                    let arr = downcast_array::<TimestampMicrosecondArray>(
+                        array,
+                        "TimestampMicrosecondArray",
+                    )?;
                     chrono::DateTime::from_timestamp_micros(arr.value(row))
                 }
                 TimeUnit::Nanosecond => {
-                    let arr = downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
+                    let arr = downcast_array::<TimestampNanosecondArray>(
+                        array,
+                        "TimestampNanosecondArray",
+                    )?;
                     let nanos = arr.value(row);
                     let secs = nanos.div_euclid(1_000_000_000);
                     let sub_nanos = nanos.rem_euclid(1_000_000_000) as u32;
@@ -348,9 +363,14 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -
         }
         DataType::Time32(unit) => {
             let secs = match unit {
-                TimeUnit::Second => downcast_array::<Time32SecondArray>(array, "Time32SecondArray")?.value(row) as i64,
+                TimeUnit::Second => {
+                    downcast_array::<Time32SecondArray>(array, "Time32SecondArray")?.value(row)
+                        as i64
+                }
                 TimeUnit::Millisecond => {
-                    let ms = downcast_array::<Time32MillisecondArray>(array, "Time32MillisecondArray")?.value(row) as i64;
+                    let ms =
+                        downcast_array::<Time32MillisecondArray>(array, "Time32MillisecondArray")?
+                            .value(row) as i64;
                     ms / 1000
                 }
                 _ => 0,
@@ -363,9 +383,14 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -
         }
         DataType::Time64(unit) => {
             let micros = match unit {
-                TimeUnit::Microsecond => downcast_array::<Time64MicrosecondArray>(array, "Time64MicrosecondArray")?.value(row),
+                TimeUnit::Microsecond => {
+                    downcast_array::<Time64MicrosecondArray>(array, "Time64MicrosecondArray")?
+                        .value(row)
+                }
                 TimeUnit::Nanosecond => {
-                    downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?.value(row) / 1000
+                    downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?
+                        .value(row)
+                        / 1000
                 }
                 _ => 0,
             };
@@ -386,7 +411,8 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -
             write_hex_string(buf, v);
         }
         DataType::FixedSizeBinary(_) => {
-            let v = downcast_array::<FixedSizeBinaryArray>(array, "FixedSizeBinaryArray")?.value(row);
+            let v =
+                downcast_array::<FixedSizeBinaryArray>(array, "FixedSizeBinaryArray")?.value(row);
             write_hex_string(buf, v);
         }
         DataType::Decimal128(_, scale) => {
@@ -400,8 +426,15 @@ fn format_value(buf: &mut String, array: &ArrayRef, row: usize, dt: &DataType) -
                 let abs_v = v.unsigned_abs();
                 let integer = abs_v / divisor as u128;
                 let frac = abs_v % divisor as u128;
-                write!(buf, "{}{}.{:0>width$}", sign, integer, frac, width = s as usize)
-                    .expect("writing SQL literal into a String should not fail");
+                write!(
+                    buf,
+                    "{}{}.{:0>width$}",
+                    sign,
+                    integer,
+                    frac,
+                    width = s as usize
+                )
+                .expect("writing SQL literal into a String should not fail");
             }
         }
         DataType::Decimal256(_, _) => {
@@ -478,18 +511,20 @@ fn array_value_to_json(array: &ArrayRef, row: usize) -> String {
     if let Ok(batch) = RecordBatch::try_new(schema, vec![col]) {
         let mut buf = Vec::new();
         let mut writer = LineDelimitedWriter::new(&mut buf);
-        if writer.write(&batch).is_ok() && writer.finish().is_ok()
-            && let Ok(s) = String::from_utf8(buf) {
-                // Output is {"v": <value>}\n — extract the value part
-                let s = s.trim();
-                if let Some(start) = s.find(':') {
-                    let val = s[start + 1..].trim();
-                    // Strip trailing }
-                    if let Some(val) = val.strip_suffix('}') {
-                        return val.trim().to_string();
-                    }
+        if writer.write(&batch).is_ok()
+            && writer.finish().is_ok()
+            && let Ok(s) = String::from_utf8(buf)
+        {
+            // Output is {"v": <value>}\n — extract the value part
+            let s = s.trim();
+            if let Some(start) = s.find(':') {
+                let val = s[start + 1..].trim();
+                // Strip trailing }
+                if let Some(val) = val.strip_suffix('}') {
+                    return val.trim().to_string();
                 }
             }
+        }
     }
     "NULL".to_string()
 }

@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::tokenize::mapper::TokenMapper;
-use crate::tokenize::{scanner, TokenizeConfig};
+use crate::tokenize::{TokenizeConfig, scanner};
 
 /// The token dictionary file format.
 #[derive(Debug, Serialize, Deserialize)]

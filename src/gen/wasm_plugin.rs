@@ -315,9 +315,9 @@ impl Drop for WasmFieldGenerator {
             && let Ok(destroy_fn) = self
                 .instance
                 .get_typed_func::<(i32,), ()>(&mut *store, "knit_destroy")
-            {
-                let _ = destroy_fn.call(&mut *store, (self.handle,));
-            }
+        {
+            let _ = destroy_fn.call(&mut *store, (self.handle,));
+        }
     }
 }
 

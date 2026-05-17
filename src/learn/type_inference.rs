@@ -146,9 +146,8 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
     }
 
     // Try UUID
-    let uuid_re =
-        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-            .expect("UUID regex must compile");
+    let uuid_re = Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+        .expect("UUID regex must compile");
     let uuid_count = non_null.iter().filter(|v| uuid_re.is_match(v)).count();
     if uuid_count as f64 / total >= 0.95 {
         return TypeInference {
@@ -161,14 +160,15 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
 
     // Try date
     if let Some((fmt, rate)) = detect_date_format(&non_null)
-        && rate >= 0.90 {
-            return TypeInference {
-                inferred_type: InferredType::Date(fmt.clone()),
-                confidence: rate,
-                patterns,
-                date_format: Some(fmt),
-            };
-        }
+        && rate >= 0.90
+    {
+        return TypeInference {
+            inferred_type: InferredType::Date(fmt.clone()),
+            confidence: rate,
+            patterns,
+            date_format: Some(fmt),
+        };
+    }
 
     // Check categorical (low cardinality), but only if no strong semantic pattern was detected.
     // Only high-specificity patterns (Email, UUID, URL, HexString, Date) gate out categorical.
@@ -282,16 +282,14 @@ fn detect_patterns(values: &[&str]) -> HashMap<StringPattern, f64> {
 
     let email_re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         .expect("email regex must compile");
-    let phone_re = Regex::new(r"^\+?\d[\d\s\-\(\)]{6,14}$")
-        .expect("phone regex must compile");
-    let uuid_re =
-        Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-            .expect("UUID regex must compile");
+    let phone_re = Regex::new(r"^\+?\d[\d\s\-\(\)]{6,14}$").expect("phone regex must compile");
+    let uuid_re = Regex::new(r"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+        .expect("UUID regex must compile");
     let url_re = Regex::new(r"^https?://[^\s]+$").expect("URL regex must compile");
     let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}").expect("date regex must compile");
     // Name pattern: 2-4 capitalized words (e.g., "John Smith", "Mary Jane Watson")
-    let name_re = Regex::new(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$")
-        .expect("name regex must compile");
+    let name_re =
+        Regex::new(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$").expect("name regex must compile");
 
     let checks: Vec<(StringPattern, &Regex)> = vec![
         (StringPattern::Email, &email_re),

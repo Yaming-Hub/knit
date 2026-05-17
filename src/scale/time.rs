@@ -182,10 +182,8 @@ fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono:
                 let total = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
                 let y = total / 12;
                 let m = (total % 12) as u32 + 1;
-                Ok(
-                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
-                        .expect("days_in_month must produce a valid month-end date"),
-                )
+                Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
+                    .expect("days_in_month must produce a valid month-end date"))
             } else {
                 Ok(add_months_anchored(base, months, base.day()))
             }
@@ -198,10 +196,8 @@ fn apply_duration(base: chrono::NaiveDate, spec: &str) -> anyhow::Result<chrono:
                 let total = base.year() * 12 + (base.month() as i32 - 1) + months as i32;
                 let y = total / 12;
                 let m = (total % 12) as u32 + 1;
-                Ok(
-                    chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
-                        .expect("days_in_month must produce a valid year-end date"),
-                )
+                Ok(chrono::NaiveDate::from_ymd_opt(y, m, days_in_month(y, m))
+                    .expect("days_in_month must produce a valid year-end date"))
             } else {
                 Ok(add_months_anchored(base, months, base.day()))
             }

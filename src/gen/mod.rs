@@ -43,13 +43,13 @@ pub use error::GenError;
 pub use generators::create_generator;
 pub use generators::fk::ForeignKeyGenerator;
 pub use generators::string_fk::StringForeignKeyGenerator;
-pub use graph::{generate_graph, Edge, GeneratedGraph};
+pub use graph::{Edge, GeneratedGraph, generate_graph};
 pub use interaction::{
-    generate_interactions, InteractionConfig, InteractionGenerator, InteractionRecord,
+    InteractionConfig, InteractionGenerator, InteractionRecord, generate_interactions,
 };
 pub use keystore::InMemoryKeyStore;
 pub use null_mask::apply_null_mask;
-pub use plugin::{registry, GeneratorPlugin, Registry};
+pub use plugin::{GeneratorPlugin, Registry, registry};
 pub use sampled_key_store::SampledKeyStore;
 pub use string_keystore::InMemoryStringKeyStore;
 pub use traits::{FieldGenerator, KeyStore, StringKeyStore};

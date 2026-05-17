@@ -285,9 +285,11 @@ mod tests {
         // Each gets its own namespace
         assert_eq!(registry.namespaces.len(), 2);
         // Should warn about potential missed unification
-        assert!(registry
-            .warnings
-            .iter()
-            .any(|w| w.contains("appears in 2 entities")));
+        assert!(
+            registry
+                .warnings
+                .iter()
+                .any(|w| w.contains("appears in 2 entities"))
+        );
     }
 }

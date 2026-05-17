@@ -224,7 +224,11 @@ fn csv_round_trip_preserves_header_row_count_and_values() {
             (row.get(1).unwrap().parse::<f64>().unwrap() - expected[index].score).abs() < 1e-12,
             "CSV score mismatch at row {index}"
         );
-        assert_eq!(row.get(2).unwrap(), expected[index].label, "CSV label mismatch at row {index}");
+        assert_eq!(
+            row.get(2).unwrap(),
+            expected[index].label,
+            "CSV label mismatch at row {index}"
+        );
         assert_eq!(
             row.get(3).unwrap().parse::<bool>().unwrap(),
             expected[index].active,
@@ -254,10 +258,25 @@ fn json_round_trip_produces_valid_json_with_expected_records() {
             row.keys().map(String::as_str).collect::<Vec<_>>(),
             vec!["id", "score", "label", "active"]
         );
-        assert_eq!(row["id"].as_i64().unwrap(), expected[index].id, "JSON id mismatch at row {index}");
-        assert!((row["score"].as_f64().unwrap() - expected[index].score).abs() < 1e-12, "JSON score mismatch at row {index}");
-        assert_eq!(row["label"].as_str().unwrap(), expected[index].label, "JSON label mismatch at row {index}");
-        assert_eq!(row["active"].as_bool().unwrap(), expected[index].active, "JSON active mismatch at row {index}");
+        assert_eq!(
+            row["id"].as_i64().unwrap(),
+            expected[index].id,
+            "JSON id mismatch at row {index}"
+        );
+        assert!(
+            (row["score"].as_f64().unwrap() - expected[index].score).abs() < 1e-12,
+            "JSON score mismatch at row {index}"
+        );
+        assert_eq!(
+            row["label"].as_str().unwrap(),
+            expected[index].label,
+            "JSON label mismatch at row {index}"
+        );
+        assert_eq!(
+            row["active"].as_bool().unwrap(),
+            expected[index].active,
+            "JSON active mismatch at row {index}"
+        );
     }
 }
 
@@ -281,9 +300,24 @@ fn jsonl_round_trip_produces_valid_json_lines_with_expected_records() {
         let row = lines[index]
             .as_object()
             .expect("JSONL row should be an object");
-        assert_eq!(row["id"].as_i64().unwrap(), expected[index].id, "JSONL id mismatch at row {index}");
-        assert!((row["score"].as_f64().unwrap() - expected[index].score).abs() < 1e-12, "JSONL score mismatch at row {index}");
-        assert_eq!(row["label"].as_str().unwrap(), expected[index].label, "JSONL label mismatch at row {index}");
-        assert_eq!(row["active"].as_bool().unwrap(), expected[index].active, "JSONL active mismatch at row {index}");
+        assert_eq!(
+            row["id"].as_i64().unwrap(),
+            expected[index].id,
+            "JSONL id mismatch at row {index}"
+        );
+        assert!(
+            (row["score"].as_f64().unwrap() - expected[index].score).abs() < 1e-12,
+            "JSONL score mismatch at row {index}"
+        );
+        assert_eq!(
+            row["label"].as_str().unwrap(),
+            expected[index].label,
+            "JSONL label mismatch at row {index}"
+        );
+        assert_eq!(
+            row["active"].as_bool().unwrap(),
+            expected[index].active,
+            "JSONL active mismatch at row {index}"
+        );
     }
 }

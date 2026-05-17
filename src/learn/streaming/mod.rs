@@ -25,8 +25,8 @@ mod topk;
 pub use hll::HyperLogLog;
 pub use numeric::NumericState;
 pub use relationships::{
-    detect_candidates, finalize_relationships, FinalizedRelationship, IncrementalRelColumn,
-    PairwiseCorrelation, RelKind, RelationshipEvidence,
+    FinalizedRelationship, IncrementalRelColumn, PairwiseCorrelation, RelKind,
+    RelationshipEvidence, detect_candidates, finalize_relationships,
 };
 pub use reservoir::ReservoirSample;
 pub use state::{ChunkRecord, ColumnDataType, ColumnState, LearnState, StateError, TableState};

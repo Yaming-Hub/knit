@@ -7,7 +7,7 @@
 use std::fs;
 use std::path::Path;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use colored::Colorize;
 
 /// Run the `knit init` command.
@@ -39,9 +39,10 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
 
     // Create parent directories if needed
     if let Some(parent) = dest.parent()
-        && !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent)?;
-        }
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
+    }
 
     let mut sidecar_count = 0;
 

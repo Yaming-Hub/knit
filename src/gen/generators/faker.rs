@@ -7,8 +7,8 @@
 //! Determinism is guaranteed for a given [`RngCore`] state so that the same
 //! seed reproduces identical datasets across runs.
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use arrow::array::{ArrayRef, Date32Array, StringArray, TimestampNanosecondArray};
 use arrow::datatypes::{DataType, TimeUnit};

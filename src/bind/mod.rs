@@ -23,7 +23,7 @@ pub mod traits;
 
 pub use avro::AvroCodec;
 pub use error::BindError;
-pub use factory::{create_sink, OutputFormat, SinkConfig};
+pub use factory::{OutputFormat, SinkConfig, create_sink};
 pub use json::MissingFieldSpec;
 pub use parquet::Compression;
 pub use sql::SqlConfig;

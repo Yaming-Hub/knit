@@ -21,8 +21,8 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array, Int64Builder};
 use arrow::datatypes::DataType;
-use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
+use rand::distr::{Distribution, Uniform};
 use rand_distr::Poisson;
 
 use crate::r#gen::context::GenContext;

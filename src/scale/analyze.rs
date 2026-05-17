@@ -198,18 +198,19 @@ fn recover_custom_values(
     field_name: &str,
 ) -> Vec<(String, f64)> {
     if let Some(field) = entity.fields.iter().find(|f| f.name == field_name)
-        && let Some(GeneratorSpec::OneOf { ref choices }) = field.generator {
-            return choices
-                .iter()
-                .map(|c| {
-                    let v = match &c.value {
-                        crate::core::Value::String(s) => s.clone(),
-                        other => format!("{:?}", other),
-                    };
-                    (v, c.weight)
-                })
-                .collect();
-        }
+        && let Some(GeneratorSpec::OneOf { ref choices }) = field.generator
+    {
+        return choices
+            .iter()
+            .map(|c| {
+                let v = match &c.value {
+                    crate::core::Value::String(s) => s.clone(),
+                    other => format!("{:?}", other),
+                };
+                (v, c.weight)
+            })
+            .collect();
+    }
     vec![]
 }
 
@@ -298,16 +299,17 @@ fn detect_actor(
     }
 
     if let Some((&root_name, &count)) = ref_counts.iter().max_by_key(|(_, c)| *c)
-        && count >= 1 {
-            let dependents = find_dependents(model, root_name, entity_counts);
-            let entity_count = entity_counts.get(root_name).copied().unwrap_or(1);
-            return Some(ActorDimension {
-                entity_name: root_name.to_string(),
-                current_count: entity_count,
-                dependents,
-                confidence: 0.6 + 0.1 * count.min(4) as f64,
-            });
-        }
+        && count >= 1
+    {
+        let dependents = find_dependents(model, root_name, entity_counts);
+        let entity_count = entity_counts.get(root_name).copied().unwrap_or(1);
+        return Some(ActorDimension {
+            entity_name: root_name.to_string(),
+            current_count: entity_count,
+            dependents,
+            confidence: 0.6 + 0.1 * count.min(4) as f64,
+        });
+    }
 
     None
 }
@@ -336,29 +338,30 @@ fn find_dependents(
 fn detect_time(model: &DataModel) -> Option<TimeDimension> {
     for entity in &model.entities {
         if let Some(ref output) = entity.output
-            && let Some(ref partition_field) = output.partition_by {
-                if output.partition_values.is_empty() {
-                    continue;
-                }
-
-                // Check if partition values look like dates
-                let values: Vec<String> = output
-                    .partition_values
-                    .iter()
-                    .map(|pv| pv.value.clone())
-                    .collect();
-
-                if values.iter().all(|v| is_date_like(v)) {
-                    let (cadence, confidence) = detect_cadence(&values);
-                    return Some(TimeDimension {
-                        entity_name: entity.name.clone(),
-                        partition_field: partition_field.clone(),
-                        partition_values: values,
-                        cadence,
-                        cadence_confidence: confidence,
-                    });
-                }
+            && let Some(ref partition_field) = output.partition_by
+        {
+            if output.partition_values.is_empty() {
+                continue;
             }
+
+            // Check if partition values look like dates
+            let values: Vec<String> = output
+                .partition_values
+                .iter()
+                .map(|pv| pv.value.clone())
+                .collect();
+
+            if values.iter().all(|v| is_date_like(v)) {
+                let (cadence, confidence) = detect_cadence(&values);
+                return Some(TimeDimension {
+                    entity_name: entity.name.clone(),
+                    partition_field: partition_field.clone(),
+                    partition_values: values,
+                    cadence,
+                    cadence_confidence: confidence,
+                });
+            }
+        }
     }
     None
 }
@@ -481,38 +484,40 @@ fn detect_custom_dimensions(
 
             // Check if this field uses OneOf with low cardinality
             if let Some(GeneratorSpec::OneOf { ref choices }) = field.generator
-                && choices.len() >= 2 && choices.len() <= 50 {
-                    let entity_count = entity_counts.get(&entity.name).copied().unwrap_or(1);
-                    let ratio = choices.len() as f64 / entity_count as f64;
-                    if ratio < 0.1 || choices.len() <= 20 {
-                        // Check if this field is used as a condition key
-                        let is_condition_key = entity.fields.iter().any(|f| {
-                            matches!(
-                                &f.generator,
-                                Some(GeneratorSpec::Conditional { field: cond_field, .. })
-                                if cond_field == &field.name
-                            )
-                        });
+                && choices.len() >= 2
+                && choices.len() <= 50
+            {
+                let entity_count = entity_counts.get(&entity.name).copied().unwrap_or(1);
+                let ratio = choices.len() as f64 / entity_count as f64;
+                if ratio < 0.1 || choices.len() <= 20 {
+                    // Check if this field is used as a condition key
+                    let is_condition_key = entity.fields.iter().any(|f| {
+                        matches!(
+                            &f.generator,
+                            Some(GeneratorSpec::Conditional { field: cond_field, .. })
+                            if cond_field == &field.name
+                        )
+                    });
 
-                        let values: Vec<(String, f64)> = choices
-                            .iter()
-                            .map(|c| {
-                                let v = match &c.value {
-                                    crate::core::Value::String(s) => s.clone(),
-                                    other => format!("{:?}", other),
-                                };
-                                (v, c.weight)
-                            })
-                            .collect();
+                    let values: Vec<(String, f64)> = choices
+                        .iter()
+                        .map(|c| {
+                            let v = match &c.value {
+                                crate::core::Value::String(s) => s.clone(),
+                                other => format!("{:?}", other),
+                            };
+                            (v, c.weight)
+                        })
+                        .collect();
 
-                        dimensions.push(CustomDimension {
-                            entity_name: entity.name.clone(),
-                            field_name: field.name.clone(),
-                            current_values: values,
-                            is_condition_key,
-                        });
-                    }
+                    dimensions.push(CustomDimension {
+                        entity_name: entity.name.clone(),
+                        field_name: field.name.clone(),
+                        current_values: values,
+                        is_condition_key,
+                    });
                 }
+            }
         }
     }
 

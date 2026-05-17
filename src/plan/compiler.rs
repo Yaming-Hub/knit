@@ -2047,20 +2047,26 @@ mod tests {
         assert_eq!(plan.phases.len(), 3, "should have 3 phases");
 
         // Phase 0: user (no deps)
-        assert!(plan.phases[0]
-            .entity_plans
-            .iter()
-            .any(|ep| ep.entity_name == "user"));
+        assert!(
+            plan.phases[0]
+                .entity_plans
+                .iter()
+                .any(|ep| ep.entity_name == "user")
+        );
         // Phase 1: order (depends on user)
-        assert!(plan.phases[1]
-            .entity_plans
-            .iter()
-            .any(|ep| ep.entity_name == "order"));
+        assert!(
+            plan.phases[1]
+                .entity_plans
+                .iter()
+                .any(|ep| ep.entity_name == "order")
+        );
         // Phase 2: line_item (depends on order)
-        assert!(plan.phases[2]
-            .entity_plans
-            .iter()
-            .any(|ep| ep.entity_name == "line_item"));
+        assert!(
+            plan.phases[2]
+                .entity_plans
+                .iter()
+                .any(|ep| ep.entity_name == "line_item")
+        );
     }
 
     #[test]

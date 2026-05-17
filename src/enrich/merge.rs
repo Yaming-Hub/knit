@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 
 use tracing::{debug, info, warn};
 
-use crate::core::types::*;
 use crate::core::Field;
+use crate::core::types::*;
 use crate::enrich::extract::FieldEnrichment;
 use crate::learn::fitting::Distribution;
 
@@ -151,22 +151,21 @@ fn merge_distribution(
         if let (Some(base_mean), Some(base_std)) = (
             spec.params.get("mean").copied(),
             spec.params.get("std_dev").copied(),
-        )
-            && let (Some(&ref_mean), Some(&ref_std)) =
-                (ref_params.get("mean"), ref_params.get("std_dev"))
-            {
-                let merged_mean = (base_weight * base_mean + ref_weight * ref_mean) / total;
-                // Combined variance includes between-mean variance
-                let base_var = base_std * base_std;
-                let ref_var = ref_std * ref_std;
-                let combined_var = (base_weight * (base_var + (base_mean - merged_mean).powi(2))
-                    + ref_weight * (ref_var + (ref_mean - merged_mean).powi(2)))
-                    / total;
-                spec.params.insert("mean".to_string(), merged_mean);
-                spec.params
-                    .insert("std_dev".to_string(), combined_var.sqrt());
-                updated = true;
-            }
+        ) && let (Some(&ref_mean), Some(&ref_std)) =
+            (ref_params.get("mean"), ref_params.get("std_dev"))
+        {
+            let merged_mean = (base_weight * base_mean + ref_weight * ref_mean) / total;
+            // Combined variance includes between-mean variance
+            let base_var = base_std * base_std;
+            let ref_var = ref_std * ref_std;
+            let combined_var = (base_weight * (base_var + (base_mean - merged_mean).powi(2))
+                + ref_weight * (ref_var + (ref_mean - merged_mean).powi(2)))
+                / total;
+            spec.params.insert("mean".to_string(), merged_mean);
+            spec.params
+                .insert("std_dev".to_string(), combined_var.sqrt());
+            updated = true;
+        }
     } else {
         for (key, ref_val) in &ref_params {
             if let Some(base_val) = spec.params.get_mut(key) {

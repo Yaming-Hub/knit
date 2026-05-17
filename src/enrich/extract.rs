@@ -5,7 +5,7 @@ use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 
-use crate::learn::fitting::{fit_categorical, fit_distribution, CategoricalFit, FitResult};
+use crate::learn::fitting::{CategoricalFit, FitResult, fit_categorical, fit_distribution};
 use crate::learn::profile::ColumnProfile;
 
 /// Extracted enrichment data for a single field.

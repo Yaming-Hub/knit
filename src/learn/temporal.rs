@@ -5,8 +5,8 @@
 //! and FFT, checks day-of-week / hour-of-day uniformity, and classifies
 //! temporal patterns.
 
-use rustfft::num_complex::Complex;
 use rustfft::FftPlanner;
+use rustfft::num_complex::Complex;
 use tracing::{debug, debug_span, warn};
 
 /// Classification of a temporal pattern.
@@ -131,33 +131,35 @@ pub fn detect_temporal_pattern(timestamps_secs: &[f64]) -> Option<TemporalPatter
 
     // Periodicity detection via FFT
     if let Some(period) = detect_period_fft(&deltas)
-        && period > 0.0 {
-            let schedule = classify_schedule(period);
-            if let Some(kind) = schedule {
-                return Some(TemporalPatternSpec {
-                    pattern: TemporalPattern::Schedule { kind: kind.clone() },
-                    generator_expr: format!("schedule({})", schedule_kind_str(&kind)),
-                    confidence: 0.7,
-                });
-            }
+        && period > 0.0
+    {
+        let schedule = classify_schedule(period);
+        if let Some(kind) = schedule {
             return Some(TemporalPatternSpec {
-                pattern: TemporalPattern::Periodic {
-                    period_secs: period,
-                },
-                generator_expr: format!("time_series(period={}s)", period.round()),
-                confidence: 0.6,
+                pattern: TemporalPattern::Schedule { kind: kind.clone() },
+                generator_expr: format!("schedule({})", schedule_kind_str(&kind)),
+                confidence: 0.7,
             });
         }
+        return Some(TemporalPatternSpec {
+            pattern: TemporalPattern::Periodic {
+                period_secs: period,
+            },
+            generator_expr: format!("time_series(period={}s)", period.round()),
+            confidence: 0.6,
+        });
+    }
 
     // Trend detection via linear regression on event rate
     if let Some(slope) = detect_trend(&ts)
-        && slope.abs() > 1e-12 {
-            return Some(TemporalPatternSpec {
-                pattern: TemporalPattern::Trending { slope },
-                generator_expr: format!("time_series(trend={})", slope),
-                confidence: 0.5,
-            });
-        }
+        && slope.abs() > 1e-12
+    {
+        return Some(TemporalPatternSpec {
+            pattern: TemporalPattern::Trending { slope },
+            generator_expr: format!("time_series(trend={})", slope),
+            confidence: 0.5,
+        });
+    }
 
     Some(TemporalPatternSpec {
         pattern: TemporalPattern::Irregular,
@@ -237,7 +239,10 @@ pub fn hour_of_day_distribution(timestamps_secs: &[f64]) -> HodDistribution {
 
 fn filter_sorted(ts: &[f64]) -> Vec<f64> {
     let mut v: Vec<f64> = ts.iter().copied().filter(|t| t.is_finite()).collect();
-    v.sort_by(|a, b| a.partial_cmp(b).expect("finite timestamps must have a total order"));
+    v.sort_by(|a, b| {
+        a.partial_cmp(b)
+            .expect("finite timestamps must have a total order")
+    });
     v
 }
 

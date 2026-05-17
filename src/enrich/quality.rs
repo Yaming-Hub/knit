@@ -185,25 +185,27 @@ pub fn build_report(field_scores: Vec<FieldQuality>) -> QualityReport {
             });
         }
         if let Some(fq) = f.fit_quality
-            && fq < 0.9 {
-                concerns.push(QualityConcern {
-                    severity: if fq < 0.7 { "high" } else { "medium" },
-                    field: f.field_name.clone(),
-                    message: format!(
-                        "distribution fit quality {:.0}% (KS={:.3})",
-                        fq * 100.0,
-                        1.0 - fq
-                    ),
-                });
-            }
+            && fq < 0.9
+        {
+            concerns.push(QualityConcern {
+                severity: if fq < 0.7 { "high" } else { "medium" },
+                field: f.field_name.clone(),
+                message: format!(
+                    "distribution fit quality {:.0}% (KS={:.3})",
+                    fq * 100.0,
+                    1.0 - fq
+                ),
+            });
+        }
         if let Some(pv) = f.p_value
-            && pv < 0.05 {
-                concerns.push(QualityConcern {
-                    severity: "high",
-                    field: f.field_name.clone(),
-                    message: format!("KS test rejects fit (p={:.4})", pv),
-                });
-            }
+            && pv < 0.05
+        {
+            concerns.push(QualityConcern {
+                severity: "high",
+                field: f.field_name.clone(),
+                message: format!("KS test rejects fit (p={:.4})", pv),
+            });
+        }
         if f.sample_size < 30 {
             concerns.push(QualityConcern {
                 severity: "medium",

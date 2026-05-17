@@ -16,8 +16,8 @@ use arrow::array::{
 };
 use arrow::datatypes::DataType;
 use chrono::{Datelike, NaiveDate, TimeZone, Utc};
-use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
+use rand::distr::{Distribution, Uniform};
 use rand_distr::Normal;
 
 use crate::r#gen::context::GenContext;
@@ -554,11 +554,13 @@ impl BusinessHoursGenerator {
     fn resolve_tz(&self, row_idx: usize, ctx: &crate::r#gen::context::GenContext) -> chrono_tz::Tz {
         if let Some(ref tz_field) = self.timezone_field
             && let Some(col) = ctx.batch_columns.get(tz_field)
-                && let Some(arr) = col.as_any().downcast_ref::<arrow::array::StringArray>()
-                    && row_idx < arr.len() && !arr.is_null(row_idx)
-                        && let Ok(tz) = arr.value(row_idx).parse::<chrono_tz::Tz>() {
-                            return tz;
-                        }
+            && let Some(arr) = col.as_any().downcast_ref::<arrow::array::StringArray>()
+            && row_idx < arr.len()
+            && !arr.is_null(row_idx)
+            && let Ok(tz) = arr.value(row_idx).parse::<chrono_tz::Tz>()
+        {
+            return tz;
+        }
         self.timezone.unwrap_or(chrono_tz::UTC)
     }
 }
@@ -604,7 +606,8 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .unwrap_or_else(|| {
                         // Nonexistent (DST spring-forward): try +1h
                         tz.from_local_datetime(
-                            &date.and_hms_opt((sh as u32 + 1).min(23), 0, 0)
+                            &date
+                                .and_hms_opt((sh as u32 + 1).min(23), 0, 0)
                                 .expect("DST fallback hour is clamped to 0–23"),
                         )
                         .earliest()
@@ -622,7 +625,8 @@ impl FieldGenerator for BusinessHoursGenerator {
                     .earliest()
                     .unwrap_or_else(|| {
                         tz.from_local_datetime(
-                            &date.and_hms_opt((eh as u32).min(23), 0, 0)
+                            &date
+                                .and_hms_opt((eh as u32).min(23), 0, 0)
                                 .expect("DST fallback hour is clamped to 0–23"),
                         )
                         .earliest()
@@ -653,7 +657,10 @@ impl FieldGenerator for BusinessHoursGenerator {
         let mut search_count: i64 = 0;
         while skip > 0 {
             if search_count > max_search_days + skip {
-                tracing::warn!("BusinessHoursGenerator: no valid days found after {} searches during offset skip", search_count);
+                tracing::warn!(
+                    "BusinessHoursGenerator: no valid days found after {} searches during offset skip",
+                    search_count
+                );
                 break;
             }
             let wd = day_cursor.weekday().num_days_from_monday();
@@ -680,7 +687,10 @@ impl FieldGenerator for BusinessHoursGenerator {
         let mut consecutive_invalid = 0i64;
         while generated < count {
             if consecutive_invalid > max_search_days {
-                tracing::warn!("BusinessHoursGenerator: no valid days found after {} consecutive searches, stopping generation", consecutive_invalid);
+                tracing::warn!(
+                    "BusinessHoursGenerator: no valid days found after {} consecutive searches, stopping generation",
+                    consecutive_invalid
+                );
                 break;
             }
 
@@ -1425,7 +1435,7 @@ mod tests {
         params.insert("start_hour".into(), 0.0);
         params.insert("end_hour".into(), 24.0);
         params.insert("days_mask".into(), 127.0); // all days
-                                                  // 2024-01-01 to 2024-01-05 (5 days)
+        // 2024-01-01 to 2024-01-05 (5 days)
         let min_ms = NaiveDate::from_ymd_opt(2024, 1, 1)
             .unwrap()
             .and_hms_opt(0, 0, 0)

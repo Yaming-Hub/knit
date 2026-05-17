@@ -2,12 +2,12 @@
 
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use colored::Colorize;
 
 use super::load_blueprint;
 use crate::cli::Cli;
-use crate::scale::{self, analyze, ScaleTargets};
+use crate::scale::{self, ScaleTargets, analyze};
 
 /// Run the `knit scale` command.
 #[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.
