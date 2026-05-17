@@ -553,6 +553,11 @@ Model subcommands:
   model info            Show summary information about a model
 ```
 
+## Benchmarks
+
+See [BENCHMARKS.md](BENCHMARKS.md) for generation pipeline performance
+baselines and instructions on running benchmarks locally.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions, coding
