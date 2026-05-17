@@ -1,7 +1,7 @@
 # Knit — Development Plan
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** Complete
 
 Each PR targets **< 2000 lines** of code changes (excluding generated files, test fixtures, and lockfiles). PRs follow the module dependency graph bottom-up and are designed to be independently reviewable and testable.
 

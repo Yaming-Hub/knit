@@ -1,0 +1,75 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for Knit
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please describe the problem you're
+        solving and the solution you'd like to see.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: >-
+        A clear description of the problem this feature would solve.
+        Example: "I'm always frustrated when …"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature Area
+      description: Which part of Knit does this feature relate to?
+      options:
+        - Blueprint language
+        - Generator (new or improved)
+        - Output format
+        - Noise injection
+        - CLI / UX
+        - Learn / reverse engineering
+        - Scale / tokenize / enrich
+        - Performance
+        - Documentation
+        - CI / tooling
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature or behavior you'd like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: blueprint-example
+    attributes:
+      label: Example Blueprint (if applicable)
+      description: >-
+        If the feature involves blueprint syntax, show what it might look like.
+        This will be automatically formatted as TOML.
+      render: toml
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, examples, or references.
+    validations:
+      required: false
