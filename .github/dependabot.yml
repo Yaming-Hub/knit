@@ -3,9 +3,9 @@ updates:
   - package-ecosystem: cargo
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     commit-message:
-      prefix: "deps"
+      prefix: "chore(deps)"
     labels:
       - dependencies
     open-pull-requests-limit: 5
@@ -13,9 +13,9 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     commit-message:
       prefix: "ci"
     labels:
       - ci
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
