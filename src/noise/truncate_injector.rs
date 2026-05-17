@@ -78,12 +78,12 @@ impl Perturbator for TruncateInjector {
                     // Need at least 2 chars to truncate
                     if char_count < 2
                         || !config.in_scope(i)
-                        || !rng.gen_bool(config.probability.clamp(0.0, 1.0))
+                        || !rng.random_bool(config.probability.clamp(0.0, 1.0))
                     {
                         return Some(s.to_string());
                     }
                     // Truncate to [1, char_count - 1] characters
-                    let new_len = rng.gen_range(1..char_count);
+                    let new_len = rng.random_range(1..char_count);
                     let truncated: String = s.chars().take(new_len).collect();
                     count += 1;
                     Some(truncated)

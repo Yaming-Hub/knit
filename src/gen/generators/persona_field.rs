@@ -219,7 +219,7 @@ mod tests {
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let result = gen.generate(&mut rng, 3, &ctx);
 
         let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -248,7 +248,7 @@ mod tests {
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let result = gen.generate(&mut rng, 3, &ctx);
 
         let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -274,7 +274,7 @@ mod tests {
         batch_columns.insert("user_id".to_string(), user_ids);
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let result = gen.generate(&mut rng, 2, &ctx);
 
         let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();

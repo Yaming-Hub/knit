@@ -72,7 +72,7 @@ fn inject_nulls(
     let len = array.len();
     let mut null_buf = vec![true; len];
     for (i, item) in null_buf.iter_mut().enumerate() {
-        if config.in_scope(i) && rng.gen::<f64>() < config.probability {
+        if config.in_scope(i) && rng.random::<f64>() < config.probability {
             *item = false;
         }
     }

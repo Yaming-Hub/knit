@@ -127,7 +127,7 @@ impl FieldGenerator for EventStreamGenerator {
                 // Always advance time (for thinning correctness).
                 state.last_timestamp_ms = candidate_ms;
 
-                if rng.gen::<f64>() < accept_prob {
+                if rng.random::<f64>() < accept_prob {
                     timestamps.push(candidate_ms);
                     generated += 1;
                 }

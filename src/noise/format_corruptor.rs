@@ -34,7 +34,7 @@ fn corrupt_format(s: &str, rng: &mut dyn RngCore) -> String {
     // Detect and corrupt common patterns
     if s.contains('@') && s.contains('.') {
         // Looks like an email — remove @ or domain dot
-        return match rng.gen_range(0u8..3) {
+        return match rng.random_range(0u8..3) {
             0 => s.replacen('@', "", 1),
             1 => s.replacen('.', "", 1),
             _ => format!("{}@", s),
@@ -43,7 +43,7 @@ fn corrupt_format(s: &str, rng: &mut dyn RngCore) -> String {
 
     // Looks like a date (YYYY-MM-DD pattern)
     if s.len() == 10 && s.chars().nth(4) == Some('-') && s.chars().nth(7) == Some('-') {
-        return match rng.gen_range(0u8..3) {
+        return match rng.random_range(0u8..3) {
             0 => s.replace('-', ""),
             1 => s.replacen('-', "/", 2),
             _ => format!("{}-13-32", &s[..4]),
@@ -52,7 +52,7 @@ fn corrupt_format(s: &str, rng: &mut dyn RngCore) -> String {
 
     // Looks like a URL
     if s.starts_with("http://") || s.starts_with("https://") {
-        return match rng.gen_range(0u8..2) {
+        return match rng.random_range(0u8..2) {
             0 => s.replacen("://", ":/", 1),
             _ => s.replacen("http", "htp", 1),
         };
@@ -61,7 +61,7 @@ fn corrupt_format(s: &str, rng: &mut dyn RngCore) -> String {
     // Generic: scramble a random segment
     let chars: Vec<char> = s.chars().collect();
     if chars.len() > 2 {
-        let pos = rng.gen_range(0..chars.len());
+        let pos = rng.random_range(0..chars.len());
         let mut result = chars;
         result[pos] = '#';
         result.into_iter().collect()
@@ -108,7 +108,7 @@ impl Perturbator for FormatCorruptor {
                         return None;
                     }
                     let v = a.value(i);
-                    if config.in_scope(i) && rng.gen::<f64>() < config.probability {
+                    if config.in_scope(i) && rng.random::<f64>() < config.probability {
                         Some(corrupt_format(v, rng))
                     } else {
                         Some(v.to_string())

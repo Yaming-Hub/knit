@@ -67,10 +67,10 @@ fn sample_reservoir(batches: &[RecordBatch], n: usize) -> LearnResult<Vec<Record
 
     // Build reservoir indices
     let mut reservoir: Vec<usize> = (0..n).collect();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for i in n..total {
-        let j = rng.gen_range(0..=i);
+        let j = rng.random_range(0..=i);
         if j < n {
             reservoir[j] = i;
         }
