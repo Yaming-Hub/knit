@@ -194,17 +194,23 @@ All notable changes to Knit are documented in this file.
 
 ### Infrastructure
 
+- **Release automation** — Tag-triggered GitHub Actions workflow (`release.yml`)
+  that gates on the full CI suite, builds release binaries for Linux (x86_64),
+  macOS (x86_64 + aarch64), and Windows (x86_64), publishes to crates.io with
+  tag/version verification, and creates a GitHub Release with pre-built binaries.
+  Supports manual dry-run via `workflow_dispatch`.
 - **CI hardening** — 9 CI jobs: check, test, test-default, clippy, fmt, doc,
   MSRV (1.92), benchmark compilation, and cargo-deny audit. All jobs run with
-  `permissions: { contents: read }` for least-privilege.
+  `permissions: { contents: read }` for least-privilege. CI is now reusable
+  via `workflow_call` for composition with other workflows.
 - **Cargo-deny** — License allow-list and vulnerability audit via `deny.toml`.
 - **Dependabot** — Weekly Cargo and GitHub Actions dependency updates.
 - **Criterion benchmarks** — 5 end-to-end pipeline benchmarks (numeric, string,
   FK resolution, expression evaluation, multi-entity pipeline).
-- **Integration test expansion** — Added 22 new integration tests covering
-  output formats, expression correctness, self-referential hierarchies, scale
-  analysis/planning, learn profiling/type inference/correlation, and tokenize
-  config/mapping/round-trip.
+- **Integration test expansion** — Added 42 integration tests covering output
+  formats (Parquet, CSV, JSON, JSONL, Avro, SQL, Arrow IPC, Template), bind
+  helpers, noise injectors (all 9 types + multi-pipeline), scale analysis,
+  learn profiling, and tokenize mapping.
 - **Documentation** — Complete CLI reference with all 13 subcommands, usage
   examples for scale/tokenize/enrich, benchmark baseline in BENCHMARKS.md,
   and `documentation` field in Cargo.toml for docs.rs linking.
