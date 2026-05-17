@@ -1,0 +1,136 @@
+San Juan-Carolina-Caguas, PR
+Manhattan, KS
+Hilton Head Island-Bluffton-Beaufort, SC
+Kahului-Wailuku-Lahaina, HI
+Spartanburg, SC
+Baton Rouge, LA
+Rockingham County-Strafford County, NH, Metropolitan Division
+Salisbury, MD-DE
+Wichita Falls, TX
+Colorado Springs, CO
+Cambridge-Newton-Framingham, MA, Metropolitan Division
+Albuquerque, NM
+Portland-South Portland, ME
+Silver Spring-Frederick-Rockville, MD, Metropolitan Division
+Charlotte-Concord-Gastonia, NC-SC
+Ogden-Clearfield, UT
+Cedar Rapids, IA
+Tallahassee, FL
+Portland-Vancouver-Hillsboro, OR-WA
+Grand Rapids-Wyoming, MI
+Riverside-San Bernardino-Ontario, CA
+Des Moines-West Des Moines, IA
+Fayetteville-Springdale-Rogers, AR-MO
+Minneapolis-St. Paul-Bloomington, MN-WI
+Worcester, MA-CT
+Wilmington, DE-MD-NJ, Metropolitan Division
+Houston-The Woodlands-Sugar Land, TX
+Spokane-Spokane Valley, WA
+Grand Island, NE
+Oakland-Hayward-Berkeley, CA, Metropolitan Division
+Myrtle Beach-Conway-North Myrtle Beach, SC-NC
+Washington-Arlington-Alexandria, DC-VA-MD-WV, Metropolitan Division
+Seattle-Bellevue-Everett, WA, Metropolitan Division
+Montgomery County-Bucks County-Chester County, PA, Metropolitan Division
+Topeka, KS
+Sioux City, IA-NE-SD
+Springfield, MA
+Deltona-Daytona Beach-Ormond Beach, FL
+New York-Jersey City-White Plains, NY-NJ, Metropolitan Division
+Rochester, NY
+Newark, NJ-PA, Metropolitan Division
+College Station-Bryan, TX
+Virginia Beach-Norfolk-Newport News, VA-NC
+Albany-Schenectady-Troy, NY
+Greenville-Anderson-Mauldin, SC
+North Port-Sarasota-Bradenton, FL
+Fort Worth-Arlington, TX, Metropolitan Division
+Warren-Troy-Farmington Hills, MI, Metropolitan Division
+Hartford-West Hartford-East Hartford, CT
+Providence-Warwick, RI-MA
+Camden, NJ, Metropolitan Division
+Burlington-South Burlington, VT
+Sioux Falls, SD
+Atlanta-Sandy Springs-Roswell, GA
+South Bend-Mishawaka, IN-MI
+Anchorage, AK
+Phoenix-Mesa-Scottsdale, AZ
+Aberdeen, SD
+Dallas-Plano-Irving, TX, Metropolitan Division
+Hagerstown-Martinsburg, MD-WV
+St. Cloud, MN
+Claremont-Lebanon, NH-VT
+Boise City, ID
+Buffalo-Cheektowaga-Niagara Falls, NY
+Billings, MT
+Minot, ND
+Austin-Round Rock, TX
+Los Angeles-Long Beach-Anaheim, CA
+Sacramento--Roseville--Arden-Arcade, CA
+Memphis, TN-MS-AR
+Cincinnati, OH-KY-IN
+Corpus Christi, TX
+Baltimore-Columbia-Towson, MD
+Omaha-Council Bluffs, NE-IA
+Rapid City, SD
+Pensacola-Ferry Pass-Brent, FL
+Denver-Aurora-Lakewood, CO
+Miami-Fort Lauderdale-West Palm Beach, FL
+Dayton, OH
+Columbus, OH
+Tampa-St. Petersburg-Clearwater, FL
+Charleston-North Charleston, SC
+Port St. Lucie, FL
+Orlando-Kissimmee-Sanford, FL
+Allentown-Bethlehem-Easton, PA-NJ
+Little Rock-North Little Rock-Conway, AR
+Nassau County-Suffolk County, NY, Metropolitan Division
+Oklahoma City, OK
+Crestview-Fort Walton Beach-Destin, FL
+Pittsburgh, PA
+Kingsport-Bristol-Bristol, TN-VA
+Philadelphia, PA, Metropolitan Division
+Salina, KS
+Boston, MA, Metropolitan Division
+El Paso, TX
+Jacksonville, FL
+Richmond, VA
+San Antonio-New Braunfels, TX
+Salt Lake City, UT
+Chicago-Naperville-Elgin, IL-IN-WI
+St. Louis, MO-IL
+Knoxville, TN
+Huntington-Ashland, WV-KY-OH
+Louisville/Jefferson County, KY-IN
+Indianapolis-Carmel-Anderson, IN
+Columbia, SC
+Grand Forks, ND-MN
+Milwaukee-Waukesha-West Allis, WI
+Panama City, FL
+Tuscaloosa, AL
+New Orleans-Metairie, LA
+Cleveland-Elyria, OH
+Provo-Orem, UT
+Kansas City, MO-KS
+Lincoln, NE
+Tulsa, OK
+Fort Wayne, IN
+Wichita, KS
+Toledo, OH
+Birmingham-Hoover, AL
+Jackson, MS
+Lansing-East Lansing, MI
+Nashville-Davidson--Murfreesboro--Franklin, TN
+Florence, SC
+Augusta-Richmond County, GA-SC
+North Platte, NE
+Lexington-Fayette, KY
+Scottsbluff, NE
+Evansville, IN-KY
+Fargo, ND-MN
+Bismarck, ND
+Charleston, WV
+Duluth, MN-WI
+Reno, NV
+Gainesville, FL
+Rochester, MN
