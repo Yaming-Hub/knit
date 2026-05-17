@@ -38,7 +38,7 @@ pub mod weighted_fk;
 
 use crate::plan::GeneratorPlan;
 
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Shared seen-set for cross-partition uniqueness enforcement.
 ///
@@ -237,11 +237,11 @@ pub fn create_generator_with_seen(
             pk_field.clone(),
         )),
         GeneratorPlan::Plugin { name, params } => {
-            match crate::gen::plugin::registry().create(name, params) {
-                Some(Ok(gen)) => gen,
+            match crate::r#gen::plugin::registry().create(name, params) {
+                Some(Ok(r#gen)) => r#gen,
                 Some(Err(e)) => {
                     tracing::error!(plugin = %name, error = %e, "plugin creation failed — using null constant");
-                    Box::new(crate::gen::generators::constant::ConstantGenerator::new(
+                    Box::new(crate::r#gen::generators::constant::ConstantGenerator::new(
                         crate::core::Value::Null,
                     ))
                 }
@@ -250,7 +250,7 @@ pub fn create_generator_with_seen(
                         plugin = %name,
                         "plugin not found in registry — using null constant; register it before generation"
                     );
-                    Box::new(crate::gen::generators::constant::ConstantGenerator::new(
+                    Box::new(crate::r#gen::generators::constant::ConstantGenerator::new(
                         crate::core::Value::Null,
                     ))
                 }

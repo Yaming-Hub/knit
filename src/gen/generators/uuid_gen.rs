@@ -10,8 +10,8 @@ use arrow::array::{ArrayRef, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate deterministic UUID v4 strings.
 ///

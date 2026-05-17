@@ -14,8 +14,8 @@ use arrow::datatypes::DataType;
 use rand::RngCore;
 use rand_distr::{Distribution, Zipf};
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
 use crate::plan::DegreePlan;
 
 /// Degree-weighted FK generator for integer primary keys.
@@ -177,9 +177,9 @@ impl FieldGenerator for WeightedStringForeignKeyGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::context::GenContext;
-    use crate::gen::keystore::InMemoryKeyStore;
-    use crate::gen::string_keystore::InMemoryStringKeyStore;
+    use crate::r#gen::context::GenContext;
+    use crate::r#gen::keystore::InMemoryKeyStore;
+    use crate::r#gen::string_keystore::InMemoryStringKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -204,9 +204,9 @@ mod tests {
         for i in 1..=100 {
             store.insert(i);
         }
-        let gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.5, 100));
+        let r#gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.5, 100));
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10_000, &make_ctx());
+        let arr = r#gen.generate(&mut rng, 10_000, &make_ctx());
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // Count how many samples map to the first 10 parents (indices 0-9, keys 1-10)
@@ -228,12 +228,12 @@ mod tests {
         for i in 1..=50 {
             store.insert(i);
         }
-        let gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.2, 50));
+        let r#gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.2, 50));
 
         let mut rng1 = ChaCha8Rng::seed_from_u64(99);
-        let arr1 = gen.generate(&mut rng1, 100, &make_ctx());
+        let arr1 = r#gen.generate(&mut rng1, 100, &make_ctx());
         let mut rng2 = ChaCha8Rng::seed_from_u64(99);
-        let arr2 = gen.generate(&mut rng2, 100, &make_ctx());
+        let arr2 = r#gen.generate(&mut rng2, 100, &make_ctx());
 
         let v1 = arr1.as_any().downcast_ref::<Int64Array>().unwrap();
         let v2 = arr2.as_any().downcast_ref::<Int64Array>().unwrap();
@@ -245,9 +245,9 @@ mod tests {
     #[test]
     fn weighted_fk_empty_store_produces_nulls() {
         let store = Arc::new(InMemoryKeyStore::new());
-        let gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.0, 0));
+        let r#gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.0, 0));
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10, &make_ctx());
+        let arr = r#gen.generate(&mut rng, 10, &make_ctx());
         assert_eq!(arr.null_count(), 10);
     }
 
@@ -257,9 +257,9 @@ mod tests {
         for i in 1..=20 {
             store.insert(i);
         }
-        let gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.0, 20));
+        let r#gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.0, 20));
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 500, &make_ctx());
+        let arr = r#gen.generate(&mut rng, 500, &make_ctx());
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..500 {
             let v = int_arr.value(i);
@@ -273,9 +273,9 @@ mod tests {
         for i in 1..=50 {
             store.insert(format!("user-{i:03}"));
         }
-        let gen = WeightedStringForeignKeyGenerator::new(store, zipf_degree(1.5, 50));
+        let r#gen = WeightedStringForeignKeyGenerator::new(store, zipf_degree(1.5, 50));
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5000, &make_ctx());
+        let arr = r#gen.generate(&mut rng, 5000, &make_ctx());
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         let mut counts: HashMap<&str, usize> = HashMap::new();
@@ -294,9 +294,9 @@ mod tests {
     #[test]
     fn weighted_string_fk_empty_store() {
         let store = Arc::new(InMemoryStringKeyStore::new());
-        let gen = WeightedStringForeignKeyGenerator::new(store, zipf_degree(1.0, 0));
+        let r#gen = WeightedStringForeignKeyGenerator::new(store, zipf_degree(1.0, 0));
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &make_ctx());
+        let arr = r#gen.generate(&mut rng, 5, &make_ctx());
         assert_eq!(arr.null_count(), 5);
     }
 
@@ -304,9 +304,9 @@ mod tests {
     fn weighted_fk_single_parent() {
         let store = Arc::new(InMemoryKeyStore::new());
         store.insert(42);
-        let gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.5, 1));
+        let r#gen = WeightedForeignKeyGenerator::new(store, zipf_degree(1.5, 1));
         let mut rng = ChaCha8Rng::seed_from_u64(0);
-        let arr = gen.generate(&mut rng, 10, &make_ctx());
+        let arr = r#gen.generate(&mut rng, 10, &make_ctx());
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..10 {
             assert_eq!(int_arr.value(i), 42);

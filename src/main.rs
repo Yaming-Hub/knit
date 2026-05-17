@@ -104,7 +104,9 @@ fn main() -> anyhow::Result<()> {
     // The Cli struct (with 20+ blueprint subcommands) exceeds the default 1-2 MB stack.
     const STACK_SIZE: usize = 16 * 1024 * 1024; // 16 MB
 
-    let result = std::thread::Builder::new()
+    
+
+    std::thread::Builder::new()
         .stack_size(STACK_SIZE)
         .name("knit-main".to_string())
         .spawn(run)
@@ -113,9 +115,7 @@ fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|e| {
             eprintln!("thread panicked: {:?}", e);
             std::process::exit(1);
-        });
-
-    result
+        })
 }
 
 fn run() -> anyhow::Result<()> {
@@ -138,16 +138,14 @@ fn run() -> anyhow::Result<()> {
     if cli.seed.is_none() {
         cli.seed = config.seed;
     }
-    if cli.parallel == 0 {
-        if let Some(p) = config.parallel {
+    if cli.parallel == 0
+        && let Some(p) = config.parallel {
             cli.parallel = p;
         }
-    }
-    if cli.batch_size == 8192 {
-        if let Some(bs) = config.batch_size {
+    if cli.batch_size == 8192
+        && let Some(bs) = config.batch_size {
             cli.batch_size = bs;
         }
-    }
 
     let result: anyhow::Result<()> = match &cli.command {
         Command::Validate { blueprint } => validate::run(blueprint, &cli),

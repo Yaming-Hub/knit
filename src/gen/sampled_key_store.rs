@@ -14,7 +14,7 @@ use std::sync::RwLock;
 
 use rand::RngCore;
 
-use crate::gen::traits::KeyStore;
+use crate::r#gen::traits::KeyStore;
 
 /// Fast bijective hash (splitmix64) for deterministic key priorities.
 fn key_hash(seed: u64, key: i64) -> u64 {
@@ -111,12 +111,11 @@ impl KeyStore for SampledKeyStore {
 
         if inner.heap.len() < inner.capacity {
             inner.heap.push((hash, key));
-        } else if let Some(&(max_hash, _)) = inner.heap.peek() {
-            if hash < max_hash {
+        } else if let Some(&(max_hash, _)) = inner.heap.peek()
+            && hash < max_hash {
                 inner.heap.pop();
                 inner.heap.push((hash, key));
             }
-        }
     }
 
     fn sample(&self, rng: &mut dyn RngCore) -> Option<i64> {

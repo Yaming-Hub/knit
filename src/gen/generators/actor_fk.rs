@@ -11,9 +11,9 @@ use arrow::array::{ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::actor_pool::ActorPool;
-use crate::gen::context::GenContext;
-use crate::gen::traits::{FieldGenerator, KeyStore};
+use crate::r#gen::actor_pool::ActorPool;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::{FieldGenerator, KeyStore};
 
 /// Generates FK values by sampling actors weighted by persona activity rate.
 ///
@@ -92,8 +92,8 @@ impl FieldGenerator for ActorForeignKeyGenerator {
 mod tests {
     use super::*;
     use crate::core::Value;
-    use crate::gen::context::GenContext;
-    use crate::gen::keystore::InMemoryKeyStore;
+    use crate::r#gen::context::GenContext;
+    use crate::r#gen::keystore::InMemoryKeyStore;
     use crate::plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -143,7 +143,7 @@ mod tests {
     fn actor_fk_produces_weighted_distribution() {
         let pool = Arc::new(make_test_pool());
         let ks = make_key_store(100);
-        let gen = ActorForeignKeyGenerator::new(pool, "users".to_string(), ks);
+        let r#gen = ActorForeignKeyGenerator::new(pool, "users".to_string(), ks);
 
         let mut rng = ChaCha8Rng::seed_from_u64(123);
         let cols = std::collections::HashMap::new();
@@ -157,7 +157,7 @@ mod tests {
             params: &params,
         };
 
-        let arr = gen.generate(&mut rng, 10_000, &ctx);
+        let arr = r#gen.generate(&mut rng, 10_000, &ctx);
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With weighted sampling, some actors (the ~20 "heavy" ones with
@@ -193,7 +193,7 @@ mod tests {
     fn actor_fk_fallback_on_pool_count_mismatch() {
         let pool = Arc::new(make_test_pool()); // 100 actors
         let ks = make_key_store(50); // Only 50 keys — mismatch!
-        let gen = ActorForeignKeyGenerator::new(pool, "users".to_string(), ks);
+        let r#gen = ActorForeignKeyGenerator::new(pool, "users".to_string(), ks);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let cols = std::collections::HashMap::new();
@@ -207,7 +207,7 @@ mod tests {
             params: &params,
         };
 
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // Should fall back to uniform — all values in [1, 50]
@@ -221,7 +221,7 @@ mod tests {
     fn actor_fk_fallback_on_missing_entity() {
         let pool = Arc::new(make_test_pool());
         let ks = make_key_store(10);
-        let gen = ActorForeignKeyGenerator::new(pool, "nonexistent".to_string(), ks);
+        let r#gen = ActorForeignKeyGenerator::new(pool, "nonexistent".to_string(), ks);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let cols = std::collections::HashMap::new();
@@ -235,7 +235,7 @@ mod tests {
             params: &params,
         };
 
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // Should fall back to uniform — all values in [1, 10]

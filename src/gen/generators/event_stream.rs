@@ -19,8 +19,8 @@ use rand::RngCore;
 use rand_distr::{Distribution, Exp};
 
 use crate::core::EventStreamComponent;
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Internal state persisted across batches.
 struct EventStreamState {
@@ -291,13 +291,13 @@ mod tests {
 
     #[test]
     fn pure_exponential_produces_increasing_timestamps() {
-        let gen = EventStreamGenerator::new(
+        let r#gen = EventStreamGenerator::new(
             1_704_067_200_000, // 2024-01-01 00:00:00 UTC
             0.001,             // 1 event per second
             vec![],
         );
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &make_ctx(0));
+        let arr = r#gen.generate(&mut rng, 100, &make_ctx(0));
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -320,17 +320,17 @@ mod tests {
 
     #[test]
     fn stateful_across_batches() {
-        let gen = EventStreamGenerator::new(1_704_067_200_000, 0.001, vec![]);
+        let r#gen = EventStreamGenerator::new(1_704_067_200_000, 0.001, vec![]);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
-        let arr1 = gen.generate(&mut rng, 50, &make_ctx(0));
+        let arr1 = r#gen.generate(&mut rng, 50, &make_ctx(0));
         let ts1 = arr1
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
             .unwrap();
         let last_of_batch1 = ts1.value(49);
 
-        let arr2 = gen.generate(&mut rng, 50, &make_ctx(50));
+        let arr2 = r#gen.generate(&mut rng, 50, &make_ctx(50));
         let ts2 = arr2
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -347,16 +347,16 @@ mod tests {
 
     #[test]
     fn output_type_is_timestamp_millisecond() {
-        let gen = EventStreamGenerator::new(0, 0.001, vec![]);
+        let r#gen = EventStreamGenerator::new(0, 0.001, vec![]);
         assert_eq!(
-            gen.output_type(),
+            r#gen.output_type(),
             DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         );
     }
 
     #[test]
     fn with_seasonality_produces_varying_density() {
-        let gen = EventStreamGenerator::new(
+        let r#gen = EventStreamGenerator::new(
             1_704_067_200_000,
             0.001,
             vec![EventStreamComponent::Seasonality {
@@ -365,7 +365,7 @@ mod tests {
             }],
         );
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 200, &make_ctx(0));
+        let arr = r#gen.generate(&mut rng, 200, &make_ctx(0));
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -441,7 +441,7 @@ mod tests {
     fn business_hours_concentrates_events() {
         // Start at 2024-01-01 12:00 UTC (during business hours).
         let start_ms = 1_704_067_200_000 + 12 * 3_600_000;
-        let gen = EventStreamGenerator::new(
+        let r#gen = EventStreamGenerator::new(
             start_ms,
             0.001, // ~1 event/second — fast enough to span multiple days
             vec![EventStreamComponent::BusinessHours {
@@ -450,7 +450,7 @@ mod tests {
             }],
         );
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 500, &make_ctx(0));
+        let arr = r#gen.generate(&mut rng, 500, &make_ctx(0));
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()

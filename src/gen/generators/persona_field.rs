@@ -13,9 +13,9 @@ use arrow::array::{
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::actor_pool::ActorPool;
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::actor_pool::ActorPool;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generates field values from per-actor persona traits.
 ///
@@ -170,7 +170,7 @@ impl FieldGenerator for PersonaFieldGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::actor_pool::ActorPool;
+    use crate::r#gen::actor_pool::ActorPool;
     use crate::plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
     use std::collections::BTreeMap;
 
@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn float_trait_to_float64() {
         let (pool, rev) = make_pool_and_reverse_map();
-        let gen = PersonaFieldGenerator::new(
+        let r#gen = PersonaFieldGenerator::new(
             pool,
             rev,
             "activity_rate".into(),
@@ -220,7 +220,7 @@ mod tests {
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
         let mut rng = rand::rng();
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
 
         let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(f64_arr.len(), 3);
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn null_actor_fk_produces_null() {
         let (pool, rev) = make_pool_and_reverse_map();
-        let gen = PersonaFieldGenerator::new(
+        let r#gen = PersonaFieldGenerator::new(
             pool,
             rev,
             "activity_rate".into(),
@@ -249,7 +249,7 @@ mod tests {
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
         let mut rng = rand::rng();
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
 
         let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert!(!f64_arr.is_null(0));
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn missing_trait_produces_null() {
         let (pool, rev) = make_pool_and_reverse_map();
-        let gen = PersonaFieldGenerator::new(
+        let r#gen = PersonaFieldGenerator::new(
             pool,
             rev,
             "nonexistent_trait".into(),
@@ -275,7 +275,7 @@ mod tests {
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
         let mut rng = rand::rng();
-        let result = gen.generate(&mut rng, 2, &ctx);
+        let result = r#gen.generate(&mut rng, 2, &ctx);
 
         let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         // Missing trait → null

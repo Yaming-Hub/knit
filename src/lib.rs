@@ -72,7 +72,7 @@ pub mod cli;
 pub mod core;
 pub mod decision;
 pub mod enrich;
-pub mod gen;
+pub mod r#gen;
 pub mod learn;
 pub mod model;
 pub mod noise;

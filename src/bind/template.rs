@@ -206,7 +206,7 @@ fn cell_to_value(col: &dyn Array, row: usize) -> Result<Value, BindError> {
 }
 
 macro_rules! typed_int {
-    ($col:expr, $arr_ty:ty, $row:expr) => {{
+    ($col:expr_2021, $arr_ty:ty, $row:expr_2021) => {{
         let arr = downcast_col!($col, $arr_ty)?;
         Ok(Value::from(arr.value($row) as i64))
     }};

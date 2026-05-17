@@ -9,9 +9,9 @@ use arrow::array::{ArrayRef, BooleanArray, Int64Array, StructArray};
 use arrow::datatypes::{DataType, Field as ArrowField};
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::null_mask::apply_null_mask;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::null_mask::apply_null_mask;
+use crate::r#gen::traits::FieldGenerator;
 use crate::plan::NullPlan;
 
 /// Post-processing configuration for a single child field within a struct.
@@ -104,13 +104,13 @@ impl FieldGenerator for StructGenerator {
             .children
             .iter()
             .zip(self.post_process.iter())
-            .map(|(gen, pp)| {
-                let arr = gen.generate(rng, count, ctx);
+            .map(|(r#gen, pp)| {
+                let arr = r#gen.generate(rng, count, ctx);
                 let arr = apply_precision(arr, pp.precision);
                 let arr = coerce_to_logical_type(arr, &pp.data_type);
                 apply_null_mask(arr, &pp.null_plan, rng, count).unwrap_or_else(|e| {
                     tracing::warn!("null mask failed in struct child: {}", e);
-                    gen.generate(rng, count, ctx)
+                    r#gen.generate(rng, count, ctx)
                 })
             })
             .collect();
@@ -136,7 +136,7 @@ impl FieldGenerator for StructGenerator {
             .children
             .iter()
             .zip(self.field_names.iter())
-            .map(|(gen, name)| ArrowField::new(name, gen.output_type(), true))
+            .map(|(r#gen, name)| ArrowField::new(name, r#gen.output_type(), true))
             .collect();
         DataType::Struct(fields.into())
     }
@@ -145,8 +145,8 @@ impl FieldGenerator for StructGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::generators::constant::ConstantGenerator;
-    use crate::gen::generators::sequence::SequenceGenerator;
+    use crate::r#gen::generators::constant::ConstantGenerator;
+    use crate::r#gen::generators::sequence::SequenceGenerator;
     use arrow::array::{Array, Float64Array, Int64Array};
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -171,12 +171,12 @@ mod tests {
             make_pp(None, crate::core::DataType::Int),
             make_pp(Some(2), crate::core::DataType::Float),
         ];
-        let gen = StructGenerator::new(children, names, post_process);
+        let r#gen = StructGenerator::new(children, names, post_process);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let cols = HashMap::new();
         let ctx = GenContext::new(&cols, 0, 0, 1, "test");
-        let result = gen.generate(&mut rng, 5, &ctx);
+        let result = r#gen.generate(&mut rng, 5, &ctx);
 
         // Should be a StructArray
         assert!(matches!(result.data_type(), DataType::Struct(_)));
@@ -215,7 +215,7 @@ mod tests {
             ))),
         ];
         let names = vec!["count".to_string(), "label".to_string()];
-        let gen = StructGenerator::new(
+        let r#gen = StructGenerator::new(
             children,
             names,
             vec![
@@ -224,7 +224,7 @@ mod tests {
             ],
         );
 
-        let dt = gen.output_type();
+        let dt = r#gen.output_type();
         assert!(matches!(dt, DataType::Struct(_)));
     }
 }

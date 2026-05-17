@@ -13,8 +13,8 @@ use rand::distr::Distribution;
 use rand_distr::weighted::WeightedAliasIndex;
 
 use crate::core::SamplingMode;
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate string values by sampling from an externally loaded data column.
 ///
@@ -129,10 +129,10 @@ mod tests {
 
     #[test]
     fn uniform_sampling_selects_from_entries() {
-        let gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Uniform);
+        let r#gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Uniform);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 20, &ctx);
+        let arr = r#gen.generate(&mut rng, 20, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 20);
         let entries = sample_entries();
@@ -149,11 +149,11 @@ mod tests {
     fn weighted_sampling_respects_weights() {
         // Give 99% weight to "Tokyo"
         let weights = vec![99.0, 0.25, 0.25, 0.25, 0.25];
-        let gen =
+        let r#gen =
             ExternalLookupGenerator::new(sample_entries(), Some(weights), SamplingMode::Weighted);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         let tokyo_count = (0..100).filter(|&i| str_arr.value(i) == "Tokyo").count();
@@ -163,13 +163,13 @@ mod tests {
 
     #[test]
     fn sequential_sampling_is_deterministic() {
-        let gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Sequential);
+        let r#gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Sequential);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let entries = sample_entries();
 
         // First batch: offset=0
         let ctx = test_ctx_with_offset(0);
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for (i, entry) in entries.iter().take(5).enumerate() {
             assert_eq!(str_arr.value(i), *entry);
@@ -177,7 +177,7 @@ mod tests {
 
         // Second batch: offset=5 wraps around
         let ctx = test_ctx_with_offset(5);
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.value(0), entries[0]); // 5 % 5 = 0
         assert_eq!(str_arr.value(1), entries[1]); // 6 % 5 = 1
@@ -186,10 +186,10 @@ mod tests {
 
     #[test]
     fn empty_entries_produce_empty_strings() {
-        let gen = ExternalLookupGenerator::new(vec![], None, SamplingMode::Uniform);
+        let r#gen = ExternalLookupGenerator::new(vec![], None, SamplingMode::Uniform);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(str_arr.value(i), "");
@@ -199,17 +199,17 @@ mod tests {
     #[test]
     fn weighted_fallback_on_no_weights() {
         // Weighted mode but no weights provided — should fallback to uniform
-        let gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Weighted);
+        let r#gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Weighted);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 10);
     }
 
     #[test]
     fn output_type_is_utf8() {
-        let gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Uniform);
-        assert_eq!(gen.output_type(), arrow::datatypes::DataType::Utf8);
+        let r#gen = ExternalLookupGenerator::new(sample_entries(), None, SamplingMode::Uniform);
+        assert_eq!(r#gen.output_type(), arrow::datatypes::DataType::Utf8);
     }
 }

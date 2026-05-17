@@ -17,8 +17,8 @@ use arrow::compute;
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 use super::{create_generator_with_seen, SharedSeen};
 
@@ -64,8 +64,8 @@ impl ConditionalGenerator {
             .into_iter()
             .map(|(cond, plan)| {
                 let cond_str = value_to_string(&cond);
-                let gen = create_generator_with_seen(&plan, shared_seen);
-                (cond_str, gen)
+                let r#gen = create_generator_with_seen(&plan, shared_seen);
+                (cond_str, r#gen)
             })
             .collect();
         let default_gen = create_generator_with_seen(&default_plan, shared_seen);
@@ -96,8 +96,8 @@ impl FieldGenerator for ConditionalGenerator {
         // Generate outputs from all branches + default (index = branches.len())
         let num_sources = self.branches.len() + 1; // branches + default
         let mut source_arrays: Vec<ArrayRef> = Vec::with_capacity(num_sources);
-        for (_, gen) in &self.branches {
-            source_arrays.push(gen.generate(rng, count, ctx));
+        for (_, r#gen) in &self.branches {
+            source_arrays.push(r#gen.generate(rng, count, ctx));
         }
         source_arrays.push(self.default.generate(rng, count, ctx));
         let default_idx = self.branches.len();
@@ -151,8 +151,8 @@ impl FieldGenerator for ConditionalGenerator {
         if dt == DataType::Null {
             // Default is Null — try to find a uniform concrete type from branches.
             let mut concrete: Option<DataType> = None;
-            for (_, gen) in &self.branches {
-                let bt = gen.output_type();
+            for (_, r#gen) in &self.branches {
+                let bt = r#gen.output_type();
                 if bt != DataType::Null {
                     match &concrete {
                         None => concrete = Some(bt),
@@ -272,7 +272,7 @@ fn array_value_as_string(arr: &ArrayRef, i: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::context::GenContext;
+    use crate::r#gen::context::GenContext;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_conditional_branches_on_string_field() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "status".into(),
             vec![
                 (
@@ -307,7 +307,7 @@ mod tests {
         batch.insert("status".to_string(), status_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "users");
 
-        let result = gen.generate(&mut rng, 5, &ctx);
+        let result = r#gen.generate(&mut rng, 5, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(sa.value(0), "welcome@example.com");
         assert_eq!(sa.value(1), "goodbye@example.com");
@@ -318,7 +318,7 @@ mod tests {
 
     #[test]
     fn test_conditional_branches_on_int_field() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "tier".into(),
             vec![
                 (
@@ -339,7 +339,7 @@ mod tests {
         batch.insert("tier".to_string(), tier_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "plans");
 
-        let result = gen.generate(&mut rng, 5, &ctx);
+        let result = r#gen.generate(&mut rng, 5, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(sa.value(0), "basic");
         assert_eq!(sa.value(1), "premium");
@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_conditional_missing_field_uses_default() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "nonexistent".into(),
             vec![(
                 Value::String("x".into()),
@@ -363,7 +363,7 @@ mod tests {
         let batch = HashMap::new();
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(sa.value(i), "default_val");
@@ -372,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_conditional_null_reference_uses_default() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "status".into(),
             vec![(
                 Value::String("active".into()),
@@ -392,7 +392,7 @@ mod tests {
         batch.insert("status".to_string(), status_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "users");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(sa.value(0), "matched");
         assert_eq!(sa.value(1), "default_for_null"); // null → default
@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn test_conditional_preserves_numeric_type() {
         // Both branches produce Float64 via Constant
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "category".into(),
             vec![
                 (
@@ -423,7 +423,7 @@ mod tests {
         batch.insert("category".to_string(), cat_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "items");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         assert_eq!(
             result.data_type(),
             &DataType::Float64,
@@ -437,7 +437,7 @@ mod tests {
 
     #[test]
     fn test_conditional_boolean_reference() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "active".into(),
             vec![
                 (
@@ -458,7 +458,7 @@ mod tests {
         batch.insert("active".to_string(), bool_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "flags");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(sa.value(0), "enabled");
         assert_eq!(sa.value(1), "disabled");
@@ -467,7 +467,7 @@ mod tests {
 
     #[test]
     fn test_conditional_float_reference() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "score".into(),
             vec![(
                 Value::Float(1.5),
@@ -482,7 +482,7 @@ mod tests {
         batch.insert("score".to_string(), float_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "scores");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(sa.value(0), "matched_1.5");
         assert_eq!(sa.value(1), "default");
@@ -491,7 +491,7 @@ mod tests {
 
     #[test]
     fn test_conditional_all_nulls_use_default() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "status".into(),
             vec![(
                 Value::String("active".into()),
@@ -506,7 +506,7 @@ mod tests {
         batch.insert("status".to_string(), null_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(
@@ -519,16 +519,16 @@ mod tests {
 
     #[test]
     fn test_conditional_output_type_matches_default() {
-        let gen =
+        let r#gen =
             ConditionalGenerator::new("x".into(), vec![], GeneratorPlan::Constant(Value::Int(42)));
         // ConstantGenerator for Int produces Int64
-        assert_eq!(gen.output_type(), DataType::Int64);
+        assert_eq!(r#gen.output_type(), DataType::Int64);
     }
 
     #[test]
     fn test_conditional_first_matching_branch_wins() {
         // Two branches match the same value — first one should win
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "key".into(),
             vec![
                 (
@@ -549,14 +549,14 @@ mod tests {
         batch.insert("key".to_string(), key_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
-        let result = gen.generate(&mut rng, 1, &ctx);
+        let result = r#gen.generate(&mut rng, 1, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(sa.value(0), "first", "first matching branch should win");
     }
 
     #[test]
     fn test_conditional_no_branches_always_default() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "x".into(),
             vec![],
             GeneratorPlan::Constant(Value::String("always_default".into())),
@@ -568,7 +568,7 @@ mod tests {
         batch.insert("x".to_string(), col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(sa.value(i), "always_default");
@@ -578,7 +578,7 @@ mod tests {
     #[test]
     fn test_conditional_unsupported_ref_type_uses_default() {
         // Timestamp array is unsupported — all rows should route to default
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "ts".into(),
             vec![(
                 Value::String("some_value".into()),
@@ -595,7 +595,7 @@ mod tests {
         batch.insert("ts".to_string(), ts_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         let sa = result.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(
@@ -638,7 +638,7 @@ mod tests {
 
     #[test]
     fn test_conditional_int64_branch_with_null_default_produces_int64() {
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "signal".into(),
             vec![(
                 Value::String("Meeting".into()),
@@ -647,7 +647,7 @@ mod tests {
             GeneratorPlan::Constant(Value::Null),
         );
 
-        assert_eq!(gen.output_type(), DataType::Int64);
+        assert_eq!(r#gen.output_type(), DataType::Int64);
 
         let mut rng = ChaCha8Rng::seed_from_u64(99);
         let signal_col: ArrayRef = Arc::new(StringArray::from(vec![
@@ -659,7 +659,7 @@ mod tests {
         batch.insert("signal".to_string(), signal_col);
         let ctx = GenContext::new(&batch, 0, 0, 1, "test");
 
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
         assert_eq!(
             *result.data_type(),
             DataType::Int64,
@@ -677,7 +677,7 @@ mod tests {
     fn test_output_type_mixed_branches_with_null_default_returns_utf8() {
         // When branches have different concrete types and default is Null,
         // output_type should return Utf8 (the string fallback type).
-        let gen = ConditionalGenerator::new(
+        let r#gen = ConditionalGenerator::new(
             "key".into(),
             vec![
                 (
@@ -691,6 +691,6 @@ mod tests {
             ],
             GeneratorPlan::Constant(Value::Null),
         );
-        assert_eq!(gen.output_type(), DataType::Utf8);
+        assert_eq!(r#gen.output_type(), DataType::Utf8);
     }
 }

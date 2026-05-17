@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::core::*;
-use crate::gen::expr;
+use crate::r#gen::expr;
 
 use crate::blueprint::error::BlueprintError;
 
@@ -77,10 +77,10 @@ fn validate_fields(
         if field.primary_key == Some(true) {
             pk_count += 1;
         }
-        if let Some(gen) = &field.generator {
+        if let Some(r#gen) = &field.generator {
             validate_generator(
                 &format!("entities.{}.fields.{}.generator", entity.name, field.name),
-                gen,
+                r#gen,
                 &field.name,
                 &field.data_type,
                 entity,
@@ -196,16 +196,16 @@ fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<BlueprintEr
                 });
             }
             // Restrict nested generator kinds (no FK, graph_target, etc.)
-            if let Some(gen) = &sub.generator {
+            if let Some(r#gen) = &sub.generator {
                 validate_nested_generator(
                     &format!("{}.fields.{}.generator", path, sub.name),
-                    gen,
+                    r#gen,
                     errors,
                 );
                 // Also validate generator parameters (distribution params, etc.)
                 validate_generator_params(
                     &format!("{}.fields.{}.generator", path, sub.name),
-                    gen,
+                    r#gen,
                     &sub.data_type,
                     errors,
                 );
@@ -238,9 +238,9 @@ fn validate_object_field(path: &str, field: &Field, errors: &mut Vec<BlueprintEr
 }
 
 /// Validate that a nested generator is one of the allowed simple types.
-fn validate_nested_generator(path: &str, gen: &GeneratorSpec, errors: &mut Vec<BlueprintError>) {
+fn validate_nested_generator(path: &str, r#gen: &GeneratorSpec, errors: &mut Vec<BlueprintError>) {
     let allowed = matches!(
-        gen,
+        r#gen,
         GeneratorSpec::Distribution { .. }
             | GeneratorSpec::Faker { .. }
             | GeneratorSpec::Constant { .. }
@@ -263,18 +263,18 @@ fn validate_nested_generator(path: &str, gen: &GeneratorSpec, errors: &mut Vec<B
 /// but without entity-level context (FK, lookup, derived, etc.).
 fn validate_generator_params(
     path: &str,
-    gen: &GeneratorSpec,
+    r#gen: &GeneratorSpec,
     data_type: &DataType,
     errors: &mut Vec<BlueprintError>,
 ) {
     // Check generator ↔ field type compatibility
-    if let Some(msg) = check_generator_type_compat(gen, data_type) {
+    if let Some(msg) = check_generator_type_compat(r#gen, data_type) {
         errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: msg,
         });
     }
-    match gen {
+    match r#gen {
         GeneratorSpec::Distribution { spec } => {
             validate_distribution(path, spec, errors);
         }
@@ -371,7 +371,7 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<Blueprint
                 return;
             }
             // Validate that the expression parses and contains only allowed constructs.
-            match crate::gen::expr::parser::parse(expr) {
+            match crate::r#gen::expr::parser::parse(expr) {
                 Ok(ast) => {
                     if let Err(msg) = crate::plan::partition::validate_count_ast(&ast) {
                         errors.push(BlueprintError::Validation {
@@ -459,8 +459,8 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
         Some(rel) => {
             // Target entity must be an actor entity
             let target_entity = model.entities.iter().find(|e| e.name == rel.to);
-            if let Some(target) = target_entity {
-                if !target.actor {
+            if let Some(target) = target_entity
+                && !target.actor {
                     errors.push(BlueprintError::Validation {
                         path: path.clone(),
                         message: format!(
@@ -469,7 +469,6 @@ fn validate_activity_count(entity: &Entity, model: &DataModel, errors: &mut Vec<
                         ),
                     });
                 }
-            }
 
             // Validate that trait_name exists in applicable personas.
             // Use the same selection rule as compile_actor_pool(): personas
@@ -565,8 +564,8 @@ fn validate_sequence_params(
             });
         }
         // Validate temporal string formats
-        if let IntOrString::Str(s) = start {
-            if !is_valid_temporal_start(s) {
+        if let IntOrString::Str(s) = start
+            && !is_valid_temporal_start(s) {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!(
@@ -575,9 +574,8 @@ fn validate_sequence_params(
                     ),
                 });
             }
-        }
         if let IntOrString::Str(s) = step {
-            let ms = crate::gen::generators::event_stream::parse_duration_ms(s);
+            let ms = crate::r#gen::generators::event_stream::parse_duration_ms(s);
             if ms == 0 {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
@@ -616,7 +614,7 @@ fn is_valid_temporal_start(s: &str) -> bool {
 /// - min ≤ max when both are specified
 /// - Constant offsets have a valid duration string
 fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Vec<BlueprintError>) {
-    use crate::gen::generators::event_stream::parse_duration_ms;
+    use crate::r#gen::generators::event_stream::parse_duration_ms;
 
     /// Check that a duration string uses a known unit suffix.
     fn is_valid_duration_string(s: &str) -> bool {
@@ -704,8 +702,8 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
                 }
             }
             // Validate duration strings
-            if let Some(min_str) = min {
-                if !is_valid_duration_string(min_str) {
+            if let Some(min_str) = min
+                && !is_valid_duration_string(min_str) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
@@ -715,9 +713,8 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
                         ),
                     });
                 }
-            }
-            if let Some(max_str) = max {
-                if !is_valid_duration_string(max_str) {
+            if let Some(max_str) = max
+                && !is_valid_duration_string(max_str) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
@@ -727,7 +724,6 @@ fn validate_relative_offset(offset: &RelativeOffset, path: &str, errors: &mut Ve
                         ),
                     });
                 }
-            }
             // Check min <= max
             if let (Some(min_str), Some(max_str)) = (min, max) {
                 let min_ms = parse_duration_ms(min_str);
@@ -782,14 +778,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "normal distribution requires 'std_dev' param".to_string(),
                 });
-            } else if let Some(&sd) = params.get("std_dev") {
-                if sd <= 0.0 {
+            } else if let Some(&sd) = params.get("std_dev")
+                && sd <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "normal distribution 'std_dev' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Uniform => {
             if !params.contains_key("min") {
@@ -804,8 +799,8 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     message: "uniform distribution requires 'max' param".to_string(),
                 });
             }
-            if let (Some(&min), Some(&max)) = (params.get("min"), params.get("max")) {
-                if min >= max {
+            if let (Some(&min), Some(&max)) = (params.get("min"), params.get("max"))
+                && min >= max {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
@@ -814,7 +809,6 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                         ),
                     });
                 }
-            }
         }
         DistributionKind::Exponential => {
             if !params.contains_key("lambda") {
@@ -822,14 +816,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "exponential distribution requires 'lambda' param".to_string(),
                 });
-            } else if let Some(&l) = params.get("lambda") {
-                if l <= 0.0 {
+            } else if let Some(&l) = params.get("lambda")
+                && l <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "exponential distribution 'lambda' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Poisson => {
             if !params.contains_key("lambda") {
@@ -837,14 +830,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "poisson distribution requires 'lambda' param".to_string(),
                 });
-            } else if let Some(&l) = params.get("lambda") {
-                if l <= 0.0 {
+            } else if let Some(&l) = params.get("lambda")
+                && l <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "poisson distribution 'lambda' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Bernoulli => {
             if !params.contains_key("p") {
@@ -852,14 +844,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "bernoulli distribution requires 'p' param".to_string(),
                 });
-            } else if let Some(&p) = params.get("p") {
-                if !(0.0..=1.0).contains(&p) {
+            } else if let Some(&p) = params.get("p")
+                && !(0.0..=1.0).contains(&p) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "bernoulli distribution 'p' must be in [0, 1]".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::LogNormal => {
             if !params.contains_key("mu") {
@@ -873,14 +864,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "lognormal distribution requires 'sigma' param".to_string(),
                 });
-            } else if let Some(&s) = params.get("sigma") {
-                if s <= 0.0 {
+            } else if let Some(&s) = params.get("sigma")
+                && s <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "lognormal distribution 'sigma' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Binomial => {
             if !params.contains_key("n") {
@@ -888,28 +878,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "binomial distribution requires 'n' param".to_string(),
                 });
-            } else if let Some(&n) = params.get("n") {
-                if n < 0.0 || n.fract() != 0.0 {
+            } else if let Some(&n) = params.get("n")
+                && (n < 0.0 || n.fract() != 0.0) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "binomial distribution 'n' must be >= 0 and integer-valued"
                             .to_string(),
                     });
                 }
-            }
             if !params.contains_key("p") {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "binomial distribution requires 'p' param".to_string(),
                 });
-            } else if let Some(&p) = params.get("p") {
-                if !(0.0..=1.0).contains(&p) {
+            } else if let Some(&p) = params.get("p")
+                && !(0.0..=1.0).contains(&p) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "binomial distribution 'p' must be in [0, 1]".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Geometric => {
             if !params.contains_key("p") {
@@ -917,14 +905,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "geometric distribution requires 'p' param".to_string(),
                 });
-            } else if let Some(&p) = params.get("p") {
-                if p <= 0.0 || p > 1.0 {
+            } else if let Some(&p) = params.get("p")
+                && (p <= 0.0 || p > 1.0) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "geometric distribution 'p' must be in (0, 1]".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Pareto => {
             if !params.contains_key("scale") {
@@ -932,27 +919,25 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "pareto distribution requires 'scale' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("scale") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("scale")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "pareto distribution 'scale' must be > 0".to_string(),
                     });
                 }
-            }
             if !params.contains_key("shape") {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "pareto distribution requires 'shape' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("shape") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("shape")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "pareto distribution 'shape' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Weibull => {
             if !params.contains_key("scale") {
@@ -960,27 +945,25 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "weibull distribution requires 'scale' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("scale") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("scale")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "weibull distribution 'scale' must be > 0".to_string(),
                     });
                 }
-            }
             if !params.contains_key("shape") {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "weibull distribution requires 'shape' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("shape") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("shape")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "weibull distribution 'shape' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Gamma => {
             if !params.contains_key("shape") {
@@ -988,27 +971,25 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "gamma distribution requires 'shape' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("shape") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("shape")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "gamma distribution 'shape' must be > 0".to_string(),
                     });
                 }
-            }
             if !params.contains_key("scale") {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "gamma distribution requires 'scale' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("scale") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("scale")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "gamma distribution 'scale' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Beta => {
             if !params.contains_key("alpha") {
@@ -1016,27 +997,25 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "beta distribution requires 'alpha' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("alpha") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("alpha")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "beta distribution 'alpha' must be > 0".to_string(),
                     });
                 }
-            }
             if !params.contains_key("beta") {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "beta distribution requires 'beta' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("beta") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("beta")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "beta distribution 'beta' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Cauchy => {
             if !params.contains_key("median") {
@@ -1050,14 +1029,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "cauchy distribution requires 'scale' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("scale") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("scale")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "cauchy distribution 'scale' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::ChiSquared => {
             if !params.contains_key("k") {
@@ -1065,14 +1043,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "chi-squared distribution requires 'k' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("k") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("k")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "chi-squared distribution 'k' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::StudentT => {
             if !params.contains_key("n") {
@@ -1080,14 +1057,13 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "student-t distribution requires 'n' param".to_string(),
                 });
-            } else if let Some(&v) = params.get("n") {
-                if v <= 0.0 {
+            } else if let Some(&v) = params.get("n")
+                && v <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "student-t distribution 'n' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Triangular => {
             if !params.contains_key("min") {
@@ -1118,8 +1094,8 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                         ),
                     });
                 }
-                if let Some(&mode) = params.get("mode") {
-                    if mode < min || mode > max {
+                if let Some(&mode) = params.get("mode")
+                    && (mode < min || mode > max) {
                         errors.push(BlueprintError::Validation {
                             path: path.to_string(),
                             message: format!(
@@ -1128,7 +1104,6 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                             ),
                         });
                     }
-                }
             }
         }
         DistributionKind::Zipf => {
@@ -1137,28 +1112,26 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "zipf distribution requires 'n' param".to_string(),
                 });
-            } else if let Some(&n) = params.get("n") {
-                if n < 1.0 || n.fract() != 0.0 {
+            } else if let Some(&n) = params.get("n")
+                && (n < 1.0 || n.fract() != 0.0) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "zipf distribution 'n' must be >= 1 and integer-valued"
                             .to_string(),
                     });
                 }
-            }
             if !params.contains_key("s") {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: "zipf distribution requires 's' param".to_string(),
                 });
-            } else if let Some(&s) = params.get("s") {
-                if s <= 0.0 {
+            } else if let Some(&s) = params.get("s")
+                && s <= 0.0 {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "zipf distribution 's' must be > 0".to_string(),
                     });
                 }
-            }
         }
         DistributionKind::Dirichlet => {
             let alpha = spec.array_params.get("alpha");
@@ -1204,15 +1177,14 @@ fn validate_distribution(path: &str, spec: &DistributionSpec, errors: &mut Vec<B
                     path: path.to_string(),
                     message: "multinomial distribution requires 'n' param".to_string(),
                 });
-            } else if let Some(&n) = spec.params.get("n") {
-                if !n.is_finite() || n < 1.0 || n.fract() != 0.0 {
+            } else if let Some(&n) = spec.params.get("n")
+                && (!n.is_finite() || n < 1.0 || n.fract() != 0.0) {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "multinomial distribution 'n' must be a positive integer"
                             .to_string(),
                     });
                 }
-            }
             let p = spec.array_params.get("p");
             match p {
                 None => {
@@ -1376,8 +1348,8 @@ const KNOWN_FAKER_METHODS: &[&str] = &[
 ///
 /// Generators that produce arbitrary types (constant, derived, oneOf, lookup,
 /// composite, conditional, unique) are not checked here.
-fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Option<String> {
-    match gen {
+fn check_generator_type_compat(r#gen: &GeneratorSpec, data_type: &DataType) -> Option<String> {
+    match r#gen {
         GeneratorSpec::Distribution { spec } => {
             let compatible = match &spec.kind {
                 DistributionKind::Dirichlet | DistributionKind::Multinomial => {
@@ -1604,7 +1576,7 @@ fn check_generator_type_compat(gen: &GeneratorSpec, data_type: &DataType) -> Opt
 #[allow(clippy::too_many_arguments)]
 fn validate_generator(
     path: &str,
-    gen: &GeneratorSpec,
+    r#gen: &GeneratorSpec,
     field_name: &str,
     data_type: &DataType,
     entity: &Entity,
@@ -1614,14 +1586,14 @@ fn validate_generator(
     errors: &mut Vec<BlueprintError>,
 ) {
     // Check generator ↔ field type compatibility
-    if let Some(msg) = check_generator_type_compat(gen, data_type) {
+    if let Some(msg) = check_generator_type_compat(r#gen, data_type) {
         errors.push(BlueprintError::Validation {
             path: path.to_string(),
             message: msg,
         });
     }
 
-    match gen {
+    match r#gen {
         GeneratorSpec::Distribution { spec } => {
             validate_distribution(path, spec, errors);
         }
@@ -1706,23 +1678,21 @@ fn validate_generator(
                 });
             }
             // Validate timezone is a valid IANA timezone
-            if let Some(tz) = timezone {
-                if tz.parse::<chrono_tz::Tz>().is_err() {
+            if let Some(tz) = timezone
+                && tz.parse::<chrono_tz::Tz>().is_err() {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!("business_hours: invalid timezone '{}'", tz),
                     });
                 }
-            }
             // timezone_field must reference an existing field in the same entity
-            if let Some(ref tz_f) = timezone_field {
+            if let Some(tz_f) = timezone_field {
                 // Path format: "entities.<entity_name>.fields.<field_name>.generator"
                 // Extract entity name from path
                 if let Some(entity_name) = path
                     .strip_prefix("entities.")
                     .and_then(|p| p.split('.').next())
-                {
-                    if let Some(current_entity) =
+                    && let Some(current_entity) =
                         model.entities.iter().find(|e| e.name == entity_name)
                     {
                         let field_names: HashSet<&str> = current_entity
@@ -1740,10 +1710,9 @@ fn validate_generator(
                             });
                         }
                     }
-                }
             }
             // days and exclude_weekends=true are mutually exclusive
-            if let Some(ref d) = days {
+            if let Some(d) = days {
                 if *exclude_weekends {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
@@ -1783,7 +1752,7 @@ fn validate_generator(
                 }
             }
             // Validate date_range
-            if let Some(ref dr) = date_range {
+            if let Some(dr) = date_range {
                 let min_parsed = chrono::NaiveDate::parse_from_str(&dr.min, "%Y-%m-%d");
                 let max_parsed = chrono::NaiveDate::parse_from_str(&dr.max, "%Y-%m-%d");
                 match (min_parsed, max_parsed) {
@@ -1824,8 +1793,8 @@ fn validate_generator(
             }
         }
         GeneratorSpec::Lookup {
-            entity: ref lookup_entity,
-            field: ref lookup_field,
+            entity: lookup_entity,
+            field: lookup_field,
         } => {
             if nested {
                 errors.push(BlueprintError::Validation {
@@ -2017,15 +1986,15 @@ fn validate_generator(
             }
         }
         GeneratorSpec::ActorRef {
-            entity: ref actor_entity,
+            entity: actor_entity,
         } => {
             if !entity_names.contains(actor_entity.as_str()) {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("actor_ref references unknown entity '{}'", actor_entity),
                 });
-            } else if let Some(target) = model.entities.iter().find(|e| e.name == *actor_entity) {
-                if !target.actor {
+            } else if let Some(target) = model.entities.iter().find(|e| e.name == *actor_entity)
+                && !target.actor {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
@@ -2034,7 +2003,6 @@ fn validate_generator(
                         ),
                     });
                 }
-            }
         }
         GeneratorSpec::RelationshipRef {
             relationship,
@@ -2059,15 +2027,14 @@ fn validate_generator(
                     ),
                 });
             }
-            if let Some(src) = source_field {
-                if src.is_empty() {
+            if let Some(src) = source_field
+                && src.is_empty() {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: "relationship_ref source_field must not be empty when specified"
                             .to_string(),
                     });
                 }
-            }
         }
         GeneratorSpec::ActorTemporal {
             trait_name,
@@ -2233,7 +2200,7 @@ fn validate_generator(
             }
         }
         // ─── Derived expression validation ─────────────────────────────
-        GeneratorSpec::Derived { expr: ref expr_str } => {
+        GeneratorSpec::Derived { expr: expr_str } => {
             // Try parsing as expression; fall back to legacy template check.
             match expr::parser::parse(expr_str) {
                 Ok(ast) => {
@@ -2324,17 +2291,16 @@ fn validate_generator(
         max,
         timestamp_field,
         ..
-    } = gen
+    } = r#gen
     {
         // Validate min < max
-        if let (Some(mn), Some(mx)) = (min, max) {
-            if mn >= mx {
+        if let (Some(mn), Some(mx)) = (min, max)
+            && mn >= mx {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),
                     message: format!("time_series min ({}) must be less than max ({})", mn, mx),
                 });
             }
-        }
 
         // Check that timestamp_field exists in entity if calendar components are used
         let has_calendar = components.iter().any(|c| {
@@ -2411,8 +2377,7 @@ fn validate_generator(
                 end_hour,
                 ..
             } = c
-            {
-                if start_hour >= end_hour {
+                && start_hour >= end_hour {
                     errors.push(BlueprintError::Validation {
                         path: path.to_string(),
                         message: format!(
@@ -2421,7 +2386,6 @@ fn validate_generator(
                         ),
                     });
                 }
-            }
             if let crate::core::TimeSeriesComponent::HolidayEffect { dates, multiplier } = c {
                 if dates.is_empty() {
                     errors.push(BlueprintError::Validation {
@@ -2455,7 +2419,7 @@ fn validate_generator(
         start,
         arrival,
         components,
-    } = gen
+    } = r#gen
     {
         // Validate start time parses.
         if chrono::DateTime::parse_from_rfc3339(start).is_err()
@@ -2663,12 +2627,11 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
             }
 
             // Validate FK field type matches target PK type
-            if let Some(pk) = pk_field {
-                if let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from) {
-                    if let Some(fk_field) =
+            if let Some(pk) = pk_field
+                && let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from)
+                    && let Some(fk_field) =
                         from_entity.fields.iter().find(|f| f.name == effective_fk)
-                    {
-                        if fk_field.data_type != pk.data_type {
+                        && fk_field.data_type != pk.data_type {
                             errors.push(BlueprintError::Validation {
                                 path: path.clone(),
                                 message: format!(
@@ -2677,9 +2640,6 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                                 ),
                             });
                         }
-                    }
-                }
-            }
         }
 
         if let Some(ref count) = rel.cardinality {
@@ -2695,8 +2655,8 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                         .params
                         .get("exponent")
                         .or_else(|| degree.params.get("s"));
-                    if let Some(&s) = exponent {
-                        if !s.is_finite() || s <= 0.0 {
+                    if let Some(&s) = exponent
+                        && (!s.is_finite() || s <= 0.0) {
                             errors.push(BlueprintError::Validation {
                                 path: dp.clone(),
                                 message: format!(
@@ -2704,7 +2664,6 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                                 ),
                             });
                         }
-                    }
                     // exponent is optional; defaults to 1.0 at runtime
                 }
                 _ => {
@@ -2825,8 +2784,8 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
             });
         }
 
-        if let Some(p) = rel.root_probability {
-            if p <= 0.0 || p > 1.0 {
+        if let Some(p) = rel.root_probability
+            && (p <= 0.0 || p > 1.0) {
                 errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
@@ -2835,10 +2794,9 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                     ),
                 });
             }
-        }
 
-        if let Some(d) = rel.max_depth {
-            if d < 1 {
+        if let Some(d) = rel.max_depth
+            && d < 1 {
                 errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
@@ -2847,7 +2805,6 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                     ),
                 });
             }
-        }
 
         // Self-ref with root nodes requires nullable FK
         if is_self_ref {
@@ -2903,11 +2860,11 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                 }
 
                 // Validate generator spec if present
-                if let Some(ref gen) = prop.generator {
-                    if let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from) {
+                if let Some(ref r#gen) = prop.generator
+                    && let Some(from_entity) = model.entities.iter().find(|e| e.name == rel.from) {
                         validate_generator(
                             &format!("{}.generator", pp),
-                            gen,
+                            r#gen,
                             &prop.name,
                             &prop.data_type,
                             from_entity,
@@ -2917,7 +2874,6 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
                             errors,
                         );
                     }
-                }
             }
 
             // Check for name conflicts with entity fields and across relationships
@@ -3021,12 +2977,12 @@ fn validate_noise_profiles(model: &DataModel, errors: &mut Vec<BlueprintError>) 
 
         // Validate scope expression (if present)
         if let Some(ref scope) = noise.scope {
-            match crate::gen::expr::parser::parse(&scope.where_expr) {
+            match crate::r#gen::expr::parser::parse(&scope.where_expr) {
                 Ok(expr) => {
                     // Validate field refs exist in the target entity
                     if names.contains(noise.entity.as_str()) {
                         let fields = entity_field_names(model, &noise.entity);
-                        for field_ref in crate::gen::expr::ast::extract_field_refs(&expr) {
+                        for field_ref in crate::r#gen::expr::ast::extract_field_refs(&expr) {
                             if !fields.contains(field_ref.as_str()) {
                                 errors.push(BlueprintError::Validation {
                                     path: path.clone(),
@@ -3534,8 +3490,8 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<BlueprintErr
                 path: path.clone(),
                 message: format!("from_entity '{}' references unknown entity", ar.from_entity),
             });
-        } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.from_entity) {
-            if !entity.actor {
+        } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.from_entity)
+            && !entity.actor {
                 errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
@@ -3544,7 +3500,6 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<BlueprintErr
                     ),
                 });
             }
-        }
 
         // to_entity must exist and be an actor
         if !names.contains(ar.to_entity.as_str()) {
@@ -3552,18 +3507,17 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<BlueprintErr
                 path: path.clone(),
                 message: format!("to_entity '{}' references unknown entity", ar.to_entity),
             });
-        } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.to_entity) {
-            if !entity.actor {
+        } else if let Some(entity) = model.entities.iter().find(|e| e.name == ar.to_entity)
+            && !entity.actor {
                 errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!("to_entity '{}' is not marked as actor = true", ar.to_entity),
                 });
             }
-        }
 
         // avg_degree param (if present) must be positive and finite
-        if let Some(&avg_degree) = ar.params.get("avg_degree") {
-            if !avg_degree.is_finite() || avg_degree <= 0.0 {
+        if let Some(&avg_degree) = ar.params.get("avg_degree")
+            && (!avg_degree.is_finite() || avg_degree <= 0.0) {
                 errors.push(BlueprintError::Validation {
                     path: path.clone(),
                     message: format!(
@@ -3572,7 +3526,6 @@ fn validate_actor_relationships(model: &DataModel, errors: &mut Vec<BlueprintErr
                     ),
                 });
             }
-        }
     }
 }
 
@@ -3583,8 +3536,8 @@ fn validate_dependency_cycles(model: &DataModel, errors: &mut Vec<BlueprintError
         // Build adjacency: field_name → set of field names it depends on (owned)
         let mut deps: HashMap<String, Vec<String>> = HashMap::new();
         for field in &entity.fields {
-            if let Some(ref gen) = field.generator {
-                let field_deps = collect_generator_deps_owned(gen);
+            if let Some(ref r#gen) = field.generator {
+                let field_deps = collect_generator_deps_owned(r#gen);
                 if !field_deps.is_empty() {
                     deps.insert(field.name.clone(), field_deps);
                 }
@@ -3617,9 +3570,9 @@ fn validate_dependency_cycles(model: &DataModel, errors: &mut Vec<BlueprintError
 /// For parsed expressions, uses AST-based field ref extraction (ignores
 /// `${...}` inside string literals). Falls back to template scanning
 /// only for legacy templates that fail expression parsing.
-fn collect_generator_deps_owned(gen: &GeneratorSpec) -> Vec<String> {
-    match gen {
-        GeneratorSpec::Derived { expr: ref expr_str } => {
+fn collect_generator_deps_owned(r#gen: &GeneratorSpec) -> Vec<String> {
+    match r#gen {
+        GeneratorSpec::Derived { expr: expr_str } => {
             // Try parsing as expression first — AST-based extraction is more
             // accurate (ignores ${...} inside string literals).
             let refs = if let Ok(ast) = expr::parser::parse(expr_str) {

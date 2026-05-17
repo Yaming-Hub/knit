@@ -11,8 +11,8 @@ use rand::RngCore;
 
 use crate::core::{Value, WeightedChoice};
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate values by weighted random choice using the alias method.
 ///
@@ -259,10 +259,10 @@ mod tests {
                 weight: 99.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
+        let r#gen = OneOfGenerator::new(choices);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10_000, &ctx);
+        let arr = r#gen.generate(&mut rng, 10_000, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         let common_count = (0..str_arr.len())
@@ -288,11 +288,11 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
-        assert_eq!(gen.output_type(), DataType::Int64);
+        let r#gen = OneOfGenerator::new(choices);
+        assert_eq!(r#gen.output_type(), DataType::Int64);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for v in i64_arr.values().iter() {
             assert!(*v == 10 || *v == 20);
@@ -301,10 +301,10 @@ mod tests {
 
     #[test]
     fn empty_choices_does_not_panic() {
-        let gen = OneOfGenerator::new(vec![]);
+        let r#gen = OneOfGenerator::new(vec![]);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         assert_eq!(arr.len(), 5);
     }
 
@@ -320,11 +320,11 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
-        assert_eq!(gen.output_type(), DataType::Float64);
+        let r#gen = OneOfGenerator::new(choices);
+        assert_eq!(r#gen.output_type(), DataType::Float64);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         for v in f64_arr.values().iter() {
             assert!(*v == 1.5 || *v == 2.5, "unexpected float value: {v}");
@@ -343,11 +343,11 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
-        assert_eq!(gen.output_type(), DataType::Boolean);
+        let r#gen = OneOfGenerator::new(choices);
+        assert_eq!(r#gen.output_type(), DataType::Boolean);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 1000, &ctx);
+        let arr = r#gen.generate(&mut rng, 1000, &ctx);
         let bool_arr = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
         let true_count = (0..bool_arr.len()).filter(|&i| bool_arr.value(i)).count();
         // Roughly 50/50 with equal weights
@@ -363,10 +363,10 @@ mod tests {
             value: Value::String("only".into()),
             weight: 1.0,
         }];
-        let gen = OneOfGenerator::new(choices);
+        let r#gen = OneOfGenerator::new(choices);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..100 {
             assert_eq!(str_arr.value(i), "only");
@@ -390,10 +390,10 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
+        let r#gen = OneOfGenerator::new(choices);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10_000, &ctx);
+        let arr = r#gen.generate(&mut rng, 10_000, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let dominant = (0..str_arr.len())
             .filter(|&i| str_arr.value(i) == "dominant")
@@ -422,10 +422,10 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
+        let r#gen = OneOfGenerator::new(choices);
         let ctx = make_ctx();
-        let a = gen.generate(&mut ChaCha8Rng::seed_from_u64(42), 50, &ctx);
-        let b = gen.generate(&mut ChaCha8Rng::seed_from_u64(42), 50, &ctx);
+        let a = r#gen.generate(&mut ChaCha8Rng::seed_from_u64(42), 50, &ctx);
+        let b = r#gen.generate(&mut ChaCha8Rng::seed_from_u64(42), 50, &ctx);
         let a_s = a.as_any().downcast_ref::<StringArray>().unwrap();
         let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..50 {
@@ -453,10 +453,10 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let gen = OneOfGenerator::new(choices);
+        let r#gen = OneOfGenerator::new(choices);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10_000, &ctx);
+        let arr = r#gen.generate(&mut rng, 10_000, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let mut counts = HashMap::new();
         for i in 0..str_arr.len() {

@@ -2620,7 +2620,7 @@ fn eval_random_duration(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::expr::parser;
+    use crate::r#gen::expr::parser;
 
     fn eval_expr(expr_str: &str, columns: HashMap<String, ArrayRef>) -> ArrayRef {
         let ast = parser::parse(expr_str).unwrap();

@@ -174,7 +174,7 @@ fn reconstruct_custom(model: &DataModel) -> Vec<CustomDimension> {
                 let is_condition_key = entity.fields.iter().any(|f| {
                     matches!(
                         &f.generator,
-                        Some(GeneratorSpec::Conditional { field: ref cond_field, .. })
+                        Some(GeneratorSpec::Conditional { field: cond_field, .. })
                         if cond_field == &custom.field
                     )
                 });
@@ -197,8 +197,8 @@ fn recover_custom_values(
     entity: &crate::core::types::Entity,
     field_name: &str,
 ) -> Vec<(String, f64)> {
-    if let Some(field) = entity.fields.iter().find(|f| f.name == field_name) {
-        if let Some(GeneratorSpec::OneOf { ref choices }) = field.generator {
+    if let Some(field) = entity.fields.iter().find(|f| f.name == field_name)
+        && let Some(GeneratorSpec::OneOf { ref choices }) = field.generator {
             return choices
                 .iter()
                 .map(|c| {
@@ -210,7 +210,6 @@ fn recover_custom_values(
                 })
                 .collect();
         }
-    }
     vec![]
 }
 
@@ -298,8 +297,8 @@ fn detect_actor(
         }
     }
 
-    if let Some((&root_name, &count)) = ref_counts.iter().max_by_key(|(_, c)| *c) {
-        if count >= 1 {
+    if let Some((&root_name, &count)) = ref_counts.iter().max_by_key(|(_, c)| *c)
+        && count >= 1 {
             let dependents = find_dependents(model, root_name, entity_counts);
             let entity_count = entity_counts.get(root_name).copied().unwrap_or(1);
             return Some(ActorDimension {
@@ -309,7 +308,6 @@ fn detect_actor(
                 confidence: 0.6 + 0.1 * count.min(4) as f64,
             });
         }
-    }
 
     None
 }
@@ -337,8 +335,8 @@ fn find_dependents(
 /// Detect time dimension from partition-based entities.
 fn detect_time(model: &DataModel) -> Option<TimeDimension> {
     for entity in &model.entities {
-        if let Some(ref output) = entity.output {
-            if let Some(ref partition_field) = output.partition_by {
+        if let Some(ref output) = entity.output
+            && let Some(ref partition_field) = output.partition_by {
                 if output.partition_values.is_empty() {
                     continue;
                 }
@@ -361,7 +359,6 @@ fn detect_time(model: &DataModel) -> Option<TimeDimension> {
                     });
                 }
             }
-        }
     }
     None
 }
@@ -483,8 +480,8 @@ fn detect_custom_dimensions(
             }
 
             // Check if this field uses OneOf with low cardinality
-            if let Some(GeneratorSpec::OneOf { ref choices }) = field.generator {
-                if choices.len() >= 2 && choices.len() <= 50 {
+            if let Some(GeneratorSpec::OneOf { ref choices }) = field.generator
+                && choices.len() >= 2 && choices.len() <= 50 {
                     let entity_count = entity_counts.get(&entity.name).copied().unwrap_or(1);
                     let ratio = choices.len() as f64 / entity_count as f64;
                     if ratio < 0.1 || choices.len() <= 20 {
@@ -492,7 +489,7 @@ fn detect_custom_dimensions(
                         let is_condition_key = entity.fields.iter().any(|f| {
                             matches!(
                                 &f.generator,
-                                Some(GeneratorSpec::Conditional { field: ref cond_field, .. })
+                                Some(GeneratorSpec::Conditional { field: cond_field, .. })
                                 if cond_field == &field.name
                             )
                         });
@@ -516,7 +513,6 @@ fn detect_custom_dimensions(
                         });
                     }
                 }
-            }
         }
     }
 

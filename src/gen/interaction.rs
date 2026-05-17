@@ -20,8 +20,8 @@ use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-use crate::gen::actor_pool::ActorPool;
-use crate::gen::graph::{Edge, GeneratedGraph};
+use crate::r#gen::actor_pool::ActorPool;
+use crate::r#gen::graph::{Edge, GeneratedGraph};
 
 /// Configuration for generating interactions for one behavioral entity.
 #[derive(Debug, Clone)]

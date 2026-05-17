@@ -15,8 +15,8 @@ use arrow::array::{ArrayRef, Int64Array, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 /// Clustered FK generator for integer primary keys.
 pub struct ClusteredForeignKeyGenerator {
@@ -163,8 +163,8 @@ impl FieldGenerator for ClusteredStringForeignKeyGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::context::GenContext;
-    use crate::gen::keystore::InMemoryKeyStore;
+    use crate::r#gen::context::GenContext;
+    use crate::r#gen::keystore::InMemoryKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -181,9 +181,9 @@ mod tests {
         for i in 1..=100 {
             store.insert(i);
         }
-        let gen = ClusteredForeignKeyGenerator::new(store, 10, 50);
+        let r#gen = ClusteredForeignKeyGenerator::new(store, 10, 50);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 50, &make_ctx_with_offset(0));
+        let arr = r#gen.generate(&mut rng, 50, &make_ctx_with_offset(0));
 
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..50 {
@@ -200,11 +200,11 @@ mod tests {
         for i in 1..=100 {
             store.insert(i);
         }
-        let gen = ClusteredForeignKeyGenerator::new(store, 10, 100);
+        let r#gen = ClusteredForeignKeyGenerator::new(store, 10, 100);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
         // Generate 100 child rows
-        let arr = gen.generate(&mut rng, 100, &make_ctx_with_offset(0));
+        let arr = r#gen.generate(&mut rng, 100, &make_ctx_with_offset(0));
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // First 10 children should mostly reference low-index parents
@@ -221,9 +221,9 @@ mod tests {
     #[test]
     fn clustered_empty_store_nulls() {
         let store = Arc::new(InMemoryKeyStore::new());
-        let gen = ClusteredForeignKeyGenerator::new(store, 10, 5);
+        let r#gen = ClusteredForeignKeyGenerator::new(store, 10, 5);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &make_ctx_with_offset(0));
+        let arr = r#gen.generate(&mut rng, 5, &make_ctx_with_offset(0));
         assert_eq!(arr.null_count(), 5);
     }
 
@@ -231,9 +231,9 @@ mod tests {
     fn clustered_single_parent() {
         let store = Arc::new(InMemoryKeyStore::new());
         store.insert(42);
-        let gen = ClusteredForeignKeyGenerator::new(store, 10, 10);
+        let r#gen = ClusteredForeignKeyGenerator::new(store, 10, 10);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10, &make_ctx_with_offset(0));
+        let arr = r#gen.generate(&mut rng, 10, &make_ctx_with_offset(0));
 
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..10 {
@@ -247,12 +247,12 @@ mod tests {
         for i in 1..=50 {
             store.insert(i);
         }
-        let gen = ClusteredForeignKeyGenerator::new(store, 20, 30);
+        let r#gen = ClusteredForeignKeyGenerator::new(store, 20, 30);
 
         let mut rng1 = ChaCha8Rng::seed_from_u64(99);
-        let arr1 = gen.generate(&mut rng1, 30, &make_ctx_with_offset(0));
+        let arr1 = r#gen.generate(&mut rng1, 30, &make_ctx_with_offset(0));
         let mut rng2 = ChaCha8Rng::seed_from_u64(99);
-        let arr2 = gen.generate(&mut rng2, 30, &make_ctx_with_offset(0));
+        let arr2 = r#gen.generate(&mut rng2, 30, &make_ctx_with_offset(0));
 
         let v1 = arr1.as_any().downcast_ref::<Int64Array>().unwrap();
         let v2 = arr2.as_any().downcast_ref::<Int64Array>().unwrap();

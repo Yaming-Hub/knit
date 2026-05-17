@@ -139,16 +139,14 @@ pub fn update_relationship_evidence(state: &mut LearnState) {
 
     // Stage 2: Update HLL sketches by merging column HLLs directly
     for ev in &mut state.relationship_evidence {
-        if let Some(table) = state.tables.get(&ev.from_table) {
-            if let Some(col) = table.columns.iter().find(|c| c.name == ev.from_column) {
+        if let Some(table) = state.tables.get(&ev.from_table)
+            && let Some(col) = table.columns.iter().find(|c| c.name == ev.from_column) {
                 ev.from_hll.merge(&col.hll);
             }
-        }
-        if let Some(table) = state.tables.get(&ev.to_table) {
-            if let Some(col) = table.columns.iter().find(|c| c.name == ev.to_column) {
+        if let Some(table) = state.tables.get(&ev.to_table)
+            && let Some(col) = table.columns.iter().find(|c| c.name == ev.to_column) {
                 ev.to_hll.merge(&col.hll);
             }
-        }
         ev.chunks_observed += 1;
     }
 }

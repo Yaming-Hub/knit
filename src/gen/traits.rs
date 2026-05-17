@@ -8,7 +8,7 @@ use arrow::array::ArrayRef;
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
+use crate::r#gen::context::GenContext;
 
 /// Generate a column of synthetic values as an Arrow array.
 ///

@@ -10,8 +10,8 @@ use arrow::array::{ArrayRef, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate strings by expanding a pattern template.
 ///
@@ -89,10 +89,10 @@ mod tests {
 
     #[test]
     fn pattern_format() {
-        let gen = PatternGenerator::new("###-???-AAA".into());
+        let r#gen = PatternGenerator::new("###-???-AAA".into());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         for i in 0..str_arr.len() {
@@ -118,10 +118,10 @@ mod tests {
 
     #[test]
     fn literal_passthrough() {
-        let gen = PatternGenerator::new("hello-world".into());
+        let r#gen = PatternGenerator::new("hello-world".into());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(str_arr.value(i), "hello-world");
@@ -130,10 +130,10 @@ mod tests {
 
     #[test]
     fn deterministic() {
-        let gen = PatternGenerator::new("##??AA".into());
+        let r#gen = PatternGenerator::new("##??AA".into());
         let ctx = make_ctx();
-        let a = gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 10, &ctx);
-        let b = gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 10, &ctx);
+        let a = r#gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 10, &ctx);
+        let b = r#gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 10, &ctx);
         let a_s = a.as_any().downcast_ref::<StringArray>().unwrap();
         let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..10 {
@@ -143,10 +143,10 @@ mod tests {
 
     #[test]
     fn empty_pattern() {
-        let gen = PatternGenerator::new(String::new());
+        let r#gen = PatternGenerator::new(String::new());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
             assert_eq!(str_arr.value(i), "");
@@ -155,10 +155,10 @@ mod tests {
 
     #[test]
     fn digits_only_pattern() {
-        let gen = PatternGenerator::new("######".into());
+        let r#gen = PatternGenerator::new("######".into());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..100 {
             let s = str_arr.value(i);
@@ -173,10 +173,10 @@ mod tests {
     #[test]
     fn special_chars_pass_through() {
         // Characters like @, ., -, space should pass through literally
-        let gen = PatternGenerator::new("##@#.#-# #".into());
+        let r#gen = PatternGenerator::new("##@#.#-# #".into());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..50 {
             let s = str_arr.value(i);
@@ -190,26 +190,26 @@ mod tests {
 
     #[test]
     fn output_type_is_utf8() {
-        let gen = PatternGenerator::new("##".into());
-        assert_eq!(gen.output_type(), DataType::Utf8);
+        let r#gen = PatternGenerator::new("##".into());
+        assert_eq!(r#gen.output_type(), DataType::Utf8);
     }
 
     #[test]
     fn zero_count_produces_empty_array() {
-        let gen = PatternGenerator::new("###".into());
+        let r#gen = PatternGenerator::new("###".into());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 0, &ctx);
+        let arr = r#gen.generate(&mut rng, 0, &ctx);
         assert_eq!(arr.len(), 0);
     }
 
     #[test]
     fn values_vary_across_rows() {
         // With enough rows, pattern output should not be all identical
-        let gen = PatternGenerator::new("????".into());
+        let r#gen = PatternGenerator::new("????".into());
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let unique: std::collections::HashSet<&str> = (0..100).map(|i| str_arr.value(i)).collect();
         assert!(

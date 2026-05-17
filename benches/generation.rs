@@ -4,7 +4,7 @@ use std::sync::Arc;
 use arrow::record_batch::RecordBatch;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use knit::blueprint::{parse_toml, validate};
-use knit::gen::{ActorPool, GenerationEngine};
+use knit::r#gen::{ActorPool, GenerationEngine};
 use knit::plan::compile;
 
 const NUMERIC_BLUEPRINT: &str = r#"

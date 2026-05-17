@@ -12,9 +12,9 @@ use rand::RngCore;
 
 use crate::plan::GeneratorPlan;
 
-use crate::gen::context::GenContext;
-use crate::gen::generators::{create_generator, create_generator_with_seen, SharedSeen};
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::generators::{create_generator, create_generator_with_seen, SharedSeen};
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate JSON array strings by composing an element generator and a length generator.
 ///
@@ -139,13 +139,13 @@ mod tests {
 
     #[test]
     fn composite_produces_json_arrays() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Int(42)),
             &GeneratorPlan::Constant(Value::Int(3)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 2, &ctx);
+        let arr = r#gen.generate(&mut rng, 2, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         assert_eq!(str_arr.value(0), "[42,42,42]");
@@ -154,13 +154,13 @@ mod tests {
 
     #[test]
     fn composite_with_strings() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::String("hi".into())),
             &GeneratorPlan::Constant(Value::Int(2)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         assert_eq!(str_arr.value(0), "[\"hi\",\"hi\"]");
@@ -168,13 +168,13 @@ mod tests {
 
     #[test]
     fn composite_zero_length() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Int(1)),
             &GeneratorPlan::Constant(Value::Int(0)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         for i in 0..3 {
@@ -184,13 +184,13 @@ mod tests {
 
     #[test]
     fn composite_with_floats() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Float(std::f64::consts::PI)),
             &GeneratorPlan::Constant(Value::Int(2)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let val = str_arr.value(0);
         // Should be a JSON array of two float values
@@ -203,13 +203,13 @@ mod tests {
 
     #[test]
     fn composite_single_element() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::String("only".into())),
             &GeneratorPlan::Constant(Value::Int(1)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.value(0), "[\"only\"]");
     }
@@ -217,13 +217,13 @@ mod tests {
     #[test]
     fn composite_string_with_special_chars() {
         // Test JSON escaping of quotes and backslashes
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::String("path\\name \"quoted\"".into())),
             &GeneratorPlan::Constant(Value::Int(1)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let val = str_arr.value(0);
         // Quotes should be escaped
@@ -240,18 +240,18 @@ mod tests {
 
     #[test]
     fn composite_output_type_is_utf8() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Int(1)),
             &GeneratorPlan::Constant(Value::Int(1)),
         );
-        assert_eq!(gen.output_type(), DataType::Utf8);
+        assert_eq!(r#gen.output_type(), DataType::Utf8);
     }
 
     #[test]
     fn composite_multiple_rows_different_lengths() {
         use crate::core::WeightedChoice;
         // Use OneOf to produce varying lengths [1, 3]
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Int(7)),
             &GeneratorPlan::OneOf {
                 choices: vec![
@@ -269,7 +269,7 @@ mod tests {
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let mut seen_lengths = std::collections::HashSet::new();
         for i in 0..10 {
@@ -297,13 +297,13 @@ mod tests {
 
     #[test]
     fn composite_deterministic() {
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Int(42)),
             &GeneratorPlan::Constant(Value::Int(2)),
         );
         let ctx = make_ctx();
-        let a = gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 5, &ctx);
-        let b = gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 5, &ctx);
+        let a = r#gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 5, &ctx);
+        let b = r#gen.generate(&mut ChaCha8Rng::seed_from_u64(99), 5, &ctx);
         let a_s = a.as_any().downcast_ref::<StringArray>().unwrap();
         let b_s = b.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
@@ -318,13 +318,13 @@ mod tests {
     #[test]
     fn composite_negative_length_clamped_to_zero() {
         // Negative length should be clamped to 0, producing empty arrays
-        let gen = CompositeGenerator::new(
+        let r#gen = CompositeGenerator::new(
             &GeneratorPlan::Constant(Value::Int(42)),
             &GeneratorPlan::Constant(Value::Int(-5)),
         );
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(

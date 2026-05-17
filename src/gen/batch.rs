@@ -9,7 +9,7 @@ use arrow::datatypes::{Field, Schema};
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 
-use crate::gen::error::GenError;
+use crate::r#gen::error::GenError;
 
 /// Assemble field arrays into a [`RecordBatch`].
 ///

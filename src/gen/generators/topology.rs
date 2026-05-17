@@ -25,8 +25,8 @@ use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
 use rand_distr::Poisson;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 // ── BarabasiAlbertGenerator ─────────────────────────────────────────
 
@@ -779,11 +779,11 @@ mod tests {
     fn ba_produces_valid_targets() {
         let mut params = BTreeMap::new();
         params.insert("m".into(), 2.0);
-        let gen = BarabasiAlbertGenerator::new(&params);
+        let r#gen = BarabasiAlbertGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 200, &ctx);
+        let arr = r#gen.generate(&mut rng, 200, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // All targets should be valid node ids [0, 200).
@@ -810,11 +810,11 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("max_depth".into(), 4.0);
         params.insert("branching_mean".into(), 3.0);
-        let gen = TreeGenerator::new(&params);
+        let r#gen = TreeGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 500, &ctx);
+        let arr = r#gen.generate(&mut rng, 500, &ctx);
         let parents = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(parents.len(), 500);
@@ -851,11 +851,11 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("max_depth".into(), 2.0);
         params.insert("branching_mean".into(), 1.5);
-        let gen = TreeGenerator::new(&params);
+        let r#gen = TreeGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(7);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         assert_eq!(arr.len(), 50);
     }
 
@@ -864,11 +864,11 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("k".into(), 4.0);
         params.insert("beta".into(), 0.3);
-        let gen = WattsStrogatzGenerator::new(&params);
+        let r#gen = WattsStrogatzGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(targets.len(), 100);
@@ -899,11 +899,11 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("k".into(), 4.0);
         params.insert("beta".into(), 0.0); // no rewiring
-        let gen = WattsStrogatzGenerator::new(&params);
+        let r#gen = WattsStrogatzGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With beta=0, all primary edges should be ring: i → (i+1) % n
@@ -920,11 +920,11 @@ mod tests {
     fn erdos_renyi_produces_valid_targets() {
         let mut params = BTreeMap::new();
         params.insert("p".into(), 0.3);
-        let gen = ErdosRenyiGenerator::new(&params);
+        let r#gen = ErdosRenyiGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(targets.len(), 100);
@@ -938,11 +938,11 @@ mod tests {
     fn erdos_renyi_dense_graph() {
         let mut params = BTreeMap::new();
         params.insert("p".into(), 0.99);
-        let gen = ErdosRenyiGenerator::new(&params);
+        let r#gen = ErdosRenyiGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With p=0.99, almost all nodes should have a neighbour (very few isolated)
@@ -957,11 +957,11 @@ mod tests {
     fn erdos_renyi_sparse_graph() {
         let mut params = BTreeMap::new();
         params.insert("p".into(), 0.01);
-        let gen = ErdosRenyiGenerator::new(&params);
+        let r#gen = ErdosRenyiGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With p=0.01, most nodes should be isolated (self-referencing)
@@ -976,11 +976,11 @@ mod tests {
     fn erdos_renyi_zero_probability() {
         let mut params = BTreeMap::new();
         params.insert("p".into(), 0.0);
-        let gen = ErdosRenyiGenerator::new(&params);
+        let r#gen = ErdosRenyiGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // All nodes should be isolated (self-referencing)
@@ -1001,11 +1001,11 @@ mod tests {
         params.insert("communities".into(), 3.0);
         params.insert("p_intra".into(), 0.5);
         params.insert("p_inter".into(), 0.05);
-        let gen = StochasticBlockGenerator::new(&params);
+        let r#gen = StochasticBlockGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 150, &ctx);
+        let arr = r#gen.generate(&mut rng, 150, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(targets.len(), 150);
@@ -1021,11 +1021,11 @@ mod tests {
         params.insert("communities".into(), 2.0);
         params.insert("p_intra".into(), 0.9);
         params.insert("p_inter".into(), 0.01);
-        let gen = StochasticBlockGenerator::new(&params);
+        let r#gen = StochasticBlockGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // With 2 communities of 50, high p_intra=0.9 and low p_inter=0.01,
@@ -1049,10 +1049,10 @@ mod tests {
     #[test]
     fn sbm_single_node() {
         let params = BTreeMap::new();
-        let gen = StochasticBlockGenerator::new(&params);
+        let r#gen = StochasticBlockGenerator::new(&params);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         assert_eq!(arr.len(), 1);
     }
 
@@ -1062,11 +1062,11 @@ mod tests {
     fn config_poisson_produces_valid_targets() {
         let mut params = BTreeMap::new();
         params.insert("mean_degree".into(), 4.0);
-        let gen = ConfigurationGenerator::new(&params);
+        let r#gen = ConfigurationGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 200, &ctx);
+        let arr = r#gen.generate(&mut rng, 200, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(targets.len(), 200);
@@ -1088,11 +1088,11 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("exponent".into(), 2.5);
         params.insert("min_degree".into(), 1.0);
-        let gen = ConfigurationGenerator::new(&params);
+        let r#gen = ConfigurationGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(targets.len(), 100);
@@ -1105,10 +1105,10 @@ mod tests {
     #[test]
     fn config_single_node() {
         let params = BTreeMap::new();
-        let gen = ConfigurationGenerator::new(&params);
+        let r#gen = ConfigurationGenerator::new(&params);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         assert_eq!(arr.len(), 1);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(targets.value(0), 0);
@@ -1118,10 +1118,10 @@ mod tests {
 
     #[test]
     fn complete_produces_valid_non_self_targets() {
-        let gen = CompleteGenerator::new(&BTreeMap::new());
+        let r#gen = CompleteGenerator::new(&BTreeMap::new());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         assert_eq!(targets.len(), 100);
@@ -1134,10 +1134,10 @@ mod tests {
 
     #[test]
     fn complete_single_node() {
-        let gen = CompleteGenerator::new(&BTreeMap::new());
+        let r#gen = CompleteGenerator::new(&BTreeMap::new());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 1, &ctx);
+        let arr = r#gen.generate(&mut rng, 1, &ctx);
         assert_eq!(arr.len(), 1);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(targets.value(0), 0);
@@ -1145,10 +1145,10 @@ mod tests {
 
     #[test]
     fn complete_empty() {
-        let gen = CompleteGenerator::new(&BTreeMap::new());
+        let r#gen = CompleteGenerator::new(&BTreeMap::new());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 0, &ctx);
+        let arr = r#gen.generate(&mut rng, 0, &ctx);
         assert_eq!(arr.len(), 0);
     }
 
@@ -1158,11 +1158,11 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("min_degree".into(), 10.0);
         params.insert("mean_degree".into(), 2.0);
-        let gen = ConfigurationGenerator::new(&params);
+        let r#gen = ConfigurationGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let targets = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(targets.len(), 5);
         for i in 0..5 {

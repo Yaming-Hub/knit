@@ -234,11 +234,10 @@ fn extract_csv_strings(
                 continue;
             }
             // Try date shifting first (if enabled)
-            if let Some(shift) = shift_days {
-                if try_register_shifted_date(field, mapper, shift) {
+            if let Some(shift) = shift_days
+                && try_register_shifted_date(field, mapper, shift) {
                     continue;
                 }
-            }
             if should_tokenize_value_with_config(field, config.tokenize_numbers) {
                 mapper.register(field);
             }
@@ -299,11 +298,10 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
                     || key_lower == "tablename"
                     || key_lower == "table_name"
                 {
-                    if let serde_json::Value::String(s) = val {
-                        if should_tokenize_value(s) {
+                    if let serde_json::Value::String(s) = val
+                        && should_tokenize_value(s) {
                             mapper.register(s);
                         }
-                    }
                 } else {
                     // Recurse into nested objects/arrays
                     extract_schema_json_strings(val, mapper);
@@ -337,11 +335,10 @@ fn extract_data_json_strings(
                 return;
             }
             // Try date shifting first
-            if let Some(shift) = date_shift {
-                if try_register_shifted_date(s, mapper, shift) {
+            if let Some(shift) = date_shift
+                && try_register_shifted_date(s, mapper, shift) {
                     return;
                 }
-            }
             if should_tokenize_value_with_config(s, config.tokenize_numbers) {
                 mapper.register(s);
             }
@@ -442,11 +439,10 @@ fn extract_parquet_strings(
                 for i in 0..str_arr.len() {
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
-                        if let Some(shift) = date_shift {
-                            if try_register_shifted_date(val, mapper, shift) {
+                        if let Some(shift) = date_shift
+                            && try_register_shifted_date(val, mapper, shift) {
                                 continue;
                             }
-                        }
                         if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
@@ -456,11 +452,10 @@ fn extract_parquet_strings(
                 for i in 0..str_arr.len() {
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
-                        if let Some(shift) = date_shift {
-                            if try_register_shifted_date(val, mapper, shift) {
+                        if let Some(shift) = date_shift
+                            && try_register_shifted_date(val, mapper, shift) {
                                 continue;
                             }
-                        }
                         if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
@@ -560,8 +555,8 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     let trimmed = s.trim();
 
     // Try ISO date: YYYY-MM-DD
-    if trimmed.len() == 10 {
-        if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
+    if trimmed.len() == 10
+        && let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
             return Some(DateInfo {
                 datetime: d
                     .and_hms_opt(0, 0, 0)
@@ -571,7 +566,6 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
                 frac_seconds: String::new(),
             });
         }
-    }
 
     // Try ISO datetime with T separator
     if trimmed.contains('T') {
@@ -616,8 +610,7 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     if trimmed.len() == 8
         && trimmed.chars().all(|c| c.is_ascii_digit())
         && (trimmed.starts_with("19") || trimmed.starts_with("20"))
-    {
-        if let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
+        && let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
             return Some(DateInfo {
                 datetime: d
                     .and_hms_opt(0, 0, 0)
@@ -627,7 +620,6 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
                 frac_seconds: String::new(),
             });
         }
-    }
 
     None
 }
@@ -674,7 +666,8 @@ fn extract_frac_seconds(s: &str) -> (&str, &str) {
 
 /// Format a shifted datetime back to its original format, preserving fractional seconds.
 fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
-    let base = match info.format {
+    
+    match info.format {
         DateFormat::IsoDate => dt.format("%Y-%m-%d").to_string(),
         DateFormat::IsoDateTimeT => {
             format!("{}{}", dt.format("%Y-%m-%dT%H:%M:%S"), info.frac_seconds,)
@@ -694,8 +687,7 @@ fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
             )
         }
         DateFormat::Compact => dt.format("%Y%m%d").to_string(),
-    };
-    base
+    }
 }
 
 /// Compute a deterministic date shift offset (in days) from a seed.

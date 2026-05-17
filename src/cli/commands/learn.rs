@@ -947,15 +947,14 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
 
         // Enrich distribution-fit decisions with entity/column context
         // (fit_distribution logs the decision without table/column context)
-        if col_analysis.distribution.is_some() {
-            if let Some(logger) = crate::decision::global_logger() {
+        if col_analysis.distribution.is_some()
+            && let Some(logger) = crate::decision::global_logger() {
                 logger.set_last_context(
                     crate::decision::DecisionKind::DistributionFit,
                     &table.entity,
                     &profile.name,
                 );
             }
-        }
 
         col_analyses.push(col_analysis);
 
@@ -1302,12 +1301,11 @@ fn build_column_stats(profile: &ColumnProfile) -> crate::core::ColumnStats {
 
     // Categorical top values (from categorical_weights if available in profile)
     // For batch learn, we extract top values from the cardinality tracker
-    if let Some(ref str_prof) = profile.string {
-        if !str_prof.patterns.is_empty() {
+    if let Some(ref str_prof) = profile.string
+        && !str_prof.patterns.is_empty() {
             // Patterns are stored as (pattern, match_rate) — not the same as top_values.
             // We don't have top-k in batch profiling, so skip for now.
         }
-    }
 
     // Temporal stats
     if let Some(ref temp) = profile.temporal {
@@ -2782,8 +2780,8 @@ fn run_behavioral_pipeline(
         for actor_col in actor_cols.iter() {
             // Check if this column's namespace has already been profiled
             let ns_name = col_to_ns.get(&(table.entity.clone(), actor_col.clone()));
-            if let Some(ns) = ns_name {
-                if profiled_namespaces.contains(ns) {
+            if let Some(ns) = ns_name
+                && profiled_namespaces.contains(ns) {
                     if !cli.quiet {
                         eprintln!(
                             "    {} skipping {}.{} — namespace '{}' already profiled",
@@ -2795,7 +2793,6 @@ fn run_behavioral_pipeline(
                     }
                     continue;
                 }
-            }
 
             if !cli.quiet {
                 let ns_label = ns_name.map_or(String::new(), |n| format!(" [namespace: {}]", n));
@@ -2834,8 +2831,8 @@ fn run_behavioral_pipeline(
 
             if let Some(result) = discover_personas(&profiles, &cluster_config) {
                 let mut personas = result.personas;
-                if let Some(max_k) = opts.max_personas {
-                    if personas.len() > max_k {
+                if let Some(max_k) = opts.max_personas
+                    && personas.len() > max_k {
                         personas.sort_by(|a, b| {
                             b.weight
                                 .partial_cmp(&a.weight)
@@ -2849,7 +2846,6 @@ fn run_behavioral_pipeline(
                             }
                         }
                     }
-                }
 
                 stats.personas_discovered += personas.len();
 
@@ -2885,13 +2881,11 @@ fn run_behavioral_pipeline(
     for (i, table) in tables.iter().enumerate() {
         let actor_cols = &all_actor_cols[i].1;
         for actor_col in actor_cols.iter() {
-            if let Some(ns) = col_to_ns.get(&(table.entity.clone(), actor_col.clone())) {
-                if let Some(personas) = namespace_personas.get(ns) {
-                    if table_analyses[i].personas.is_empty() {
+            if let Some(ns) = col_to_ns.get(&(table.entity.clone(), actor_col.clone()))
+                && let Some(personas) = namespace_personas.get(ns)
+                    && table_analyses[i].personas.is_empty() {
                         table_analyses[i].personas = personas.clone();
                     }
-                }
-            }
         }
     }
 

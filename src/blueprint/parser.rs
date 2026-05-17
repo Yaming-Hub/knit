@@ -234,14 +234,13 @@ pub fn resolve_mixins(model: &mut DataModel) -> Result<(), BlueprintError> {
     if model.mixins.is_empty() {
         // Check for references to undefined mixins
         for entity in &mut model.entities {
-            if let Some(ref refs) = entity.mixin_refs {
-                if let Some(name) = refs.first() {
+            if let Some(ref refs) = entity.mixin_refs
+                && let Some(name) = refs.first() {
                     return Err(BlueprintError::Validation {
                         path: format!("entities.{}.mixins", entity.name),
                         message: format!("references undefined mixin '{}'", name),
                     });
                 }
-            }
             // Normalize empty mixin_refs
             entity.mixin_refs = None;
         }
@@ -436,11 +435,10 @@ fn resolve_fields(
             }
 
             // Inherit nullable if field has default (Never) and custom type specifies one
-            if field.nullable == NullSpec::default() {
-                if let Some(ref ns) = ct.nullable {
+            if field.nullable == NullSpec::default()
+                && let Some(ref ns) = ct.nullable {
                     field.nullable = ns.clone();
                 }
-            }
         }
 
         // Recurse into nested object sub-fields

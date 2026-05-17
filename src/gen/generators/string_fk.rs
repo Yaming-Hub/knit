@@ -11,8 +11,8 @@ use arrow::array::{ArrayRef, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::{FieldGenerator, StringKeyStore};
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::{FieldGenerator, StringKeyStore};
 
 /// Generates a column of string/UUID foreign-key values by sampling from a
 /// parent entity's [`StringKeyStore`].
@@ -57,7 +57,7 @@ impl FieldGenerator for StringForeignKeyGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::string_keystore::InMemoryStringKeyStore;
+    use crate::r#gen::string_keystore::InMemoryStringKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -85,10 +85,10 @@ mod tests {
         store.insert("uuid-bbb".to_string());
         store.insert("uuid-ccc".to_string());
 
-        let gen = StringForeignKeyGenerator::new(store);
+        let r#gen = StringForeignKeyGenerator::new(store);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
 
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 10);
@@ -104,10 +104,10 @@ mod tests {
     #[test]
     fn empty_store_produces_nulls() {
         let store = Arc::new(InMemoryStringKeyStore::new());
-        let gen = StringForeignKeyGenerator::new(store);
+        let r#gen = StringForeignKeyGenerator::new(store);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
 
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 5);
@@ -119,8 +119,8 @@ mod tests {
     #[test]
     fn output_type_is_utf8() {
         let store = Arc::new(InMemoryStringKeyStore::new());
-        let gen = StringForeignKeyGenerator::new(store);
-        assert_eq!(gen.output_type(), DataType::Utf8);
+        let r#gen = StringForeignKeyGenerator::new(store);
+        assert_eq!(r#gen.output_type(), DataType::Utf8);
     }
 
     #[test]
@@ -129,14 +129,14 @@ mod tests {
         for i in 0..10 {
             store.insert(format!("key-{i}"));
         }
-        let gen = StringForeignKeyGenerator::new(Arc::clone(&store));
+        let r#gen = StringForeignKeyGenerator::new(Arc::clone(&store));
         let ctx = test_ctx();
 
         let mut rng1 = ChaCha8Rng::seed_from_u64(123);
-        let arr1 = gen.generate(&mut rng1, 20, &ctx);
+        let arr1 = r#gen.generate(&mut rng1, 20, &ctx);
 
         let mut rng2 = ChaCha8Rng::seed_from_u64(123);
-        let arr2 = gen.generate(&mut rng2, 20, &ctx);
+        let arr2 = r#gen.generate(&mut rng2, 20, &ctx);
 
         let s1 = arr1.as_any().downcast_ref::<StringArray>().unwrap();
         let s2 = arr2.as_any().downcast_ref::<StringArray>().unwrap();

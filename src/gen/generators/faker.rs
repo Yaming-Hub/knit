@@ -14,8 +14,8 @@ use arrow::array::{ArrayRef, Date32Array, StringArray, TimestampNanosecondArray}
 use arrow::datatypes::{DataType, TimeUnit};
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 // ---------------------------------------------------------------------------
 // Word lists
@@ -2314,7 +2314,7 @@ mod tests {
         GenContext::new(map, 0, 0, 1, "test")
     }
 
-    fn gen(category: &str, count: usize, seed: u64) -> ArrayRef {
+    fn r#gen(category: &str, count: usize, seed: u64) -> ArrayRef {
         let g = FakerGenerator::new(category.into(), "en_US".into(), vec![]);
         let ctx = make_ctx();
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
@@ -2340,7 +2340,7 @@ mod tests {
 
     #[test]
     fn first_name_produces_nonempty_strings() {
-        let arr = gen("first_name", 50, 1);
+        let arr = r#gen("first_name", 50, 1);
         assert_eq!(arr.len(), 50);
         for v in strings(&arr) {
             assert!(!v.is_empty(), "first_name produced empty string");
@@ -2349,7 +2349,7 @@ mod tests {
 
     #[test]
     fn last_name_produces_nonempty_strings() {
-        let arr = gen("last_name", 50, 2);
+        let arr = r#gen("last_name", 50, 2);
         assert_eq!(arr.len(), 50);
         for v in strings(&arr) {
             assert!(!v.is_empty());
@@ -2358,7 +2358,7 @@ mod tests {
 
     #[test]
     fn full_name_contains_space() {
-        let arr = gen("full_name", 50, 3);
+        let arr = r#gen("full_name", 50, 3);
         for v in strings(&arr) {
             assert!(v.contains(' '), "full_name missing space: {v}");
         }
@@ -2366,7 +2366,7 @@ mod tests {
 
     #[test]
     fn username_format() {
-        let arr = gen("username", 100, 4);
+        let arr = r#gen("username", 100, 4);
         for v in strings(&arr) {
             assert!(v.contains('_'), "username missing underscore: {v}");
             assert_eq!(v, v.to_lowercase(), "username not lowercase: {v}");
@@ -2375,7 +2375,7 @@ mod tests {
 
     #[test]
     fn email_contains_at() {
-        let arr = gen("email", 100, 5);
+        let arr = r#gen("email", 100, 5);
         for v in strings(&arr) {
             assert!(v.contains('@'), "email missing @: {v}");
             assert!(v.contains('.'), "email missing dot: {v}");
@@ -2384,7 +2384,7 @@ mod tests {
 
     #[test]
     fn phone_format() {
-        let arr = gen("phone", 100, 6);
+        let arr = r#gen("phone", 100, 6);
         let re_like = |s: &str| -> bool {
             // Expected: 555-DDD-DDDD
             let parts: Vec<&str> = s.split('-').collect();
@@ -2402,7 +2402,7 @@ mod tests {
 
     #[test]
     fn sentence_ends_with_period() {
-        let arr = gen("sentence", 50, 7);
+        let arr = r#gen("sentence", 50, 7);
         for v in strings(&arr) {
             assert!(v.ends_with('.'), "sentence missing period: {v}");
             assert!(v.len() > 5, "sentence too short: {v}");
@@ -2416,7 +2416,7 @@ mod tests {
 
     #[test]
     fn word_produces_nonempty() {
-        let arr = gen("word", 50, 8);
+        let arr = r#gen("word", 50, 8);
         for v in strings(&arr) {
             assert!(!v.is_empty());
         }
@@ -2424,7 +2424,7 @@ mod tests {
 
     #[test]
     fn address_has_number_and_street() {
-        let arr = gen("address", 50, 9);
+        let arr = r#gen("address", 50, 9);
         for v in strings(&arr) {
             let parts: Vec<&str> = v.splitn(2, ' ').collect();
             assert!(parts.len() == 2, "address missing parts: {v}");
@@ -2437,7 +2437,7 @@ mod tests {
 
     #[test]
     fn city_nonempty() {
-        let arr = gen("city", 50, 10);
+        let arr = r#gen("city", 50, 10);
         for v in strings(&arr) {
             assert!(!v.is_empty());
         }
@@ -2445,7 +2445,7 @@ mod tests {
 
     #[test]
     fn company_nonempty() {
-        let arr = gen("company", 50, 11);
+        let arr = r#gen("company", 50, 11);
         for v in strings(&arr) {
             assert!(v.contains(' '), "company missing space: {v}");
         }
@@ -2453,7 +2453,7 @@ mod tests {
 
     #[test]
     fn unknown_method_does_not_panic() {
-        let arr = gen("nonexistent_method", 10, 12);
+        let arr = r#gen("nonexistent_method", 10, 12);
         assert_eq!(arr.len(), 10);
         for v in strings(&arr) {
             assert_eq!(v, "nonexistent_method");
@@ -2462,8 +2462,8 @@ mod tests {
 
     #[test]
     fn deterministic_with_same_seed() {
-        let a = gen("email", 20, 42);
-        let b = gen("email", 20, 42);
+        let a = r#gen("email", 20, 42);
+        let b = r#gen("email", 20, 42);
         let va = strings(&a);
         let vb = strings(&b);
         assert_eq!(va, vb, "same seed must produce same output");
@@ -2472,7 +2472,7 @@ mod tests {
     #[test]
     fn correct_count() {
         for count in [0, 1, 5, 100] {
-            let arr = gen("first_name", count, 99);
+            let arr = r#gen("first_name", count, 99);
             assert_eq!(arr.len(), count, "wrong count for {count}");
         }
     }
@@ -2486,7 +2486,7 @@ mod tests {
     #[test]
     fn name_alias_works() {
         // "name" should behave like "full_name"
-        let arr = gen("name", 20, 55);
+        let arr = r#gen("name", 20, 55);
         for v in strings(&arr) {
             assert!(v.contains(' '), "name alias missing space: {v}");
         }
@@ -2494,7 +2494,7 @@ mod tests {
 
     #[test]
     fn state_produces_known_state() {
-        let arr = gen("state", 50, 20);
+        let arr = r#gen("state", 50, 20);
         for v in strings(&arr) {
             assert!(
                 super::US_STATES.contains(&v.as_str()),
@@ -2505,7 +2505,7 @@ mod tests {
 
     #[test]
     fn country_produces_known_country() {
-        let arr = gen("country", 50, 21);
+        let arr = r#gen("country", 50, 21);
         for v in strings(&arr) {
             assert!(
                 super::COUNTRIES.contains(&v.as_str()),
@@ -2516,7 +2516,7 @@ mod tests {
 
     #[test]
     fn zip_code_five_digits() {
-        let arr = gen("zip_code", 100, 22);
+        let arr = r#gen("zip_code", 100, 22);
         for v in strings(&arr) {
             assert_eq!(v.len(), 5, "zip_code should be 5 chars: {v}");
             assert!(
@@ -2530,7 +2530,7 @@ mod tests {
     fn zip_code_aliases() {
         // All aliases should produce 5-digit codes
         for alias in &["zip_code", "zipcode", "postal_code"] {
-            let arr = gen(alias, 10, 23);
+            let arr = r#gen(alias, 10, 23);
             for v in strings(&arr) {
                 assert_eq!(v.len(), 5, "{alias} should produce 5-digit code: {v}");
             }
@@ -2539,7 +2539,7 @@ mod tests {
 
     #[test]
     fn url_format() {
-        let arr = gen("url", 50, 24);
+        let arr = r#gen("url", 50, 24);
         for v in strings(&arr) {
             assert!(
                 v.starts_with("https://"),
@@ -2551,7 +2551,7 @@ mod tests {
 
     #[test]
     fn domain_format() {
-        let arr = gen("domain", 50, 25);
+        let arr = r#gen("domain", 50, 25);
         for v in strings(&arr) {
             assert!(
                 !v.starts_with("https://"),
@@ -2563,7 +2563,7 @@ mod tests {
 
     #[test]
     fn ipv4_format() {
-        let arr = gen("ipv4", 50, 26);
+        let arr = r#gen("ipv4", 50, 26);
         for v in strings(&arr) {
             let octets: Vec<&str> = v.split('.').collect();
             assert_eq!(octets.len(), 4, "ipv4 should have 4 octets: {v}");
@@ -2576,7 +2576,7 @@ mod tests {
 
     #[test]
     fn ip_address_alias() {
-        let arr = gen("ip_address", 10, 27);
+        let arr = r#gen("ip_address", 10, 27);
         for v in strings(&arr) {
             assert_eq!(
                 v.split('.').count(),
@@ -2588,7 +2588,7 @@ mod tests {
 
     #[test]
     fn ipv6_format() {
-        let arr = gen("ipv6", 50, 28);
+        let arr = r#gen("ipv6", 50, 28);
         for v in strings(&arr) {
             let groups: Vec<&str> = v.split(':').collect();
             assert_eq!(groups.len(), 8, "ipv6 should have 8 groups: {v}");
@@ -2604,7 +2604,7 @@ mod tests {
 
     #[test]
     fn color_from_list() {
-        let arr = gen("color", 50, 29);
+        let arr = r#gen("color", 50, 29);
         for v in strings(&arr) {
             assert!(
                 super::COLORS.contains(&v.as_str()),
@@ -2615,7 +2615,7 @@ mod tests {
 
     #[test]
     fn hex_color_format() {
-        let arr = gen("hex_color", 50, 30);
+        let arr = r#gen("hex_color", 50, 30);
         for v in strings(&arr) {
             assert!(v.starts_with('#'), "hex_color should start with #: {v}");
             assert_eq!(v.len(), 7, "hex_color should be 7 chars: {v}");
@@ -2628,7 +2628,7 @@ mod tests {
 
     #[test]
     fn paragraph_multiple_sentences() {
-        let arr = gen("paragraph", 20, 31);
+        let arr = r#gen("paragraph", 20, 31);
         for v in strings(&arr) {
             assert!(v.ends_with('.'), "paragraph should end with period: {v}");
             let sentence_count = v.matches('.').count();
@@ -2641,7 +2641,7 @@ mod tests {
 
     #[test]
     fn title_title_case() {
-        let arr = gen("title", 50, 32);
+        let arr = r#gen("title", 50, 32);
         for v in strings(&arr) {
             assert!(!v.is_empty(), "title should not be empty");
             // Each word should start with uppercase
@@ -2656,7 +2656,7 @@ mod tests {
 
     #[test]
     fn hex_string_default_length() {
-        let arr = gen("hex_string", 50, 40);
+        let arr = r#gen("hex_string", 50, 40);
         for v in strings(&arr) {
             assert_eq!(v.len(), 32, "default hex_string should be 32 chars: {v}");
             assert!(
@@ -2714,7 +2714,7 @@ mod tests {
 
     #[test]
     fn mac_address_format() {
-        let arr = gen("mac_address", 50, 100);
+        let arr = r#gen("mac_address", 50, 100);
         for v in strings(&arr) {
             let parts: Vec<&str> = v.split(':').collect();
             assert_eq!(parts.len(), 6, "MAC should have 6 octets: {v}");
@@ -2727,7 +2727,7 @@ mod tests {
 
     #[test]
     fn credit_card_luhn_valid() {
-        let arr = gen("credit_card", 100, 101);
+        let arr = r#gen("credit_card", 100, 101);
         for v in strings(&arr) {
             let len = v.len();
             assert!(
@@ -2754,7 +2754,7 @@ mod tests {
 
     #[test]
     fn iban_format() {
-        let arr = gen("iban", 50, 102);
+        let arr = r#gen("iban", 50, 102);
         for v in strings(&arr) {
             assert!(v.len() >= 15, "IBAN should be >= 15 chars: {v}");
             // First 2 chars are country code (uppercase letters)
@@ -2772,7 +2772,7 @@ mod tests {
 
     #[test]
     fn bic_format() {
-        let arr = gen("bic", 50, 103);
+        let arr = r#gen("bic", 50, 103);
         for v in strings(&arr) {
             assert_eq!(v.len(), 8, "BIC should be 8 chars: {v}");
         }
@@ -2780,7 +2780,7 @@ mod tests {
 
     #[test]
     fn currency_code_valid() {
-        let arr = gen("currency_code", 50, 104);
+        let arr = r#gen("currency_code", 50, 104);
         for v in strings(&arr) {
             assert_eq!(v.len(), 3, "currency code should be 3 chars: {v}");
             assert!(
@@ -2792,7 +2792,7 @@ mod tests {
 
     #[test]
     fn latitude_in_range() {
-        let arr = gen("latitude", 50, 105);
+        let arr = r#gen("latitude", 50, 105);
         for v in strings(&arr) {
             let lat: f64 = v.parse().unwrap();
             assert!(
@@ -2804,7 +2804,7 @@ mod tests {
 
     #[test]
     fn longitude_in_range() {
-        let arr = gen("longitude", 50, 106);
+        let arr = r#gen("longitude", 50, 106);
         for v in strings(&arr) {
             let lon: f64 = v.parse().unwrap();
             assert!(
@@ -2816,7 +2816,7 @@ mod tests {
 
     #[test]
     fn vin_format() {
-        let arr = gen("vin", 50, 107);
+        let arr = r#gen("vin", 50, 107);
         for v in strings(&arr) {
             assert_eq!(v.len(), 17, "VIN should be 17 chars: {v}");
             assert!(
@@ -2828,7 +2828,7 @@ mod tests {
 
     #[test]
     fn ean13_valid_checksum() {
-        let arr = gen("ean13", 50, 108);
+        let arr = r#gen("ean13", 50, 108);
         for v in strings(&arr) {
             assert_eq!(v.len(), 13, "EAN-13 should be 13 digits: {v}");
             assert!(v.chars().all(|c| c.is_ascii_digit()), "all digits: {v}");
@@ -2845,7 +2845,7 @@ mod tests {
 
     #[test]
     fn isbn13_prefix() {
-        let arr = gen("isbn13", 50, 109);
+        let arr = r#gen("isbn13", 50, 109);
         for v in strings(&arr) {
             assert_eq!(v.len(), 13, "ISBN-13 should be 13 digits: {v}");
             assert!(
@@ -2857,7 +2857,7 @@ mod tests {
 
     #[test]
     fn blood_type_valid() {
-        let arr = gen("blood_type", 50, 110);
+        let arr = r#gen("blood_type", 50, 110);
         for v in strings(&arr) {
             assert!(
                 super::BLOOD_TYPES.contains(&v.as_str()),
@@ -2868,7 +2868,7 @@ mod tests {
 
     #[test]
     fn license_plate_format() {
-        let arr = gen("license_plate", 50, 111);
+        let arr = r#gen("license_plate", 50, 111);
         for v in strings(&arr) {
             assert!(v.contains('-'), "license plate should contain dash: {v}");
         }
@@ -2876,7 +2876,7 @@ mod tests {
 
     #[test]
     fn month_valid() {
-        let arr = gen("month", 50, 112);
+        let arr = r#gen("month", 50, 112);
         for v in strings(&arr) {
             assert!(
                 super::MONTHS.contains(&v.as_str()),
@@ -2887,7 +2887,7 @@ mod tests {
 
     #[test]
     fn day_of_week_valid() {
-        let arr = gen("day_of_week", 50, 113);
+        let arr = r#gen("day_of_week", 50, 113);
         for v in strings(&arr) {
             assert!(
                 super::WEEKDAYS.contains(&v.as_str()),
@@ -2898,7 +2898,7 @@ mod tests {
 
     #[test]
     fn file_name_has_extension() {
-        let arr = gen("file_name", 50, 114);
+        let arr = r#gen("file_name", 50, 114);
         for v in strings(&arr) {
             assert!(v.contains('.'), "file_name should have extension: {v}");
         }
@@ -2907,8 +2907,8 @@ mod tests {
     #[test]
     fn dotted_provider_name_normalized() {
         // Dotted names like "internet.email" should work the same as "email"
-        let a = gen("internet.email", 20, 42);
-        let b = gen("email", 20, 42);
+        let a = r#gen("internet.email", 20, 42);
+        let b = r#gen("email", 20, 42);
         let a_strs = strings(&a);
         let b_strs = strings(&b);
         assert_eq!(a_strs, b_strs, "dotted name should produce same output");
@@ -2916,7 +2916,7 @@ mod tests {
 
     #[test]
     fn time_format() {
-        let arr = gen("time", 50, 115);
+        let arr = r#gen("time", 50, 115);
         for v in strings(&arr) {
             let parts: Vec<&str> = v.split(':').collect();
             assert_eq!(parts.len(), 3, "time should have HH:MM:SS: {v}");
@@ -2925,7 +2925,7 @@ mod tests {
 
     #[test]
     fn industry_from_list() {
-        let arr = gen("industry", 50, 116);
+        let arr = r#gen("industry", 50, 116);
         for v in strings(&arr) {
             assert!(
                 super::INDUSTRIES.contains(&v.as_str()),
@@ -2936,7 +2936,7 @@ mod tests {
 
     #[test]
     fn user_agent_nonempty() {
-        let arr = gen("user_agent", 50, 117);
+        let arr = r#gen("user_agent", 50, 117);
         for v in strings(&arr) {
             assert!(
                 v.contains("Mozilla") || v.len() > 10,

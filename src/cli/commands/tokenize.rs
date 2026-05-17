@@ -151,11 +151,10 @@ fn run_tokenize(
     );
 
     // Print text-format report separately (JSON report is merged into main output)
-    if let Some(ref rpt) = report_data {
-        if !json_output {
+    if let Some(ref rpt) = report_data
+        && !json_output {
             print!("{}", crate::tokenize::report::format_text(rpt));
         }
-    }
 
     Ok(())
 }
@@ -246,9 +245,9 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
     for orig in &orig_data {
         let orig_path = original.join(&orig.rel_path);
         let tok_path = tokenized.join(&orig.rel_path);
-        if tok_path.exists() {
-            if let (Ok(o_count), Ok(t_count)) = (count_lines(&orig_path), count_lines(&tok_path)) {
-                if o_count != t_count {
+        if tok_path.exists()
+            && let (Ok(o_count), Ok(t_count)) = (count_lines(&orig_path), count_lines(&tok_path))
+                && o_count != t_count {
                     row_match = false;
                     row_mismatches.push(serde_json::json!({
                         "file": orig.rel_path.display().to_string(),
@@ -256,8 +255,6 @@ fn run_verify(original: &Path, tokenized: &Path, json_output: bool) -> Result<()
                         "tokenized": t_count,
                     }));
                 }
-            }
-        }
     }
 
     // Compare schema file sets by relative path

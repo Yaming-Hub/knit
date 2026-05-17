@@ -18,8 +18,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info, instrument};
 
-use crate::gen::expr::ast::Expr;
-use crate::gen::expr::eval::{evaluate, EvalContext};
+use crate::r#gen::expr::ast::Expr;
+use crate::r#gen::expr::eval::{evaluate, EvalContext};
 use crate::noise::error::NoiseError;
 use crate::noise::traits::{ColumnFilter, InvariantSet, PerturbConfig, Perturbator};
 
@@ -203,12 +203,11 @@ impl Pipeline {
             std::collections::HashMap::new();
         for &(_, idx) in &order {
             let (_, overrides) = &self.perturbators[idx];
-            if let Some(ref expr) = overrides.scope_expr {
-                if let std::collections::hash_map::Entry::Vacant(e) = precomputed_scope.entry(idx) {
+            if let Some(ref expr) = overrides.scope_expr
+                && let std::collections::hash_map::Entry::Vacant(e) = precomputed_scope.entry(idx) {
                     let mask = evaluate_scope_mask(expr, &batch)?;
                     e.insert(Arc::new(mask));
                 }
-            }
         }
 
         for (stage, idx) in &order {
@@ -449,7 +448,7 @@ mod tests {
 
     #[test]
     fn scope_expr_evaluated_per_batch() {
-        use crate::gen::expr::ast::{BinOp, Expr, LiteralValue};
+        use crate::r#gen::expr::ast::{BinOp, Expr, LiteralValue};
         use crate::noise::NullInjector;
 
         // Build a batch where column "status" has two values

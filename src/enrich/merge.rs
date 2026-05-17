@@ -53,12 +53,12 @@ pub fn merge_enrichment(
     enrichment: &FieldEnrichment,
     ref_row_count: u64,
 ) -> MergeOutcome {
-    let Some(ref mut gen) = field.generator else {
+    let Some(ref mut r#gen) = field.generator else {
         debug!(field = %field.name, "no generator to enrich");
         return MergeOutcome::NoGenerator;
     };
 
-    match gen {
+    match r#gen {
         GeneratorSpec::Distribution { spec } => {
             merge_distribution(field.name.as_str(), spec, enrichment, ref_row_count)
         }
@@ -66,7 +66,7 @@ pub fn merge_enrichment(
             merge_oneof(field.name.as_str(), choices, enrichment, ref_row_count)
         }
         _ => {
-            debug!(field = %field.name, gen_type = gen.type_name(), "skipping non-statistical generator");
+            debug!(field = %field.name, gen_type = r#gen.type_name(), "skipping non-statistical generator");
             MergeOutcome::UnsupportedGenerator
         }
     }
@@ -151,8 +151,8 @@ fn merge_distribution(
         if let (Some(base_mean), Some(base_std)) = (
             spec.params.get("mean").copied(),
             spec.params.get("std_dev").copied(),
-        ) {
-            if let (Some(&ref_mean), Some(&ref_std)) =
+        )
+            && let (Some(&ref_mean), Some(&ref_std)) =
                 (ref_params.get("mean"), ref_params.get("std_dev"))
             {
                 let merged_mean = (base_weight * base_mean + ref_weight * ref_mean) / total;
@@ -167,7 +167,6 @@ fn merge_distribution(
                     .insert("std_dev".to_string(), combined_var.sqrt());
                 updated = true;
             }
-        }
     } else {
         for (key, ref_val) in &ref_params {
             if let Some(base_val) = spec.params.get_mut(key) {
@@ -288,12 +287,12 @@ mod tests {
     use crate::learn::fitting::{CandidateFit, CategoricalFit, Distribution, FitResult};
     use std::collections::HashMap;
 
-    fn make_field(name: &str, dt: DataType, gen: GeneratorSpec) -> Field {
+    fn make_field(name: &str, dt: DataType, r#gen: GeneratorSpec) -> Field {
         Field {
             name: name.to_string(),
             description: None,
             data_type: dt,
-            generator: Some(gen),
+            generator: Some(r#gen),
             nullable: NullSpec::Never,
             primary_key: None,
             precision: None,

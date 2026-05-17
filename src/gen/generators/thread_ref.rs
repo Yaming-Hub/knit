@@ -11,8 +11,8 @@ use arrow::array::{ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Entry in the thread ring buffer tracking a generated PK and its thread depth.
 #[derive(Clone, Copy)]
@@ -206,20 +206,20 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
 
-    fn run_with_pks(gen: &ThreadRefGenerator, rng: &mut ChaCha8Rng, pks: &[i64]) -> ArrayRef {
+    fn run_with_pks(r#gen: &ThreadRefGenerator, rng: &mut ChaCha8Rng, pks: &[i64]) -> ArrayRef {
         let pk_array: ArrayRef = std::sync::Arc::new(Int64Array::from(pks.to_vec()));
         let mut columns = HashMap::new();
         columns.insert("id".to_string(), pk_array);
         let ctx = GenContext::new(&columns, 0, 0, 1, "messages");
-        gen.generate(rng, pks.len(), &ctx)
+        r#gen.generate(rng, pks.len(), &ctx)
     }
 
     #[test]
     fn thread_starter_always_null() {
-        let gen = ThreadRefGenerator::new(0.0, 10, 100, "id".to_string());
+        let r#gen = ThreadRefGenerator::new(0.0, 10, 100, "id".to_string());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let pks: Vec<i64> = (1..=50).collect();
-        let result = run_with_pks(&gen, &mut rng, &pks);
+        let result = run_with_pks(&r#gen, &mut rng, &pks);
         let arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..50 {
             assert!(arr.is_null(i), "row {i} should be null (thread starter)");
@@ -228,10 +228,10 @@ mod tests {
 
     #[test]
     fn all_replies_reference_valid_pks() {
-        let gen = ThreadRefGenerator::new(1.0, 100, 50, "id".to_string());
+        let r#gen = ThreadRefGenerator::new(1.0, 100, 50, "id".to_string());
         let mut rng = ChaCha8Rng::seed_from_u64(123);
         let pks: Vec<i64> = (100..=199).collect();
-        let result = run_with_pks(&gen, &mut rng, &pks);
+        let result = run_with_pks(&r#gen, &mut rng, &pks);
         let arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // First row must be null (no prior messages to reply to)
@@ -256,10 +256,10 @@ mod tests {
 
     #[test]
     fn max_depth_respected() {
-        let gen = ThreadRefGenerator::new(1.0, 2, 50, "id".to_string());
+        let r#gen = ThreadRefGenerator::new(1.0, 2, 50, "id".to_string());
         let mut rng = ChaCha8Rng::seed_from_u64(456);
         let pks: Vec<i64> = (1..=200).collect();
-        let result = run_with_pks(&gen, &mut rng, &pks);
+        let result = run_with_pks(&r#gen, &mut rng, &pks);
         let arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // Build depth map
