@@ -406,6 +406,95 @@ fn append_numeric_values_aligned(col: &dyn Array, values: &mut Vec<f64>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arrow::array::{Float64Array, Int64Array, StringArray};
+    use arrow::datatypes::{DataType, Field, Schema};
+    use std::sync::Arc;
+
+    // ─── helper builders ────────────────────────────────────────────────
+
+    /// Build a minimal numeric `ColumnProfile`.
+    fn numeric_profile(name: &str) -> ColumnProfile {
+        ColumnProfile {
+            name: name.to_string(),
+            data_type: DataType::Float64,
+            count: 0,
+            null_count: 0,
+            null_rate: 0.0,
+            empty_string_rate: 0.0,
+            distinct_count: None,
+            cardinality_ratio: None,
+            numeric: Some(crate::learn::profile::NumericProfile {
+                min: 0.0,
+                max: 0.0,
+                mean: 0.0,
+                std_dev: 0.0,
+                median: 0.0,
+                skewness: 0.0,
+                kurtosis: 0.0,
+                max_decimal_places: Some(0),
+                percentiles: crate::learn::profile::Percentiles {
+                    p1: 0.0,
+                    p5: 0.0,
+                    p10: 0.0,
+                    p25: 0.0,
+                    p50: 0.0,
+                    p75: 0.0,
+                    p90: 0.0,
+                    p95: 0.0,
+                    p99: 0.0,
+                },
+            }),
+            string: None,
+            temporal: None,
+        }
+    }
+
+    /// Build a minimal string `ColumnProfile`.
+    fn string_profile(name: &str) -> ColumnProfile {
+        ColumnProfile {
+            name: name.to_string(),
+            data_type: DataType::Utf8,
+            count: 0,
+            null_count: 0,
+            null_rate: 0.0,
+            empty_string_rate: 0.0,
+            distinct_count: None,
+            cardinality_ratio: None,
+            numeric: None,
+            string: None,
+            temporal: None,
+        }
+    }
+
+    /// Build a `RecordBatch` from f64 column arrays.
+    fn numeric_batch(columns: &[(&str, Vec<f64>)]) -> RecordBatch {
+        let fields: Vec<Field> = columns
+            .iter()
+            .map(|(name, _)| Field::new(*name, DataType::Float64, true))
+            .collect();
+        let schema = Arc::new(Schema::new(fields));
+        let arrays: Vec<Arc<dyn Array>> = columns
+            .iter()
+            .map(|(_, values)| Arc::new(Float64Array::from(values.clone())) as Arc<dyn Array>)
+            .collect();
+        RecordBatch::try_new(schema, arrays).unwrap()
+    }
+
+    /// Build a `RecordBatch` from string column arrays.
+    fn string_batch(columns: &[(&str, Vec<Option<&str>>)]) -> RecordBatch {
+        let fields: Vec<Field> = columns
+            .iter()
+            .map(|(name, _)| Field::new(*name, DataType::Utf8, true))
+            .collect();
+        let schema = Arc::new(Schema::new(fields));
+        let arrays: Vec<Arc<dyn Array>> = columns
+            .iter()
+            .map(|(_, values)| Arc::new(StringArray::from(values.clone())) as Arc<dyn Array>)
+            .collect();
+        RecordBatch::try_new(schema, arrays).unwrap()
+    }
+
+    // ─── pearson_correlation ────────────────────────────────────────────
 
     #[test]
     fn pearson_perfect_positive() {
@@ -430,12 +519,67 @@ mod tests {
     }
 
     #[test]
+    fn pearson_uncorrelated() {
+        // sin and cos over full cycles are uncorrelated
+        let n = 1000;
+        let x: Vec<f64> = (0..n)
+            .map(|i| (2.0 * std::f64::consts::PI * i as f64 / n as f64).sin())
+            .collect();
+        let y: Vec<f64> = (0..n)
+            .map(|i| (2.0 * std::f64::consts::PI * i as f64 / n as f64).cos())
+            .collect();
+        let r = pearson_correlation(&x, &y);
+        assert!(r.abs() < 0.05, "sin/cos should be uncorrelated, got {r}");
+    }
+
+    #[test]
+    fn pearson_constant_x_returns_zero() {
+        let x = vec![5.0; 50];
+        let y: Vec<f64> = (0..50).map(|i| i as f64).collect();
+        assert_eq!(pearson_correlation(&x, &y), 0.0);
+    }
+
+    #[test]
+    fn pearson_single_element() {
+        assert_eq!(pearson_correlation(&[1.0], &[2.0]), 0.0);
+    }
+
+    #[test]
+    fn pearson_two_elements() {
+        let r = pearson_correlation(&[1.0, 2.0], &[3.0, 4.0]);
+        assert!((r - 1.0).abs() < 0.001, "two co-increasing points → r≈1.0");
+    }
+
+    // ─── spearman_correlation ───────────────────────────────────────────
+
+    #[test]
     fn spearman_monotone() {
         let x: Vec<f64> = (0..50).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|v| v.powi(3)).collect(); // monotone increasing
+        let y: Vec<f64> = x.iter().map(|v| v.powi(3)).collect();
         let rho = spearman_correlation(&x, &y);
         assert!(rho > 0.99, "monotone should have rho≈1.0, got {rho}");
     }
+
+    #[test]
+    fn spearman_reverse() {
+        let x: Vec<f64> = (0..50).map(|i| i as f64).collect();
+        let y: Vec<f64> = x.iter().map(|v| -v).collect();
+        let rho = spearman_correlation(&x, &y);
+        assert!(
+            (rho + 1.0).abs() < 0.01,
+            "reverse should have rho≈-1.0, got {rho}"
+        );
+    }
+
+    #[test]
+    fn spearman_with_ties() {
+        let x = vec![1.0, 2.0, 2.0, 3.0, 4.0, 4.0, 5.0];
+        let y = vec![10.0, 20.0, 20.0, 30.0, 40.0, 40.0, 50.0];
+        let rho = spearman_correlation(&x, &y);
+        assert!(rho > 0.95, "tied but monotone → high rho, got {rho}");
+    }
+
+    // ─── cramers_v ──────────────────────────────────────────────────────
 
     #[test]
     fn cramers_v_perfect_association() {
@@ -454,7 +598,6 @@ mod tests {
         let a: Vec<String> = (0..200)
             .map(|i| if i % 2 == 0 { "A".into() } else { "B".into() })
             .collect();
-        // b is independent of a
         let b: Vec<String> = (0..200)
             .map(|i| if i % 3 == 0 { "X".into() } else { "Y".into() })
             .collect();
@@ -463,17 +606,398 @@ mod tests {
     }
 
     #[test]
+    fn cramers_v_single_category_a() {
+        let a = vec!["only".to_string(); 20];
+        let b: Vec<String> = (0..20)
+            .map(|i| if i % 2 == 0 { "X".into() } else { "Y".into() })
+            .collect();
+        let v = cramers_v(&a, &b);
+        assert_eq!(v, 0.0, "single category in a → V=0");
+    }
+
+    #[test]
+    fn cramers_v_single_category_b() {
+        let a: Vec<String> = (0..20)
+            .map(|i| if i % 2 == 0 { "A".into() } else { "B".into() })
+            .collect();
+        let b = vec!["only".to_string(); 20];
+        let v = cramers_v(&a, &b);
+        assert_eq!(v, 0.0, "single category in b → V=0");
+    }
+
+    #[test]
+    fn cramers_v_multi_category() {
+        // 3×3 contingency with perfect diagonal → high V
+        let mut a = Vec::new();
+        let mut b = Vec::new();
+        for _ in 0..50 {
+            a.push("A".to_string());
+            b.push("X".to_string());
+        }
+        for _ in 0..50 {
+            a.push("B".to_string());
+            b.push("Y".to_string());
+        }
+        for _ in 0..50 {
+            a.push("C".to_string());
+            b.push("Z".to_string());
+        }
+        let v = cramers_v(&a, &b);
+        assert!(v > 0.8, "perfect 3×3 diagonal → high V, got {v}");
+    }
+
+    // ─── ranks ──────────────────────────────────────────────────────────
+
+    #[test]
     fn ranks_with_ties() {
         let vals = vec![3.0, 1.0, 4.0, 1.0, 5.0];
         let r = ranks(&vals);
-        // 1.0 appears at indices 1, 3 → ranks 1, 2 → avg 1.5
         assert!((r[1] - 1.5).abs() < 0.01);
         assert!((r[3] - 1.5).abs() < 0.01);
     }
 
     #[test]
+    fn ranks_already_sorted() {
+        let vals = vec![10.0, 20.0, 30.0, 40.0];
+        let r = ranks(&vals);
+        assert_eq!(r, vec![1.0, 2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn ranks_all_tied() {
+        let vals = vec![7.0; 5];
+        let r = ranks(&vals);
+        // All tied → average rank = (1+2+3+4+5)/5 = 3.0
+        for rank in &r {
+            assert!((rank - 3.0).abs() < 0.01, "all tied should be 3.0, got {rank}");
+        }
+    }
+
+    #[test]
+    fn ranks_reverse_order() {
+        let vals = vec![40.0, 30.0, 20.0, 10.0];
+        let r = ranks(&vals);
+        assert_eq!(r, vec![4.0, 3.0, 2.0, 1.0]);
+    }
+
+    // ─── pearson_p_value ────────────────────────────────────────────────
+
+    #[test]
+    fn p_value_perfect_correlation() {
+        let p = pearson_p_value(1.0, 100);
+        assert_eq!(p, 0.0, "|r|=1 → p=0");
+    }
+
+    #[test]
+    fn p_value_zero_correlation() {
+        let p = pearson_p_value(0.0, 100);
+        assert!(
+            (p - 1.0).abs() < 0.1,
+            "r=0 with large n → p≈1.0, got {p}"
+        );
+    }
+
+    #[test]
+    fn p_value_strong_correlation_small_n() {
+        let p = pearson_p_value(0.95, 10);
+        assert!(p < 0.05, "strong r with n=10 → p<0.05, got {p}");
+    }
+
+    #[test]
+    fn p_value_weak_correlation_small_n() {
+        let p = pearson_p_value(0.1, 5);
+        assert!(p > 0.05, "weak r with n=5 → p>0.05, got {p}");
+    }
+
+    #[test]
+    fn p_value_too_few_points() {
+        assert_eq!(pearson_p_value(0.5, 2), 1.0);
+        assert_eq!(pearson_p_value(0.5, 1), 1.0);
+    }
+
+    #[test]
+    fn p_value_large_df_uses_normal() {
+        // df > 30 triggers normal approximation path
+        let p = pearson_p_value(0.5, 100);
+        assert!(p < 0.001, "r=0.5 at n=100 should be very significant, got {p}");
+    }
+
+    // ─── normal_cdf ─────────────────────────────────────────────────────
+
+    #[test]
+    fn normal_cdf_symmetry() {
+        let mid = normal_cdf(0.0);
+        assert!(
+            (mid - 0.5).abs() < 0.001,
+            "Φ(0) should be 0.5, got {mid}"
+        );
+    }
+
+    #[test]
+    fn normal_cdf_tails() {
+        let left = normal_cdf(-3.0);
+        let right = normal_cdf(3.0);
+        assert!(left < 0.01, "Φ(-3) should be small, got {left}");
+        assert!(right > 0.99, "Φ(3) should be near 1, got {right}");
+        assert!(
+            (left + right - 1.0).abs() < 0.001,
+            "Φ(-3) + Φ(3) ≈ 1"
+        );
+    }
+
+    // ─── paired_finite ──────────────────────────────────────────────────
+
+    #[test]
+    fn paired_finite_filters_nan() {
+        let a = vec![1.0, f64::NAN, 3.0, 4.0];
+        let b = vec![10.0, 20.0, f64::NAN, 40.0];
+        let (pa, pb) = paired_finite(&a, &b);
+        assert_eq!(pa, vec![1.0, 4.0]);
+        assert_eq!(pb, vec![10.0, 40.0]);
+    }
+
+    #[test]
+    fn paired_finite_filters_inf() {
+        let a = vec![1.0, f64::INFINITY, 3.0];
+        let b = vec![10.0, 20.0, 30.0];
+        let (pa, pb) = paired_finite(&a, &b);
+        assert_eq!(pa, vec![1.0, 3.0]);
+        assert_eq!(pb, vec![10.0, 30.0]);
+    }
+
+    #[test]
+    fn paired_finite_different_lengths() {
+        let a = vec![1.0, 2.0, 3.0, 4.0];
+        let b = vec![10.0, 20.0];
+        let (pa, pb) = paired_finite(&a, &b);
+        assert_eq!(pa.len(), 2);
+        assert_eq!(pb.len(), 2);
+    }
+
+    #[test]
+    fn paired_finite_empty() {
+        let (pa, pb) = paired_finite(&[], &[]);
+        assert!(pa.is_empty());
+        assert!(pb.is_empty());
+    }
+
+    // ─── detect_correlations (end-to-end) ───────────────────────────────
+
+    #[test]
+    fn detect_correlations_empty_profiles() {
+        let result = detect_correlations(&[], &[]);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn detect_correlations_empty_batches() {
+        let profiles = vec![numeric_profile("a")];
+        let result = detect_correlations(&profiles, &[]);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn detect_correlations_finds_numeric_pair() {
+        let n = 200;
+        let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+        let y: Vec<f64> = x.iter().map(|v| v * 2.0 + 5.0).collect();
+        let batch = numeric_batch(&[("x", x), ("y", y)]);
+        let profiles = vec![numeric_profile("x"), numeric_profile("y")];
+
+        let results = detect_correlations(&profiles, &[batch]);
+        let pearson_hits: Vec<_> = results
+            .iter()
+            .filter(|c| c.method == CorrelationMethod::Pearson)
+            .collect();
+        assert!(
+            !pearson_hits.is_empty(),
+            "should detect Pearson correlation for perfectly linear data"
+        );
+        assert!(
+            pearson_hits[0].coefficient > 0.99,
+            "coefficient should be ~1.0, got {}",
+            pearson_hits[0].coefficient
+        );
+    }
+
+    #[test]
+    fn detect_correlations_skips_weak_numeric() {
+        // Two uncorrelated columns — should produce no results at all
+        let n = 200;
+        let x: Vec<f64> = (0..n)
+            .map(|i| (i as f64 * 0.1).sin())
+            .collect();
+        let y: Vec<f64> = (0..n)
+            .map(|i| (i as f64 * 0.1).cos())
+            .collect();
+        let batch = numeric_batch(&[("x", x), ("y", y)]);
+        let profiles = vec![numeric_profile("x"), numeric_profile("y")];
+
+        let results = detect_correlations(&profiles, &[batch]);
+        assert!(
+            results.is_empty(),
+            "uncorrelated sin/cos should produce no results, got {} hits",
+            results.len()
+        );
+    }
+
+    #[test]
+    fn detect_correlations_fewer_than_5_rows_skipped() {
+        let batch = numeric_batch(&[("a", vec![1.0, 2.0, 3.0]), ("b", vec![4.0, 5.0, 6.0])]);
+        let profiles = vec![numeric_profile("a"), numeric_profile("b")];
+        let results = detect_correlations(&profiles, &[batch]);
+        assert!(
+            results.is_empty(),
+            "fewer than 5 paired values should be skipped"
+        );
+    }
+
+    #[test]
+    fn detect_correlations_finds_categorical_pair() {
+        // Perfect categorical association
+        let n = 100;
+        let a: Vec<Option<&str>> = (0..n)
+            .map(|i| Some(if i % 2 == 0 { "A" } else { "B" }))
+            .collect();
+        let b: Vec<Option<&str>> = (0..n)
+            .map(|i| Some(if i % 2 == 0 { "X" } else { "Y" }))
+            .collect();
+        let batch = string_batch(&[("cat_a", a), ("cat_b", b)]);
+        let profiles = vec![string_profile("cat_a"), string_profile("cat_b")];
+
+        let results = detect_correlations(&profiles, &[batch]);
+        let cramers: Vec<_> = results
+            .iter()
+            .filter(|c| c.method == CorrelationMethod::CramersV)
+            .collect();
+        assert!(
+            !cramers.is_empty(),
+            "should detect Cramér's V for perfectly associated categories"
+        );
+        assert!(cramers[0].coefficient > 0.5);
+    }
+
+    #[test]
+    fn detect_correlations_skips_null_pairs() {
+        // Mix of null and non-null rows — only 3 non-null pairs remain
+        // (fewer than 5), so no correlation should be detected
+        let a: Vec<Option<&str>> = vec![
+            Some("A"), None, Some("B"), None, Some("A"),
+            None, None, None, None, None,
+            None, None, None, None, None,
+            None, None, None, None, None,
+        ];
+        let b: Vec<Option<&str>> = vec![
+            Some("X"), Some("Y"), Some("Y"), Some("X"), Some("X"),
+            Some("Y"), Some("X"), Some("Y"), Some("X"), Some("Y"),
+            Some("X"), Some("Y"), Some("X"), Some("Y"), Some("X"),
+            Some("Y"), Some("X"), Some("Y"), Some("X"), Some("Y"),
+        ];
+        let batch = string_batch(&[("cat_a", a), ("cat_b", b)]);
+        let profiles = vec![string_profile("cat_a"), string_profile("cat_b")];
+
+        let results = detect_correlations(&profiles, &[batch]);
+        assert!(
+            results.is_empty(),
+            "mostly-null column should produce no correlations (too few pairs)"
+        );
+    }
+
+    #[test]
+    fn detect_correlations_multiple_batches() {
+        // Each batch alone has only 4 rows (below the 5-row minimum).
+        // Only by combining both batches do we get 8 rows, enough
+        // to detect the correlation.
+        let x1: Vec<f64> = (0..4).map(|i| i as f64).collect();
+        let y1: Vec<f64> = x1.iter().map(|v| v * 3.0).collect();
+        let x2: Vec<f64> = (4..8).map(|i| i as f64).collect();
+        let y2: Vec<f64> = x2.iter().map(|v| v * 3.0).collect();
+
+        let batch1 = numeric_batch(&[("x", x1), ("y", y1)]);
+        let batch2 = numeric_batch(&[("x", x2), ("y", y2)]);
+        let profiles = vec![numeric_profile("x"), numeric_profile("y")];
+
+        // Single batch alone should be insufficient
+        let single = detect_correlations(&profiles, std::slice::from_ref(&batch1));
+        assert!(
+            single.is_empty(),
+            "single 4-row batch should be insufficient"
+        );
+
+        // Both batches combined should detect the correlation
+        let results = detect_correlations(&profiles, &[batch1, batch2]);
+        assert!(
+            !results.is_empty(),
+            "combined batches should detect correlation"
+        );
+    }
+
+    #[test]
+    fn detect_correlations_three_numeric_columns() {
+        // a ↔ b correlated, a ↔ c uncorrelated
+        let n = 200;
+        let a: Vec<f64> = (0..n).map(|i| i as f64).collect();
+        let b: Vec<f64> = a.iter().map(|v| v * 2.0).collect();
+        let c: Vec<f64> = (0..n).map(|i| ((i * 7 + 13) % 100) as f64).collect();
+
+        let batch = numeric_batch(&[("a", a), ("b", b), ("c", c)]);
+        let profiles = vec![
+            numeric_profile("a"),
+            numeric_profile("b"),
+            numeric_profile("c"),
+        ];
+
+        let results = detect_correlations(&profiles, &[batch]);
+        let ab: Vec<_> = results
+            .iter()
+            .filter(|c| {
+                (c.column_a == "a" && c.column_b == "b")
+                    || (c.column_a == "b" && c.column_b == "a")
+            })
+            .collect();
+        assert!(!ab.is_empty(), "should detect a↔b correlation");
+    }
+
+    // ─── append_numeric_values_aligned ───────────────────────────────────
+
+    #[test]
+    fn append_numeric_f64_with_nulls() {
+        let arr = Float64Array::from(vec![Some(1.0), None, Some(3.0)]);
+        let mut values = Vec::new();
+        append_numeric_values_aligned(&arr, &mut values);
+        assert_eq!(values.len(), 3);
+        assert_eq!(values[0], 1.0);
+        assert!(values[1].is_nan());
+        assert_eq!(values[2], 3.0);
+    }
+
+    #[test]
+    fn append_numeric_i64_with_nulls() {
+        let arr = Int64Array::from(vec![Some(10), None, Some(30)]);
+        let mut values = Vec::new();
+        append_numeric_values_aligned(&arr, &mut values);
+        assert_eq!(values.len(), 3);
+        assert_eq!(values[0], 10.0);
+        assert!(values[1].is_nan());
+        assert_eq!(values[2], 30.0);
+    }
+
+    // ─── empty / edge cases ─────────────────────────────────────────────
+
+    #[test]
     fn empty_inputs() {
         assert_eq!(pearson_correlation(&[], &[]), 0.0);
         assert_eq!(cramers_v(&[], &[]), 0.0);
+        assert_eq!(spearman_correlation(&[], &[]), 0.0);
+    }
+
+    #[test]
+    fn ranks_empty() {
+        assert!(ranks(&[]).is_empty());
+    }
+
+    #[test]
+    fn ranks_single() {
+        assert_eq!(ranks(&[42.0]), vec![1.0]);
     }
 }
