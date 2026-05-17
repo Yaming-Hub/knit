@@ -24,7 +24,7 @@ use crate::plan::types::{CopulaPlan, MarginalInfo};
 /// Generate a uniform f64 in [0, 1).
 #[inline]
 fn uniform01(rng: &mut ChaCha8Rng) -> f64 {
-    rng.gen::<f64>()
+    rng.random::<f64>()
 }
 
 /// Apply copula plans to a batch, replacing independently generated columns

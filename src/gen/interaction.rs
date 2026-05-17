@@ -141,7 +141,7 @@ impl InteractionGenerator {
         _offset: u64,
     ) -> InteractionRecord {
         // Sample an edge uniformly from the graph
-        let edge_idx = rng.gen_range(0..self.edge_list.len());
+        let edge_idx = rng.random_range(0..self.edge_list.len());
         let edge = &self.edge_list[edge_idx];
 
         let actor_index = edge.from;

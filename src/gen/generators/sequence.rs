@@ -59,7 +59,7 @@ impl FieldGenerator for SequenceGenerator {
             Some(j) if j > 0 => (0..count)
                 .map(|i| {
                     let base = self.start + (ctx.row_offset + i as u64) as i64 * self.step;
-                    let offset = rng.gen_range(-j..=j);
+                    let offset = rng.random_range(-j..=j);
                     base + offset
                 })
                 .collect(),

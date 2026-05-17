@@ -704,7 +704,7 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
-    let offset: i64 = rng.gen_range(-1825..=1825);
+    let offset: i64 = rng.random_range(-1825..=1825);
     if offset == 0 {
         1
     } else {
@@ -719,7 +719,7 @@ pub(crate) fn compute_numeric_shift(seed: u64) -> i64 {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
-    let offset: i64 = rng.gen_range(-10_000..=10_000);
+    let offset: i64 = rng.random_range(-10_000..=10_000);
     if offset == 0 {
         1
     } else {

@@ -128,7 +128,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i);
-                    if !config.in_scope(i) || rand::Rng::gen::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rand::Rng::random::<f64>(rng) >= probability {
                         return Some(v);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -150,7 +150,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i) as f64;
-                    if !config.in_scope(i) || rand::Rng::gen::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rand::Rng::random::<f64>(rng) >= probability {
                         return Some(v as i32);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };
@@ -172,7 +172,7 @@ fn add_noise(
                         return None;
                     }
                     let v = a.value(i) as f64;
-                    if !config.in_scope(i) || rand::Rng::gen::<f64>(rng) >= probability {
+                    if !config.in_scope(i) || rand::Rng::random::<f64>(rng) >= probability {
                         return Some(v as i64);
                     }
                     let sd = if relative { stddev * v.abs() } else { stddev };

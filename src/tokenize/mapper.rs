@@ -120,7 +120,7 @@ impl TokenMapper {
         }
         // Ultimate fallback: append unique suffix
         let base = self.generate_shape_token(original);
-        let suffix: u32 = self.rng.gen();
+        let suffix: u32 = self.rng.random();
         format!("{}_{:08x}", base, suffix)
     }
 
@@ -145,21 +145,21 @@ impl TokenMapper {
     /// Generate a random character matching the class of the input character.
     fn random_char_matching(&mut self, ch: char) -> char {
         if ch.is_ascii_uppercase() {
-            (b'A' + self.rng.gen_range(0..26u8)) as char
+            (b'A' + self.rng.random_range(0..26u8)) as char
         } else if ch.is_ascii_lowercase() {
-            (b'a' + self.rng.gen_range(0..26u8)) as char
+            (b'a' + self.rng.random_range(0..26u8)) as char
         } else if ch.is_ascii_digit() {
-            (b'0' + self.rng.gen_range(0..10u8)) as char
+            (b'0' + self.rng.random_range(0..10u8)) as char
         } else if ch.is_alphabetic() {
             // Non-ASCII letters: replace with random ASCII letter of same case
             if ch.is_uppercase() {
-                (b'A' + self.rng.gen_range(0..26u8)) as char
+                (b'A' + self.rng.random_range(0..26u8)) as char
             } else {
-                (b'a' + self.rng.gen_range(0..26u8)) as char
+                (b'a' + self.rng.random_range(0..26u8)) as char
             }
         } else if ch.is_numeric() {
             // Non-ASCII digits
-            (b'0' + self.rng.gen_range(0..10u8)) as char
+            (b'0' + self.rng.random_range(0..10u8)) as char
         } else {
             // Punctuation and other: preserve as-is (structural separators)
             ch

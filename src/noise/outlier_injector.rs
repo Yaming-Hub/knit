@@ -104,8 +104,8 @@ fn inject_outliers(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if config.in_scope(i) && rng.gen::<f64>() < probability {
-                        let sign: f64 = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
+                    if config.in_scope(i) && rng.random::<f64>() < probability {
+                        let sign: f64 = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
                         Some(a.value(i) + sign * range * multiplier)
                     } else {
                         Some(a.value(i))
@@ -126,8 +126,8 @@ fn inject_outliers(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if config.in_scope(i) && rng.gen::<f64>() < probability {
-                        let sign: f64 = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
+                    if config.in_scope(i) && rng.random::<f64>() < probability {
+                        let sign: f64 = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
                         Some((a.value(i) as f64 + sign * range * multiplier) as i32)
                     } else {
                         Some(a.value(i))
@@ -148,8 +148,8 @@ fn inject_outliers(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if config.in_scope(i) && rng.gen::<f64>() < probability {
-                        let sign: f64 = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
+                    if config.in_scope(i) && rng.random::<f64>() < probability {
+                        let sign: f64 = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
                         Some((a.value(i) as f64 + sign * range * multiplier) as i64)
                     } else {
                         Some(a.value(i))

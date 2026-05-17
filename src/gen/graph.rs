@@ -157,7 +157,7 @@ fn generate_scale_free(
                 if attached >= m {
                     break;
                 }
-                let r = rng.gen_range(0..total_degree);
+                let r = rng.random_range(0..total_degree);
                 let mut cum = 0u64;
                 let mut selected = 0;
                 for (idx, &d) in target_degrees.iter().enumerate() {
@@ -214,9 +214,9 @@ fn generate_scale_free(
                 }
 
                 let target = if total_degree == 0 {
-                    rng.gen_range(0..new_node)
+                    rng.random_range(0..new_node)
                 } else {
-                    let r = rng.gen_range(0..total_degree);
+                    let r = rng.random_range(0..total_degree);
                     let mut cum = 0u64;
                     let mut selected = 0;
                     for (idx, &d) in degrees.iter().take(new_node).enumerate() {
@@ -282,9 +282,9 @@ fn generate_small_world(
     // Rewire edges
     let p = rewire_prob.clamp(0.0, 1.0);
     for edge in edges.iter_mut() {
-        if rng.gen::<f64>() < p {
+        if rng.random::<f64>() < p {
             // Rewire to random target (not self, not duplicate)
-            let new_target = rng.gen_range(0..n);
+            let new_target = rng.random_range(0..n);
             if new_target != edge.from {
                 edge.to = new_target;
             }
@@ -329,7 +329,7 @@ fn generate_erdos_renyi(
             // Sample number of edges for this source node from binomial approx
             let target_edges = (t as f64 * p).round() as usize;
             for _ in 0..target_edges {
-                let j = rng.gen_range(0..t);
+                let j = rng.random_range(0..t);
                 if !is_self_referential || i != j {
                     edges.push(Edge { from: i, to: j });
                 }
@@ -341,7 +341,7 @@ fn generate_erdos_renyi(
                 if is_self_referential && i == j {
                     continue; // no self-loops for same-entity graphs
                 }
-                if rng.gen::<f64>() < p {
+                if rng.random::<f64>() < p {
                     edges.push(Edge { from: i, to: j });
                 }
             }
@@ -408,8 +408,8 @@ fn generate_hierarchical(
     // Add lateral connections within the same level
     let lateral_count = ((avg_degree - 1.0).max(0.0) * n as f64 / 2.0) as usize;
     for _ in 0..lateral_count {
-        let a = rng.gen_range(0..n);
-        let b = rng.gen_range(0..n);
+        let a = rng.random_range(0..n);
+        let b = rng.random_range(0..n);
         if a != b && level[a] == level[b] {
             edges.push(Edge { from: a, to: b });
         }
@@ -424,7 +424,7 @@ fn apply_reciprocity(mut edges: Vec<Edge>, reciprocity: f64, rng: &mut impl Rng)
     let original_len = edges.len();
 
     for i in 0..original_len {
-        if rng.gen::<f64>() < p {
+        if rng.random::<f64>() < p {
             edges.push(Edge {
                 from: edges[i].to,
                 to: edges[i].from,

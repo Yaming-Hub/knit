@@ -110,7 +110,7 @@ fn apply_drift(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if !config.in_scope(i) || rng.gen::<f64>() >= probability {
+                    if !config.in_scope(i) || rng.random::<f64>() >= probability {
                         return Some(a.value(i));
                     }
                     Some(a.value(i) + drift_per_row * i as f64)
@@ -128,7 +128,7 @@ fn apply_drift(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if !config.in_scope(i) || rng.gen::<f64>() >= probability {
+                    if !config.in_scope(i) || rng.random::<f64>() >= probability {
                         return Some(a.value(i));
                     }
                     Some((a.value(i) as f64 + drift_per_row * i as f64).round() as i32)
@@ -146,7 +146,7 @@ fn apply_drift(
                     if !a.is_valid(i) {
                         return None;
                     }
-                    if !config.in_scope(i) || rng.gen::<f64>() >= probability {
+                    if !config.in_scope(i) || rng.random::<f64>() >= probability {
                         return Some(a.value(i));
                     }
                     Some((a.value(i) as f64 + drift_per_row * i as f64).round() as i64)

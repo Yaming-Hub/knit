@@ -146,7 +146,7 @@ impl TemporalSpikeInjector {
             vec![min_val; self.spike_count]
         } else {
             (0..self.spike_count)
-                .map(|_| rng.gen_range(min_val..=max_val))
+                .map(|_| rng.random_range(min_val..=max_val))
                 .collect()
         };
 
@@ -167,11 +167,11 @@ impl TemporalSpikeInjector {
             .enumerate()
             .map(|(i, v)| {
                 let ms = (*v)?;
-                if !config.in_scope(i) || !rng.gen_bool(config.probability.clamp(0.0, 1.0)) {
+                if !config.in_scope(i) || !rng.random_bool(config.probability.clamp(0.0, 1.0)) {
                     return Some(ms);
                 }
                 // Pick a random spike center
-                let center = spike_centers[rng.gen_range(0..spike_centers.len())];
+                let center = spike_centers[rng.random_range(0..spike_centers.len())];
                 // Sample offset from normal distribution, scaled to unit
                 let offset_ms = normal.sample(rng);
                 let offset_native = (offset_ms / unit_factor) as i64;

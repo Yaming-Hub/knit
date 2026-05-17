@@ -232,7 +232,7 @@ fn sample_from_cumulative(cum_weights: &[f64], rng: &mut impl Rng) -> usize {
     if total <= 0.0 {
         return 0;
     }
-    let sample: f64 = rng.gen::<f64>() * total;
+    let sample: f64 = rng.random::<f64>() * total;
     cum_weights
         .partition_point(|&w| w <= sample)
         .min(cum_weights.len() - 1)
@@ -298,15 +298,15 @@ fn sample_from_distribution(
             let mean = get_f64("mean");
             let std_dev = get_f64("std_dev").max(0.001);
             // Box-Muller transform for normal sampling
-            let u1: f64 = rng.gen::<f64>().max(1e-10);
-            let u2: f64 = rng.gen::<f64>();
+            let u1: f64 = rng.random::<f64>().max(1e-10);
+            let u2: f64 = rng.random::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             Value::Float(mean + std_dev * z)
         }
         "uniform" => {
             let min = get_f64("min");
             let max = get_f64("max").max(min + 0.001);
-            Value::Float(rng.gen::<f64>() * (max - min) + min)
+            Value::Float(rng.random::<f64>() * (max - min) + min)
         }
         "poisson" => {
             let lambda = get_f64("lambda").max(0.0);
@@ -315,8 +315,8 @@ fn sample_from_distribution(
             }
             if lambda > 30.0 {
                 // Normal approximation for large lambda: N(lambda, sqrt(lambda))
-                let u1: f64 = rng.gen::<f64>().max(1e-10);
-                let u2: f64 = rng.gen::<f64>();
+                let u1: f64 = rng.random::<f64>().max(1e-10);
+                let u2: f64 = rng.random::<f64>();
                 let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 let sample = lambda + lambda.sqrt() * z;
                 Value::Int(sample.round().max(0.0) as i64)
@@ -327,7 +327,7 @@ fn sample_from_distribution(
                 let mut p = 1.0f64;
                 loop {
                     k += 1;
-                    p *= rng.gen::<f64>();
+                    p *= rng.random::<f64>();
                     if p <= l {
                         break;
                     }
@@ -337,7 +337,7 @@ fn sample_from_distribution(
         }
         "exponential" => {
             let lambda = get_f64("lambda").max(0.001);
-            let u: f64 = rng.gen::<f64>().max(1e-10);
+            let u: f64 = rng.random::<f64>().max(1e-10);
             Value::Float(-u.ln() / lambda)
         }
         _ => {

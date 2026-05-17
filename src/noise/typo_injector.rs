@@ -43,7 +43,7 @@ fn apply_typo(s: &str, rng: &mut dyn RngCore) -> String {
         return s.to_string();
     }
     let chars: Vec<char> = s.chars().collect();
-    let kind = match rng.gen_range(0u8..4) {
+    let kind = match rng.random_range(0u8..4) {
         0 => TypoKind::Swap,
         1 => TypoKind::Insert,
         2 => TypoKind::Delete,
@@ -54,22 +54,22 @@ fn apply_typo(s: &str, rng: &mut dyn RngCore) -> String {
     match kind {
         TypoKind::Swap => {
             if result.len() >= 2 {
-                let pos = rng.gen_range(0..result.len() - 1);
+                let pos = rng.random_range(0..result.len() - 1);
                 result.swap(pos, pos + 1);
             }
         }
         TypoKind::Insert => {
-            let pos = rng.gen_range(0..=result.len());
-            let c = (b'a' + rng.gen_range(0..26u8)) as char;
+            let pos = rng.random_range(0..=result.len());
+            let c = (b'a' + rng.random_range(0..26u8)) as char;
             result.insert(pos, c);
         }
         TypoKind::Delete => {
-            let pos = rng.gen_range(0..result.len());
+            let pos = rng.random_range(0..result.len());
             result.remove(pos);
         }
         TypoKind::Substitute => {
-            let pos = rng.gen_range(0..result.len());
-            result[pos] = (b'a' + rng.gen_range(0..26u8)) as char;
+            let pos = rng.random_range(0..result.len());
+            result[pos] = (b'a' + rng.random_range(0..26u8)) as char;
         }
     }
     result.into_iter().collect()
@@ -113,7 +113,7 @@ impl Perturbator for TypoInjector {
                         return None;
                     }
                     let v = a.value(i);
-                    if config.in_scope(i) && rng.gen::<f64>() < config.probability {
+                    if config.in_scope(i) && rng.random::<f64>() < config.probability {
                         Some(apply_typo(v, rng))
                     } else {
                         Some(v.to_string())

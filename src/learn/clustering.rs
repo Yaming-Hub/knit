@@ -187,7 +187,7 @@ pub fn kmeans(
                 }
             } else {
                 // Empty cluster — reinitialize randomly
-                let random_idx = rng.gen_range(0..n);
+                let random_idx = rng.random_range(0..n);
                 new_centroids[c] = data[random_idx].clone();
             }
         }
@@ -239,7 +239,7 @@ fn silhouette_score_seeded(data: &[Vec<f64>], assignments: &[usize], k: usize, s
             let mut indices: Vec<usize> = (0..n).collect();
             // Fisher-Yates shuffle, take first SILHOUETTE_SAMPLE_SIZE
             for i in 0..SILHOUETTE_SAMPLE_SIZE {
-                let j = rng.gen_range(i..n);
+                let j = rng.random_range(i..n);
                 indices.swap(i, j);
             }
             indices.truncate(SILHOUETTE_SAMPLE_SIZE);
@@ -536,7 +536,7 @@ fn kmeans_plus_plus_init(data: &[Vec<f64>], k: usize, rng: &mut StdRng) -> Vec<V
     let mut centroids = Vec::with_capacity(k);
 
     // First centroid: random point
-    let first_idx = rng.gen_range(0..n);
+    let first_idx = rng.random_range(0..n);
     centroids.push(data[first_idx].clone());
 
     for _ in 1..k {
@@ -555,7 +555,7 @@ fn kmeans_plus_plus_init(data: &[Vec<f64>], k: usize, rng: &mut StdRng) -> Vec<V
         let total: f64 = distances.iter().sum();
         if total <= 0.0 {
             // All points are at centroids — pick random
-            let idx = rng.gen_range(0..n);
+            let idx = rng.random_range(0..n);
             centroids.push(data[idx].clone());
             continue;
         }
@@ -564,7 +564,7 @@ fn kmeans_plus_plus_init(data: &[Vec<f64>], k: usize, rng: &mut StdRng) -> Vec<V
         }
 
         // Weighted random selection
-        let r: f64 = rng.gen::<f64>();
+        let r: f64 = rng.random::<f64>();
         let mut cumulative = 0.0;
         let mut selected = n - 1;
         for (i, &prob) in distances.iter().enumerate() {
