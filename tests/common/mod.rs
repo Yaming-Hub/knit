@@ -15,28 +15,51 @@ pub fn examples_dir() -> PathBuf {
     manifest.join("examples")
 }
 
-/// Collect all `.knit.toml` files from the examples directory.
+/// Collect all `.knit.toml` files from the examples directory (recursive).
+///
+/// Fragment files (those without a `[model]` section) are excluded since they
+/// cannot be parsed or validated standalone.
 #[allow(dead_code)] // Shared helper for example-driven integration tests.
 pub fn example_schemas() -> Vec<PathBuf> {
     let dir = examples_dir();
-    let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
-        .unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
-        .filter_map(|entry| {
-            let path = entry.ok()?.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("toml")
-                && path
-                    .file_name()
-                    .and_then(|s| s.to_str())
-                    .is_some_and(|n| n.ends_with(".knit.toml"))
-            {
-                Some(path)
-            } else {
-                None
-            }
-        })
-        .collect();
+    let mut paths: Vec<PathBuf> = Vec::new();
+    collect_knit_toml_files(&dir, &mut paths);
+    // Exclude fragment files that lack a [model] table
+    paths.retain(|p| {
+        let content = std::fs::read_to_string(p)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", p.display()));
+        let table: toml::Table = toml::from_str(&content).unwrap_or_default();
+        table.contains_key("model")
+    });
     paths.sort();
     paths
+}
+
+/// Recursively collect `.knit.toml` files from a directory.
+///
+/// Uses `symlink_metadata` to avoid following symlinks into potential loops.
+fn collect_knit_toml_files(dir: &Path, paths: &mut Vec<PathBuf>) {
+    for entry in std::fs::read_dir(dir)
+        .unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
+    {
+        let path = entry
+            .unwrap_or_else(|e| panic!("cannot read entry in {}: {e}", dir.display()))
+            .path();
+        let is_dir = path
+            .symlink_metadata()
+            .map(|m| m.is_dir())
+            .unwrap_or(false);
+        if is_dir {
+            collect_knit_toml_files(&path, paths);
+        } else if path.extension().and_then(|s| s.to_str()) == Some("toml")
+            && path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .is_some_and(|n| n.ends_with(".knit.toml"))
+        {
+            paths.push(path);
+        }
+    }
 }
 
 /// Parse, validate, compile, and generate all batches for a TOML schema string.
