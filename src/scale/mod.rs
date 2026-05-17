@@ -154,8 +154,7 @@ pub fn compute_plan(
     }
 
     // Time scaling
-    let new_partitions = if let (Some(time_spec), Some(time_dim)) =
-        (&targets.time, &analysis.time)
+    let new_partitions = if let (Some(time_spec), Some(time_dim)) = (&targets.time, &analysis.time)
     {
         // Apply cadence override or warn on low confidence
         let effective_dim = if let Some(override_cadence) = targets.cadence {
@@ -264,13 +263,14 @@ pub fn compute_plan(
         }
         // Reject density on the actor entity — use --actors instead
         if let Some(ref actor) = analysis.actor
-            && actor.entity_name == *entity_name {
-                anyhow::bail!(
-                    "'{}' is the actor entity; use --actors to scale it (--density \
+            && actor.entity_name == *entity_name
+        {
+            anyhow::bail!(
+                "'{}' is the actor entity; use --actors to scale it (--density \
                      is for non-actor entities)",
-                    entity_name
-                );
-            }
+                entity_name
+            );
+        }
         let current = analysis
             .entity_counts
             .get(entity_name)
@@ -332,39 +332,40 @@ pub fn rewrite(model: &mut DataModel, plan: &ScalingPlan) {
     if let Some(ref np) = plan.new_partitions {
         for entity in &mut model.entities {
             if entity.name == np.entity_name
-                && let Some(ref mut output) = entity.output {
-                    tracing::debug!(
-                        entity = %entity.name,
-                        old_partitions = output.partition_values.len(),
-                        new_partitions = np.values.len(),
-                        "scaling partitions"
-                    );
-                    output.partition_values = np.values.clone();
+                && let Some(ref mut output) = entity.output
+            {
+                tracing::debug!(
+                    entity = %entity.name,
+                    old_partitions = output.partition_values.len(),
+                    new_partitions = np.values.len(),
+                    "scaling partitions"
+                );
+                output.partition_values = np.values.clone();
 
-                    // Also update the partition field's generator to produce
-                    // values matching the new partition set.
-                    if let Some(partition_field) = &output.partition_by {
-                        for field in &mut entity.fields {
-                            if field.name == *partition_field {
-                                let choices: Vec<WeightedChoice> = np
-                                    .values
-                                    .iter()
-                                    .map(|pv| WeightedChoice {
-                                        value: Value::String(pv.value.clone()),
-                                        weight: pv.weight,
-                                    })
-                                    .collect();
-                                field.generator = Some(GeneratorSpec::OneOf { choices });
-                                tracing::debug!(
-                                    entity = %entity.name,
-                                    field = %field.name,
-                                    values = np.values.len(),
-                                    "synced partition field generator"
-                                );
-                            }
+                // Also update the partition field's generator to produce
+                // values matching the new partition set.
+                if let Some(partition_field) = &output.partition_by {
+                    for field in &mut entity.fields {
+                        if field.name == *partition_field {
+                            let choices: Vec<WeightedChoice> = np
+                                .values
+                                .iter()
+                                .map(|pv| WeightedChoice {
+                                    value: Value::String(pv.value.clone()),
+                                    weight: pv.weight,
+                                })
+                                .collect();
+                            field.generator = Some(GeneratorSpec::OneOf { choices });
+                            tracing::debug!(
+                                entity = %entity.name,
+                                field = %field.name,
+                                values = np.values.len(),
+                                "synced partition field generator"
+                            );
                         }
                     }
                 }
+            }
         }
     }
 

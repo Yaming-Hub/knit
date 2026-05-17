@@ -155,17 +155,18 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
 
     // Normal
     if std_dev > 0.0
-        && let Ok(d) = Normal::new(mean, std_dev) {
-            let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
-            let ll = normal_log_likelihood(&clean, mean, std_dev);
-            push_candidate(
-                &mut candidates,
-                Distribution::Normal(mean, std_dev),
-                ks,
-                ll,
-                n,
-            );
-        }
+        && let Ok(d) = Normal::new(mean, std_dev)
+    {
+        let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
+        let ll = normal_log_likelihood(&clean, mean, std_dev);
+        push_candidate(
+            &mut candidates,
+            Distribution::Normal(mean, std_dev),
+            ks,
+            ll,
+            n,
+        );
+    }
 
     // LogNormal — only for strictly positive values
     if min_val > 0.0 {
@@ -175,25 +176,26 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         let sigma2 = log_vals.iter().map(|v| (v - mu).powi(2)).sum::<f64>() / n as f64;
         let sigma = sigma2.sqrt();
         if sigma > 0.0
-            && let Ok(d) = LogNormal::new(mu, sigma) {
-                let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
-                let ll: f64 = clean
-                    .iter()
-                    .map(|&x| {
-                        -x.ln()
-                            - 0.5 * ((x.ln() - mu) / sigma).powi(2)
-                            - sigma.ln()
-                            - (2.0 * PI).sqrt().ln()
-                    })
-                    .sum();
-                push_candidate(
-                    &mut candidates,
-                    Distribution::LogNormal(mu, sigma),
-                    ks,
-                    ll,
-                    n,
-                );
-            }
+            && let Ok(d) = LogNormal::new(mu, sigma)
+        {
+            let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
+            let ll: f64 = clean
+                .iter()
+                .map(|&x| {
+                    -x.ln()
+                        - 0.5 * ((x.ln() - mu) / sigma).powi(2)
+                        - sigma.ln()
+                        - (2.0 * PI).sqrt().ln()
+                })
+                .sum();
+            push_candidate(
+                &mut candidates,
+                Distribution::LogNormal(mu, sigma),
+                ks,
+                ll,
+                n,
+            );
+        }
     }
 
     // Exponential — positive values only
@@ -216,12 +218,14 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     if min_val > 0.0 && var > 0.0 {
         let shape = mean * mean / var;
         let rate = mean / var;
-        if shape > 0.0 && rate > 0.0
-            && let Ok(d) = Gamma::new(shape, 1.0 / rate) {
-                let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
-                let ll = gamma_log_likelihood(&clean, shape, rate);
-                push_candidate(&mut candidates, Distribution::Gamma(shape, rate), ks, ll, n);
-            }
+        if shape > 0.0
+            && rate > 0.0
+            && let Ok(d) = Gamma::new(shape, 1.0 / rate)
+        {
+            let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
+            let ll = gamma_log_likelihood(&clean, shape, rate);
+            push_candidate(&mut candidates, Distribution::Gamma(shape, rate), ks, ll, n);
+        }
     }
 
     // Beta — values in (0,1)
@@ -232,18 +236,20 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         if common > 0.0 {
             let alpha = m * common;
             let beta_param = (1.0 - m) * common;
-            if alpha > 0.0 && beta_param > 0.0
-                && let Ok(d) = Beta::new(alpha, beta_param) {
-                    let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
-                    let ll = beta_log_likelihood(&clean, alpha, beta_param);
-                    push_candidate(
-                        &mut candidates,
-                        Distribution::Beta(alpha, beta_param),
-                        ks,
-                        ll,
-                        n,
-                    );
-                }
+            if alpha > 0.0
+                && beta_param > 0.0
+                && let Ok(d) = Beta::new(alpha, beta_param)
+            {
+                let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
+                let ll = beta_log_likelihood(&clean, alpha, beta_param);
+                push_candidate(
+                    &mut candidates,
+                    Distribution::Beta(alpha, beta_param),
+                    ks,
+                    ll,
+                    n,
+                );
+            }
         }
     }
 
@@ -277,7 +283,7 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         let is_integer_like = clean.iter().all(|v| (v - v.round()).abs() < 1e-6);
         if is_integer_like {
             let lambda = mean; // MLE for Poisson is sample mean
-                               // Compute KS using Poisson CDF approximation (normal approximation for large lambda)
+            // Compute KS using Poisson CDF approximation (normal approximation for large lambda)
             let ks = ks_stat_continuous(&clean, |x| {
                 // Use normal approximation to Poisson CDF
                 if lambda > 0.0 {
@@ -532,8 +538,8 @@ fn erf(x: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::rngs::StdRng;
     use rand::SeedableRng;
+    use rand::rngs::StdRng;
     use rand_distr::{
         Distribution as RandDist, Exp as ExpDist, LogNormal as LnDist, Normal as NormDist,
     };

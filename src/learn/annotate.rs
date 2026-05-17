@@ -57,19 +57,19 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
             .entities
             .iter_mut()
             .find(|e| e.name == time.entity_name)
-        {
-            let ann = entity.scaling.get_or_insert_with(|| DimensionAnnotation {
-                actor: None,
-                time: None,
-                custom: vec![],
-            });
-            ann.time = Some(TimeAnnotation {
-                partition_column: time.partition_field.clone(),
-                cadence: time.cadence.map(format_cadence),
-                partition_count: time.partition_values.len(),
-                partition_values: time.partition_values.clone(),
-            });
-        }
+    {
+        let ann = entity.scaling.get_or_insert_with(|| DimensionAnnotation {
+            actor: None,
+            time: None,
+            custom: vec![],
+        });
+        ann.time = Some(TimeAnnotation {
+            partition_column: time.partition_field.clone(),
+            cadence: time.cadence.map(format_cadence),
+            partition_count: time.partition_values.len(),
+            partition_values: time.partition_values.clone(),
+        });
+    }
 
     // Custom dimensions
     for dim in &analysis.custom {

@@ -46,7 +46,8 @@ fn hierarchy_example_generates_acyclic_valid_manager_tree() {
     }
 
     assert_eq!(
-        total_rows, ids.len(),
+        total_rows,
+        ids.len(),
         "total rows ({total_rows}) should equal unique ids ({})",
         ids.len()
     );

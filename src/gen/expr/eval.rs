@@ -374,11 +374,7 @@ fn eval_mod(left: &ArrayRef, right: &ArrayRef) -> Result<ArrayRef, EvalError> {
                     None
                 } else {
                     let b = ra.value(i);
-                    if b == 0 {
-                        None
-                    } else {
-                        Some(la.value(i) % b)
-                    }
+                    if b == 0 { None } else { Some(la.value(i) % b) }
                 }
             })
             .collect();
@@ -677,11 +673,7 @@ fn eval_function(name: &str, args: &[Expr], ctx: &EvalContext<'_>) -> Result<Arr
                 &arr,
                 "sqrt",
                 |x| {
-                    if x < 0.0 {
-                        None
-                    } else {
-                        Some(x.sqrt())
-                    }
+                    if x < 0.0 { None } else { Some(x.sqrt()) }
                 },
             )
         }
@@ -2700,14 +2692,14 @@ mod tests {
         let mut cols = HashMap::new();
         cols.insert(
             "x".into(),
-            Arc::new(Float64Array::from(vec![std::f64::consts::PI, std::f64::consts::E]))
-                as ArrayRef,
+            Arc::new(Float64Array::from(vec![
+                std::f64::consts::PI,
+                std::f64::consts::E,
+            ])) as ArrayRef,
         );
         let result = eval_expr("round(${x}, 2)", cols);
         let fa = as_f64(&result).unwrap();
-        assert!(
-            (fa.value(0) - (std::f64::consts::PI * 100.0).round() / 100.0).abs() < 1e-10
-        );
+        assert!((fa.value(0) - (std::f64::consts::PI * 100.0).round() / 100.0).abs() < 1e-10);
         assert!((fa.value(1) - 2.72).abs() < 1e-10);
     }
 

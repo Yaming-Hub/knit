@@ -20,7 +20,7 @@ use rand::RngCore;
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
 
-use super::{create_generator_with_seen, SharedSeen};
+use super::{SharedSeen, create_generator_with_seen};
 
 /// A conditional generator that switches on a reference field's value.
 ///
@@ -218,13 +218,8 @@ fn value_to_string(v: &crate::core::Value) -> String {
 /// Returns `None` for null values so they route to the default branch.
 fn array_to_optional_strings(arr: &ArrayRef, count: usize) -> Vec<Option<String>> {
     let len = arr.len().min(count);
-    let to_opt = |i: usize, s: String| -> Option<String> {
-        if arr.is_null(i) {
-            None
-        } else {
-            Some(s)
-        }
-    };
+    let to_opt =
+        |i: usize, s: String| -> Option<String> { if arr.is_null(i) { None } else { Some(s) } };
     if let Some(sa) = arr.as_any().downcast_ref::<StringArray>() {
         (0..len)
             .map(|i| to_opt(i, sa.value(i).to_string()))

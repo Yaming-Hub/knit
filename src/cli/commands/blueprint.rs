@@ -737,9 +737,10 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
             }
             out.push_str(&format!("data_type = \"{:?}\"\n", field.data_type).to_lowercase());
             if let Some(pk) = field.primary_key
-                && pk {
-                    out.push_str("primary_key = true\n");
-                }
+                && pk
+            {
+                out.push_str("primary_key = true\n");
+            }
             if let Some(prec) = field.precision {
                 out.push_str(&format!("precision = {}\n", prec));
             }
@@ -1158,12 +1159,13 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
             // Same name exists — check if semantics differ.
             let base_rel = result.relationships.iter().find(|r| r.name == rel.name);
             if let Some(br) = base_rel
-                && (br.from != rel.from || br.to != rel.to || br.foreign_key != rel.foreign_key) {
-                    report.warnings.push(format!(
+                && (br.from != rel.from || br.to != rel.to || br.foreign_key != rel.foreign_key)
+            {
+                report.warnings.push(format!(
                         "relationship `{}`: exists in both with different endpoints, keeping base version",
                         rel.name
                     ));
-                }
+            }
         } else {
             result.relationships.push(rel.clone());
             report.relationships_added += 1;
@@ -3119,9 +3121,9 @@ fn parse_create_table(
         && let Some(f) = fields
             .iter_mut()
             .find(|f| f.name.eq_ignore_ascii_case(first_pk))
-        {
-            f.primary_key = Some(true);
-        }
+    {
+        f.primary_key = Some(true);
+    }
 
     entities.push(Entity {
         name: table_name,
@@ -3316,9 +3318,10 @@ fn parse_column_def(
     // Check for inline REFERENCES — use original tokens to preserve case.
     let original_constraint_str = tokens[constraint_start..].join(" ");
     if constraint_str.contains("REFERENCES")
-        && let Some(fk) = parse_inline_references(&original_constraint_str, table_name, &col_name) {
-            relationships.push(fk);
-        }
+        && let Some(fk) = parse_inline_references(&original_constraint_str, table_name, &col_name)
+    {
+        relationships.push(fk);
+    }
 
     Some(Field {
         name: col_name,
@@ -3899,9 +3902,10 @@ fn arrow_type_compatible(
             arrow::datatypes::DataType::Timestamp(unit_a, _),
             arrow::datatypes::DataType::Timestamp(unit_e, _),
         ) = (actual, exp)
-            && unit_a == unit_e {
-                return true;
-            }
+            && unit_a == unit_e
+        {
+            return true;
+        }
     }
     false
 }
@@ -6298,9 +6302,11 @@ mod tests {
             vec![make_entity("users", vec![make_field("id", DataType::Int)])],
         );
         let findings = lint_model(&model);
-        assert!(findings
-            .iter()
-            .any(|f| f.message.contains("no description")));
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("no description"))
+        );
     }
 
     #[test]
@@ -6364,12 +6370,16 @@ mod tests {
             properties: Vec::new(),
         });
         let findings = lint_model(&model);
-        assert!(findings
-            .iter()
-            .any(|f| f.message.contains("`orders` does not exist")));
-        assert!(findings
-            .iter()
-            .any(|f| f.message.contains("`products` does not exist")));
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("`orders` does not exist"))
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("`products` does not exist"))
+        );
     }
 
     #[test]
@@ -7582,9 +7592,11 @@ mod tests {
         model.entities[0].count = CountSpec::Fixed(5);
         write_test_csv(dir.path(), "Users", &["id"], &[vec!["1"], vec!["2"]]);
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
-        assert!(findings
-            .iter()
-            .any(|f| f.severity == Severity::Warning && f.message.contains("row count")));
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.severity == Severity::Warning && f.message.contains("row count"))
+        );
     }
 
     #[test]
@@ -7636,9 +7648,11 @@ mod tests {
         );
 
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
-        assert!(findings
-            .iter()
-            .any(|f| { f.severity == Severity::Error && f.message.contains("orphan") }));
+        assert!(
+            findings
+                .iter()
+                .any(|f| { f.severity == Severity::Error && f.message.contains("orphan") })
+        );
     }
 
     #[test]
@@ -7762,9 +7776,11 @@ mod tests {
 
         // Filter to Orders only — should still detect FK orphans
         let findings = validate_data(&model, dir.path(), &["Orders".to_string()]).unwrap();
-        assert!(findings
-            .iter()
-            .any(|f| { f.severity == Severity::Error && f.message.contains("orphan") }));
+        assert!(
+            findings
+                .iter()
+                .any(|f| { f.severity == Severity::Error && f.message.contains("orphan") })
+        );
     }
 
     #[test]
@@ -7807,9 +7823,11 @@ mod tests {
 
         let findings = validate_data(&model, dir.path(), &[]).unwrap();
         // Users_id should NOT be flagged as unexpected
-        assert!(!findings
-            .iter()
-            .any(|f| { f.message.contains("unexpected column `Users_id`") }));
+        assert!(
+            !findings
+                .iter()
+                .any(|f| { f.message.contains("unexpected column `Users_id`") })
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -7964,16 +7982,18 @@ mod tests {
             "test",
             vec![make_entity("Users", vec![make_field("id", DataType::Int)])],
         );
-        assert!(derive_model(
-            &model,
-            Some(2.0),
-            &[],
-            &["Bad".to_string()],
-            None,
-            None,
-            None
-        )
-        .is_err());
+        assert!(
+            derive_model(
+                &model,
+                Some(2.0),
+                &[],
+                &["Bad".to_string()],
+                None,
+                None,
+                None
+            )
+            .is_err()
+        );
     }
 
     #[test]

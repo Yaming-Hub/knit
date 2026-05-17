@@ -4,9 +4,9 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 
+use crate::tokenize::TokenizeConfig;
 use crate::tokenize::mapper::TokenMapper;
 use crate::tokenize::scanner::{FileEntry, FileFormat};
-use crate::tokenize::TokenizeConfig;
 
 /// Apply tokenization to a data or dictionary file.
 /// If config.output_format is set and differs from the source format,
@@ -212,10 +212,9 @@ fn tokenize_json_value(
 ) {
     match value {
         serde_json::Value::String(s) => {
-            if should_tokenize
-                && let Some(token) = mapper.get(s) {
-                    *s = token.to_string();
-                }
+            if should_tokenize && let Some(token) = mapper.get(s) {
+                *s = token.to_string();
+            }
         }
         serde_json::Value::Number(n) => {
             if should_tokenize && config.tokenize_numbers {
@@ -233,9 +232,10 @@ fn tokenize_json_value(
                             *value = serde_json::Value::Number(u.into());
                         }
                     } else if let Ok(f) = token.parse::<f64>()
-                        && let Some(num) = serde_json::Number::from_f64(f) {
-                            *value = serde_json::Value::Number(num);
-                        }
+                        && let Some(num) = serde_json::Number::from_f64(f)
+                    {
+                        *value = serde_json::Value::Number(num);
+                    }
                 }
             }
         }
@@ -317,9 +317,10 @@ fn tokenize_schema_value(value: &mut serde_json::Value, mapper: &TokenMapper) {
                     || key_lower == "table_name"
                 {
                     if let serde_json::Value::String(s) = val
-                        && let Some(token) = mapper.get(s) {
-                            *s = token.to_string();
-                        }
+                        && let Some(token) = mapper.get(s)
+                    {
+                        *s = token.to_string();
+                    }
                 } else {
                     tokenize_schema_value(val, mapper);
                 }
@@ -343,8 +344,8 @@ fn apply_parquet(
     use arrow::array::{Array, AsArray, StringArray};
     use arrow::datatypes::{Field, Schema};
     use arrow::record_batch::RecordBatch;
-    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
     use parquet::arrow::ArrowWriter;
+    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
     use std::sync::Arc;
 
     let file = std::fs::File::open(src)?;
@@ -551,8 +552,8 @@ fn shift_native_numeric(
     offset: i64,
 ) -> Option<std::sync::Arc<dyn arrow::array::Array>> {
     use arrow::array::{
-        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, UInt16Array,
-        UInt32Array, UInt64Array, UInt8Array,
+        Float32Array, Float64Array, Int8Array, Int16Array, Int32Array, Int64Array, UInt8Array,
+        UInt16Array, UInt32Array, UInt64Array,
     };
     use arrow::datatypes::DataType;
     use std::sync::Arc;
@@ -1853,8 +1854,8 @@ mod tests {
         use arrow::array::{Float64Array, Int32Array, StringArray};
         use arrow::datatypes::{Field, Schema};
         use arrow::record_batch::RecordBatch;
-        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
         use parquet::arrow::ArrowWriter;
+        use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
         use std::sync::Arc;
 
         let dir = TempDir::new().unwrap();

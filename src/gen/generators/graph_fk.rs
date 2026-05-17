@@ -218,7 +218,8 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let r#gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
+        let r#gen =
+            GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
 
         // Actor 3 (PK=400) has no outbound edges — should fall back to uniform
         let source_arr = Arc::new(Int64Array::from(vec![400; 50]));
@@ -246,7 +247,8 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let r#gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
+        let r#gen =
+            GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
 
         // Mix of null and non-null source values
         let source_arr = Arc::new(Int64Array::from(vec![

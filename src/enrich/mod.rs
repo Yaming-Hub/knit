@@ -18,7 +18,7 @@ use crate::core::DataModel;
 use crate::learn::ingest::read_auto_with_limit;
 use crate::learn::profile::compute_profiles;
 
-use self::mapper::{map_columns, ColumnMapping};
+use self::mapper::{ColumnMapping, map_columns};
 use self::merge::merge_enrichment;
 
 /// Configuration for an enrichment run.
@@ -158,7 +158,9 @@ pub fn enrich(
             .entities
             .iter_mut()
             .find(|e| e.name == target_entity_name)
-            .ok_or_else(|| anyhow::anyhow!("target entity '{}' not found in model", target_entity_name))?;
+            .ok_or_else(|| {
+                anyhow::anyhow!("target entity '{}' not found in model", target_entity_name)
+            })?;
 
         let field = entity_mut
             .fields

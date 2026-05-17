@@ -5,7 +5,7 @@ use arrow::array::{Array, Float64Array, StringArray};
 
 mod common;
 use common::generate_from_toml;
-use knit::learn::fitting::{fit_categorical, fit_distribution, Distribution};
+use knit::learn::fitting::{Distribution, fit_categorical, fit_distribution};
 
 /// Schema with a normal distribution (mean=100, std_dev=15) and categorical column.
 const ROUNDTRIP_SCHEMA: &str = r#"
@@ -203,7 +203,7 @@ fn categorical_recovers_weights() {
 fn schema_assembly_produces_valid_model() {
     use knit::blueprint::validate;
     use knit::learn::fitting::fit_distribution;
-    use knit::learn::schema_assembly::{assemble_data_model, ColumnAnalysis, TableAnalysis};
+    use knit::learn::schema_assembly::{ColumnAnalysis, TableAnalysis, assemble_data_model};
 
     let data = generate_from_toml(ROUNDTRIP_SCHEMA);
     let batches = data.get("samples").expect("samples entity");

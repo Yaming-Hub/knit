@@ -112,10 +112,11 @@ impl KeyStore for SampledKeyStore {
         if inner.heap.len() < inner.capacity {
             inner.heap.push((hash, key));
         } else if let Some(&(max_hash, _)) = inner.heap.peek()
-            && hash < max_hash {
-                inner.heap.pop();
-                inner.heap.push((hash, key));
-            }
+            && hash < max_hash
+        {
+            inner.heap.pop();
+            inner.heap.push((hash, key));
+        }
     }
 
     fn sample(&self, rng: &mut dyn RngCore) -> Option<i64> {

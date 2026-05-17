@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use chrono::{Duration, NaiveDate, NaiveDateTime};
 
-use crate::tokenize::mapper::TokenMapper;
 use crate::tokenize::TokenizeConfig;
+use crate::tokenize::mapper::TokenMapper;
 
 /// Classification of a file in the dataset.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -235,9 +235,10 @@ fn extract_csv_strings(
             }
             // Try date shifting first (if enabled)
             if let Some(shift) = shift_days
-                && try_register_shifted_date(field, mapper, shift) {
-                    continue;
-                }
+                && try_register_shifted_date(field, mapper, shift)
+            {
+                continue;
+            }
             if should_tokenize_value_with_config(field, config.tokenize_numbers) {
                 mapper.register(field);
             }
@@ -299,9 +300,10 @@ fn extract_schema_json_strings(value: &serde_json::Value, mapper: &mut TokenMapp
                     || key_lower == "table_name"
                 {
                     if let serde_json::Value::String(s) = val
-                        && should_tokenize_value(s) {
-                            mapper.register(s);
-                        }
+                        && should_tokenize_value(s)
+                    {
+                        mapper.register(s);
+                    }
                 } else {
                     // Recurse into nested objects/arrays
                     extract_schema_json_strings(val, mapper);
@@ -336,9 +338,10 @@ fn extract_data_json_strings(
             }
             // Try date shifting first
             if let Some(shift) = date_shift
-                && try_register_shifted_date(s, mapper, shift) {
-                    return;
-                }
+                && try_register_shifted_date(s, mapper, shift)
+            {
+                return;
+            }
             if should_tokenize_value_with_config(s, config.tokenize_numbers) {
                 mapper.register(s);
             }
@@ -440,9 +443,10 @@ fn extract_parquet_strings(
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
                         if let Some(shift) = date_shift
-                            && try_register_shifted_date(val, mapper, shift) {
-                                continue;
-                            }
+                            && try_register_shifted_date(val, mapper, shift)
+                        {
+                            continue;
+                        }
                         if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
@@ -453,9 +457,10 @@ fn extract_parquet_strings(
                     if !str_arr.is_null(i) {
                         let val = str_arr.value(i);
                         if let Some(shift) = date_shift
-                            && try_register_shifted_date(val, mapper, shift) {
-                                continue;
-                            }
+                            && try_register_shifted_date(val, mapper, shift)
+                        {
+                            continue;
+                        }
                         if should_tokenize_value_with_config(val, config.tokenize_numbers) {
                             mapper.register(val);
                         }
@@ -556,16 +561,17 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
 
     // Try ISO date: YYYY-MM-DD
     if trimmed.len() == 10
-        && let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
-            return Some(DateInfo {
-                datetime: d
-                    .and_hms_opt(0, 0, 0)
-                    .expect("midnight must be a valid time for parsed dates"),
-                format: DateFormat::IsoDate,
-                tz_suffix: String::new(),
-                frac_seconds: String::new(),
-            });
-        }
+        && let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d")
+    {
+        return Some(DateInfo {
+            datetime: d
+                .and_hms_opt(0, 0, 0)
+                .expect("midnight must be a valid time for parsed dates"),
+            format: DateFormat::IsoDate,
+            tz_suffix: String::new(),
+            frac_seconds: String::new(),
+        });
+    }
 
     // Try ISO datetime with T separator
     if trimmed.contains('T') {
@@ -610,16 +616,17 @@ fn is_date_string(s: &str) -> Option<DateInfo> {
     if trimmed.len() == 8
         && trimmed.chars().all(|c| c.is_ascii_digit())
         && (trimmed.starts_with("19") || trimmed.starts_with("20"))
-        && let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d") {
-            return Some(DateInfo {
-                datetime: d
-                    .and_hms_opt(0, 0, 0)
-                    .expect("midnight must be a valid time for parsed dates"),
-                format: DateFormat::Compact,
-                tz_suffix: String::new(),
-                frac_seconds: String::new(),
-            });
-        }
+        && let Ok(d) = NaiveDate::parse_from_str(trimmed, "%Y%m%d")
+    {
+        return Some(DateInfo {
+            datetime: d
+                .and_hms_opt(0, 0, 0)
+                .expect("midnight must be a valid time for parsed dates"),
+            format: DateFormat::Compact,
+            tz_suffix: String::new(),
+            frac_seconds: String::new(),
+        });
+    }
 
     None
 }
@@ -666,7 +673,6 @@ fn extract_frac_seconds(s: &str) -> (&str, &str) {
 
 /// Format a shifted datetime back to its original format, preserving fractional seconds.
 fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
-    
     match info.format {
         DateFormat::IsoDate => dt.format("%Y-%m-%d").to_string(),
         DateFormat::IsoDateTimeT => {
@@ -697,11 +703,7 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
     let offset: i64 = rng.random_range(-1825..=1825);
-    if offset == 0 {
-        1
-    } else {
-        offset
-    }
+    if offset == 0 { 1 } else { offset }
 }
 
 /// Compute a deterministic numeric shift for native numeric tokenization.
@@ -712,11 +714,7 @@ pub(crate) fn compute_numeric_shift(seed: u64) -> i64 {
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
     let offset: i64 = rng.random_range(-10_000..=10_000);
-    if offset == 0 {
-        1
-    } else {
-        offset
-    }
+    if offset == 0 { 1 } else { offset }
 }
 
 /// Register a date string with its shifted value in the mapper.

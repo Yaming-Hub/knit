@@ -259,9 +259,8 @@ impl ActorTemporalGenerator {
             let base_lower = self.compute_actor_lower_bound(actor_idx);
 
             // Generate burst event count distribution (Poisson, min 1)
-            let poisson = Poisson::new(burst_cfg.avg_events.max(1.0)).unwrap_or(
-                Poisson::new(3.0).expect("burst fallback Poisson uses a valid rate"),
-            );
+            let poisson = Poisson::new(burst_cfg.avg_events.max(1.0))
+                .unwrap_or(Poisson::new(3.0).expect("burst fallback Poisson uses a valid rate"));
             // Exponential for inter-burst idle and intra-burst gap
             let gap_exp = Exp::new(1.0 / (burst_cfg.avg_gap_ms as f64).max(1.0)).unwrap_or(
                 Exp::new(1.0 / 180_000.0)

@@ -17,7 +17,7 @@ use tracing::{debug, info};
 
 use crate::tokenize::dictionary::TokenDictionary;
 use crate::tokenize::mapper::TokenMapper;
-use crate::tokenize::scanner::{scan_directory, FileKind};
+use crate::tokenize::scanner::{FileKind, scan_directory};
 
 /// Configuration for a tokenization run.
 #[derive(Debug, Clone)]

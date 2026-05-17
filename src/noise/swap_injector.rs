@@ -9,9 +9,9 @@
 use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
-use rand::seq::SliceRandom;
 use rand::Rng;
 use rand::RngCore;
+use rand::seq::SliceRandom;
 use std::sync::Arc;
 use tracing::trace;
 
@@ -75,7 +75,9 @@ impl Perturbator for SwapInjector {
 
             // Select rows to swap (only from in-scope rows)
             let mut swap_indices: Vec<usize> = (0..n)
-                .filter(|&i| config.in_scope(i) && rng.random_bool(config.probability.clamp(0.0, 1.0)))
+                .filter(|&i| {
+                    config.in_scope(i) && rng.random_bool(config.probability.clamp(0.0, 1.0))
+                })
                 .collect();
             swap_indices.shuffle(rng);
             // Pair up — drop last if odd

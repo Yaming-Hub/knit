@@ -15,8 +15,8 @@ use std::sync::Arc;
 use arrow::array::{ArrayRef, Float64Array, Int64Array, ListArray};
 use arrow::buffer::OffsetBuffer;
 use arrow::datatypes::{DataType, Field};
-use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
+use rand::distr::{Distribution, Uniform};
 
 use crate::core::DistributionKind;
 
@@ -169,8 +169,7 @@ impl FieldGenerator for DistributionGenerator {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
                 let dist = rand_distr::Poisson::new(lambda).unwrap_or_else(|_| {
                     tracing::warn!(lambda, "invalid Poisson params, falling back to Poisson(1)");
-                    rand_distr::Poisson::new(1.0)
-                        .expect("Poisson fallback λ=1 uses a valid rate")
+                    rand_distr::Poisson::new(1.0).expect("Poisson fallback λ=1 uses a valid rate")
                 });
                 let values: Vec<i64> = (0..count)
                     .map(|_| {
@@ -363,8 +362,7 @@ impl FieldGenerator for DistributionGenerator {
                     .get("alpha")
                     .cloned()
                     .unwrap_or_else(|| vec![1.0, 1.0]);
-                let alpha = if alpha.len() >= 2 && alpha.iter().all(|a| a.is_finite() && *a > 0.0)
-                {
+                let alpha = if alpha.len() >= 2 && alpha.iter().all(|a| a.is_finite() && *a > 0.0) {
                     alpha
                 } else {
                     tracing::warn!(

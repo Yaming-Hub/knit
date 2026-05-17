@@ -513,7 +513,9 @@ pub enum StateError {
     #[error("serialization error: {0}")]
     Serialize(String),
     /// State file version is newer than supported.
-    #[error("state file version {file_version} is newer than supported version {supported_version}; please upgrade knit")]
+    #[error(
+        "state file version {file_version} is newer than supported version {supported_version}; please upgrade knit"
+    )]
     VersionMismatch {
         /// Version found in the file.
         file_version: u16,

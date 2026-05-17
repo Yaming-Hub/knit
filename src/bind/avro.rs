@@ -5,8 +5,8 @@
 
 use std::io::Write;
 
-use apache_avro::types::Value as AvroValue;
 use apache_avro::Schema as AvroSchema;
+use apache_avro::types::Value as AvroValue;
 use arrow::array::*;
 use arrow::datatypes::{DataType, Schema, TimeUnit};
 use arrow::record_batch::RecordBatch;
@@ -329,7 +329,11 @@ fn arrow_type_to_avro(dt: &DataType) -> Result<AvroSchema, BindError> {
 /// `nullable` is driven by the Arrow schema field's `is_nullable()`, not the
 /// array's runtime null count, ensuring union wrapping is consistent regardless
 /// of whether the current batch contains nulls.
-fn arrow_value_to_avro(array: &ArrayRef, row: usize, nullable: bool) -> Result<AvroValue, BindError> {
+fn arrow_value_to_avro(
+    array: &ArrayRef,
+    row: usize,
+    nullable: bool,
+) -> Result<AvroValue, BindError> {
     if array.is_null(row) {
         return Ok(if nullable {
             AvroValue::Union(0, Box::new(AvroValue::Null))
@@ -428,15 +432,22 @@ fn arrow_value_to_avro_inner(array: &ArrayRef, row: usize) -> Result<AvroValue, 
                 AvroValue::Long(a.value(row) * 1000)
             }
             TimeUnit::Millisecond => {
-                let a = downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
+                let a = downcast_array::<TimestampMillisecondArray>(
+                    array,
+                    "TimestampMillisecondArray",
+                )?;
                 AvroValue::Long(a.value(row))
             }
             TimeUnit::Microsecond => {
-                let a = downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
+                let a = downcast_array::<TimestampMicrosecondArray>(
+                    array,
+                    "TimestampMicrosecondArray",
+                )?;
                 AvroValue::Long(a.value(row) / 1_000)
             }
             TimeUnit::Nanosecond => {
-                let a = downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
+                let a =
+                    downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
                 AvroValue::Long(a.value(row) / 1_000_000)
             }
         },
@@ -468,15 +479,18 @@ fn arrow_value_to_avro_inner(array: &ArrayRef, row: usize) -> Result<AvroValue, 
                 AvroValue::Long(a.value(row) * 1000)
             }
             TimeUnit::Millisecond => {
-                let a = downcast_array::<DurationMillisecondArray>(array, "DurationMillisecondArray")?;
+                let a =
+                    downcast_array::<DurationMillisecondArray>(array, "DurationMillisecondArray")?;
                 AvroValue::Long(a.value(row))
             }
             TimeUnit::Microsecond => {
-                let a = downcast_array::<DurationMicrosecondArray>(array, "DurationMicrosecondArray")?;
+                let a =
+                    downcast_array::<DurationMicrosecondArray>(array, "DurationMicrosecondArray")?;
                 AvroValue::Long(a.value(row) / 1000)
             }
             TimeUnit::Nanosecond => {
-                let a = downcast_array::<DurationNanosecondArray>(array, "DurationNanosecondArray")?;
+                let a =
+                    downcast_array::<DurationNanosecondArray>(array, "DurationNanosecondArray")?;
                 AvroValue::Long(a.value(row) / 1_000_000)
             }
         },

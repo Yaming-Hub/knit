@@ -19,13 +19,13 @@ use serde_json;
 use tracing::{debug, info, info_span, warn};
 
 use crate::learn::correlation::detect_correlations;
-use crate::learn::fitting::{fit_categorical, fit_distribution, FitResult};
+use crate::learn::fitting::{FitResult, fit_categorical, fit_distribution};
 use crate::learn::ingest::{self, IngestionResult};
-use crate::learn::profile::{compute_profiles, ColumnProfile};
-use crate::learn::relationships::{detect_relationships, RelColumn, TableProfile};
-use crate::learn::schema_assembly::{assemble_data_model, ColumnAnalysis, TableAnalysis};
-use crate::learn::temporal::{detect_temporal_pattern, TemporalPatternSpec};
-use crate::learn::type_inference::{infer_type, InferredType, StringPattern};
+use crate::learn::profile::{ColumnProfile, compute_profiles};
+use crate::learn::relationships::{RelColumn, TableProfile, detect_relationships};
+use crate::learn::schema_assembly::{ColumnAnalysis, TableAnalysis, assemble_data_model};
+use crate::learn::temporal::{TemporalPatternSpec, detect_temporal_pattern};
+use crate::learn::type_inference::{InferredType, StringPattern, infer_type};
 
 /// Options for the `--actors` behavioral analysis pipeline.
 pub struct ActorsOpts {
@@ -196,8 +196,7 @@ pub fn run(
     }
 
     // Batch mode (original behavior)
-    let source = source
-        .ok_or_else(|| anyhow::anyhow!("source path is required in batch mode"))?;
+    let source = source.ok_or_else(|| anyhow::anyhow!("source path is required in batch mode"))?;
     run_batch(
         source,
         output,
@@ -948,13 +947,14 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         // Enrich distribution-fit decisions with entity/column context
         // (fit_distribution logs the decision without table/column context)
         if col_analysis.distribution.is_some()
-            && let Some(logger) = crate::decision::global_logger() {
-                logger.set_last_context(
-                    crate::decision::DecisionKind::DistributionFit,
-                    &table.entity,
-                    &profile.name,
-                );
-            }
+            && let Some(logger) = crate::decision::global_logger()
+        {
+            logger.set_last_context(
+                crate::decision::DecisionKind::DistributionFit,
+                &table.entity,
+                &profile.name,
+            );
+        }
 
         col_analyses.push(col_analysis);
 
@@ -1302,10 +1302,11 @@ fn build_column_stats(profile: &ColumnProfile) -> crate::core::ColumnStats {
     // Categorical top values (from categorical_weights if available in profile)
     // For batch learn, we extract top values from the cardinality tracker
     if let Some(ref str_prof) = profile.string
-        && !str_prof.patterns.is_empty() {
-            // Patterns are stored as (pattern, match_rate) — not the same as top_values.
-            // We don't have top-k in batch profiling, so skip for now.
-        }
+        && !str_prof.patterns.is_empty()
+    {
+        // Patterns are stored as (pattern, match_rate) — not the same as top_values.
+        // We don't have top-k in batch profiling, so skip for now.
+    }
 
     // Temporal stats
     if let Some(ref temp) = profile.temporal {
@@ -1701,7 +1702,7 @@ fn extract_complex_display_values(batch: &RecordBatch, col_name: &str) -> Vec<St
 
 /// Serialize list elements to a JSON array string.
 fn list_value_to_json(value_arr: &dyn arrow::array::Array) -> String {
-    use arrow::array::{as_string_array, AsArray};
+    use arrow::array::{AsArray, as_string_array};
     use arrow::datatypes::DataType as ADT;
 
     let mut items = Vec::new();
@@ -1752,7 +1753,7 @@ fn list_value_to_json(value_arr: &dyn arrow::array::Array) -> String {
 
 /// Serialize a single complex-type value (List, Map) at index `i` to JSON string.
 fn complex_value_to_json(array: &dyn arrow::array::Array, i: usize) -> Option<String> {
-    use arrow::array::{as_string_array, AsArray};
+    use arrow::array::{AsArray, as_string_array};
     use arrow::datatypes::DataType as ADT;
 
     match array.data_type() {
@@ -2613,7 +2614,7 @@ fn run_behavioral_pipeline(
     use crate::learn::actor_graph::{RelationshipAccumulator, RelationshipDiscoveryConfig};
     use crate::learn::actor_registry::build_actor_registry;
     use crate::learn::behavioral::ActorProfiler;
-    use crate::learn::clustering::{discover_personas, ClusteringConfig};
+    use crate::learn::clustering::{ClusteringConfig, discover_personas};
     use crate::learn::schema_assembly::score_actor_column;
 
     let mut stats = BehavioralStats::default();
@@ -2781,18 +2782,19 @@ fn run_behavioral_pipeline(
             // Check if this column's namespace has already been profiled
             let ns_name = col_to_ns.get(&(table.entity.clone(), actor_col.clone()));
             if let Some(ns) = ns_name
-                && profiled_namespaces.contains(ns) {
-                    if !cli.quiet {
-                        eprintln!(
-                            "    {} skipping {}.{} — namespace '{}' already profiled",
-                            "→".dimmed(),
-                            table.entity.cyan(),
-                            actor_col,
-                            ns,
-                        );
-                    }
-                    continue;
+                && profiled_namespaces.contains(ns)
+            {
+                if !cli.quiet {
+                    eprintln!(
+                        "    {} skipping {}.{} — namespace '{}' already profiled",
+                        "→".dimmed(),
+                        table.entity.cyan(),
+                        actor_col,
+                        ns,
+                    );
                 }
+                continue;
+            }
 
             if !cli.quiet {
                 let ns_label = ns_name.map_or(String::new(), |n| format!(" [namespace: {}]", n));
@@ -2832,20 +2834,21 @@ fn run_behavioral_pipeline(
             if let Some(result) = discover_personas(&profiles, &cluster_config) {
                 let mut personas = result.personas;
                 if let Some(max_k) = opts.max_personas
-                    && personas.len() > max_k {
-                        personas.sort_by(|a, b| {
-                            b.weight
-                                .partial_cmp(&a.weight)
-                                .unwrap_or(std::cmp::Ordering::Equal)
-                        });
-                        personas.truncate(max_k);
-                        let total: f64 = personas.iter().map(|p| p.weight).sum();
-                        if total > 0.0 {
-                            for p in &mut personas {
-                                p.weight /= total;
-                            }
+                    && personas.len() > max_k
+                {
+                    personas.sort_by(|a, b| {
+                        b.weight
+                            .partial_cmp(&a.weight)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    });
+                    personas.truncate(max_k);
+                    let total: f64 = personas.iter().map(|p| p.weight).sum();
+                    if total > 0.0 {
+                        for p in &mut personas {
+                            p.weight /= total;
                         }
                     }
+                }
 
                 stats.personas_discovered += personas.len();
 
@@ -2883,9 +2886,10 @@ fn run_behavioral_pipeline(
         for actor_col in actor_cols.iter() {
             if let Some(ns) = col_to_ns.get(&(table.entity.clone(), actor_col.clone()))
                 && let Some(personas) = namespace_personas.get(ns)
-                    && table_analyses[i].personas.is_empty() {
-                        table_analyses[i].personas = personas.clone();
-                    }
+                && table_analyses[i].personas.is_empty()
+            {
+                table_analyses[i].personas = personas.clone();
+            }
         }
     }
 

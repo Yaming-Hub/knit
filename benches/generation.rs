@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow::record_batch::RecordBatch;
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use knit::blueprint::{parse_toml, validate};
 use knit::r#gen::{ActorPool, GenerationEngine};
 use knit::plan::compile;

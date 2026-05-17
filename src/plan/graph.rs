@@ -71,9 +71,10 @@ pub fn assign_phases(model: &DataModel) -> Result<PhaseAssignment, PlanError> {
             if let Some(crate::core::GeneratorSpec::ActorRef { entity: ref target }) =
                 field.generator
                 && let Some(&to_idx) = entity_index.get(target.as_str())
-                    && from_idx != to_idx {
-                        graph.add_edge(nodes[from_idx], nodes[to_idx], ());
-                    }
+                && from_idx != to_idx
+            {
+                graph.add_edge(nodes[from_idx], nodes[to_idx], ());
+            }
         }
     }
 

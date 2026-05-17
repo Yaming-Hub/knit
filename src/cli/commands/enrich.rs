@@ -5,9 +5,9 @@ use std::path::Path;
 use anyhow::Result;
 use colored::Colorize;
 
-use crate::cli::commands::{load_blueprint, save_blueprint};
 use crate::cli::Cli;
-use crate::enrich::{enrich, EnrichConfig};
+use crate::cli::commands::{load_blueprint, save_blueprint};
+use crate::enrich::{EnrichConfig, enrich};
 
 /// Run the enrich subcommand.
 #[allow(clippy::too_many_arguments)] // CLI handlers mirror subcommand flags directly.

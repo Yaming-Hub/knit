@@ -118,7 +118,7 @@ pub fn ingest_batches_to_state(
 /// for cross-table relationship tracking. Call after all tables from a source
 /// have been ingested.
 pub fn update_relationship_evidence(state: &mut LearnState) {
-    use crate::learn::streaming::relationships::{detect_candidates, IncrementalRelColumn};
+    use crate::learn::streaming::relationships::{IncrementalRelColumn, detect_candidates};
 
     // Build column metadata for candidate detection
     let mut all_columns: Vec<IncrementalRelColumn> = Vec::new();
@@ -140,13 +140,15 @@ pub fn update_relationship_evidence(state: &mut LearnState) {
     // Stage 2: Update HLL sketches by merging column HLLs directly
     for ev in &mut state.relationship_evidence {
         if let Some(table) = state.tables.get(&ev.from_table)
-            && let Some(col) = table.columns.iter().find(|c| c.name == ev.from_column) {
-                ev.from_hll.merge(&col.hll);
-            }
+            && let Some(col) = table.columns.iter().find(|c| c.name == ev.from_column)
+        {
+            ev.from_hll.merge(&col.hll);
+        }
         if let Some(table) = state.tables.get(&ev.to_table)
-            && let Some(col) = table.columns.iter().find(|c| c.name == ev.to_column) {
-                ev.to_hll.merge(&col.hll);
-            }
+            && let Some(col) = table.columns.iter().find(|c| c.name == ev.to_column)
+        {
+            ev.to_hll.merge(&col.hll);
+        }
         ev.chunks_observed += 1;
     }
 }
@@ -159,8 +161,8 @@ pub fn update_relationship_evidence(state: &mut LearnState) {
 pub fn update_correlation_evidence(state: &mut LearnState, entity: &str, batches: &[RecordBatch]) {
     use crate::learn::streaming::relationships::PairwiseCorrelation;
     use arrow::array::{
-        Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, UInt16Array,
-        UInt32Array, UInt64Array, UInt8Array,
+        Float32Array, Float64Array, Int8Array, Int16Array, Int32Array, Int64Array, UInt8Array,
+        UInt16Array, UInt32Array, UInt64Array,
     };
 
     if batches.is_empty() {
@@ -522,7 +524,7 @@ pub fn finalize_state(
     Vec<TableAnalysis>,
     Vec<crate::learn::streaming::FinalizedRelationship>,
 ) {
-    use crate::learn::correlation::{pearson_p_value, Correlation, CorrelationMethod};
+    use crate::learn::correlation::{Correlation, CorrelationMethod, pearson_p_value};
 
     let mut analyses = Vec::new();
 

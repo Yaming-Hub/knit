@@ -327,9 +327,10 @@ fn social_platform_activity_after_signup() {
     let mut violations = 0;
     for (author_id, created_at) in &post_pairs {
         if let Some(&signup) = signup_map.get(author_id)
-            && *created_at < signup {
-                violations += 1;
-            }
+            && *created_at < signup
+        {
+            violations += 1;
+        }
     }
     assert_eq!(
         violations, 0,
@@ -341,9 +342,10 @@ fn social_platform_activity_after_signup() {
     let mut violations = 0;
     for (author_id, created_at) in &comment_pairs {
         if let Some(&signup) = signup_map.get(author_id)
-            && *created_at < signup {
-                violations += 1;
-            }
+            && *created_at < signup
+        {
+            violations += 1;
+        }
     }
     assert_eq!(
         violations, 0,
@@ -355,9 +357,10 @@ fn social_platform_activity_after_signup() {
     let mut violations = 0;
     for (sender_id, sent_at) in &dm_pairs {
         if let Some(&signup) = signup_map.get(sender_id)
-            && *sent_at < signup {
-                violations += 1;
-            }
+            && *sent_at < signup
+        {
+            violations += 1;
+        }
     }
     assert_eq!(
         violations, 0,
@@ -514,9 +517,10 @@ fn social_platform_comment_after_post() {
     let total = comment_post_ids.len();
     for (i, &post_id) in comment_post_ids.iter().enumerate() {
         if let Some(&post_ts) = post_ts_map.get(&post_id)
-            && comment_timestamps[i] < post_ts {
-                violations += 1;
-            }
+            && comment_timestamps[i] < post_ts
+        {
+            violations += 1;
+        }
     }
 
     assert_eq!(

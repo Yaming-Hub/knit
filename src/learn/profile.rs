@@ -523,8 +523,7 @@ fn detect_string_patterns(values: &[&str]) -> Vec<(String, f64)> {
         ),
         (
             "phone",
-            Regex::new(r"^\+?[\d\s\-\(\)]{7,15}$")
-                .expect("phone regex must compile"),
+            Regex::new(r"^\+?[\d\s\-\(\)]{7,15}$").expect("phone regex must compile"),
         ),
         (
             "uuid",
@@ -665,11 +664,7 @@ fn extract_ts_range(len: usize, get_us: impl Fn(usize) -> Option<i64>) -> Option
             }
         }
     }
-    if found {
-        Some((min_v, max_v))
-    } else {
-        None
-    }
+    if found { Some((min_v, max_v)) } else { None }
 }
 
 #[cfg(test)]
@@ -825,9 +820,10 @@ mod tests {
         .unwrap();
         let profiles = compute_profiles(&[batch]).unwrap();
         let s = profiles[0].string.as_ref().unwrap();
-        assert!(s
-            .patterns
-            .iter()
-            .any(|(name, rate)| name == "email" && *rate > 0.9));
+        assert!(
+            s.patterns
+                .iter()
+                .any(|(name, rate)| name == "email" && *rate > 0.9)
+        );
     }
 }

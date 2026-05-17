@@ -92,8 +92,7 @@ impl FieldGenerator for CorrelatedGenerator {
 
         let r = self.correlation;
         let complement = (1.0 - r * r).max(0.0).sqrt();
-        let noise = Normal::new(0.0, 1.0)
-            .expect("standard normal noise uses valid parameters");
+        let noise = Normal::new(0.0, 1.0).expect("standard normal noise uses valid parameters");
 
         let values: Vec<f64> = x_norm
             .iter()

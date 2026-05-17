@@ -318,9 +318,10 @@ impl ActorProfiler {
 
             // Extract and observe timestamp
             if let Some((t_idx, ref t_dt)) = temporal_info
-                && let Some(epoch_secs) = extract_epoch_secs(batch.column(t_idx), row, t_dt) {
-                    acc.observe_timestamp(epoch_secs);
-                }
+                && let Some(epoch_secs) = extract_epoch_secs(batch.column(t_idx), row, t_dt)
+            {
+                acc.observe_timestamp(epoch_secs);
+            }
 
             // Extract and observe feature columns
             for &(f_idx, f_name, ref f_dt) in &feature_info {
@@ -551,10 +552,11 @@ fn observe_field_value(
             if let Some(dict) = array
                 .as_any()
                 .downcast_ref::<arrow::array::DictionaryArray<arrow::datatypes::Int32Type>>()
-                && let Some(values) = dict.values().as_any().downcast_ref::<StringArray>() {
-                    let key = dict.keys().value(row) as usize;
-                    acc.observe_categorical(field_name, values.value(key));
-                }
+                && let Some(values) = dict.values().as_any().downcast_ref::<StringArray>()
+            {
+                let key = dict.keys().value(row) as usize;
+                acc.observe_categorical(field_name, values.value(key));
+            }
         }
         _ => {} // skip unsupported types
     }

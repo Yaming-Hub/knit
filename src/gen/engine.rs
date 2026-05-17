@@ -332,7 +332,7 @@ impl GenerationEngine {
         entity_plans: &[EntityPlan],
         mut batches: Vec<(String, RecordBatch)>,
     ) -> Vec<(String, RecordBatch)> {
-        use crate::r#gen::temporal_sort::{enforce_inter_event_gaps, DEFAULT_MIN_GAP_MS};
+        use crate::r#gen::temporal_sort::{DEFAULT_MIN_GAP_MS, enforce_inter_event_gaps};
 
         // Collect actor temporal info per entity. An entity may have multiple
         // ActorTemporal fields (each produces a timestamp column that needs
@@ -537,14 +537,13 @@ impl GenerationEngine {
     /// because Sequence generators always produce Int64 regardless of declared type.
     fn is_string_pk_entity(&self, ep: &EntityPlan) -> bool {
         if let Some(pk_idx) = ep.primary_key_field_index
-            && let Some(fp) = ep.field_plans.get(pk_idx) {
-                return matches!(
-                    &fp.generator_plan,
-                    GeneratorPlan::Uuid
-                        | GeneratorPlan::Faker { .. }
-                        | GeneratorPlan::Pattern { .. }
-                );
-            }
+            && let Some(fp) = ep.field_plans.get(pk_idx)
+        {
+            return matches!(
+                &fp.generator_plan,
+                GeneratorPlan::Uuid | GeneratorPlan::Faker { .. } | GeneratorPlan::Pattern { .. }
+            );
+        }
         // No explicit PK index — conservatively return false to avoid
         // misidentifying an Int64 PK entity as string-keyed.
         false
@@ -700,11 +699,12 @@ impl GenerationEngine {
                     "extracting PK values"
                 );
                 if let Some(ref ks) = key_store
-                    && let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>() {
-                        for v in i64_arr.values().iter() {
-                            ks.insert(*v);
-                        }
+                    && let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>()
+                {
+                    for v in i64_arr.values().iter() {
+                        ks.insert(*v);
                     }
+                }
                 if let Some(ref sks) = string_key_store {
                     if let Some(str_arr) = col.as_any().downcast_ref::<StringArray>() {
                         for i in 0..str_arr.len() {
@@ -1344,10 +1344,11 @@ impl GenerationEngine {
             let mut found_any = false;
             for (&_pk, &idx) in pk_reverse.iter() {
                 if let Some(ts) = self.temporal_store.get(actor_entity, tsf, idx)
-                    && idx < times.len() {
-                        times[idx] = Some(ts);
-                        found_any = true;
-                    }
+                    && idx < times.len()
+                {
+                    times[idx] = Some(ts);
+                    found_any = true;
+                }
             }
             if found_any {
                 Some(Arc::new(times))
@@ -2462,10 +2463,12 @@ mod tests {
         });
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("intentional error"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("intentional error")
+        );
     }
 
     #[test]
@@ -2606,7 +2609,10 @@ mod tests {
         ]));
         let result = apply_precision(arr, Some(2));
         let float_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
-        assert_eq!(float_arr.value(0), (std::f64::consts::PI * 100.0).round() / 100.0);
+        assert_eq!(
+            float_arr.value(0),
+            (std::f64::consts::PI * 100.0).round() / 100.0
+        );
         assert!(float_arr.is_null(1));
         assert_eq!(float_arr.value(2), 2.72);
     }

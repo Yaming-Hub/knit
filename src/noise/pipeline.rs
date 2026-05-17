@@ -19,7 +19,7 @@ use std::sync::Arc;
 use tracing::{debug, info, instrument};
 
 use crate::r#gen::expr::ast::Expr;
-use crate::r#gen::expr::eval::{evaluate, EvalContext};
+use crate::r#gen::expr::eval::{EvalContext, evaluate};
 use crate::noise::error::NoiseError;
 use crate::noise::traits::{ColumnFilter, InvariantSet, PerturbConfig, Perturbator};
 
@@ -204,10 +204,11 @@ impl Pipeline {
         for &(_, idx) in &order {
             let (_, overrides) = &self.perturbators[idx];
             if let Some(ref expr) = overrides.scope_expr
-                && let std::collections::hash_map::Entry::Vacant(e) = precomputed_scope.entry(idx) {
-                    let mask = evaluate_scope_mask(expr, &batch)?;
-                    e.insert(Arc::new(mask));
-                }
+                && let std::collections::hash_map::Entry::Vacant(e) = precomputed_scope.entry(idx)
+            {
+                let mask = evaluate_scope_mask(expr, &batch)?;
+                e.insert(Arc::new(mask));
+            }
         }
 
         for (stage, idx) in &order {

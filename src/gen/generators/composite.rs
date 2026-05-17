@@ -13,7 +13,7 @@ use rand::RngCore;
 use crate::plan::GeneratorPlan;
 
 use crate::r#gen::context::GenContext;
-use crate::r#gen::generators::{create_generator, create_generator_with_seen, SharedSeen};
+use crate::r#gen::generators::{SharedSeen, create_generator, create_generator_with_seen};
 use crate::r#gen::traits::FieldGenerator;
 
 /// Generate JSON array strings by composing an element generator and a length generator.

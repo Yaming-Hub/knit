@@ -9,7 +9,7 @@ use std::path::Path;
 use anyhow::{Context, Result};
 
 use crate::tokenize::dictionary::TokenDictionary;
-use crate::tokenize::scanner::{scan_directory, FileKind};
+use crate::tokenize::scanner::{FileKind, scan_directory};
 
 /// Summary report of a tokenization run.
 #[derive(Debug)]
@@ -171,9 +171,10 @@ fn count_jsonl_rows(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
         if columns.is_none()
             && let Ok(val) =
                 serde_json::from_str::<serde_json::Value>(trimmed.trim_end_matches(','))
-                && let Some(obj) = val.as_object() {
-                    columns = Some(obj.len());
-                }
+            && let Some(obj) = val.as_object()
+        {
+            columns = Some(obj.len());
+        }
     }
     Ok((Some(rows), columns))
 }

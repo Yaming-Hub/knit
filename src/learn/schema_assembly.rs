@@ -317,40 +317,41 @@ fn build_entity(
 
         // Row-type conditional generation: wrap generator with discriminator check
         if let (Some(disc_col), Some(companion)) = (&discriminator_col, &table.companion)
-            && let Some(row_type) = companion.row_type_for_column(&col.name) {
-                // This column should only have values when discriminator == row_type.
-                // Wrap the learned generator in a Conditional.
-                generator = GeneratorSpec::Conditional {
-                    field: disc_col.clone(),
-                    branches: vec![crate::core::ConditionalBranch {
-                        condition: Value::Int(row_type as i64),
-                        generator,
-                    }],
-                    default: None,
-                };
-                // Conditional generator already handles nullability via default: None,
-                // so don't double-count with NullSpec::Probability
-                let field_nullable = NullSpec::Never;
-                let precision = if data_type == crate::core::DataType::Float {
-                    col.max_decimal_places
-                } else {
-                    None
-                };
-                fields.push(Field {
-                    name: col.name.clone(),
-                    description: None,
-                    data_type,
-                    generator: Some(generator),
-                    nullable: field_nullable,
-                    primary_key: if col.is_primary_key { Some(true) } else { None },
-                    precision,
-                    actor_column: false,
-                    fields: vec![],
-                    stats: col.stats.clone(),
-                    traits: col.traits.clone(),
-                });
-                continue;
-            }
+            && let Some(row_type) = companion.row_type_for_column(&col.name)
+        {
+            // This column should only have values when discriminator == row_type.
+            // Wrap the learned generator in a Conditional.
+            generator = GeneratorSpec::Conditional {
+                field: disc_col.clone(),
+                branches: vec![crate::core::ConditionalBranch {
+                    condition: Value::Int(row_type as i64),
+                    generator,
+                }],
+                default: None,
+            };
+            // Conditional generator already handles nullability via default: None,
+            // so don't double-count with NullSpec::Probability
+            let field_nullable = NullSpec::Never;
+            let precision = if data_type == crate::core::DataType::Float {
+                col.max_decimal_places
+            } else {
+                None
+            };
+            fields.push(Field {
+                name: col.name.clone(),
+                description: None,
+                data_type,
+                generator: Some(generator),
+                nullable: field_nullable,
+                primary_key: if col.is_primary_key { Some(true) } else { None },
+                precision,
+                actor_column: false,
+                fields: vec![],
+                stats: col.stats.clone(),
+                traits: col.traits.clone(),
+            });
+            continue;
+        }
 
         // Infer precision for float columns from source data
         let precision = if data_type == crate::core::DataType::Float {
@@ -447,9 +448,10 @@ fn build_entity(
     // Also mark explicitly flagged actor columns (from --actor-column)
     for col in &table.columns {
         if col.is_actor_column
-            && let Some(field) = fields.iter_mut().find(|f| f.name == col.name) {
-                field.actor_column = true;
-            }
+            && let Some(field) = fields.iter_mut().find(|f| f.name == col.name)
+        {
+            field.actor_column = true;
+        }
     }
 
     // Compute table-level statistics from learned data
@@ -680,9 +682,10 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
     for (col_name, score) in actor_scores {
         if *score >= 0.9
             && let Some(field) = fields.iter().find(|f| &f.name == col_name)
-                && field.primary_key == Some(true) {
-                    return true;
-                }
+            && field.primary_key == Some(true)
+        {
+            return true;
+        }
     }
 
     false
@@ -1103,11 +1106,7 @@ fn rewrite_temporal_pairs(fields: &mut [Field], columns: &[ColumnAnalysis]) {
                 let s_mid = (s_min + s_max) / 2.0;
                 let e_mid = (e_min + e_max) / 2.0;
                 let diff = e_mid - s_mid;
-                if diff > 0.0 {
-                    diff
-                } else {
-                    86_400.0
-                } // default 1 day if ranges overlap completely
+                if diff > 0.0 { diff } else { 86_400.0 } // default 1 day if ranges overlap completely
             }
             _ => 86_400.0, // default 1 day
         };
