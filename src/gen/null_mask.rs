@@ -7,7 +7,7 @@
 
 use arrow::array::{ArrayRef, BooleanArray, NullArray};
 use arrow::compute::kernels::zip::zip;
-use rand::RngCore;
+use rand::Rng;
 use std::sync::Arc;
 
 use crate::r#gen::error::GenError;
@@ -34,7 +34,7 @@ use crate::plan::NullPlan;
 pub fn apply_null_mask(
     array: ArrayRef,
     null_plan: &NullPlan,
-    rng: &mut dyn RngCore,
+    rng: &mut dyn Rng,
     count: usize,
 ) -> Result<ArrayRef, GenError> {
     match null_plan {
@@ -71,7 +71,7 @@ mod tests {
     use super::*;
     use arrow::array::{Array, Int64Array, StringArray};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     fn make_rng() -> ChaCha8Rng {
         ChaCha8Rng::seed_from_u64(42)

@@ -700,7 +700,7 @@ fn format_shifted_date(dt: &NaiveDateTime, info: &DateInfo) -> String {
 /// Returns an offset between -1825 and +1825 days (±5 years), never zero.
 pub(crate) fn compute_date_shift(seed: u64) -> i64 {
     use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0xDA7E_5EED));
     let offset: i64 = rng.random_range(-1825..=1825);
     if offset == 0 { 1 } else { offset }
@@ -711,7 +711,7 @@ pub(crate) fn compute_date_shift(seed: u64) -> i64 {
 /// Used for both integer (wrapping add) and float (additive shift) columns.
 pub(crate) fn compute_numeric_shift(seed: u64) -> i64 {
     use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng};
     let mut rng = StdRng::seed_from_u64(seed.wrapping_add(0x4E0B_5EED));
     let offset: i64 = rng.random_range(-10_000..=10_000);
     if offset == 0 { 1 } else { offset }

@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -25,7 +25,7 @@ use crate::r#gen::traits::FieldGenerator;
 pub struct UuidGenerator;
 
 impl FieldGenerator for UuidGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         let values: Vec<String> = (0..count)
             .map(|_| {
                 let mut bytes = [0u8; 16];
@@ -49,7 +49,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::{HashMap, HashSet};
 
     fn make_ctx() -> GenContext<'static> {

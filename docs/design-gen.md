@@ -69,7 +69,7 @@ commodity hardware with NVMe storage.
 | `core module` | Shared types: `Value`, `DataModel`, `GeneratorSpec`, `DistributionSpec`, `DataType` |
 | `arrow` | `RecordBatch`, `ArrayRef`, array builders (`Int64Builder`, `StringBuilder`, etc.) |
 | `rand` | `Rng` trait, core RNG abstractions |
-| `rand_chacha` | `ChaCha8Rng` — deterministic, reproducible PRNG (hierarchical seeding) |
+| `rand` (`chacha` feature) | `ChaCha8Rng` — deterministic, reproducible PRNG (hierarchical seeding) |
 | `rand_distr` | Distribution samplers: `Normal`, `LogNormal`, `Exp`, `Pareto`, `Zipf`, etc. |
 | `rayon` | Partition-level parallelism via work-stealing thread pool |
 | `statrs` | Statistical functions: CDF, inverse CDF, special functions (for copulas, KS-test) |

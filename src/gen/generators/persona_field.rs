@@ -11,7 +11,7 @@ use arrow::array::{
     Array, ArrayRef, BooleanArray, Float64Array, Int32Array, Int64Array, StringArray,
 };
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::actor_pool::ActorPool;
 use crate::r#gen::context::GenContext;
@@ -58,7 +58,7 @@ impl PersonaFieldGenerator {
 }
 
 impl FieldGenerator for PersonaFieldGenerator {
-    fn generate(&self, _rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, _rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         // Read actor FK column from batch
         let actor_col = ctx.batch_columns.get(&self.actor_field);
 

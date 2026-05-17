@@ -8,7 +8,7 @@ use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use std::sync::Arc;
 use tracing::trace;
 
@@ -50,7 +50,7 @@ impl Perturbator for OutlierInjector {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -86,7 +86,7 @@ fn should_apply(name: &str, filter: &ColumnFilter) -> bool {
 
 fn inject_outliers(
     array: &dyn Array,
-    rng: &mut dyn RngCore,
+    rng: &mut dyn Rng,
     config: &PerturbConfig,
     multiplier: f64,
 ) -> Result<Arc<dyn Array>, NoiseError> {
@@ -218,7 +218,7 @@ mod tests {
     use super::*;
     use arrow::datatypes::{Field, Schema};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     fn num_batch() -> RecordBatch {
         let schema = Arc::new(Schema::new(vec![Field::new(

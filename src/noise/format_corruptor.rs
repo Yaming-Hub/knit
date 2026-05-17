@@ -8,7 +8,7 @@ use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use std::sync::Arc;
 use tracing::trace;
 
@@ -30,7 +30,7 @@ impl FormatCorruptor {
 }
 
 /// Corrupt a string value by damaging its structural format.
-fn corrupt_format(s: &str, rng: &mut dyn RngCore) -> String {
+fn corrupt_format(s: &str, rng: &mut dyn Rng) -> String {
     // Detect and corrupt common patterns
     if s.contains('@') && s.contains('.') {
         // Looks like an email — remove @ or domain dot
@@ -82,7 +82,7 @@ impl Perturbator for FormatCorruptor {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -136,7 +136,7 @@ mod tests {
     use super::*;
     use arrow::datatypes::{Field, Schema};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     fn email_batch() -> RecordBatch {
         let schema = Arc::new(Schema::new(vec![Field::new("email", DataType::Utf8, true)]));

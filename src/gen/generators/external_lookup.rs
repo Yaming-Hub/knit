@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
-use rand::RngCore;
+use rand::Rng;
 use rand::distr::Distribution;
 use rand_distr::weighted::WeightedAliasIndex;
 
@@ -50,7 +50,7 @@ impl ExternalLookupGenerator {
 }
 
 impl FieldGenerator for ExternalLookupGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         if self.entries.is_empty() {
             let empty: Vec<&str> = vec![""; count];
             return Arc::new(StringArray::from(empty));
@@ -104,7 +104,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn test_ctx_with_offset(offset: u64) -> GenContext<'static> {

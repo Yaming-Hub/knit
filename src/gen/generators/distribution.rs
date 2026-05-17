@@ -15,7 +15,7 @@ use std::sync::Arc;
 use arrow::array::{ArrayRef, Float64Array, Int64Array, ListArray};
 use arrow::buffer::OffsetBuffer;
 use arrow::datatypes::{DataType, Field};
-use rand::RngCore;
+use rand::Rng;
 use rand::distr::{Distribution, Uniform};
 
 use crate::core::DistributionKind;
@@ -109,7 +109,7 @@ impl DistributionGenerator {
 }
 
 impl FieldGenerator for DistributionGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         match self.kind {
             DistributionKind::Uniform => {
                 let lo = self.param("min", 0.0);
@@ -483,7 +483,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

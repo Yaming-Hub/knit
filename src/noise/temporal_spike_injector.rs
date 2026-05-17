@@ -9,7 +9,7 @@ use arrow::array::*;
 use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use rand_distr::{Distribution, Normal};
 use std::sync::Arc;
 use tracing::trace;
@@ -80,7 +80,7 @@ impl Perturbator for TemporalSpikeInjector {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -116,7 +116,7 @@ impl TemporalSpikeInjector {
     fn spike_timestamps(
         &self,
         col: &Arc<dyn Array>,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<Arc<dyn Array>, NoiseError> {
         let (unit, tz) = match col.data_type() {
@@ -255,7 +255,7 @@ fn build_timestamp_array(
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     fn make_ts_batch(values: Vec<i64>) -> RecordBatch {
         let arr = TimestampMillisecondArray::from(values);

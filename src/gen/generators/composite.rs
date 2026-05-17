@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Float64Array, Int64Array, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::plan::GeneratorPlan;
 
@@ -74,7 +74,7 @@ fn element_to_json(arr: &ArrayRef, idx: usize) -> String {
 }
 
 impl FieldGenerator for CompositeGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         // First, determine lengths for each row.
         let length_arr = self.length_gen.generate(rng, count, ctx);
         let lengths: Vec<usize> = if let Some(i) = length_arr.as_any().downcast_ref::<Int64Array>()
@@ -129,7 +129,7 @@ mod tests {
     use crate::plan::GeneratorPlan;
     use arrow::array::ArrayRef;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

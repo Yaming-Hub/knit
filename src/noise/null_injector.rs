@@ -7,7 +7,7 @@ use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use std::sync::Arc;
 use tracing::trace;
 
@@ -40,7 +40,7 @@ impl Perturbator for NullInjector {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -66,7 +66,7 @@ impl Perturbator for NullInjector {
 /// Build a null bitmap and reconstruct the array with extra nulls.
 fn inject_nulls(
     array: &dyn Array,
-    rng: &mut dyn RngCore,
+    rng: &mut dyn Rng,
     config: &PerturbConfig,
 ) -> Result<Arc<dyn Array>, NoiseError> {
     let len = array.len();
@@ -207,7 +207,7 @@ mod tests {
     fn null_injection_with_high_probability() {
         let injector = NullInjector::new();
         let config = PerturbConfig::default().with_probability(1.0).with_seed(42);
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(42);
         let result = injector.perturb(sample_batch(), &mut rng, &config).unwrap();
         // All cells should be null
         assert_eq!(result.column(0).null_count(), 5);
@@ -218,7 +218,7 @@ mod tests {
     fn null_injection_with_zero_probability() {
         let injector = NullInjector::new();
         let config = PerturbConfig::default().with_probability(0.0).with_seed(0);
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(0);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(0);
         let result = injector.perturb(sample_batch(), &mut rng, &config).unwrap();
         assert_eq!(result.column(0).null_count(), 0);
         assert_eq!(result.column(1).null_count(), 0);
@@ -228,7 +228,7 @@ mod tests {
     fn null_injection_partial_probability() {
         let injector = NullInjector::new();
         let config = PerturbConfig::default().with_probability(0.5).with_seed(42);
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(42);
         // Use a larger batch for statistical assertions
         let schema = Arc::new(Schema::new(vec![Field::new(
             "val",
@@ -253,7 +253,7 @@ mod tests {
         let config = PerturbConfig::default()
             .with_probability(1.0)
             .with_columns(vec!["name".to_string()]);
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(42);
         let result = injector.perturb(sample_batch(), &mut rng, &config).unwrap();
         // Only "name" column should be nulled
         assert_eq!(result.column(0).null_count(), 0, "id should be unchanged");
@@ -276,7 +276,7 @@ mod tests {
             ],
         )
         .unwrap();
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(42);
         let result = injector.perturb(batch, &mut rng, &config).unwrap();
         assert_eq!(
             result.column(0).null_count(),
@@ -307,7 +307,7 @@ mod tests {
             ]))],
         )
         .unwrap();
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut rng = rand::rngs::ChaCha8Rng::seed_from_u64(42);
         let result = injector.perturb(batch, &mut rng, &config).unwrap();
         // With p=0, existing nulls should remain but no new ones added
         assert_eq!(result.column(0).null_count(), 2);

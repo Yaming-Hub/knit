@@ -10,8 +10,8 @@ use std::sync::Arc;
 
 use arrow::array::{Array, Int64Array, StringArray};
 use arrow::record_batch::RecordBatch;
-use rand::{RngCore, SeedableRng};
-use rand_chacha::ChaCha8Rng;
+use rand::rngs::ChaCha8Rng;
+use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 
 use crate::plan::{

@@ -17,8 +17,8 @@ use std::collections::{BTreeMap, HashMap};
 use crate::core::Value;
 use crate::plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
 use rand::SeedableRng;
-use rand::{Rng, RngCore};
-use rand_chacha::ChaCha8Rng;
+use rand::rngs::ChaCha8Rng;
+use rand::{Rng, RngExt};
 
 /// Runtime actor pool — holds per-actor persona assignments and trait values.
 #[derive(Debug, Clone)]
@@ -81,7 +81,7 @@ impl ActorPool {
     /// Sample an actor index from the pool, weighted by activity rate.
     ///
     /// Returns a deterministic actor index based on the provided RNG.
-    pub fn sample_actor(&self, entity: &str, rng: &mut dyn RngCore) -> Option<usize> {
+    pub fn sample_actor(&self, entity: &str, rng: &mut dyn Rng) -> Option<usize> {
         let pool = self.pools.get(entity)?;
         if pool.actor_count == 0 {
             return None;
@@ -126,15 +126,15 @@ impl ActorPool {
     }
 }
 
-/// Generate a uniform f64 in [0, 1) from a dyn RngCore.
-fn gen_f64(rng: &mut dyn RngCore) -> f64 {
+/// Generate a uniform f64 in [0, 1) from a dyn Rng.
+fn gen_f64(rng: &mut dyn Rng) -> f64 {
     // Same algorithm as rand's Standard distribution for f64
     let bits = rng.next_u64();
     (bits >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
 }
 
 /// Generate a uniform usize in [0, n) using rejection sampling.
-fn gen_range_usize(rng: &mut dyn RngCore, n: usize) -> usize {
+fn gen_range_usize(rng: &mut dyn Rng, n: usize) -> usize {
     debug_assert!(n > 0);
     let n = n as u64;
     let threshold = u64::MAX - (u64::MAX % n);

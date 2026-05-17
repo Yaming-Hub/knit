@@ -15,7 +15,7 @@ use arrow::array::{
 };
 use arrow::compute;
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -78,7 +78,7 @@ impl ConditionalGenerator {
 }
 
 impl FieldGenerator for ConditionalGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         // Read the reference field
         let ref_col = ctx.batch_columns.get(&self.field);
         let ref_values: Vec<Option<String>> = match ref_col {
@@ -269,7 +269,7 @@ mod tests {
     use super::*;
     use crate::r#gen::context::GenContext;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
     use std::sync::Arc;
 

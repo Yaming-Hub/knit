@@ -62,7 +62,7 @@ mod tests {
     use arrow::array::*;
     use arrow::datatypes::DataType;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::{BTreeMap, HashMap};
 
     fn make_ctx() -> GenContext<'static> {

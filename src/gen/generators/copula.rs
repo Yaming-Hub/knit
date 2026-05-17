@@ -14,8 +14,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Float64Array};
-use rand::Rng;
-use rand_chacha::ChaCha8Rng;
+use rand::RngExt;
+use rand::rngs::ChaCha8Rng;
 use statrs::distribution::{ContinuousCDF, LogNormal, Normal};
 
 use crate::core::{CopulaFamily, DistributionKind};

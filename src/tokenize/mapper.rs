@@ -6,7 +6,7 @@
 use std::collections::{HashMap, HashSet};
 
 use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 
 /// Maps original string values to generated tokens.
 ///

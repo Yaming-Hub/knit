@@ -4,7 +4,7 @@
 //! numbers, and more — by randomly sampling from embedded word lists. No
 //! external faker crate is required; all data is self-contained.
 //!
-//! Determinism is guaranteed for a given [`RngCore`] state so that the same
+//! Determinism is guaranteed for a given [`Rng`] state so that the same
 //! seed reproduces identical datasets across runs.
 
 use std::sync::Arc;
@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use arrow::array::{ArrayRef, Date32Array, StringArray, TimestampNanosecondArray};
 use arrow::datatypes::{DataType, TimeUnit};
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -1672,13 +1672,13 @@ static BS_NOUNS: &[&str] = &[
 // ---------------------------------------------------------------------------
 
 /// Pick a random element from a static slice using the given RNG.
-fn pick<'a>(rng: &mut dyn RngCore, list: &'a [&str]) -> &'a str {
+fn pick<'a>(rng: &mut dyn Rng, list: &'a [&str]) -> &'a str {
     list[rng.next_u32() as usize % list.len()]
 }
 
 /// Generate a credit card number with valid Luhn checksum.
 /// Prefixes: Visa (4), Mastercard (51-55), Amex (34/37).
-fn generate_credit_card(rng: &mut dyn RngCore) -> String {
+fn generate_credit_card(rng: &mut dyn Rng) -> String {
     let choice = rng.next_u32() % 3;
     let (prefix, total_len) = match choice {
         0 => ("4", 16usize), // Visa
@@ -1698,7 +1698,7 @@ fn generate_credit_card(rng: &mut dyn RngCore) -> String {
     generate_cc_with_prefix(prefix, total_len, rng)
 }
 
-fn generate_cc_with_prefix(prefix: &str, total_len: usize, rng: &mut dyn RngCore) -> String {
+fn generate_cc_with_prefix(prefix: &str, total_len: usize, rng: &mut dyn Rng) -> String {
     let mut digits: Vec<u8> = prefix.bytes().map(|b| b - b'0').collect();
     // Fill random digits (leave last for check digit)
     while digits.len() < total_len - 1 {
@@ -1728,7 +1728,7 @@ fn luhn_check_digit(digits: &[u8]) -> u8 {
 /// Generate a simplified IBAN with valid check digits (mod-97).
 /// Only uses countries whose BBAN format is entirely numeric digits,
 /// so the generated IBANs pass standard validators.
-fn generate_iban(rng: &mut dyn RngCore) -> String {
+fn generate_iban(rng: &mut dyn Rng) -> String {
     // Countries with all-numeric BBANs (no embedded letters)
     let country = pick(rng, &["DE", "FR", "AT", "ES", "FI", "PT", "NO"]);
     let bban_len = match country {
@@ -1767,7 +1767,7 @@ fn mod97(s: &str) -> u32 {
 }
 
 /// Generate a 17-character VIN (no I, O, Q per spec).
-fn generate_vin(rng: &mut dyn RngCore) -> String {
+fn generate_vin(rng: &mut dyn Rng) -> String {
     const VIN_CHARS: &[u8] = b"ABCDEFGHJKLMNPRSTUVWXYZ0123456789";
     let mut vin: Vec<u8> = (0..17)
         .map(|_| VIN_CHARS[rng.next_u32() as usize % VIN_CHARS.len()])
@@ -1778,7 +1778,7 @@ fn generate_vin(rng: &mut dyn RngCore) -> String {
 }
 
 /// Generate a valid EAN-13 barcode with check digit.
-fn generate_ean13(rng: &mut dyn RngCore) -> String {
+fn generate_ean13(rng: &mut dyn Rng) -> String {
     let mut digits: Vec<u8> = (0..12).map(|_| (rng.next_u32() % 10) as u8).collect();
     let check = ean_check_digit(&digits);
     digits.push(check);
@@ -1786,7 +1786,7 @@ fn generate_ean13(rng: &mut dyn RngCore) -> String {
 }
 
 /// Generate a valid ISBN-13 with 978/979 prefix and check digit.
-fn generate_isbn13(rng: &mut dyn RngCore) -> String {
+fn generate_isbn13(rng: &mut dyn Rng) -> String {
     let prefix = if rng.next_u32().is_multiple_of(2) {
         [9, 7, 8]
     } else {
@@ -1900,7 +1900,7 @@ impl FakerGenerator {
     }
 
     /// Generate a single value for the configured category.
-    fn generate_one(&self, rng: &mut dyn RngCore) -> String {
+    fn generate_one(&self, rng: &mut dyn Rng) -> String {
         match self.category.as_str() {
             "first_name" => pick(rng, FIRST_NAMES).to_string(),
             "last_name" => pick(rng, LAST_NAMES).to_string(),
@@ -2217,7 +2217,7 @@ impl FakerGenerator {
 }
 
 impl FieldGenerator for FakerGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         match self.category.as_str() {
             "datetime" | "timestamp" => {
                 // Generate timestamp as nanoseconds since epoch
@@ -2306,7 +2306,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

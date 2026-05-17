@@ -10,7 +10,7 @@ use arrow::array::*;
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 use rand::seq::SliceRandom;
 use std::sync::Arc;
 use tracing::trace;
@@ -50,7 +50,7 @@ impl Perturbator for SwapInjector {
     fn perturb(
         &self,
         batch: RecordBatch,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         config: &PerturbConfig,
     ) -> Result<RecordBatch, NoiseError> {
         let schema = batch.schema();
@@ -150,7 +150,7 @@ fn swap_via_take(col: &Arc<dyn Array>, perm: &[usize]) -> Result<Arc<dyn Array>,
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     #[test]
     fn multiset_preserved() {

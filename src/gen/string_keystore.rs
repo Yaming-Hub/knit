@@ -4,7 +4,7 @@
 //! to [`InMemoryKeyStore`](crate::gen::InMemoryKeyStore). It stores UUID or string
 //! primary-key values and supports uniform random sampling for FK resolution.
 
-use rand::RngCore;
+use rand::Rng;
 use std::sync::RwLock;
 
 use crate::r#gen::traits::StringKeyStore;
@@ -47,7 +47,7 @@ impl StringKeyStore for InMemoryStringKeyStore {
             .push(key);
     }
 
-    fn sample(&self, rng: &mut dyn RngCore) -> Option<String> {
+    fn sample(&self, rng: &mut dyn Rng) -> Option<String> {
         let keys = self.keys.read().expect("string keystore lock poisoned");
         if keys.is_empty() {
             return None;
@@ -81,7 +81,7 @@ impl StringKeyStore for InMemoryStringKeyStore {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
 
     #[test]
     fn empty_store_returns_none() {

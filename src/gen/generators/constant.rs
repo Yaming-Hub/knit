@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, BooleanArray, Float64Array, Int64Array, NullArray, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::core::Value;
 
@@ -32,7 +32,7 @@ impl ConstantGenerator {
 }
 
 impl FieldGenerator for ConstantGenerator {
-    fn generate(&self, _rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, _rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         match &self.value {
             Value::String(s) => {
                 let values: Vec<&str> = vec![s.as_str(); count];
@@ -75,7 +75,7 @@ mod tests {
     use crate::r#gen::context::GenContext;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

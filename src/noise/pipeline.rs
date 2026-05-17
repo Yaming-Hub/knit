@@ -12,7 +12,7 @@
 use arrow::array::{AsArray, BooleanArray};
 use arrow::record_batch::RecordBatch;
 use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use rand::rngs::ChaCha8Rng;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -270,7 +270,7 @@ mod tests {
         fn perturb(
             &self,
             batch: RecordBatch,
-            _rng: &mut dyn rand::RngCore,
+            _rng: &mut dyn rand::Rng,
             _cfg: &PerturbConfig,
         ) -> Result<RecordBatch, NoiseError> {
             Ok(batch)
@@ -362,7 +362,7 @@ mod tests {
         fn perturb(
             &self,
             batch: RecordBatch,
-            _rng: &mut dyn rand::RngCore,
+            _rng: &mut dyn rand::Rng,
             cfg: &PerturbConfig,
         ) -> Result<RecordBatch, NoiseError> {
             *self.received_prob.lock().unwrap() = cfg.probability;

@@ -10,7 +10,7 @@ use std::sync::Arc;
 use arrow::array::{ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
 use rand::Rng;
-use rand::RngCore;
+use rand::RngExt;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -54,7 +54,7 @@ impl SequenceGenerator {
 }
 
 impl FieldGenerator for SequenceGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let values: Vec<i64> = match self.jitter_ms {
             Some(j) if j > 0 => (0..count)
                 .map(|i| {
@@ -91,7 +91,7 @@ impl CyclicValuesGenerator {
 }
 
 impl FieldGenerator for CyclicValuesGenerator {
-    fn generate(&self, _rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, _rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let n = self.values.len();
         let result: Vec<&str> = (0..count)
             .map(|i| {
@@ -112,7 +112,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn ctx_with_offset(offset: u64) -> GenContext<'static> {

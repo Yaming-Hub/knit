@@ -9,7 +9,7 @@ use std::sync::Mutex;
 
 use arrow::array::{ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -53,7 +53,7 @@ impl ThreadState {
     /// Select a reply target weighted by recency (exponential decay).
     /// Returns the PK and depth of the selected entry, or None if buffer is empty
     /// or all entries exceed max_depth.
-    fn select_reply(&self, rng: &mut dyn RngCore, max_depth: u32) -> Option<ThreadEntry> {
+    fn select_reply(&self, rng: &mut dyn Rng, max_depth: u32) -> Option<ThreadEntry> {
         if self.count == 0 {
             return None;
         }
@@ -103,7 +103,7 @@ impl ThreadState {
 }
 
 /// Generate a uniform f64 in [0, 1) from an RNG.
-fn gen_f64(rng: &mut dyn RngCore) -> f64 {
+fn gen_f64(rng: &mut dyn Rng) -> f64 {
     let bits = rng.next_u64() >> 11;
     bits as f64 / (1u64 << 53) as f64
 }
@@ -147,7 +147,7 @@ impl ThreadRefGenerator {
 }
 
 impl FieldGenerator for ThreadRefGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         // Read the PK column (already generated for this batch)
         let pk_col = ctx
             .batch_columns
@@ -203,7 +203,7 @@ mod tests {
     use super::*;
     use arrow::array::{Array, Int64Array};
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn run_with_pks(r#gen: &ThreadRefGenerator, rng: &mut ChaCha8Rng, pks: &[i64]) -> ArrayRef {

@@ -16,7 +16,7 @@ use arrow::array::{
 };
 use arrow::datatypes::DataType;
 use chrono::{Datelike, NaiveDate, TimeZone, Utc};
-use rand::RngCore;
+use rand::Rng;
 use rand::distr::{Distribution, Uniform};
 use rand_distr::Normal;
 
@@ -234,7 +234,7 @@ impl RelativeGenerator {
     }
 
     /// Sample a single offset in milliseconds for the given RNG.
-    fn sample_offset(&self, rng: &mut dyn RngCore) -> i64 {
+    fn sample_offset(&self, rng: &mut dyn Rng) -> i64 {
         let factor = self.unit.to_millis() as f64;
 
         match &self.mode {
@@ -293,7 +293,7 @@ impl RelativeGenerator {
 }
 
 impl FieldGenerator for RelativeGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let base = ctx.batch_columns.get(&self.base_field);
         let base_values: Vec<i64> = match base {
             Some(arr) => {
@@ -411,7 +411,7 @@ impl TimeSeriesGenerator {
 }
 
 impl FieldGenerator for TimeSeriesGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let noise_dist = Normal::new(0.0, self.noise_std.max(1e-9))
             .unwrap_or_else(|_| Normal::new(0.0, 1.0).expect("stddev=1.0 is always valid"));
         let base_offset = ctx.row_offset as i64;
@@ -566,7 +566,7 @@ impl BusinessHoursGenerator {
 }
 
 impl FieldGenerator for BusinessHoursGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let nominal_range_ms = (self.end_hour as i64 - self.start_hour as i64) * 3_600_000;
         let base_offset = ctx.row_offset as i64;
 
@@ -771,7 +771,7 @@ mod tests {
     use arrow::array::TimestampMillisecondArray;
     use chrono::Timelike;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn empty_ctx() -> GenContext<'static> {

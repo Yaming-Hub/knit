@@ -16,9 +16,8 @@
 
 use crate::core::GraphType;
 use crate::plan::GraphPlan;
-use rand::Rng;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use rand::rngs::ChaCha8Rng;
+use rand::{Rng, RngExt, SeedableRng};
 
 use crate::r#gen::ActorPool;
 

@@ -12,7 +12,7 @@ use arrow::array::{ArrayRef, Float64Array, TimestampMicrosecondArray, TimestampN
 use arrow::datatypes::DataType;
 use chrono::{Datelike, Timelike};
 use parking_lot::Mutex;
-use rand::RngCore;
+use rand::Rng;
 use rand_distr::{Distribution, Normal};
 
 use crate::core::TimeSeriesComponent;
@@ -165,7 +165,7 @@ impl NumericTimeSeriesGenerator {
 }
 
 impl FieldGenerator for NumericTimeSeriesGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         let mut state = self.state.lock();
         let timestamps = self.get_timestamps(ctx, count);
 
@@ -321,7 +321,7 @@ impl FieldGenerator for NumericTimeSeriesGenerator {
 mod tests {
     use super::*;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

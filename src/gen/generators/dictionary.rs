@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use arrow::array::{ArrayRef, StringArray};
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -69,7 +69,7 @@ impl DictionaryGenerator {
     }
 
     /// Generate a single value using the configured strategy.
-    fn generate_one(&self, rng: &mut dyn RngCore, index: usize) -> String {
+    fn generate_one(&self, rng: &mut dyn Rng, index: usize) -> String {
         if self.entries.is_empty() {
             return String::new();
         }
@@ -116,7 +116,7 @@ impl DictionaryGenerator {
 }
 
 impl FieldGenerator for DictionaryGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         let values: Vec<String> = (0..count).map(|i| self.generate_one(rng, i)).collect();
         Arc::new(StringArray::from(
             values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
@@ -177,7 +177,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn test_ctx() -> GenContext<'static> {

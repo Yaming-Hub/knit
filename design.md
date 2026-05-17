@@ -700,7 +700,7 @@ Built with `clap`. All commands support `--help`.
 | Crate | Purpose |
 |-------|---------|
 | `serde`, `toml`, `serde_json` | Schema serialization (TOML + JSON) |
-| `rand`, `rand_distr`, `rand_chacha` | RNG and statistical distributions |
+| `rand` (with `chacha` feature), `rand_distr` | RNG, ChaCha8 PRNG, and statistical distributions |
 | `arrow`, `parquet` | Columnar data and Parquet output |
 | `csv` | CSV output |
 | `minijinja` | Template rendering |

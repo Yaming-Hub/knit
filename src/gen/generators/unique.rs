@@ -19,7 +19,7 @@ use arrow::array::{
     TimestampSecondArray, UInt64Array,
 };
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::r#gen::context::GenContext;
 use crate::r#gen::traits::FieldGenerator;
@@ -123,7 +123,7 @@ fn array_value_to_string(array: &dyn Array, index: usize) -> String {
 }
 
 impl FieldGenerator for UniqueGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return self.inner.generate(rng, 0, ctx);
         }
@@ -220,7 +220,7 @@ mod tests {
     use crate::r#gen::generators::constant::ConstantGenerator;
     use crate::r#gen::generators::one_of::OneOfGenerator;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     /// Build a minimal [`GenContext`] for tests.

@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 
 use crate::core::{Value, WeightedChoice};
 
@@ -68,7 +68,7 @@ impl OneOfGenerator {
     }
 
     /// Sample a single index using the alias method.
-    fn sample_index(&self, rng: &mut dyn RngCore) -> usize {
+    fn sample_index(&self, rng: &mut dyn Rng) -> usize {
         let n = self.choices.len();
         if n == 0 {
             return 0;
@@ -83,7 +83,7 @@ impl OneOfGenerator {
 }
 
 /// Generate a uniform f64 in [0, 1) from an RNG.
-fn next_f64(rng: &mut dyn RngCore) -> f64 {
+fn next_f64(rng: &mut dyn Rng) -> f64 {
     let bits = rng.next_u64();
     // Use top 53 bits for a double in [0, 1).
     (bits >> 11) as f64 / (1u64 << 53) as f64
@@ -154,7 +154,7 @@ fn build_alias_table(weights: &[f64]) -> (Vec<f64>, Vec<usize>) {
 }
 
 impl FieldGenerator for OneOfGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if self.choices.is_empty() {
             return Arc::new(StringArray::from(vec![""; count]));
         }
@@ -235,7 +235,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn make_ctx() -> GenContext<'static> {

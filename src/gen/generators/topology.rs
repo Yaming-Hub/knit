@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use arrow::array::{ArrayRef, Int64Array, Int64Builder};
 use arrow::datatypes::DataType;
-use rand::RngCore;
+use rand::Rng;
 use rand::distr::{Distribution, Uniform};
 use rand_distr::Poisson;
 
@@ -57,7 +57,7 @@ impl BarabasiAlbertGenerator {
 }
 
 impl FieldGenerator for BarabasiAlbertGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
@@ -176,7 +176,7 @@ impl TreeGenerator {
 }
 
 impl FieldGenerator for TreeGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             let mut builder = Int64Builder::new();
             return Arc::new(builder.finish());
@@ -283,7 +283,7 @@ impl WattsStrogatzGenerator {
 }
 
 impl FieldGenerator for WattsStrogatzGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
@@ -364,7 +364,7 @@ impl ErdosRenyiGenerator {
 }
 
 impl FieldGenerator for ErdosRenyiGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
@@ -480,7 +480,7 @@ impl StochasticBlockGenerator {
 }
 
 impl FieldGenerator for StochasticBlockGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
@@ -594,7 +594,7 @@ impl ConfigurationGenerator {
     /// Sample a degree from discrete power-law: P(k) ∝ k^{-exponent}, k ∈ [min, max].
     fn sample_power_law_degree(
         &self,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn Rng,
         exponent: f64,
         min_k: usize,
         max_k: usize,
@@ -621,7 +621,7 @@ impl ConfigurationGenerator {
 }
 
 impl FieldGenerator for ConfigurationGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
@@ -736,7 +736,7 @@ impl CompleteGenerator {
 }
 
 impl FieldGenerator for CompleteGenerator {
-    fn generate(&self, rng: &mut dyn RngCore, count: usize, _ctx: &GenContext) -> ArrayRef {
+    fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
         if count == 0 {
             return Arc::new(Int64Array::from(Vec::<i64>::new()));
         }
@@ -767,7 +767,7 @@ mod tests {
     use super::*;
     use arrow::array::Array;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
+    use rand::rngs::ChaCha8Rng;
     use std::collections::HashMap;
 
     fn test_ctx() -> GenContext<'static> {
