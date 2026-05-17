@@ -178,15 +178,18 @@ All notable changes to Knit are documented in this file.
   chains, and `unsafe` env var access in tests replaced with safe alternatives.
 - **MSRV updated to 1.92** — Minimum supported Rust version raised to 1.92
   (required by edition 2024 and updated dependencies).
-- **Dependencies upgraded** — Arrow ecosystem 54→58, rand ecosystem 0.8→0.9,
-  wasmtime 21→44, indicatif 0.17→0.18, and 5 other dependency updates.
+- **Dependencies upgraded** — Arrow ecosystem 54→58, rand ecosystem 0.8→0.9→0.10,
+  rand_distr 0.4→0.5→0.6, criterion 0.5→0.8, wasmtime 21→44, indicatif
+  0.17→0.18, and 5 other dependency updates. The `rand_chacha` crate was removed
+  as a direct dependency (now provided by `rand` with the `chacha` feature).
 
 ### Fixed
 
 - Removed unused `Utc` import in compiler.rs
 - **Deprecated rand 0.9 API calls** — Replaced 75 deprecated calls: `thread_rng()`
   → `rng()`, `.gen()` → `.random()`, `.gen_range()` → `.random_range()`,
-  `.gen_bool()` → `.random_bool()`.
+  `.gen_bool()` → `.random_bool()`. Migrated to rand 0.10 API: `Rng` → `RngExt`,
+  `rand_chacha::ChaCha8Rng` → `rand::rngs::ChaCha8Rng`.
 - **Error handling hardened** — Production `.unwrap()` calls in error-prone paths
   replaced with proper error propagation across CLI, learn, noise, scale, gen,
   plan, bind, and blueprint modules. Fallible `.expect()` in WASM plugin
@@ -199,21 +202,30 @@ All notable changes to Knit are documented in this file.
   macOS (x86_64 + aarch64), and Windows (x86_64), publishes to crates.io with
   tag/version verification, and creates a GitHub Release with pre-built binaries.
   Supports manual dry-run via `workflow_dispatch`.
-- **CI hardening** — 9 CI jobs: check, test, test-default, clippy, fmt, doc,
-  MSRV (1.92), benchmark compilation, and cargo-deny audit. All jobs run with
-  `permissions: { contents: read }` for least-privilege. CI is now reusable
-  via `workflow_call` for composition with other workflows.
+- **Code coverage** — `cargo-llvm-cov` workflow generates LCOV reports and uploads
+  to Codecov on every push to main. Coverage badge in README.
+- **CI hardening** — 3 GitHub Actions workflows with 14 jobs: CI (`ci.yml` with
+  9 jobs: check, test, test-default, clippy, fmt, doc, MSRV, bench, deny),
+  coverage (`coverage.yml`), and release (`release.yml` with 4 jobs). CI and
+  coverage jobs use `permissions: { contents: read }` for least-privilege;
+  the release job elevates to `contents: write` only for GitHub Release creation.
+  CI is reusable via `workflow_call` for composition with other workflows.
 - **Cargo-deny** — License allow-list and vulnerability audit via `deny.toml`.
 - **Dependabot** — Weekly Cargo and GitHub Actions dependency updates.
 - **Criterion benchmarks** — 5 end-to-end pipeline benchmarks (numeric, string,
   FK resolution, expression evaluation, multi-entity pipeline).
-- **Integration test expansion** — Added 42 integration tests covering output
-  formats (Parquet, CSV, JSON, JSONL, Avro, SQL, Arrow IPC, Template), bind
-  helpers, noise injectors (all 9 types + multi-pipeline), scale analysis,
-  learn profiling, and tokenize mapping.
+- **Property-based testing** — `proptest` for core invariants: row count
+  correctness (single and multi-batch), determinism, schema preservation
+  (including nullability), FK referential integrity, and noise pipeline safety.
+- **Integration test expansion** — Added 41 new integration and property-based
+  tests covering output formats (Parquet, CSV, JSON, JSONL, Avro, SQL, Arrow
+  IPC, Template), bind helpers, noise injectors (all 9 types + multi-pipeline),
+  scale analysis, learn profiling, tokenize mapping, and property-based
+  invariants (row counts, determinism, FK integrity, schema preservation).
 - **Documentation** — Complete CLI reference with all 13 subcommands, usage
   examples for scale/tokenize/enrich, benchmark baseline in BENCHMARKS.md,
-  and `documentation` field in Cargo.toml for docs.rs linking.
+  `documentation` field in Cargo.toml for docs.rs linking, and CONTRIBUTING.md
+  with development workflow and local coverage instructions.
 
 ## [0.4.0] — 2026-05-10
 
