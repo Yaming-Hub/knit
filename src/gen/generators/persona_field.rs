@@ -282,4 +282,53 @@ mod tests {
         assert!(f64_arr.is_null(0));
         assert!(f64_arr.is_null(1));
     }
+
+    #[test]
+    fn output_type_matches_requested() {
+        let (pool, rev) = make_pool_and_reverse_map();
+
+        for data_type in [
+            DataType::Float64,
+            DataType::Int64,
+            DataType::Int32,
+            DataType::Boolean,
+            DataType::Utf8,
+        ] {
+            let r#gen = PersonaFieldGenerator::new(
+                pool.clone(),
+                rev.clone(),
+                "activity_rate".into(),
+                "users".into(),
+                "user_id".into(),
+                data_type.clone(),
+            );
+
+            assert_eq!(r#gen.output_type(), data_type);
+        }
+    }
+
+    #[test]
+    fn wrong_fk_column_type_yields_nulls() {
+        let (pool, rev) = make_pool_and_reverse_map();
+        let r#gen = PersonaFieldGenerator::new(
+            pool,
+            rev,
+            "activity_rate".into(),
+            "users".into(),
+            "user_id".into(),
+            DataType::Float64,
+        );
+
+        let mut batch_columns = HashMap::new();
+        let user_ids = Arc::new(StringArray::from(vec!["100", "200"])) as ArrayRef;
+        batch_columns.insert("user_id".to_string(), user_ids);
+
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let result = r#gen.generate(&mut rng, 2, &ctx);
+
+        let f64_arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
+        assert!(f64_arr.is_null(0));
+        assert!(f64_arr.is_null(1));
+    }
 }

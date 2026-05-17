@@ -244,4 +244,42 @@ mod tests {
             assert!((1..=10).contains(&v), "value {v} out of range");
         }
     }
+
+    #[test]
+    fn output_type_is_int64() {
+        let r#gen = ActorForeignKeyGenerator::new(
+            Arc::new(make_test_pool()),
+            "users".to_string(),
+            make_key_store(100),
+        );
+
+        assert_eq!(r#gen.output_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn actor_fk_empty_key_store_produces_nulls() {
+        let r#gen = ActorForeignKeyGenerator::new(
+            Arc::new(make_test_pool()),
+            "users".to_string(),
+            Arc::new(InMemoryKeyStore::new()),
+        );
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let cols = std::collections::HashMap::new();
+        let params = std::collections::HashMap::new();
+        let ctx = GenContext {
+            batch_columns: &cols,
+            row_offset: 0,
+            partition_index: 0,
+            partition_count: 1,
+            entity_name: "posts",
+            params: &params,
+        };
+
+        let arr = r#gen.generate(&mut rng, 4, &ctx);
+        let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
+
+        for i in 0..4 {
+            assert!(arrow::array::Array::is_null(int_arr, i));
+        }
+    }
 }

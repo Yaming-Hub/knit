@@ -315,3 +315,88 @@ pub fn plan_contains_unique(plan: &GeneratorPlan) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn plan_contains_unique_for_unique_variant() {
+        let plan = GeneratorPlan::Unique {
+            inner: Box::new(GeneratorPlan::Constant(crate::core::Value::Int(1))),
+            max_retries: 3,
+        };
+
+        assert!(plan_contains_unique(&plan));
+    }
+
+    #[test]
+    fn plan_contains_unique_for_non_unique() {
+        let plan = GeneratorPlan::Sequence {
+            start: 1,
+            step: 1,
+            jitter_ms: None,
+        };
+
+        assert!(!plan_contains_unique(&plan));
+    }
+
+    #[test]
+    fn plan_contains_unique_nested_in_conditional() {
+        let plan = GeneratorPlan::Conditional {
+            field: "kind".to_string(),
+            branches: vec![(
+                crate::core::Value::String("vip".to_string()),
+                Box::new(GeneratorPlan::Unique {
+                    inner: Box::new(GeneratorPlan::Constant(crate::core::Value::Int(7))),
+                    max_retries: 5,
+                }),
+            )],
+            default: Box::new(GeneratorPlan::Sequence {
+                start: 10,
+                step: 2,
+                jitter_ms: None,
+            }),
+        };
+
+        assert!(plan_contains_unique(&plan));
+    }
+
+    #[test]
+    fn create_generator_for_sequence() {
+        let plan = GeneratorPlan::Sequence {
+            start: 10,
+            step: 2,
+            jitter_ms: None,
+        };
+        let generator = create_generator(&plan);
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let batch_columns = std::collections::HashMap::new();
+        let ctx = crate::r#gen::context::GenContext::new(&batch_columns, 0, 0, 1, "items");
+        let result = generator.generate(&mut rng, 3, &ctx);
+        let values = result
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .expect("sequence generator should produce Int64Array");
+
+        assert_eq!(generator.output_type(), arrow::datatypes::DataType::Int64);
+        assert_eq!(values.values(), &[10, 12, 14]);
+    }
+
+    #[test]
+    fn create_generator_for_constant() {
+        let plan = GeneratorPlan::Constant(crate::core::Value::Int(7));
+        let generator = create_generator(&plan);
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let batch_columns = std::collections::HashMap::new();
+        let ctx = crate::r#gen::context::GenContext::new(&batch_columns, 0, 0, 1, "items");
+        let result = generator.generate(&mut rng, 3, &ctx);
+        let values = result
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .expect("constant generator should produce Int64Array");
+
+        assert_eq!(generator.output_type(), arrow::datatypes::DataType::Int64);
+        assert_eq!(values.values(), &[7, 7, 7]);
+    }
+}

@@ -592,4 +592,116 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn output_type_is_timestamp() {
+        let (pool, rev) = make_pool_and_reverse_map();
+        let r#gen = ActorTemporalGenerator::new(
+            pool,
+            rev,
+            "peak_hours".into(),
+            "users".into(),
+            "user_id".into(),
+            None,
+            None,
+            None,
+        );
+
+        assert_eq!(r#gen.output_type(), DataType::Timestamp(TimeUnit::Millisecond, None));
+    }
+
+    #[test]
+    fn causal_times_enforce_lower_bound() {
+        let (pool, rev) = make_pool_and_reverse_map();
+        let causal_times = Arc::new(CausalTimes {
+            pk_to_timestamp: HashMap::from([
+                (10, DEFAULT_START_MS + 5 * 24 * 3_600_000),
+                (20, DEFAULT_START_MS + 10 * 24 * 3_600_000),
+            ]),
+            fk_field: "post_id".into(),
+        });
+        let r#gen = ActorTemporalGenerator::new(
+            pool,
+            rev,
+            "peak_hours".into(),
+            "users".into(),
+            "user_id".into(),
+            None,
+            Some(causal_times),
+            None,
+        );
+
+        let mut batch_columns = HashMap::new();
+        batch_columns.insert(
+            "user_id".to_string(),
+            Arc::new(Int64Array::from(vec![100, 200])) as ArrayRef,
+        );
+        batch_columns.insert(
+            "post_id".to_string(),
+            Arc::new(Int64Array::from(vec![10, 20])) as ArrayRef,
+        );
+
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "comments");
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(42);
+        let result = r#gen.generate(&mut rng, 2, &ctx);
+        let ts_arr = result
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        assert!(ts_arr.value(0) >= DEFAULT_START_MS + 5 * 24 * 3_600_000);
+        assert!(ts_arr.value(1) >= DEFAULT_START_MS + 10 * 24 * 3_600_000);
+    }
+
+    #[test]
+    fn non_midnight_causal_times_stay_within_span() {
+        let (pool, rev) = make_pool_and_reverse_map();
+        // Use a non-midnight lower bound: 2024-06-15 14:30 UTC
+        let non_midnight_ms = DEFAULT_START_MS + 167 * 24 * 3_600_000 + 14 * 3_600_000 + 30 * 60_000;
+        let causal_times = Arc::new(CausalTimes {
+            pk_to_timestamp: HashMap::from([(10, non_midnight_ms)]),
+            fk_field: "post_id".into(),
+        });
+        let r#gen = ActorTemporalGenerator::new(
+            pool,
+            rev,
+            "peak_hours".into(),
+            "users".into(),
+            "user_id".into(),
+            None,
+            Some(causal_times),
+            None,
+        );
+
+        let mut batch_columns = HashMap::new();
+        batch_columns.insert(
+            "user_id".to_string(),
+            Arc::new(Int64Array::from(vec![100; 50])) as ArrayRef,
+        );
+        batch_columns.insert(
+            "post_id".to_string(),
+            Arc::new(Int64Array::from(vec![10; 50])) as ArrayRef,
+        );
+
+        let ctx = GenContext::new(&batch_columns, 0, 0, 1, "comments");
+        let mut rng = <rand::rngs::StdRng as rand::SeedableRng>::seed_from_u64(99);
+        let result = r#gen.generate(&mut rng, 50, &ctx);
+        let ts_arr = result
+            .as_any()
+            .downcast_ref::<TimestampMillisecondArray>()
+            .unwrap();
+
+        let upper_limit = non_midnight_ms + DEFAULT_SPAN_MS + 24 * 3_600_000;
+        for i in 0..50 {
+            let ts = ts_arr.value(i);
+            assert!(
+                ts >= non_midnight_ms,
+                "row {i}: timestamp {ts} < lower bound {non_midnight_ms}"
+            );
+            assert!(
+                ts <= upper_limit,
+                "row {i}: timestamp {ts} > upper limit {upper_limit}"
+            );
+        }
+    }
 }
