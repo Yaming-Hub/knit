@@ -18,7 +18,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use crate::bind::{Compression, OutputFormat, Sink, SinkConfig};
 use crate::core::{CountSpec, DataModel, NoiseProfile};
-use crate::gen::{generate_graph, ActorPool, GenerationEngine};
+use crate::r#gen::{generate_graph, ActorPool, GenerationEngine};
 use crate::noise::{ColumnFilter, PerturbConfig, Pipeline};
 use crate::plan::ExecutionPlan;
 
@@ -282,7 +282,7 @@ pub fn run_from_model(
     // Only materialize behavioral pipeline when the plan has actor pools.
     if !plan.actor_pool.pools.is_empty() {
         let actor_pool = ActorPool::from_plan(&plan.actor_pool, model.seed);
-        let graphs: Vec<crate::gen::GeneratedGraph> = plan
+        let graphs: Vec<crate::r#gen::GeneratedGraph> = plan
             .actor_pool
             .graph_plans
             .iter()
@@ -348,9 +348,9 @@ pub fn run_from_model(
     }
     let mut partition_configs: HashMap<String, PartitionConfig> = HashMap::new();
     for entity in &model.entities {
-        if let Some(output) = &entity.output {
-            if let Some(partition_key) = &output.partition_by {
-                if !output.partition_values.is_empty() {
+        if let Some(output) = &entity.output
+            && let Some(partition_key) = &output.partition_by
+                && !output.partition_values.is_empty() {
                     let mut cumulative = 0.0;
                     let values: Vec<(String, f64)> = output
                         .partition_values
@@ -369,8 +369,6 @@ pub fn run_from_model(
                         },
                     );
                 }
-            }
-        }
     }
 
     // For partitioned entities, use separate sinks keyed by (entity, partition_value)
@@ -396,7 +394,7 @@ pub fn run_from_model(
             let batch_idx = batch_counters.entry(entity_name.to_string()).or_insert(0);
             let batch = if let Some(pipeline) = noise_pipelines.get(entity_name) {
                 let result = pipeline.run_with_offset(batch, *batch_idx).map_err(|e| {
-                    crate::gen::GenError::Generation(format!(
+                    crate::r#gen::GenError::Generation(format!(
                         "noise pipeline error for '{}': {}",
                         entity_name, e
                     ))
@@ -468,7 +466,7 @@ pub fn run_from_model(
                                     matches!(c, std::path::Component::ParentDir | std::path::Component::RootDir)
                                 })
                             {
-                                return Err(crate::gen::GenError::Generation(format!(
+                                return Err(crate::r#gen::GenError::Generation(format!(
                                     "unsafe output path for entity '{}': {}", entity_name, base
                                 )));
                             }
@@ -479,17 +477,17 @@ pub fn run_from_model(
                         // Sanitize partition value for use as directory name
                         let safe_pval = pval.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.'], "_");
                         if safe_pval.is_empty() || safe_pval == ".." || safe_pval.starts_with('/') || safe_pval.starts_with('\\') {
-                            return Err(crate::gen::GenError::Generation(format!(
+                            return Err(crate::r#gen::GenError::Generation(format!(
                                 "unsafe partition value for entity '{}': {}", entity_name, pval
                             )));
                         }
                         let part_dir = base_dir.join(format!("{}={}", pc.partition_key, safe_pval));
                         fs::create_dir_all(&part_dir).map_err(|e| {
-                            crate::gen::GenError::Generation(format!("failed to create {}: {}", part_dir.display(), e))
+                            crate::r#gen::GenError::Generation(format!("failed to create {}: {}", part_dir.display(), e))
                         })?;
                         let file_path = part_dir.join(format!("{}.{}", entity_name, extension));
                         let file = fs::File::create(&file_path).map_err(|e| {
-                            crate::gen::GenError::Generation(format!("failed to create {}: {}", file_path.display(), e))
+                            crate::r#gen::GenError::Generation(format!("failed to create {}: {}", file_path.display(), e))
                         })?;
                         let writer: Box<dyn std::io::Write + Send> = Box::new(BufWriter::new(file));
                         let schema = entity_schemas
@@ -513,7 +511,7 @@ pub fn run_from_model(
                             ..SinkConfig::default()
                         };
                         let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
-                            crate::gen::GenError::Generation(format!("failed to create sink: {}", e))
+                            crate::r#gen::GenError::Generation(format!("failed to create sink: {}", e))
                         })?;
                         partition_sinks.insert(key.clone(), sink);
                     }
@@ -523,16 +521,16 @@ pub fn run_from_model(
                         indices.iter().map(|&i| i as u32).collect::<Vec<_>>()
                     );
                     let part_batch = arrow::compute::take_record_batch(&batch, &indices_arr)
-                        .map_err(|e| crate::gen::GenError::Generation(format!("partition split error: {}", e)))?;
+                        .map_err(|e| crate::r#gen::GenError::Generation(format!("partition split error: {}", e)))?;
 
                     let sink = partition_sinks.get_mut(&key).ok_or_else(|| {
-                        crate::gen::GenError::Generation(format!(
+                        crate::r#gen::GenError::Generation(format!(
                             "missing output sink for partition {:?}",
                             key
                         ))
                     })?;
                     sink.write_batch(&part_batch)
-                        .map_err(|e| crate::gen::GenError::Generation(format!("sink write error: {}", e)))?;
+                        .map_err(|e| crate::r#gen::GenError::Generation(format!("sink write error: {}", e)))?;
                 }
             } else {
                 // ── Non-partitioned (flat) output ───────────────────────
@@ -550,13 +548,13 @@ pub fn run_from_model(
                                     matches!(c, std::path::Component::ParentDir | std::path::Component::RootDir)
                                 })
                             {
-                                return Err(crate::gen::GenError::Generation(format!(
+                                return Err(crate::r#gen::GenError::Generation(format!(
                                     "unsafe output path for entity '{}': {}", entity_name, subdir
                                 )));
                             }
                             let dir = out_path.join(subdir);
                             fs::create_dir_all(&dir).map_err(|e| {
-                                crate::gen::GenError::Generation(format!("failed to create {}: {}", dir.display(), e))
+                                crate::r#gen::GenError::Generation(format!("failed to create {}: {}", dir.display(), e))
                             })?;
                             dir.join(format!("{}.{}", entity_name, extension))
                         } else {
@@ -564,7 +562,7 @@ pub fn run_from_model(
                         }
                     };
                     let file = fs::File::create(&file_path).map_err(|e| {
-                        crate::gen::GenError::Generation(format!("failed to create {}: {}", file_path.display(), e))
+                        crate::r#gen::GenError::Generation(format!("failed to create {}: {}", file_path.display(), e))
                     })?;
                     let writer: Box<dyn std::io::Write + Send> = Box::new(BufWriter::new(file));
                     let schema = entity_schemas.get(entity_name).cloned().unwrap_or_else(|| batch.schema());
@@ -594,16 +592,16 @@ pub fn run_from_model(
                         ..SinkConfig::default()
                     };
                     let sink = crate::bind::create_sink(writer, schema, &sink_config).map_err(|e| {
-                        crate::gen::GenError::Generation(format!("failed to create sink: {}", e))
+                        crate::r#gen::GenError::Generation(format!("failed to create sink: {}", e))
                     })?;
                     sinks.insert(entity_name.to_string(), sink);
                 }
 
                 let sink = sinks.get_mut(entity_name).ok_or_else(|| {
-                    crate::gen::GenError::Generation(format!("sink for entity '{}' not found", entity_name))
+                    crate::r#gen::GenError::Generation(format!("sink for entity '{}' not found", entity_name))
                 })?;
                 sink.write_batch(&batch)
-                    .map_err(|e| crate::gen::GenError::Generation(format!("sink write error: {}", e)))?;
+                    .map_err(|e| crate::r#gen::GenError::Generation(format!("sink write error: {}", e)))?;
             }
 
             // Emit JSON progress event only after successful write
@@ -941,11 +939,10 @@ fn detect_list_element_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
                             has_number = true;
                             if n.is_f64() && !n.is_i64() && !n.is_u64() {
                                 is_float = true;
-                            } else if let Some(v) = n.as_i64() {
-                                if v < i32::MIN as i64 || v > i32::MAX as i64 {
+                            } else if let Some(v) = n.as_i64()
+                                && (v < i32::MIN as i64 || v > i32::MAX as i64) {
                                     fits_i32 = false;
                                 }
-                            }
                         }
                         serde_json::Value::Null => {}
                         _ => return ArrowDataType::Utf8,
@@ -975,8 +972,7 @@ fn detect_map_kv_types(fp: &crate::plan::FieldPlan) -> (ArrowDataType, ArrowData
                 _ => continue,
             };
             if let Ok(map) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&s)
-            {
-                if let Some(val) = map.values().next() {
+                && let Some(val) = map.values().next() {
                     let val_type = match val {
                         serde_json::Value::Number(n) => {
                             if n.is_i64() || n.is_u64() {
@@ -989,7 +985,6 @@ fn detect_map_kv_types(fp: &crate::plan::FieldPlan) -> (ArrowDataType, ArrowData
                     };
                     return (ArrowDataType::Utf8, val_type);
                 }
-            }
         }
     }
     (ArrowDataType::Utf8, ArrowDataType::Utf8)
@@ -1199,7 +1194,7 @@ fn string_to_map_array(
 pub(crate) fn cast_batch_to_schema(
     batch: &RecordBatch,
     target_schema: &Arc<Schema>,
-) -> Result<RecordBatch, crate::gen::GenError> {
+) -> Result<RecordBatch, crate::r#gen::GenError> {
     let mut needs_cast = false;
     for (i, field) in target_schema.fields().iter().enumerate() {
         if i < batch.num_columns() && batch.column(i).data_type() != field.data_type() {
@@ -1281,7 +1276,7 @@ pub(crate) fn cast_batch_to_schema(
 
     let final_schema = Arc::new(Schema::new(adjusted_fields));
     RecordBatch::try_new(final_schema, columns)
-        .map_err(|e| crate::gen::GenError::Generation(format!("schema cast error: {}", e)))
+        .map_err(|e| crate::r#gen::GenError::Generation(format!("schema cast error: {}", e)))
 }
 
 /// Infer the Arrow data type from a GeneratorPlan variant.
@@ -1386,7 +1381,7 @@ fn default_arrow_for_data_type(dt: &crate::core::DataType) -> ArrowDataType {
         ))),
         crate::core::DataType::Map => ArrowDataType::Utf8,
         crate::core::DataType::Object => ArrowDataType::Utf8, // struct handled at plan level
-        crate::core::DataType::Custom(ref name) => {
+        crate::core::DataType::Custom(name) => {
             unreachable!("custom type '{}' should be resolved before planning", name)
         }
     }
@@ -1519,14 +1514,14 @@ fn build_noise_pipelines(profiles: &[NoiseProfile], model_seed: u64) -> HashMap<
 
         // Compile scope expression once (if present).
         let scope_expr = profile.scope.as_ref().map(|s| {
-            crate::gen::expr::parser::parse(&s.where_expr).unwrap_or_else(|e| {
+            crate::r#gen::expr::parser::parse(&s.where_expr).unwrap_or_else(|e| {
                 tracing::warn!(
                     name = %profile.name,
                     error = %e,
                     "failed to parse scope expression, ignoring scope"
                 );
                 // Return a constant-true expression as fallback
-                crate::gen::expr::ast::Expr::Literal(crate::gen::expr::ast::LiteralValue::Bool(
+                crate::r#gen::expr::ast::Expr::Literal(crate::r#gen::expr::ast::LiteralValue::Bool(
                     true,
                 ))
             })
@@ -1719,7 +1714,7 @@ fn flatten_schema_for_csv(schema: &Schema) -> Schema {
 /// for formats that don't support nested structures (e.g. CSV).
 pub(crate) fn flatten_nested_columns(
     batch: &RecordBatch,
-) -> Result<RecordBatch, crate::gen::GenError> {
+) -> Result<RecordBatch, crate::r#gen::GenError> {
     use arrow::array::StringArray;
 
     let schema = batch.schema();
@@ -1752,7 +1747,7 @@ pub(crate) fn flatten_nested_columns(
     }
 
     RecordBatch::try_new(Arc::new(Schema::new(fields)), columns)
-        .map_err(|e| crate::gen::GenError::Generation(format!("flatten error: {e}")))
+        .map_err(|e| crate::r#gen::GenError::Generation(format!("flatten error: {e}")))
 }
 
 /// Check if an Arrow data type is a nested/complex type.
@@ -2098,14 +2093,13 @@ fn resolve_lookup_in_generator(
                 if let (Ok(canonical_dir), Ok(canonical_file)) = (
                     std::fs::canonicalize(schema_dir),
                     std::fs::canonicalize(&full_path),
-                ) {
-                    if !canonical_file.starts_with(&canonical_dir) {
+                )
+                    && !canonical_file.starts_with(&canonical_dir) {
                         bail!(
                             "external lookup source '{}' resolves outside schema directory",
                             file_path
                         );
                     }
-                }
                 // If canonicalize fails (e.g. file doesn't exist), the open call
                 // below will produce a clear error message.
                 let wc = weight_column.take();
@@ -2236,7 +2230,7 @@ fn load_lookup_csv(
             let trimmed = val.trim();
             if !trimmed.is_empty() {
                 entries.push(trimmed.to_string());
-                if let (Some(ref mut w), Some(wi)) = (&mut weights, weight_idx) {
+                if let (Some(w), Some(wi)) = (&mut weights, weight_idx) {
                     let weight_str = record.get(wi).unwrap_or("");
                     let weight: f64 = weight_str.trim().parse().map_err(|_| {
                         anyhow::anyhow!(
@@ -2307,7 +2301,7 @@ fn load_lookup_json(
 
         if !s.is_empty() {
             entries.push(s);
-            if let (Some(ref mut w), Some(wc)) = (&mut weights, weight_column) {
+            if let (Some(w), Some(wc)) = (&mut weights, weight_column) {
                 let weight_val = obj.get(wc).ok_or_else(|| {
                     anyhow::anyhow!(
                         "JSON object in '{}' missing weight column '{}'",
@@ -2417,7 +2411,7 @@ fn load_lookup_parquet(
 
             entries.push(trimmed);
 
-            if let (Some(ref mut w), Some(wi)) = (&mut weights, weight_col_idx) {
+            if let (Some(w), Some(wi)) = (&mut weights, weight_col_idx) {
                 let weight_col = batch.column(wi);
                 let weight = extract_single_weight(weight_col, i)?;
                 w.push(weight);
@@ -2459,7 +2453,7 @@ fn extract_single_weight(array: &dyn arrow::array::Array, idx: usize) -> Result<
 fn load_plugins(cli: &Cli) -> Result<()> {
     #[cfg(feature = "wasm-plugins")]
     {
-        use crate::gen::wasm_plugin;
+        use crate::r#gen::wasm_plugin;
         use std::collections::HashSet;
 
         let mut seen_names = HashSet::new();

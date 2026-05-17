@@ -12,8 +12,8 @@ use rand::RngCore;
 
 use crate::core::Value;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Produce the same [`Value`] for every row in the batch.
 ///
@@ -72,7 +72,7 @@ impl FieldGenerator for ConstantGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::context::GenContext;
+    use crate::r#gen::context::GenContext;
     use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -89,63 +89,63 @@ mod tests {
 
     #[test]
     fn constant_string() {
-        let gen = ConstantGenerator::new(Value::String("hello".to_string()));
-        let arr = gen.generate(&mut make_rng(), 5, &make_ctx());
+        let r#gen = ConstantGenerator::new(Value::String("hello".to_string()));
+        let arr = r#gen.generate(&mut make_rng(), 5, &make_ctx());
         assert_eq!(arr.len(), 5);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..5 {
             assert_eq!(str_arr.value(i), "hello");
         }
-        assert_eq!(gen.output_type(), DataType::Utf8);
+        assert_eq!(r#gen.output_type(), DataType::Utf8);
     }
 
     #[test]
     fn constant_int() {
-        let gen = ConstantGenerator::new(Value::Int(42));
-        let arr = gen.generate(&mut make_rng(), 3, &make_ctx());
+        let r#gen = ConstantGenerator::new(Value::Int(42));
+        let arr = r#gen.generate(&mut make_rng(), 3, &make_ctx());
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for i in 0..3 {
             assert_eq!(int_arr.value(i), 42);
         }
-        assert_eq!(gen.output_type(), DataType::Int64);
+        assert_eq!(r#gen.output_type(), DataType::Int64);
     }
 
     #[test]
     fn constant_float() {
-        let gen = ConstantGenerator::new(Value::Float(std::f64::consts::PI));
-        let arr = gen.generate(&mut make_rng(), 4, &make_ctx());
+        let r#gen = ConstantGenerator::new(Value::Float(std::f64::consts::PI));
+        let arr = r#gen.generate(&mut make_rng(), 4, &make_ctx());
         let f_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         for i in 0..4 {
             assert!((f_arr.value(i) - std::f64::consts::PI).abs() < f64::EPSILON);
         }
-        assert_eq!(gen.output_type(), DataType::Float64);
+        assert_eq!(r#gen.output_type(), DataType::Float64);
     }
 
     #[test]
     fn constant_bool() {
-        let gen = ConstantGenerator::new(Value::Bool(true));
-        let arr = gen.generate(&mut make_rng(), 3, &make_ctx());
+        let r#gen = ConstantGenerator::new(Value::Bool(true));
+        let arr = r#gen.generate(&mut make_rng(), 3, &make_ctx());
         let b_arr = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
         for i in 0..3 {
             assert!(b_arr.value(i));
         }
-        assert_eq!(gen.output_type(), DataType::Boolean);
+        assert_eq!(r#gen.output_type(), DataType::Boolean);
     }
 
     #[test]
     fn constant_null() {
-        let gen = ConstantGenerator::new(Value::Null);
-        let arr = gen.generate(&mut make_rng(), 5, &make_ctx());
+        let r#gen = ConstantGenerator::new(Value::Null);
+        let arr = r#gen.generate(&mut make_rng(), 5, &make_ctx());
         assert_eq!(arr.len(), 5);
         // NullArray data type is Null; every element is logically null
         assert_eq!(*arr.data_type(), DataType::Null);
-        assert_eq!(gen.output_type(), DataType::Null);
+        assert_eq!(r#gen.output_type(), DataType::Null);
     }
 
     #[test]
     fn constant_zero_count() {
-        let gen = ConstantGenerator::new(Value::Int(1));
-        let arr = gen.generate(&mut make_rng(), 0, &make_ctx());
+        let r#gen = ConstantGenerator::new(Value::Int(1));
+        let arr = r#gen.generate(&mut make_rng(), 0, &make_ctx());
         assert_eq!(arr.len(), 0);
     }
 }

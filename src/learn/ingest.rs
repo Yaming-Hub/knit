@@ -96,11 +96,10 @@ pub fn read_csv_with_limit(
         let batch = batch_result?;
         rows_read += batch.num_rows();
         batches.push(batch);
-        if let Some(limit) = max_rows {
-            if rows_read >= limit {
+        if let Some(limit) = max_rows
+            && rows_read >= limit {
                 break;
             }
-        }
     }
 
     // Final truncation to exact limit (last batch may overshoot)
@@ -493,11 +492,10 @@ fn collect_files_recursive(dir: &Path) -> LearnResult<Vec<PathBuf>> {
                 Err(_) => continue,
             };
             if ft.is_dir() && !ft.is_symlink() {
-                if let Ok(canonical) = path.canonicalize() {
-                    if visited.insert(canonical) {
+                if let Ok(canonical) = path.canonicalize()
+                    && visited.insert(canonical) {
                         dirs.push(path);
                     }
-                }
             } else if ft.is_file() {
                 files.push(path);
             }
@@ -654,9 +652,9 @@ fn try_structured_ingest(
             }
 
             // Detect hive partition from parent directory name (e.g. PartitionDate=2024-10-13)
-            if let Some(parent) = file.parent() {
-                if let Some(dir_name) = parent.file_name().and_then(|n| n.to_str()) {
-                    if let Some(eq_pos) = dir_name.find('=') {
+            if let Some(parent) = file.parent()
+                && let Some(dir_name) = parent.file_name().and_then(|n| n.to_str())
+                    && let Some(eq_pos) = dir_name.find('=') {
                         let key = &dir_name[..eq_pos];
                         let value = &dir_name[eq_pos + 1..];
                         if partition_key.is_none() {
@@ -674,8 +672,6 @@ fn try_structured_ingest(
                         *partition_row_counts.entry(value.to_string()).or_insert(0) += file_rows;
                         continue;
                     }
-                }
-            }
 
             let remaining = row_limit - total_rows;
             let batches = read_auto_with_limit(file, Some(remaining))?;

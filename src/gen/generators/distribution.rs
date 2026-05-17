@@ -20,8 +20,8 @@ use rand::RngCore;
 
 use crate::core::DistributionKind;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate values drawn from a configurable statistical distribution.
 ///

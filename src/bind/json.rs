@@ -86,7 +86,7 @@ impl<W: Write + Send> JsonSink<W> {
 /// [`BindError`] on type mismatch instead of panicking.
 #[macro_export]
 macro_rules! downcast_col {
-    ($col:expr, $arr_ty:ty) => {
+    ($col:expr_2021, $arr_ty:ty) => {
         $col.as_any().downcast_ref::<$arr_ty>().ok_or_else(|| {
             $crate::bind::BindError::Other(format!(
                 "Arrow type mismatch: expected {}, got {:?}",
@@ -263,7 +263,7 @@ fn struct_to_json(col: &dyn Array, row: usize) -> Result<serde_json::Value, Bind
 }
 
 macro_rules! json_number {
-    ($col:expr, $arr_ty:ty, $row:expr) => {{
+    ($col:expr_2021, $arr_ty:ty, $row:expr_2021) => {{
         let arr = downcast_col!($col, $arr_ty)?;
         Ok(serde_json::Value::Number(arr.value($row).into()))
     }};

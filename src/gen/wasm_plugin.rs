@@ -49,9 +49,9 @@ use arrow::array::ArrayRef;
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::plugin::GeneratorPlugin;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::plugin::GeneratorPlugin;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Current ABI version. WASM modules must return this from `knit_abi_version`.
 const ABI_VERSION: i32 = 1;
@@ -311,14 +311,13 @@ impl FieldGenerator for WasmFieldGenerator {
 
 impl Drop for WasmFieldGenerator {
     fn drop(&mut self) {
-        if let Ok(mut store) = self.store.lock() {
-            if let Ok(destroy_fn) = self
+        if let Ok(mut store) = self.store.lock()
+            && let Ok(destroy_fn) = self
                 .instance
                 .get_typed_func::<(i32,), ()>(&mut *store, "knit_destroy")
             {
                 let _ = destroy_fn.call(&mut *store, (self.handle,));
             }
-        }
     }
 }
 
@@ -499,7 +498,7 @@ pub fn load_wasm_plugin(
     }
 
     tracing::info!(name = %name, path = %path.display(), "loaded WASM generator plugin");
-    crate::gen::plugin::registry().register(Box::new(plugin));
+    crate::r#gen::plugin::registry().register(Box::new(plugin));
     Ok(name)
 }
 

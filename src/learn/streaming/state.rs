@@ -481,7 +481,7 @@ impl ColumnState {
             )
         {
             match (&mut self.numeric, &other.numeric) {
-                (Some(ref mut s), Some(ref o)) => s.merge(o),
+                (Some(s), Some(o)) => s.merge(o),
                 (None, Some(o)) => self.numeric = Some(o.clone()),
                 _ => {}
             }

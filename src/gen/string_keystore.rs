@@ -7,7 +7,7 @@
 use rand::RngCore;
 use std::sync::RwLock;
 
-use crate::gen::traits::StringKeyStore;
+use crate::r#gen::traits::StringKeyStore;
 
 /// In-memory key store for string/UUID keys backed by a `Vec<String>` behind a [`RwLock`].
 ///

@@ -10,7 +10,7 @@ use arrow::compute::kernels::zip::zip;
 use rand::RngCore;
 use std::sync::Arc;
 
-use crate::gen::error::GenError;
+use crate::r#gen::error::GenError;
 use crate::plan::NullPlan;
 
 /// Apply a null mask to a generated array according to the given [`NullPlan`].

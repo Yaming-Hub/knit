@@ -38,11 +38,10 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
     };
 
     // Create parent directories if needed
-    if let Some(parent) = dest.parent() {
-        if !parent.as_os_str().is_empty() {
+    if let Some(parent) = dest.parent()
+        && !parent.as_os_str().is_empty() {
             fs::create_dir_all(parent)?;
         }
-    }
 
     let mut sidecar_count = 0;
 

@@ -326,11 +326,10 @@ fn social_platform_activity_after_signup() {
     let post_pairs = collect_fk_timestamp_pairs(&batches["posts"], "author_id", "created_at");
     let mut violations = 0;
     for (author_id, created_at) in &post_pairs {
-        if let Some(&signup) = signup_map.get(author_id) {
-            if *created_at < signup {
+        if let Some(&signup) = signup_map.get(author_id)
+            && *created_at < signup {
                 violations += 1;
             }
-        }
     }
     assert_eq!(
         violations, 0,
@@ -341,11 +340,10 @@ fn social_platform_activity_after_signup() {
     let comment_pairs = collect_fk_timestamp_pairs(&batches["comments"], "author_id", "created_at");
     let mut violations = 0;
     for (author_id, created_at) in &comment_pairs {
-        if let Some(&signup) = signup_map.get(author_id) {
-            if *created_at < signup {
+        if let Some(&signup) = signup_map.get(author_id)
+            && *created_at < signup {
                 violations += 1;
             }
-        }
     }
     assert_eq!(
         violations, 0,
@@ -356,11 +354,10 @@ fn social_platform_activity_after_signup() {
     let dm_pairs = collect_fk_timestamp_pairs(&batches["direct_messages"], "sender_id", "sent_at");
     let mut violations = 0;
     for (sender_id, sent_at) in &dm_pairs {
-        if let Some(&signup) = signup_map.get(sender_id) {
-            if *sent_at < signup {
+        if let Some(&signup) = signup_map.get(sender_id)
+            && *sent_at < signup {
                 violations += 1;
             }
-        }
     }
     assert_eq!(
         violations, 0,
@@ -516,11 +513,10 @@ fn social_platform_comment_after_post() {
     let mut violations = 0;
     let total = comment_post_ids.len();
     for (i, &post_id) in comment_post_ids.iter().enumerate() {
-        if let Some(&post_ts) = post_ts_map.get(&post_id) {
-            if comment_timestamps[i] < post_ts {
+        if let Some(&post_ts) = post_ts_map.get(&post_id)
+            && comment_timestamps[i] < post_ts {
                 violations += 1;
             }
-        }
     }
 
     assert_eq!(

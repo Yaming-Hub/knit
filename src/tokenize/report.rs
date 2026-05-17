@@ -168,15 +168,12 @@ fn count_jsonl_rows(path: &Path) -> Result<(Option<usize>, Option<usize>)> {
             continue;
         }
         rows += 1;
-        if columns.is_none() {
-            if let Ok(val) =
+        if columns.is_none()
+            && let Ok(val) =
                 serde_json::from_str::<serde_json::Value>(trimmed.trim_end_matches(','))
-            {
-                if let Some(obj) = val.as_object() {
+                && let Some(obj) = val.as_object() {
                     columns = Some(obj.len());
                 }
-            }
-        }
     }
     Ok((Some(rows), columns))
 }

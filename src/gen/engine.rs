@@ -19,24 +19,24 @@ use crate::plan::{
     PartitionRange,
 };
 
-use crate::gen::actor_pool::ActorPool;
-use crate::gen::batch::assemble_batch;
-use crate::gen::context::GenContext;
-use crate::gen::error::GenError;
-use crate::gen::generators::actor_fk::ActorForeignKeyGenerator;
-use crate::gen::generators::actor_temporal::{ActorTemporalGenerator, CausalTimes};
-use crate::gen::generators::create_generator_with_seen;
-use crate::gen::generators::fk::ForeignKeyGenerator;
-use crate::gen::generators::graph_fk::GraphTargetFkGenerator;
-use crate::gen::generators::persona_field::PersonaFieldGenerator;
-use crate::gen::generators::plan_contains_unique;
-use crate::gen::generators::string_fk::StringForeignKeyGenerator;
-use crate::gen::keystore::InMemoryKeyStore;
-use crate::gen::null_mask::apply_null_mask;
-use crate::gen::sampled_key_store::SampledKeyStore;
-use crate::gen::string_keystore::InMemoryStringKeyStore;
-use crate::gen::temporal_store::TemporalStore;
-use crate::gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
+use crate::r#gen::actor_pool::ActorPool;
+use crate::r#gen::batch::assemble_batch;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::error::GenError;
+use crate::r#gen::generators::actor_fk::ActorForeignKeyGenerator;
+use crate::r#gen::generators::actor_temporal::{ActorTemporalGenerator, CausalTimes};
+use crate::r#gen::generators::create_generator_with_seen;
+use crate::r#gen::generators::fk::ForeignKeyGenerator;
+use crate::r#gen::generators::graph_fk::GraphTargetFkGenerator;
+use crate::r#gen::generators::persona_field::PersonaFieldGenerator;
+use crate::r#gen::generators::plan_contains_unique;
+use crate::r#gen::generators::string_fk::StringForeignKeyGenerator;
+use crate::r#gen::keystore::InMemoryKeyStore;
+use crate::r#gen::null_mask::apply_null_mask;
+use crate::r#gen::sampled_key_store::SampledKeyStore;
+use crate::r#gen::string_keystore::InMemoryStringKeyStore;
+use crate::r#gen::temporal_store::TemporalStore;
+use crate::r#gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 /// Default number of rows per Arrow batch.
 const DEFAULT_BATCH_SIZE: usize = 8192;
@@ -167,7 +167,7 @@ pub struct GenerationEngine {
     /// Optional actor pool for persona-weighted FK generation.
     actor_pool: Option<Arc<ActorPool>>,
     /// Generated relationship graphs: graph_name → adjacency list.
-    graph_adjacency: HashMap<String, Arc<crate::gen::generators::graph_fk::AdjacencyList>>,
+    graph_adjacency: HashMap<String, Arc<crate::r#gen::generators::graph_fk::AdjacencyList>>,
     /// Reverse PK→index maps: entity_name → (PK → actor_index).
     pk_reverse_maps: HashMap<String, Arc<std::collections::HashMap<i64, usize>>>,
     /// Per-actor temporal baselines for ordering constraints.
@@ -231,7 +231,7 @@ impl GenerationEngine {
 
         for graph_plan in &plan.actor_pool.graph_plans {
             let graph =
-                crate::gen::graph::generate_graph(graph_plan, pool, plan.rng_tree.global_seed);
+                crate::r#gen::graph::generate_graph(graph_plan, pool, plan.rng_tree.global_seed);
 
             // Build outbound adjacency list (Vec<Vec<usize>> indexed by source actor)
             let source_count = graph.source_count as usize;
@@ -304,10 +304,10 @@ impl GenerationEngine {
                         ..
                     } = fp.generator_plan
                     {
-                        if let Some(ref tsf) = temporal_start_field {
+                        if let Some(tsf) = temporal_start_field {
                             needed.insert((actor_entity.clone(), tsf.clone()));
                         }
-                        if let Some(ref ta) = temporal_after {
+                        if let Some(ta) = temporal_after {
                             needed.insert((ta.entity.clone(), ta.field.clone()));
                         }
                     }
@@ -332,7 +332,7 @@ impl GenerationEngine {
         entity_plans: &[EntityPlan],
         mut batches: Vec<(String, RecordBatch)>,
     ) -> Vec<(String, RecordBatch)> {
-        use crate::gen::temporal_sort::{enforce_inter_event_gaps, DEFAULT_MIN_GAP_MS};
+        use crate::r#gen::temporal_sort::{enforce_inter_event_gaps, DEFAULT_MIN_GAP_MS};
 
         // Collect actor temporal info per entity. An entity may have multiple
         // ActorTemporal fields (each produces a timestamp column that needs
@@ -536,8 +536,8 @@ impl GenerationEngine {
     /// Determined by the PK field's generator plan rather than data_type,
     /// because Sequence generators always produce Int64 regardless of declared type.
     fn is_string_pk_entity(&self, ep: &EntityPlan) -> bool {
-        if let Some(pk_idx) = ep.primary_key_field_index {
-            if let Some(fp) = ep.field_plans.get(pk_idx) {
+        if let Some(pk_idx) = ep.primary_key_field_index
+            && let Some(fp) = ep.field_plans.get(pk_idx) {
                 return matches!(
                     &fp.generator_plan,
                     GeneratorPlan::Uuid
@@ -545,7 +545,6 @@ impl GenerationEngine {
                         | GeneratorPlan::Pattern { .. }
                 );
             }
-        }
         // No explicit PK index — conservatively return false to avoid
         // misidentifying an Int64 PK entity as string-keyed.
         false
@@ -700,13 +699,12 @@ impl GenerationEngine {
                     col_type = ?col.data_type(),
                     "extracting PK values"
                 );
-                if let Some(ref ks) = key_store {
-                    if let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>() {
+                if let Some(ref ks) = key_store
+                    && let Some(i64_arr) = col.as_any().downcast_ref::<Int64Array>() {
                         for v in i64_arr.values().iter() {
                             ks.insert(*v);
                         }
                     }
-                }
                 if let Some(ref sks) = string_key_store {
                     if let Some(str_arr) = col.as_any().downcast_ref::<StringArray>() {
                         for i in 0..str_arr.len() {
@@ -791,12 +789,12 @@ impl GenerationEngine {
                                             as Box<dyn FieldGenerator>
                                     }
                                     crate::plan::SelectionPlan::Sequential => {
-                                        Box::new(crate::gen::generators::sequential_fk::SequentialStringForeignKeyGenerator::new(
+                                        Box::new(crate::r#gen::generators::sequential_fk::SequentialStringForeignKeyGenerator::new(
                                             Arc::clone(sks),
                                         )) as Box<dyn FieldGenerator>
                                     }
                                     crate::plan::SelectionPlan::Clustered { cluster_size } => {
-                                        Box::new(crate::gen::generators::clustered_fk::ClusteredStringForeignKeyGenerator::new(
+                                        Box::new(crate::r#gen::generators::clustered_fk::ClusteredStringForeignKeyGenerator::new(
                                             Arc::clone(sks),
                                             *cluster_size,
                                             ep.estimated_row_count,
@@ -825,7 +823,7 @@ impl GenerationEngine {
                                 Box::new(StringForeignKeyGenerator::new(Arc::clone(sks)))
                                     as Box<dyn FieldGenerator>
                             } else {
-                                Box::new(crate::gen::generators::weighted_fk::WeightedStringForeignKeyGenerator::new(
+                                Box::new(crate::r#gen::generators::weighted_fk::WeightedStringForeignKeyGenerator::new(
                                     Arc::clone(sks),
                                     dp.clone(),
                                 )) as Box<dyn FieldGenerator>
@@ -840,9 +838,9 @@ impl GenerationEngine {
                         // 2. Actor pool exists for the target entity
                         // 3. Target uses InMemoryVec (not sampled subset)
                         // 4. Target has single partition (insertion order is deterministic)
-                        if fp.actor_column {
-                            if let Some(ref pool) = self.actor_pool {
-                                if pool.has_entity(target_entity) {
+                        if fp.actor_column
+                            && let Some(ref pool) = self.actor_pool
+                                && pool.has_entity(target_entity) {
                                     let target_partitions = Self::count_entity_partitions(plan, target_entity);
                                     let is_sampled = matches!(key_store_kind, KeyStoreKind::SampledSubset { .. });
 
@@ -875,8 +873,6 @@ impl GenerationEngine {
                                         )) as Box<dyn FieldGenerator>;
                                     }
                                 }
-                            }
-                        }
                         // Selection strategy takes priority (mutually exclusive with degree)
                         if let Some(sp) = selection {
                             let target_partitions = Self::count_entity_partitions(plan, target_entity);
@@ -896,12 +892,12 @@ impl GenerationEngine {
                                         Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
                                     }
                                     crate::plan::SelectionPlan::Sequential => {
-                                        Box::new(crate::gen::generators::sequential_fk::SequentialForeignKeyGenerator::new(
+                                        Box::new(crate::r#gen::generators::sequential_fk::SequentialForeignKeyGenerator::new(
                                             Arc::clone(ks),
                                         )) as Box<dyn FieldGenerator>
                                     }
                                     crate::plan::SelectionPlan::Clustered { cluster_size } => {
-                                        Box::new(crate::gen::generators::clustered_fk::ClusteredForeignKeyGenerator::new(
+                                        Box::new(crate::r#gen::generators::clustered_fk::ClusteredForeignKeyGenerator::new(
                                             Arc::clone(ks),
                                             *cluster_size,
                                             ep.estimated_row_count,
@@ -931,7 +927,7 @@ impl GenerationEngine {
                                 );
                                 Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
                             } else {
-                                Box::new(crate::gen::generators::weighted_fk::WeightedForeignKeyGenerator::new(
+                                Box::new(crate::r#gen::generators::weighted_fk::WeightedForeignKeyGenerator::new(
                                     Arc::clone(ks),
                                     dp.clone(),
                                 )) as Box<dyn FieldGenerator>
@@ -952,7 +948,7 @@ impl GenerationEngine {
                             target = %target_entity,
                             "FK target key store not found — using null generator"
                         );
-                        Box::new(crate::gen::generators::constant::ConstantGenerator::new(
+                        Box::new(crate::r#gen::generators::constant::ConstantGenerator::new(
                             crate::core::Value::Null,
                         )) as Box<dyn FieldGenerator>
                     }
@@ -964,15 +960,15 @@ impl GenerationEngine {
                     target_entity,
                     ..
                 } => {
-                    if let Some(gen) = self.build_graph_target_generator(ep, fp, graph_name, source_field, from_entity, target_entity, plan) {
-                        gen
-                    } else if let Some(ks) = self.key_stores.get(target_entity) {
+                    match self.build_graph_target_generator(ep, fp, graph_name, source_field, from_entity, target_entity, plan) { Some(r#gen) => {
+                        r#gen
+                    } _ => if let Some(ks) = self.key_stores.get(target_entity) {
                         Box::new(ForeignKeyGenerator::new(Arc::clone(ks))) as Box<dyn FieldGenerator>
                     } else {
-                        Box::new(crate::gen::generators::constant::ConstantGenerator::new(
+                        Box::new(crate::r#gen::generators::constant::ConstantGenerator::new(
                             crate::core::Value::Null,
                         )) as Box<dyn FieldGenerator>
-                    }
+                    }}
                 }
                 GeneratorPlan::PersonaField {
                     trait_name,
@@ -1020,12 +1016,12 @@ impl GenerationEngine {
     ) -> Box<dyn FieldGenerator> {
         let mut children: Vec<Box<dyn FieldGenerator>> = Vec::with_capacity(sub_plans.len());
         let mut names: Vec<String> = Vec::with_capacity(sub_plans.len());
-        let mut post_process: Vec<crate::gen::generators::struct_gen::ChildPostProcess> =
+        let mut post_process: Vec<crate::r#gen::generators::struct_gen::ChildPostProcess> =
             Vec::with_capacity(sub_plans.len());
 
         for sp in sub_plans {
             names.push(sp.field_name.clone());
-            post_process.push(crate::gen::generators::struct_gen::ChildPostProcess {
+            post_process.push(crate::r#gen::generators::struct_gen::ChildPostProcess {
                 precision: sp.precision,
                 data_type: sp.data_type.clone(),
                 null_plan: sp.null_plan.clone(),
@@ -1038,7 +1034,7 @@ impl GenerationEngine {
             }
         }
 
-        Box::new(crate::gen::generators::struct_gen::StructGenerator::new(
+        Box::new(crate::r#gen::generators::struct_gen::StructGenerator::new(
             children,
             names,
             post_process,
@@ -1189,7 +1185,7 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
     ) -> Box<dyn FieldGenerator> {
         let null_fallback = || -> Box<dyn FieldGenerator> {
-            Box::new(crate::gen::generators::constant::ConstantGenerator::new(
+            Box::new(crate::r#gen::generators::constant::ConstantGenerator::new(
                 crate::core::Value::Null,
             ))
         };
@@ -1282,7 +1278,7 @@ impl GenerationEngine {
     ) -> Box<dyn FieldGenerator> {
         let bh_fallback = || -> Box<dyn FieldGenerator> {
             Box::new(
-                crate::gen::generators::temporal::BusinessHoursGenerator::new(
+                crate::r#gen::generators::temporal::BusinessHoursGenerator::new(
                     &std::collections::BTreeMap::new(),
                     &std::collections::BTreeMap::new(),
                 ),
@@ -1347,12 +1343,11 @@ impl GenerationEngine {
             let mut times = vec![None; pk_count];
             let mut found_any = false;
             for (&_pk, &idx) in pk_reverse.iter() {
-                if let Some(ts) = self.temporal_store.get(actor_entity, tsf, idx) {
-                    if idx < times.len() {
+                if let Some(ts) = self.temporal_store.get(actor_entity, tsf, idx)
+                    && idx < times.len() {
                         times[idx] = Some(ts);
                         found_any = true;
                     }
-                }
             }
             if found_any {
                 Some(Arc::new(times))
@@ -1477,7 +1472,7 @@ impl GenerationEngine {
         // Phase 2: Apply copula plans — replace independently generated columns
         // with jointly correlated values via the specified copula.
         if !ep.copula_plans.is_empty() {
-            crate::gen::generators::copula::apply_copula_plans(
+            crate::r#gen::generators::copula::apply_copula_plans(
                 &ep.copula_plans,
                 &mut batch_columns,
                 rng,

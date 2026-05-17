@@ -21,8 +21,8 @@ use arrow::array::{
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Wrapper generator that enforces uniqueness on an inner generator's output.
 ///
@@ -217,8 +217,8 @@ fn build_result_array(collected: &[(ArrayRef, Vec<usize>)]) -> ArrayRef {
 mod tests {
     use super::*;
     use crate::core::{Value, WeightedChoice};
-    use crate::gen::generators::constant::ConstantGenerator;
-    use crate::gen::generators::one_of::OneOfGenerator;
+    use crate::r#gen::generators::constant::ConstantGenerator;
+    use crate::r#gen::generators::one_of::OneOfGenerator;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
@@ -233,13 +233,13 @@ mod tests {
     #[test]
     fn unique_output_has_no_duplicates() {
         // Use UUID generator which produces rng-based unique-ish values.
-        use crate::gen::generators::uuid_gen::UuidGenerator;
+        use crate::r#gen::generators::uuid_gen::UuidGenerator;
         let inner = Box::new(UuidGenerator);
-        let gen = UniqueGenerator::new(inner, 100);
+        let r#gen = UniqueGenerator::new(inner, 100);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let values: HashSet<&str> = (0..str_arr.len()).map(|i| str_arr.value(i)).collect();
         assert_eq!(values.len(), 50, "all values must be unique");
@@ -263,11 +263,11 @@ mod tests {
             },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
-        let gen = UniqueGenerator::new(inner, 1000);
+        let r#gen = UniqueGenerator::new(inner, 1000);
         let mut rng = ChaCha8Rng::seed_from_u64(99);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let values: HashSet<&str> = (0..str_arr.len()).map(|i| str_arr.value(i)).collect();
         assert_eq!(
@@ -282,52 +282,52 @@ mod tests {
         // Constant generator always produces the same value; after first row
         // every subsequent row will exhaust retries.
         let inner = Box::new(ConstantGenerator::new(Value::String("same".into())));
-        let gen = UniqueGenerator::new(inner, 5);
+        let r#gen = UniqueGenerator::new(inner, 5);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = test_ctx();
 
         // Should not panic — gracefully degrades.
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         assert_eq!(arr.len(), 3);
     }
 
     #[test]
     fn unique_count_zero() {
-        use crate::gen::generators::uuid_gen::UuidGenerator;
+        use crate::r#gen::generators::uuid_gen::UuidGenerator;
         let inner = Box::new(UuidGenerator);
-        let gen = UniqueGenerator::new(inner, 100);
+        let r#gen = UniqueGenerator::new(inner, 100);
         let mut rng = ChaCha8Rng::seed_from_u64(0);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 0, &ctx);
+        let arr = r#gen.generate(&mut rng, 0, &ctx);
         assert_eq!(arr.len(), 0);
     }
 
     #[test]
     fn unique_output_type_matches_inner() {
-        use crate::gen::generators::uuid_gen::UuidGenerator;
+        use crate::r#gen::generators::uuid_gen::UuidGenerator;
         let inner = Box::new(UuidGenerator);
         let expected = inner.output_type();
-        let gen = UniqueGenerator::new(inner, 10);
-        assert_eq!(gen.output_type(), expected);
+        let r#gen = UniqueGenerator::new(inner, 10);
+        assert_eq!(r#gen.output_type(), expected);
     }
 
     #[test]
     fn unique_wrapping_faker() {
         // Faker generators produce strings; just make sure it doesn't panic.
-        use crate::gen::generators::faker::FakerGenerator;
+        use crate::r#gen::generators::faker::FakerGenerator;
         let inner = Box::new(FakerGenerator::new(
             "first_name".into(),
             "en_US".into(),
             vec![],
         ));
-        let gen = UniqueGenerator::new(inner, 100);
+        let r#gen = UniqueGenerator::new(inner, 100);
         let mut rng = ChaCha8Rng::seed_from_u64(7);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         assert_eq!(arr.len(), 10);
-        assert_eq!(gen.output_type(), DataType::Utf8);
+        assert_eq!(r#gen.output_type(), DataType::Utf8);
     }
 
     #[test]
@@ -360,12 +360,12 @@ mod tests {
             },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
-        let gen = UniqueGenerator::new(inner, 1000);
+        let r#gen = UniqueGenerator::new(inner, 1000);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
 
-        let arr1 = gen.generate(&mut rng, 3, &ctx);
-        let arr2 = gen.generate(&mut rng, 3, &ctx);
+        let arr1 = r#gen.generate(&mut rng, 3, &ctx);
+        let arr2 = r#gen.generate(&mut rng, 3, &ctx);
         let s1 = arr1.as_any().downcast_ref::<StringArray>().unwrap();
         let s2 = arr2.as_any().downcast_ref::<StringArray>().unwrap();
 
@@ -405,11 +405,11 @@ mod tests {
             },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
-        let gen = UniqueGenerator::new(inner, 1000);
+        let r#gen = UniqueGenerator::new(inner, 1000);
         let mut rng = ChaCha8Rng::seed_from_u64(99);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         let values: HashSet<i64> = (0..int_arr.len()).map(|i| int_arr.value(i)).collect();
         assert_eq!(values.len(), 5, "all 5 unique ints should be produced");
@@ -419,11 +419,11 @@ mod tests {
     fn unique_max_retries_returns_correct_length() {
         // Constant inner with max_retries=2: should still produce requested count
         let inner = Box::new(ConstantGenerator::new(Value::Int(7)));
-        let gen = UniqueGenerator::new(inner, 2);
+        let r#gen = UniqueGenerator::new(inner, 2);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         assert_eq!(arr.len(), 5, "should always return requested count");
         // First value is unique, rest are duplicates filled in
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn unique_deterministic_with_same_seed() {
-        use crate::gen::generators::uuid_gen::UuidGenerator;
+        use crate::r#gen::generators::uuid_gen::UuidGenerator;
 
         let make_gen = || UniqueGenerator::new(Box::new(UuidGenerator), 100);
         let gen1 = make_gen();
@@ -471,11 +471,11 @@ mod tests {
             },
         ];
         let inner = Box::new(OneOfGenerator::new(choices));
-        let gen = UniqueGenerator::new(inner, 1000);
+        let r#gen = UniqueGenerator::new(inner, 1000);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
 
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let float_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         let values: HashSet<u64> = (0..float_arr.len())
             .map(|i| float_arr.value(i).to_bits())
@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn shared_seen_set_cross_partition_uniqueness() {
         // Two generators sharing the same seen-set should not produce overlapping values.
-        use crate::gen::generators::uuid_gen::UuidGenerator;
+        use crate::r#gen::generators::uuid_gen::UuidGenerator;
 
         let shared = Arc::new(Mutex::new(HashSet::new()));
         let gen1 =
@@ -515,7 +515,7 @@ mod tests {
     #[test]
     fn shared_seen_deterministic() {
         // Shared-seen generators must produce identical output across runs.
-        use crate::gen::generators::uuid_gen::UuidGenerator;
+        use crate::r#gen::generators::uuid_gen::UuidGenerator;
 
         let run = || {
             let shared = Arc::new(Mutex::new(HashSet::new()));

@@ -16,9 +16,9 @@ use arrow::datatypes::{DataType, TimeUnit};
 use rand::RngCore;
 use rand_distr::{Distribution, Exp, Normal, Poisson};
 
-use crate::gen::actor_pool::ActorPool;
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::actor_pool::ActorPool;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Default start date: 2024-01-01 UTC (ms since epoch).
 const DEFAULT_START_MS: i64 = 1_704_067_200_000;
@@ -400,7 +400,7 @@ fn gen_range_i64(rng: &mut dyn RngCore, max: i64) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::actor_pool::ActorPool;
+    use crate::r#gen::actor_pool::ActorPool;
     use crate::plan::{ActorEntityPool, ActorPoolPlan, PersonaWeight};
     use rand::SeedableRng;
     use std::collections::BTreeMap;
@@ -434,7 +434,7 @@ mod tests {
     #[test]
     fn generates_timestamps_biased_toward_peak() {
         let (pool, rev) = make_pool_and_reverse_map();
-        let gen = ActorTemporalGenerator::new(
+        let r#gen = ActorTemporalGenerator::new(
             pool.clone(),
             rev.clone(),
             "peak_hours".into(),
@@ -451,7 +451,7 @@ mod tests {
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(999);
-        let result = gen.generate(&mut rng, 100, &ctx);
+        let result = r#gen.generate(&mut rng, 100, &ctx);
 
         let ts_arr = result
             .as_any()
@@ -492,7 +492,7 @@ mod tests {
     #[test]
     fn null_actor_fk_still_produces_timestamp() {
         let (pool, rev) = make_pool_and_reverse_map();
-        let gen = ActorTemporalGenerator::new(
+        let r#gen = ActorTemporalGenerator::new(
             pool,
             rev,
             "peak_hours".into(),
@@ -509,7 +509,7 @@ mod tests {
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(123);
-        let result = gen.generate(&mut rng, 3, &ctx);
+        let result = r#gen.generate(&mut rng, 3, &ctx);
 
         let ts_arr = result
             .as_any()
@@ -539,7 +539,7 @@ mod tests {
             Some(creation_ms_actor2),
         ]);
 
-        let gen = ActorTemporalGenerator::new(
+        let r#gen = ActorTemporalGenerator::new(
             pool,
             rev,
             "peak_hours".into(),
@@ -562,7 +562,7 @@ mod tests {
 
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "posts");
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
-        let result = gen.generate(&mut rng, 300, &ctx);
+        let result = r#gen.generate(&mut rng, 300, &ctx);
 
         let ts_arr = result
             .as_any()

@@ -275,7 +275,7 @@ pub fn is_legacy_template(input: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::expr::ast::{BinOp, LiteralValue, UnOp};
+    use crate::r#gen::expr::ast::{BinOp, LiteralValue, UnOp};
 
     #[test]
     fn simple_add() {

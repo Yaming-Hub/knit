@@ -12,8 +12,8 @@ use arrow::datatypes::DataType;
 use rand::Rng;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Generate a monotonic integer sequence with optional jitter.
 ///

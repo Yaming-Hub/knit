@@ -11,8 +11,8 @@ use arrow::array::{ArrayRef, Int64Array, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::{FieldGenerator, KeyStore, StringKeyStore};
 
 /// Round-robin FK generator for integer primary keys.
 pub struct SequentialForeignKeyGenerator {
@@ -95,8 +95,8 @@ impl FieldGenerator for SequentialStringForeignKeyGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::context::GenContext;
-    use crate::gen::keystore::InMemoryKeyStore;
+    use crate::r#gen::context::GenContext;
+    use crate::r#gen::keystore::InMemoryKeyStore;
     use arrow::array::Array;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
@@ -113,9 +113,9 @@ mod tests {
         for i in 1..=5 {
             store.insert(i);
         }
-        let gen = SequentialForeignKeyGenerator::new(store);
+        let r#gen = SequentialForeignKeyGenerator::new(store);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 12, &make_ctx_with_offset(0));
+        let arr = r#gen.generate(&mut rng, 12, &make_ctx_with_offset(0));
 
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         // Should cycle: 1,2,3,4,5,1,2,3,4,5,1,2
@@ -131,11 +131,11 @@ mod tests {
         for i in 1..=5 {
             store.insert(i);
         }
-        let gen = SequentialForeignKeyGenerator::new(store);
+        let r#gen = SequentialForeignKeyGenerator::new(store);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
         // Offset 3 means first row is global row 3 → index 3 → key 4
-        let arr = gen.generate(&mut rng, 5, &make_ctx_with_offset(3));
+        let arr = r#gen.generate(&mut rng, 5, &make_ctx_with_offset(3));
         let int_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(int_arr.value(0), 4); // index 3
         assert_eq!(int_arr.value(1), 5); // index 4
@@ -147,9 +147,9 @@ mod tests {
     #[test]
     fn sequential_empty_store_nulls() {
         let store = Arc::new(InMemoryKeyStore::new());
-        let gen = SequentialForeignKeyGenerator::new(store);
+        let r#gen = SequentialForeignKeyGenerator::new(store);
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &make_ctx_with_offset(0));
+        let arr = r#gen.generate(&mut rng, 5, &make_ctx_with_offset(0));
         assert_eq!(arr.null_count(), 5);
     }
 
@@ -159,13 +159,13 @@ mod tests {
         for i in 1..=10 {
             store.insert(i);
         }
-        let gen = SequentialForeignKeyGenerator::new(store);
+        let r#gen = SequentialForeignKeyGenerator::new(store);
 
         let mut rng1 = ChaCha8Rng::seed_from_u64(1);
         let mut rng2 = ChaCha8Rng::seed_from_u64(999);
 
-        let arr1 = gen.generate(&mut rng1, 10, &make_ctx_with_offset(0));
-        let arr2 = gen.generate(&mut rng2, 10, &make_ctx_with_offset(0));
+        let arr1 = r#gen.generate(&mut rng1, 10, &make_ctx_with_offset(0));
+        let arr2 = r#gen.generate(&mut rng2, 10, &make_ctx_with_offset(0));
 
         let v1 = arr1.as_any().downcast_ref::<Int64Array>().unwrap();
         let v2 = arr2.as_any().downcast_ref::<Int64Array>().unwrap();

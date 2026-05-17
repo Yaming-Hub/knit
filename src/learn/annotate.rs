@@ -52,8 +52,8 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
     }
 
     // Time dimension
-    if let Some(time) = &analysis.time {
-        if let Some(entity) = model
+    if let Some(time) = &analysis.time
+        && let Some(entity) = model
             .entities
             .iter_mut()
             .find(|e| e.name == time.entity_name)
@@ -70,7 +70,6 @@ pub fn annotate_dimensions(model: &mut DataModel, analysis: &ScalingAnalysis) {
                 partition_values: time.partition_values.clone(),
             });
         }
-    }
 
     // Custom dimensions
     for dim in &analysis.custom {

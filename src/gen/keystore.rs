@@ -8,7 +8,7 @@
 use rand::RngCore;
 use std::sync::RwLock;
 
-use crate::gen::traits::KeyStore;
+use crate::r#gen::traits::KeyStore;
 
 /// In-memory key store backed by a `Vec<i64>` behind a [`RwLock`].
 ///

@@ -398,7 +398,7 @@ fn build_personas(
         let cluster_members: Vec<&ActorProfile> = profiles
             .iter()
             .zip(assignments.iter())
-            .filter(|(_, &a)| a == cluster_idx)
+            .filter(|&(_, &a)| a == cluster_idx)
             .map(|(p, _)| p)
             .collect();
 

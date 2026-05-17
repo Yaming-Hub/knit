@@ -168,11 +168,10 @@ fn prompt_action(reader: &mut impl BufRead, num_alternatives: usize) -> ReviewAc
         if input == "s" || input == "skip" {
             return ReviewAction::Skip;
         }
-        if let Ok(n) = input.parse::<usize>() {
-            if n >= 1 && n <= num_alternatives {
+        if let Ok(n) = input.parse::<usize>()
+            && n >= 1 && n <= num_alternatives {
                 return ReviewAction::ChooseAlternative(n - 1);
             }
-        }
         eprintln!(
             "    {} enter 'a' (accept), 's' (skip), or 1-{}",
             "invalid:".red(),

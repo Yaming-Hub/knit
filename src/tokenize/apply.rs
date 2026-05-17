@@ -212,11 +212,10 @@ fn tokenize_json_value(
 ) {
     match value {
         serde_json::Value::String(s) => {
-            if should_tokenize {
-                if let Some(token) = mapper.get(s) {
+            if should_tokenize
+                && let Some(token) = mapper.get(s) {
                     *s = token.to_string();
                 }
-            }
         }
         serde_json::Value::Number(n) => {
             if should_tokenize && config.tokenize_numbers {
@@ -233,11 +232,10 @@ fn tokenize_json_value(
                         if !token.contains('.') {
                             *value = serde_json::Value::Number(u.into());
                         }
-                    } else if let Ok(f) = token.parse::<f64>() {
-                        if let Some(num) = serde_json::Number::from_f64(f) {
+                    } else if let Ok(f) = token.parse::<f64>()
+                        && let Some(num) = serde_json::Number::from_f64(f) {
                             *value = serde_json::Value::Number(num);
                         }
-                    }
                 }
             }
         }
@@ -318,11 +316,10 @@ fn tokenize_schema_value(value: &mut serde_json::Value, mapper: &TokenMapper) {
                     || key_lower == "tablename"
                     || key_lower == "table_name"
                 {
-                    if let serde_json::Value::String(s) = val {
-                        if let Some(token) = mapper.get(s) {
+                    if let serde_json::Value::String(s) = val
+                        && let Some(token) = mapper.get(s) {
                             *s = token.to_string();
                         }
-                    }
                 } else {
                     tokenize_schema_value(val, mapper);
                 }

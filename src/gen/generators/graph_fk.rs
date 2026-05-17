@@ -11,8 +11,8 @@ use arrow::array::{Array, ArrayRef, Int64Array};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::{FieldGenerator, KeyStore};
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::{FieldGenerator, KeyStore};
 
 /// Generate a uniform usize in [0, n) using rejection sampling (dyn-compatible).
 fn gen_range_usize(rng: &mut dyn RngCore, n: usize) -> usize {
@@ -151,7 +151,7 @@ impl GraphTargetFkGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gen::keystore::InMemoryKeyStore;
+    use crate::r#gen::keystore::InMemoryKeyStore;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use std::collections::HashMap;
@@ -187,7 +187,7 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let gen = GraphTargetFkGenerator::new(
+        let r#gen = GraphTargetFkGenerator::new(
             adjacency.clone(),
             pk_to_index.clone(),
             ks.clone(),
@@ -202,7 +202,7 @@ mod tests {
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "test_entity");
         let mut rng = ChaCha8Rng::seed_from_u64(42);
 
-        let result = gen.generate(&mut rng, 100, &ctx);
+        let result = r#gen.generate(&mut rng, 100, &ctx);
         let result_arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // All values should be 200 or 300 (neighbors of actor 0)
@@ -218,7 +218,7 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
+        let r#gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
 
         // Actor 3 (PK=400) has no outbound edges — should fall back to uniform
         let source_arr = Arc::new(Int64Array::from(vec![400; 50]));
@@ -228,7 +228,7 @@ mod tests {
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "test_entity");
         let mut rng = ChaCha8Rng::seed_from_u64(99);
 
-        let result = gen.generate(&mut rng, 50, &ctx);
+        let result = r#gen.generate(&mut rng, 50, &ctx);
         let result_arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // All values should be valid PKs from key store
@@ -246,7 +246,7 @@ mod tests {
         let pk_to_index = Arc::new(make_pk_to_index());
         let ks = make_key_store();
 
-        let gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
+        let r#gen = GraphTargetFkGenerator::new(adjacency, pk_to_index, ks, "sender_id".to_string());
 
         // Mix of null and non-null source values
         let source_arr = Arc::new(Int64Array::from(vec![
@@ -262,7 +262,7 @@ mod tests {
         let ctx = GenContext::new(&batch_columns, 0, 0, 1, "test_entity");
         let mut rng = ChaCha8Rng::seed_from_u64(7);
 
-        let result = gen.generate(&mut rng, 5, &ctx);
+        let result = r#gen.generate(&mut rng, 5, &ctx);
         let result_arr = result.as_any().downcast_ref::<Int64Array>().unwrap();
 
         // Null sources produce null targets

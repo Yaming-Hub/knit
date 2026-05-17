@@ -478,8 +478,8 @@ fn array_value_to_json(array: &ArrayRef, row: usize) -> String {
     if let Ok(batch) = RecordBatch::try_new(schema, vec![col]) {
         let mut buf = Vec::new();
         let mut writer = LineDelimitedWriter::new(&mut buf);
-        if writer.write(&batch).is_ok() && writer.finish().is_ok() {
-            if let Ok(s) = String::from_utf8(buf) {
+        if writer.write(&batch).is_ok() && writer.finish().is_ok()
+            && let Ok(s) = String::from_utf8(buf) {
                 // Output is {"v": <value>}\n — extract the value part
                 let s = s.trim();
                 if let Some(start) = s.find(':') {
@@ -490,7 +490,6 @@ fn array_value_to_json(array: &ArrayRef, row: usize) -> String {
                     }
                 }
             }
-        }
     }
     "NULL".to_string()
 }

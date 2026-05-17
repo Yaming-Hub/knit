@@ -154,8 +154,8 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     }
 
     // Normal
-    if std_dev > 0.0 {
-        if let Ok(d) = Normal::new(mean, std_dev) {
+    if std_dev > 0.0
+        && let Ok(d) = Normal::new(mean, std_dev) {
             let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
             let ll = normal_log_likelihood(&clean, mean, std_dev);
             push_candidate(
@@ -166,7 +166,6 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
                 n,
             );
         }
-    }
 
     // LogNormal — only for strictly positive values
     if min_val > 0.0 {
@@ -175,8 +174,8 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         // MLE variance uses /n
         let sigma2 = log_vals.iter().map(|v| (v - mu).powi(2)).sum::<f64>() / n as f64;
         let sigma = sigma2.sqrt();
-        if sigma > 0.0 {
-            if let Ok(d) = LogNormal::new(mu, sigma) {
+        if sigma > 0.0
+            && let Ok(d) = LogNormal::new(mu, sigma) {
                 let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
                 let ll: f64 = clean
                     .iter()
@@ -195,7 +194,6 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
                     n,
                 );
             }
-        }
     }
 
     // Exponential — positive values only
@@ -218,13 +216,12 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
     if min_val > 0.0 && var > 0.0 {
         let shape = mean * mean / var;
         let rate = mean / var;
-        if shape > 0.0 && rate > 0.0 {
-            if let Ok(d) = Gamma::new(shape, 1.0 / rate) {
+        if shape > 0.0 && rate > 0.0
+            && let Ok(d) = Gamma::new(shape, 1.0 / rate) {
                 let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
                 let ll = gamma_log_likelihood(&clean, shape, rate);
                 push_candidate(&mut candidates, Distribution::Gamma(shape, rate), ks, ll, n);
             }
-        }
     }
 
     // Beta — values in (0,1)
@@ -235,8 +232,8 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
         if common > 0.0 {
             let alpha = m * common;
             let beta_param = (1.0 - m) * common;
-            if alpha > 0.0 && beta_param > 0.0 {
-                if let Ok(d) = Beta::new(alpha, beta_param) {
+            if alpha > 0.0 && beta_param > 0.0
+                && let Ok(d) = Beta::new(alpha, beta_param) {
                     let ks = ks_stat_continuous(&clean, |x| d.cdf(x));
                     let ll = beta_log_likelihood(&clean, alpha, beta_param);
                     push_candidate(
@@ -247,7 +244,6 @@ pub fn fit_distribution(values: &[f64]) -> Option<FitResult> {
                         n,
                     );
                 }
-            }
         }
     }
 

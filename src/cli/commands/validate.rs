@@ -100,9 +100,9 @@ fn validate_dictionary_files(model: &crate::core::DataModel, schema_dir: &Path) 
     let mut warnings = Vec::new();
     for entity in &model.entities {
         for field in &entity.fields {
-            if let Some(gen) = &field.generator {
+            if let Some(r#gen) = &field.generator {
                 collect_dictionary_file_errors(
-                    gen,
+                    r#gen,
                     schema_dir,
                     &format!("entities.{}.fields.{}", entity.name, field.name),
                     &mut warnings,
@@ -115,12 +115,12 @@ fn validate_dictionary_files(model: &crate::core::DataModel, schema_dir: &Path) 
 
 /// Recursively walk generator specs to find Dictionary generators and check files.
 fn collect_dictionary_file_errors(
-    gen: &crate::core::GeneratorSpec,
+    r#gen: &crate::core::GeneratorSpec,
     schema_dir: &Path,
     path: &str,
     errors: &mut Vec<String>,
 ) {
-    match gen {
+    match r#gen {
         crate::core::GeneratorSpec::Dictionary { file, .. } => {
             if file.is_empty() {
                 return; // Already caught by semantic validation

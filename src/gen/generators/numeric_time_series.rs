@@ -16,8 +16,8 @@ use rand::RngCore;
 use rand_distr::{Distribution, Normal};
 
 use crate::core::TimeSeriesComponent;
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Parse a duration string like "24h", "7d", "15m", "1s" into number of steps.
 /// When used with row indices (no timestamp), the value is the raw number.
@@ -332,10 +332,10 @@ mod tests {
 
     #[test]
     fn test_baseline_only() {
-        let gen = NumericTimeSeriesGenerator::new(42.0, vec![], None, None, None);
+        let r#gen = NumericTimeSeriesGenerator::new(42.0, vec![], None, None, None);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 10, &ctx);
+        let result = r#gen.generate(&mut rng, 10, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         for i in 0..10 {
             assert!((arr.value(i) - 42.0).abs() < 0.001);
@@ -344,7 +344,7 @@ mod tests {
 
     #[test]
     fn test_trend() {
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             0.0,
             vec![TimeSeriesComponent::Trend {
                 slope: 2.0,
@@ -356,7 +356,7 @@ mod tests {
         );
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 5, &ctx);
+        let result = r#gen.generate(&mut rng, 5, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         // Values should be 0, 2, 4, 6, 8
         assert!((arr.value(0) - 0.0).abs() < 0.001);
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn test_noise() {
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             50.0,
             vec![TimeSeriesComponent::Noise { std_dev: 5.0 }],
             None,
@@ -375,7 +375,7 @@ mod tests {
         );
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 1000, &ctx);
+        let result = r#gen.generate(&mut rng, 1000, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         let mean: f64 = (0..1000).map(|i| arr.value(i)).sum::<f64>() / 1000.0;
         // Mean should be close to baseline 50
@@ -384,7 +384,7 @@ mod tests {
 
     #[test]
     fn test_clamping() {
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             50.0,
             vec![TimeSeriesComponent::Trend {
                 slope: 100.0,
@@ -396,7 +396,7 @@ mod tests {
         );
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 5, &ctx);
+        let result = r#gen.generate(&mut rng, 5, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         for i in 0..5 {
             assert!(arr.value(i) >= 0.0);
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_seasonality_oscillates() {
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             50.0,
             vec![TimeSeriesComponent::Seasonality {
                 period: "100".to_string(),
@@ -419,7 +419,7 @@ mod tests {
         );
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 100, &ctx);
+        let result = r#gen.generate(&mut rng, 100, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         let min_val = (0..100).map(|i| arr.value(i)).fold(f64::MAX, f64::min);
         let max_val = (0..100).map(|i| arr.value(i)).fold(f64::MIN, f64::max);
@@ -430,7 +430,7 @@ mod tests {
 
     #[test]
     fn test_ar_autocorrelation() {
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             50.0,
             vec![
                 TimeSeriesComponent::Noise { std_dev: 1.0 },
@@ -444,7 +444,7 @@ mod tests {
         );
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 200, &ctx);
+        let result = r#gen.generate(&mut rng, 200, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         // AR(1) with 0.9 coefficient should show strong autocorrelation
         // Adjacent values should be much closer than random
@@ -460,7 +460,7 @@ mod tests {
 
     #[test]
     fn test_level_shift() {
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             50.0,
             vec![TimeSeriesComponent::LevelShift {
                 probability: 1.0, // every row shifts
@@ -472,7 +472,7 @@ mod tests {
         );
         let mut rng = ChaCha8Rng::seed_from_u64(1);
         let ctx = make_ctx();
-        let result = gen.generate(&mut rng, 10, &ctx);
+        let result = r#gen.generate(&mut rng, 10, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
         // Each row adds +1 to the level shift
         // Row 0: 50 + 1 = 51, Row 1: 50 + 2 = 52, ...
@@ -504,7 +504,7 @@ mod tests {
         let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             100.0,
             vec![TimeSeriesComponent::HolidayEffect {
                 dates: vec!["2024-01-01".to_string()],
@@ -516,7 +516,7 @@ mod tests {
         );
 
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let result = gen.generate(&mut rng, 2, &ctx);
+        let result = r#gen.generate(&mut rng, 2, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
 
         // Row 0 (Jan 1 = holiday): 100 * 2.0 = 200
@@ -556,7 +556,7 @@ mod tests {
         let cols: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(cols));
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
-        let gen = NumericTimeSeriesGenerator::new(
+        let r#gen = NumericTimeSeriesGenerator::new(
             100.0,
             vec![TimeSeriesComponent::HolidayEffect {
                 dates: vec!["2024-12-25".to_string()],
@@ -568,7 +568,7 @@ mod tests {
         );
 
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let result = gen.generate(&mut rng, 2, &ctx);
+        let result = r#gen.generate(&mut rng, 2, &ctx);
         let arr = result.as_any().downcast_ref::<Float64Array>().unwrap();
 
         // Row 0 (Dec 25 = holiday): 100 * 0.1 = 10

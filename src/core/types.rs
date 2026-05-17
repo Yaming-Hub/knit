@@ -2187,8 +2187,8 @@ mod tests {
             "kind": "normal",
             "params": {"mean": 50.0, "std_dev": 10.0}
         }"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        match gen {
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match r#gen {
             GeneratorSpec::Distribution { spec } => {
                 assert_eq!(spec.kind, DistributionKind::Normal);
                 assert_eq!(spec.params["mean"], 50.0);
@@ -2200,15 +2200,15 @@ mod tests {
     #[test]
     fn test_generator_spec_faker() {
         let json = r#"{"type": "faker", "method": "name.first_name", "args": []}"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        assert!(matches!(gen, GeneratorSpec::Faker { .. }));
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        assert!(matches!(r#gen, GeneratorSpec::Faker { .. }));
     }
 
     #[test]
     fn test_generator_spec_sequence() {
         let json = r#"{"type": "sequence", "start": 1, "step": 1, "prefix": "ORD-"}"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        match gen {
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match r#gen {
             GeneratorSpec::Sequence {
                 start,
                 step,
@@ -2226,8 +2226,8 @@ mod tests {
     #[test]
     fn test_generator_spec_sequence_with_jitter() {
         let json = r#"{"type": "sequence", "start": 0, "step": 86400000, "jitter": "30m"}"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        match &gen {
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match &r#gen {
             GeneratorSpec::Sequence {
                 start,
                 step,
@@ -2241,15 +2241,15 @@ mod tests {
             _ => panic!("expected Sequence"),
         }
         // Roundtrip: jitter should survive serialization
-        let re_json = serde_json::to_string(&gen).unwrap();
+        let re_json = serde_json::to_string(&r#gen).unwrap();
         assert!(re_json.contains("\"jitter\":\"30m\""));
     }
 
     #[test]
     fn test_generator_spec_sequence_string_start() {
         let json = r#"{"type": "sequence", "start": "2024-01-01", "step": "1d"}"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        match &gen {
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match &r#gen {
             GeneratorSpec::Sequence { start, step, .. } => {
                 assert_eq!(start, &IntOrString::Str("2024-01-01".into()));
                 assert_eq!(step, &IntOrString::Str("1d".into()));
@@ -2257,7 +2257,7 @@ mod tests {
             _ => panic!("expected Sequence"),
         }
         // Roundtrip: strings should survive serialization
-        let re_json = serde_json::to_string(&gen).unwrap();
+        let re_json = serde_json::to_string(&r#gen).unwrap();
         assert!(re_json.contains("\"start\":\"2024-01-01\""));
         assert!(re_json.contains("\"step\":\"1d\""));
     }
@@ -2265,8 +2265,8 @@ mod tests {
     #[test]
     fn test_generator_spec_sequence_datetime_start() {
         let json = r#"{"type": "sequence", "start": "2024-01-01T08:00:00", "step": "1h"}"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        match &gen {
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match &r#gen {
             GeneratorSpec::Sequence { start, step, .. } => {
                 assert_eq!(start, &IntOrString::Str("2024-01-01T08:00:00".into()));
                 assert_eq!(step, &IntOrString::Str("1h".into()));
@@ -2282,8 +2282,8 @@ type = "sequence"
 start = "2024-06-15"
 step = "7d"
 "#;
-        let gen: GeneratorSpec = toml::from_str(toml_str).unwrap();
-        match &gen {
+        let r#gen: GeneratorSpec = toml::from_str(toml_str).unwrap();
+        match &r#gen {
             GeneratorSpec::Sequence { start, step, .. } => {
                 assert_eq!(start, &IntOrString::Str("2024-06-15".into()));
                 assert_eq!(step, &IntOrString::Str("7d".into()));
@@ -2301,8 +2301,8 @@ step = "7d"
                 {"value": "inactive", "weight": 0.3}
             ]
         }"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        match gen {
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        match r#gen {
             GeneratorSpec::OneOf { choices } => {
                 assert_eq!(choices.len(), 2);
                 assert_eq!(choices[0].value, Value::String("active".into()));
@@ -2314,8 +2314,8 @@ step = "7d"
     #[test]
     fn test_generator_spec_derived() {
         let json = r#"{"type": "derived", "expr": "first_name + ' ' + last_name"}"#;
-        let gen: GeneratorSpec = serde_json::from_str(json).unwrap();
-        assert!(matches!(gen, GeneratorSpec::Derived { .. }));
+        let r#gen: GeneratorSpec = serde_json::from_str(json).unwrap();
+        assert!(matches!(r#gen, GeneratorSpec::Derived { .. }));
     }
 
     #[test]
@@ -2745,8 +2745,8 @@ active_days = "uniform"
                 "lookup",
             ),
         ];
-        for (gen, expected) in cases {
-            assert_eq!(gen.type_name(), expected);
+        for (r#gen, expected) in cases {
+            assert_eq!(r#gen.type_name(), expected);
         }
     }
 }

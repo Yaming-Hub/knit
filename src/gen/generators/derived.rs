@@ -22,11 +22,11 @@ use arrow::array::{Array, ArrayRef, Float64Array, StringArray};
 use arrow::datatypes::DataType;
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::expr::ast::{self, Expr};
-use crate::gen::expr::eval::{self, EvalContext};
-use crate::gen::expr::parser;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::expr::ast::{self, Expr};
+use crate::r#gen::expr::eval::{self, EvalContext};
+use crate::r#gen::expr::parser;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Evaluate a derived expression referencing other fields in the batch.
 ///
@@ -326,9 +326,9 @@ mod tests {
         );
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new("${a} + ${b}".into(), vec!["a".into(), "b".into()]);
+        let r#gen = DerivedGenerator::new("${a} + ${b}".into(), vec!["a".into(), "b".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(f64_arr.values(), &[11.0, 22.0, 33.0]);
     }
@@ -346,9 +346,9 @@ mod tests {
         );
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new("${x} / ${y}".into(), vec!["x".into(), "y".into()]);
+        let r#gen = DerivedGenerator::new("${x} / ${y}".into(), vec!["x".into(), "y".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 2, &ctx);
+        let arr = r#gen.generate(&mut rng, 2, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         assert!(f64_arr.is_null(0)); // div by zero → null
         assert_eq!(f64_arr.value(1), 4.0);
@@ -367,12 +367,12 @@ mod tests {
         );
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new(
+        let r#gen = DerivedGenerator::new(
             "${first} ${last}".into(),
             vec!["first".into(), "last".into()],
         );
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 2, &ctx);
+        let arr = r#gen.generate(&mut rng, 2, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.value(0), "Alice Smith");
         assert_eq!(str_arr.value(1), "Bob Jones");
@@ -383,9 +383,9 @@ mod tests {
         let cols = HashMap::new();
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new("${a} + ${b}".into(), vec!["a".into(), "b".into()]);
+        let r#gen = DerivedGenerator::new("${a} + ${b}".into(), vec!["a".into(), "b".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(f64_arr.values(), &[0.0, 0.0, 0.0]);
     }
@@ -404,9 +404,9 @@ mod tests {
         )])));
         let ctx = GenContext::new(map, 0, 0, 1, "test").with_params(params);
 
-        let gen = DerivedGenerator::new("${param.prefix} ${name}".into(), vec!["name".into()]);
+        let r#gen = DerivedGenerator::new("${param.prefix} ${name}".into(), vec!["name".into()]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 2, &ctx);
+        let arr = r#gen.generate(&mut rng, 2, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.value(0), "Dr. Alice");
         assert_eq!(str_arr.value(1), "Dr. Bob");
@@ -417,9 +417,9 @@ mod tests {
         let cols = HashMap::new();
         let ctx = make_ctx_with_columns(cols);
 
-        let gen = DerivedGenerator::new("prefix: ${param.missing}".into(), vec![]);
+        let r#gen = DerivedGenerator::new("prefix: ${param.missing}".into(), vec![]);
         let mut rng = ChaCha8Rng::seed_from_u64(1);
-        let arr = gen.generate(&mut rng, 2, &ctx);
+        let arr = r#gen.generate(&mut rng, 2, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         // Unresolved param placeholder stays as-is
         assert_eq!(str_arr.value(0), "prefix: ${param.missing}");

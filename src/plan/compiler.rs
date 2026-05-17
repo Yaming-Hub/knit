@@ -726,7 +726,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     let step_ms = resolve_step_to_i64(step);
                     let jitter_ms = jitter
                         .as_deref()
-                        .map(crate::gen::generators::event_stream::parse_duration_ms);
+                        .map(crate::r#gen::generators::event_stream::parse_duration_ms);
                     GeneratorPlan::Sequence {
                         start: start_ms,
                         step: step_ms,
@@ -891,8 +891,8 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     })
                     .collect();
                 let default_plan = match default {
-                    Some(gen) => Box::new(compile_generator_from_spec(
-                        gen,
+                    Some(r#gen) => Box::new(compile_generator_from_spec(
+                        r#gen,
                         all_fields,
                         &field.data_type,
                     )),
@@ -1121,7 +1121,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
 /// - `Distribution { ... }` — configurable distribution with min/max clamping
 /// - `Constant { value }` — fixed offset, no randomness
 fn compile_relative_offset(anchor: &str, offset: &RelativeOffset) -> GeneratorPlan {
-    use crate::gen::generators::event_stream::parse_duration_ms;
+    use crate::r#gen::generators::event_stream::parse_duration_ms;
 
     let mut params = BTreeMap::new();
     let mut string_params = BTreeMap::new();
@@ -1299,7 +1299,7 @@ fn default_generator_for_type(data_type: &crate::core::DataType) -> GeneratorPla
         | DataType::Array
         | DataType::Map
         | DataType::Object => GeneratorPlan::Constant(crate::core::Value::Null),
-        DataType::Custom(ref name) => {
+        DataType::Custom(name) => {
             unreachable!("custom type '{}' should be resolved before planning", name)
         }
     }
@@ -1464,7 +1464,7 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
         }) => 0,
         // BusinessHours with timezone_field depends on the timezone field
         Some(GeneratorSpec::BusinessHours {
-            timezone_field: Some(ref tz_f),
+            timezone_field: Some(tz_f),
             ..
         }) => {
             let tz_order = all_fields
@@ -1482,8 +1482,8 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
 /// Simple heuristic: look for field names from `all_fields` that appear in the expression.
 fn extract_dependencies(expr: &str, all_fields: &[Field]) -> Vec<String> {
     // Try AST-based extraction first (more accurate)
-    if let Ok(ast) = crate::gen::expr::parser::parse(expr) {
-        let refs = crate::gen::expr::ast::extract_field_refs(&ast);
+    if let Ok(ast) = crate::r#gen::expr::parser::parse(expr) {
+        let refs = crate::r#gen::expr::ast::extract_field_refs(&ast);
         let field_names: std::collections::HashSet<&str> =
             all_fields.iter().map(|f| f.name.as_str()).collect();
         return refs
@@ -1837,7 +1837,7 @@ fn resolve_step_to_i64(v: &crate::core::IntOrString) -> i64 {
     match v {
         crate::core::IntOrString::Int(n) => *n,
         crate::core::IntOrString::Str(s) => {
-            crate::gen::generators::event_stream::parse_duration_ms(s)
+            crate::r#gen::generators::event_stream::parse_duration_ms(s)
         }
     }
 }

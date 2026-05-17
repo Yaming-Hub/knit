@@ -298,8 +298,8 @@ fn format_count_spec(count: &crate::core::CountSpec) -> String {
     }
 }
 
-fn format_generator_spec(gen: &crate::core::GeneratorSpec) -> String {
-    match gen {
+fn format_generator_spec(r#gen: &crate::core::GeneratorSpec) -> String {
+    match r#gen {
         crate::core::GeneratorSpec::Distribution { spec } => format!("{}", spec.kind),
         crate::core::GeneratorSpec::Faker { method, .. } => format!("faker({})", method),
         crate::core::GeneratorSpec::Sequence { .. } => "sequence".to_string(),
@@ -736,11 +736,10 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
                 out.push_str(&format!("description = \"{}\"\n", toml_escape(desc)));
             }
             out.push_str(&format!("data_type = \"{:?}\"\n", field.data_type).to_lowercase());
-            if let Some(pk) = field.primary_key {
-                if pk {
+            if let Some(pk) = field.primary_key
+                && pk {
                     out.push_str("primary_key = true\n");
                 }
-            }
             if let Some(prec) = field.precision {
                 out.push_str(&format!("precision = {}\n", prec));
             }
@@ -748,8 +747,8 @@ fn serialize_model_to_toml(model: &DataModel) -> Result<String> {
                 out.push_str("actor_column = true\n");
             }
             // Serialize generator if present
-            if let Some(gen) = &field.generator {
-                let gen_val = toml::Value::try_from(gen);
+            if let Some(r#gen) = &field.generator {
+                let gen_val = toml::Value::try_from(r#gen);
                 if let Ok(val) = gen_val {
                     let gen_str = toml::to_string_pretty(&val)?;
                     // Indent under [entities.fields.generator]
@@ -919,8 +918,8 @@ fn count_nullable(fields: &[Field]) -> usize {
 }
 
 fn collect_generator_usage(field: &Field, usage: &mut BTreeMap<String, usize>) {
-    if let Some(ref gen) = field.generator {
-        *usage.entry(gen.type_name().to_string()).or_insert(0) += 1;
+    if let Some(ref r#gen) = field.generator {
+        *usage.entry(r#gen.type_name().to_string()).or_insert(0) += 1;
     }
     for sub in &field.fields {
         collect_generator_usage(sub, usage);
@@ -1016,9 +1015,9 @@ pub fn run_stats(path: &str, json: bool) -> Result<()> {
         println!("{}", "Generators".bold().underline());
         let mut sorted: Vec<_> = stats.generator_usage.iter().collect();
         sorted.sort_by(|a, b| b.1.cmp(a.1));
-        for (gen, count) in sorted {
+        for (r#gen, count) in sorted {
             let pct = (*count as f64 / stats.total_fields as f64) * 100.0;
-            println!("  {:15} {:>4} ({:.0}%)", gen, count, pct);
+            println!("  {:15} {:>4} ({:.0}%)", r#gen, count, pct);
         }
         println!();
     }
@@ -1158,14 +1157,13 @@ pub fn merge_models(base: &DataModel, overlay: &DataModel) -> (DataModel, MergeR
         if existing_rels.contains(&rel.name) {
             // Same name exists — check if semantics differ.
             let base_rel = result.relationships.iter().find(|r| r.name == rel.name);
-            if let Some(br) = base_rel {
-                if br.from != rel.from || br.to != rel.to || br.foreign_key != rel.foreign_key {
+            if let Some(br) = base_rel
+                && (br.from != rel.from || br.to != rel.to || br.foreign_key != rel.foreign_key) {
                     report.warnings.push(format!(
                         "relationship `{}`: exists in both with different endpoints, keeping base version",
                         rel.name
                     ));
                 }
-            }
         } else {
             result.relationships.push(rel.clone());
             report.relationships_added += 1;
@@ -2093,8 +2091,8 @@ fn rename_generator_refs(
     field_renames: &BTreeMap<(String, String), String>,
     updates: &mut usize,
 ) {
-    if let Some(ref mut gen) = field.generator {
-        rename_generator_spec(gen, owner_entity, entity_renames, field_renames, updates);
+    if let Some(ref mut r#gen) = field.generator {
+        rename_generator_spec(r#gen, owner_entity, entity_renames, field_renames, updates);
     }
     for child in &mut field.fields {
         rename_generator_refs(child, owner_entity, entity_renames, field_renames, updates);
@@ -2103,7 +2101,7 @@ fn rename_generator_refs(
 
 /// Rename references within a single GeneratorSpec.
 fn rename_generator_spec(
-    gen: &mut crate::core::GeneratorSpec,
+    r#gen: &mut crate::core::GeneratorSpec,
     owner_entity: &str,
     entity_renames: &BTreeMap<String, String>,
     field_renames: &BTreeMap<(String, String), String>,
@@ -2118,7 +2116,7 @@ fn rename_generator_spec(
         }
     };
 
-    match gen {
+    match r#gen {
         GeneratorSpec::Lookup { entity, field } => {
             let orig_entity = entity.clone();
             if let Some(new) = entity_renames.get(entity.as_str()) {
@@ -2134,7 +2132,7 @@ fn rename_generator_spec(
             }
         }
         GeneratorSpec::ActorTemporal {
-            temporal_after: Some(ref mut ta),
+            temporal_after: Some(ta),
             ..
         } => {
             let orig = ta.entity.clone();
@@ -2153,7 +2151,7 @@ fn rename_generator_spec(
             rename_field(owner_entity, anchor, updates);
         }
         GeneratorSpec::RelationshipRef {
-            source_field: Some(ref mut sf),
+            source_field: Some(sf),
             ..
         } => {
             rename_field(owner_entity, sf, updates);
@@ -3117,14 +3115,13 @@ fn parse_create_table(
             table_pk_cols[0]
         );
     }
-    if let Some(first_pk) = table_pk_cols.first() {
-        if let Some(f) = fields
+    if let Some(first_pk) = table_pk_cols.first()
+        && let Some(f) = fields
             .iter_mut()
             .find(|f| f.name.eq_ignore_ascii_case(first_pk))
         {
             f.primary_key = Some(true);
         }
-    }
 
     entities.push(Entity {
         name: table_name,
@@ -3318,11 +3315,10 @@ fn parse_column_def(
 
     // Check for inline REFERENCES — use original tokens to preserve case.
     let original_constraint_str = tokens[constraint_start..].join(" ");
-    if constraint_str.contains("REFERENCES") {
-        if let Some(fk) = parse_inline_references(&original_constraint_str, table_name, &col_name) {
+    if constraint_str.contains("REFERENCES")
+        && let Some(fk) = parse_inline_references(&original_constraint_str, table_name, &col_name) {
             relationships.push(fk);
         }
-    }
 
     Some(Field {
         name: col_name,
@@ -3903,11 +3899,9 @@ fn arrow_type_compatible(
             arrow::datatypes::DataType::Timestamp(unit_a, _),
             arrow::datatypes::DataType::Timestamp(unit_e, _),
         ) = (actual, exp)
-        {
-            if unit_a == unit_e {
+            && unit_a == unit_e {
                 return true;
             }
-        }
     }
     false
 }
@@ -4778,12 +4772,12 @@ pub fn run_sample(
         .map(|(k, v)| (k.clone(), super::generate::value_to_string(v)))
         .collect();
     let mut engine =
-        crate::gen::GenerationEngine::with_batch_size(rows as usize).with_params(gen_params);
+        crate::r#gen::GenerationEngine::with_batch_size(rows as usize).with_params(gen_params);
     engine.build_graphs(&plan);
 
     // Build actor pool if needed
     if !plan.actor_pool.pools.is_empty() {
-        let pool = crate::gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
+        let pool = crate::r#gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
         engine = engine.with_actor_pool(std::sync::Arc::new(pool));
     }
 
@@ -4966,12 +4960,12 @@ pub fn run_test(
         .collect();
     let batch_size = rows as usize;
     let mut engine =
-        crate::gen::GenerationEngine::with_batch_size(batch_size).with_params(gen_params);
+        crate::r#gen::GenerationEngine::with_batch_size(batch_size).with_params(gen_params);
     engine.build_graphs(&plan);
 
     // Build actor pool if needed
     if !plan.actor_pool.pools.is_empty() {
-        let pool = crate::gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
+        let pool = crate::r#gen::ActorPool::from_plan(&plan.actor_pool, model.seed);
         engine = engine.with_actor_pool(std::sync::Arc::new(pool));
     }
 
@@ -4994,7 +4988,7 @@ pub fn run_test(
                 .append(true)
                 .open(&csv_path)
                 .map_err(|e| {
-                    crate::gen::GenError::Generation(format!(
+                    crate::r#gen::GenError::Generation(format!(
                         "failed to open {}: {}",
                         csv_path.display(),
                         e
@@ -5010,7 +5004,7 @@ pub fn run_test(
                 )
                 .build(file_handle);
             writer.write(&batch).map_err(|e| {
-                crate::gen::GenError::Generation(format!(
+                crate::r#gen::GenError::Generation(format!(
                     "failed to write CSV for '{}': {}",
                     entity_name, e
                 ))

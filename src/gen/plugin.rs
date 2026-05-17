@@ -9,8 +9,8 @@
 //!
 //! ```no_run
 //! use std::collections::BTreeMap;
-//! use knit::gen::plugin::{registry, GeneratorPlugin};
-//! use knit::gen::traits::FieldGenerator;
+//! use knit::r#gen::plugin::{registry, GeneratorPlugin};
+//! use knit::r#gen::traits::FieldGenerator;
 //!
 //! struct MyPlugin;
 //! impl GeneratorPlugin for MyPlugin {
@@ -29,7 +29,7 @@
 use std::collections::BTreeMap;
 use std::sync::{OnceLock, RwLock};
 
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::traits::FieldGenerator;
 
 /// A trait for custom generator plugins that can be registered at runtime.
 ///
@@ -131,7 +131,7 @@ mod tests {
     use rand::RngCore;
     use std::sync::Arc;
 
-    use crate::gen::context::GenContext;
+    use crate::r#gen::context::GenContext;
 
     /// A trivial generator that always returns 42.
     struct FortyTwoGenerator;
@@ -201,8 +201,8 @@ mod tests {
         let reg = Registry::new();
         reg.register(Box::new(TestPlugin));
 
-        let gen = reg.find("forty_two").unwrap().unwrap();
-        assert_eq!(gen.output_type(), DataType::Int64);
+        let r#gen = reg.find("forty_two").unwrap().unwrap();
+        assert_eq!(r#gen.output_type(), DataType::Int64);
     }
 
     #[test]

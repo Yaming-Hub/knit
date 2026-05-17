@@ -91,9 +91,9 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100_000, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
 
         let sum: f64 = f64_arr.values().iter().sum();
@@ -129,9 +129,9 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10_000, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
 
         for v in f64_arr.values().iter() {
@@ -148,9 +148,9 @@ mod tests {
             step: 3,
             jitter_ms: None,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 5, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 5, &ctx);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         let expected: Vec<i64> = vec![10, 13, 16, 19, 22];
@@ -165,10 +165,10 @@ mod tests {
             step: 1,
             jitter_ms: None,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
         let ctx = GenContext::new(map, 100, 1, 2, "test");
-        let arr = gen.generate(&mut make_rng(), 5, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 5, &ctx);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         let expected: Vec<i64> = vec![100, 101, 102, 103, 104];
@@ -181,9 +181,9 @@ mod tests {
     #[test]
     fn constant_produces_identical_values() {
         let plan = GeneratorPlan::Constant(Value::Int(42));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
 
         for v in i64_arr.values().iter() {
@@ -196,9 +196,9 @@ mod tests {
     #[test]
     fn uuid_format() {
         let plan = GeneratorPlan::Uuid;
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         for i in 0..str_arr.len() {
@@ -212,9 +212,9 @@ mod tests {
     #[test]
     fn uuid_uniqueness() {
         let plan = GeneratorPlan::Uuid;
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10_000, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
 
         let mut set = std::collections::HashSet::new();
@@ -240,11 +240,11 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
 
-        let a = gen.generate(&mut make_rng(), 1000, &ctx);
-        let b = gen.generate(&mut make_rng(), 1000, &ctx);
+        let a = r#gen.generate(&mut make_rng(), 1000, &ctx);
+        let b = r#gen.generate(&mut make_rng(), 1000, &ctx);
 
         let a_f = a.as_any().downcast_ref::<Float64Array>().unwrap();
         let b_f = b.as_any().downcast_ref::<Float64Array>().unwrap();
@@ -256,9 +256,9 @@ mod tests {
     #[test]
     fn null_mask_probability() {
         let plan = GeneratorPlan::Constant(Value::Int(1));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10_000, &ctx);
 
         let null_plan = NullPlan::Probability(0.3);
         let masked = apply_null_mask(arr, &null_plan, &mut make_rng(), 10_000).unwrap();
@@ -271,9 +271,9 @@ mod tests {
     #[test]
     fn null_mask_pattern() {
         let plan = GeneratorPlan::Constant(Value::Int(1));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 20, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 20, &ctx);
 
         let null_plan = NullPlan::Pattern { every_n: 5 };
         let masked = apply_null_mask(arr, &null_plan, &mut make_rng(), 20).unwrap();
@@ -337,9 +337,9 @@ mod tests {
             clamp_max: Some(200.0),
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100_000, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
 
         for v in f64_arr.values().iter() {
@@ -364,9 +364,9 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 1000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 1000, &ctx);
         assert_eq!(*arr.data_type(), DataType::Int64);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         // Poisson(5) should have mean ≈ 5
@@ -387,9 +387,9 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10_000, &ctx);
         assert_eq!(*arr.data_type(), DataType::Int64);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         // Values should only be 0 or 1
@@ -414,9 +414,9 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 1000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 1000, &ctx);
         assert_eq!(*arr.data_type(), DataType::Int64);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for v in i64_arr.values().iter() {
@@ -437,9 +437,9 @@ mod tests {
             clamp_max: None,
             round: false,
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 1000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 1000, &ctx);
         assert_eq!(*arr.data_type(), DataType::Int64);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for v in i64_arr.values().iter() {
@@ -469,9 +469,9 @@ mod tests {
             ],
             cumulative_weights: vec![1.0 / 3.0, 2.0 / 3.0, 1.0],
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 1000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 1000, &ctx);
         assert_eq!(*arr.data_type(), DataType::Utf8);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
@@ -500,9 +500,9 @@ mod tests {
             ],
             cumulative_weights: vec![1.0 / 3.0, 2.0 / 3.0, 1.0],
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 1000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 1000, &ctx);
         assert_eq!(*arr.data_type(), DataType::Int64);
         let i64_arr = arr.as_any().downcast_ref::<Int64Array>().unwrap();
         for v in i64_arr.values().iter() {
@@ -527,9 +527,9 @@ mod tests {
             ],
             cumulative_weights: vec![0.9, 1.0],
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10_000, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10_000, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         let common_count = (0..str_arr.len())
             .filter(|i| str_arr.value(*i) == "common")
@@ -545,9 +545,9 @@ mod tests {
         let plan = GeneratorPlan::Pattern {
             pattern: "#####".into(),
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
             let s = str_arr.value(i);
@@ -564,9 +564,9 @@ mod tests {
         let plan = GeneratorPlan::Pattern {
             pattern: "???".into(),
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
             let s = str_arr.value(i);
@@ -583,9 +583,9 @@ mod tests {
         let plan = GeneratorPlan::Pattern {
             pattern: "ID-###-??".into(),
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 50, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 50, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
             let s = str_arr.value(i);
@@ -604,9 +604,9 @@ mod tests {
             locale: "en_US".into(),
             args: vec![],
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         assert_eq!(*arr.data_type(), DataType::Utf8);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
@@ -622,9 +622,9 @@ mod tests {
             locale: "en_US".into(),
             args: vec![],
         };
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
             let s = str_arr.value(i);
@@ -637,9 +637,9 @@ mod tests {
     #[test]
     fn constant_string() {
         let plan = GeneratorPlan::Constant(Value::String("hello".into()));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..str_arr.len() {
             assert_eq!(str_arr.value(i), "hello");
@@ -649,9 +649,9 @@ mod tests {
     #[test]
     fn constant_float() {
         let plan = GeneratorPlan::Constant(Value::Float(1.234));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10, &ctx);
         let f64_arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
         for v in f64_arr.values().iter() {
             assert_eq!(*v, 1.234);
@@ -661,9 +661,9 @@ mod tests {
     #[test]
     fn constant_bool() {
         let plan = GeneratorPlan::Constant(Value::Bool(true));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10, &ctx);
         let bool_arr = arr.as_any().downcast_ref::<BooleanArray>().unwrap();
         for i in 0..bool_arr.len() {
             assert!(bool_arr.value(i));
@@ -673,9 +673,9 @@ mod tests {
     #[test]
     fn constant_null() {
         let plan = GeneratorPlan::Constant(Value::Null);
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 10, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 10, &ctx);
         assert_eq!(*arr.data_type(), DataType::Null);
         assert_eq!(arr.len(), 10);
     }
@@ -685,9 +685,9 @@ mod tests {
     #[test]
     fn null_mask_never() {
         let plan = GeneratorPlan::Constant(Value::Int(1));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let masked = apply_null_mask(arr, &NullPlan::Never, &mut make_rng(), 100).unwrap();
         assert_eq!(masked.null_count(), 0);
     }
@@ -695,9 +695,9 @@ mod tests {
     #[test]
     fn null_mask_always() {
         let plan = GeneratorPlan::Constant(Value::Int(1));
-        let gen = create_generator(&plan);
+        let r#gen = create_generator(&plan);
         let ctx = make_ctx();
-        let arr = gen.generate(&mut make_rng(), 100, &ctx);
+        let arr = r#gen.generate(&mut make_rng(), 100, &ctx);
         let masked = apply_null_mask(arr, &NullPlan::Always, &mut make_rng(), 100).unwrap();
         // NullPlan::Always produces a NullArray (DataType::Null)
         assert_eq!(*masked.data_type(), DataType::Null);

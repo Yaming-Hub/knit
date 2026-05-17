@@ -160,8 +160,8 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
     }
 
     // Try date
-    if let Some((fmt, rate)) = detect_date_format(&non_null) {
-        if rate >= 0.90 {
+    if let Some((fmt, rate)) = detect_date_format(&non_null)
+        && rate >= 0.90 {
             return TypeInference {
                 inferred_type: InferredType::Date(fmt.clone()),
                 confidence: rate,
@@ -169,7 +169,6 @@ pub fn infer_type(values: &[Option<&str>], categorical_threshold: f64) -> TypeIn
                 date_format: Some(fmt),
             };
         }
-    }
 
     // Check categorical (low cardinality), but only if no strong semantic pattern was detected.
     // Only high-specificity patterns (Email, UUID, URL, HexString, Date) gate out categorical.

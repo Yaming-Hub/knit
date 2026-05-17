@@ -13,8 +13,8 @@ use std::sync::Arc;
 use arrow::array::{ArrayRef, StringArray};
 use rand::RngCore;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 /// Expansion strategy when dictionary entries are exhausted.
 #[derive(Debug, Clone, PartialEq)]
@@ -189,10 +189,10 @@ mod tests {
     #[test]
     fn sample_strategy_picks_from_entries() {
         let entries = vec!["alpha".into(), "beta".into(), "gamma".into()];
-        let gen = DictionaryGenerator::new(entries.clone(), "sample".into());
+        let r#gen = DictionaryGenerator::new(entries.clone(), "sample".into());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 10);
         for i in 0..10 {
@@ -207,9 +207,9 @@ mod tests {
             "Pro Cotton Shoes".into(),
             "Slim Rubber Lamp".into(),
         ];
-        let gen = DictionaryGenerator::new(entries, "combinatorial".into());
-        assert!(gen.token_pools.is_some());
-        let pools = gen.token_pools.as_ref().unwrap();
+        let r#gen = DictionaryGenerator::new(entries, "combinatorial".into());
+        assert!(r#gen.token_pools.is_some());
+        let pools = r#gen.token_pools.as_ref().unwrap();
         assert_eq!(pools.len(), 3);
         assert!(pools[0].contains(&"Ultra".to_string()));
         assert!(pools[1].contains(&"Cotton".to_string()));
@@ -217,7 +217,7 @@ mod tests {
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 5);
         // Each value should have 3 words
@@ -230,10 +230,10 @@ mod tests {
     #[test]
     fn suffix_strategy_appends_number() {
         let entries = vec!["Widget".into(), "Gadget".into()];
-        let gen = DictionaryGenerator::new(entries, "suffix".into());
+        let r#gen = DictionaryGenerator::new(entries, "suffix".into());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         assert_eq!(str_arr.len(), 5);
         // First 2 should be plain (index < entries.len())
@@ -250,10 +250,10 @@ mod tests {
 
     #[test]
     fn empty_dictionary_produces_empty_strings() {
-        let gen = DictionaryGenerator::new(vec![], "sample".into());
+        let r#gen = DictionaryGenerator::new(vec![], "sample".into());
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = test_ctx();
-        let arr = gen.generate(&mut rng, 3, &ctx);
+        let arr = r#gen.generate(&mut rng, 3, &ctx);
         let str_arr = arr.as_any().downcast_ref::<StringArray>().unwrap();
         for i in 0..3 {
             assert_eq!(str_arr.value(i), "");

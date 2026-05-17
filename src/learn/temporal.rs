@@ -130,8 +130,8 @@ pub fn detect_temporal_pattern(timestamps_secs: &[f64]) -> Option<TemporalPatter
     }
 
     // Periodicity detection via FFT
-    if let Some(period) = detect_period_fft(&deltas) {
-        if period > 0.0 {
+    if let Some(period) = detect_period_fft(&deltas)
+        && period > 0.0 {
             let schedule = classify_schedule(period);
             if let Some(kind) = schedule {
                 return Some(TemporalPatternSpec {
@@ -148,18 +148,16 @@ pub fn detect_temporal_pattern(timestamps_secs: &[f64]) -> Option<TemporalPatter
                 confidence: 0.6,
             });
         }
-    }
 
     // Trend detection via linear regression on event rate
-    if let Some(slope) = detect_trend(&ts) {
-        if slope.abs() > 1e-12 {
+    if let Some(slope) = detect_trend(&ts)
+        && slope.abs() > 1e-12 {
             return Some(TemporalPatternSpec {
                 pattern: TemporalPattern::Trending { slope },
                 generator_expr: format!("time_series(trend={})", slope),
                 confidence: 0.5,
             });
         }
-    }
 
     Some(TemporalPatternSpec {
         pattern: TemporalPattern::Irregular,

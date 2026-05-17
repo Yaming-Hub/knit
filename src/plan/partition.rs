@@ -64,7 +64,7 @@ pub fn resolve_count(count: &CountSpec, params: &BTreeMap<String, Value>) -> Res
 /// Only param refs, literals, and pure arithmetic/math functions are allowed.
 /// Field refs and random/row functions are rejected.
 fn evaluate_count_expr(expr: &str, params: &BTreeMap<String, Value>) -> Result<u64, String> {
-    use crate::gen::expr::{eval, parser};
+    use crate::r#gen::expr::{eval, parser};
 
     let ast =
         parser::parse(expr).map_err(|e| format!("count expression parse error: {}", e.message))?;
@@ -112,8 +112,8 @@ fn evaluate_count_expr(expr: &str, params: &BTreeMap<String, Value>) -> Result<u
 }
 
 /// Validate that a count expression AST only contains allowed constructs.
-pub fn validate_count_ast(expr: &crate::gen::expr::ast::Expr) -> Result<(), String> {
-    use crate::gen::expr::ast::Expr;
+pub fn validate_count_ast(expr: &crate::r#gen::expr::ast::Expr) -> Result<(), String> {
+    use crate::r#gen::expr::ast::Expr;
     match expr {
         Expr::Literal(_) | Expr::ParamRef(_) => Ok(()),
         Expr::FieldRef(name) => Err(format!(

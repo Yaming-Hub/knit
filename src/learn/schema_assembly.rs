@@ -316,8 +316,8 @@ fn build_entity(
         };
 
         // Row-type conditional generation: wrap generator with discriminator check
-        if let (Some(ref disc_col), Some(ref companion)) = (&discriminator_col, &table.companion) {
-            if let Some(row_type) = companion.row_type_for_column(&col.name) {
+        if let (Some(disc_col), Some(companion)) = (&discriminator_col, &table.companion)
+            && let Some(row_type) = companion.row_type_for_column(&col.name) {
                 // This column should only have values when discriminator == row_type.
                 // Wrap the learned generator in a Conditional.
                 generator = GeneratorSpec::Conditional {
@@ -351,7 +351,6 @@ fn build_entity(
                 });
                 continue;
             }
-        }
 
         // Infer precision for float columns from source data
         let precision = if data_type == crate::core::DataType::Float {
@@ -447,11 +446,10 @@ fn build_entity(
 
     // Also mark explicitly flagged actor columns (from --actor-column)
     for col in &table.columns {
-        if col.is_actor_column {
-            if let Some(field) = fields.iter_mut().find(|f| f.name == col.name) {
+        if col.is_actor_column
+            && let Some(field) = fields.iter_mut().find(|f| f.name == col.name) {
                 field.actor_column = true;
             }
-        }
     }
 
     // Compute table-level statistics from learned data
@@ -680,13 +678,11 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
 
     // Check if a PK column is actor-like (e.g., user_id as PK)
     for (col_name, score) in actor_scores {
-        if *score >= 0.9 {
-            if let Some(field) = fields.iter().find(|f| &f.name == col_name) {
-                if field.primary_key == Some(true) {
+        if *score >= 0.9
+            && let Some(field) = fields.iter().find(|f| &f.name == col_name)
+                && field.primary_key == Some(true) {
                     return true;
                 }
-            }
-        }
     }
 
     false
@@ -694,10 +690,10 @@ fn is_actor_entity(table_name: &str, actor_scores: &[(String, f64)], fields: &[F
 
 /// Build a [`GeneratorSpec`] for a column based on inferred properties.
 fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> GeneratorSpec {
-    let gen = build_generator_inner(col, fk);
+    let r#gen = build_generator_inner(col, fk);
     debug!(
         column = %col.name,
-        generator = gen.type_name(),
+        generator = r#gen.type_name(),
         has_fk = fk.is_some(),
         is_pk = col.is_primary_key,
         has_temporal = col.temporal_pattern.is_some(),
@@ -716,7 +712,7 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
             .builder(crate::decision::DecisionKind::GeneratorSelection)
             .phase("learn")
             .column(&col.name)
-            .chosen(gen.type_name().to_string())
+            .chosen(r#gen.type_name().to_string())
             .reason(format!(
                 "fk={}, pk={}, temporal={}, distribution={}, categorical={}, type={:?}",
                 fk.is_some(),
@@ -729,7 +725,7 @@ fn build_generator(col: &ColumnAnalysis, fk: Option<&RelationshipCandidate>) -> 
             .confidence(conf)
             .record();
     }
-    gen
+    r#gen
 }
 
 fn build_generator_inner(
@@ -1983,8 +1979,8 @@ mod tests {
             stats: None,
             traits: None,
         };
-        let gen = build_generator(&col, None);
-        assert!(matches!(gen, GeneratorSpec::UuidGen { version: 4 }));
+        let r#gen = build_generator(&col, None);
+        assert!(matches!(r#gen, GeneratorSpec::UuidGen { version: 4 }));
     }
 
     #[test]
@@ -2009,8 +2005,8 @@ mod tests {
             stats: None,
             traits: None,
         };
-        let gen = build_generator(&col, None);
-        assert!(matches!(gen, GeneratorSpec::OneOf { .. }));
+        let r#gen = build_generator(&col, None);
+        assert!(matches!(r#gen, GeneratorSpec::OneOf { .. }));
     }
 
     #[test]
@@ -2035,11 +2031,11 @@ mod tests {
             stats: None,
             traits: None,
         };
-        let gen = build_generator(&col, None);
+        let r#gen = build_generator(&col, None);
         assert!(
-            matches!(gen, GeneratorSpec::Faker { ref method, .. } if method == "email"),
+            matches!(r#gen, GeneratorSpec::Faker { ref method, .. } if method == "email"),
             "expected Faker(email), got {:?}",
-            gen,
+            r#gen,
         );
     }
 
@@ -2065,11 +2061,11 @@ mod tests {
             stats: None,
             traits: None,
         };
-        let gen = build_generator(&col, None);
+        let r#gen = build_generator(&col, None);
         assert!(
-            matches!(gen, GeneratorSpec::Faker { ref method, .. } if method == "phone"),
+            matches!(r#gen, GeneratorSpec::Faker { ref method, .. } if method == "phone"),
             "expected Faker(phone), got {:?}",
-            gen,
+            r#gen,
         );
     }
 

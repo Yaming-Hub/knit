@@ -20,8 +20,8 @@ use rand::distr::{Distribution, Uniform};
 use rand::RngCore;
 use rand_distr::Normal;
 
-use crate::gen::context::GenContext;
-use crate::gen::traits::FieldGenerator;
+use crate::r#gen::context::GenContext;
+use crate::r#gen::traits::FieldGenerator;
 
 // ── TemporalUnit ────────────────────────────────────────────────────
 
@@ -551,18 +551,14 @@ impl BusinessHoursGenerator {
 
     /// Resolve timezone for a given row from batch_columns, falling back to
     /// the fixed timezone or UTC.
-    fn resolve_tz(&self, row_idx: usize, ctx: &crate::gen::context::GenContext) -> chrono_tz::Tz {
-        if let Some(ref tz_field) = self.timezone_field {
-            if let Some(col) = ctx.batch_columns.get(tz_field) {
-                if let Some(arr) = col.as_any().downcast_ref::<arrow::array::StringArray>() {
-                    if row_idx < arr.len() && !arr.is_null(row_idx) {
-                        if let Ok(tz) = arr.value(row_idx).parse::<chrono_tz::Tz>() {
+    fn resolve_tz(&self, row_idx: usize, ctx: &crate::r#gen::context::GenContext) -> chrono_tz::Tz {
+        if let Some(ref tz_field) = self.timezone_field
+            && let Some(col) = ctx.batch_columns.get(tz_field)
+                && let Some(arr) = col.as_any().downcast_ref::<arrow::array::StringArray>()
+                    && row_idx < arr.len() && !arr.is_null(row_idx)
+                        && let Ok(tz) = arr.value(row_idx).parse::<chrono_tz::Tz>() {
                             return tz;
                         }
-                    }
-                }
-            }
-        }
         self.timezone.unwrap_or(chrono_tz::UTC)
     }
 }
@@ -786,10 +782,10 @@ mod tests {
         params.insert("offset_mean".into(), 10.0);
         params.insert("offset_std".into(), 2.0);
         params.insert("unit".into(), 0.0); // seconds
-        let gen = RelativeGenerator::new("created_at".into(), &params, &BTreeMap::new());
+        let r#gen = RelativeGenerator::new("created_at".into(), &params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -806,11 +802,11 @@ mod tests {
         params.insert("interval_ms".into(), 1000.0);
         params.insert("trend_slope".into(), 0.0);
         params.insert("noise_std".into(), 0.0);
-        let gen = TimeSeriesGenerator::new(&params);
+        let r#gen = TimeSeriesGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -829,11 +825,11 @@ mod tests {
         params.insert("start_hour".into(), 9.0);
         params.insert("end_hour".into(), 17.0);
         params.insert("days_mask".into(), 0x1F as f64);
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -856,12 +852,12 @@ mod tests {
         params.insert("start_hour".into(), 30.0);
         params.insert("end_hour".into(), 50.0);
         params.insert("days_mask".into(), 0x7F as f64);
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         // Should not panic — hours are clamped
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         assert_eq!(arr.len(), 10);
     }
 
@@ -873,11 +869,11 @@ mod tests {
         params.insert("start_hour".into(), 20.0);
         params.insert("end_hour".into(), 24.0);
         params.insert("days_mask".into(), 0x7F as f64);
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -903,11 +899,11 @@ mod tests {
         params.insert("offset_mean".into(), 5.0);
         params.insert("offset_std".into(), 0.0); // deterministic
         params.insert("unit".into(), 0.0); // seconds
-        let gen = RelativeGenerator::new("nonexistent".into(), &params, &BTreeMap::new());
+        let r#gen = RelativeGenerator::new("nonexistent".into(), &params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -939,10 +935,10 @@ mod tests {
         params.insert("offset_mean".into(), 1.0);
         params.insert("offset_std".into(), 0.0);
         params.insert("unit".into(), 3.0); // days
-        let gen = RelativeGenerator::new("ts".into(), &params, &BTreeMap::new());
+        let r#gen = RelativeGenerator::new("ts".into(), &params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -962,9 +958,9 @@ mod tests {
     #[test]
     fn relative_output_type() {
         let params = BTreeMap::new();
-        let gen = RelativeGenerator::new("x".into(), &params, &BTreeMap::new());
+        let r#gen = RelativeGenerator::new("x".into(), &params, &BTreeMap::new());
         assert_eq!(
-            gen.output_type(),
+            r#gen.output_type(),
             DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         );
     }
@@ -975,7 +971,7 @@ mod tests {
         let mut params = BTreeMap::new();
         params.insert("offset_mode".into(), 2.0);
         params.insert("constant_ms".into(), 86_400_000.0); // 1 day in ms
-        let gen = RelativeGenerator::new("ts".into(), &params, &BTreeMap::new());
+        let r#gen = RelativeGenerator::new("ts".into(), &params, &BTreeMap::new());
 
         let base_ms = 1_700_000_000_000i64;
         let mut cols = HashMap::new();
@@ -987,7 +983,7 @@ mod tests {
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 5, &ctx);
+        let arr = r#gen.generate(&mut rng, 5, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1012,7 +1008,7 @@ mod tests {
         let mut string_params = BTreeMap::new();
         string_params.insert("distribution".into(), "log_normal".into());
 
-        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+        let r#gen = RelativeGenerator::new("ts".into(), &params, &string_params);
 
         let base_ms = 1_000_000i64;
         let mut cols = HashMap::new();
@@ -1024,7 +1020,7 @@ mod tests {
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1052,7 +1048,7 @@ mod tests {
         let mut string_params = BTreeMap::new();
         string_params.insert("distribution".into(), "normal".into());
 
-        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+        let r#gen = RelativeGenerator::new("ts".into(), &params, &string_params);
 
         let base_ms = 0i64;
         let mut cols = HashMap::new();
@@ -1064,7 +1060,7 @@ mod tests {
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 200, &ctx);
+        let arr = r#gen.generate(&mut rng, 200, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1090,7 +1086,7 @@ mod tests {
         let mut string_params = BTreeMap::new();
         string_params.insert("distribution".into(), "uniform".into());
 
-        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+        let r#gen = RelativeGenerator::new("ts".into(), &params, &string_params);
 
         let base_ms = 0i64;
         let mut cols = HashMap::new();
@@ -1102,7 +1098,7 @@ mod tests {
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1128,7 +1124,7 @@ mod tests {
         let mut string_params = BTreeMap::new();
         string_params.insert("distribution".into(), "exponential".into());
 
-        let gen = RelativeGenerator::new("ts".into(), &params, &string_params);
+        let r#gen = RelativeGenerator::new("ts".into(), &params, &string_params);
 
         let base_ms = 1_000_000i64;
         let mut cols = HashMap::new();
@@ -1140,7 +1136,7 @@ mod tests {
         let ctx = GenContext::new(cols, 0, 0, 1, "test");
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr = gen.generate(&mut rng, 50, &ctx);
+        let arr = r#gen.generate(&mut rng, 50, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1161,11 +1157,11 @@ mod tests {
         params.insert("interval_ms".into(), 1000.0);
         params.insert("trend_slope".into(), 500.0); // 500ms added per row
         params.insert("noise_std".into(), 0.0);
-        let gen = TimeSeriesGenerator::new(&params);
+        let r#gen = TimeSeriesGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1193,11 +1189,11 @@ mod tests {
         params.insert("s0_period".into(), 10_000.0);
         params.insert("s0_amplitude".into(), 2.0);
         params.insert("s0_phase".into(), 0.0);
-        let gen = TimeSeriesGenerator::new(&params);
+        let r#gen = TimeSeriesGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 20, &ctx);
+        let arr = r#gen.generate(&mut rng, 20, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1224,11 +1220,11 @@ mod tests {
         params.insert("interval_ms".into(), 10_000.0);
         params.insert("trend_slope".into(), 0.0);
         params.insert("noise_std".into(), 1000.0); // 1 second noise std
-        let gen = TimeSeriesGenerator::new(&params);
+        let r#gen = TimeSeriesGenerator::new(&params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 100, &ctx);
+        let arr = r#gen.generate(&mut rng, 100, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1258,14 +1254,14 @@ mod tests {
         params.insert("interval_ms".into(), 1000.0);
         params.insert("trend_slope".into(), 0.0);
         params.insert("noise_std".into(), 0.0);
-        let gen = TimeSeriesGenerator::new(&params);
+        let r#gen = TimeSeriesGenerator::new(&params);
 
         let map: &'static HashMap<String, ArrayRef> = Box::leak(Box::new(HashMap::new()));
 
         // Partition 0: rows 0-4
         let ctx0 = GenContext::new(map, 0, 0, 1, "test");
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let arr0 = gen.generate(&mut rng, 5, &ctx0);
+        let arr0 = r#gen.generate(&mut rng, 5, &ctx0);
         let ts0 = arr0
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1274,7 +1270,7 @@ mod tests {
         // Partition 1: rows 5-9 (row_offset=5)
         let ctx1 = GenContext::new(map, 5, 0, 1, "test");
         let mut rng2 = ChaCha8Rng::seed_from_u64(99);
-        let arr1 = gen.generate(&mut rng2, 5, &ctx1);
+        let arr1 = r#gen.generate(&mut rng2, 5, &ctx1);
         let ts1 = arr1
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1287,9 +1283,9 @@ mod tests {
     #[test]
     fn time_series_output_type() {
         let params = BTreeMap::new();
-        let gen = TimeSeriesGenerator::new(&params);
+        let r#gen = TimeSeriesGenerator::new(&params);
         assert_eq!(
-            gen.output_type(),
+            r#gen.output_type(),
             DataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         );
     }
@@ -1303,11 +1299,11 @@ mod tests {
         params.insert("start_hour".into(), 0.0);
         params.insert("end_hour".into(), 24.0);
         params.insert("days_mask".into(), 0x7F as f64);
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 7, &ctx);
+        let arr = r#gen.generate(&mut rng, 7, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1336,13 +1332,13 @@ mod tests {
         params.insert("start_hour".into(), 9.0);
         params.insert("end_hour".into(), 17.0);
         params.insert("days_mask".into(), 0x1F as f64);
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let ctx = empty_ctx();
         let mut rng1 = ChaCha8Rng::seed_from_u64(42);
-        let arr1 = gen.generate(&mut rng1, 20, &ctx);
+        let arr1 = r#gen.generate(&mut rng1, 20, &ctx);
         let mut rng2 = ChaCha8Rng::seed_from_u64(42);
-        let arr2 = gen.generate(&mut rng2, 20, &ctx);
+        let arr2 = r#gen.generate(&mut rng2, 20, &ctx);
 
         let ts1 = arr1
             .as_any()
@@ -1366,11 +1362,11 @@ mod tests {
         params.insert("start_hour".into(), 9.0);
         params.insert("end_hour".into(), 17.0);
         params.insert("days_mask".into(), 10.0); // bits 1 and 3 = Tue + Thu
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 20, &ctx);
+        let arr = r#gen.generate(&mut rng, 20, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1397,11 +1393,11 @@ mod tests {
         let mut string_params = BTreeMap::new();
         // Exclude Jan 2 and Jan 3
         string_params.insert("exclude_dates".into(), "2024-01-02,2024-01-03".into());
-        let gen = BusinessHoursGenerator::new(&params, &string_params);
+        let r#gen = BusinessHoursGenerator::new(&params, &string_params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1444,12 +1440,12 @@ mod tests {
             .timestamp_millis() as f64;
         params.insert("date_range_min_ms".into(), min_ms);
         params.insert("date_range_max_ms".into(), max_ms);
-        let gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
+        let r#gen = BusinessHoursGenerator::new(&params, &BTreeMap::new());
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
         // Generate more rows than days to force wrapping
-        let arr = gen.generate(&mut rng, 15, &ctx);
+        let arr = r#gen.generate(&mut rng, 15, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()
@@ -1477,11 +1473,11 @@ mod tests {
         params.insert("days_mask".into(), 31.0); // weekdays
         let mut string_params = BTreeMap::new();
         string_params.insert("timezone".into(), "America/New_York".into());
-        let gen = BusinessHoursGenerator::new(&params, &string_params);
+        let r#gen = BusinessHoursGenerator::new(&params, &string_params);
 
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let ctx = empty_ctx();
-        let arr = gen.generate(&mut rng, 10, &ctx);
+        let arr = r#gen.generate(&mut rng, 10, &ctx);
         let ts = arr
             .as_any()
             .downcast_ref::<TimestampMillisecondArray>()

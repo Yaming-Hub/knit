@@ -7,8 +7,8 @@
 //! ## Usage
 //!
 //! ```no_run
-//! # use knit::gen::graph::generate_graph;
-//! # fn example(graph_plan: &knit::plan::GraphPlan, actor_pool: &knit::gen::ActorPool) {
+//! # use knit::r#gen::graph::generate_graph;
+//! # fn example(graph_plan: &knit::plan::GraphPlan, actor_pool: &knit::r#gen::ActorPool) {
 //! let graph = generate_graph(graph_plan, actor_pool, 42);
 //! println!("generated {} edges", graph.edges.len());
 //! # }
@@ -20,7 +20,7 @@ use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-use crate::gen::ActorPool;
+use crate::r#gen::ActorPool;
 
 /// A directed edge between two actors.
 #[derive(Debug, Clone, PartialEq, Eq)]
