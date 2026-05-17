@@ -85,6 +85,7 @@ wasm-plugins = ["dep:wasmtime"]
 assert_cmd = "2.2"
 criterion = { version = "0.8", features = ["html_reports"] }
 predicates = "3.1"
+proptest = "1.11.0"
 
 [[bench]]
 name = "generation"
