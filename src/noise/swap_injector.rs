@@ -262,4 +262,106 @@ mod tests {
             .unwrap();
         assert_eq!(col.values(), &[1, 2, 3]);
     }
+
+    #[test]
+    fn single_row_batch_unchanged() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let batch = RecordBatch::try_new(
+            arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
+                "x",
+                DataType::Int64,
+                true,
+            )])
+            .into(),
+            vec![Arc::new(Int64Array::from(vec![7])) as Arc<dyn Array>],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = SwapInjector::new()
+            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .unwrap();
+
+        let col = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
+        assert_eq!(col.values(), &[7]);
+    }
+
+    #[test]
+    fn probability_zero_no_changes() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let batch = RecordBatch::try_new(
+            arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
+                "x",
+                DataType::Utf8,
+                true,
+            )])
+            .into(),
+            vec![Arc::new(StringArray::from(vec!["a", "b", "c", "d"])) as Arc<dyn Array>],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = SwapInjector::new()
+            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(0.0))
+            .unwrap();
+
+        let col = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        assert_eq!((0..col.len()).map(|i| col.value(i)).collect::<Vec<_>>(), vec!["a", "b", "c", "d"]);
+    }
+
+    #[test]
+    fn by_name_filter_only_swaps_target() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let schema = arrow::datatypes::Schema::new(vec![
+            arrow::datatypes::Field::new("target", DataType::Int64, true),
+            arrow::datatypes::Field::new("other", DataType::Utf8, true),
+        ]);
+        let batch = RecordBatch::try_new(
+            schema.into(),
+            vec![
+                Arc::new(Int64Array::from(vec![10, 20, 30, 40])) as Arc<dyn Array>,
+                Arc::new(StringArray::from(vec!["w", "x", "y", "z"])),
+            ],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = SwapInjector::new()
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default()
+                    .with_probability(1.0)
+                    .with_columns(vec!["target".to_string()]),
+            )
+            .unwrap();
+
+        let target = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
+        let other = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+
+        assert_ne!((0..target.len()).map(|i| target.value(i)).collect::<Vec<_>>(), vec![10, 20, 30, 40]);
+        assert_eq!((0..other.len()).map(|i| other.value(i)).collect::<Vec<_>>(), vec!["w", "x", "y", "z"]);
+    }
 }

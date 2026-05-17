@@ -374,4 +374,56 @@ mod tests {
         assert_eq!(col.value(1), 2000);
         assert_eq!(col.value(2), 3000);
     }
+
+    #[test]
+    fn non_timestamp_columns_unchanged() {
+        use rand::SeedableRng;
+        use rand::rngs::StdRng;
+
+        let schema = arrow::datatypes::Schema::new(vec![
+            arrow::datatypes::Field::new("count", DataType::Int64, true),
+            arrow::datatypes::Field::new("label", DataType::Utf8, true),
+        ]);
+        let batch = RecordBatch::try_new(
+            schema.into(),
+            vec![
+                Arc::new(Int64Array::from(vec![1, 2, 3])) as Arc<dyn Array>,
+                Arc::new(StringArray::from(vec!["a", "b", "c"])),
+            ],
+        )
+        .unwrap();
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let result = TemporalSpikeInjector::new()
+            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .unwrap();
+
+        let counts = result
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int64Array>()
+            .unwrap();
+        let labels = result
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+
+        assert_eq!(counts.values(), &[1, 2, 3]);
+        assert_eq!((0..labels.len()).map(|i| labels.value(i)).collect::<Vec<_>>(), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn with_spike_count_builder() {
+        let injector = TemporalSpikeInjector::new().with_spike_count(7);
+
+        assert_eq!(injector.spike_count, 7);
+    }
+
+    #[test]
+    fn with_spread_ms_builder() {
+        let injector = TemporalSpikeInjector::new().with_spread_ms(2_500.0);
+
+        assert_eq!(injector.spread_ms, 2_500.0);
+    }
 }

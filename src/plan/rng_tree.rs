@@ -127,4 +127,22 @@ mod tests {
         all_seeds.dedup();
         assert_eq!(all_seeds.len(), count, "all seeds should be unique");
     }
+
+    #[test]
+    fn derive_seed_deterministic() {
+        assert_eq!(derive_seed(123, b"field"), derive_seed(123, b"field"));
+    }
+
+    #[test]
+    fn derive_seed_different_keys_differ() {
+        assert_ne!(derive_seed(123, b"field_a"), derive_seed(123, b"field_b"));
+    }
+
+    #[test]
+    fn empty_entities_handled() {
+        let tree = build_rng_tree(999, &[]);
+
+        assert_eq!(tree.global_seed, 999);
+        assert!(tree.entity_nodes.is_empty());
+    }
 }
