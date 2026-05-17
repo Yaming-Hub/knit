@@ -1,0 +1,152 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Knit
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the form below so we can
+        reproduce and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+      placeholder: When I run `knit generate ...` with a blueprint containing ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: blueprint
+    attributes:
+      label: Minimal Blueprint
+      description: >-
+        Provide the smallest blueprint that reproduces the bug.
+        This will be automatically formatted as TOML.
+      render: toml
+      placeholder: |
+        blueprint_version = "1.0"
+
+        [model]
+        name = "repro"
+        seed = 42
+
+        [[entities]]
+        name = "example"
+        count = 10
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce the bug?
+      placeholder: |
+        1. Save the blueprint above as `repro.knit.toml`
+        2. Run `knit generate repro.knit.toml -o out/ --format csv`
+        3. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: >-
+        What actually happened? Include error messages, stack traces, or
+        unexpected output. Use `-v` for verbose logging.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: command
+    attributes:
+      label: CLI Command
+      description: Which `knit` subcommand were you running?
+      options:
+        - generate
+        - validate
+        - plan
+        - learn
+        - blueprint
+        - init
+        - inspect
+        - scale
+        - tokenize
+        - enrich
+        - model
+        - generators
+        - completions
+        - Other / not applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: format
+    attributes:
+      label: Output Format
+      description: Which output format were you using (if applicable)?
+      options:
+        - Not applicable
+        - Parquet
+        - CSV
+        - TSV
+        - JSON
+        - JSONL
+        - Arrow IPC
+        - Avro
+        - SQL
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Knit Version
+      description: "Output of `knit --version`"
+      placeholder: "knit 0.4.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux (x86_64)
+        - Linux (aarch64)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: rust-version
+    attributes:
+      label: Rust Version (if building from source)
+      description: "Output of `rustc --version`"
+      placeholder: "rustc 1.92.0 (… 2025-…)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: >-
+        Any other context, screenshots, or log output that might help.
+    validations:
+      required: false

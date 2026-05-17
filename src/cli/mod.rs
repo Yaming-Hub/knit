@@ -60,6 +60,10 @@ pub fn parse_dim_spec(s: &str) -> Result<(String, u64), String> {
     about,
     long_about = None,
 )]
+/// Top-level CLI application parsed by `clap`.
+///
+/// Contains the subcommand to execute and all global options
+/// (seed, format, compression, verbosity, etc.) that apply across commands.
 pub struct Cli {
     /// The subcommand to execute.
     #[command(subcommand)]

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/Yaming-Hub/knit/tree/main/docs/guide
+    about: Read the user guide before filing an issue
+  - name: Examples
+    url: https://github.com/Yaming-Hub/knit/tree/main/examples
+    about: Browse example blueprints for common patterns
