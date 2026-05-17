@@ -1,5 +1,8 @@
 # Knit — Design Document
 
+**Version:** 0.4.0
+**Status:** Implemented
+
 A high-performance Rust toolset for generating large synthetic datasets (100GB+ in hours).
 
 ## Table of Contents

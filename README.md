@@ -217,7 +217,7 @@ Knit is published as a single crate. Internally it is organized into modules:
 
 ## Examples
 
-The `examples/` directory contains 29 sample blueprints. Highlights:
+The `examples/` directory contains 32 sample blueprints. Highlights:
 
 - `ecommerce.knit.toml` — Users, products, orders, reviews with FK relationships
 - `ecommerce_behavioral.knit.toml` — Persona-driven purchasing: 4 customer
@@ -257,8 +257,8 @@ The `examples/` directory contains 29 sample blueprints. Highlights:
 Generate all examples:
 
 ```bash
-for schema in examples/*.knit.toml; do
-  knit generate "$schema" -o data/$(basename "$schema" .knit.toml) --format csv
+find examples -name '*.knit.toml' | while read schema; do
+  knit generate "$schema" -o "data/$(basename "$schema" .knit.toml)" --format csv
 done
 ```
 

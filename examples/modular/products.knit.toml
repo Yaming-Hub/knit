@@ -1,0 +1,49 @@
+# Reusable product catalog fragment.
+#
+# Include this in any schema that needs a products table:
+#   include = "products.knit.toml"
+
+[[entities]]
+name = "products"
+count = 200
+description = "Product catalog"
+
+[[entities.fields]]
+name = "product_id"
+data_type = "int"
+primary_key = true
+[entities.fields.generator]
+type = "sequence"
+
+[[entities.fields]]
+name = "name"
+data_type = "string"
+[entities.fields.generator]
+type = "faker"
+method = "product_name"
+
+[[entities.fields]]
+name = "price"
+data_type = "float"
+precision = 2
+[entities.fields.generator]
+type = "distribution"
+kind = "log_normal"
+[entities.fields.generator.params]
+mu = 3.5
+sigma = 0.8
+
+[[entities.fields]]
+name = "category"
+data_type = "string"
+[entities.fields.generator]
+type = "one_of"
+choices = [
+    { value = "Electronics", weight = 25 },
+    { value = "Clothing", weight = 20 },
+    { value = "Home & Garden", weight = 15 },
+    { value = "Books", weight = 15 },
+    { value = "Sports", weight = 10 },
+    { value = "Toys", weight = 8 },
+    { value = "Food", weight = 7 },
+]
