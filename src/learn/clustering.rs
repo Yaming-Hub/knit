@@ -612,6 +612,8 @@ mod tests {
         }
     }
 
+    // ─── profiles_to_features ───────────────────────────────────────────
+
     #[test]
     fn profiles_to_features_correct_dimensions() {
         let profiles = vec![
@@ -638,8 +640,40 @@ mod tests {
     }
 
     #[test]
+    fn profiles_to_features_empty() {
+        let (features, names) = profiles_to_features(&[]);
+        assert!(features.is_empty());
+        assert!(names.is_empty());
+    }
+
+    #[test]
+    fn profiles_to_features_single_profile() {
+        let profiles = vec![make_profile("a", 12, 3, 100, 45.0)];
+        let (features, names) = profiles_to_features(&profiles);
+        assert_eq!(features.len(), 1);
+        assert_eq!(names.len(), 33);
+        // Single profile: all features should be zero (no variance possible)
+        for val in &features[0] {
+            assert!(val.abs() < 1e-10, "single profile should be all zeros");
+        }
+    }
+
+    #[test]
+    fn profiles_to_features_names_correct() {
+        let profiles = vec![make_profile("a", 0, 0, 1, 1.0)];
+        let (_, names) = profiles_to_features(&profiles);
+        assert_eq!(names[0], "hour_00");
+        assert_eq!(names[23], "hour_23");
+        assert_eq!(names[24], "day_0");
+        assert_eq!(names[30], "day_6");
+        assert_eq!(names[31], "log_activity_count");
+        assert_eq!(names[32], "active_span_days");
+    }
+
+    // ─── kmeans ─────────────────────────────────────────────────────────
+
+    #[test]
     fn kmeans_basic_two_clusters() {
-        // Two obvious clusters: [0,0] area and [10,10] area
         let data = vec![
             vec![0.0, 0.0],
             vec![0.1, 0.1],
@@ -651,7 +685,6 @@ mod tests {
         let config = ClusteringConfig::default();
         let (assignments, _centroids) = kmeans(&data, 2, &config);
 
-        // Points 0-2 should be in one cluster, 3-5 in another
         assert_eq!(assignments[0], assignments[1]);
         assert_eq!(assignments[1], assignments[2]);
         assert_eq!(assignments[3], assignments[4]);
@@ -660,117 +693,70 @@ mod tests {
     }
 
     #[test]
-    fn silhouette_score_well_separated() {
+    fn kmeans_three_clusters() {
+        let data = vec![
+            vec![0.0, 0.0],
+            vec![0.1, 0.0],
+            vec![10.0, 0.0],
+            vec![10.1, 0.0],
+            vec![5.0, 10.0],
+            vec![5.1, 10.0],
+        ];
+        let config = ClusteringConfig::default();
+        let (assignments, centroids) = kmeans(&data, 3, &config);
+
+        assert_eq!(centroids.len(), 3);
+        // Each pair should be in the same cluster
+        assert_eq!(assignments[0], assignments[1]);
+        assert_eq!(assignments[2], assignments[3]);
+        assert_eq!(assignments[4], assignments[5]);
+        // All three clusters should be different
+        assert_ne!(assignments[0], assignments[2]);
+        assert_ne!(assignments[0], assignments[4]);
+        assert_ne!(assignments[2], assignments[4]);
+    }
+
+    #[test]
+    fn kmeans_identical_points() {
+        // All points the same — should converge without panic
+        let data = vec![vec![5.0, 5.0]; 10];
+        let config = ClusteringConfig::default();
+        let (assignments, centroids) = kmeans(&data, 2, &config);
+        assert_eq!(assignments.len(), 10);
+        assert_eq!(centroids.len(), 2);
+    }
+
+    #[test]
+    fn kmeans_k_equals_n() {
+        // Each point gets its own cluster
+        let data = vec![vec![0.0], vec![10.0], vec![20.0]];
+        let config = ClusteringConfig::default();
+        let (assignments, centroids) = kmeans(&data, 3, &config);
+        assert_eq!(centroids.len(), 3);
+        // All assignments should be distinct
+        let mut unique: Vec<usize> = assignments.clone();
+        unique.sort();
+        unique.dedup();
+        assert_eq!(unique.len(), 3);
+    }
+
+    #[test]
+    fn kmeans_converges_within_max_iterations() {
         let data = vec![
             vec![0.0, 0.0],
             vec![0.1, 0.1],
-            vec![10.0, 10.0],
-            vec![10.1, 10.1],
-        ];
-        let assignments = vec![0, 0, 1, 1];
-        let score = silhouette_score(&data, &assignments, 2);
-        // Well-separated clusters should have high silhouette
-        assert!(score > 0.9, "score was {score}");
-    }
-
-    #[test]
-    fn silhouette_score_single_cluster() {
-        let data = vec![vec![1.0], vec![2.0]];
-        let assignments = vec![0, 0];
-        let score = silhouette_score(&data, &assignments, 1);
-        assert_eq!(score, 0.0);
-    }
-
-    #[test]
-    fn discover_personas_too_few_actors() {
-        let profiles = vec![
-            make_profile("a", 9, 0, 50, 30.0),
-            make_profile("b", 14, 3, 100, 60.0),
+            vec![100.0, 100.0],
+            vec![100.1, 100.1],
         ];
         let config = ClusteringConfig {
-            min_actors: 4,
+            max_iterations: 5, // Very few iterations
             ..Default::default()
         };
-        let result = discover_personas(&profiles, &config);
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn discover_personas_finds_clusters() {
-        // Two distinct groups: morning workers vs evening workers
-        let mut profiles = Vec::new();
-        for i in 0..10 {
-            profiles.push(make_profile(
-                &format!("morning_{i}"),
-                8 + (i % 3), // peak hour 8-10
-                i % 5,       // weekdays
-                50 + i as u64 * 5,
-                30.0,
-            ));
-        }
-        for i in 0..10 {
-            profiles.push(make_profile(
-                &format!("evening_{i}"),
-                20 + (i % 3), // peak hour 20-22
-                5 + (i % 2),  // weekends
-                20 + i as u64 * 2,
-                15.0,
-            ));
-        }
-
-        let config = ClusteringConfig {
-            seed: 42,
-            min_actors: 4,
-            ..Default::default()
-        };
-        let result = discover_personas(&profiles, &config);
-        assert!(result.is_some());
-
-        let result = result.unwrap();
-        assert!(
-            result.k >= 2,
-            "should find at least 2 clusters, got {}",
-            result.k
-        );
-        assert!(
-            result.silhouette_score > 0.0,
-            "silhouette should be positive"
-        );
-        assert_eq!(result.personas.len(), result.k);
-        assert_eq!(result.assignments.len(), 20);
-
-        // Weights should sum to 1.0
-        let weight_sum: f64 = result.personas.iter().map(|p| p.weight).sum();
-        assert!((weight_sum - 1.0).abs() < 1e-10);
-
-        // Each persona should have traits
-        for persona in &result.personas {
-            assert!(!persona.name.is_empty());
-            assert!(persona.traits.contains_key("peak_hours"));
-            assert!(persona.traits.contains_key("active_days_pattern"));
-            assert!(persona.traits.contains_key("activity_rate"));
-        }
-    }
-
-    #[test]
-    fn generate_persona_name_variants() {
-        let mut avg_hours = [0.0f64; 24];
-        // Peak at hour 8
-        avg_hours[8] = 0.6;
-        let name = generate_persona_name(0, &avg_hours, "weekday_heavy", 150.0);
-        assert!(name.contains("power"), "expected 'power' in {name}");
-        assert!(
-            name.contains("early_bird"),
-            "expected 'early_bird' in {name}"
-        );
-
-        // Peak at hour 22, low activity
-        avg_hours[8] = 0.0;
-        avg_hours[22] = 0.6;
-        let name = generate_persona_name(1, &avg_hours, "weekend_heavy", 5.0);
-        assert!(name.contains("casual"), "expected 'casual' in {name}");
-        assert!(name.contains("evening"), "expected 'evening' in {name}");
-        assert!(name.contains("weekender"), "expected 'weekender' in {name}");
+        let (assignments, _) = kmeans(&data, 2, &config);
+        // Well-separated clusters should converge quickly
+        assert_eq!(assignments[0], assignments[1]);
+        assert_eq!(assignments[2], assignments[3]);
+        assert_ne!(assignments[0], assignments[2]);
     }
 
     #[test]
@@ -788,16 +774,394 @@ mod tests {
     }
 
     #[test]
+    fn kmeans_different_seeds_may_differ() {
+        let data = vec![
+            vec![0.0],
+            vec![1.0],
+            vec![2.0],
+            vec![3.0],
+            vec![4.0],
+            vec![5.0],
+        ];
+        let c1 = ClusteringConfig {
+            seed: 1,
+            ..Default::default()
+        };
+        let c2 = ClusteringConfig {
+            seed: 999,
+            ..Default::default()
+        };
+        let (a1, _) = kmeans(&data, 3, &c1);
+        let (a2, _) = kmeans(&data, 3, &c2);
+        // Different seeds may produce different assignments (or same — we
+        // just verify both run without error and produce valid output)
+        assert_eq!(a1.len(), 6);
+        assert_eq!(a2.len(), 6);
+    }
+
+    // ─── silhouette_score ───────────────────────────────────────────────
+
+    #[test]
+    fn silhouette_score_well_separated() {
+        let data = vec![
+            vec![0.0, 0.0],
+            vec![0.1, 0.1],
+            vec![10.0, 10.0],
+            vec![10.1, 10.1],
+        ];
+        let assignments = vec![0, 0, 1, 1];
+        let score = silhouette_score(&data, &assignments, 2);
+        assert!(score > 0.9, "score was {score}");
+    }
+
+    #[test]
+    fn silhouette_score_single_cluster() {
+        let data = vec![vec![1.0], vec![2.0]];
+        let assignments = vec![0, 0];
+        let score = silhouette_score(&data, &assignments, 1);
+        assert_eq!(score, 0.0);
+    }
+
+    #[test]
+    fn silhouette_score_poorly_separated() {
+        // Interleaved points → low silhouette
+        let data = vec![
+            vec![0.0],
+            vec![1.0],
+            vec![2.0],
+            vec![3.0],
+            vec![4.0],
+            vec![5.0],
+        ];
+        // Interleaved assignment: 0,1,0,1,0,1
+        let assignments = vec![0, 1, 0, 1, 0, 1];
+        let score = silhouette_score(&data, &assignments, 2);
+        assert!(
+            score < 0.5,
+            "interleaved clusters should have low score, got {score}"
+        );
+    }
+
+    #[test]
+    fn silhouette_score_data_smaller_than_k() {
+        let data = vec![vec![1.0], vec![2.0]];
+        let assignments = vec![0, 1];
+        // k=3 but only 2 points → returns 0
+        let score = silhouette_score(&data, &assignments, 3);
+        assert_eq!(score, 0.0);
+    }
+
+    #[test]
+    fn silhouette_score_three_clusters() {
+        let data = vec![
+            vec![0.0, 0.0],
+            vec![0.1, 0.0],
+            vec![10.0, 0.0],
+            vec![10.1, 0.0],
+            vec![5.0, 10.0],
+            vec![5.1, 10.0],
+        ];
+        let assignments = vec![0, 0, 1, 1, 2, 2];
+        let score = silhouette_score(&data, &assignments, 3);
+        assert!(
+            score > 0.7,
+            "well-separated 3-cluster should have high score, got {score}"
+        );
+    }
+
+    // ─── euclidean_dist_sq ──────────────────────────────────────────────
+
+    #[test]
+    fn euclidean_dist_sq_basic() {
+        assert!((euclidean_dist_sq(&[0.0, 0.0], &[3.0, 4.0]) - 25.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn euclidean_dist_sq_same_point() {
+        assert_eq!(euclidean_dist_sq(&[1.0, 2.0, 3.0], &[1.0, 2.0, 3.0]), 0.0);
+    }
+
+    #[test]
+    fn euclidean_dist_sq_one_dimensional() {
+        assert!((euclidean_dist_sq(&[0.0], &[5.0]) - 25.0).abs() < 1e-10);
+    }
+
+    // ─── discover_personas ──────────────────────────────────────────────
+
+    #[test]
+    fn discover_personas_too_few_actors() {
+        let profiles = vec![
+            make_profile("a", 9, 0, 50, 30.0),
+            make_profile("b", 14, 3, 100, 60.0),
+        ];
+        let config = ClusteringConfig {
+            min_actors: 4,
+            ..Default::default()
+        };
+        let result = discover_personas(&profiles, &config);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn discover_personas_finds_clusters() {
+        let mut profiles = Vec::new();
+        for i in 0..10 {
+            profiles.push(make_profile(
+                &format!("morning_{i}"),
+                8 + (i % 3),
+                i % 5,
+                50 + i as u64 * 5,
+                30.0,
+            ));
+        }
+        for i in 0..10 {
+            profiles.push(make_profile(
+                &format!("evening_{i}"),
+                20 + (i % 3),
+                5 + (i % 2),
+                20 + i as u64 * 2,
+                15.0,
+            ));
+        }
+
+        let config = ClusteringConfig {
+            seed: 42,
+            min_actors: 4,
+            ..Default::default()
+        };
+        let result = discover_personas(&profiles, &config);
+        assert!(result.is_some());
+
+        let result = result.unwrap();
+        assert!(result.k >= 2, "should find at least 2 clusters, got {}", result.k);
+        assert!(result.silhouette_score > 0.0, "silhouette should be positive");
+        assert_eq!(result.personas.len(), result.k);
+        assert_eq!(result.assignments.len(), 20);
+
+        let weight_sum: f64 = result.personas.iter().map(|p| p.weight).sum();
+        assert!((weight_sum - 1.0).abs() < 1e-10);
+
+        for persona in &result.personas {
+            assert!(!persona.name.is_empty());
+            assert!(persona.traits.contains_key("peak_hours"));
+            assert!(persona.traits.contains_key("active_days_pattern"));
+            assert!(persona.traits.contains_key("activity_rate"));
+        }
+    }
+
+    #[test]
+    fn discover_personas_exactly_min_actors() {
+        // Exactly 4 actors (min_actors default) — should attempt clustering
+        let profiles = vec![
+            make_profile("a", 8, 0, 100, 30.0),
+            make_profile("b", 8, 0, 100, 30.0),
+            make_profile("c", 20, 5, 10, 5.0),
+            make_profile("d", 20, 5, 10, 5.0),
+        ];
+        let config = ClusteringConfig::default();
+        let result = discover_personas(&profiles, &config);
+        // May or may not find valid clusters depending on min cluster size,
+        // but should not panic
+        if let Some(r) = result {
+            assert!(r.k >= 2);
+            assert_eq!(r.assignments.len(), 4);
+        }
+    }
+
+    #[test]
+    fn discover_personas_all_identical() {
+        // All profiles identical — no distinct clusters can form
+        let profiles: Vec<ActorProfile> = (0..10)
+            .map(|i| make_profile(&format!("u{i}"), 12, 3, 50, 30.0))
+            .collect();
+        let config = ClusteringConfig::default();
+        let result = discover_personas(&profiles, &config);
+        // Identical profiles produce zero-variance features, so silhouette
+        // scores are 0.0 and no k beats the threshold. Expect None.
+        assert!(
+            result.is_none(),
+            "expected None for identical profiles, got k={}",
+            result.as_ref().map_or(0, |r| r.k)
+        );
+    }
+
+    #[test]
+    fn discover_personas_deterministic() {
+        let mut profiles = Vec::new();
+        for i in 0..8 {
+            profiles.push(make_profile(
+                &format!("a{i}"),
+                8 + (i % 2),
+                i % 5,
+                50,
+                30.0,
+            ));
+        }
+        for i in 0..8 {
+            profiles.push(make_profile(
+                &format!("b{i}"),
+                20 + (i % 2),
+                5 + (i % 2),
+                20,
+                15.0,
+            ));
+        }
+
+        let config = ClusteringConfig {
+            seed: 123,
+            ..Default::default()
+        };
+        let r1 = discover_personas(&profiles, &config);
+        let r2 = discover_personas(&profiles, &config);
+
+        match (r1, r2) {
+            (Some(a), Some(b)) => {
+                assert_eq!(a.k, b.k, "same seed should produce same K");
+                assert_eq!(a.assignments, b.assignments, "same seed should produce same assignments");
+            }
+            (None, None) => {} // both None is fine
+            _ => panic!("determinism failure: one returned Some, other None"),
+        }
+    }
+
+    #[test]
     fn clustering_result_has_correct_assignment_count() {
         let profiles: Vec<ActorProfile> = (0..20)
             .map(|i| make_profile(&format!("u{i}"), i % 24, i % 7, 10 + i as u64, 10.0))
             .collect();
         let config = ClusteringConfig::default();
-        if let Some(result) = discover_personas(&profiles, &config) {
-            assert_eq!(result.assignments.len(), 20);
-            for (_, cluster) in &result.assignments {
-                assert!(*cluster < result.k);
-            }
+        let result =
+            discover_personas(&profiles, &config).expect("20 diverse profiles should cluster");
+        assert_eq!(result.assignments.len(), 20);
+        for (_, cluster) in &result.assignments {
+            assert!(*cluster < result.k);
         }
+    }
+
+    // ─── generate_persona_name ──────────────────────────────────────────
+
+    #[test]
+    fn generate_persona_name_variants() {
+        let mut avg_hours = [0.0f64; 24];
+        avg_hours[8] = 0.6;
+        let name = generate_persona_name(0, &avg_hours, "weekday_heavy", 150.0);
+        assert!(name.contains("power"), "expected 'power' in {name}");
+        assert!(name.contains("early_bird"), "expected 'early_bird' in {name}");
+
+        avg_hours[8] = 0.0;
+        avg_hours[22] = 0.6;
+        let name = generate_persona_name(1, &avg_hours, "weekend_heavy", 5.0);
+        assert!(name.contains("casual"), "expected 'casual' in {name}");
+        assert!(name.contains("evening"), "expected 'evening' in {name}");
+        assert!(name.contains("weekender"), "expected 'weekender' in {name}");
+    }
+
+    #[test]
+    fn generate_persona_name_time_labels() {
+        let make = |hour: usize| -> String {
+            let mut h = [0.0f64; 24];
+            h[hour] = 1.0;
+            generate_persona_name(0, &h, "uniform", 50.0)
+        };
+
+        assert!(make(3).contains("night_owl"), "hour 3 → night_owl");
+        assert!(make(9).contains("early_bird"), "hour 9 → early_bird");
+        assert!(make(14).contains("afternoon"), "hour 14 → afternoon");
+        assert!(make(20).contains("evening"), "hour 20 → evening");
+    }
+
+    #[test]
+    fn generate_persona_name_activity_levels() {
+        let hours = [0.0f64; 24];
+        let name_power = generate_persona_name(0, &hours, "uniform", 200.0);
+        assert!(name_power.contains("power"));
+
+        let name_regular = generate_persona_name(0, &hours, "uniform", 50.0);
+        assert!(name_regular.contains("regular"));
+
+        let name_casual = generate_persona_name(0, &hours, "uniform", 5.0);
+        assert!(name_casual.contains("casual"));
+    }
+
+    // ─── build_personas ─────────────────────────────────────────────────
+
+    #[test]
+    fn build_personas_weights_sum_to_one() {
+        let profiles = vec![
+            make_profile("a", 8, 0, 100, 30.0),
+            make_profile("b", 8, 0, 100, 30.0),
+            make_profile("c", 8, 0, 100, 30.0),
+            make_profile("d", 20, 5, 10, 5.0),
+            make_profile("e", 20, 5, 10, 5.0),
+        ];
+        let assignments = vec![0, 0, 0, 1, 1];
+        let centroids = vec![vec![0.0; 33], vec![0.0; 33]];
+        let personas = build_personas(&centroids, &assignments, &profiles, 2);
+
+        assert_eq!(personas.len(), 2);
+        let weight_sum: f64 = personas.iter().map(|p| p.weight).sum();
+        assert!(
+            (weight_sum - 1.0).abs() < 1e-10,
+            "weights should sum to 1.0, got {weight_sum}"
+        );
+        // Cluster 0 has 3/5 = 0.6, cluster 1 has 2/5 = 0.4
+        assert!((personas[0].weight - 0.6).abs() < 1e-10);
+        assert!((personas[1].weight - 0.4).abs() < 1e-10);
+    }
+
+    #[test]
+    fn build_personas_includes_all_traits() {
+        let profiles = vec![
+            make_profile("a", 8, 0, 100, 30.0),
+            make_profile("b", 20, 5, 10, 5.0),
+        ];
+        let assignments = vec![0, 1];
+        let centroids = vec![vec![0.0; 33], vec![0.0; 33]];
+        let personas = build_personas(&centroids, &assignments, &profiles, 2);
+
+        assert_eq!(personas.len(), 2, "expected 2 personas for 2 clusters");
+        for persona in &personas {
+            assert!(persona.traits.contains_key("peak_hours"));
+            assert!(persona.traits.contains_key("active_days_pattern"));
+            assert!(persona.traits.contains_key("activity_rate"));
+            assert!(persona.traits.contains_key("active_span_days"));
+            assert!(!persona.name.is_empty());
+        }
+    }
+
+    #[test]
+    fn build_personas_day_pattern_detection() {
+        // Weekday-heavy profile: activity on Mon-Fri
+        let mut weekday = make_profile("wd", 12, 0, 50, 30.0);
+        weekday.active_days = [0.2, 0.2, 0.2, 0.2, 0.2, 0.0, 0.0];
+        // Weekend-heavy profile: activity on Sat-Sun
+        let mut weekend = make_profile("we", 12, 5, 50, 30.0);
+        weekend.active_days = [0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5];
+
+        let profiles = vec![weekday, weekend];
+        let assignments = vec![0, 1];
+        let centroids = vec![vec![0.0; 33], vec![0.0; 33]];
+        let personas = build_personas(&centroids, &assignments, &profiles, 2);
+
+        // One should be weekday_heavy, other weekend_heavy or uniform
+        let patterns: Vec<&Value> = personas
+            .iter()
+            .map(|p| &p.traits["active_days_pattern"])
+            .collect();
+        let has_weekday = patterns.iter().any(|v| matches!(v, Value::String(s) if s == "weekday_heavy"));
+        let has_weekend = patterns.iter().any(|v| matches!(v, Value::String(s) if s == "weekend_heavy"));
+        assert!(has_weekday, "should detect weekday_heavy pattern");
+        assert!(has_weekend, "should detect weekend_heavy pattern");
+    }
+
+    // ─── ClusteringConfig ───────────────────────────────────────────────
+
+    #[test]
+    fn clustering_config_default() {
+        let config = ClusteringConfig::default();
+        assert_eq!(config.seed, 42);
+        assert_eq!(config.max_iterations, 100);
+        assert!(config.convergence_threshold > 0.0);
+        assert_eq!(config.min_actors, 4);
     }
 }
