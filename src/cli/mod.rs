@@ -674,6 +674,14 @@ pub enum ModelAction {
         /// Model path (flat file or structured directory).
         input: String,
     },
+    /// Migrate a model to v2 structured format.
+    Migrate {
+        /// Input path (flat .toml file or structured directory).
+        input: String,
+        /// Output directory (defaults to input location or `<name>_v2/`).
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 #[cfg(test)]

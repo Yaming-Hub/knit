@@ -387,6 +387,9 @@ fn run() -> anyhow::Result<()> {
         Command::Model { action } => match action {
             ModelAction::Convert { input, output } => model::run_convert(input, output),
             ModelAction::Info { input } => model::run_info(input),
+            ModelAction::Migrate { input, output } => {
+                model::run_migrate(input, output.as_deref())
+            }
         },
     }
     .inspect_err(|e| {

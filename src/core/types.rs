@@ -431,6 +431,21 @@ impl DataModel {
             .unwrap_or_default()
     }
 
+    /// Migrate this model to v2 format in-place.
+    ///
+    /// Marks the model as v2, which changes the on-disk serialization format
+    /// to a structured directory layout. The in-memory representation remains
+    /// unchanged — constraints stay on entities and are collected at write-time.
+    ///
+    /// This is idempotent — calling on an already-v2 model is a no-op.
+    pub fn migrate_to_v2(&mut self) {
+        if self.blueprint_version == "2.0" {
+            return;
+        }
+        self.blueprint_version = "2.0".to_string();
+        tracing::info!("migrated model to blueprint v2");
+    }
+
     /// Construct a [`DataModel`] from layered components.
     ///
     /// Constraints from the [`RelationshipModel`] are distributed to their
@@ -3474,5 +3489,21 @@ active_days = "uniform"
             stats: None,
             traits: None,
         };
+    }
+
+    #[test]
+    fn test_migrate_to_v2_updates_version() {
+        let mut model = DataModel::default();
+        model.blueprint_version = "1.0".to_string();
+        model.migrate_to_v2();
+        assert_eq!(model.blueprint_version, "2.0");
+    }
+
+    #[test]
+    fn test_migrate_to_v2_idempotent() {
+        let mut model = DataModel::default();
+        model.blueprint_version = "2.0".to_string();
+        model.migrate_to_v2();
+        assert_eq!(model.blueprint_version, "2.0");
     }
 }
