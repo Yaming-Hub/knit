@@ -286,6 +286,8 @@ pub fn assemble_data_model(name: &str, tables: &[TableAnalysis]) -> DataModel {
         custom_types: Vec::new(),
         mixins: Vec::new(),
         companion_files: Vec::new(),
+        grid_structures: Vec::new(),
+        tuple_dictionaries: Vec::new(),
     }
 }
 

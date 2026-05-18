@@ -54,18 +54,22 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
 
     // 4. Load relationships (optional)
     let rels_path = root.join("relationships.toml");
-    let (relationships, actor_relationships) = if rels_path.is_file() {
-        let s = std::fs::read_to_string(&rels_path)
-            .with_context(|| format!("reading {}", rels_path.display()))?;
-        let rf: RelationshipsFile =
-            toml::from_str(&s).with_context(|| format!("parsing {}", rels_path.display()))?;
-        (
-            rf.foreign_keys.unwrap_or_default(),
-            rf.actor_graphs.unwrap_or_default(),
-        )
-    } else {
-        (vec![], vec![])
-    };
+    let (relationships, actor_relationships, rel_constraints, grid_structures, tuple_dictionaries) =
+        if rels_path.is_file() {
+            let s = std::fs::read_to_string(&rels_path)
+                .with_context(|| format!("reading {}", rels_path.display()))?;
+            let rf: RelationshipsFile =
+                toml::from_str(&s).with_context(|| format!("parsing {}", rels_path.display()))?;
+            (
+                rf.foreign_keys.unwrap_or_default(),
+                rf.actor_graphs.unwrap_or_default(),
+                rf.constraints.unwrap_or_default(),
+                rf.grid_structures.unwrap_or_default(),
+                rf.tuple_dictionaries.unwrap_or_default(),
+            )
+        } else {
+            (vec![], vec![], vec![], vec![], vec![])
+        };
 
     // 5. Load correlations (optional)
     let corr_path = root.join("correlations.toml");
@@ -128,6 +132,8 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
         custom_types,
         mixins,
         companion_files,
+        grid_structures,
+        tuple_dictionaries,
     };
 
     info!(
@@ -232,6 +238,12 @@ struct RelationshipsFile {
     foreign_keys: Option<Vec<Relationship>>,
     #[serde(default)]
     actor_graphs: Option<Vec<ActorRelationship>>,
+    #[serde(default)]
+    constraints: Option<Vec<TableConstraint>>,
+    #[serde(default)]
+    grid_structures: Option<Vec<GridStructure>>,
+    #[serde(default)]
+    tuple_dictionaries: Option<Vec<TupleDictionary>>,
 }
 
 /// Correlations file (`correlations.toml`).
@@ -519,6 +531,8 @@ data_type = "int"
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
         let dir = TempDir::new().unwrap();
         let out = dir.path().join("written_model");

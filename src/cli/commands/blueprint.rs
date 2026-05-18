@@ -1918,6 +1918,18 @@ pub fn subset_model(model: &DataModel, roots: &[String], include_deps: bool) -> 
         custom_types: model.custom_types.clone(),
         mixins: model.mixins.clone(),
         companion_files: model.companion_files.clone(),
+        grid_structures: model
+            .grid_structures
+            .iter()
+            .filter(|gs| selected.contains(&gs.table))
+            .cloned()
+            .collect(),
+        tuple_dictionaries: model
+            .tuple_dictionaries
+            .iter()
+            .filter(|td| selected.contains(&td.table))
+            .cloned()
+            .collect(),
     }
 }
 
@@ -2794,6 +2806,8 @@ pub fn scaffold_model(
         custom_types: Vec::new(),
         mixins: Vec::new(),
         companion_files: Vec::new(),
+        grid_structures: Vec::new(),
+        tuple_dictionaries: Vec::new(),
     })
 }
 
@@ -2954,6 +2968,8 @@ pub fn import_sql(sql: &str, model_name: &str) -> Result<DataModel> {
         custom_types: Vec::new(),
         mixins: Vec::new(),
         companion_files: Vec::new(),
+        grid_structures: Vec::new(),
+        tuple_dictionaries: Vec::new(),
     })
 }
 
@@ -5324,6 +5340,8 @@ mod tests {
             custom_types: Vec::new(),
             mixins: Vec::new(),
             companion_files: Vec::new(),
+            grid_structures: Vec::new(),
+            tuple_dictionaries: Vec::new(),
         }
     }
 

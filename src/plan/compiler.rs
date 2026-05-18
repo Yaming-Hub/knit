@@ -1977,6 +1977,8 @@ mod tests {
             custom_types: Vec::new(),
             mixins: Vec::new(),
             companion_files: Vec::new(),
+            grid_structures: Vec::new(),
+            tuple_dictionaries: Vec::new(),
         }
     }
 

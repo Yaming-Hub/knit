@@ -145,9 +145,8 @@ impl Default for ModelMeta {
 
 /// Layer 2: all cross-table and cross-column relationships.
 ///
-/// Groups foreign keys, correlations, constraints, and actor relationships
-/// between entities. Future PRs will extend this to include grid structures
-/// and tuple dictionaries.
+/// Groups foreign keys, correlations, constraints, grid structures,
+/// tuple dictionaries, and actor relationships between entities.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct RelationshipModel {
     /// Foreign-key and association relationships between entities.
@@ -298,6 +297,12 @@ pub struct DataModel {
     /// discovered during `knit learn`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub companion_files: Vec<String>,
+    /// Detected panel/grid structures (v2 relationship layer).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub grid_structures: Vec<GridStructure>,
+    /// Multi-column tuple dictionaries (v2 relationship layer).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tuple_dictionaries: Vec<TupleDictionary>,
 }
 
 impl Default for DataModel {
@@ -319,6 +324,8 @@ impl Default for DataModel {
             custom_types: Vec::new(),
             mixins: Vec::new(),
             companion_files: Vec::new(),
+            grid_structures: Vec::new(),
+            tuple_dictionaries: Vec::new(),
         }
     }
 }
@@ -368,8 +375,8 @@ impl DataModel {
             correlations: self.correlations.clone(),
             actor_relationships: self.actor_relationships.clone(),
             constraints,
-            grid_structures: Vec::new(),
-            tuple_dictionaries: Vec::new(),
+            grid_structures: self.grid_structures.clone(),
+            tuple_dictionaries: self.tuple_dictionaries.clone(),
         }
     }
 
@@ -381,6 +388,8 @@ impl DataModel {
         self.relationships = rel.foreign_keys;
         self.correlations = rel.correlations;
         self.actor_relationships = rel.actor_relationships;
+        self.grid_structures = rel.grid_structures;
+        self.tuple_dictionaries = rel.tuple_dictionaries;
         // Distribute constraints back to entities
         for entity in &mut self.entities {
             entity.constraints.clear();
@@ -459,6 +468,8 @@ impl DataModel {
             relationships: relationships.foreign_keys,
             correlations: relationships.correlations,
             actor_relationships: relationships.actor_relationships,
+            grid_structures: relationships.grid_structures,
+            tuple_dictionaries: relationships.tuple_dictionaries,
             noise_profiles,
             personas,
             custom_types,
@@ -2799,6 +2810,8 @@ step = "7d"
             custom_types: Vec::new(),
             mixins: Vec::new(),
             companion_files: Vec::new(),
+            grid_structures: Vec::new(),
+            tuple_dictionaries: Vec::new(),
         };
 
         let toml_str = toml::to_string_pretty(&model).unwrap();

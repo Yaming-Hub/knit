@@ -76,6 +76,8 @@ impl RawSchema {
             custom_types: self.types,
             mixins: self.mixins,
             companion_files: self.companion_files,
+            grid_structures: Vec::new(),
+            tuple_dictionaries: Vec::new(),
         };
         Ok(model)
     }

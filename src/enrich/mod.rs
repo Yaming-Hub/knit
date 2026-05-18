@@ -323,6 +323,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         }
     }
 
