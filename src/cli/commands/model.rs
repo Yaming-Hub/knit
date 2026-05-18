@@ -147,3 +147,106 @@ pub fn run_info(input: &str) -> Result<()> {
 
     Ok(())
 }
+
+/// Run `knit model migrate` — upgrade a model to v2 structured format.
+pub fn run_migrate(input: &str, output: Option<&str>) -> Result<()> {
+    let input_path = Path::new(input);
+
+    let mut model = if is_structured_model(input_path) {
+        reader::load_model_directory(input_path)?
+    } else {
+        load_blueprint(input)?
+    };
+
+    // Early exit if already v2
+    if model.blueprint_version == "2.0" && output.is_none() {
+        println!("{}", "Model is already v2 — no migration needed.".green());
+        return Ok(());
+    }
+
+    let old_version = model.blueprint_version.clone();
+    model.migrate_to_v2();
+
+    let out_path = match output {
+        Some(p) => Path::new(p).to_path_buf(),
+        None => {
+            if is_structured_model(input_path) {
+                // Refuse in-place overwrite without explicit --output
+                anyhow::bail!(
+                    "input is already a structured directory; specify --output explicitly"
+                );
+            }
+            let stem = input_path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("model");
+            input_path
+                .parent()
+                .unwrap_or(Path::new("."))
+                .join(format!("{}_v2", stem))
+        }
+    };
+
+    writer::write_model_directory(&model, &out_path)?;
+
+    println!(
+        "{}",
+        format!(
+            "Migrated {} → {} (v{} → v{})",
+            input,
+            out_path.display(),
+            old_version,
+            model.blueprint_version
+        )
+        .green()
+    );
+
+    Ok(())
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_migrate_v1_flat_to_v2_structured() {
+        let dir = TempDir::new().unwrap();
+        let input_file = dir.path().join("test.toml");
+        std::fs::write(
+            &input_file,
+            r#"
+blueprint_version = "1.0"
+[model]
+name = "migrate_test"
+seed = 99
+
+[[entities]]
+name = "Users"
+count = 50
+
+[[entities.fields]]
+name = "id"
+data_type = "int"
+"#,
+        )
+        .unwrap();
+
+        let output_dir = dir.path().join("output_v2");
+        run_migrate(
+            input_file.to_str().unwrap(),
+            Some(output_dir.to_str().unwrap()),
+        )
+        .unwrap();
+
+        // Verify output is a v2 structured model
+        assert!(output_dir.join("knit.toml").is_file());
+        assert!(output_dir.join("tables").join("Users.toml").is_file());
+
+        let loaded = reader::load_model_directory(&output_dir).unwrap();
+        assert_eq!(loaded.blueprint_version, "2.0");
+        assert_eq!(loaded.name, "migrate_test");
+        assert_eq!(loaded.seed, 99);
+        assert_eq!(loaded.entities.len(), 1);
+        assert_eq!(loaded.entities[0].name, "Users");
+    }
+}
