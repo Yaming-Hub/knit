@@ -288,6 +288,13 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         crate::plan::GeneratorPlan::EventStream { components, .. } => {
             format!("event_stream({} components)", components.len())
         }
+        crate::plan::GeneratorPlan::TupleLookup {
+            source_field,
+            column,
+            ..
+        } => {
+            format!("tuple_lookup({}, col={})", source_field, column)
+        }
     }
 }
 

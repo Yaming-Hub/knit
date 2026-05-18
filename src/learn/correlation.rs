@@ -153,6 +153,122 @@ pub fn detect_correlations(
     results
 }
 
+/// A detected tuple: a group of co-occurring string columns where values form
+/// near-functional dependencies (e.g., city+state, first_name+last_name).
+#[derive(Debug, Clone)]
+pub struct TupleGroup {
+    /// Column names in the tuple, ordered by cardinality (highest first = primary).
+    pub columns: Vec<String>,
+    /// Unique tuples as rows of string values (same order as `columns`).
+    pub tuples: Vec<Vec<String>>,
+}
+
+/// Detect co-occurring string column tuples.
+///
+/// Finds pairs of string columns with high Cramér's V (≥ 0.8) that exhibit
+/// near-functional dependencies: knowing one column's value nearly determines
+/// the other's. Returns groups of columns whose values should be sampled
+/// together from a joint dictionary.
+pub fn detect_tuple_columns(
+    profiles: &[ColumnProfile],
+    batches: &[RecordBatch],
+) -> Vec<TupleGroup> {
+    let _span = info_span!("tuple_detection").entered();
+    if profiles.is_empty() || batches.is_empty() {
+        return Vec::new();
+    }
+
+    let string_cols = collect_string_columns(profiles, batches);
+    let str_names: Vec<&String> = string_cols.keys().collect();
+    let mut results = Vec::new();
+
+    for i in 0..str_names.len() {
+        for j in (i + 1)..str_names.len() {
+            let a = &string_cols[str_names[i]];
+            let b = &string_cols[str_names[j]];
+            let n = a.len().min(b.len());
+
+            // Collect aligned non-null pairs
+            let mut paired: Vec<(String, String)> = Vec::new();
+            for idx in 0..n {
+                if let (Some(av), Some(bv)) = (&a[idx], &b[idx]) {
+                    paired.push((av.clone(), bv.clone()));
+                }
+            }
+            if paired.len() < 5 {
+                continue;
+            }
+
+            // Check Cramér's V for strong association
+            let col_a: Vec<String> = paired.iter().map(|(a, _)| a.clone()).collect();
+            let col_b: Vec<String> = paired.iter().map(|(_, b)| b.clone()).collect();
+            let v = cramers_v(&col_a, &col_b);
+            if v < 0.8 {
+                continue;
+            }
+
+            // Check functional dependency ratio: A→B means each unique A maps
+            // to (nearly) one unique B
+            let mut a_to_b: HashMap<&str, std::collections::HashSet<&str>> = HashMap::new();
+            for (av, bv) in &paired {
+                a_to_b.entry(av.as_str()).or_default().insert(bv.as_str());
+            }
+            let func_ratio_ab =
+                a_to_b.values().filter(|s| s.len() == 1).count() as f64 / a_to_b.len() as f64;
+
+            let mut b_to_a: HashMap<&str, std::collections::HashSet<&str>> = HashMap::new();
+            for (av, bv) in &paired {
+                b_to_a.entry(bv.as_str()).or_default().insert(av.as_str());
+            }
+            let func_ratio_ba =
+                b_to_a.values().filter(|s| s.len() == 1).count() as f64 / b_to_a.len() as f64;
+
+            // At least one direction should be >90% functional
+            if func_ratio_ab < 0.9 && func_ratio_ba < 0.9 {
+                continue;
+            }
+
+            // Determine primary (higher cardinality) and extract unique tuples
+            let card_a = a_to_b.len();
+            let card_b = b_to_a.len();
+            let (primary, secondary) = if card_a >= card_b {
+                (str_names[i].clone(), str_names[j].clone())
+            } else {
+                (str_names[j].clone(), str_names[i].clone())
+            };
+
+            // Collect unique tuples (dedup by primary value)
+            let mut seen = std::collections::HashSet::new();
+            let mut tuples = Vec::new();
+            for (av, bv) in &paired {
+                let (pv, sv) = if card_a >= card_b {
+                    (av.clone(), bv.clone())
+                } else {
+                    (bv.clone(), av.clone())
+                };
+                if seen.insert(pv.clone()) {
+                    tuples.push(vec![pv, sv]);
+                }
+            }
+
+            debug!(
+                a = %primary, b = %secondary, cramers_v = v,
+                func_ab = func_ratio_ab, func_ba = func_ratio_ba,
+                tuples = tuples.len(),
+                "detected tuple columns"
+            );
+
+            results.push(TupleGroup {
+                columns: vec![primary, secondary],
+                tuples,
+            });
+        }
+    }
+
+    results.truncate(20);
+    results
+}
+
 /// A detected conditional distribution: a categorical column conditions a
 /// numeric column's distribution.
 #[derive(Debug, Clone)]

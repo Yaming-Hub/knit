@@ -366,6 +366,13 @@ fn format_generator_spec(r#gen: &crate::core::GeneratorSpec) -> String {
         crate::core::GeneratorSpec::EventStream { components, .. } => {
             format!("event_stream({} components)", components.len())
         }
+        crate::core::GeneratorSpec::TupleLookup {
+            source_field,
+            column,
+            ..
+        } => {
+            format!("tuple_lookup({}, col={})", source_field, column)
+        }
     }
 }
 

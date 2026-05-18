@@ -913,6 +913,19 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     source_file: Some(file.clone()),
                 }
             }
+            GeneratorSpec::TupleLookup {
+                source_field,
+                file,
+                column,
+            } => {
+                // Lookup table is loaded by the CLI layer after compilation.
+                GeneratorPlan::TupleLookup {
+                    source_field: source_field.clone(),
+                    lookup: std::collections::HashMap::new(),
+                    source_file: Some(file.clone()),
+                    column: *column,
+                }
+            }
             GeneratorSpec::ExternalLookup {
                 source,
                 column,

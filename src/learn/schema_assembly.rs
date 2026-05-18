@@ -59,6 +59,8 @@ pub struct TableAnalysis {
     pub constraints: Vec<crate::core::Constraint>,
     /// Detected conditional distributions (category → numeric).
     pub conditional_distributions: Vec<crate::learn::correlation::ConditionalDistribution>,
+    /// Detected co-occurring tuple column groups.
+    pub tuple_groups: Vec<crate::learn::correlation::TupleGroup>,
 }
 
 impl TableAnalysis {
@@ -81,6 +83,7 @@ impl TableAnalysis {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }
     }
 }
@@ -1805,6 +1808,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1861,6 +1865,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1905,6 +1910,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1956,6 +1962,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -2087,6 +2094,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2131,6 +2139,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2293,6 +2302,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2336,6 +2346,7 @@ mod tests {
             sort_order: None,
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
+            tuple_groups: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);

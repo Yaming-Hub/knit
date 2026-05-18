@@ -18,7 +18,7 @@ use serde::Serialize;
 use serde_json;
 use tracing::{debug, info, info_span, warn};
 
-use crate::learn::correlation::{detect_correlations, detect_conditional_distributions};
+use crate::learn::correlation::{detect_correlations, detect_conditional_distributions, detect_tuple_columns};
 use crate::learn::fitting::{FitResult, fit_categorical, fit_distribution};
 use crate::learn::ingest::{self, IngestionResult};
 use crate::learn::profile::{ColumnProfile, compute_profiles};
@@ -415,6 +415,17 @@ fn run_batch(
             );
         }
         table_analyses[i].conditional_distributions = cond_dists;
+
+        // Detect co-occurring string tuple columns
+        let tuple_groups = detect_tuple_columns(&profiles, &table.batches);
+        if !tuple_groups.is_empty() {
+            debug!(
+                table = %table.entity,
+                count = tuple_groups.len(),
+                "tuple column groups found"
+            );
+        }
+        table_analyses[i].tuple_groups = tuple_groups;
         if let Some(ref pb) = corr_pb {
             pb.inc(1);
         }
@@ -451,6 +462,13 @@ fn run_batch(
     let use_structured = resolve_use_structured(output, model_format);
     let output_dir = resolve_asset_dir(output, use_structured);
     let dict_count = extract_dictionaries(&mut data_model, &tables, &output_dir, cli.quiet)?;
+
+    // 5b-tuple. Extract tuple dictionaries for co-occurring column groups
+    let tuple_count =
+        extract_tuple_dictionaries(&mut data_model, &table_analyses, &output_dir)?;
+    if tuple_count > 0 && !cli.quiet {
+        eprintln!("  Extracted {tuple_count} tuple dictionaries");
+    }
 
     // 5b2. Copy companion schema dictionary files (if any)
     let _companion_dict_count =
@@ -2683,6 +2701,142 @@ fn extract_dictionaries(
     }
 
     Ok(dict_count)
+}
+
+/// Extract co-occurring tuple dictionaries as TSV files.
+///
+/// For each detected tuple group, writes a TSV dictionary file containing the
+/// unique tuples, sets the primary column to a Dictionary generator, and sets
+/// secondary columns to TupleLookup generators.
+fn extract_tuple_dictionaries(
+    model: &mut crate::core::DataModel,
+    table_analyses: &[crate::learn::schema_assembly::TableAnalysis],
+    output_dir: &Path,
+) -> Result<usize> {
+    use std::io::Write;
+
+    let mut count = 0;
+
+    for analysis in table_analyses {
+        if analysis.tuple_groups.is_empty() {
+            continue;
+        }
+        let entity = model.entities.iter_mut().find(|e| e.name == analysis.name);
+        let Some(entity) = entity else { continue };
+
+        for group in &analysis.tuple_groups {
+            if group.columns.len() < 2 || group.tuples.is_empty() {
+                continue;
+            }
+
+            let primary = &group.columns[0];
+
+            // Skip if any column in the tuple already has a Dictionary generator
+            // (from regular dictionary extraction)
+            let any_has_dict = group.columns.iter().any(|col| {
+                entity
+                    .fields
+                    .iter()
+                    .any(|f| f.name == *col && matches!(f.generator, Some(crate::core::GeneratorSpec::Dictionary { .. })))
+            });
+            if any_has_dict {
+                continue;
+            }
+
+            let file_name = format!(
+                "{}__{}.tsv",
+                sanitize_filename(&entity.name),
+                group
+                    .columns
+                    .iter()
+                    .map(|c| sanitize_filename(c))
+                    .collect::<Vec<_>>()
+                    .join("_")
+            );
+            let file_path = output_dir.join(&file_name);
+
+            // Write TSV file (escape tabs/newlines in values)
+            let mut file = std::fs::File::create(&file_path)
+                .with_context(|| format!("failed to create tuple dictionary {file_name}"))?;
+            for tuple in &group.tuples {
+                let escaped: Vec<String> = tuple
+                    .iter()
+                    .map(|v| escape_tsv_value(v))
+                    .collect();
+                let line = escaped.join("\t");
+                writeln!(file, "{line}")?;
+            }
+
+            // Set primary column to Dictionary generator
+            if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *primary) {
+                field.generator = Some(crate::core::GeneratorSpec::Dictionary {
+                    file: file_name.clone(),
+                    expansion: "sample".to_string(),
+                });
+            }
+
+            // Set secondary columns to TupleLookup generators
+            for (col_idx, col_name) in group.columns.iter().enumerate().skip(1) {
+                if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
+                    field.generator = Some(crate::core::GeneratorSpec::TupleLookup {
+                        source_field: primary.clone(),
+                        file: file_name.clone(),
+                        column: col_idx,
+                    });
+                }
+            }
+
+            count += 1;
+            tracing::debug!(
+                entity = %entity.name,
+                columns = ?group.columns,
+                tuples = group.tuples.len(),
+                file = %file_name,
+                "wrote tuple dictionary"
+            );
+        }
+    }
+
+    Ok(count)
+}
+
+/// Sanitize a string for use as a filename component.
+fn sanitize_filename(s: &str) -> String {
+    s.chars()
+        .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
+        .collect()
+}
+
+/// Escape tab, newline, and carriage return characters for TSV output.
+fn escape_tsv_value(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('\t', "\\t")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
+}
+
+/// Unescape a TSV value produced by [`escape_tsv_value`].
+pub fn unescape_tsv_value(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('t') => result.push('\t'),
+                Some('n') => result.push('\n'),
+                Some('r') => result.push('\r'),
+                Some('\\') => result.push('\\'),
+                Some(other) => {
+                    result.push('\\');
+                    result.push(other);
+                }
+                None => result.push('\\'),
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
 }
 
 /// Extract dictionaries from state reservoir samples for incremental finalize.
