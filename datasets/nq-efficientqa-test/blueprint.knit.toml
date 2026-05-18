@@ -46,7 +46,7 @@ value = '["2018"]'
 weight = 0.005
 
 [[entities.fields.generator.choices]]
-value = '["3"]'
+value = '["Rabindranath Tagore"]'
 weight = 0.003
 
 [[entities.fields.generator.choices]]
@@ -54,71 +54,11 @@ value = '["10"]'
 weight = 0.003
 
 [[entities.fields.generator.choices]]
-value = '["Rabindranath Tagore"]'
+value = '["3"]'
 weight = 0.003
 
 [[entities.fields.generator.choices]]
-value = '["1"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["China"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["1992"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["New York"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["nine"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["Keala Settle"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["New England Patriots"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["Boston Red Sox"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["Kareem Abdul-Jabbar"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
 value = '["1995"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["1990"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = """["India's Rohit Sharma","Rohit Sharma"]"""
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["None"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["September 28, 2018"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = """["Sandra Day O'Connor"]"""
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["8"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -126,7 +66,35 @@ value = '["Shankar Dayal Sharma"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
+value = '["None"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
 value = '["Vince Gill"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["China"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = """["Sandra Day O'Connor"]"""
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["1"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["September 28, 2018"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["Boston Red Sox"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["New York"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -134,527 +102,47 @@ value = '["Boston Red Sox","Los Angeles Dodgers"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Glynis Johns"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Pennsylvania's 6th","Pennsylvania's 6th congressional district"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Erik Erikson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["red","Yellow"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["several victims"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Los Angeles, California"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2,300,000,000"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["While in the Dark Castle"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Des Moines"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hawkeye"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2003","November 29, 2003"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["October 3, 2018","October 3, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mike Pence of Indiana","Mike Pence"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["January 8, 2019"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the United States Census"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mentuhotep II"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Alison Pill"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Pacific standard time zone"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bill Belichick","Neal Dahlen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mark Tippetts","Incumbent Republican Governor Greg Abbott","Greg Abbott","Lupe Valdez"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Scottish Terrier","Chihuahua","bloodhound","Scottish terrier","Borzoi","mongrel","Pekingese","American Cocker Spaniel","bulldog"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Brian Keith"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Passenger","English singer-songwriter Passenger"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Republic of Ecuador","Ecuador","Republic of Ecuador"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Virginia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Negro Act of 1740"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["John Knox","David Tennant"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1971"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1969"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["actor Guy Henry's","Guy Henry"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Alabama"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["January 18, 2019","May 19, 2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jillian Mele"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Dave Barnes"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2010 to 2014","Wednesdays and Sundays at 10pm"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Simpsons","My Three Sons"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["John Travolta","Olivia Newton-John"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hector Barbossa","Captain Hector Barbossa"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Fast & Furious 6"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["punishment for a crime"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Peter Addenbrooke Thomas"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["July 26, 2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Real Madrid"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["lyrics written by Mark Lowry","music written by Buddy Greene","Buddy Greene","Mark Lowry"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Calgary, Alberta"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["solute"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Gulf and south Atlantic","Gulf and south Atlantic regions"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Plaza Hotel","Plaza Hotel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kate Siegel","Mckenna Grace","Kate Siegel and Mckenna Grace"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Third Crusade","Third Crusade"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hannah John-Kamen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Snoopy"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["treaties ratified by the Senate","acts of Congress"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Vancouver, British Columbia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Original Sin","\"Original Sin\""]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Chris Gayle","India's Rohit Sharma","Rohit Sharma"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Billy Joel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["\"Formality\""]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jury duty"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Gerald Giraffe","Leo Templer","Zeus Jahn-Vilnur","Posher Ra Ra"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the spirit of perverseness"]'
-weight = 0.001
+value = '["8"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Byju Raveendran"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bernard of Chartres","Isaac Newton"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["rectum","colon","stomach","mucous membranes","esophagus","small intestine"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Six Feet Under"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jessica"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1955","2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Stacy Keibler","Rachel Bilson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Eva Mendes"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Amos 'n Andy"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["an extinct stratovolcano complex","stratovolcano complex","stratovolcano"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["president pro tempore","a president pro tempore"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["evening of October 31"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2008","2007"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["David Bamigboye"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["He­lium"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["cytochrome b6f complex","ATP synthase","photosystem I","Photosystem II"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1957","1958"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["930 BCE","about 930 BCE"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Karen Trust Grassle"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["orchids of the genus Vanilla"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sir Robert Walpole"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["increased metabolism"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["George Washington","Abraham Lincoln","Theodore Roosevelt","Thomas Jefferson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Galileo","Galileo Galilei"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["October 16, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Claudia Grace Wells"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["June 16, 2017","June 16, 2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["morgue or mortuary","A morgue or mortuary"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the spirit world"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["professional studio musicians","Jamie Lee Curtis"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Ramsey","Kelly","Kelly Issacs","Travis","Quan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Antinous, son of Eupheithes","Antinous"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["CYYZ","YYZ"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Nyle DiMarco"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bachman–Turner Overdrive"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["8.15 miles","8.15","13.12Â km"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["May 24, 2010"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Croatia","Austria","Belgium","Argentina","Brazil"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["organ"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Darwinian evolutionary theory"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Syria"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Eastbourne","Dungeness","West London"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Surendra Pal"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jerry Leiber","Mike Stoller"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Battle of the Labyrinth"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jakob Fugger"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2017","2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["southeastern"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the current domestic posting rate"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["December 28, 1987","October 1, 1988"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["NC State"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bradley Cooper"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Albert Lawrence Brooks"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["186–184","Detroit Pistons*","Denver Nuggets","December 13, 1983"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["13","10"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["petroleum","Gas"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Paul","Paul the Apostle","Paul the Apostle's"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["shoulder blade"]'
-weight = 0.001
+value = '["New England Patriots"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Project Method","progressive education"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["We Belong Together","\"We Belong Together\""]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1946","21 March 1946","on 21 March 1946"]'
-weight = 0.001
+value = '["1990"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Alessia Cara"]'
-weight = 0.001
+value = '["Kareem Abdul-Jabbar"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Georgie"]'
-weight = 0.001
+value = '["Keala Settle"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Jo","Josephine \"Jo\""]'
-weight = 0.001
+value = '["nine"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Pat Sajak"]'
-weight = 0.001
+value = '["1992"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["1:43 scale"]'
-weight = 0.001
+value = """["India's Rohit Sharma","Rohit Sharma"]"""
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Norma Koch"]'
+value = '["Lucas Jade Zumann"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["at least 1961","1952"]'
+value = '["from October to December 1936","1937"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["in sailing small craft","tying down light aircraft"]'
+value = '["2000","108 2011","2018"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -662,95 +150,47 @@ value = '["StubHub Center"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["controlling interest"]'
+value = '["2020"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Article 37"]'
+value = '["Pittsburgh"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Woodrow Wilson"]'
+value = '["The Gap Band"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Prudential plc","Pakistan","India","India and Pakistan"]'
+value = '["the Fifth Amendment"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Kingdom of Israel","Kingdom of Judah"]'
+value = '["Roy Halee","Art Garfunkel","Paul Simon"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Lena Horne"]'
+value = '["Ulama"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["marriage of Ferdinand and Isabella","October 19, 1469"]'
+value = '["N. K. Singh","N. K. Singh, IAS","N. K.Singh"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["1 April 2010","4 August 2009"]'
+value = '["1787"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["July 18, 2018"]'
+value = '["Qatar"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["$150 million production budget","$150 million"]'
+value = '["Tim Walz","Jeff Johnson","Hennepin County commissioner Jeff Johnson"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Nicole Scherzinger"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Andrée Bernard"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2013"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["reduce bias","randomization guards against selection bias","minimizes allocation bias"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["nucleus"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Greenfield International Stadium","JSCA International Cricket Stadium","Barabati Stadium","Feroz Shah Kotla Ground","Vidarbha Cricket Association Stadium","Eden Gardens","Rajiv Gandhi International Cricket Stadium","Barsapara Stadium"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["50 First Dates"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Paul O'Keefe"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["egg"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jason and Justin Draeger"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Edward Thorndike","B. F. Skinner"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bulgaria"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["October 2018"]'
+value = '["25 October 1854"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -758,47 +198,7 @@ value = '["26","3"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["E. Hamilton Lee"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mavis Staples"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1937"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Solomon"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Vince Vaughn","Liam James"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["November 9","November 9, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sir Charles Baskerville"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["$12.6 billion","USD 14 billion","at least 12 billion dollars"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Isaac Liev Schreiber"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sir Alexander Tilloch Galt","the Canadian Confederation"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Lionel Messi","Cristiano Ronaldo"]'
+value = '["the walls of the heart","the walls"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -806,39 +206,639 @@ value = '["the Acadian people","the British"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
+value = '["Pat Sajak"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["19 September 1893","1893"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["German","Latin"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Daniel Radcliffe"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["lyrics written by Mark Lowry","music written by Buddy Greene","Buddy Greene","Mark Lowry"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["luteinizing hormone","follicle-stimulating hormone","gonadotropin-releasing hormone"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Numbers 22:28"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["many"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["15,589 sq mi"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Chris Gayle","India's Rohit Sharma","Rohit Sharma"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Patrick Duffy"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jillian Mele"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["in 2019","2019"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["James Rodríguez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Raul Bova"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1823","unorganized territory"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Perdita Weeks"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["bogeyman","\"skull\""]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jerry Leiber","Mike Stoller"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Gujarati","Marwari"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1848","September 9, 1850"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Platters"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Mark Tippetts","Larry Kilgore","Barbara Krueger","Greg Abbott","Lupe Valdez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Tom Petty and the Heartbreakers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1969"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Georgia Bulldogs","Georgia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Toby Damon"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Antoine Lavoisier","Robert Boyle","John Dalton","JÃ¶ns Berzelius"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Raj Guru Gajaraj Mishra"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Melissa James Gibson","Jason Horwitch","Charlotte Stoudt","Sharon Hoffman","Tian Jun Gu","Frank Pugliese","Jerome Hairston"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Lexie Grey"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["George Tipton","Harry Nilsson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["E. Hamilton Lee"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 12, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["28 September","28 September 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["A bench trial","bench trial"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Article 37"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Bermuda","India"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sir Alexander Tilloch Galt","the Canadian Confederation"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Katawhang Lumad","Lumad","The Lumad"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["100","121"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2001","16 November 2001"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["American Samoa","Puerto Rico","Hawaii","Northern Mariana Islands","Guam","Arizona","United States Virgin Islands"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Faithe Herman"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Bharat Ratna","Padma Bhushan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Poppy Drayton"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["May 1950"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["life"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 29, 1993","1993"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2004","2016"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Kate Siegel","Mckenna Grace","Kate Siegel and Mckenna Grace"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Twisted Sister","the American band Twisted Sister"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 16, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["DJ Flava","DJ Khaled","DeeJay Abstract","DJ Tom Clugston","DJ Teddy-O","DJ Eprom","Chloe x Halle","Nasty P","DJ Stylus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1540s"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["thirteen","10"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Elena Anaya as Aleera","Silvia Colloca","Josie Maran as Marishka","Elena Anaya","Silvia Colloca as Verona","Josie Maran"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Sixth Labour Government","Sixth Labour Government"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Fury in the Jury"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["May 17, 2015"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["constantly"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["December 6, 2001"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["a gender-neutral honorific"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["EMI Studios"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["While in the Dark Castle"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Andrée Bernard"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
 value = '["Rococo","neoclassicism","French Creole"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Mark Mothersbaugh","Paul Reubens","George McGrath"]'
+value = '["Mick Malthouse"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the G.I. Generation"]'
+value = '["8.15 miles","8.15","13.12Â km"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the 18th century Caribbean"]'
+value = '["the season seven premiere","In the season seven premiere"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Peter Ostrum","Gene Wilder"]'
+value = '["January 9, 2019"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Taraji P. Henson"]'
+value = '["16 October 2018","16 October, 2018"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2000","1998"]'
+value = '["Randall Flagg"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Captain George Thatcher Balch"]'
+value = '["two terminals","two"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2010"]'
+value = '["Plymouth, Massachusetts"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["September 1, 1945"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["rectum","colon","stomach","mucous membranes","esophagus","small intestine"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Tomás Mendez","Mendez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Pierre Larousse","anonymous fellow contributors"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["During World War I","World War I"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["size"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Tanner Elle Schneider","Elle King"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["morgue or mortuary","A morgue or mortuary"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Calgary, Alberta"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Federal Reserve"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Aegon","Princess Elia","Rhaenys","the Targaryen royal family","her children Rhaenys and Aegon"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the Government of India","Department of Electronics"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Senator Hadi Sirika","Sen. Sirika Hadi","Sirika Hadi"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["guanine"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["a difference","difference"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Waylon Jennings"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Bradley Cooper"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["John Schneider","Nancy McKeon","Juan Pablo Di Pace","Joe Amabile","Nikki Glaser","Mary Lou Retton","DeMarcus Ware","Danelle Umstead","Tinashe"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["John Jefferson Williams"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["designated in 1954","1954","extended in 2016"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["southeastern"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1607","Jamestown, Virginia","Between 1584 and 1589"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Mark Andreas Sheppard"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Justin Rose"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1950"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Lenny Kravitz","Yogi Berra"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Judges","Joshua","Kings","Samuel"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the 104th Congress"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 15, 2019","February 19"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Cliffs of Moher"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["major decisions","levy or collect any taxes"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 3, 2019"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Psyche"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Paul","Paul the Apostle","Paul the Apostle's"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["George Washington","Abraham Lincoln","Theodore Roosevelt","Thomas Jefferson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Project Method","progressive education"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Albert Lawrence Brooks"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the Intermontane Plateaus","Four Corners region"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the caval opening"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["red","Yellow"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 5, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["20","13"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Hector Barbossa","Captain Hector Barbossa"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["John Ellison"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Indiana"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["David Bamigboye"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["July 2012","July 28, 2012","August 19, 2012"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Glenn Shadix","Chris Sarandon","William Hickey","Ed Ivory","Paul Reubens","Catherine O'Hara","Ken Page","Danny Elfman"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2005"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1.8 billion"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Amos 'n Andy"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["James Madison"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Steven M. Zirnkilton"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["UCF Knights"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Ireland's Jonathan Sexton","Jonathan Sexton"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the 17th century","sometime around 1650"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Ben Affleck"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Daniel Day-Lewis","Katharine Hepburn","Jack Nicholson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sargassum seaweed","its characteristic brown Sargassum seaweed","the Sargassum seaweed"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["George Ezra"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Season 30"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["James Reynolds"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the father of the radio"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Bulgaria"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Your Name","Your Name."]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["184","303"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Nashville","Toronto"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 8, 2019"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Stacy Keibler","Rachel Bilson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Father Christmas"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Hephaestus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["036"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sebastian Vettel"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Janice Karman","Anna Faris"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Virginia class","Virginia class"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the spirit world"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jacob Marley","The Ghost of Christmas Past"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["after the year 2001"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1997"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the early 19th century","early 19th century"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Mavis Staples"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sthefany Gutiérrez","Tamaryn Green"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["petroleum","Gas"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["a Wednesday after Thanksgiving","in mid November","mid November"]'
 weight = 0.001
 
 [entities.fields.stats]
@@ -864,19 +864,19 @@ value = '["2018"]'
 weight = 0.003
 
 [[entities.fields.generator.choices]]
-value = '["three"]'
-weight = 0.003
-
-[[entities.fields.generator.choices]]
 value = '["Great Britain"]'
 weight = 0.003
 
 [[entities.fields.generator.choices]]
-value = '["ten"]'
-weight = 0.002
+value = '["three"]'
+weight = 0.003
 
 [[entities.fields.generator.choices]]
 value = '["congress"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["kareem abdul - jabbar"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -888,243 +888,11 @@ value = '["1981"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["kareem abdul - jabbar"]'
+value = '["ten"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["no-value indicator"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["dodge city, kansas","Kansas"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["emmanuel pinol"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["rotating calipers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1968"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["bachman -- turner overdrive","Randy Bachman"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1917"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["unsaturated fat"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["During the 1980s"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Elizabeth Debicki"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["atomic number 2","Helium"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["two primary bronchi","primary bronchi"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["general william howe"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Brent Crude"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the governor of the state","state governor"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["homologous"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["18, 426"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mid - size crossover suv"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the northern Kingdom of Israel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2256"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["actinide series"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Francis Julius Bellamy","Francis Bellamy"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["49 -- 47 BCE","49 BCE"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["engraved"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sovereign - class"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["bette davis"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["erotic sculpture"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["10 October 2010"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Vanna White"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["neil patrick harris","Jason Segel","alyson hannigan","Bob Saget"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["rhode island"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Star One"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["enacted a harsh slave code"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["fight - or - flight response","fight-or-flight response"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Cherokee tribes"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["alabama crimson tide"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["irish legend of stingy jack","Stingy Jack","Irish legend","Ireland"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["50 gb","up to 50 gigabytes"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["an evil disembodied brain","brain","a disembodied brain"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["M. A. Chidambaram Stadium"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Eddie Paul Martinez"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["geelong"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1988"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Charles Darwin"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["25","up to 25","25 players"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1607 in Jamestown, Virginia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1066"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["central and state government","both the central and state government"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sargassum"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["John Lewis"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["miguel d\\u00edaz-canel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mark a. sheppard"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["hindu"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["704"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["largely owned"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["8.15 mi"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["james rodriguez"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jerry Leiber and Mike Stoller"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Thespis"]'
+value = '["chemical"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -1132,31 +900,67 @@ value = '["July 2016"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["benjamin franklin"]'
+value = '["William Shakespeare"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["south of saratoga, new york","New York","Saratoga, New York"]'
+value = '["the g. i. generation"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["vehicle registration"]'
+value = '["1469","in the 15th century"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2017"]'
+value = '["bray studios","Bisham in East Berkshire","Berkshire","bray studios at water oakley, near windsor in berkshire","Water Oakley","Oakley Court"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Ray Bolger","ray bolger raymond wallace bolger"]'
+value = '["steam power"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Hadi Sirika"]'
+value = '["Charles Darwin"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Surat"]'
+value = '["American Express Co."]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Georgia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["amino acids"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["density"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Tom Brady"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["british general john burgoyne","General John Burgoyne","john burgoyne"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["6th"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Elizabeth Debicki"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["sara harvey"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["serena mason","Will Horton"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -1168,299 +972,19 @@ value = '["southern and western states"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2001"]'
+value = '["central and state government","both the central and state government"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["honorific"]'
+value = '["Ramsey Walters"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["roger l. jackson"]'
+value = '["actinide series"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["biconvex structure"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["dinoflagellates"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["yorktown, virginia","The Siege of Yorktown"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["stephanie szostak"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Richard Stephen Dreyfuss"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mahogany"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["spring equinox"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["lewis hamilton"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["phil lynott"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Walter Padick"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["13"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["transform"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["united states house of representatives","Congress","the 1994 Congressional election campaign"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["98th percentile or higher"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["pacific time zone","Pacific Standard Time"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["november / december"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2014"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["New York City"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["fourteen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jacobs","Christian Jacobs","casey siemaszko","twins Jason and Justin Draeger"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["laverne cox"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["united kingdom","the UK"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the g. i. generation"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["european single market"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["july 26, 1788"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["tennis, baseball, bowling"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["for a set number of minutes","an infringement of the rules","penalty"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Joni Mitchell"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["gulf and east coast states","the american gulf and east coast states","Florida"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Robert Walpole"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["alcoholism"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["steam power"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["34 calories"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["European Parliament"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["iceland","Argentina, Austria"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["november 2001"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["a Philippine province","eight provinces"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["benedict arnold"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Ohio State's Archie Griffin"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1971"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Justinian"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the clerk"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["reverse"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["folklore","Germanic folklore","collected and published folklore"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["70-85 million","70 - 85 million people"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["density"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["jerry reed","Burt Reynolds"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["raj guru gajraj mishra","Chandra Sekher Upadhyaya"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Meriwether Lewis"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Precambrian"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Michael Richard Pence"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["texas","Pennsylvania","Fredonia, New York","Louisiana"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["six geese a-laying"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hindustani classical music","Hindustani"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["fort bragg","Fort Bragg, North Carolina"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["molecular oxygen","molecular oxygen ( o )"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["United States"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Simon & Garfunkel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["\\u00e6thelstan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["all stages of pregnancy"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["shoulder"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["captain hector barbosa"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Fast & Furious 7"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mar\\u00eda conchita","Maria Conchita Alonso","Mara Conchita Alonso"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hatshepsut"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1945"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["june 13, 1973"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Max Carl Gronenthal"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kareem Abdul - Jabbar"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["5 september"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["haji mohammad siddiq choudri"]'
+value = '["hindu"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -1468,175 +992,39 @@ value = '["talmud"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the indus river","Sindhu"]'
+value = '["miranda richardson"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["sara harvey"]'
+value = '["Frank Sinatra"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["6th"]'
+value = '["pacific time zone","Pacific Standard Time"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["july 15, 1964","1964"]'
+value = '["july 1969","July 20, 1969"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the President"]'
+value = '["Allies"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Liev Schreiber"]'
+value = '["Vanna White"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["tokyo mx"]'
+value = '["accuracy"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["john broadus watson","John B. Watson"]'
+value = '["four steps"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["southeastern coast of Africa","Africa"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["cai lun"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1945","July 28, 1945"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1973, 1974","1973 and 1974","early in the 1973 season"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Italian inventor Guglielmo Marconi"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jimmy Carter"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["chicken meat","formed, white meat chicken"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the lander of Mars 2"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the federalist party"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["peter thomas"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["George Edward Bruns"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["39"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["early 2019"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["India Security Press"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Tom Brady"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["numbers 22 : 28","Book of Numbers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["H. B. Reese"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jean - Jacques Rousseau"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mount whitney"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["double bonds"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["july 5, 2000"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1995"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["daniel lissing"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["14"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Twenty - sixth Amendment","Voting Rights Act of 1965"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["India"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["green plants","plants"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["King Solomon"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1698"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mariska Hargitay"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["January 31, 1988","January 25, 1998","January 26, 2003"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["by the 2nd century"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["british general john burgoyne","General John Burgoyne","john burgoyne"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["high flow oxygen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Canada"]'
+value = '["local ordinance"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -1644,15 +1032,627 @@ value = '["Patrick Lloyd"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Kyle MacLachlan"]'
+value = '["tennis, baseball, bowling"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Queen Elizabeth II"]'
+value = '["the extrem shank end of the leg bone","the leg"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["serena mason","Will Horton"]'
+value = '["homologous"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jared leto"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["ancient Greece"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["honorific"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1995"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["double bonds"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Surat"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Halloween","Halloween night"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["united states house of representatives","Congress","the 1994 Congressional election campaign"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jean - Jacques Rousseau"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["haji mohammad siddiq choudri"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["choir or chorus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the caribbean"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mute","Muteness or mutism"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["luke combs"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["49 -- 47 BCE","49 BCE"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["terre haute, indiana","Vigo County, Indiana"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Meriwether Lewis"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Lake Erie","Lake Ontario","the Atlantic Ocean"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["enact laws","the granting of Royal charters","royal decisions","a bill","ratify"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["enacted a harsh slave code"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["antoine-laurent de lavoisier","J\\u0101bir ibn Hayy\\u0101n"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jerry Leiber and Mike Stoller"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 31, 1988","January 25, 1998","January 26, 2003"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["5 september"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Robert Walpole"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jacobs","Christian Jacobs","casey siemaszko","twins Jason and Justin Draeger"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["around 1.8 billion"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["supply and demand"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["8.15 mi"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["H. B. Reese"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Precambrian"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mid - size crossover"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Michael Richard Pence"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["t8"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["a Philippine province","eight provinces"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Canada"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Francis Julius Bellamy","Francis Bellamy"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["general william howe"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["irish legend of stingy jack","Stingy Jack","Irish legend","Ireland"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["july 1921"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Max Carl Gronenthal"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["kansas city"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mukesh khanna"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["agricultural","agricultural region","a market and road center"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["september 14, 2009"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["/ Payroll / Salaries / Managers","/Payroll/Salaries/Managers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cambodia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["atomic number 2","Helium"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["shoulder"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Portugal"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["vehicle registration"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["George Edward Bruns"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mar\\u00eda conchita","Maria Conchita Alonso","Mara Conchita Alonso"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["benedict arnold"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sanaa McCoy Lathan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["lewis hamilton"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["an evil disembodied brain","brain","a disembodied brain"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["november 2001"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2014"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["benjamin franklin"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["erotic sculpture"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["transform"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jimmy Carter"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Thomas Jefferson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["minimises selection bias","to reduce bias"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["former President John F. Kennedy"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mortuary","morgue"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["alcoholism"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["dodge city, kansas","Kansas"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cherokee tribes"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["13"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["United States"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["texas","Pennsylvania","Fredonia, New York","Louisiana"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Thespis"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["liquid chemicals","immiscible liquids"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mid - size crossover suv"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["unsaturated fat"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Egypt"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["bette davis"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["cai lun"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["folklore","Germanic folklore","collected and published folklore"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["alabama crimson tide"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["ural mountains"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["european single market"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["season 7"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["in the 1870s","1872"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Mariska Hargitay"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["templeton peck"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october to december 1936","1936"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["geelong"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["freedom of expression","live and work in the United States","right to have rights","Voting for federal office","to receive federal assistance"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["King Solomon"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["raj guru gajraj mishra","Chandra Sekher Upadhyaya"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["biconvex structure"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Elia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["During the 1980s"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["a muscular, hollow organ"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2256"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1945"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["early 2019"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["sugar cane"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["copper"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["53"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Twenty - sixth Amendment","Voting Rights Act of 1965"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["LeBron James"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["john broadus watson","John B. Watson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mount whitney"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["high flow oxygen"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["18"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["European Parliament"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["14"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["34 calories"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["bradley whitford"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jerry reed","Burt Reynolds"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mark a. sheppard"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["noble families"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1973, 1974","1973 and 1974","early in the 1973 season"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1698"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["phil lynott"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Hindustani classical music","Hindustani"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Joni Mitchell"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["fort bragg","Fort Bragg, North Carolina"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["daniel lissing"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["all stages of pregnancy"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["around 930 bce"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["New York City"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["spring equinox"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["southeastern coast of Africa","Africa"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["london","Ladbroke Grove in London"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Eddie Paul Martinez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["calories"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the lander of Mars 2"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["fourteen"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["gulf and east coast states","the american gulf and east coast states","Florida"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["John Lewis"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["july 15, 1964","1964"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["after the 1957 season"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Simon & Garfunkel"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1917"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["scapula"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["emmanuel pinol"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["rotating calipers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["peace on Earth and good will toward men","peace on earth"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["roger l. jackson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the temptations"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2001"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Star One"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["legislative","legislative branch"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["tokyo mx"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["six geese a-laying"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["excitation","electron excitation"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mahogany"]'
 weight = 0.001
 
 [entities.fields.stats]
@@ -1674,479 +1674,15 @@ value = "[]"
 weight = 0.723
 
 [[entities.fields.generator.choices]]
-value = '["1987"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
 value = '["2013"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["bank of america"]'
-weight = 0.001
+value = '["1987"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["the second tuesday of the january","January 11, 2011"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Square academic cap","capuchon","\\\"Top Hat\\\""]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mad cow disease"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["worldwide economic recession","Great Depression","economic downturns"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["21"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["William Dawes Jr."]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["jenna johnson","Charo","Emma Slater","Dorothy Hamill","debi mazar","Chuck Wicks"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["ireland","Canada","united kingdom"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["october 10, 2017","April 10, 2018","May 22, 2018","october 9, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["131","Universe Survival Saga"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["his wife, annie"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Griffin","Ohio State"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["52.7 million","52. 7 million"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["English","Spanish"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["new bone growth takes place"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2015","2017","October 20, 2012","2007","2011","2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["washington huskies","UCLA Bruins","notre dame","New England Patriots","the Boise State Broncos"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Eddie"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["western Tamil Nadu","Surguja District","Central, Eastern and South India","Assam"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["sailing small craft","safety - critical applications"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["dinoflagellate"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["elise stefanik","elise marie stefanik"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["responsibility to protect","pay taxes","filial support","right to have rights","Voting for federal office"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["two-dimensional liquid","a bilayer of phospholipids","a lipid bilayer","restricts the lateral diffusion of membrane components"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["october 1963","EMI Studios in Studio 2","Abbey Road Studios"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1050s","1067"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the confederacy","the Confederate States of America","great britain and france","France"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Milwaukee","Chicago","Lebanon, Kansas"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["steve doocy","Lauren Susan Green","Patti Ann Browne","Brian Kilmeade","Lauren Green"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Richard Chamberlain","Louis Hayward"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Dennis Quaid","Tom Skerritt"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["alexis ren","Steve Wozniak","peta murgatroyd","Allison Holker","Jordan Fisher","debi mazar","Debbie Gibson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Juarno Augustus"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Marley's ghost"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["penn state","Oklahoma","Minnesota Golden Gophers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Stillwater, Saratoga County, New York","Schuylerville, New York"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["plymouth rock","Cape Cod"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Aphasia","mixed transcortical aphasia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["october 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["november"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jack Dorsey"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["prime minister sir john a. macdonald","the Canadian government"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Gothic architecture"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["station code","station code for a village called Malton","a village called Malton"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the taliban","the Taliban regime"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Dormer"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["over 2080","2080","over 1100","over 200"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["bobby bones","Derek Hough"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["welford park in berkshire"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the fourth season"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["between 36 and 40 million people"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["united states"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Yondu"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the state legislature","the President"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["labour party"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["individual noblemen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Tennessee Titans","the New England Patriots"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["atlanta, georgia","Mercedes-Benz Stadium in Atlanta, Georgia","Mercedes-Benz Stadium","mercedes - benz stadium in atlanta, georgia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["seven","10","6","7"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the legislature","the legislatures of the states"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["photoreceptor cell","photoreceptor cells"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["approximately 10,840","approximately 8,000"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["union"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["round steak","beefsteak"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["five gold rings","gifts","a gift"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2009"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["7","eighth","Seven","six","6"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["warmth"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Uttar Pradesh"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the President of India"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["after the 1957"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["53"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["ozone"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["spring of 1950","1 November 1955","November 1963"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["12","DirectX 12"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["shayne ward"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Photography"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Tyler Mane"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["10 December 2017","11 november 2018","2018","7 April 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["virginia-class","Virginia-class submarine"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["arizona cardinals","Tennessee Titans"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["n.k. singh","Nand Kishore Singh","Shri Y.B. Chavan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["December 14, 1970","1970"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Pittsburgh Steelers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kyrsten Lea Sinema"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Miguel Daz - Canel","miguel diaz - canel","Miguel Mario Daz-Canel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the voting rights act"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["3"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mariana klaveno"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2012","2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["consuls"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["lunar rock","Moon rock"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2:00 a.m.","8 : 00 p. m.","6:00 a.m."]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Senate"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Christians"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["plynlimon in mid wales"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["He"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2012","April 2008","1994","2009","1927"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["7 \\u2013 9 feet"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["within the nucleus"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Chicken or the egg","hen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["state or territorial governor","the state adjutant general","adjutant general","the President"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["on each shoulder","on the upper left arm","on the collar","the upper left arm"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Colorado Plateau"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["twenty-ninth season","The twenty - ninth season","season 29","29","twenty - eighth season"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["federal communications commission","their governments","PPL"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["from 2010 to 2014","Wednesdays and Sundays"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["september 28, 2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Great Depression"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["archie griffin","Cam Newton","Tim Tebow","Sam Bradford"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["third season","two","5"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["respect"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["erikson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sthefany Guti\\\\u00e9rrez"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sri Lanka"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["sahel","the Isthmus of Suez","Asia","desert"]'
+value = '["september 27, 2017","May 9, 2018"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -2154,311 +1690,55 @@ value = '["low nutrient density","monosaccharides"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["brooke shields"]'
+value = '["the state legislature","the President"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["axis powers"]'
+value = '["individual noblemen"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Ideal Toy Corp."]'
+value = '["worldwide economic recession","Great Depression","economic downturns"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["registrant type"]'
+value = '["Griffin","Ohio State"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["English and Scottish origin"]'
+value = '["his wife, annie"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Alta California"]'
+value = '["october 27, 2017"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the spirit"]'
+value = '["the god hephaestus"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Barcelona","Barcelona, Spain"]'
+value = '["Lionel Messi"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["october 31"]'
+value = '["dinoflagellate"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Connie Francis"]'
+value = '["regulates calcium ion concentration","calcium ion concentration"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2018"]'
+value = '["Passenger : Normal"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["field yates","Matthew Berry"]'
+value = """["Marley's ghost"]"""
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Klondike"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["117"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Christopher Sarandon Jr."]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["eleven regional federal reserve bank presidents","seven members of the Federal Reserve Board"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Fort Hood"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["5 October 2018","2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["an extinct stratovolcano"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Isadora Duncan","Dai Ailian"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["since the 1990s","the 1980s","january 1, 1983","1960s","1979"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["governor ralph torres"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["david lloyd george","Herbert Henry Asquith","Georges Benjamin Clemenceau"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["january 2018","11 January 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["rural"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["England"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["south kerala","south Indian state","Chengannur","south","the south indian state of kerala","Palakkad","Thiruvananthapuram"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["a multi - party representative democracy"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Independence Hall"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["981","about 900","981 different manuscripts"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["5","2","14"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Army","united states navy"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Will"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Incumbent Republican Governor Greg Abbott"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["pittsburgh steelers","Tennessee Titans"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["50 to 85 million"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["sir cyril radcliffe","parliament of the united kingdom","Indian Independence Act 1947","the labour government"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Cleveland Browns","Detroit"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Association football","Basketball"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["6","six","5","10"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["videsh sanchar nigam limited","videsh sanchar nigam"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["july 2000"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["october 17, 2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1998"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["francis scott key","1931","rabindranath tagore"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2005","1995"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["sugar beets"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Chris Gayle"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["electron donors"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["intrinsic eye muscles","eye","extrinsic eye muscles","eye muscles","levator palpebrae superioris"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["executed","Most of the captured slaves were executed"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Northeast"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Austrian Empire","the United Kingdom","british empire"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["september 27, 2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mexico","incursion by russian fur traders"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["brian snitker"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["katherine","robert thorn"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["australia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Coco"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["-27.2 \\u00b0 C","-27.2 \\u00b0C"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["calcium sulfate"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["pakistan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The 2nd Cataract"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["uterine rupture","high concentrations of oxygen","asphyxia","Perinatal asphyxia","increased carbon dioxide retention","allergies","error detection","liability insurance"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Philadelphia 76ers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["orchids"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the 16th century","1548","31 October 1548","the 1520s","1521"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["any time","ash wednesday and good friday","Thanksgiving","Christmas Eve"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Weeknd","Harry Styles","Ed Sheeran","Lady Gaga","Taylor Swift"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["chemical snow"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["63","ten"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["western united states"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["old life"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Moliagul, Victoria, Australia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["around 1. 8 billion","24%"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the last olympian"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["united states","los altos hills, california"]'
+value = '["station code","station code for a village called Malton","a village called Malton"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -2466,7 +1746,727 @@ value = '["a lord","Lord of the Manor"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
+value = '["Aphasia","mixed transcortical aphasia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the Colorado Plateau"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Chicken or the egg","hen"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["governor ralph torres"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["field yates","Matthew Berry"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["western united states"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mad cow disease"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["7","eighth","Seven","six","6"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Julie Andrews"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Alta California"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Weeknd","Harry Styles","Ed Sheeran","Lady Gaga","Taylor Swift"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["july 2000"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["alexis ren","Steve Wozniak","peta murgatroyd","Allison Holker","Jordan Fisher","debi mazar","Debbie Gibson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["50 to 85 million"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1980"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["five gold rings","gifts","a gift"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Christians"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["117"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Independence Hall"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jordan fisher","nyle dimarco","Rashad Jennings","Donald Driver"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the Senate"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["executed","Most of the captured slaves were executed"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["erikson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["david lloyd george","Herbert Henry Asquith","Georges Benjamin Clemenceau"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["10000"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["connie nielsen","jeremy sisto","Zeeko Zaki"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["wake forest","Oklahoma Sooners","Western Michigan","kansas state wildcats","Houston Cougars","the Texas Longhorns"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["sugar beets"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the second tuesday of the january","January 11, 2011"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Klondike"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["10 December 2017","11 november 2018","2018","7 April 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Ideal Toy Corp."]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["within the nucleus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["british colonial officers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Moliagul, Victoria, Australia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
 value = '["2007","June 2017","in 2007"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["francis scott key","1931","rabindranath tagore"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2009"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["consuls"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the aquifer"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["houston astros"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["after the 1957"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["3"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jenna johnson","Charo","Emma Slater","Dorothy Hamill","debi mazar","Chuck Wicks"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["5","2","14"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["third season","two","5"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["electron donors"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["soviet union"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["plymouth rock","Cape Cod"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["since the 1990s","the 1980s","january 1, 1983","1960s","1979"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["atlanta, georgia","Mercedes-Benz Stadium in Atlanta, Georgia","Mercedes-Benz Stadium","mercedes - benz stadium in atlanta, georgia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2005","1995"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the taliban","the Taliban regime"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Tyler Mane"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Angus and Laura"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october 31"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["6"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Fort Hood"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["warmth"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["December 14, 1970","1970"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october 1963","EMI Studios in Studio 2","Abbey Road Studios"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2015","2017","October 20, 2012","2007","2011","2016"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["lewis and clark"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["131","Universe Survival Saga"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["electricity","parallel processing","water or steam"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Richard Chamberlain","Louis Hayward"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["november"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Gothic architecture"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Dormer"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["63","ten"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Coco"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Isadora Duncan","Dai Ailian"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Philadelphia 76ers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Yondu"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["pittsburgh steelers","Tennessee Titans"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the legislature","the legislatures of the states"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1050s","1067"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["rural"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Mexico","incursion by russian fur traders"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2012","April 2008","1994","2009","1927"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Miguel Daz - Canel","miguel diaz - canel","Miguel Mario Daz-Canel"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The legislative body","the General Court","Parliament","elected rulers","congress"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1998"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["n.k. singh","Nand Kishore Singh","Shri Y.B. Chavan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Atlanta","atlanta, georgia","Los Angeles"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1789"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Christopher Sarandon Jr."]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["welford park in berkshire"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["john d. rockefeller","John Davison Rockefeller Sr.","Carlos Slim"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["united states"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["brooke shields"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["elise stefanik","elise marie stefanik"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["congressman tim walz"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["archie griffin","Cam Newton","Tim Tebow","Sam Bradford"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1 -- 2 January 1942","1942","January 1942"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["981","about 900","981 different manuscripts"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the voting rights act"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["poor agricultural practices","eutrophication","plate tectonics","Wellhead blowout"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Square academic cap","capuchon","\\\"Top Hat\\\""]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2015"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Faro Automated Solutions","GAIA"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1975","June 1975"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["labour party"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["old life"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["spring of 1950","1 November 1955","November 1963"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["shayne ward"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2012"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["steve doocy","Lauren Susan Green","Patti Ann Browne","Brian Kilmeade","Lauren Green"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["sixth"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Army","united states navy"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sthefany Guti\\\\u00e9rrez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Will"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["prime minister sir john a. macdonald","the Canadian government"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Photography"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["6","six","5","10"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["bank of america"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["virginia-class","Virginia-class submarine"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["katherine","robert thorn"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["responsibility to protect","pay taxes","filial support","right to have rights","Voting for federal office"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2015","2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["respect"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["twenty-ninth season","The twenty - ninth season","season 29","29","twenty - eighth season"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["around 1. 8 billion","24%"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Chuck Woolery"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2,400 million years ago","some 1.85 billion years ago","Paleoproterozoic era","2, 400 million years ago"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october 10, 2017","April 10, 2018","May 22, 2018","october 9, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["state or territorial governor","the state adjutant general","adjutant general","the President"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Barcelona","Barcelona, Spain"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["on each shoulder","on the upper left arm","on the collar","the upper left arm"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["He"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the spirit"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["21"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["atlanta, georgia","mercedes-benz stadium","mercedes - benz stadium in atlanta, georgia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Juarno Augustus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Chris Gayle"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["penn state","Oklahoma","Minnesota Golden Gophers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jack Dorsey"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["May 1, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["coal"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["pakistan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["axis powers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["calcium sulfate"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["an extinct stratovolcano"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["eleven regional federal reserve bank presidents","seven members of the Federal Reserve Board"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["English Fairy Tales","The Three Little Pigs"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october 10, 2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["green bay packers, inc.","Packers","Green Bay Packers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["5 October 2018","2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["photoreceptor cell","photoreceptor cells"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["round steak","beefsteak"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["English","Spanish"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["australia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["continental transform fault"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["a female American Cocker Spaniel"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Super Bowl LII","february 4, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Chris Martin"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Alabama Crimson Tide"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Henry"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["epinephrine"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Stillwater, Saratoga County, New York","Schuylerville, New York"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The 2nd Cataract"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["first stoppage of play","one minute"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Uttar Pradesh"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sri Lanka"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["ral esparza"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["interest rates"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["federal communications commission","their governments","PPL"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cleveland Browns","Detroit"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["vice president","President"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["goo goo dolls"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["september 28, 2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Great Lakes"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["october 17, 2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["ireland","Canada","united kingdom"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["uterine rupture","high concentrations of oxygen","asphyxia","Perinatal asphyxia","increased carbon dioxide retention","allergies","error detection","liability insurance"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["William Dawes Jr."]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the fourth season"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["March 30, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["plynlimon in mid wales"]'
 weight = 0.001
 
 [entities.fields.stats]
@@ -2488,6 +2488,10 @@ value = "[]"
 weight = 0.226
 
 [[entities.fields.generator.choices]]
+value = '["2011"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
 value = '["new england patriots","Los Angeles Dodgers"]'
 weight = 0.002
 
@@ -2496,663 +2500,11 @@ value = '["1984"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["2011"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["100","370","Wilt Chamberlain"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1894"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The Fate of the Furious","The Fast and the Furious","\\\"Fast Five\\\""]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["plastocyanin","thylakoid ATP synthase","plastid terminal oxidase"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["november 6, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Cheech Marin"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["fresco","Paris"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["diary of Samuel Pepys","Pinewood Studios"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["karen dotrice","Julie Andrews","Dick Van Dyke"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["coupe","Jeep"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Geffen Records","Hollywood Rose"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["unitary parliamentary representative democracy","a coalition between Labour and New Zealand First","a coalition between Labour","Jacinda Ardern","Wellington","Parliament"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2000","2018","2008"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["raga rock","English Baroque"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["uly 2, 1928,"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["evergreens","usually made from evergreens","German Lutherans","Illinois","Scotland"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["shiganshina","May 9, 2016","Ilse's Notebook","July 9, 2016","25","ground's counterattack","Mikasa","the 50th issue of 2016","Japan"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Collingwood"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["30 ft","100 m","13","1.2","1.8","Parker","a few miles","0 to 6 feet"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["season eight","the eighth-season finale","season 9"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["in the stroma","carbohydrate molecules"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Erik Kuselias","Erin Michelle Coscarelli","Mike Tuggle","Adam Caplan","peyton manning","Chris Harrison","the United States"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["rita skeeter","Michael Gambon","Danny Taylor"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["February 21, 1885","October 28, 1886","1916"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["multitasking","heat or electricity","New England","thousands of years","AC motors"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2014","2016","2009"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["King Philip III"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["snow white","Telltale","Bigby Wolf"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Sorting Hat"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["richard harris","jim caviezel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["guerrilla games","Isaac Asimov"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Heartland"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["right atrium of the heart","T12"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["reward pathway","hypothalamus"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["aeschylus","ancient greece","John Mitchell"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["July 2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2017","2005 -- 06","2018","1978","2005","1986","1989\\\\u201390"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["orthodox hindus","Christianity"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["indira gandhi","Sanjay Gandhi","jawaharlal nehru","IGCAR"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Edward James Olmos","Rosie Perez","Miguel","Hern\\u00e1n Cort\\u00e9s"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["shoes","Cracker Jack","Cracker Jack ring","paper bag","Deep Blue Something","Home"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["junior walker & the all stars","Ricochet","The Sundays","tim mcgraw","Snoop Dogg","Oh Land"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["dwight d. eisenhower","Franklin D. Roosevelt","John F. Kennedy","Thomas Woodrow Wilson","Ronald Wilson Reagan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Duke Blue Devils","Duke"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Louis XIII","Iron Man"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["saif ali khan","Sushant Singh Rajput","Vikram Singh Chauhan","kriti sanon","Shivangi Joshi","Poorva Gokhale"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["non-denominated","national","h\\u00c9ireann","butterwort","Nationality","pence","\\\"descendant\\\"","non-denominated postage"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mike Vaughn","Stu Macher","Charles Butler"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["basalts","mafic plutonic rocks","granite"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["neil gorsuch","Rolando Acosta","Samuel Anthony Alito Jr.","Robert Nathan Wilentz","brett kavanaugh","Michael R. Morgan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["seven"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["jay hernandez","Tim Kang"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1789","June 8, 1789"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the currency in which the securities are denominated","S","the US Treasury"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Southampton"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Larry Bloom","Bridgette Doremus","Ian Mackley"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the early 18th century","by the early 18th century","by 1650","2000","1840"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["01:00 LST","nine to twelve months"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sara Crowe","John Hannah","Tom"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["April 14, 2017","1971"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["romany malco","Christina Moses","Grace Park","Allison Miller","lizzy greene","Odessa Young"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["10","545"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["february 22, 2019","March 1, 2019"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Congress","the Whigs"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Joywave"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Lincoln Parish","Matt Shultz"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["German","French"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Chicago Cubs","the San Diego Padres","The American League"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Prison rape","hunger strikes","general government","Angola"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["part iv","Article 41","Article 356","43A"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the united monarchy","samaria","Kafr Qara"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jim Thornton"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["los angeles lakers","Chicago Bulls","Cleveland Cavaliers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["David Francis Somerville Learner","peter jones"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["jackie gleason"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["vulval vestibule"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["cellular energy","primary active transport that uses ATP","adenosine triphosphate"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Julie Foy","Jennie McAlpine"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the choir"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["addis ababa","Dire Dawa","Tripoli"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["24 weeks","20 weeks","two weeks","up to 24 weeks"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Numbers 22:22","genesis 30 : 43","Numbers 22\\u201324"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["season 8","Teen Wolf","season 6","sixth season","eighth","season 2","\\\"Code Breaker\\\""]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["the downward spiral","5x21","Promised Land","Home","my brother's keeper","21"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Apollo 1","Apollo 1 crew","vladimir komarov"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kelly Clarkson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["+ 1 844","3"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["about 1, 700","five","one","63467"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Beatles","the Ed Sullivan Show"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["france","Iroquois","the Iroquois Six Nations","American Indian allies","the colonies of British America"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["march 18, 2018","October 23, 2018","October 16, 2018","June 20, 2018","March 2, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["25"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Lionel Logue","Ron"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["crushed cornflakes","christmas","Frozen"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1983","ca. 1000 ce","1925","1968"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["as soon as 2019"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1899"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["57 through 71","118","two"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Dustin Johnson","Bud Cauley","Justin Thomas"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["nucleic acids","Plant hormones","Vitamin C"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["july 2014","December 2014","1994","new year's eve","1898","1962"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["venkaiah naidu","Ram Nath Kovind","Muppavarapu Venkaiah Naidu"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["paranasal sinuses","temporomandibular joints (TMJ)","Clivus"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Piccolo Jr. Saga"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["kenneth branagh","Gene Wilder"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["phil collins","English drummer Phil Collins"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["josh groban","Haven Gillespie","Eddie Deezen","Tom Hanks","bing crosby","the Kringle family"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Shinedown","Yardbirds","Barry Manilow"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["us $ 1.8 billion","USD 54.5 million","Rs 27.824 billion","usd1000 per person","$126 million","57.3 million"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Christopher Columbus'"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kenneth Wolstenholme"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["209"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["at the end of a number","India","the bakhshali manuscript","on monuments","By 1770 BC","zero"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["city","metatheatrical","Midwestern","mining town"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["April"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Chlo Sevigny","uma thurman","Rachel Griffiths","Laura Linney","Shelby Miller"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Moscow"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["matt stonie","richard blais","Sophie Faldo","Zac Young","sandra lee","Jason Smith"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the ghost of christmas present"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["kismet","Pom Klementieff","Michelle Yeoh","Zoe Saldana"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Magne\\u00adsium","Fresnel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["january 9, 1987","November 16, 2015","april 22, 1998"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["raheem sterling","Harry Kane","Mohamed Salah","Lionel Messi","Matt Doherty"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["ganges"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["June 7, 1990","1998","31 March 2001"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["december 24, 1926","1959"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["o( n )","O","24 hours or less","O(log n)"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["wake forest high school","Lawrence Central High School","carver high school","pearsall high school","Western High School"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2003"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["c. 400 BCE","132 bce","the second century CE"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["steve conway","Bobby Vee"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["progesterone","Pregnenolone"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["pope clement vii","Pope Eugene IV","dustin hoffman","Pope Francis","Richard Madden as Cosimo de' Medici","clement vii","Francis","Stuart Martin"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["september 29, 2017","September 23, 2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kyler Mackenzie Pettis"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["drive","Thom","Wild At Heart","Bonnie and Clyde","The Cars"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Saifai International Cricket Stadium","sharjah cricket stadium"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2018","November 6, 2018","since 2 October 2017"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mid - 1990s","1933","1994"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Pakistan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["my dear","sita ram ji","freedom or liberty","Sh\\u00f4rot"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Peptidoglycan","Oomycetes"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["systematics","Biological systematics","biogeography","Conservation biology","Phylogenetics"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["early 2007","august 12, 1981","1974","1981"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["King Charles II","the continental congress","Britain"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["charles lindbergh","Barry Goldwater","James Harold Doolittle","the wright brothers","CBS","Oscar"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["two","2","18","up to two","eight","8"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Amaziah","Jesus"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["february 5, 2006","2016","1988"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1001","128","1906"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Rudolph","Donner"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["anatolian turks","the Turks","Galliformes","anatolia","pod","Turkey"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["per gessle"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["8","13","23","36","two"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["animal","Cenozoic","Paleozoic"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["46","27"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Anna Rajam Malhotra","Devika Rani","Anna Rajam George"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1 january 1973"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Russia","Ethiopia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1833","1941","1937","1940","may 1941","1944","1977"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["evan handler"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["beau garrett","Will Yun Lee","Freddie Highmore","hill harper"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["tyler florence","Nick Slater","Michelle Tribble","lvaro lvarez","Hazell Mckenzie","Vivica"]'
+value = '["October 8, 2017","The Funny Things You Do"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["f - type atpase"]'
+value = '["united states","europe and north africa","Los Angeles","Good Girl Gone Bad"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -3160,95 +2512,103 @@ value = '["California"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["albert henry woolson"]'
+value = '["the ghost of christmas present"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["president","Congress","the World Health Organization"]'
+value = '["Stanley Tucci"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["16 april 2018"]'
+value = '["as early as 1849"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["moments before waking","a basic level","the fourth week"]'
+value = '["best costume design"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["woody harrelson"]'
+value = '["Tinker Bell","medicine","the Melbourne Cup","Peter"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Tom","Ethan Brooke","stephen amell","Erin Krakow","Grant Bowler"]'
+value = '["proletariat","Bull"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["The endoplasmic reticulum synthesizes molecules","plasma gel"]'
+value = '["marsha lisa thomason","Daniela Sofia Korn Ruah","Margaret Denise Quigley","Annie Wersching"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Donald J. Trump"]'
+value = '["September 29, 2017"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["october 27, 2017","January 19, 2018","April 27, 2017","October 8, 2018","april 7, 2017","August 13, 2018","November 30, 2016","June 2, 2018"]'
+value = '["2015","2017","2016","april 4, 2017"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["cryptic nature","lester b. pearson","PUJ","Toronto Pearson International Airport","entered pop culture"]'
+value = '["5 January","christmas day"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["doak walker","cam newton"]'
+value = '["c. 400 BCE","132 bce","the second century CE"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["19 June 2018","4 may 2018","May 25, 2018","September 2018"]'
+value = '["Jack Skellington"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["The House initiates impeachment cases","Congress"]'
+value = '["Aristotle","Essence","physical and chemical properties","two","Chemical"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["josh robert thompson","brad williams","Kiefer Sutherland","Kiefer William Frederick Dempsey George Rufus Sutherland","Chris Rock","Larry Wilmore","Orlando Jones"]'
+value = '["sonny boy williamson i","Sharon, Lois & Bram","Maureen McGovern"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["wealthy commoners","the gentry","England"]'
+value = '["motor neuron","the vestibular system"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["four"]'
+value = '["january 9, 1987","November 16, 2015","april 22, 1998"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["michael malthouse","Bill Belichick","Brent Harvey"]'
+value = '["55","355 calories","375","450","carbohydrate","22","13961316"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Covent Garden","covent garden fruit, vegetable and flower market","Los Angeles","Toronto","Toronto, Ontario Canada","greenwood falls, virginia","British Columbia","Britain"]'
+value = '["Ceylon"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["abraham lincoln","Martin Van Buren"]'
+value = '["Mark Dayton"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Brandon Edwin Cruz","Mark Toby"]'
+value = '["Bruns","Nicholas Jonas","Philippines","Klaus Badelt"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Joe McElderry"]'
+value = '["Bill Pence","mr. lathrop","Dennis Weaver","Rich Wyatt"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["ovarian cysts","AFE"]'
+value = '["alun armstrong"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Constantinople"]'
+value = '["wetlands","Quebec City","the Kings Plains creek"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Lincoln Parish","Matt Shultz"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["faceman \\\" peck","Special Forces","the Arizona Cardinals","Faceman"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -3256,23 +2616,499 @@ value = '["One"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["jodi benson","Loreto Peralta","Jodi Marie Marzorati Benson","Merrin Dungey","patricia ann carroll","Gina Gershon"]'
+value = '["the mountains of eastern anatolia","Al-Qurnah","the Persian Gulf"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["4th century BC","1716","six centuries"]'
+value = '["the New York Giants"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["temporoparietal junction","the Equator"]'
+value = '["chicago","Donna","Topher Grace"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["sean combs","Justin Martin","Richard Parnell Habersham","Sidney Poitier","Ralph Carter"]'
+value = '["march 1987"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["June 26, 2011"]'
+value = '["sinoatrial node","heart"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["one of the elected Senators","Vice President"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["november 6, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["head","head\\\" or \\\"skull","cream of coconut","Portuguese"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["sarvepalli radhakrishnan","Mohammad Hamid Ansari","Muppavarapu Venkaiah Naidu","Venkaiah Naidu","Pawan Kumar Chamling"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Dustin Johnson","Bud Cauley","Justin Thomas"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["may 19, 2018","March 15, 2018","2018","April 20, 2018","September 27, 2018","may 17, 2018","May 19, 2016"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Singha Durbar","Nepal"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["the downward spiral","5x21","Promised Land","Home","my brother's keeper","21"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["early 2018","26 October 2017","2018","April 27, 2018","november 11, 2017","19 October 2015","TBA","August 1, 2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Rashad Jennings"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["16th congressional district","Pennsylvania's 16th congressional district","7th congressional district","Colorado's 2nd congressional district","12th","Pennsylvania's 7th congressional district"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["natalie","Luther Ingram","Esperanza","alex"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["los angeles dodgers","Dodgers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["nearly $35 million","university scholarships","$ 25, 000","$1","6"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["diary of Samuel Pepys","Pinewood Studios"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["michael dunn","Lennard Pearce","Jennifer Lawrence","tefan avr","Vas Blackwood","tamzin outhwaite","Sarah Duncan","John Challis","Andr\\\\u00e9e Bernard"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Joe McElderry"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Stephen Curry"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mtm recognition","pawhuska, oklahoma","Louisville"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["robert david hall","Kathleen Rose Perkins","rob kerkovich","Zoe McLellan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["A Christmas Carol"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Matt Walst","Mormon Tabernacle Choir","Johnny Keyes and the Magnificents"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Wood","45.9%"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["winter months","winter"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2000","2018","2008"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["fiend","The Imp of the Perverse","irritation","the impression of pluto","nervousness","Necromancer"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["emmanuel piol","Sonny Perdue"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["gev","C","Asheville Regional Airport","CLT"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["April 14, 2017","1971"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["mother teresa","Amartya Sen","Manjul Bhargava","A.P.J. Abdul Kalam","Subhash Khot","Rabindranath Tagore","Sachin Tendulkar"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["samaresh basu","Dulquer Salmaan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1 january 1973"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["snow white","Telltale","Bigby Wolf"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the early 18th century","by the early 18th century","by 1650","2000","1840"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Shinedown","Yardbirds","Barry Manilow"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["around the year 410","the 5th century"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["peasants","1812","German"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1898"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1789","June 8, 1789"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["uly 2, 1928,"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Afzal Rahman Khan","Muhammad bin Qasim","Afzal Akram Rahman Khan","general sir frank walter messervy","British","Muhammad Ali Jinnah"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Nicholas Sparks'"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["monounsaturated fatty acids","monounsaturated","stearidonic acid","alkenes","monounsaturated fat"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["two","2","18","up to two","eight","8"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["eleven","12","13","six","11"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["post-transition metal","Group 11"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Andrew Wynford Davies","Kevin Spacey","Barry Blue"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1999","2007"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["pia miranda","Kate Beckinsale","Yvonne Monlaur"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Michael Jordan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["nick ayers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["east africa","Indian Ocean","the coast of East Africa"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["April 12, 1971","1970"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["kismet","Pom Klementieff","Michelle Yeoh","Zoe Saldana"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Vancouver, British Columbia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Duke Blue Devils","Duke"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 2015"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["aeschylus","ancient greece","John Mitchell"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["about 1, 700","five","one","63467"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Commonwealth","Group of Five","the United Nations Charter"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["13 September 1959"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["right atrium of the heart","T12"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["los angeles lakers","Chicago Bulls","Cleveland Cavaliers"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the second saturday in march","the second Saturday of March","the second Saturday of August","the first sunday in november","the second Sunday in March","the first Sunday in October"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jackie gleason"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["v8","C","four"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Amybeth McNulty","Nicollette Sheridan","Lucas Jade Zumann"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Kenneth Wolstenholme"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["albigensian crusade","the Byzantine Empire","Jerusalem","the Second Crusade"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1919","march 29, 1919"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["hindi"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["other inorganic molecules"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["in the stroma","carbohydrate molecules"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Kira McLean","Samara Cook","Lucy Hale","Charlotte DiLaurentis","ashley benson","Mona Vanderwaal"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Edward James Olmos","Rosie Perez","Miguel","Hern\\u00e1n Cort\\u00e9s"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["my dear","sita ram ji","freedom or liberty","Sh\\u00f4rot"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["vowels","Area Number","Belgium"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2014","february 5, 2017"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cholula, Puebla, Mexico","Srirangam","angkor wat","Jerusalem"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["philae","The Western Desert","The Nile","egyptian labyrinth","Nile River"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["122","118","311"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["7 hurricanes","14\\u201319 named storms","92 -- 198","11","14\\u201319","between 92 and 198","the Atlantic Ocean","over 3,300","14\\\\u201319"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the legislature","the legislature of each state","state legislatures","the house of representatives","Congress","270"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["john gallagher jr.","Jennifer Garner","tyson ritter"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Moscow"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["esthetician","Porter"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["albert henry woolson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Christina Applegate"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["dr. king","Hosea Williams","Edmund Pettus","Edgar Nixon","SNCC"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["March 29, 2018","March 29, 2019","October 2, 2018","United Kingdom"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["april 20, 1937"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["systematics","Biological systematics","biogeography","Conservation biology","Phylogenetics"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["fifty - six foot","50 ft","fifty-six","two","10","seven","50 feet"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Russia","Ethiopia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["bernie taupin","a music industry executive","Les Garland","bologna","Starship"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["July 2016"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Samuel Johnson","voltaire and jean - jacques rousseau","Finn B\\u00e1lor","Nathan Bailey"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["france","Iroquois","the Iroquois Six Nations","American Indian allies","the colonies of British America"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["f - type atpase"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Oberyn Martell","Haf\\u00fe\\u00f3r J\\u00fal\\u00edus Bj\\u00f6rnsson","Stannis"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["animal","Cenozoic","Paleozoic"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 8, 1998","March 27, 2018","January 27, 2018","2019","may 22, 2018","October 10, 2017","April 10, 2019"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["clement attlee","Winston Churchill"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = """["Tony Lumpkin","john o'keeffe","Spain","Oliver Goldsmith"]"""
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2011","1839"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Catriona Gray of the Philippines","Catriona Gray","Cheryl Patton of Florida","ximena navarrete","Laura Gonz\\u00e1lez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jay hernandez","Tim Kang"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Chlo Sevigny","uma thurman","Rachel Griffiths","Laura Linney","Shelby Miller"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Julie Foy","Jennie McAlpine"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["February 21, 1885","October 28, 1886","1916"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2013"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["ganymede"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["miranda bailey","Chandra","James","ellis","English"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["route 66","Hit the Road Jack","Ray Charles","The Killing Stones","rise up","Margie Hendrix"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Piccolo Jr. Saga"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Arizona"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["josh groban","Haven Gillespie","Eddie Deezen","Tom Hanks","bing crosby","the Kringle family"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["season 8","Teen Wolf","season 6","sixth season","eighth","season 2","\\\"Code Breaker\\\""]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -3280,7 +3116,171 @@ value = '["joel johnstone","tony shalhoub","kevin pollak","Max Casella","Eltony 
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["sonny boy williamson i","Sharon, Lois & Bram","Maureen McGovern"]'
+value = '["February 5, 2016","14 November 2014"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Provincetown, Massachusetts","Provincetown Harbor","Plymouth Colony","plymouth, england","Colony of Virginia"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jeremy Davies"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["junior walker & the all stars","Ricochet","The Sundays","tim mcgraw","Snoop Dogg","Oh Land"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["hans lippershey"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["cupid","Pan","Proserpina","Cooke"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the l - shell","positron","the neutron"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["single market","trade bloc","an embargo","The Block","SADC"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["01:00 LST","nine to twelve months"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1974","2011","April 1981"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["jack pearson","Chris Sullivan","Kevin","Casey Hooper","Kevin Pearson","bradley whitford"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["46","27"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jonathan Crombie","James","Miranda de Pencier"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '''["Sierra Leone's Refugee All Stars","Aerosmith","Andr\\u00e9s Cantor"]'''
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["five","Football","Wii Sports"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["March 31, 1949","1809"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["16 December 1903","2005"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["january 1, 1905","1918"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["France"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Andrew Onderdonk","president george stephen","Canadian Pacific Railway Limited","William Cornelius Van Horne","Alexander Mackenzie"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Barrett Strong"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["wake forest high school","Lawrence Central High School","carver high school","pearsall high school","Western High School"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["15 april 2018","July 25, 2018","5 August 2018","Old Trafford"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["give shape to the cell"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["peyton manning"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["May 8, 1970","december 1969","1964","1980"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["11"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["triceps tendon"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["molecules","water vapor","fractional distillation","centrifugal"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jesus","Tsar Alexander III"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["good times","Generations","Harris and Company","The Jeffersons","the cosby show","ABC","The Partridge Family"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Donald Trump","Barack Obama"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["766","519","122"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Pawon","Hindu"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["saif ali khan","Sushant Singh Rajput","Vikram Singh Chauhan","kriti sanon","Shivangi Joshi","Poorva Gokhale"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cheech Marin"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2049","1561","michael strahan"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["bed","troop"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Padma Shri"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["22"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1894"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["early 2007","august 12, 1981","1974","1981"]'
 weight = 0.001
 
 [entities.fields.stats]
@@ -3306,19 +3306,7 @@ value = '["Rabindranath Tagore"]'
 weight = 0.003
 
 [[entities.fields.generator.choices]]
-value = """["Sandra Day O'Connor"]"""
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["Boston Red Sox"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
 value = '["8"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["1"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -3326,15 +3314,7 @@ value = '["1995"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Keala Settle"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["10"]'
-weight = 0.002
-
-[[entities.fields.generator.choices]]
-value = '["3","three"]'
+value = '["nine"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -3342,11 +3322,27 @@ value = '["Vince Gill"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["nine"]'
+value = '["3","three"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
 value = '["September 28, 2018"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = """["Sandra Day O'Connor"]"""
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["Keala Settle"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["1"]'
+weight = 0.002
+
+[[entities.fields.generator.choices]]
+value = '["Boston Red Sox"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -3358,11 +3354,11 @@ value = """["India's Rohit Sharma","Rohit Sharma"]"""
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["New England Patriots"]'
+value = '["Shankar Dayal Sharma"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["Shankar Dayal Sharma"]'
+value = '["New England Patriots"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
@@ -3370,463 +3366,75 @@ value = '["Boston Red Sox","Los Angeles Dodgers"]'
 weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["O(n)"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["describe the type of registration","the type of registration","vehicle registration"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["a gender-neutral honorific","honorific"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["on December 24, 1968","December 24, 1968","1968"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Richard Montgomery","Philip Schuyler","General Philip Schuyler","benedict arnold"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Aegon","Princess Elia","Rhaenys","the Targaryen royal family","her children Rhaenys and Aegon","Elia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Markie","Olivia"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Richardson","miranda richardson"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["16 October 2018","16 October, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Stacy Keibler","Rachel Bilson","neil patrick harris","Jason Segel","alyson hannigan","Bob Saget"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["100","121"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the United States Census"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["January 2, 2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["clergy","royally chartered organizations","towns as civic identifiers","noble families"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Universal Studios Hollywood"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["town","agricultural","agricultural region","a market and road center"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Ashtavakra"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2000","108 2011","2018","2011"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Article 37"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["March 2, 1836"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mars 2","Mars 2 lander","the lander of Mars 2"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1997"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the court reporter","the court clerk","the witness stand","the clerk"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hades","Fisherman","Greek Soldier","Modi"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["a Wednesday after Thanksgiving","in mid November","mid November"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["January 6, 2018","October 15, 2018","2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Lazarus Muoka"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Michael D. Higgins","President Michael D. Higgins"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["regulation","code","ordinance","by-law","local ordinance"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Microprocessor without Interlocked Pipelined Stages","microprocessor without interlocked pipeline stages","microprocessor"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sahyadris","Tamil Nadu","Eastern Ghats","Andhra Pradesh","Madhya","India"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mariska Magdolna Hargitay","Mariska Hargitay"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["15,589 sq mi"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["10","ten"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Isaac Cole Powell","Anthony Corriete","Isaac Powell","Jerry Dixon"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1793","in Pawtucket,","rhode island"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kate Siegel","Mckenna Grace","Kate Siegel and Mckenna Grace","Siegel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Tom Petty and the Heartbreakers"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["January 11, 1970"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Grant Mitchell","Den Watts"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["October 1, 1971","October 1, 1971","1971"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["baseball","bowling","tennis","boxing","golf","tennis, baseball, bowling"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["accurate","precise","accuracy"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hobart, Australia","Hobart, Tasmania"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["38 Special","Max Carl Gronenthal"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["mahogany tree","mahogany"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["organ","a muscular, hollow organ"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["international specie flows","a collapsing land bubble","The Panic of 1837"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Baltimore Colts"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["ancient Greek and Roman theatre","Egypt"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Tanuja 'Tanu' Trivedi","Tanu"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Masiela Lusha"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["5 June 1975"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Africa","teaching in Africa"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["West Indies","the West Indies"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["France","United States","benjamin franklin"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Kareem Abdul-Jabbar","kareem abdul - jabbar"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Santa Clara, California","Levi's Stadium"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Leo III the Isaurian","Emperor Leo III","Justinian"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Texas","California","Arkansas","Arizona","Louisiana","Mississippi","southern and western states"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["several victims","serena mason","Will Horton"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["December 1941","in December 1941"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["a transparent, biconvex structure","biconvex","biconvex structure"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["James Earl Carter Jr.","Carter","Jimmy Carter"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jillian Mele"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["boxing"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jason and Justin Draeger","Jacobs","Christian Jacobs","casey siemaszko","twins Jason and Justin Draeger"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["The sarcoplasmic reticulum","agranular","sarcoplasmic reticulum (SR)"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bobby Bones","Sharna Burgess","November 19, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["egg"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Andy Serkis"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Mark Mothersbaugh","Paul Reubens","George McGrath"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Elizabeth II","Queen Elizabeth II"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["August 31, 1998","1998","August 18, 1998"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["radiation","ozone layer"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["18"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the Twenty-sixth Amendment","The Twenty - sixth Amendment","Voting Rights Act of 1965"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hawkeye"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Justin Wilde","Doug Konecky"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Burgoyne","british general john burgoyne","General John Burgoyne","john burgoyne"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["new bone growth"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Lucas Jade Zumann"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Dalila Bela"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["gypsum"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Prime Minister H. H. Asquith"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["the President","President"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Gujarati","Marwari"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sky Palace","Kingdom of Liones","The Kingdom of Liones"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = """["Archie Griffin","Ohio State's Archie Griffin"]"""
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["American Samoa","Puerto Rico","Hawaii","Northern Mariana Islands","Guam","Arizona","United States Virgin Islands","arizona ( except for the navajo"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["seventeen","17"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sail Rock, Maine"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["German","Latin"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Hermes"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Senator Hadi Sirika","Sen. Sirika Hadi","Sirika Hadi","Hadi Sirika"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Ben Affleck"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["2016"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Bulgaria"]'
-weight = 0.001
+value = '["10"]'
+weight = 0.002
 
 [[entities.fields.generator.choices]]
-value = '["50 First Dates"]'
+value = '["Football"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["John Knox","David Tennant"]'
+value = '["Virginia Bruce","Frank Sinatra"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["25 October 1854"]'
+value = '["Raúl Esparza"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["26 November 1962"]'
+value = '["Los Angeles Dodgers"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["October 16, 2018"]'
+value = '["the Welcome Stranger","The Canaã nugget"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["5/238","5"]'
+value = '["a state run mental hospital"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Lesley Gore"]'
+value = '["The Gap Band"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2013","2018"]'
+value = '["Taxonomy"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["1607"]'
+value = '["759","527"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["1998","in 1998"]'
+value = '["January 8, 2019"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Georgia May Foote"]'
+value = '["New York","the state of new york","New York State"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["China","cai lun"]'
+value = '["Funimation","Crunchyroll","tokyo mx"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Eagle Ford Formation","Marcellus natural gas trend","Haynesville Shale","Newark East Barnett Shale","San Juan Basin","Fayetteville Shale","Wattenberg Gas Field","Sprayberry","Carthage","Pinedale Gas Field","texas","Pennsylvania","Fredonia, New York","Louisiana"]'
+value = '["1712","in 1698","1849","1698"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["16 November 2018"]'
+value = '["nitrogen","0.93% argon","carbon dioxide","0.04% carbon dioxide","argon","78.09% nitrogen","oxygen","20.95% oxygen","small amounts of other gases","water vapor"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Ziv Zaifman","Michelle Williams","Hugh Jackman"]'
+value = '["February 7, 2010","Indianapolis Colts"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Michael Bublé","the Mills Brothers","British balladeer Steve Conway","Al Martino","Frank Fontaine"]'
+value = '["LSU Tigers","LSU"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Super Bowl XXII in 1988","2003","1998","Super Bowl XXXVII in 2003","Super Bowl XXXII in 1998","1988","January 31, 1988","January 25, 1998","January 26, 2003"]'
+value = '["not more than four steps","four steps"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -3834,23 +3442,19 @@ value = '["United States"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["January 2010","June 3, 2018","early 1990s","in the early 1990s"]'
+value = '["Bovine spongiform encephalopathy"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Lexie Grey"]'
+value = '["Cage the Elephant"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Federal Reserve"]'
+value = """["Tanuja 'Tanu' Trivedi","Tanu"]"""
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Miguel DÃ­az-Canel","miguel d\\u00edaz-canel"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Furious 7","Fast & Furious 7"]'
+value = '["China","United States"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -3858,207 +3462,155 @@ value = '["none"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Jacob Elordi"]'
+value = '["processed boneless chicken meat","chicken meat","formed, white meat chicken"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Brian Kennedy","Secret Garden"]'
+value = '["Jimmy Carter","U.S. President Jimmy Carter"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["The Pacific standard time zone","pacific time zone","Pacific Standard Time"]'
+value = '["1955","2018"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["amino acid","amino acids"]'
+value = '["West Indies","the West Indies"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["reduce bias","randomization guards against selection bias","minimizes allocation bias","minimises selection bias","to reduce bias"]'
+value = '["Klondike Kat"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Joe Don Baker"]'
+value = '["8.15 miles","8.15","13.12Â km","8.15 mi"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["shoulder sleeve","shoulder"]'
+value = '["petroleum","Gas"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Mesoamerica","South America"]'
+value = '["religion","freedom of speech","freedom of the press"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Mick Malthouse"]'
+value = '["four"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["John F. Kennedy","former President John F. Kennedy"]'
+value = '["2008","2007"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Kyrsten Sinema"]'
+value = '["We Belong Together","\"We Belong Together\""]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Byju Raveendran"]'
+value = '["Stacy Keibler","Rachel Bilson","neil patrick harris","Jason Segel","alyson hannigan","Bob Saget"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Roger Labon Jackson","roger l. jackson"]'
+value = '["Frank Loesser","Loesser","Lynn Garland"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["January 3, 2019","2019"]'
+value = '["steam engine","Steam engines","steam","steam power"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Annie Campbell"]'
+value = '["a typewriter ribbon"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["1982","April 17, 1982"]'
+value = '["Check on It","\"Check on It\"","\"Grillz\""]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["two","three"]'
+value = '["The Monuments Men"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Upstate New York"]'
+value = '["French Algeria","united kingdom","the UK"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Philipp Scheidemann"]'
+value = '["Amma"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["All 14 districts"]'
+value = '["5/238","5"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["size"]'
+value = '["William H. Harris","others","Chalk Beeson","Luke Short"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Eden Hazard"]'
+value = '["2001","16 November 2001","november 2001"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["26 October 2018","October 2018"]'
+value = '["Edward Thorndike","B. F. Skinner","john broadus watson","John B. Watson"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Ptolemy"]'
+value = '["Racial tensions"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["September 20, 2010"]'
+value = '["the President of India"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["2256–2257","2256"]'
+value = '["The Simpsons","My Three Sons"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["972"]'
+value = '["3"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["choir","A choir","choir or chorus"]'
+value = '["Ross"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Schlieffen Plan"]'
+value = '["Mid-size crossover SUV","mid-size crossover SUV","mid - size crossover suv"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Five Keys, New Mexico"]'
+value = '["Whitehouse, Texas","Tyler, Texas","Texas Tech"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the tensor fasciae latae muscle","the bottom sirloin sub primal cut","the bottom sirloin subprimal cut"]'
+value = '["water","soap flakes","foamite","sugar","chemical"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["main antagonist of the story","an evil disembodied brain","brain","a disembodied brain"]'
+value = '["Italy","Spain","Spanish","Mexico"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["A bench trial","bench trial"]'
+value = '["Lenny Kravitz","Yogi Berra"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = """["Paul","Paul the Apostle","Paul the Apostle's"]"""
+value = '["Darwinian evolutionary theory","Charles Darwin"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["morgue or mortuary","A morgue or mortuary","mortuary","morgue"]'
+value = '["Fast & Furious 6"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["The Third Crusade","Third Crusade"]'
+value = '["1989–90"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["November 9","November 9, 2018"]'
+value = '["49–47 BCE","49 -- 47 BCE","49 BCE"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["02330"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["July 18, 2018"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["1898","1 March 1898"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Jean-Jacques Rousseau","Jean - Jacques Rousseau"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Sir Joshua Reynolds","artist Sir Joshua Reynolds"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["John Adams"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["17"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["He­lium","atomic number 2","Helium"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["worldwide","Afghanistan"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Templeton \"Face\" Peck","templeton peck"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["David Bowie"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["in sailing small craft","tying down light aircraft"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["a difference","difference"]'
-weight = 0.001
-
-[[entities.fields.generator.choices]]
-value = '["Brendon Urie","Jessie Preston","Daniel Isaac McGuffey","vocalist Brendon Urie"]'
+value = '["Cassie Jo Stoddart"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
@@ -4066,35 +3618,483 @@ value = """["actor Guy Henry's","Guy Henry"]"""
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["eastern Turkey"]'
+value = '["Project Method","progressive education"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["October 24, 1934","1934","November 1934"]'
+value = '["January 2, 2016"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Governor","the governor of the state","state governor"]'
+value = '["July 2019","december 1, 2017","September 20, 2016"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Operation Eagle Claw"]'
+value = '["Texas"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Antinous, son of Eupheithes","Antinous"]'
+value = '["December 15, 1791","1791","late August 1789"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["During World War I","World War I"]'
+value = '["American Express Company","American Express Co."]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["the Acadian people","the British"]'
+value = '["designated in 1954","1954","extended in 2016"]'
 weight = 0.001
 
 [[entities.fields.generator.choices]]
-value = '["Des Moines","kansas city"]'
+value = '["The legislature","legislature","legislative","legislative branch"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Philip Parris Lynott","phil lynott"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Soviet Union","the Soviet Union","Soviet"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Marlow in Buckinghamshire","bray studios","Bisham in East Berkshire","Berkshire","bray studios at water oakley, near windsor in berkshire","Water Oakley","Oakley Court"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1969"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Brian Mitchell","Jerry Rice"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["in regions of new growth","soft parts","cortex","the cortex of roots"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["December 1941","in December 1941"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Texas","California","Arkansas","Arizona","Louisiana","Mississippi","southern and western states"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Boston Red Sox","Red Sox"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Marc Evan Jackson","Maya Rudolph"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Karen Dotrice","Dick Van Dyke"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Billy Joel"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["15,589 sq mi"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 9, 2019"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Poppy Drayton"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Zagreb"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["100","wilt chamberlain"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Eagle Ford Formation","Marcellus natural gas trend","Haynesville Shale","Newark East Barnett Shale","San Juan Basin","Fayetteville Shale","Wattenberg Gas Field","Sprayberry","Carthage","Pinedale Gas Field","texas","Pennsylvania","Fredonia, New York","Louisiana"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["photoreceptor","photoreceptors"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Vince Vaughn","Liam James"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Brian Keith"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["British actor Toby Hemingway","Jaclyn Jarrett","Kyra Angle","Toby Hemingway","Swift"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cantonese","Chinese","English"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["20","13"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["32"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sebastian Vettel","lewis hamilton"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Leto","jared leto"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the G.I. Generation","the g. i. generation"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Andrée Bernard"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Glenn Strange"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["each representing a Philippine province","a Philippine province","eight provinces"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Drug Enforcement"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["three"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Amy Grant","MÃ¡ire \"Moya\" Brennan","Joni Mitchell"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Leo III the Isaurian","Emperor Leo III","Justinian"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["solute"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Parliamentarians","Oliver Cromwell"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["2010 to 2014","Wednesdays and Sundays at 10pm","10 October 2010"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Super Bowl XXII in 1988","2003","1998","Super Bowl XXXVII in 2003","Super Bowl XXXII in 1998","1988","January 31, 1988","January 25, 1998","January 26, 2003"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the 1st century","by the 2nd century"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the 1980s","During the 1980s"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Old English","english","Old English origin"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Rose McIver"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jerry Leiber","Mike Stoller","Jerry Leiber and Mike Stoller"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Eastbourne","Dungeness","West London","london","Ladbroke Grove in London"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["glucose","into glucose"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["international specie flows","a collapsing land bubble","The Panic of 1837"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1950"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["vocal","experimental pieces","jazz","jazz genre","collaborations with Western classical musicians","world music","orchestral works","traditional ragas","Indian classical music","Hindustani classical music","Hindustani"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 16, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Maxillary","Ethmoid","Frontal","Sphenoid","Maxillary sinus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Lara Spencer","Lara Christine Von Seelen"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["March 2, 1917","On March 2, 1917","1900","1917"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Five Keys, New Mexico"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["51"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["James Reynolds"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["the New York Yankees","New York Yankees"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["nucleus"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["two","three"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["lyrics written by Mark Lowry","music written by Buddy Greene","Buddy Greene","Mark Lowry"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1924"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Waylon Jennings"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["describe the type of registration","the type of registration","vehicle registration"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Universal Studios Hollywood"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["central nervous system","throughout the brain","vertebrate central nervous system"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Ramsey","Kelly","Kelly Issacs","Travis","Quan","Ramsey Walters"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Kathy Najimy","Eric Lively"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Fredric March","Andy Devine","Lionel Stander","Adolphe Menjou","May Robson","Owen Moore","Janet Gaynor"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Alabama Crimson Tide","Alabama Crimson Tide"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sir Robert Walpole","Robert Walpole"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Richardson","miranda richardson"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Gulf and south Atlantic","Gulf and south Atlantic regions","gulf and east coast states","the american gulf and east coast states","Florida"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Templeton \"Face\" Peck","templeton peck"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["100","121"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["$12.6 billion","USD 14 billion","at least 12 billion dollars"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Ron DeSantis","Andrew Gillum"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 29, 1993","1993"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 5, 2014","October 5, 2014","November 1, 2015","2014"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Gujarati","Marwari"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The sarcoplasmic reticulum","agranular","sarcoplasmic reticulum (SR)"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1884","December 6, 1884","1888"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["19 September 1893","1893"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Peter Ostrum","Gene Wilder"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["James Earl Carter Jr.","Carter","Jimmy Carter"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 5, 2018"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["1982","April 17, 1982"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["July 26, 2016"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Miss Kate Hardcastle","Kate","Charles Marlow","Kate Hardcastle"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Solomon","King Solomon"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["\"Counterfeit\""]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["January 2010","June 3, 2018","early 1990s","in the early 1990s"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["English"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Atlanta Falcons","the Atlanta Falcons","Arizona Cardinals"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jo","Josephine \"Jo\""]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["\"The Two Students\""]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Hades","Fisherman","Greek Soldier","Modi"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["360,760 stockholders","publicly held nonprofit corporation","stockholders"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Cataracts of the Nile"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["5th century","by the 5th century"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Elizabeth II","Queen Elizabeth II"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["boxing"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Virginia","yorktown, virginia","The Siege of Yorktown"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["34.16%"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Eddie Martinez","Eddie Paul Martinez"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Greenfield International Stadium","JSCA International Cricket Stadium","Barabati Stadium","Feroz Shah Kotla Ground","Vidarbha Cricket Association Stadium","Eden Gardens","Rajiv Gandhi International Cricket Stadium","Barsapara Stadium","M. A. Chidambaram Stadium"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["October 1, 1971","October 1, 1971","1971"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["The Sixth Labour Government","Sixth Labour Government"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Unhappily Ever After"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Jim Cummings"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["One"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Nicki Minaj"]'
+weight = 0.001
+
+[[entities.fields.generator.choices]]
+value = '["Sir Alexander Tilloch Galt","the Canadian Confederation"]'
 weight = 0.001
 
 [entities.fields.stats]
@@ -4102,6 +4102,9 @@ null_rate = 0.0
 
 [entities.fields.traits]
 semantic = "categorical"
+
+[entities.output]
+source_format = "jsonl"
 
 [entities.stats]
 source_rows = 1769

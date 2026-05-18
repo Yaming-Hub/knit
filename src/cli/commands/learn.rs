@@ -2765,6 +2765,23 @@ fn extract_tuple_dictionaries(
                 continue;
             }
 
+            // Skip if primary column has a date/datetime type (Dictionary produces strings)
+            let primary_is_date = entity
+                .fields
+                .iter()
+                .find(|f| f.name == *primary)
+                .is_some_and(|f| matches!(
+                    f.data_type,
+                    crate::core::DataType::Date
+                        | crate::core::DataType::Datetime
+                        | crate::core::DataType::DatetimeUs
+                        | crate::core::DataType::Datetimetz
+                        | crate::core::DataType::Time
+                ));
+            if primary_is_date {
+                continue;
+            }
+
             let file_name = format!(
                 "{}__{}.tsv",
                 sanitize_filename(&entity.name),
