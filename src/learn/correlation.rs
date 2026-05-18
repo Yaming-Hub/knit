@@ -9,6 +9,8 @@ use arrow::array::{Array, Float64Array, StringArray};
 use arrow::record_batch::RecordBatch;
 use tracing::{debug, info_span, trace};
 
+use super::fitting::Distribution;
+
 use crate::learn::profile::ColumnProfile;
 
 /// A detected correlation between two columns.
@@ -148,6 +150,183 @@ pub fn detect_correlations(
     }
 
     results.truncate(500);
+    results
+}
+
+/// A detected conditional distribution: a categorical column conditions a
+/// numeric column's distribution.
+#[derive(Debug, Clone)]
+pub struct ConditionalDistribution {
+    /// The categorical column (conditioning field).
+    pub given: String,
+    /// The numeric column (dependent field).
+    pub dependent: String,
+    /// Per-category distribution branches.
+    pub branches: Vec<ConditionalBranch>,
+    /// Overall (unconditional) distribution for fallback.
+    pub default_distribution: Distribution,
+    /// Overall mean of the dependent column.
+    pub default_mean: f64,
+    /// Overall standard deviation of the dependent column.
+    pub default_std: f64,
+}
+
+/// A single branch mapping a category value to a fitted distribution.
+#[derive(Debug, Clone)]
+pub struct ConditionalBranch {
+    /// Category value.
+    pub condition: String,
+    /// Fitted distribution for this category.
+    pub distribution: Distribution,
+    /// Whether values are integer-only.
+    pub is_integer: bool,
+}
+
+/// Detect categorical→numeric conditional distributions.
+///
+/// For each (categorical, numeric) column pair, groups numeric values by
+/// category and fits distributions per group. Emits a conditional distribution
+/// when the per-category means differ significantly (coefficient of variation
+/// of group means > 0.15).
+pub fn detect_conditional_distributions(
+    profiles: &[ColumnProfile],
+    batches: &[RecordBatch],
+) -> Vec<ConditionalDistribution> {
+    let _span = info_span!("conditional_distributions").entered();
+    if profiles.is_empty() || batches.is_empty() {
+        return Vec::new();
+    }
+
+    let numeric_cols = collect_numeric_columns(profiles, batches);
+    let string_cols = collect_string_columns(profiles, batches);
+    let mut results = Vec::new();
+
+    // For each (categorical, numeric) pair
+    for (cat_name, cat_vals) in &string_cols {
+        // Skip high-cardinality categoricals (>50 unique values)
+        let unique_cats: std::collections::HashSet<&str> = cat_vals
+            .iter()
+            .filter_map(|v| v.as_deref())
+            .collect();
+        if unique_cats.len() > 50 || unique_cats.len() < 2 {
+            continue;
+        }
+
+        for (num_name, num_vals) in &numeric_cols {
+            let len = cat_vals.len().min(num_vals.len());
+            if len < 10 {
+                continue;
+            }
+
+            // Group numeric values by category
+            let mut groups: HashMap<&str, Vec<f64>> = HashMap::new();
+            for i in 0..len {
+                if let Some(cat) = cat_vals[i].as_deref() {
+                    let val = num_vals[i];
+                    if val.is_finite() {
+                        groups.entry(cat).or_default().push(val);
+                    }
+                }
+            }
+
+            // Need at least 2 groups with 5+ values each
+            let valid_groups: Vec<(&str, &Vec<f64>)> = groups
+                .iter()
+                .filter(|(_, v)| v.len() >= 5)
+                .map(|(k, v)| (*k, v))
+                .collect();
+            if valid_groups.len() < 2 {
+                continue;
+            }
+
+            // Check if group means differ significantly
+            let group_means: Vec<f64> = valid_groups
+                .iter()
+                .map(|(_, v)| v.iter().sum::<f64>() / v.len() as f64)
+                .collect();
+            let overall_mean = group_means.iter().sum::<f64>() / group_means.len() as f64;
+            if overall_mean.abs() < f64::EPSILON {
+                continue;
+            }
+            let mean_std = (group_means
+                .iter()
+                .map(|m| (m - overall_mean).powi(2))
+                .sum::<f64>()
+                / group_means.len() as f64)
+                .sqrt();
+            let cv = mean_std / overall_mean.abs();
+
+            // Only emit if means vary meaningfully (CV > 0.15)
+            if cv < 0.15 {
+                trace!(
+                    cat = %cat_name, num = %num_name, cv,
+                    "conditional distribution CV below threshold"
+                );
+                continue;
+            }
+
+            // Fit distribution per group
+            let mut branches = Vec::new();
+            let all_finite: Vec<f64> = num_vals.iter().filter(|v| v.is_finite()).copied().collect();
+            // True overall mean (weighted by actual values, not group means)
+            let true_overall_mean =
+                all_finite.iter().sum::<f64>() / all_finite.len().max(1) as f64;
+            let is_integer = all_finite.iter().all(|v| (*v - v.round()).abs() < 1e-9);
+
+            for (cat, vals) in &valid_groups {
+                if let Some(fit) = super::fitting::fit_distribution(vals) {
+                    branches.push(ConditionalBranch {
+                        condition: cat.to_string(),
+                        distribution: fit.best.distribution.clone(),
+                        is_integer,
+                    });
+                }
+            }
+
+            if branches.len() < 2 {
+                continue;
+            }
+
+            // Fit overall default distribution
+            let default_dist = super::fitting::fit_distribution(&all_finite)
+                .map(|f| f.best.distribution.clone())
+                .unwrap_or_else(|| {
+                    let mean = all_finite.iter().sum::<f64>() / all_finite.len() as f64;
+                    let std = (all_finite
+                        .iter()
+                        .map(|v| (v - mean).powi(2))
+                        .sum::<f64>()
+                        / all_finite.len() as f64)
+                        .sqrt();
+                    Distribution::Normal(mean, std.max(0.01))
+                });
+
+            let overall_std = (all_finite
+                .iter()
+                .map(|v| (v - true_overall_mean).powi(2))
+                .sum::<f64>()
+                / all_finite.len() as f64)
+                .sqrt();
+
+            debug!(
+                cat = %cat_name, num = %num_name, cv,
+                groups = branches.len(),
+                "detected conditional distribution"
+            );
+
+            results.push(ConditionalDistribution {
+                given: cat_name.clone(),
+                dependent: num_name.clone(),
+                branches,
+                default_distribution: default_dist,
+                default_mean: true_overall_mean,
+                default_std: overall_std.max(0.01),
+            });
+        }
+    }
+
+    // Limit to avoid blueprint bloat
+    results.truncate(50);
     results
 }
 
@@ -999,5 +1178,73 @@ mod tests {
     #[test]
     fn ranks_single() {
         assert_eq!(ranks(&[42.0]), vec![1.0]);
+    }
+
+    // ─── conditional distribution tests ────────────────────────────────
+
+    /// Build a batch with one string column and one numeric column.
+    fn cond_batch(cat: &[&str], nums: &[f64]) -> RecordBatch {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("category", DataType::Utf8, false),
+            Field::new("value", DataType::Float64, false),
+        ]));
+        RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(StringArray::from(cat.to_vec())),
+                Arc::new(Float64Array::from(nums.to_vec())),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn cond_dist_detects_distinct_groups() {
+        // Two categories with very different means → should detect
+        let mut cat = Vec::new();
+        let mut vals = Vec::new();
+        for _ in 0..50 {
+            cat.push("A");
+            vals.push(10.0);
+        }
+        for _ in 0..50 {
+            cat.push("B");
+            vals.push(100.0);
+        }
+        let batch = cond_batch(&cat, &vals);
+        let profiles = vec![string_profile("category"), numeric_profile("value")];
+        let result = detect_conditional_distributions(&profiles, &[batch]);
+        assert!(!result.is_empty(), "should detect conditional distribution");
+        assert_eq!(result[0].given, "category");
+        assert_eq!(result[0].dependent, "value");
+        assert_eq!(result[0].branches.len(), 2);
+    }
+
+    #[test]
+    fn cond_dist_skips_similar_groups() {
+        // Two categories with identical distributions → CV ≈ 0 → no detection
+        let mut cat = Vec::new();
+        let mut vals = Vec::new();
+        for _ in 0..50 {
+            cat.push("A");
+            vals.push(50.0);
+        }
+        for _ in 0..50 {
+            cat.push("B");
+            vals.push(50.0);
+        }
+        let batch = cond_batch(&cat, &vals);
+        let profiles = vec![string_profile("category"), numeric_profile("value")];
+        let result = detect_conditional_distributions(&profiles, &[batch]);
+        assert!(
+            result.is_empty(),
+            "should NOT detect when groups are identical"
+        );
+    }
+
+    #[test]
+    fn cond_dist_empty_input() {
+        let result = detect_conditional_distributions(&[], &[]);
+        assert!(result.is_empty());
     }
 }
