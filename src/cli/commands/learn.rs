@@ -18,7 +18,7 @@ use serde::Serialize;
 use serde_json;
 use tracing::{debug, info, info_span, warn};
 
-use crate::learn::correlation::{detect_correlations, detect_conditional_distributions, detect_tuple_columns};
+use crate::learn::correlation::{detect_correlations, detect_conditional_distributions, detect_tuple_columns, detect_derived_text_columns};
 use crate::learn::fitting::{FitResult, fit_categorical, fit_distribution};
 use crate::learn::ingest::{self, IngestionResult};
 use crate::learn::profile::{ColumnProfile, compute_profiles};
@@ -426,6 +426,17 @@ fn run_batch(
             );
         }
         table_analyses[i].tuple_groups = tuple_groups;
+
+        // Detect derived text columns (e.g., full_name = first + " " + last)
+        let derived_text = detect_derived_text_columns(&profiles, &table.batches);
+        if !derived_text.is_empty() {
+            debug!(
+                table = %table.entity,
+                count = derived_text.len(),
+                "derived text columns found"
+            );
+        }
+        table_analyses[i].derived_text_columns = derived_text;
         if let Some(ref pb) = corr_pb {
             pb.inc(1);
         }
