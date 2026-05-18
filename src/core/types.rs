@@ -859,7 +859,7 @@ pub struct SummaryStats {
 /// classifications. Like stats, traits are metadata-only and do not affect
 /// generation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
-pub struct FieldTraits {
+pub struct ColumnTraits {
     /// Detected semantic type (e.g. `"email"`, `"uuid"`, `"date"`, `"categorical"`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic: Option<String>,
@@ -876,6 +876,9 @@ pub struct FieldTraits {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub distribution_shape: Option<DistributionShape>,
 }
+
+/// Backward-compatibility alias for [`ColumnTraits`].
+pub type FieldTraits = ColumnTraits;
 
 /// Cardinality classification for a column.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -959,7 +962,7 @@ pub struct Column {
     pub stats: Option<ColumnStats>,
     /// Auto-detected qualitative traits (populated by `knit learn`, metadata-only).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub traits: Option<FieldTraits>,
+    pub traits: Option<ColumnTraits>,
 }
 
 fn default_data_type() -> DataType {
