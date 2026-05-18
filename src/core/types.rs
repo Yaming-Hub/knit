@@ -231,13 +231,13 @@ pub struct TupleDictionary {
     pub file: String,
 }
 
-// ── Type Aliases for v2 naming ───────────────────────────────────────
+// ── Type Aliases for backward compatibility ──────────────────────────
 
-/// Alias for [`Entity`] — the v2 blueprint uses "Table" terminology.
-pub type Table = Entity;
+/// Backward-compatible alias: `Entity` is the v1 name for [`Table`].
+pub type Entity = Table;
 
-/// Alias for [`Field`] — the v2 blueprint uses "Column" terminology.
-pub type Column = Field;
+/// Backward-compatible alias: `Field` is the v1 name for [`Column`].
+pub type Field = Column;
 
 // ── DataModel ────────────────────────────────────────────────────────
 
@@ -516,15 +516,15 @@ pub struct Mixin {
     pub fields: Vec<Field>,
 }
 
-// ── Entity & Field ───────────────────────────────────────────────────
+// ── Table & Column (formerly Entity & Field) ────────────────────────
 
-/// A single entity (analogous to a database table) in the data model.
+/// A table (formerly "entity") in the data model.
 ///
-/// Each entity produces one output file/table with `count` rows and the
-/// specified `fields`. Constraints and topology are optional refinements.
+/// Each table produces one output file/table with `count` rows and the
+/// specified columns. Constraints and topology are optional refinements.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Entity {
-    /// Unique entity name, used as the table/file name in output.
+pub struct Table {
+    /// Unique table name, used as the table/file name in output.
     pub name: String,
     /// Optional free-text description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -535,16 +535,16 @@ pub struct Entity {
     /// How many rows to generate (fixed, range, or distribution).
     #[serde(default)]
     pub count: CountSpec,
-    /// Column definitions for this entity.
+    /// Column definitions for this table.
     #[serde(default)]
     pub fields: Vec<Field>,
     /// Integrity constraints (unique, check, range) applied after generation.
     #[serde(default)]
     pub constraints: Vec<Constraint>,
-    /// Optional graph/tree topology for hierarchical entities.
+    /// Optional graph/tree topology for hierarchical tables.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub topology: Option<TopologySpec>,
-    /// Whether this entity represents an actor (human/person) population.
+    /// Whether this table represents an actor (human/person) population.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub actor: bool,
     /// Name of the personas section to use for actor persona assignment.
@@ -552,7 +552,7 @@ pub struct Entity {
     pub persona_distribution: Option<String>,
     /// Dynamic row count driven by per-actor activity rates.
     ///
-    /// When set, the total row count for this entity is computed as the sum
+    /// When set, the total row count for this table is computed as the sum
     /// of each actor's activity trait value (from the actor pool), instead of
     /// using the static `count` field. The `count` field still serves as a
     /// fallback estimate for planning when the actor pool is unavailable.
@@ -570,7 +570,7 @@ pub struct Entity {
     pub stats: Option<TableStats>,
     /// Scaling dimension annotations (populated by `knit learn`).
     ///
-    /// Records which scaling dimensions (actor, time, custom) this entity
+    /// Records which scaling dimensions (actor, time, custom) this table
     /// participates in, so `knit scale` can skip re-analysis.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scaling: Option<DimensionAnnotation>,
@@ -582,7 +582,7 @@ pub struct Entity {
     pub sort_by: Option<SortOrder>,
 }
 
-impl Default for Entity {
+impl Default for Table {
     fn default() -> Self {
         Self {
             name: String::new(),
@@ -891,13 +891,13 @@ pub enum DistributionShape {
     LongTail,
 }
 
-/// A single field (column) within an [`Entity`].
+/// A column (field) within a [`Table`].
 ///
-/// Each field has a data type, an optional generator that produces values, and
+/// Each column has a data type, an optional generator that produces values, and
 /// a null specification. The [`plan`](crate::plan) compiler translates the
 /// `generator` into a fully resolved `GeneratorPlan` for execution.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Field {
+pub struct Column {
     /// Column name.
     pub name: String,
     /// Optional free-text description.
@@ -913,7 +913,7 @@ pub struct Field {
     /// When and how to inject `NULL` values.
     #[serde(default)]
     pub nullable: NullSpec,
-    /// Whether this field is the entity's primary key.
+    /// Whether this column is the table's primary key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub primary_key: Option<bool>,
     /// Number of decimal places for float output (e.g. `2` for currency).
@@ -2300,7 +2300,7 @@ pub struct ConditionalBranch {
 
 /// Graph/tree topology specification for hierarchical entity generation.
 ///
-/// When present on an [`Entity`], the generator creates parent-child
+/// When present on a [`Table`], the generator creates parent-child
 /// relationships or graph edges following the specified model.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
