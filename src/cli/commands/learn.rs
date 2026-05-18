@@ -68,9 +68,16 @@ fn resolve_use_structured(output: &str, model_format: Option<crate::cli::ModelFo
     match model_format {
         Some(ModelFormat::Structured) => true,
         Some(ModelFormat::Flat) => false,
+        // Default to structured (v2) unless output path ends in .toml (case-insensitive)
         None => {
             let p = Path::new(output);
-            p.extension().is_none() || p.is_dir()
+            if p.is_dir() {
+                return true;
+            }
+            match p.extension().and_then(|e| e.to_str()) {
+                Some(ext) => !ext.eq_ignore_ascii_case("toml"),
+                None => true,
+            }
         }
     }
 }
@@ -548,6 +555,12 @@ fn run_batch(
     }
 
     // 6. Write output (flat TOML or structured directory)
+    // Set blueprint version based on output format
+    if use_structured {
+        data_model.blueprint_version = "2.0".to_string();
+    } else {
+        data_model.blueprint_version = "1.0".to_string();
+    }
     write_model_output(
         &data_model,
         output,
@@ -921,6 +934,12 @@ fn emit_blueprint_from_state(
     }
 
     // Write output (flat or structured)
+    // Set blueprint version based on output format
+    if use_structured {
+        data_model.blueprint_version = "2.0".to_string();
+    } else {
+        data_model.blueprint_version = "1.0".to_string();
+    }
     write_model_output(
         &data_model,
         output,
