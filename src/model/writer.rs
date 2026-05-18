@@ -99,6 +99,7 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
                 mixins: entity.mixin_refs.clone(),
                 stats: entity.stats.clone(),
                 scaling: entity.scaling.clone(),
+                sort_by: entity.sort_by.clone(),
             },
             columns: entity.fields.clone(),
             constraints: if entity.constraints.is_empty() {
@@ -113,7 +114,14 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
     }
 
     // 4. Write relationships.toml (if any)
-    if !model.relationships.is_empty() || !model.actor_relationships.is_empty() {
+    let rel_model = model.relationship_model();
+    let has_relationships = !model.relationships.is_empty()
+        || !model.actor_relationships.is_empty()
+        || !rel_model.constraints.is_empty()
+        || !rel_model.grid_structures.is_empty()
+        || !rel_model.tuple_dictionaries.is_empty();
+
+    if has_relationships {
         let rels = RelationshipsOut {
             foreign_keys: if model.relationships.is_empty() {
                 None
@@ -124,6 +132,21 @@ pub fn write_model_directory(model: &DataModel, output: &Path) -> Result<()> {
                 None
             } else {
                 Some(model.actor_relationships.clone())
+            },
+            constraints: if rel_model.constraints.is_empty() {
+                None
+            } else {
+                Some(rel_model.constraints.clone())
+            },
+            grid_structures: if rel_model.grid_structures.is_empty() {
+                None
+            } else {
+                Some(rel_model.grid_structures.clone())
+            },
+            tuple_dictionaries: if rel_model.tuple_dictionaries.is_empty() {
+                None
+            } else {
+                Some(rel_model.tuple_dictionaries.clone())
             },
         };
         let rels_str = toml::to_string_pretty(&rels).context("serializing relationships.toml")?;
@@ -245,6 +268,8 @@ struct TableMetaOut {
     stats: Option<TableStats>,
     #[serde(skip_serializing_if = "Option::is_none")]
     scaling: Option<DimensionAnnotation>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sort_by: Option<SortOrder>,
 }
 
 #[derive(Serialize)]
@@ -253,6 +278,12 @@ struct RelationshipsOut {
     foreign_keys: Option<Vec<Relationship>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     actor_graphs: Option<Vec<ActorRelationship>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    constraints: Option<Vec<TableConstraint>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    grid_structures: Option<Vec<GridStructure>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tuple_dictionaries: Option<Vec<TupleDictionary>>,
 }
 
 #[derive(Serialize)]
@@ -346,6 +377,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         }
     }
 
@@ -427,5 +460,58 @@ mod tests {
 
         let loaded = crate::model::reader::load_model_directory(&out).unwrap();
         assert_eq!(loaded.blueprint_version, "1.0");
+    }
+
+    #[test]
+    fn test_v2_relationships_roundtrip() {
+        let mut model = make_simple_model();
+        model.grid_structures = vec![GridStructure {
+            table: "Users".to_string(),
+            outer: "region".to_string(),
+            outer_values: vec!["US".to_string(), "EU".to_string()],
+            inner: "year".to_string(),
+            inner_values: vec!["2020".to_string(), "2021".to_string()],
+            completeness: 1.0,
+        }];
+        model.tuple_dictionaries = vec![TupleDictionary {
+            table: "Users".to_string(),
+            columns: vec!["city".to_string(), "state".to_string()],
+            file: "city_state.tsv".to_string(),
+        }];
+
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("v2_rels_model");
+
+        write_model_directory(&model, &out).unwrap();
+
+        // Verify relationships.toml exists and contains v2 sections
+        let rels_toml = std::fs::read_to_string(out.join("relationships.toml")).unwrap();
+        assert!(rels_toml.contains("grid_structures"), "should contain grid_structures section");
+        assert!(rels_toml.contains("tuple_dictionaries"), "should contain tuple_dictionaries section");
+
+        // Roundtrip
+        let loaded = crate::model::reader::load_model_directory(&out).unwrap();
+        assert_eq!(loaded.grid_structures.len(), 1);
+        assert_eq!(loaded.grid_structures[0].table, "Users");
+        assert_eq!(loaded.grid_structures[0].outer, "region");
+        assert_eq!(loaded.tuple_dictionaries.len(), 1);
+        assert_eq!(loaded.tuple_dictionaries[0].columns, vec!["city", "state"]);
+    }
+
+    #[test]
+    fn test_sort_by_roundtrip() {
+        let mut model = make_simple_model();
+        model.entities[0].sort_by = Some(SortOrder {
+            column: "id".to_string(),
+            direction: SortDirection::Asc,
+        });
+
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("sort_model");
+
+        write_model_directory(&model, &out).unwrap();
+
+        let loaded = crate::model::reader::load_model_directory(&out).unwrap();
+        assert_eq!(loaded.entities[0].sort_by, model.entities[0].sort_by);
     }
 }

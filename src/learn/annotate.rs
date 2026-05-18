@@ -155,6 +155,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
 
         annotate_dimensions(&mut model, &empty_analysis());
@@ -180,6 +182,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
 
         let analysis = ScalingAnalysis {
@@ -225,6 +229,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
 
         let analysis = ScalingAnalysis {
@@ -275,6 +281,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
 
         let analysis = ScalingAnalysis {
@@ -314,6 +322,8 @@ mod tests {
             custom_types: vec![],
             mixins: vec![],
             companion_files: vec![],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
 
         let analysis = ScalingAnalysis {

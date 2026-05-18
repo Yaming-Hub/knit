@@ -467,6 +467,8 @@ fn minimal_data_model_roundtrip() {
         custom_types: Vec::new(),
         mixins: Vec::new(),
         companion_files: Vec::new(),
+        grid_structures: Vec::new(),
+        tuple_dictionaries: Vec::new(),
     };
 
     let json = serde_json::to_string_pretty(&model).unwrap();
@@ -555,6 +557,8 @@ fn entity_tags_skip_serializing_when_empty() {
         custom_types: Vec::new(),
         mixins: Vec::new(),
         companion_files: Vec::new(),
+        grid_structures: Vec::new(),
+        tuple_dictionaries: Vec::new(),
     };
     let json = serde_json::to_string(&model).unwrap();
     assert!(!json.contains("\"tags\""));
