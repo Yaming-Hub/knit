@@ -1187,6 +1187,7 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
         crate::core::DataType::DatetimeUs => {
             return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None);
         }
+        crate::core::DataType::Date => return ArrowDataType::Date32,
         crate::core::DataType::Array => {
             // Detect element type from OneOf choices if possible
             let elem_type = detect_list_element_type(fp);
