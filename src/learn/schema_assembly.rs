@@ -57,6 +57,8 @@ pub struct TableAnalysis {
     pub sort_order: Option<crate::core::SortOrder>,
     /// Detected integrity constraints (range bounds, column ordering).
     pub constraints: Vec<crate::core::Constraint>,
+    /// Detected conditional distributions (category → numeric).
+    pub conditional_distributions: Vec<crate::learn::correlation::ConditionalDistribution>,
 }
 
 impl TableAnalysis {
@@ -78,6 +80,7 @@ impl TableAnalysis {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }
     }
 }
@@ -438,6 +441,50 @@ fn build_entity(
         })
         .collect();
 
+    // Build conditional distribution correlations
+    let cond_corrs: Vec<crate::core::Correlation> = table
+        .conditional_distributions
+        .iter()
+        .map(|cd| {
+            let branches: Vec<crate::core::ConditionalDistributionBranch> = cd
+                .branches
+                .iter()
+                .map(|b| {
+                    let (kind, params) = distribution_to_kind_params(&b.distribution);
+                    crate::core::ConditionalDistributionBranch {
+                        condition: crate::core::Value::String(b.condition.clone()),
+                        distribution: kind,
+                        params,
+                        round: b.is_integer,
+                    }
+                })
+                .collect();
+            let (def_kind, def_params) =
+                distribution_to_kind_params(&cd.default_distribution);
+            crate::core::Correlation {
+                entity: table.name.clone(),
+                correlation_type: Some("conditional_distribution".into()),
+                fields: Vec::new(),
+                matrix: Vec::new(),
+                conditional: Vec::new(),
+                copula: None,
+                dependent: Some(cd.dependent.clone()),
+                given: Some(cd.given.clone()),
+                distributions: branches,
+                default: Some(crate::core::DistributionSpec {
+                    kind: def_kind,
+                    params: def_params,
+                    array_params: std::collections::BTreeMap::new(),
+                    round: false,
+                }),
+            }
+        })
+        .collect();
+
+    // Merge all correlations
+    let mut all_corrs = corrs;
+    all_corrs.extend(cond_corrs);
+
     // Detect actor columns by name heuristics and mark them
     let actor_scores = detect_actor_columns(&table.columns);
 
@@ -514,7 +561,7 @@ fn build_entity(
         sort_by: table.sort_order.clone(),
     };
 
-    (entity, rels, corrs)
+    (entity, rels, all_corrs)
 }
 
 // ── Actor column detection ──────────────────────────────────────────
@@ -640,6 +687,64 @@ pub fn score_actor_column(name: &str) -> f64 {
     }
 
     0.0
+}
+
+/// Convert a [`fitting::Distribution`] into a [`DistributionKind`] and its parameter map.
+fn distribution_to_kind_params(
+    dist: &crate::learn::fitting::Distribution,
+) -> (crate::core::DistributionKind, std::collections::BTreeMap<String, f64>) {
+    use crate::core::DistributionKind;
+    use crate::learn::fitting::Distribution;
+    let mut params = std::collections::BTreeMap::new();
+    let kind = match dist {
+        Distribution::Uniform(min, max) => {
+            params.insert("min".into(), *min);
+            params.insert("max".into(), *max);
+            DistributionKind::Uniform
+        }
+        Distribution::Normal(mean, std) => {
+            params.insert("mean".into(), *mean);
+            params.insert("std_dev".into(), *std);
+            DistributionKind::Normal
+        }
+        Distribution::LogNormal(mu, sigma) => {
+            params.insert("mean".into(), *mu);
+            params.insert("std_dev".into(), *sigma);
+            DistributionKind::LogNormal
+        }
+        Distribution::Exponential(lambda) => {
+            params.insert("lambda".into(), *lambda);
+            DistributionKind::Exponential
+        }
+        Distribution::Poisson(lambda) => {
+            params.insert("lambda".into(), *lambda);
+            DistributionKind::Poisson
+        }
+        Distribution::Zipf(n, s) => {
+            // Zipf has no direct DistributionKind equivalent; approximate with
+            // Pareto (also heavy-tailed power-law).
+            params.insert("x_m".into(), 1.0);
+            params.insert("alpha".into(), *s);
+            let _ = n; // n is implicit in the row count
+            DistributionKind::Pareto
+        }
+        Distribution::Beta(alpha, beta) => {
+            params.insert("alpha".into(), *alpha);
+            params.insert("beta".into(), *beta);
+            DistributionKind::Beta
+        }
+        Distribution::Gamma(shape, rate) => {
+            params.insert("shape".into(), *shape);
+            params.insert("scale".into(), 1.0 / rate);
+            DistributionKind::Gamma
+        }
+        Distribution::Pareto(x_m, alpha) => {
+            params.insert("x_m".into(), *x_m);
+            params.insert("alpha".into(), *alpha);
+            DistributionKind::Pareto
+        }
+    };
+    (kind, params)
 }
 
 /// Detect actor columns in a table, returning columns with scores above threshold.
@@ -1699,6 +1804,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1754,6 +1860,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1797,6 +1904,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1847,6 +1955,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1977,6 +2086,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2020,6 +2130,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2181,6 +2292,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2223,6 +2335,7 @@ mod tests {
             source_format: None,
             sort_order: None,
             constraints: Vec::new(),
+            conditional_distributions: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);

@@ -18,7 +18,7 @@ use serde::Serialize;
 use serde_json;
 use tracing::{debug, info, info_span, warn};
 
-use crate::learn::correlation::detect_correlations;
+use crate::learn::correlation::{detect_correlations, detect_conditional_distributions};
 use crate::learn::fitting::{FitResult, fit_categorical, fit_distribution};
 use crate::learn::ingest::{self, IngestionResult};
 use crate::learn::profile::{ColumnProfile, compute_profiles};
@@ -404,6 +404,17 @@ fn run_batch(
             );
         }
         table_analyses[i].correlations = correlations;
+
+        // Detect categorical→numeric conditional distributions
+        let cond_dists = detect_conditional_distributions(&profiles, &table.batches);
+        if !cond_dists.is_empty() {
+            debug!(
+                table = %table.entity,
+                count = cond_dists.len(),
+                "conditional distributions found"
+            );
+        }
+        table_analyses[i].conditional_distributions = cond_dists;
         if let Some(ref pb) = corr_pb {
             pb.inc(1);
         }
