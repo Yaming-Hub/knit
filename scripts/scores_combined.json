@@ -1,0 +1,447 @@
+[
+  {
+    "dataset": "aa-flight-paths",
+    "score": 25,
+    "reason": "Columns match (10/10) but values completely wrong - airports don't match coordinates, cnt values unrealistic (15/90)"
+  },
+  {
+    "dataset": "airline-safety",
+    "score": 35,
+    "reason": "Columns match (10/10), value ranges plausible (10/25), categorical values preserved (15/25), no relationship preservation (0/20)"
+  },
+  {
+    "dataset": "airports",
+    "score": 20,
+    "reason": "Columns match (10/10) but all geographic data is nonsensical - cities in wrong states, coordinates don't match (10/90)"
+  },
+  {
+    "dataset": "alcohol-by-country",
+    "score": 30,
+    "reason": "Columns match (10/10) but many countries have identical value 17.5, distribution unrealistic (10/25), countries plausible (10/25)"
+  },
+  {
+    "dataset": "anscombe",
+    "score": 45,
+    "reason": "Format change JSON to CSV (-5), columns match (5/10), X/Y ranges similar (15/25), Series values preserved (15/25), structure changed (10/20)"
+  },
+  {
+    "dataset": "apple-stock-2014",
+    "score": 15,
+    "reason": "Columns match (10/10), dates repeat and skip days (0/20), prices 2-3x too high and unrealistic (0/25), no temporal pattern (5/45)"
+  },
+  {
+    "dataset": "attention",
+    "score": 50,
+    "reason": "Columns match (10/10), value ranges reasonable (15/25), categorical preserved (15/25), subject-score relationships weak (5/20), row count similar (5/20)"
+  },
+  {
+    "dataset": "avengers",
+    "score": 10,
+    "reason": "Columns match (10/10) but data completely garbled - names nonsensical, URLs broken (0/90)"
+  },
+  {
+    "dataset": "bad-drivers",
+    "score": 55,
+    "reason": "Columns match (10/10), ranges realistic (15/25), state names valid (20/25), relationships weak (5/20), row count similar (5/20)"
+  },
+  {
+    "dataset": "barley",
+    "score": 70,
+    "reason": "Columns match (10/10), yield ranges realistic (20/25), variety/site names valid (20/25), year preserved (10/20), good structure (10/20)"
+  },
+  {
+    "dataset": "biopics",
+    "score": 15,
+    "reason": "Columns match (10/10) but data severely corrupted - names concatenated, values jumbled (5/90)"
+  },
+  {
+    "dataset": "bob-ross",
+    "score": 60,
+    "reason": "Columns match (10/10), binary values preserved (20/25), episode format similar (15/25), title structure maintained (10/20), partial data (5/20)"
+  },
+  {
+    "dataset": "burtin",
+    "score": 40,
+    "reason": "Columns present but misaligned (5/10), value ranges plausible (12/25), bacteria names valid (15/25), gram staining misplaced (3/20), format issues (5/20)"
+  },
+  {
+    "dataset": "candy-power-ranking",
+    "score": 55,
+    "reason": "Columns match (10/10), binary/percentage ranges good (15/25), candy names mostly valid (15/25), some relationships preserved (10/20), structure good (5/20)"
+  },
+  {
+    "dataset": "car-crashes",
+    "score": 60,
+    "reason": "Columns match (10/10), ranges realistic (18/25), state abbreviations valid (20/25), calculated fields reasonable (7/20), good format (5/20)"
+  },
+  {
+    "dataset": "cars-json",
+    "score": 50,
+    "reason": "Columns match (10/10), MPG/cylinders ranges odd (10/25), car names valid (15/25), year all same - wrong (5/20), origin preserved (10/20)"
+  },
+  {
+    "dataset": "co2-concentration",
+    "score": 20,
+    "reason": "Columns match (10/10), dates skip around - no monthly pattern (0/20), CO2 values too high and random (5/25), no trend (5/45)"
+  },
+  {
+    "dataset": "college-majors-all",
+    "score": 55,
+    "reason": "Columns match (10/10), employment values plausible (12/25), categories shuffled (10/25), rates reasonable (13/25), format good (10/20)"
+  },
+  {
+    "dataset": "countries",
+    "score": 40,
+    "reason": "Columns match (10/10), fertility/life ranges off (8/25), country names valid (15/25), temporal relationships lost (2/20), structure poor (5/20)"
+  },
+  {
+    "dataset": "covid-icu-beds",
+    "score": 55,
+    "reason": "Columns match (10/10), percentages/ratios realistic (15/25), MMSA names valid (15/25), calculated fields reasonable (10/20), format good (5/20)"
+  },
+  {
+    "dataset": "crimea",
+    "score": 45,
+    "reason": "Columns match (10/10), death counts plausible (12/25), dates within range (10/25), army_size relationships weak (8/20), format good (5/20)"
+  },
+  {
+    "dataset": "dc-characters",
+    "score": 25,
+    "reason": "Columns match (10/10), character data garbled (5/25), names/urls corrupted (5/25), alignment/traits misplaced (0/20), poor structure (5/20)"
+  },
+  {
+    "dataset": "diamonds",
+    "score": 55,
+    "reason": "Columns match (10/10), carat/price ranges good (15/25), cut/color/clarity valid (18/25), relationships partially preserved (7/20), format good (5/20)"
+  },
+  {
+    "dataset": "disasters",
+    "score": 50,
+    "reason": "Columns match (10/10), death counts plausible (13/25), entity values preserved (15/25), year distribution scattered (7/20), format good (5/20)"
+  },
+  {
+    "dataset": "dots",
+    "score": 35,
+    "reason": "Columns match (10/10), time values completely different (5/25), choice preserved (10/25), coherence/firing relationships lost (5/20), format ok (5/20)"
+  },
+  {
+    "dataset": "dowjones",
+    "score": 25,
+    "reason": "Columns match (10/10), dates skip randomly - no monthly (0/20), prices way too high and erratic (5/25), no trend (10/45)"
+  },
+  {
+    "dataset": "drinks",
+    "score": 50,
+    "reason": "Columns match (10/10), serving ranges plausible (12/25), country names valid (18/25), total_litres relationships weak (5/20), format good (5/20)"
+  },
+  {
+    "dataset": "driving",
+    "score": 45,
+    "reason": "Columns match (10/10), year/miles ranges reasonable (12/25), side values valid (15/25), relationships weak (3/20), format good (5/20)"
+  },
+  {
+    "dataset": "ebola-2014",
+    "score": 40,
+    "reason": "Columns match (10/10), dates scattered within range (8/25), country names preserved (15/25), lat/lon relationships lost (2/20), format good (5/20)"
+  },
+  {
+    "dataset": "exercise",
+    "score": 55,
+    "reason": "Columns match (10/10), pulse ranges realistic (15/25), diet/time/kind preserved (18/25), id relationships weak (7/20), format good (5/20)"
+  },
+  {
+    "dataset": "flare",
+    "score": 40,
+    "reason": "Columns match (10/10), size values plausible (10/25), names look valid but scrambled (10/25), parent relationships lost (5/20), format good (5/20)"
+  },
+  {
+    "dataset": "flights",
+    "score": 30,
+    "reason": "Columns match (10/10), passenger counts too high (5/25), month names preserved (15/25), year-month duplication issues (0/20), format ok (0/20)"
+  },
+  {
+    "dataset": "flights-airport",
+    "score": 45,
+    "reason": "Columns match (10/10), count ranges plausible (13/25), IATA codes valid format (15/25), origin-destination pairs scrambled (2/20), format good (5/20)"
+  },
+  {
+    "dataset": "fmri",
+    "score": 65,
+    "reason": "Columns match (10/10), signal ranges accurate (18/25), subject/event/region preserved (20/25), relationships reasonable (12/20), format good (5/20)"
+  },
+  {
+    "dataset": "gapminder",
+    "score": 45,
+    "reason": "Columns match (10/10), pop/life/fertility ranges off (10/25), country names valid (15/25), cluster assignments wrong (5/20), format good (5/20)"
+  },
+  {
+    "dataset": "gapminder-health-income",
+    "score": 40,
+    "reason": "Columns present but misaligned (5/10), value ranges plausible (12/25), country names valid but region wrong column (10/25), relationships weak (8/20), format poor (5/20)"
+  },
+  {
+    "dataset": "geyser",
+    "score": 70,
+    "reason": "Columns match (10/10), duration/waiting ranges accurate (20/25), kind preserved (20/25), correlations maintained (15/20), format good (5/20)"
+  },
+  {
+    "dataset": "github-events",
+    "score": 50,
+    "reason": "Columns match (10/10), time format correct (15/25), count ranges plausible (15/25), temporal distribution scattered (5/20), format good (5/20)"
+  },
+  {
+    "dataset": "global-temp",
+    "score": 35,
+    "reason": "Columns match (10/10), years duplicate too much (5/25), temp ranges reasonable but scattered (10/25), no temporal trend (5/20), format good (5/20)"
+  },
+  {
+    "dataset": "glue-scores",
+    "score": 40,
+    "reason": "Columns present but misaligned (5/10), score ranges plausible (12/25), model/encoder/task names valid (15/25), relationships wrong (3/20), format poor (5/20)"
+  },
+  {
+    "dataset": "grad-students",
+    "score": 55,
+    "reason": "Columns match (10/10), employment/salary ranges realistic (15/25), major categories shuffled (12/25), unemployment rates reasonable (13/20), format good (5/20)"
+  },
+  {
+    "dataset": "healthexp",
+    "score": 30,
+    "reason": "Columns match (10/10), spending way too high (5/25), country names valid (15/25), life expectancy too high (5/25), year distribution poor (0/20), duplication issues (-5/20)"
+  },
+  {
+    "dataset": "income",
+    "score": 45,
+    "reason": "Columns match but id missing (8/10), pct/total ranges off (10/25), state/region names valid (18/25), group preserved (15/25), format issues (-6/20)"
+  },
+  {
+    "dataset": "iowa-electricity",
+    "score": 50,
+    "reason": "Columns match (10/10), dates granular not yearly (10/25), generation ranges plausible (15/25), source preserved (10/20), format changed (5/20)"
+  },
+  {
+    "dataset": "iris",
+    "score": 60,
+    "reason": "Columns match (10/10), sepal/petal ranges too wide (12/25), species preserved (20/25), setosa measurements off (13/20), format good (5/20)"
+  },
+  {
+    "dataset": "la-riots",
+    "score": 35,
+    "reason": "Columns match (10/10), dates wrong year range (5/25), names/race/gender valid (15/25), coordinates relationships poor (0/20), format good (5/20)"
+  },
+  {
+    "dataset": "london-centroids",
+    "score": 55,
+    "reason": "Format changed JSON to CSV (8/10), cx/cy ranges plausible (15/25), borough names valid (20/25), coordinates roughly right area (7/20), format ok (5/20)"
+  },
+  {
+    "dataset": "marvel-characters",
+    "score": 15,
+    "reason": "Columns match (10/10), data severely corrupted - names garbled (2/25), character attributes nonsensical (3/25), all relationships lost (0/20)"
+  },
+  {
+    "dataset": "miserables",
+    "score": 25,
+    "reason": "Format corrupted - nested JSON flattened wrong (0/10), content preserved as string (10/25), node names visible (10/25), structure destroyed (0/20), format broken (5/20)"
+  },
+  {
+    "dataset": "monarchs",
+    "score": 30,
+    "reason": "Format changed JSON to CSV (8/10), year ranges wrong (5/25), names preserved (15/25), start-end relationships broken (0/20), format ok (2/20)"
+  },
+  {
+    "dataset": "mpg",
+    "score": 60,
+    "reason": "Column names/types mostly match, but value ranges and categorical values (e.g., origin, name) are inconsistent and unrealistic. Relationships and structure are only partially preserved."
+  },
+  {
+    "dataset": "nba-raptor",
+    "score": 55,
+    "reason": "Column names/types match, but generated values are implausible (e.g., negative/large numbers, odd player names). Relationships and structure are weakly preserved."
+  },
+  {
+    "dataset": "normal-2d",
+    "score": 85,
+    "reason": "Column names/types and value ranges are realistic. Distributions and structure are well preserved for 2D normal data."
+  },
+  {
+    "dataset": "nq-efficientqa-dev",
+    "score": 40,
+    "reason": "Column names/types match, but generated answers are implausible and not from the same domain. Relationships and structure are weak."
+  },
+  {
+    "dataset": "nq-efficientqa-dev-noann",
+    "score": 80,
+    "reason": "Column names/types and structure match. Questions are plausible, but domain drift is present."
+  },
+  {
+    "dataset": "nq-efficientqa-sample",
+    "score": 45,
+    "reason": "Column names/types match, but generated answers are not plausible or from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "nq-efficientqa-test",
+    "score": 45,
+    "reason": "Column names/types match, but generated answers and predictions are not plausible. Structure is preserved."
+  },
+  {
+    "dataset": "nq-efficientqa-test-noann",
+    "score": 80,
+    "reason": "Column names/types and structure match. Questions are plausible, but domain drift is present."
+  },
+  {
+    "dataset": "nq-open-dev",
+    "score": 45,
+    "reason": "Column names/types match, but generated answers are not plausible or from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "nq-open-train",
+    "score": 45,
+    "reason": "Column names/types match, but generated answers are not plausible or from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "obesity",
+    "score": 75,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some categorical values (state) are inconsistent."
+  },
+  {
+    "dataset": "ohlc",
+    "score": 70,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some categorical values (signal) are inconsistent."
+  },
+  {
+    "dataset": "penguins",
+    "score": 80,
+    "reason": "Column names/types and structure match. Value ranges and categories are plausible, with minor inconsistencies."
+  },
+  {
+    "dataset": "penguins-json",
+    "score": 80,
+    "reason": "Column names/types and structure match. Value ranges and categories are plausible, with minor inconsistencies."
+  },
+  {
+    "dataset": "piqa-test",
+    "score": 50,
+    "reason": "Column names/types match, but generated solutions are not plausible or from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "piqa-train",
+    "score": 50,
+    "reason": "Column names/types match, but generated solutions are not plausible or from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "piqa-valid",
+    "score": 50,
+    "reason": "Column names/types match, but generated solutions are not plausible or from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "planets",
+    "score": 65,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some categorical values (method) are inconsistent."
+  },
+  {
+    "dataset": "population",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges are inconsistent and unrealistic in places."
+  },
+  {
+    "dataset": "population-engineers-hurricanes",
+    "score": 65,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some categorical values (state) are inconsistent."
+  },
+  {
+    "dataset": "recent-grads",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges and categories are inconsistent and unrealistic in places."
+  },
+  {
+    "dataset": "seaice",
+    "score": 70,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some values are inconsistent."
+  },
+  {
+    "dataset": "seattle-weather",
+    "score": 75,
+    "reason": "Column names/types and structure match. Value ranges and categories are plausible, with minor inconsistencies."
+  },
+  {
+    "dataset": "seattle-weather-hourly",
+    "score": 70,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some values are inconsistent."
+  },
+  {
+    "dataset": "sp500",
+    "score": 65,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some values are inconsistent."
+  },
+  {
+    "dataset": "sp500-2000",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges are inconsistent and unrealistic in places."
+  },
+  {
+    "dataset": "species",
+    "score": 55,
+    "reason": "Column names/types match, but generated categorical values are inconsistent and not from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "steak-survey",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges and categories are inconsistent and unrealistic in places."
+  },
+  {
+    "dataset": "stocks",
+    "score": 70,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some values are inconsistent."
+  },
+  {
+    "dataset": "taxis",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges and categories are inconsistent and unrealistic in places."
+  },
+  {
+    "dataset": "tips",
+    "score": 80,
+    "reason": "Column names/types and structure match. Value ranges and categories are plausible, with minor inconsistencies."
+  },
+  {
+    "dataset": "titanic",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges and categories are inconsistent and unrealistic in places."
+  },
+  {
+    "dataset": "unemployment-industries",
+    "score": 70,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some values are inconsistent."
+  },
+  {
+    "dataset": "us-ag-exports",
+    "score": 65,
+    "reason": "Column names/types and structure match. Value ranges are plausible, but some categorical values (state) are inconsistent."
+  },
+  {
+    "dataset": "us-airport-traffic",
+    "score": 55,
+    "reason": "Column names/types match, but generated categorical values are inconsistent and not from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "us-births-cdc",
+    "score": 80,
+    "reason": "Column names/types and structure match. Value ranges are plausible, with minor inconsistencies."
+  },
+  {
+    "dataset": "us-births-ssa",
+    "score": 80,
+    "reason": "Column names/types and structure match. Value ranges are plausible, with minor inconsistencies."
+  },
+  {
+    "dataset": "us-cities",
+    "score": 55,
+    "reason": "Column names/types match, but generated categorical values are inconsistent and not from the same domain. Structure is preserved."
+  },
+  {
+    "dataset": "women-stem",
+    "score": 60,
+    "reason": "Column names/types and structure match. Value ranges and categories are inconsistent and unrealistic in places."
+  }
+]
