@@ -98,6 +98,77 @@ pub enum Value {
     Map(BTreeMap<String, Value>),
 }
 
+// ── Blueprint v2 Layer Structs ────────────────────────────────────────
+
+/// Layer 1 metadata: identity and global configuration for the model.
+///
+/// Groups the scalar properties that define *what* this model is and its
+/// global generation settings. Extracted from [`DataModel`] to provide a
+/// clean separation between model identity and model contents.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ModelMeta {
+    /// Human-readable name for this model (e.g. `"ecommerce"`).
+    pub name: String,
+    /// Optional free-text description.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// Global RNG seed for deterministic generation.
+    #[serde(default = "default_seed")]
+    pub seed: u64,
+    /// Default locale for faker-style generators (e.g. `"en_US"`).
+    #[serde(default = "default_locale")]
+    pub locale: String,
+    /// Default timezone for temporal generators (e.g. `"UTC"`).
+    #[serde(default = "default_timezone")]
+    pub timezone: String,
+    /// Blueprint format version (e.g. `"1.0"` or `"2.0"`).
+    #[serde(default = "default_blueprint_version")]
+    pub blueprint_version: String,
+    /// User-defined key-value parameters available to generators.
+    #[serde(default)]
+    pub params: BTreeMap<String, Value>,
+}
+
+impl Default for ModelMeta {
+    fn default() -> Self {
+        Self {
+            name: "unnamed".to_string(),
+            description: None,
+            seed: default_seed(),
+            locale: default_locale(),
+            timezone: default_timezone(),
+            blueprint_version: default_blueprint_version(),
+            params: BTreeMap::new(),
+        }
+    }
+}
+
+/// Layer 2: all cross-table and cross-column relationships.
+///
+/// Groups foreign keys, correlations, and actor relationships between
+/// entities. Future PRs will extend this to include constraints, grid
+/// structures, and tuple dictionaries.
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct RelationshipModel {
+    /// Foreign-key and association relationships between entities.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub foreign_keys: Vec<Relationship>,
+    /// Inter-field correlation specifications.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub correlations: Vec<Correlation>,
+    /// Actor-to-actor relationship graph specifications.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actor_relationships: Vec<ActorRelationship>,
+}
+
+// ── Type Aliases for v2 naming ───────────────────────────────────────
+
+/// Alias for [`Entity`] — the v2 blueprint uses "Table" terminology.
+pub type Table = Entity;
+
+/// Alias for [`Field`] — the v2 blueprint uses "Column" terminology.
+pub type Column = Field;
+
 // ── DataModel ────────────────────────────────────────────────────────
 
 /// The root data model describing an entire synthetic dataset.
@@ -178,6 +249,79 @@ impl Default for DataModel {
             custom_types: Vec::new(),
             mixins: Vec::new(),
             companion_files: Vec::new(),
+        }
+    }
+}
+
+impl DataModel {
+    /// Extract the model identity and global configuration as a [`ModelMeta`].
+    pub fn meta(&self) -> ModelMeta {
+        ModelMeta {
+            name: self.name.clone(),
+            description: self.description.clone(),
+            seed: self.seed,
+            locale: self.locale.clone(),
+            timezone: self.timezone.clone(),
+            blueprint_version: self.blueprint_version.clone(),
+            params: self.params.clone(),
+        }
+    }
+
+    /// Apply a [`ModelMeta`] to this model, overwriting identity/config fields.
+    pub fn set_meta(&mut self, meta: ModelMeta) {
+        self.name = meta.name;
+        self.description = meta.description;
+        self.seed = meta.seed;
+        self.locale = meta.locale;
+        self.timezone = meta.timezone;
+        self.blueprint_version = meta.blueprint_version;
+        self.params = meta.params;
+    }
+
+    /// Extract the relationship layer as a [`RelationshipModel`].
+    pub fn relationship_model(&self) -> RelationshipModel {
+        RelationshipModel {
+            foreign_keys: self.relationships.clone(),
+            correlations: self.correlations.clone(),
+            actor_relationships: self.actor_relationships.clone(),
+        }
+    }
+
+    /// Apply a [`RelationshipModel`] to this model, overwriting relationship fields.
+    pub fn set_relationship_model(&mut self, rel: RelationshipModel) {
+        self.relationships = rel.foreign_keys;
+        self.correlations = rel.correlations;
+        self.actor_relationships = rel.actor_relationships;
+    }
+
+    /// Construct a [`DataModel`] from layered components.
+    pub fn from_layers(
+        meta: ModelMeta,
+        entities: Vec<Entity>,
+        relationships: RelationshipModel,
+        noise_profiles: Vec<NoiseProfile>,
+        personas: Vec<Persona>,
+        custom_types: Vec<CustomType>,
+        mixins: Vec<Mixin>,
+        companion_files: Vec<String>,
+    ) -> Self {
+        Self {
+            name: meta.name,
+            description: meta.description,
+            seed: meta.seed,
+            locale: meta.locale,
+            timezone: meta.timezone,
+            blueprint_version: meta.blueprint_version,
+            params: meta.params,
+            entities,
+            relationships: relationships.foreign_keys,
+            correlations: relationships.correlations,
+            actor_relationships: relationships.actor_relationships,
+            noise_profiles,
+            personas,
+            custom_types,
+            mixins,
+            companion_files,
         }
     }
 }
@@ -294,6 +438,28 @@ pub struct Entity {
     /// generated data preserves the same ordering as the source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort_by: Option<SortOrder>,
+}
+
+impl Default for Entity {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            description: None,
+            tags: Vec::new(),
+            count: CountSpec::default(),
+            fields: Vec::new(),
+            constraints: Vec::new(),
+            topology: None,
+            actor: false,
+            persona_distribution: None,
+            activity_count: None,
+            mixin_refs: None,
+            output: None,
+            stats: None,
+            scaling: None,
+            sort_by: None,
+        }
+    }
 }
 
 /// Sort order specification detected during `knit learn`.
@@ -2857,5 +3023,130 @@ active_days = "uniform"
         assert!(toml.contains("created_at"));
         let parsed: Entity = toml::from_str(&toml).unwrap();
         assert_eq!(parsed.sort_by, entity.sort_by);
+    }
+
+    #[test]
+    fn test_model_meta_roundtrip() {
+        let model = DataModel {
+            name: "test_model".into(),
+            description: Some("A test".into()),
+            seed: 123,
+            locale: "de_DE".into(),
+            timezone: "Europe/Berlin".into(),
+            blueprint_version: "2.0".into(),
+            params: BTreeMap::from([("key".into(), Value::String("val".into()))]),
+            ..Default::default()
+        };
+
+        let meta = model.meta();
+        assert_eq!(meta.name, "test_model");
+        assert_eq!(meta.seed, 123);
+        assert_eq!(meta.locale, "de_DE");
+        assert_eq!(meta.timezone, "Europe/Berlin");
+        assert_eq!(meta.blueprint_version, "2.0");
+        assert_eq!(meta.params.len(), 1);
+
+        let mut model2 = DataModel::default();
+        model2.set_meta(meta);
+        assert_eq!(model2.name, "test_model");
+        assert_eq!(model2.seed, 123);
+    }
+
+    #[test]
+    fn test_relationship_model_roundtrip() {
+        let model = DataModel {
+            relationships: vec![Relationship {
+                name: "fk_test".into(),
+                from: "orders.customer_id".into(),
+                to: "customers.id".into(),
+                kind: RelationshipKind::ManyToOne,
+                nullable: None,
+                foreign_key: None,
+                cardinality: None,
+                degree: None,
+                selection: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
+                properties: Vec::new(),
+            }],
+            correlations: vec![Correlation {
+                entity: "orders".into(),
+                fields: vec!["a".into(), "b".into()],
+                matrix: vec![vec![1.0, 0.5], vec![0.5, 1.0]],
+                correlation_type: None,
+                conditional: Vec::new(),
+                copula: None,
+                dependent: None,
+                given: None,
+                distributions: Vec::new(),
+                default: None,
+            }],
+            ..Default::default()
+        };
+
+        let rel = model.relationship_model();
+        assert_eq!(rel.foreign_keys.len(), 1);
+        assert_eq!(rel.foreign_keys[0].name, "fk_test");
+        assert_eq!(rel.correlations.len(), 1);
+        assert_eq!(rel.correlations[0].entity, "orders");
+
+        let mut model2 = DataModel::default();
+        model2.set_relationship_model(rel);
+        assert_eq!(model2.relationships.len(), 1);
+        assert_eq!(model2.correlations.len(), 1);
+    }
+
+    #[test]
+    fn test_from_layers() {
+        let meta = ModelMeta {
+            name: "layered".into(),
+            seed: 99,
+            ..Default::default()
+        };
+        let entities = vec![Entity {
+            name: "users".into(),
+            ..Default::default()
+        }];
+        let relationships = RelationshipModel {
+            foreign_keys: vec![],
+            correlations: vec![],
+            actor_relationships: vec![],
+        };
+
+        let model = DataModel::from_layers(
+            meta,
+            entities,
+            relationships,
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+        );
+
+        assert_eq!(model.name, "layered");
+        assert_eq!(model.seed, 99);
+        assert_eq!(model.entities.len(), 1);
+        assert_eq!(model.entities[0].name, "users");
+    }
+
+    #[test]
+    fn test_type_aliases() {
+        // Verify Table and Column are usable aliases
+        let _table: Table = Entity::default();
+        let _column: Column = Field {
+            name: "test".into(),
+            description: None,
+            data_type: DataType::String,
+            generator: None,
+            nullable: NullSpec::default(),
+            primary_key: None,
+            precision: None,
+            actor_column: false,
+            fields: Vec::new(),
+            stats: None,
+            traits: None,
+        };
     }
 }
