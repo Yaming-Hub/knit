@@ -29,14 +29,17 @@ use crate::model as model_dir;
 /// - File with `.json` extension → JSON schema
 /// - Otherwise → TOML flat schema
 ///
+/// Emits a deprecation warning for v1 blueprints.
 /// Returns the parsed [`DataModel`] or an error.
 pub fn load_blueprint(path: &str) -> Result<DataModel, BlueprintError> {
     let p = Path::new(path);
 
     // Check for structured model directory
     if model_dir::is_structured_model(p) {
-        return model_dir::reader::load_model_directory(p)
-            .map_err(|e| BlueprintError::Other(e.to_string()));
+        let model = model_dir::reader::load_model_directory(p)
+            .map_err(|e| BlueprintError::Other(e.to_string()))?;
+        warn_v1_deprecation(&model, path);
+        return Ok(model);
     }
 
     let ext = p
@@ -44,9 +47,23 @@ pub fn load_blueprint(path: &str) -> Result<DataModel, BlueprintError> {
         .and_then(|e| e.to_str())
         .unwrap_or("")
         .to_lowercase();
-    match ext.as_str() {
-        "json" => crate::blueprint::parse_json_file(p),
-        _ => crate::blueprint::parse_toml_file(p),
+    let model = match ext.as_str() {
+        "json" => crate::blueprint::parse_json_file(p)?,
+        _ => crate::blueprint::parse_toml_file(p)?,
+    };
+    warn_v1_deprecation(&model, path);
+    Ok(model)
+}
+
+/// Emit a deprecation warning if the loaded blueprint uses v1 format.
+fn warn_v1_deprecation(model: &DataModel, path: &str) {
+    let v = &model.blueprint_version;
+    if v.is_empty() || v == "1" || v.starts_with("1.") {
+        tracing::warn!(
+            path = path,
+            version = %v,
+            "loading v1 blueprint; v1 format is deprecated — use `knit model migrate` to upgrade to v2"
+        );
     }
 }
 
