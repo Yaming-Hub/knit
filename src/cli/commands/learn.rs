@@ -18,7 +18,7 @@ use serde::Serialize;
 use serde_json;
 use tracing::{debug, info, info_span, warn};
 
-use crate::learn::correlation::{detect_correlations, detect_conditional_distributions, detect_tuple_columns, detect_derived_text_columns};
+use crate::learn::correlation::{detect_correlations, detect_conditional_distributions, detect_tuple_columns, detect_derived_text_columns, detect_grid_structures};
 use crate::learn::fitting::{FitResult, fit_categorical, fit_distribution};
 use crate::learn::ingest::{self, IngestionResult};
 use crate::learn::profile::{ColumnProfile, compute_profiles};
@@ -437,6 +437,17 @@ fn run_batch(
             );
         }
         table_analyses[i].derived_text_columns = derived_text;
+
+        // Detect panel/grid structures (cross-product column pairs)
+        let grids = detect_grid_structures(&profiles, &table.batches);
+        if !grids.is_empty() {
+            debug!(
+                table = %table.entity,
+                count = grids.len(),
+                "grid structures found"
+            );
+        }
+        table_analyses[i].grid_structures = grids;
         if let Some(ref pb) = corr_pb {
             pb.inc(1);
         }

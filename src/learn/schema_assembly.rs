@@ -63,6 +63,8 @@ pub struct TableAnalysis {
     pub tuple_groups: Vec<crate::learn::correlation::TupleGroup>,
     /// Detected derived text column relationships.
     pub derived_text_columns: Vec<crate::learn::correlation::DerivedTextRelation>,
+    /// Detected panel/grid structures (cross-product column pairs).
+    pub grid_structures: Vec<crate::learn::correlation::GridStructure>,
 }
 
 impl TableAnalysis {
@@ -87,6 +89,7 @@ impl TableAnalysis {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }
     }
 }
@@ -496,6 +499,49 @@ fn build_entity(
         if let Some(field) = fields.iter_mut().find(|f| f.name == dt.target) {
             field.generator = Some(crate::core::GeneratorSpec::Derived {
                 expr: dt.expr.clone(),
+            });
+        }
+    }
+
+    // Apply grid/panel structure: set cyclic generators for cross-product columns
+    for grid in &table.grid_structures {
+        let inner_len = grid.inner_values.len();
+        let outer_len = grid.outer_values.len();
+
+        // Outer column: each value repeated |inner| times
+        let outer_expanded: Vec<String> = grid
+            .outer_values
+            .iter()
+            .flat_map(|v| std::iter::repeat(v.clone()).take(inner_len))
+            .collect();
+
+        // Inner column: full list tiled |outer| times
+        let inner_tiled: Vec<String> = grid
+            .inner_values
+            .iter()
+            .cloned()
+            .cycle()
+            .take(inner_len * outer_len)
+            .collect();
+
+        if let Some(field) = fields.iter_mut().find(|f| f.name == grid.outer) {
+            field.generator = Some(crate::core::GeneratorSpec::Sequence {
+                start: crate::core::IntOrString::Int(0),
+                step: crate::core::IntOrString::Int(1),
+                prefix: None,
+                values: Some(outer_expanded),
+                cycle: Some(true),
+                jitter: None,
+            });
+        }
+        if let Some(field) = fields.iter_mut().find(|f| f.name == grid.inner) {
+            field.generator = Some(crate::core::GeneratorSpec::Sequence {
+                start: crate::core::IntOrString::Int(0),
+                step: crate::core::IntOrString::Int(1),
+                prefix: None,
+                values: Some(inner_tiled),
+                cycle: Some(true),
+                jitter: None,
             });
         }
     }
@@ -1822,6 +1868,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1880,6 +1927,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1926,6 +1974,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1979,6 +2028,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -2112,6 +2162,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2158,6 +2209,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2322,6 +2374,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2367,6 +2420,7 @@ mod tests {
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
             derived_text_columns: Vec::new(),
+            grid_structures: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);

@@ -396,6 +396,140 @@ fn count_concat_matches(
     }
     matches
 }
+
+/// A detected panel/grid structure: two categorical columns whose rows form a
+/// (near-)complete cross product.
+#[derive(Debug, Clone)]
+pub struct GridStructure {
+    /// The "outer" column (slower-changing in the cross product).
+    pub outer: String,
+    /// Unique values of the outer column, in order of first appearance.
+    pub outer_values: Vec<String>,
+    /// The "inner" column (faster-changing, cycles for each outer value).
+    pub inner: String,
+    /// Unique values of the inner column, in order of first appearance.
+    pub inner_values: Vec<String>,
+    /// Completeness ratio (actual combos / expected combos).
+    pub completeness: f64,
+}
+
+/// Detect panel/grid structures — pairs of categorical columns whose rows form
+/// a (near-)complete cross product.
+///
+/// A grid is detected when the number of unique (A, B) combinations is ≥ 90%
+/// of |unique A| × |unique B|, and both columns have ≤ 200 unique values.
+pub fn detect_grid_structures(
+    profiles: &[ColumnProfile],
+    batches: &[RecordBatch],
+) -> Vec<GridStructure> {
+    let _span = info_span!("grid_detection").entered();
+    if profiles.is_empty() || batches.is_empty() {
+        return Vec::new();
+    }
+
+    let string_cols = collect_string_columns(profiles, batches);
+    let str_names: Vec<&String> = string_cols.keys().collect();
+    let mut results = Vec::new();
+
+    'outer: for i in 0..str_names.len() {
+        if results.len() >= 10 {
+            break;
+        }
+        let a_vals = &string_cols[str_names[i]];
+        // Unique values preserving first-appearance order
+        let a_unique = ordered_unique(a_vals);
+        if a_unique.len() < 2 || a_unique.len() > 200 {
+            continue;
+        }
+
+        for j in (i + 1)..str_names.len() {
+            if results.len() >= 10 {
+                break 'outer;
+            }
+            let b_vals = &string_cols[str_names[j]];
+            let b_unique = ordered_unique(b_vals);
+            if b_unique.len() < 2 || b_unique.len() > 200 {
+                continue;
+            }
+
+            let n = a_vals.len().min(b_vals.len());
+
+            // Count actual unique combinations (only from rows where both are non-null)
+            let mut combos: std::collections::HashSet<(&str, &str)> =
+                std::collections::HashSet::new();
+            let mut a_seen = std::collections::HashSet::new();
+            let mut b_seen = std::collections::HashSet::new();
+            for idx in 0..n {
+                if let (Some(a), Some(b)) = (&a_vals[idx], &b_vals[idx]) {
+                    combos.insert((a.as_str(), b.as_str()));
+                    a_seen.insert(a.as_str());
+                    b_seen.insert(b.as_str());
+                }
+            }
+
+            // Use only values that appear in non-null paired rows
+            let expected = a_seen.len() * b_seen.len();
+            if expected == 0 {
+                continue;
+            }
+
+            let completeness = combos.len() as f64 / expected as f64;
+            if completeness < 0.9 {
+                continue;
+            }
+
+            // Filter values to those actually seen in paired rows (preserving order)
+            let a_paired: Vec<String> = a_unique
+                .iter()
+                .filter(|v| a_seen.contains(v.as_str()))
+                .cloned()
+                .collect();
+            let b_paired: Vec<String> = b_unique
+                .iter()
+                .filter(|v| b_seen.contains(v.as_str()))
+                .cloned()
+                .collect();
+
+            // Assign outer (fewer unique values) vs inner (more)
+            let a_is_outer = a_paired.len() <= b_paired.len();
+            let (outer, outer_vals, inner, inner_vals) = if a_is_outer {
+                (str_names[i].clone(), a_paired, str_names[j].clone(), b_paired)
+            } else {
+                (str_names[j].clone(), b_paired, str_names[i].clone(), a_paired)
+            };
+
+            debug!(
+                outer = %outer, inner = %inner,
+                outer_n = outer_vals.len(), inner_n = inner_vals.len(),
+                completeness, combos = combos.len(),
+                "detected grid structure"
+            );
+
+            results.push(GridStructure {
+                outer,
+                outer_values: outer_vals,
+                inner,
+                inner_values: inner_vals,
+                completeness,
+            });
+        }
+    }
+
+    results
+}
+
+/// Collect unique string values preserving first-appearance order.
+fn ordered_unique(vals: &[Option<String>]) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
+    let mut result = Vec::new();
+    for v in vals.iter().flatten() {
+        if seen.insert(v.clone()) {
+            result.push(v.clone());
+        }
+    }
+    result
+}
+
 #[derive(Debug, Clone)]
 pub struct ConditionalDistribution {
     /// The categorical column (conditioning field).
@@ -1569,6 +1703,57 @@ mod tests {
     #[test]
     fn derived_text_empty_input() {
         let result = detect_derived_text_columns(&[], &[]);
+        assert!(result.is_empty());
+    }
+
+    // ── Grid structure tests ──────────────────────────────────────────
+
+    #[test]
+    fn detect_complete_grid() {
+        // 2 regions × 3 products = 6 rows (complete cross product)
+        let batch = RecordBatch::try_from_iter(vec![
+            (
+                "region",
+                Arc::new(StringArray::from(vec!["US", "US", "US", "EU", "EU", "EU"])) as ArrayRef,
+            ),
+            (
+                "product",
+                Arc::new(StringArray::from(vec!["A", "B", "C", "A", "B", "C"])) as ArrayRef,
+            ),
+        ])
+        .unwrap();
+        let profiles = vec![string_profile("region"), string_profile("product")];
+        let result = detect_grid_structures(&profiles, &[batch]);
+        assert_eq!(result.len(), 1);
+        let grid = &result[0];
+        assert_eq!(grid.outer_values.len(), 2);
+        assert_eq!(grid.inner_values.len(), 3);
+        assert!(grid.completeness >= 0.99);
+    }
+
+    #[test]
+    fn reject_non_grid() {
+        // 3 regions, 3 products, but only 3 combos (not 9)
+        let batch = RecordBatch::try_from_iter(vec![
+            (
+                "region",
+                Arc::new(StringArray::from(vec!["US", "EU", "JP"])) as ArrayRef,
+            ),
+            (
+                "product",
+                Arc::new(StringArray::from(vec!["A", "B", "C"])) as ArrayRef,
+            ),
+        ])
+        .unwrap();
+        let profiles = vec![string_profile("region"), string_profile("product")];
+        let result = detect_grid_structures(&profiles, &[batch]);
+        // 3 combos / 9 expected = 0.33 < 0.9 → not a grid
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn grid_empty_input() {
+        let result = detect_grid_structures(&[], &[]);
         assert!(result.is_empty());
     }
 }
