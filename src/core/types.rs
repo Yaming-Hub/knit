@@ -145,9 +145,9 @@ impl Default for ModelMeta {
 
 /// Layer 2: all cross-table and cross-column relationships.
 ///
-/// Groups foreign keys, correlations, and actor relationships between
-/// entities. Future PRs will extend this to include constraints, grid
-/// structures, and tuple dictionaries.
+/// Groups foreign keys, correlations, constraints, and actor relationships
+/// between entities. Future PRs will extend this to include grid structures
+/// and tuple dictionaries.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct RelationshipModel {
     /// Foreign-key and association relationships between entities.
@@ -159,6 +159,27 @@ pub struct RelationshipModel {
     /// Actor-to-actor relationship graph specifications.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actor_relationships: Vec<ActorRelationship>,
+    /// Integrity constraints grouped by table.
+    ///
+    /// In v1 format, constraints live on each entity. In v2 format, they are
+    /// collected here with an explicit `table` field. Use
+    /// [`DataModel::all_constraints()`] to get the merged view.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub constraints: Vec<TableConstraint>,
+}
+
+/// A constraint associated with a specific table.
+///
+/// Wraps a [`Constraint`] with the table name it applies to, enabling
+/// constraints to be stored centrally in [`RelationshipModel`] rather than
+/// scattered across individual entities.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TableConstraint {
+    /// Name of the table this constraint applies to.
+    pub table: String,
+    /// The constraint specification.
+    #[serde(flatten)]
+    pub constraint: Constraint,
 }
 
 // ── Type Aliases for v2 naming ───────────────────────────────────────
@@ -279,25 +300,84 @@ impl DataModel {
     }
 
     /// Extract the relationship layer as a [`RelationshipModel`].
+    ///
+    /// Merges entity-level constraints into the relationship model so that
+    /// all constraints are accessible from a single location.
     pub fn relationship_model(&self) -> RelationshipModel {
+        let mut constraints: Vec<TableConstraint> = Vec::new();
+        // Collect entity-level constraints with their table names
+        for entity in &self.entities {
+            for c in &entity.constraints {
+                constraints.push(TableConstraint {
+                    table: entity.name.clone(),
+                    constraint: c.clone(),
+                });
+            }
+        }
         RelationshipModel {
             foreign_keys: self.relationships.clone(),
             correlations: self.correlations.clone(),
             actor_relationships: self.actor_relationships.clone(),
+            constraints,
         }
     }
 
     /// Apply a [`RelationshipModel`] to this model, overwriting relationship fields.
+    ///
+    /// Constraints from the relationship model are distributed back to their
+    /// respective entities (matching by `table` name).
     pub fn set_relationship_model(&mut self, rel: RelationshipModel) {
         self.relationships = rel.foreign_keys;
         self.correlations = rel.correlations;
         self.actor_relationships = rel.actor_relationships;
+        // Distribute constraints back to entities
+        for entity in &mut self.entities {
+            entity.constraints.clear();
+        }
+        for tc in rel.constraints {
+            if let Some(entity) = self.entities.iter_mut().find(|e| e.name == tc.table) {
+                entity.constraints.push(tc.constraint);
+            } else {
+                tracing::warn!(
+                    table = %tc.table,
+                    "constraint references non-existent table, skipping"
+                );
+            }
+        }
+    }
+
+    /// Get all constraints across all entities as [`TableConstraint`]s.
+    ///
+    /// This provides a unified view of constraints regardless of whether
+    /// they were defined on individual entities (v1) or centrally (v2).
+    pub fn all_constraints(&self) -> Vec<TableConstraint> {
+        self.entities
+            .iter()
+            .flat_map(|entity| {
+                entity.constraints.iter().map(move |c| TableConstraint {
+                    table: entity.name.clone(),
+                    constraint: c.clone(),
+                })
+            })
+            .collect()
+    }
+
+    /// Get constraints for a specific table by name.
+    pub fn constraints_for(&self, table: &str) -> Vec<&Constraint> {
+        self.entities
+            .iter()
+            .find(|e| e.name == table)
+            .map(|e| e.constraints.iter().collect())
+            .unwrap_or_default()
     }
 
     /// Construct a [`DataModel`] from layered components.
+    ///
+    /// Constraints from the [`RelationshipModel`] are distributed to their
+    /// respective entities by matching the `table` field.
     pub fn from_layers(
         meta: ModelMeta,
-        entities: Vec<Entity>,
+        mut entities: Vec<Entity>,
         relationships: RelationshipModel,
         noise_profiles: Vec<NoiseProfile>,
         personas: Vec<Persona>,
@@ -305,6 +385,17 @@ impl DataModel {
         mixins: Vec<Mixin>,
         companion_files: Vec<String>,
     ) -> Self {
+        // Distribute constraints to their respective entities
+        for tc in &relationships.constraints {
+            if let Some(entity) = entities.iter_mut().find(|e| e.name == tc.table) {
+                entity.constraints.push(tc.constraint.clone());
+            } else {
+                tracing::warn!(
+                    table = %tc.table,
+                    "constraint references non-existent table, skipping"
+                );
+            }
+        }
         Self {
             name: meta.name,
             description: meta.description,
@@ -3112,6 +3203,12 @@ active_days = "uniform"
             foreign_keys: vec![],
             correlations: vec![],
             actor_relationships: vec![],
+            constraints: vec![TableConstraint {
+                table: "users".into(),
+                constraint: Constraint::Unique {
+                    fields: vec!["email".into()],
+                },
+            }],
         };
 
         let model = DataModel::from_layers(
@@ -3129,6 +3226,104 @@ active_days = "uniform"
         assert_eq!(model.seed, 99);
         assert_eq!(model.entities.len(), 1);
         assert_eq!(model.entities[0].name, "users");
+        // Constraint was distributed to the entity
+        assert_eq!(model.entities[0].constraints.len(), 1);
+    }
+
+    #[test]
+    fn test_all_constraints() {
+        let model = DataModel {
+            entities: vec![
+                Entity {
+                    name: "orders".into(),
+                    constraints: vec![
+                        Constraint::Range {
+                            field: "total".into(),
+                            min: Some(Value::Float(0.0)),
+                            max: None,
+                        },
+                    ],
+                    ..Default::default()
+                },
+                Entity {
+                    name: "users".into(),
+                    constraints: vec![
+                        Constraint::Unique { fields: vec!["email".into()] },
+                    ],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
+
+        let all = model.all_constraints();
+        assert_eq!(all.len(), 2);
+        assert_eq!(all[0].table, "orders");
+        assert_eq!(all[1].table, "users");
+
+        let orders_constraints = model.constraints_for("orders");
+        assert_eq!(orders_constraints.len(), 1);
+
+        let missing = model.constraints_for("nonexistent");
+        assert_eq!(missing.len(), 0);
+    }
+
+    #[test]
+    fn test_relationship_model_includes_constraints() {
+        let model = DataModel {
+            entities: vec![Entity {
+                name: "orders".into(),
+                constraints: vec![Constraint::Range {
+                    field: "total".into(),
+                    min: Some(Value::Float(0.0)),
+                    max: Some(Value::Float(10000.0)),
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        let rel = model.relationship_model();
+        assert_eq!(rel.constraints.len(), 1);
+        assert_eq!(rel.constraints[0].table, "orders");
+
+        // Round-trip: set_relationship_model distributes back
+        let mut model2 = DataModel {
+            entities: vec![Entity {
+                name: "orders".into(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        model2.set_relationship_model(rel);
+        assert_eq!(model2.entities[0].constraints.len(), 1);
+    }
+
+    #[test]
+    fn test_table_constraint_serde_roundtrip() {
+        let tc = TableConstraint {
+            table: "orders".into(),
+            constraint: Constraint::Range {
+                field: "total".into(),
+                min: Some(Value::Float(0.0)),
+                max: Some(Value::Float(9999.99)),
+            },
+        };
+        let json = serde_json::to_string(&tc).unwrap();
+        let back: TableConstraint = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.table, "orders");
+        assert_eq!(back, tc);
+
+        // Also test Unique variant
+        let tc2 = TableConstraint {
+            table: "users".into(),
+            constraint: Constraint::Unique {
+                fields: vec!["email".into()],
+            },
+        };
+        let json2 = serde_json::to_string(&tc2).unwrap();
+        let back2: TableConstraint = serde_json::from_str(&json2).unwrap();
+        assert_eq!(back2, tc2);
     }
 
     #[test]
