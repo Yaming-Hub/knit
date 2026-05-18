@@ -48,5 +48,8 @@ null_rate = 0.0
 [entities.fields.traits]
 semantic = "categorical"
 
+[entities.output]
+source_format = "json"
+
 [entities.stats]
 source_rows = 1

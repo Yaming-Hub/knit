@@ -75,22 +75,25 @@ avg_length = 99.51293986222305
 semantic = "text"
 cardinality = "unique"
 
+[entities.output]
+source_format = "jsonl"
+
 [entities.stats]
 source_rows = 16113
 
 [[correlations]]
 entity = "original"
 fields = [
-    "sol2",
+    "goal",
     "sol1",
 ]
 matrix = [
     [
     1.0,
-    0.9982619424468201,
+    0.9978666364720098,
 ],
     [
-    0.9982619424468201,
+    0.9978666364720098,
     1.0,
 ],
 ]
@@ -99,16 +102,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "sol2",
     "goal",
+    "sol2",
 ]
 matrix = [
     [
     1.0,
-    0.9982498048819546,
+    0.9982498048801004,
 ],
     [
-    0.9982498048819546,
+    0.9982498048801004,
     1.0,
 ],
 ]
@@ -118,15 +121,15 @@ conditional = []
 entity = "original"
 fields = [
     "sol1",
-    "goal",
+    "sol2",
 ]
 matrix = [
     [
     1.0,
-    0.9978666364877127,
+    0.9982619424477469,
 ],
     [
-    0.9978666364877127,
+    0.9982619424477469,
     1.0,
 ],
 ]

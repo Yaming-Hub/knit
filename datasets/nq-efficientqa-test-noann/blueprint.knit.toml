@@ -33,5 +33,8 @@ avg_length = 47.330130016958734
 semantic = "text"
 cardinality = "unique"
 
+[entities.output]
+source_format = "jsonl"
+
 [entities.stats]
 source_rows = 1769

@@ -1,0 +1,194 @@
+country,beer_servings,spirit_servings,wine_servings,total_litres_of_pure_alcohol
+Italy,23,63,47,10.7
+Thailand,88,45,4,2.9
+Turkey,2,21,83,1.9
+India,46,243,21,10.0
+Spain,70,5,141,4.4
+Slovenia,376,72,32,4.0
+Turkey,225,91,24,1.7
+Hungary,47,106,46,1.4
+Australia,14,9,17,1.1
+Singapore,111,5,51,14.0
+Egypt,14,16,35,0.7
+Serbia,137,84,132,9.5
+Czech Republic,240,66,51,3.7
+South Korea,128,192,66,2.5
+Canada,103,96,38,5.6
+Brazil,234,126,56,0.3
+Finland,117,73,29,14.4
+Slovakia,161,3,10,2.3
+Greece,65,1,76,4.1
+Israel,89,36,178,5.0
+Chile,21,41,77,5.1
+Nigeria,197,310,2,2.0
+China,376,19,45,0.5
+Egypt,376,45,20,14.4
+Philippines,187,15,22,1.5
+United Arab Emirates,53,23,96,5.8
+China,124,17,69,3.5
+Slovakia,28,7,29,10.6
+Egypt,7,6,81,0.6
+Vietnam,24,17,2,0.9
+Vietnam,23,51,118,6.6
+United Arab Emirates,156,206,55,6.8
+Colombia,102,4,125,0.5
+Egypt,125,135,50,2.3
+Malaysia,61,52,25,2.5
+South Korea,37,0,13,1.0
+Norway,144,438,4,0.3
+Colombia,39,68,32,7.5
+Norway,205,19,6,4.1
+Canada,88,31,14,9.1
+Singapore,259,88,114,5.3
+United States,51,33,9,1.0
+Peru,21,58,40,6.8
+Netherlands,288,36,10,2.0
+Egypt,344,53,48,2.4
+Slovakia,14,48,78,0.4
+Italy,31,43,16,0.5
+Norway,169,58,69,6.4
+Hungary,257,26,31,3.3
+Egypt,176,25,50,0.8
+Belgium,266,29,78,3.9
+Canada,138,19,94,7.9
+Israel,55,9,189,5.4
+Singapore,220,126,49,5.3
+Netherlands,27,60,24,4.3
+Canada,129,6,22,7.3
+Argentina,79,11,24,12.3
+Colombia,73,131,53,3.7
+Colombia,186,255,64,11.0
+Pakistan,83,147,30,0.8
+Belgium,303,55,39,5.5
+Pakistan,1,211,38,0.6
+Luxembourg,179,103,18,1.2
+United Arab Emirates,68,187,48,3.7
+Russia,22,2,17,12.6
+Ireland,72,84,27,4.9
+United Kingdom,140,152,5,6.6
+Mexico,100,204,32,8.0
+Bangladesh,88,69,9,10.6
+Mexico,220,15,66,3.2
+New Zealand,14,71,52,13.3
+Poland,122,51,138,1.6
+Belgium,32,6,3,1.8
+France,79,248,23,1.2
+Russia,99,22,4,2.8
+Malaysia,7,44,0,0.3
+Pakistan,53,97,30,1.8
+Saudi Arabia,0,18,58,1.8
+Pakistan,51,20,40,2.5
+Poland,15,19,31,6.4
+Italy,216,7,29,2.5
+Croatia,207,22,85,2.3
+Italy,21,49,234,0.3
+Turkey,199,235,52,0.3
+South Africa,219,44,46,4.7
+Ireland,89,97,73,4.2
+Indonesia,105,67,107,1.9
+Philippines,75,114,61,5.1
+United Kingdom,147,54,89,0.4
+India,145,320,7,2.4
+Austria,11,0,42,0.6
+Croatia,65,59,170,2.0
+Portugal,15,176,26,0.2
+Thailand,53,176,14,4.0
+Thailand,34,118,37,0.4
+Netherlands,92,95,241,7.6
+Taiwan,7,41,57,7.1
+South Africa,16,252,78,1.5
+Hungary,134,58,21,6.0
+Colombia,94,311,25,1.3
+Canada,55,143,33,0.9
+Malaysia,22,15,80,12.3
+Canada,123,39,87,3.3
+Argentina,43,57,167,3.6
+Czech Republic,105,4,37,4.9
+Iceland,172,146,4,4.1
+South Korea,42,11,86,0.2
+Singapore,31,18,12,1.9
+Sweden,3,132,31,4.5
+Croatia,1,55,98,1.8
+India,63,79,14,2.4
+Thailand,75,149,33,4.1
+Ireland,67,90,3,1.1
+Russia,217,7,27,0.8
+Thailand,181,83,3,6.1
+Brazil,336,190,11,14.4
+United Arab Emirates,123,42,87,2.0
+Serbia,4,106,77,14.4
+Ukraine,23,251,24,10.5
+Mexico,184,37,15,3.4
+Pakistan,37,34,22,3.0
+Romania,99,65,42,11.4
+Czech Republic,212,95,52,4.0
+United States,34,118,32,2.3
+Philippines,140,431,20,3.6
+Vietnam,195,62,57,14.4
+Argentina,9,69,63,3.0
+Saudi Arabia,4,95,128,13.2
+Poland,28,102,17,0.1
+Pakistan,44,20,20,4.2
+United Arab Emirates,82,11,18,5.1
+Indonesia,1,18,6,9.0
+Hong Kong,244,111,7,5.2
+Bangladesh,114,133,93,1.7
+Luxembourg,65,44,3,4.6
+Poland,281,35,24,11.3
+Croatia,133,4,23,0.1
+Greece,91,241,29,1.8
+Bangladesh,35,162,5,0.4
+Brazil,89,19,2,0.3
+Norway,355,31,2,4.3
+Argentina,82,87,8,0.8
+Colombia,24,104,5,14.4
+Japan,376,53,19,3.4
+Finland,17,12,76,2.7
+Netherlands,27,64,35,0.9
+Croatia,30,47,29,4.1
+Hungary,15,438,37,2.2
+Taiwan,1,94,58,3.7
+Ukraine,201,20,115,8.0
+Egypt,29,5,49,4.0
+New Zealand,79,4,28,1.1
+Argentina,121,7,62,7.0
+United Kingdom,133,85,12,14.4
+France,84,113,92,1.5
+Brazil,32,53,28,1.0
+Denmark,230,5,93,0.3
+India,74,48,145,3.6
+Spain,68,76,48,1.7
+Japan,59,100,35,1.5
+Turkey,41,56,66,3.5
+Ukraine,157,26,5,14.4
+South Africa,294,58,22,0.9
+New Zealand,24,143,24,1.1
+France,237,3,11,4.3
+Switzerland,123,45,61,13.6
+China,39,136,21,5.9
+Brazil,228,90,54,1.8
+Nigeria,5,11,2,3.0
+Israel,376,277,23,8.0
+India,172,152,86,10.1
+Malaysia,78,4,97,5.2
+Japan,62,20,205,4.0
+Mexico,6,11,70,2.3
+China,12,12,101,2.6
+South Korea,41,10,23,3.1
+Ukraine,299,70,37,3.5
+Sweden,117,103,162,2.6
+Serbia,10,301,14,2.9
+Finland,11,17,21,8.2
+Argentina,41,281,103,0.5
+Austria,185,42,47,1.1
+Russia,15,12,72,0.2
+Bangladesh,32,29,35,5.2
+Colombia,107,11,43,6.2
+Sweden,3,5,43,3.7
+Greece,91,5,38,0.2
+China,97,79,14,5.6
+Indonesia,199,19,24,7.7
+New Zealand,2,52,9,11.0
+Malaysia,31,153,7,3.1
+Luxembourg,61,232,53,11.5
+United Arab Emirates,122,130,24,5.5

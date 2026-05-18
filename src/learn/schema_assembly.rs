@@ -525,24 +525,37 @@ fn build_entity(
             .collect();
 
         if let Some(field) = fields.iter_mut().find(|f| f.name == grid.outer) {
-            field.generator = Some(crate::core::GeneratorSpec::Sequence {
-                start: crate::core::IntOrString::Int(0),
-                step: crate::core::IntOrString::Int(1),
-                prefix: None,
-                values: Some(outer_expanded),
-                cycle: Some(true),
-                jitter: None,
-            });
+            // Only set cyclic generator for string-typed fields (not date/datetime)
+            let is_string_type = matches!(
+                field.data_type,
+                crate::core::DataType::String
+            );
+            if is_string_type {
+                field.generator = Some(crate::core::GeneratorSpec::Sequence {
+                    start: crate::core::IntOrString::Int(0),
+                    step: crate::core::IntOrString::Int(1),
+                    prefix: None,
+                    values: Some(outer_expanded),
+                    cycle: Some(true),
+                    jitter: None,
+                });
+            }
         }
         if let Some(field) = fields.iter_mut().find(|f| f.name == grid.inner) {
-            field.generator = Some(crate::core::GeneratorSpec::Sequence {
-                start: crate::core::IntOrString::Int(0),
-                step: crate::core::IntOrString::Int(1),
-                prefix: None,
-                values: Some(inner_tiled),
-                cycle: Some(true),
-                jitter: None,
-            });
+            let is_string_type = matches!(
+                field.data_type,
+                crate::core::DataType::String
+            );
+            if is_string_type {
+                field.generator = Some(crate::core::GeneratorSpec::Sequence {
+                    start: crate::core::IntOrString::Int(0),
+                    step: crate::core::IntOrString::Int(1),
+                    prefix: None,
+                    values: Some(inner_tiled),
+                    cycle: Some(true),
+                    jitter: None,
+                });
+            }
         }
     }
 
@@ -769,8 +782,8 @@ fn distribution_to_kind_params(
             DistributionKind::Normal
         }
         Distribution::LogNormal(mu, sigma) => {
-            params.insert("mean".into(), *mu);
-            params.insert("std_dev".into(), *sigma);
+            params.insert("mu".into(), *mu);
+            params.insert("sigma".into(), *sigma);
             DistributionKind::LogNormal
         }
         Distribution::Exponential(lambda) => {
@@ -784,8 +797,8 @@ fn distribution_to_kind_params(
         Distribution::Zipf(n, s) => {
             // Zipf has no direct DistributionKind equivalent; approximate with
             // Pareto (also heavy-tailed power-law).
-            params.insert("x_m".into(), 1.0);
-            params.insert("alpha".into(), *s);
+            params.insert("scale".into(), 1.0);
+            params.insert("shape".into(), *s);
             let _ = n; // n is implicit in the row count
             DistributionKind::Pareto
         }
@@ -800,8 +813,8 @@ fn distribution_to_kind_params(
             DistributionKind::Gamma
         }
         Distribution::Pareto(x_m, alpha) => {
-            params.insert("x_m".into(), *x_m);
-            params.insert("alpha".into(), *alpha);
+            params.insert("scale".into(), *x_m);
+            params.insert("shape".into(), *alpha);
             DistributionKind::Pareto
         }
     };
