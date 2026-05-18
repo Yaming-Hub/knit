@@ -166,6 +166,12 @@ pub struct RelationshipModel {
     /// [`DataModel::all_constraints()`] to get the merged view.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub constraints: Vec<TableConstraint>,
+    /// Detected panel/grid structures (two columns forming a cross product).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub grid_structures: Vec<GridStructure>,
+    /// Multi-column tuple dictionaries (co-occurring column groups).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tuple_dictionaries: Vec<TupleDictionary>,
 }
 
 /// A constraint associated with a specific table.
@@ -180,6 +186,49 @@ pub struct TableConstraint {
     /// The constraint specification.
     #[serde(flatten)]
     pub constraint: Constraint,
+}
+
+/// A detected panel/grid structure: two categorical columns whose rows form a
+/// (near-)complete cross product.
+///
+/// Grid structures indicate that a table represents a panel dataset — e.g.,
+/// every combination of `year × country` appears as a row. During generation,
+/// the grid columns use `CyclicValues` generators to reproduce this pattern.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GridStructure {
+    /// Name of the table containing the grid.
+    pub table: String,
+    /// The "outer" column (slower-changing in the cross product).
+    pub outer: String,
+    /// Unique values of the outer column, in order of first appearance.
+    pub outer_values: Vec<String>,
+    /// The "inner" column (faster-changing, cycles for each outer value).
+    pub inner: String,
+    /// Unique values of the inner column, in order of first appearance.
+    pub inner_values: Vec<String>,
+    /// Completeness ratio (actual combos / expected combos). 1.0 = full grid.
+    pub completeness: f64,
+}
+
+/// A multi-column tuple dictionary: columns whose values always co-occur as
+/// tuples (e.g., city + state + zip code).
+///
+/// During generation, the primary column uses a `Dictionary` generator and
+/// secondary columns use `TupleLookup` generators to maintain co-occurrence.
+///
+/// # Invariants
+///
+/// `columns` must contain at least 2 entries. The first entry is the primary
+/// (key) column; remaining entries are lookup columns.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TupleDictionary {
+    /// Name of the table containing the tuple columns.
+    pub table: String,
+    /// Column names that form the tuple (first is the primary/key column).
+    /// Must contain at least 2 entries.
+    pub columns: Vec<String>,
+    /// Path to the dictionary file (TSV) containing unique tuples.
+    pub file: String,
 }
 
 // ── Type Aliases for v2 naming ───────────────────────────────────────
@@ -319,6 +368,8 @@ impl DataModel {
             correlations: self.correlations.clone(),
             actor_relationships: self.actor_relationships.clone(),
             constraints,
+            grid_structures: Vec::new(),
+            tuple_dictionaries: Vec::new(),
         }
     }
 
@@ -3209,6 +3260,8 @@ active_days = "uniform"
                     fields: vec!["email".into()],
                 },
             }],
+            grid_structures: vec![],
+            tuple_dictionaries: vec![],
         };
 
         let model = DataModel::from_layers(
@@ -3324,6 +3377,71 @@ active_days = "uniform"
         let json2 = serde_json::to_string(&tc2).unwrap();
         let back2: TableConstraint = serde_json::from_str(&json2).unwrap();
         assert_eq!(back2, tc2);
+    }
+
+    #[test]
+    fn test_grid_structure_serde_roundtrip() {
+        let grid = GridStructure {
+            table: "survey".into(),
+            outer: "year".into(),
+            outer_values: vec!["2020".into(), "2021".into(), "2022".into()],
+            inner: "country".into(),
+            inner_values: vec!["US".into(), "UK".into(), "DE".into()],
+            completeness: 1.0,
+        };
+        let json = serde_json::to_string(&grid).unwrap();
+        let back: GridStructure = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, grid);
+
+        // TOML roundtrip
+        let toml = toml::to_string(&grid).unwrap();
+        let back_toml: GridStructure = toml::from_str(&toml).unwrap();
+        assert_eq!(back_toml, grid);
+    }
+
+    #[test]
+    fn test_tuple_dictionary_serde_roundtrip() {
+        let td = TupleDictionary {
+            table: "locations".into(),
+            columns: vec!["city".into(), "state".into(), "zip".into()],
+            file: "dictionaries/city_state_zip.tsv".into(),
+        };
+        let json = serde_json::to_string(&td).unwrap();
+        let back: TupleDictionary = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, td);
+
+        let toml = toml::to_string(&td).unwrap();
+        let back_toml: TupleDictionary = toml::from_str(&toml).unwrap();
+        assert_eq!(back_toml, td);
+    }
+
+    #[test]
+    fn test_relationship_model_with_grid_and_tuple() {
+        let rel = RelationshipModel {
+            foreign_keys: vec![],
+            correlations: vec![],
+            actor_relationships: vec![],
+            constraints: vec![],
+            grid_structures: vec![GridStructure {
+                table: "panel".into(),
+                outer: "year".into(),
+                outer_values: vec!["2020".into()],
+                inner: "month".into(),
+                inner_values: vec!["Jan".into(), "Feb".into()],
+                completeness: 1.0,
+            }],
+            tuple_dictionaries: vec![TupleDictionary {
+                table: "addresses".into(),
+                columns: vec!["city".into(), "state".into()],
+                file: "dicts/city_state.tsv".into(),
+            }],
+        };
+        let json = serde_json::to_string(&rel).unwrap();
+        let back: RelationshipModel = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.grid_structures.len(), 1);
+        assert_eq!(back.tuple_dictionaries.len(), 1);
+        assert_eq!(back.grid_structures[0].table, "panel");
+        assert_eq!(back.tuple_dictionaries[0].columns.len(), 2);
     }
 
     #[test]
