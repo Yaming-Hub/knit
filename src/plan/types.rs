@@ -366,6 +366,19 @@ pub enum GeneratorPlan {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source_file: Option<String>,
     },
+    /// Tuple lookup — reads the primary field from batch_columns and maps to a
+    /// co-occurring value via a pre-loaded lookup table.
+    TupleLookup {
+        /// Name of the source field already generated in this batch.
+        source_field: String,
+        /// Lookup table: maps primary column value → this field's value.
+        lookup: std::collections::HashMap<String, String>,
+        /// Original file path from the schema (used for resolution).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_file: Option<String>,
+        /// Column index in the tuple file (for lazy loading).
+        column: usize,
+    },
     /// Graph-aware FK — samples target actor from source actor's graph neighbors.
     ///
     /// At runtime, reads the source field column from `batch_columns`, maps each

@@ -1672,6 +1672,7 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
         crate::plan::GeneratorPlan::EventStream { .. } => {
             ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         }
+        crate::plan::GeneratorPlan::TupleLookup { .. } => ArrowDataType::Utf8,
     }
 }
 
@@ -2354,6 +2355,64 @@ fn resolve_dict_in_generator(
                 resolve_dict_in_generator(branch_plan, schema_dir)?;
             }
             resolve_dict_in_generator(default, schema_dir)?;
+        }
+        crate::plan::GeneratorPlan::TupleLookup {
+            source_file,
+            lookup,
+            column,
+            ..
+        } => {
+            if let Some(file_path) = source_file.take() {
+                if Path::new(&file_path).is_absolute() {
+                    bail!(
+                        "tuple dictionary file path must be relative, got: '{}'",
+                        file_path
+                    );
+                }
+                if file_path.contains("..") {
+                    bail!(
+                        "tuple dictionary file path must not contain '..': '{}'",
+                        file_path
+                    );
+                }
+                let full_path = schema_dir.join(&file_path);
+                let file = std::fs::File::open(&full_path).with_context(|| {
+                    format!(
+                        "failed to open tuple dictionary '{}' (resolved to '{}')",
+                        file_path,
+                        full_path.display()
+                    )
+                })?;
+                let reader = std::io::BufReader::new(file);
+                let col_idx = *column;
+                let mut skipped = 0usize;
+                for line in reader.lines() {
+                    let line = line?;
+                    let parts: Vec<&str> = line.trim().split('\t').collect();
+                    if let (Some(key), Some(val)) = (parts.first(), parts.get(col_idx)) {
+                        lookup.insert(
+                            crate::cli::commands::learn::unescape_tsv_value(key),
+                            crate::cli::commands::learn::unescape_tsv_value(val),
+                        );
+                    } else {
+                        skipped += 1;
+                    }
+                }
+                if skipped > 0 {
+                    tracing::warn!(
+                        tuple_file = %file_path,
+                        skipped,
+                        expected_columns = col_idx + 1,
+                        "skipped malformed lines in tuple dictionary"
+                    );
+                }
+                tracing::debug!(
+                    tuple_file = %file_path,
+                    entries = lookup.len(),
+                    column = col_idx,
+                    "loaded tuple lookup"
+                );
+            }
         }
         _ => {}
     }

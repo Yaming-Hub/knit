@@ -32,6 +32,7 @@ pub mod struct_gen;
 pub mod temporal;
 pub mod thread_ref;
 pub mod topology;
+pub mod tuple_lookup;
 pub mod unique;
 pub mod uuid_gen;
 pub mod weighted_fk;
@@ -202,6 +203,14 @@ pub fn create_generator_with_seen(
         } => Box::new(dictionary::DictionaryGenerator::new(
             entries.clone(),
             expansion.clone(),
+        )),
+        GeneratorPlan::TupleLookup {
+            source_field,
+            lookup,
+            ..
+        } => Box::new(tuple_lookup::TupleLookupGenerator::new(
+            source_field.clone(),
+            lookup.clone(),
         )),
         // GraphTarget generators are created by the engine (which has graphs +
         // key stores). If nested, fall back to null.
