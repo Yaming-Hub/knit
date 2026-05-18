@@ -269,8 +269,133 @@ pub fn detect_tuple_columns(
     results
 }
 
-/// A detected conditional distribution: a categorical column conditions a
-/// numeric column's distribution.
+/// A detected derived text relationship: column B's values are explained by a
+/// template expression referencing other columns.
+#[derive(Debug, Clone)]
+pub struct DerivedTextRelation {
+    /// The derived column name (whose generator will be replaced).
+    pub target: String,
+    /// The derived expression (e.g., `"${first_name} ${last_name}"`).
+    pub expr: String,
+    /// Source columns referenced by the expression.
+    pub sources: Vec<String>,
+}
+
+/// Detect derived text column relationships.
+///
+/// For each string column, checks if its values can be explained as a simple
+/// concatenation/template of other string columns. Returns detected relations
+/// where ≥90% of rows match the inferred template.
+pub fn detect_derived_text_columns(
+    profiles: &[ColumnProfile],
+    batches: &[RecordBatch],
+) -> Vec<DerivedTextRelation> {
+    let _span = info_span!("derived_text_detection").entered();
+    if profiles.is_empty() || batches.is_empty() {
+        return Vec::new();
+    }
+
+    let string_cols = collect_string_columns(profiles, batches);
+    let str_names: Vec<String> = string_cols.keys().cloned().collect();
+    let mut results = Vec::new();
+
+    // For each target column, try to find a 2-column concatenation template
+    for target_name in &str_names {
+        let target_vals = &string_cols[target_name];
+        let n = target_vals.len();
+        if n < 10 {
+            continue;
+        }
+
+        // Try all pairs of source columns
+        for i in 0..str_names.len() {
+            if str_names[i] == *target_name {
+                continue;
+            }
+            for j in (i + 1)..str_names.len() {
+                if str_names[j] == *target_name {
+                    continue;
+                }
+
+                let a_vals = &string_cols[&str_names[i]];
+                let b_vals = &string_cols[&str_names[j]];
+
+                // Try separators: " ", ", ", "_", ".", "-", "" and both orders
+                for sep in &[" ", ", ", "_", ".", "-", ""] {
+                    for (first, second, first_name, second_name) in [
+                        (a_vals, b_vals, &str_names[i], &str_names[j]),
+                        (b_vals, a_vals, &str_names[j], &str_names[i]),
+                    ] {
+                        let matches = count_concat_matches(
+                            target_vals, first, second, sep, n,
+                        );
+                        if matches as f64 / n as f64 >= 0.9 {
+                            let expr = if sep.is_empty() {
+                                format!("${{{first_name}}}${{{second_name}}}")
+                            } else {
+                                format!(
+                                    "${{{first_name}}}{sep}${{{second_name}}}",
+                                )
+                            };
+                            debug!(
+                                target = %target_name, expr = %expr,
+                                match_rate = matches as f64 / n as f64,
+                                "detected derived text column"
+                            );
+                            results.push(DerivedTextRelation {
+                                target: target_name.clone(),
+                                expr,
+                                sources: vec![
+                                    first_name.clone(),
+                                    second_name.clone(),
+                                ],
+                            });
+                            // Found a match for this target — skip remaining patterns
+                            break;
+                        }
+                    }
+                    // Check if we already found a match for this target
+                    if results.last().map(|r| &r.target) == Some(target_name) {
+                        break;
+                    }
+                }
+                if results.last().map(|r| &r.target) == Some(target_name) {
+                    break;
+                }
+            }
+            if results.last().map(|r| &r.target) == Some(target_name) {
+                break;
+            }
+        }
+    }
+
+    results.truncate(20);
+    results
+}
+
+/// Count how many rows match `target == first + sep + second`.
+fn count_concat_matches(
+    target: &[Option<String>],
+    first: &[Option<String>],
+    second: &[Option<String>],
+    sep: &str,
+    n: usize,
+) -> usize {
+    let mut matches = 0;
+    for idx in 0..n {
+        if let (Some(t), Some(a), Some(b)) = (
+            target.get(idx).and_then(|v| v.as_deref()),
+            first.get(idx).and_then(|v| v.as_deref()),
+            second.get(idx).and_then(|v| v.as_deref()),
+        ) {
+            let candidate = format!("{a}{sep}{b}");
+            if t == candidate {
+                matches += 1;
+            }
+        }
+    }
+    matches
+}
 #[derive(Debug, Clone)]
 pub struct ConditionalDistribution {
     /// The categorical column (conditioning field).
@@ -701,7 +826,7 @@ fn append_numeric_values_aligned(col: &dyn Array, values: &mut Vec<f64>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::array::{Float64Array, Int64Array, StringArray};
+    use arrow::array::{ArrayRef, Float64Array, Int64Array, StringArray};
     use arrow::datatypes::{DataType, Field, Schema};
     use std::sync::Arc;
 
@@ -1361,6 +1486,89 @@ mod tests {
     #[test]
     fn cond_dist_empty_input() {
         let result = detect_conditional_distributions(&[], &[]);
+        assert!(result.is_empty());
+    }
+
+    // ─── derived text column tests ─────────────────────────────────────
+
+    #[test]
+    fn derived_text_detects_concat() {
+        let n = 20;
+        let first: Vec<Option<&str>> = (0..n).map(|i| Some(if i % 2 == 0 { "Alice" } else { "Bob" })).collect();
+        let last: Vec<Option<&str>> = (0..n).map(|i| Some(if i % 3 == 0 { "Smith" } else { "Jones" })).collect();
+        let full: Vec<Option<String>> = (0..n)
+            .map(|i| {
+                Some(format!(
+                    "{} {}",
+                    first[i].unwrap(),
+                    last[i].unwrap()
+                ))
+            })
+            .collect();
+        let full_refs: Vec<Option<&str>> = full.iter().map(|v| v.as_deref()).collect();
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("first", DataType::Utf8, true),
+            Field::new("last", DataType::Utf8, true),
+            Field::new("full_name", DataType::Utf8, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(StringArray::from(first)) as ArrayRef,
+                Arc::new(StringArray::from(last)) as ArrayRef,
+                Arc::new(StringArray::from(full_refs)) as ArrayRef,
+            ],
+        )
+        .unwrap();
+
+        let profiles = vec![
+            string_profile("first"),
+            string_profile("last"),
+            string_profile("full_name"),
+        ];
+        let result = detect_derived_text_columns(&profiles, &[batch]);
+        assert!(!result.is_empty(), "should detect full_name = first + ' ' + last");
+        let rel = &result[0];
+        assert_eq!(rel.target, "full_name");
+        assert!(rel.expr.contains("first"));
+        assert!(rel.expr.contains("last"));
+    }
+
+    #[test]
+    fn derived_text_skips_unrelated() {
+        let n = 20;
+        let a: Vec<Option<&str>> = (0..n).map(|_| Some("hello")).collect();
+        let b: Vec<Option<&str>> = (0..n).map(|_| Some("world")).collect();
+        let c: Vec<Option<&str>> = (0..n).map(|_| Some("unrelated")).collect();
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("a", DataType::Utf8, true),
+            Field::new("b", DataType::Utf8, true),
+            Field::new("c", DataType::Utf8, true),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(StringArray::from(a)) as ArrayRef,
+                Arc::new(StringArray::from(b)) as ArrayRef,
+                Arc::new(StringArray::from(c)) as ArrayRef,
+            ],
+        )
+        .unwrap();
+
+        let profiles = vec![
+            string_profile("a"),
+            string_profile("b"),
+            string_profile("c"),
+        ];
+        let result = detect_derived_text_columns(&profiles, &[batch]);
+        assert!(result.is_empty(), "should not detect unrelated columns");
+    }
+
+    #[test]
+    fn derived_text_empty_input() {
+        let result = detect_derived_text_columns(&[], &[]);
         assert!(result.is_empty());
     }
 }

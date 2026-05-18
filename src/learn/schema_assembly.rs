@@ -61,6 +61,8 @@ pub struct TableAnalysis {
     pub conditional_distributions: Vec<crate::learn::correlation::ConditionalDistribution>,
     /// Detected co-occurring tuple column groups.
     pub tuple_groups: Vec<crate::learn::correlation::TupleGroup>,
+    /// Detected derived text column relationships.
+    pub derived_text_columns: Vec<crate::learn::correlation::DerivedTextRelation>,
 }
 
 impl TableAnalysis {
@@ -84,6 +86,7 @@ impl TableAnalysis {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }
     }
 }
@@ -487,6 +490,15 @@ fn build_entity(
     // Merge all correlations
     let mut all_corrs = corrs;
     all_corrs.extend(cond_corrs);
+
+    // Apply derived text column relationships
+    for dt in &table.derived_text_columns {
+        if let Some(field) = fields.iter_mut().find(|f| f.name == dt.target) {
+            field.generator = Some(crate::core::GeneratorSpec::Derived {
+                expr: dt.expr.clone(),
+            });
+        }
+    }
 
     // Detect actor columns by name heuristics and mark them
     let actor_scores = detect_actor_columns(&table.columns);
@@ -1809,6 +1821,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1866,6 +1879,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1911,6 +1925,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -1963,6 +1978,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
 
         let schema = assemble_schema(&tables);
@@ -2095,6 +2111,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2140,6 +2157,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
 
         let model = assemble_data_model("test", &tables);
@@ -2303,6 +2321,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("uuid()"), "schema: {}", schema);
@@ -2347,6 +2366,7 @@ mod tests {
             constraints: Vec::new(),
             conditional_distributions: Vec::new(),
             tuple_groups: Vec::new(),
+            derived_text_columns: Vec::new(),
         }];
         let schema = assemble_schema(&tables);
         assert!(schema.contains("faker(\"email\")"), "schema: {}", schema);
