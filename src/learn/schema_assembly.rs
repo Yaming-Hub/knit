@@ -402,6 +402,12 @@ fn build_entity(
     // to use Relative offsets from Start, ensuring EndDate ≥ StartDate.
     rewrite_temporal_pairs(&mut fields, &table.columns);
 
+    // Upgrade sort-key date columns from Faker("date") to Sequence for
+    // monotonic, duplicate-free date generation.
+    if let Some(ref sort_order) = table.sort_order {
+        upgrade_sort_date_to_sequence(&mut fields, &table.columns, sort_order, table.row_count);
+    }
+
     // Build top-level Relationship entries from detected FKs
     let rels: Vec<Relationship> = table
         .relationships
@@ -638,6 +644,162 @@ fn build_entity(
     };
 
     (entity, rels, all_corrs)
+}
+
+/// Upgrade a date column used as the sort key from Faker("date") to a
+/// Sequence generator, ensuring monotonic and duplicate-free dates.
+///
+/// Computes the step interval from the observed date range divided by row count,
+/// then rounds to the nearest sensible interval (daily, weekly, monthly, yearly).
+fn upgrade_sort_date_to_sequence(
+    fields: &mut [Field],
+    columns: &[ColumnAnalysis],
+    sort_order: &crate::core::SortOrder,
+    row_count: u64,
+) {
+    // Find the sort column
+    let col_analysis = columns.iter().find(|c| c.name == sort_order.column);
+    let Some(col) = col_analysis else { return };
+
+    // Only upgrade date columns (not datetime) that currently use Faker("date").
+    // Datetime columns may have sub-day cadences that this heuristic would destroy.
+    let is_date_type = matches!(
+        col.inferred_type,
+        Some(InferredType::Date(_))
+    ) || (col.temporal_range.is_some() && !col.has_time_component);
+    if !is_date_type {
+        return;
+    }
+
+    let field = fields.iter_mut().find(|f| f.name == sort_order.column);
+    let Some(field) = field else { return };
+
+    // Only upgrade Faker("date") generators (not already Sequence/TimeSeries)
+    let is_faker_date = matches!(
+        &field.generator,
+        Some(GeneratorSpec::Faker { method, .. }) if method == "date"
+    );
+    if !is_faker_date {
+        return;
+    }
+
+    // Compute start date and step from temporal_range or stats
+    let (start_str, step_str) = if let Some((min_epoch, max_epoch)) = col.temporal_range {
+        let range_seconds = (max_epoch - min_epoch).abs();
+        let rows = row_count.max(2) as f64;
+        let step_seconds = range_seconds / (rows - 1.0);
+
+        // Round step to a meaningful interval
+        let step = round_to_interval(step_seconds);
+
+        // Format start as date string
+        let start = epoch_to_date_string(min_epoch, col.has_time_component);
+        (start, step)
+    } else if let Some(ref stats) = col.stats {
+        // Fallback: use stats min_temporal / max_temporal
+        if let (Some(min_str), Some(_max_str)) = (&stats.min_temporal, &stats.max_temporal) {
+            let start = min_str.clone();
+            // Estimate step from row count (assume daily if unknown)
+            let step = if row_count > 365 { "1d" } else { "7d" };
+            (start, step.to_string())
+        } else {
+            return;
+        }
+    } else {
+        return;
+    };
+
+    // No jitter for sort-by columns: jitter can break monotonicity which
+    // defeats the purpose of the Sequence upgrade for sorted output.
+    let jitter: Option<String> = None;
+
+    debug!(
+        column = %sort_order.column,
+        start = %start_str,
+        step = %step_str,
+        jitter = ?jitter,
+        "upgraded sort-key date column to Sequence"
+    );
+
+    field.generator = Some(GeneratorSpec::Sequence {
+        start: IntOrString::Str(start_str),
+        step: IntOrString::Str(step_str),
+        prefix: None,
+        values: None,
+        cycle: None,
+        jitter,
+    });
+}
+
+/// Round a step in seconds to the nearest human-meaningful interval.
+fn round_to_interval(seconds: f64) -> String {
+    const MINUTE: f64 = 60.0;
+    const HOUR: f64 = 3600.0;
+    const DAY: f64 = 86400.0;
+    const WEEK: f64 = 7.0 * DAY;
+    const MONTH: f64 = 30.44 * DAY; // average month
+    const YEAR: f64 = 365.25 * DAY;
+
+    if seconds >= YEAR * 0.75 {
+        "365d".to_string()
+    } else if seconds >= MONTH * 0.75 {
+        let months = (seconds / MONTH).round() as u64;
+        format!("{}d", months * 30)
+    } else if seconds >= WEEK * 0.75 {
+        let weeks = (seconds / WEEK).round() as u64;
+        format!("{}d", weeks * 7)
+    } else if seconds >= DAY * 0.75 {
+        let days = (seconds / DAY).round() as u64;
+        format!("{}d", days.max(1))
+    } else if seconds >= HOUR * 0.75 {
+        let hours = (seconds / HOUR).round() as u64;
+        format!("{}h", hours.max(1))
+    } else if seconds >= MINUTE * 0.75 {
+        let minutes = (seconds / MINUTE).round() as u64;
+        format!("{}m", minutes.max(1))
+    } else {
+        "1d".to_string() // minimum: daily
+    }
+}
+
+/// Convert an epoch timestamp (seconds) to a date or datetime string.
+fn epoch_to_date_string(epoch_secs: f64, has_time: bool) -> String {
+    use chrono::{DateTime, NaiveDateTime, Utc};
+    let secs = epoch_secs as i64;
+    let nanos = ((epoch_secs - secs as f64) * 1_000_000_000.0) as u32;
+    if let Some(naive) = NaiveDateTime::from_timestamp_opt(secs, nanos) {
+        if has_time {
+            let dt: DateTime<Utc> = DateTime::from_naive_utc_and_offset(naive, Utc);
+            dt.format("%Y-%m-%dT%H:%M:%S").to_string()
+        } else {
+            naive.format("%Y-%m-%d").to_string()
+        }
+    } else {
+        "2000-01-01".to_string()
+    }
+}
+
+/// Compute a reasonable jitter string for a given step interval.
+/// Returns None for very short intervals, or ~10% of the step otherwise.
+fn compute_jitter(step: &str) -> Option<String> {
+    // Parse the step duration (simplified: look for Nd, Nh, Nm patterns)
+    let step_lower = step.to_lowercase();
+    if step_lower.ends_with('d') {
+        if let Ok(days) = step_lower.trim_end_matches('d').parse::<u64>() {
+            if days >= 7 {
+                return Some(format!("{}d", (days / 5).max(1)));
+            } else if days >= 1 {
+                return Some("12h".to_string());
+            }
+        }
+    } else if step_lower.ends_with('h') {
+        if let Ok(hours) = step_lower.trim_end_matches('h').parse::<u64>() {
+            if hours >= 2 {
+                return Some(format!("{}m", (hours * 6).max(10)));
+            }
+        }
+    }
+    None
 }
 
 // ── Actor column detection ──────────────────────────────────────────

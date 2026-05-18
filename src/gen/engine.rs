@@ -132,6 +132,27 @@ fn coerce_to_logical_type(
             }
             arr
         }
+        crate::core::DataType::Date => {
+            if arr.as_any().is::<arrow::array::Date32Array>() {
+                return arr;
+            }
+            // Int64 values are epoch milliseconds — convert to Date32 (days since epoch)
+            if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
+                let days: arrow::array::Date32Array = i64_arr
+                    .iter()
+                    .map(|v| v.and_then(|ms| {
+                        let d = ms.div_euclid(86_400_000);
+                        if d >= i32::MIN as i64 && d <= i32::MAX as i64 {
+                            Some(d as i32)
+                        } else {
+                            None
+                        }
+                    }))
+                    .collect();
+                return Arc::new(days);
+            }
+            arr
+        }
         _ => arr,
     }
 }
