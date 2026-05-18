@@ -104,9 +104,14 @@ pub fn run(
     scale::rewrite(&mut model, &plan);
 
     // Delegate to generate pipeline
-    let schema_dir = Path::new(blueprint_path)
-        .parent()
-        .unwrap_or_else(|| Path::new("."));
+    let schema_dir = {
+        let p = Path::new(blueprint_path);
+        if p.is_dir() {
+            p
+        } else {
+            p.parent().unwrap_or_else(|| Path::new("."))
+        }
+    };
     super::generate::run_from_model(model, schema_dir, output, &[], cli)
 }
 

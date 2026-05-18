@@ -59,9 +59,16 @@ pub fn run(
         apply_count_override(&mut model, count_str)?;
     }
 
-    let schema_dir = Path::new(blueprint_path)
-        .parent()
-        .unwrap_or_else(|| Path::new("."));
+    let schema_dir = {
+        let p = Path::new(blueprint_path);
+        if p.is_dir() {
+            // Structured blueprint: assets live inside the directory
+            p
+        } else {
+            // Flat .toml blueprint: assets live alongside it
+            p.parent().unwrap_or_else(|| Path::new("."))
+        }
+    };
 
     run_from_model(model, schema_dir, output_dir, entity_filter, cli)
 }
