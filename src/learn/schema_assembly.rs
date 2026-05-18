@@ -661,11 +661,12 @@ fn upgrade_sort_date_to_sequence(
     let col_analysis = columns.iter().find(|c| c.name == sort_order.column);
     let Some(col) = col_analysis else { return };
 
-    // Only upgrade date/datetime columns that currently use Faker
+    // Only upgrade date columns (not datetime) that currently use Faker("date").
+    // Datetime columns may have sub-day cadences that this heuristic would destroy.
     let is_date_type = matches!(
         col.inferred_type,
         Some(InferredType::Date(_))
-    ) || col.temporal_pattern.is_some();
+    ) || (col.temporal_range.is_some() && !col.has_time_component);
     if !is_date_type {
         return;
     }
@@ -673,10 +674,10 @@ fn upgrade_sort_date_to_sequence(
     let field = fields.iter_mut().find(|f| f.name == sort_order.column);
     let Some(field) = field else { return };
 
-    // Only upgrade Faker date/datetime generators (not already Sequence/TimeSeries)
+    // Only upgrade Faker("date") generators (not already Sequence/TimeSeries)
     let is_faker_date = matches!(
         &field.generator,
-        Some(GeneratorSpec::Faker { method, .. }) if method == "date" || method == "datetime"
+        Some(GeneratorSpec::Faker { method, .. }) if method == "date"
     );
     if !is_faker_date {
         return;
@@ -708,8 +709,9 @@ fn upgrade_sort_date_to_sequence(
         return;
     };
 
-    // Add jitter proportional to step for realistic irregularity
-    let jitter = compute_jitter(&step_str);
+    // No jitter for sort-by columns: jitter can break monotonicity which
+    // defeats the purpose of the Sequence upgrade for sorted output.
+    let jitter: Option<String> = None;
 
     debug!(
         column = %sort_order.column,

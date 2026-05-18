@@ -140,7 +140,14 @@ fn coerce_to_logical_type(
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
                 let days: arrow::array::Date32Array = i64_arr
                     .iter()
-                    .map(|v| v.map(|ms| (ms / 86_400_000) as i32))
+                    .map(|v| v.and_then(|ms| {
+                        let d = ms.div_euclid(86_400_000);
+                        if d >= i32::MIN as i64 && d <= i32::MAX as i64 {
+                            Some(d as i32)
+                        } else {
+                            None
+                        }
+                    }))
                     .collect();
                 return Arc::new(days);
             }
