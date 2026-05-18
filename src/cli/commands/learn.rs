@@ -1010,6 +1010,18 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         analysis.sort_order = Some(sort_order);
     }
 
+    // Detect cross-column constraints from source data
+    let constraints = detect_column_constraints(&combined, &analysis.columns);
+    if !constraints.is_empty() {
+        debug!(
+            table = %table.entity,
+            count = constraints.len(),
+            "detected column constraints"
+        );
+        // Store on analysis for propagation to Entity
+        analysis.constraints = constraints;
+    }
+
     let rel_profile = TableProfile {
         name: table.entity.clone(),
         columns: rel_columns,
@@ -1178,6 +1190,160 @@ fn check_sorted_float(iter: impl Iterator<Item = f64>) -> Option<crate::core::So
         return Some(SortDirection::Desc);
     }
     None
+}
+
+/// Detect cross-column constraints from source data.
+///
+/// Checks all pairs of numeric columns for ordering relationships (A ≤ B for
+/// all rows) and emits `Constraint::Range` for each numeric column's observed
+/// min/max bounds. Also detects OHLC-like patterns (open ≤ high, low ≤ close).
+fn detect_column_constraints(
+    batch: &RecordBatch,
+    columns: &[ColumnAnalysis],
+) -> Vec<crate::core::Constraint> {
+    use crate::core::{Constraint, Value};
+
+    if batch.num_rows() < 2 {
+        return Vec::new();
+    }
+
+    let mut constraints = Vec::new();
+
+    // Collect numeric column indices and their f64 values
+    let mut numeric_cols: Vec<(&str, Vec<f64>)> = Vec::new();
+    for col in columns {
+        if let Some(arr) = batch.column_by_name(&col.name) {
+            if let Some(vals) = extract_f64_values(arr.as_ref()) {
+                if vals.len() >= 2 {
+                    numeric_cols.push((&col.name, vals));
+                }
+            }
+        }
+    }
+
+    // Emit Range constraints from observed min/max for each numeric column
+    for (name, vals) in &numeric_cols {
+        let min = vals.iter().copied().fold(f64::INFINITY, f64::min);
+        let max = vals.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        if min.is_finite() && max.is_finite() && min < max {
+            constraints.push(Constraint::Range {
+                field: name.to_string(),
+                min: Some(Value::Float(min)),
+                max: Some(Value::Float(max)),
+            });
+        }
+    }
+
+    // Detect pairwise ordering: A ≤ B for all rows
+    for i in 0..numeric_cols.len() {
+        for j in (i + 1)..numeric_cols.len() {
+            let (name_a, vals_a) = &numeric_cols[i];
+            let (name_b, vals_b) = &numeric_cols[j];
+            let len = vals_a.len().min(vals_b.len());
+            if len < 2 {
+                continue;
+            }
+
+            // Check A ≤ B
+            let a_le_b = (0..len).all(|k| vals_a[k] <= vals_b[k]);
+            if a_le_b {
+                constraints.push(Constraint::Check {
+                    expr: format!("{} <= {}", name_a, name_b),
+                });
+                continue;
+            }
+
+            // Check B ≤ A
+            let b_le_a = (0..len).all(|k| vals_b[k] <= vals_a[k]);
+            if b_le_a {
+                constraints.push(Constraint::Check {
+                    expr: format!("{} <= {}", name_b, name_a),
+                });
+            }
+        }
+    }
+
+    constraints
+}
+
+/// Extract f64 values from an Arrow array (numeric types only).
+fn extract_f64_values(arr: &dyn arrow::array::Array) -> Option<Vec<f64>> {
+    use arrow::array;
+    use arrow::datatypes::DataType;
+
+    match arr.data_type() {
+        DataType::Int8 => Some(
+            arr.as_any()
+                .downcast_ref::<array::Int8Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::Int16 => Some(
+            arr.as_any()
+                .downcast_ref::<array::Int16Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::Int32 => Some(
+            arr.as_any()
+                .downcast_ref::<array::Int32Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::Int64 => Some(
+            arr.as_any()
+                .downcast_ref::<array::Int64Array>()?
+                .iter()
+                .filter_map(|v| v.map(|x| x as f64))
+                .collect(),
+        ),
+        DataType::UInt8 => Some(
+            arr.as_any()
+                .downcast_ref::<array::UInt8Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::UInt16 => Some(
+            arr.as_any()
+                .downcast_ref::<array::UInt16Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::UInt32 => Some(
+            arr.as_any()
+                .downcast_ref::<array::UInt32Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::UInt64 => Some(
+            arr.as_any()
+                .downcast_ref::<array::UInt64Array>()?
+                .iter()
+                .filter_map(|v| v.map(|x| x as f64))
+                .collect(),
+        ),
+        DataType::Float32 => Some(
+            arr.as_any()
+                .downcast_ref::<array::Float32Array>()?
+                .iter()
+                .filter_map(|v| v.map(f64::from))
+                .collect(),
+        ),
+        DataType::Float64 => Some(
+            arr.as_any()
+                .downcast_ref::<array::Float64Array>()?
+                .iter()
+                .filter_map(|v| v)
+                .collect(),
+        ),
+        _ => None,
+    }
 }
 
 /// Analyse a single column: fit distributions, detect temporal patterns,
@@ -4061,5 +4227,96 @@ mod tests {
         let cols = vec![ColumnAnalysis::new("x".to_string(), 0.0, 1.0)];
         let result = super::detect_sort_order(&batch, &cols);
         assert!(result.is_none(), "fewer than 3 rows should return None");
+    }
+
+    #[test]
+    fn detect_range_constraints_from_numeric_column() {
+        use arrow::array::Float64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("price", DataType::Float64, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![Arc::new(Float64Array::from(vec![10.0, 20.0, 30.0, 50.0]))],
+        )
+        .unwrap();
+
+        let mut col = ColumnAnalysis::new("price".to_string(), 0.0, 1.0);
+        col.categorical_weights = Some(vec![("10".into(), 0.25)]);
+        let constraints = super::detect_column_constraints(&batch, &[col]);
+
+        let range = constraints.iter().find(|c| matches!(c, crate::core::Constraint::Range { field, .. } if field == "price"));
+        assert!(range.is_some(), "should detect range constraint for numeric column");
+        if let Some(crate::core::Constraint::Range { min, max, .. }) = range {
+            assert_eq!(*min, Some(crate::core::Value::Float(10.0)));
+            assert_eq!(*max, Some(crate::core::Value::Float(50.0)));
+        }
+    }
+
+    #[test]
+    fn detect_ordering_constraint_between_columns() {
+        use arrow::array::Float64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("low", DataType::Float64, false),
+            Field::new("high", DataType::Float64, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Float64Array::from(vec![1.0, 2.0, 3.0])),
+                Arc::new(Float64Array::from(vec![5.0, 6.0, 7.0])),
+            ],
+        )
+        .unwrap();
+
+        let mut col_low = ColumnAnalysis::new("low".to_string(), 0.0, 1.0);
+        col_low.categorical_weights = Some(vec![("1".into(), 0.33)]);
+        let mut col_high = ColumnAnalysis::new("high".to_string(), 0.0, 1.0);
+        col_high.categorical_weights = Some(vec![("5".into(), 0.33)]);
+
+        let constraints = super::detect_column_constraints(&batch, &[col_low, col_high]);
+
+        let check = constraints.iter().find(|c| {
+            matches!(c, crate::core::Constraint::Check { expr } if expr.contains("<="))
+        });
+        assert!(check.is_some(), "should detect ordering constraint low <= high");
+    }
+
+    #[test]
+    fn no_ordering_constraint_for_unrelated_columns() {
+        use arrow::array::Float64Array;
+        use arrow::datatypes::{Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("a", DataType::Float64, false),
+            Field::new("b", DataType::Float64, false),
+        ]));
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(Float64Array::from(vec![5.0, 1.0, 8.0])),
+                Arc::new(Float64Array::from(vec![2.0, 9.0, 3.0])),
+            ],
+        )
+        .unwrap();
+
+        let mut col_a = ColumnAnalysis::new("a".to_string(), 0.0, 1.0);
+        col_a.categorical_weights = Some(vec![("5".into(), 0.33)]);
+        let mut col_b = ColumnAnalysis::new("b".to_string(), 0.0, 1.0);
+        col_b.categorical_weights = Some(vec![("2".into(), 0.33)]);
+
+        let constraints = super::detect_column_constraints(&batch, &[col_a, col_b]);
+
+        let check = constraints.iter().find(|c| {
+            matches!(c, crate::core::Constraint::Check { expr } if expr.contains("<="))
+        });
+        assert!(check.is_none(), "unrelated columns should not produce ordering constraint");
     }
 }

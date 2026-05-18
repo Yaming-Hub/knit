@@ -400,6 +400,14 @@ pub fn run_from_model(
     // Buffer batches for entities that need sorting
     let mut sort_buffers: HashMap<String, Vec<RecordBatch>> = HashMap::new();
 
+    // Collect constraints per entity for post-generation enforcement
+    let entity_constraints: HashMap<String, Vec<crate::core::Constraint>> = model
+        .entities
+        .iter()
+        .filter(|e| !e.constraints.is_empty())
+        .map(|e| (e.name.clone(), e.constraints.clone()))
+        .collect();
+
     // Execute generation
     let mut batch_counters: HashMap<String, u64> = HashMap::new();
     engine
@@ -447,6 +455,16 @@ pub fn run_from_model(
             // since CSV doesn't support nested structures.
             let batch = if matches!(format, OutputFormat::Csv) {
                 flatten_nested_columns(&batch)?
+            } else {
+                batch
+            };
+
+            // ── Enforce constraints (range clamping, column ordering) ────
+            let batch = if let Some(constraints) = entity_constraints.get(entity_name) {
+                enforce_constraints(&batch, constraints)
+                    .map_err(|e| crate::r#gen::GenError::Generation(
+                        format!("constraint enforcement error for '{}': {}", entity_name, e),
+                    ))?
             } else {
                 batch
             };
@@ -816,6 +834,217 @@ pub fn run_from_model(
     }
 
     Ok(())
+}
+
+/// Enforce constraints on a generated batch.
+///
+/// Processes `Range` constraints (clamp values to [min, max]) and `Check`
+/// constraints with ordering expressions (e.g. `A <= B` — swap values when
+/// violated). Returns a new batch with constraints satisfied.
+fn enforce_constraints(
+    batch: &RecordBatch,
+    constraints: &[crate::core::Constraint],
+) -> Result<RecordBatch> {
+    use crate::core::Constraint;
+
+    let mut columns: Vec<arrow::array::ArrayRef> = batch.columns().to_vec();
+    let schema = batch.schema();
+
+    for constraint in constraints {
+        match constraint {
+            Constraint::Range { field, min, max } => {
+                if let Ok(idx) = schema.index_of(field) {
+                    columns[idx] = clamp_column(&columns[idx], min.as_ref(), max.as_ref());
+                }
+            }
+            Constraint::Check { expr } => {
+                // Parse simple "A <= B" ordering expressions
+                if let Some((left, right)) = parse_ordering_expr(expr) {
+                    if let (Ok(li), Ok(ri)) = (schema.index_of(&left), schema.index_of(&right)) {
+                        let (new_left, new_right) =
+                            enforce_ordering(&columns[li], &columns[ri]);
+                        columns[li] = new_left;
+                        columns[ri] = new_right;
+                    }
+                }
+            }
+            _ => {} // Unique, NotNull — not enforced here
+        }
+    }
+
+    RecordBatch::try_new(schema, columns).context("failed to rebuild batch after constraints")
+}
+
+/// Parse a simple ordering expression like "A <= B" into (left, right).
+fn parse_ordering_expr(expr: &str) -> Option<(String, String)> {
+    let parts: Vec<&str> = expr.split("<=").collect();
+    if parts.len() == 2 {
+        let left = parts[0].trim().to_string();
+        let right = parts[1].trim().to_string();
+        if !left.is_empty() && !right.is_empty() {
+            return Some((left, right));
+        }
+    }
+    None
+}
+
+/// Clamp a numeric column to [min, max] bounds.
+fn clamp_column(
+    col: &arrow::array::ArrayRef,
+    min: Option<&crate::core::Value>,
+    max: Option<&crate::core::Value>,
+) -> arrow::array::ArrayRef {
+    use arrow::array::{Float64Array, Int64Array};
+    use arrow::datatypes::DataType;
+    use std::sync::Arc;
+
+    let min_f64 = min.and_then(|v| match v {
+        crate::core::Value::Float(f) => Some(*f),
+        crate::core::Value::Int(i) => Some(*i as f64),
+        _ => None,
+    });
+    let max_f64 = max.and_then(|v| match v {
+        crate::core::Value::Float(f) => Some(*f),
+        crate::core::Value::Int(i) => Some(*i as f64),
+        _ => None,
+    });
+
+    if min_f64.is_none() && max_f64.is_none() {
+        return Arc::clone(col);
+    }
+
+    match col.data_type() {
+        DataType::Float64 => {
+            let arr = col.as_any().downcast_ref::<Float64Array>().unwrap();
+            let clamped: Float64Array = arr
+                .iter()
+                .map(|v| {
+                    v.map(|x| {
+                        let x = if let Some(lo) = min_f64 { x.max(lo) } else { x };
+                        if let Some(hi) = max_f64 { x.min(hi) } else { x }
+                    })
+                })
+                .collect();
+            Arc::new(clamped)
+        }
+        DataType::Float32 => {
+            let arr = col
+                .as_any()
+                .downcast_ref::<arrow::array::Float32Array>()
+                .unwrap();
+            let clamped: arrow::array::Float32Array = arr
+                .iter()
+                .map(|v| {
+                    v.map(|x| {
+                        let x = if let Some(lo) = min_f64 {
+                            x.max(lo as f32)
+                        } else {
+                            x
+                        };
+                        if let Some(hi) = max_f64 {
+                            x.min(hi as f32)
+                        } else {
+                            x
+                        }
+                    })
+                })
+                .collect();
+            Arc::new(clamped)
+        }
+        DataType::Int64 => {
+            let arr = col.as_any().downcast_ref::<Int64Array>().unwrap();
+            let lo_i64 = min_f64.map(|f| f.max(i64::MIN as f64).min(i64::MAX as f64) as i64);
+            let hi_i64 = max_f64.map(|f| f.max(i64::MIN as f64).min(i64::MAX as f64) as i64);
+            let clamped: Int64Array = arr
+                .iter()
+                .map(|v| {
+                    v.map(|x| {
+                        let x = if let Some(lo) = lo_i64 { x.max(lo) } else { x };
+                        if let Some(hi) = hi_i64 { x.min(hi) } else { x }
+                    })
+                })
+                .collect();
+            Arc::new(clamped)
+        }
+        DataType::Int32 => {
+            let arr = col
+                .as_any()
+                .downcast_ref::<arrow::array::Int32Array>()
+                .unwrap();
+            let lo_i32 = min_f64.map(|f| f.max(i32::MIN as f64).min(i32::MAX as f64) as i32);
+            let hi_i32 = max_f64.map(|f| f.max(i32::MIN as f64).min(i32::MAX as f64) as i32);
+            let clamped: arrow::array::Int32Array = arr
+                .iter()
+                .map(|v| {
+                    v.map(|x| {
+                        let x = if let Some(lo) = lo_i32 { x.max(lo) } else { x };
+                        if let Some(hi) = hi_i32 { x.min(hi) } else { x }
+                    })
+                })
+                .collect();
+            Arc::new(clamped)
+        }
+        _ => Arc::clone(col),
+    }
+}
+
+/// Enforce A <= B ordering between two numeric columns.
+///
+/// For each row where A > B, swaps the values so the constraint holds.
+fn enforce_ordering(
+    left: &arrow::array::ArrayRef,
+    right: &arrow::array::ArrayRef,
+) -> (arrow::array::ArrayRef, arrow::array::ArrayRef) {
+    use arrow::array::{Array, Float64Array};
+    use arrow::datatypes::DataType;
+    use std::sync::Arc;
+
+    // Only handle Float64 for now (most common from generation)
+    if *left.data_type() != DataType::Float64 || *right.data_type() != DataType::Float64 {
+        return (Arc::clone(left), Arc::clone(right));
+    }
+
+    let left_arr = left.as_any().downcast_ref::<Float64Array>().unwrap();
+    let right_arr = right.as_any().downcast_ref::<Float64Array>().unwrap();
+
+    let len = left_arr.len().min(right_arr.len());
+    let mut new_left = Vec::with_capacity(len);
+    let mut new_right = Vec::with_capacity(len);
+
+    for i in 0..len {
+        if left_arr.is_null(i) || right_arr.is_null(i) {
+            new_left.push(if left_arr.is_null(i) {
+                None
+            } else {
+                Some(left_arr.value(i))
+            });
+            new_right.push(if right_arr.is_null(i) {
+                None
+            } else {
+                Some(right_arr.value(i))
+            });
+        } else {
+            let l = left_arr.value(i);
+            let r = right_arr.value(i);
+            if l.is_nan() || r.is_nan() {
+                // Preserve NaN values in place — NaN comparisons are unordered
+                new_left.push(Some(l));
+                new_right.push(Some(r));
+            } else if l <= r {
+                new_left.push(Some(l));
+                new_right.push(Some(r));
+            } else {
+                // Swap to enforce A <= B
+                new_left.push(Some(r));
+                new_right.push(Some(l));
+            }
+        }
+    }
+
+    (
+        Arc::new(Float64Array::from(new_left)),
+        Arc::new(Float64Array::from(new_right)),
+    )
 }
 
 /// Sort record batches by a column, concatenating and re-splitting as needed.
