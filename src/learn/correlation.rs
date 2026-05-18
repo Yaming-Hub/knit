@@ -289,11 +289,45 @@ pub fn detect_tuple_columns(
             .collect();
         col_cards.sort_by(|a, b| b.1.cmp(&a.1));
 
-        let primary = &col_cards[0].0;
-        let mut columns: Vec<String> = vec![primary.clone()];
-        for (col, _) in &col_cards[1..] {
-            columns.push(col.clone());
+        if col_cards.is_empty() {
+            continue;
         }
+
+        let primary = &col_cards[0].0;
+
+        // Validate: keep only secondary columns that are functionally determined
+        // by the primary (≥85% of primary values map to exactly one secondary value).
+        let n = string_cols[primary].len();
+        let mut valid_secondaries: Vec<String> = Vec::new();
+        for (col, _) in &col_cards[1..] {
+            let col_vals = &string_cols[col];
+            let mut p_to_s: HashMap<&str, std::collections::HashSet<&str>> = HashMap::new();
+            for idx in 0..n.min(col_vals.len()) {
+                if let (Some(pv), Some(sv)) = (&string_cols[primary][idx], &col_vals[idx]) {
+                    p_to_s.entry(pv.as_str()).or_default().insert(sv.as_str());
+                }
+            }
+            if p_to_s.is_empty() {
+                continue;
+            }
+            let func_ratio =
+                p_to_s.values().filter(|s| s.len() == 1).count() as f64 / p_to_s.len() as f64;
+            if func_ratio >= TUPLE_FUNC_RATIO_THRESHOLD {
+                valid_secondaries.push(col.clone());
+            } else {
+                debug!(
+                    primary = %primary, secondary = %col, func_ratio,
+                    "dropped from merged group (not functionally determined)"
+                );
+            }
+        }
+
+        if valid_secondaries.is_empty() {
+            continue;
+        }
+
+        let mut columns: Vec<String> = vec![primary.clone()];
+        columns.extend(valid_secondaries);
 
         // Extract unique tuples keyed by primary value
         let n = string_cols[primary].len();

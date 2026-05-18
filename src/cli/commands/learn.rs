@@ -2846,8 +2846,9 @@ fn extract_tuple_dictionaries(
                 writeln!(file, "{line}")?;
             }
 
-            // Write a separate primary-only dictionary file (one value per line)
-            // because the Dictionary generator reads full lines and doesn't parse TSV.
+            // Write a separate primary-only dictionary file (one value per line).
+            // Use raw values (not TSV-escaped) because the Dictionary generator
+            // reads lines verbatim, and TupleLookup keys in the TSV are also raw.
             let primary_dict_name = format!(
                 "{}_{}.dict.txt",
                 sanitize_filename(&entity.name),
@@ -2858,7 +2859,10 @@ fn extract_tuple_dictionaries(
                 .with_context(|| format!("failed to create primary dict {primary_dict_name}"))?;
             for tuple in &group.tuples {
                 if let Some(pv) = tuple.first() {
-                    writeln!(pdict, "{}", escape_tsv_value(pv))?;
+                    // Skip values with newlines (would break line-based dict format)
+                    if !pv.contains('\n') && !pv.contains('\r') {
+                        writeln!(pdict, "{pv}")?;
+                    }
                 }
             }
 
