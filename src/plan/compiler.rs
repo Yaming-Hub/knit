@@ -1471,6 +1471,15 @@ fn compute_dependency_order(field: &Field, all_fields: &[Field]) -> u32 {
                 .unwrap_or(0);
             ts_order + 1
         }
+        // TupleLookup depends on its source_field — must come after it
+        Some(GeneratorSpec::TupleLookup { source_field, .. }) => {
+            let src_order = all_fields
+                .iter()
+                .find(|f| f.name == *source_field)
+                .map(|f| compute_dependency_order(f, all_fields))
+                .unwrap_or(0);
+            src_order + 1
+        }
         Some(GeneratorSpec::TimeSeries {
             timestamp_field: None,
             ..

@@ -54,7 +54,7 @@ pub fn load_model_directory(path: &Path) -> Result<DataModel> {
 
     // 4. Load relationships (optional)
     let rels_path = root.join("relationships.toml");
-    let (relationships, actor_relationships, rel_constraints, grid_structures, tuple_dictionaries) =
+    let (relationships, actor_relationships, _rel_constraints, grid_structures, tuple_dictionaries) =
         if rels_path.is_file() {
             let s = std::fs::read_to_string(&rels_path)
                 .with_context(|| format!("reading {}", rels_path.display()))?;

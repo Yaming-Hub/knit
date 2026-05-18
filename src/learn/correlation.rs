@@ -163,12 +163,21 @@ pub struct TupleGroup {
     pub tuples: Vec<Vec<String>>,
 }
 
+/// Minimum Cramér's V for tuple detection (lowered from 0.8 to catch more
+/// relationships like city→state that have some many-to-one overlap).
+const TUPLE_CRAMERS_V_THRESHOLD: f64 = 0.7;
+
+/// Minimum functional dependency ratio (lowered from 0.9 to 0.85 to capture
+/// near-functional relationships that aren't perfectly clean).
+const TUPLE_FUNC_RATIO_THRESHOLD: f64 = 0.85;
+
 /// Detect co-occurring string column tuples.
 ///
-/// Finds pairs of string columns with high Cramér's V (≥ 0.8) that exhibit
+/// Finds pairs of string columns with high Cramér's V that exhibit
 /// near-functional dependencies: knowing one column's value nearly determines
-/// the other's. Returns groups of columns whose values should be sampled
-/// together from a joint dictionary.
+/// the other's. Overlapping pairs are merged into N-way tuple groups via
+/// transitive closure so that e.g. iata→name + iata→city + iata→state
+/// becomes a single {iata, name, city, state} group.
 pub fn detect_tuple_columns(
     profiles: &[ColumnProfile],
     batches: &[RecordBatch],
@@ -180,7 +189,9 @@ pub fn detect_tuple_columns(
 
     let string_cols = collect_string_columns(profiles, batches);
     let str_names: Vec<&String> = string_cols.keys().collect();
-    let mut results = Vec::new();
+
+    // Phase 1: detect all qualifying pairs with their primary column
+    let mut pairs: Vec<(String, String)> = Vec::new(); // (primary, secondary)
 
     for i in 0..str_names.len() {
         for j in (i + 1)..str_names.len() {
@@ -203,7 +214,7 @@ pub fn detect_tuple_columns(
             let col_a: Vec<String> = paired.iter().map(|(a, _)| a.clone()).collect();
             let col_b: Vec<String> = paired.iter().map(|(_, b)| b.clone()).collect();
             let v = cramers_v(&col_a, &col_b);
-            if v < 0.8 {
+            if v < TUPLE_CRAMERS_V_THRESHOLD {
                 continue;
             }
 
@@ -223,12 +234,14 @@ pub fn detect_tuple_columns(
             let func_ratio_ba =
                 b_to_a.values().filter(|s| s.len() == 1).count() as f64 / b_to_a.len() as f64;
 
-            // At least one direction should be >90% functional
-            if func_ratio_ab < 0.9 && func_ratio_ba < 0.9 {
+            // At least one direction should meet the functional threshold
+            if func_ratio_ab < TUPLE_FUNC_RATIO_THRESHOLD
+                && func_ratio_ba < TUPLE_FUNC_RATIO_THRESHOLD
+            {
                 continue;
             }
 
-            // Determine primary (higher cardinality) and extract unique tuples
+            // Determine primary (higher cardinality)
             let card_a = a_to_b.len();
             let card_b = b_to_a.len();
             let (primary, secondary) = if card_a >= card_b {
@@ -237,36 +250,178 @@ pub fn detect_tuple_columns(
                 (str_names[j].clone(), str_names[i].clone())
             };
 
-            // Collect unique tuples (dedup by primary value)
-            let mut seen = std::collections::HashSet::new();
-            let mut tuples = Vec::new();
-            for (av, bv) in &paired {
-                let (pv, sv) = if card_a >= card_b {
-                    (av.clone(), bv.clone())
-                } else {
-                    (bv.clone(), av.clone())
-                };
-                if seen.insert(pv.clone()) {
-                    tuples.push(vec![pv, sv]);
-                }
-            }
-
             debug!(
                 a = %primary, b = %secondary, cramers_v = v,
                 func_ab = func_ratio_ab, func_ba = func_ratio_ba,
-                tuples = tuples.len(),
-                "detected tuple columns"
+                "detected tuple pair"
             );
 
-            results.push(TupleGroup {
-                columns: vec![primary, secondary],
-                tuples,
-            });
+            pairs.push((primary, secondary));
         }
+    }
+
+    if pairs.is_empty() {
+        return Vec::new();
+    }
+
+    // Phase 2: merge overlapping pairs into N-way groups (transitive closure)
+    let merged_groups = merge_tuple_pairs(&pairs);
+
+    // Phase 3: extract unique tuples for each merged group
+    let mut results = Vec::new();
+    for group_cols in merged_groups {
+        if group_cols.len() < 2 {
+            continue;
+        }
+
+        // Determine primary column (highest cardinality in the group)
+        let mut col_cards: Vec<(String, usize)> = group_cols
+            .iter()
+            .filter_map(|name| {
+                string_cols.get(name).map(|vals| {
+                    let distinct: std::collections::HashSet<&str> = vals
+                        .iter()
+                        .filter_map(|v| v.as_deref())
+                        .collect();
+                    (name.clone(), distinct.len())
+                })
+            })
+            .collect();
+        col_cards.sort_by(|a, b| b.1.cmp(&a.1));
+
+        if col_cards.is_empty() {
+            continue;
+        }
+
+        let primary = &col_cards[0].0;
+
+        // Validate: keep only secondary columns that are functionally determined
+        // by the primary (≥85% of primary values map to exactly one secondary value).
+        let n = string_cols[primary].len();
+        let mut valid_secondaries: Vec<String> = Vec::new();
+        for (col, _) in &col_cards[1..] {
+            let col_vals = &string_cols[col];
+            let mut p_to_s: HashMap<&str, std::collections::HashSet<&str>> = HashMap::new();
+            for idx in 0..n.min(col_vals.len()) {
+                if let (Some(pv), Some(sv)) = (&string_cols[primary][idx], &col_vals[idx]) {
+                    p_to_s.entry(pv.as_str()).or_default().insert(sv.as_str());
+                }
+            }
+            if p_to_s.is_empty() {
+                continue;
+            }
+            let func_ratio =
+                p_to_s.values().filter(|s| s.len() == 1).count() as f64 / p_to_s.len() as f64;
+            if func_ratio >= TUPLE_FUNC_RATIO_THRESHOLD {
+                valid_secondaries.push(col.clone());
+            } else {
+                debug!(
+                    primary = %primary, secondary = %col, func_ratio,
+                    "dropped from merged group (not functionally determined)"
+                );
+            }
+        }
+
+        if valid_secondaries.is_empty() {
+            continue;
+        }
+
+        let mut columns: Vec<String> = vec![primary.clone()];
+        columns.extend(valid_secondaries);
+
+        // Extract unique tuples keyed by primary value
+        let n = string_cols[primary].len();
+        let mut seen = std::collections::HashSet::new();
+        let mut tuples = Vec::new();
+
+        for idx in 0..n {
+            // Get primary value
+            let pv = match &string_cols[primary][idx] {
+                Some(v) => v.clone(),
+                None => continue,
+            };
+            if !seen.insert(pv.clone()) {
+                continue;
+            }
+
+            // Get all column values for this row
+            let mut row = vec![pv];
+            let mut skip = false;
+            for col in &columns[1..] {
+                match &string_cols[col][idx] {
+                    Some(v) => row.push(v.clone()),
+                    None => {
+                        skip = true;
+                        break;
+                    }
+                }
+            }
+            if !skip {
+                tuples.push(row);
+            }
+        }
+
+        if tuples.is_empty() {
+            continue;
+        }
+
+        debug!(
+            columns = ?columns,
+            tuples = tuples.len(),
+            "merged tuple group"
+        );
+
+        results.push(TupleGroup { columns, tuples });
     }
 
     results.truncate(20);
     results
+}
+
+/// Merge overlapping pairs into connected groups via union-find.
+///
+/// E.g., pairs [(A,B), (A,C), (D,E)] → groups [{A,B,C}, {D,E}].
+fn merge_tuple_pairs(pairs: &[(String, String)]) -> Vec<Vec<String>> {
+    // Collect all unique column names
+    let mut all_cols: Vec<String> = Vec::new();
+    for (a, b) in pairs {
+        if !all_cols.contains(a) {
+            all_cols.push(a.clone());
+        }
+        if !all_cols.contains(b) {
+            all_cols.push(b.clone());
+        }
+    }
+
+    // Union-find
+    let mut parent: Vec<usize> = (0..all_cols.len()).collect();
+
+    let find = |parent: &mut Vec<usize>, mut x: usize| -> usize {
+        while parent[x] != x {
+            parent[x] = parent[parent[x]];
+            x = parent[x];
+        }
+        x
+    };
+
+    for (a, b) in pairs {
+        let ia = all_cols.iter().position(|c| c == a).unwrap();
+        let ib = all_cols.iter().position(|c| c == b).unwrap();
+        let ra = find(&mut parent, ia);
+        let rb = find(&mut parent, ib);
+        if ra != rb {
+            parent[ra] = rb;
+        }
+    }
+
+    // Group by root
+    let mut groups: HashMap<usize, Vec<String>> = HashMap::new();
+    for (i, col) in all_cols.iter().enumerate() {
+        let root = find(&mut parent, i);
+        groups.entry(root).or_default().push(col.clone());
+    }
+
+    groups.into_values().filter(|g| g.len() >= 2).collect()
 }
 
 /// A detected derived text relationship: column B's values are explained by a
@@ -530,6 +685,8 @@ fn ordered_unique(vals: &[Option<String>]) -> Vec<String> {
     result
 }
 
+/// A detected conditional distribution relationship between a categorical
+/// column and a numeric column (e.g., price depends on category).
 #[derive(Debug, Clone)]
 pub struct ConditionalDistribution {
     /// The categorical column (conditioning field).

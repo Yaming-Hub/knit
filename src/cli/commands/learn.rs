@@ -2772,16 +2772,37 @@ fn extract_tuple_dictionaries(
 
             let primary = &group.columns[0];
 
-            // Skip if any column in the tuple already has a Dictionary generator
-            // (from regular dictionary extraction)
-            let any_has_dict = group.columns.iter().any(|col| {
-                entity
-                    .fields
-                    .iter()
-                    .any(|f| f.name == *col && matches!(f.generator, Some(crate::core::GeneratorSpec::Dictionary { .. })))
-            });
-            if any_has_dict {
-                continue;
+            // For 2-column tuples, skip if the primary already has a Dictionary
+            // (the standalone dictionary is sufficient; TupleLookup only adds value
+            // when there are 3+ columns forming a coherent entity).
+            if group.columns.len() == 2 {
+                let primary_has_dict = entity.fields.iter().any(|f| {
+                    f.name == *primary
+                        && matches!(
+                            f.generator,
+                            Some(crate::core::GeneratorSpec::Dictionary { .. })
+                        )
+                });
+                if primary_has_dict {
+                    continue;
+                }
+            }
+
+            // For 3+ column groups, replace existing dictionaries — the tuple
+            // dictionary subsumes them and provides multi-column coherence.
+            // Delete orphaned dictionary files from prior extraction.
+            if group.columns.len() >= 3 {
+                for col_name in &group.columns {
+                    if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
+                        if let Some(crate::core::GeneratorSpec::Dictionary { ref file, .. }) =
+                            field.generator
+                        {
+                            let old_path = output_dir.join(file);
+                            let _ = std::fs::remove_file(&old_path);
+                            field.generator = None;
+                        }
+                    }
+                }
             }
 
             // Skip if primary column has a date/datetime type (Dictionary produces strings)
@@ -2825,15 +2846,35 @@ fn extract_tuple_dictionaries(
                 writeln!(file, "{line}")?;
             }
 
-            // Set primary column to Dictionary generator
+            // Write a separate primary-only dictionary file (one value per line).
+            // Use raw values (not TSV-escaped) because the Dictionary generator
+            // reads lines verbatim, and TupleLookup keys in the TSV are also raw.
+            let primary_dict_name = format!(
+                "{}_{}.dict.txt",
+                sanitize_filename(&entity.name),
+                sanitize_filename(primary)
+            );
+            let primary_dict_path = output_dir.join(&primary_dict_name);
+            let mut pdict = std::fs::File::create(&primary_dict_path)
+                .with_context(|| format!("failed to create primary dict {primary_dict_name}"))?;
+            for tuple in &group.tuples {
+                if let Some(pv) = tuple.first() {
+                    // Skip values with newlines (would break line-based dict format)
+                    if !pv.contains('\n') && !pv.contains('\r') {
+                        writeln!(pdict, "{pv}")?;
+                    }
+                }
+            }
+
+            // Set primary column to Dictionary generator (reads from primary-only file)
             if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *primary) {
                 field.generator = Some(crate::core::GeneratorSpec::Dictionary {
-                    file: file_name.clone(),
+                    file: primary_dict_name,
                     expansion: "sample".to_string(),
                 });
             }
 
-            // Set secondary columns to TupleLookup generators
+            // Set secondary columns to TupleLookup generators (reads from TSV)
             for (col_idx, col_name) in group.columns.iter().enumerate().skip(1) {
                 if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
                     field.generator = Some(crate::core::GeneratorSpec::TupleLookup {
