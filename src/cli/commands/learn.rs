@@ -1093,6 +1093,9 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
     // Detect time-series trends in numeric columns relative to a sorted temporal column
     detect_time_series_trends(&combined, &mut analysis);
 
+    // Detect arithmetic relationships between numeric columns (e.g., total = men + women)
+    detect_arithmetic_relations(&combined, &mut analysis);
+
     // Detect cross-column constraints from source data
     let constraints = detect_column_constraints(&combined, &analysis.columns);
     if !constraints.is_empty() {
@@ -1462,6 +1465,347 @@ fn extract_f64_column(batch: &RecordBatch, col_name: &str) -> Vec<(usize, f64)> 
         _ => {}
     }
     out
+}
+
+/// Detect arithmetic relationships between numeric columns.
+///
+/// Tests all triples (target, a, b) of numeric columns to find cases where
+/// `target ≈ a + b`, `target ≈ a - b`, `target ≈ a * b`, or `target ≈ a / b`
+/// holds for ≥95% of non-null rows. When a relationship is found, sets
+/// `derived_spec` on the target column to a `Derived` expression.
+///
+/// This captures patterns like `Total = Men + Women` or `ShareWomen = Women / Total`.
+fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis) {
+    use crate::core::GeneratorSpec;
+
+    let n = batch.num_rows();
+    if n < 10 {
+        return;
+    }
+
+    // Collect numeric columns with their values (only non-null rows as full vectors for alignment)
+    let mut numeric_data: Vec<(String, Vec<Option<f64>>)> = Vec::new();
+    for col in &analysis.columns {
+        if let Some(arr) = batch.column_by_name(&col.name) {
+            if let Some(vals) = extract_nullable_f64_values(arr.as_ref(), n) {
+                numeric_data.push((col.name.clone(), vals));
+            }
+        }
+    }
+
+    if numeric_data.len() < 3 {
+        return;
+    }
+
+    // Track which columns have been assigned a derived expression
+    let mut derived_columns: Vec<(String, String)> = Vec::new(); // (target_name, expr)
+
+    // For each potential target column, test all pairs of source columns
+    for target_idx in 0..numeric_data.len() {
+        let (ref target_name, ref target_vals) = numeric_data[target_idx];
+
+        // Skip columns with very few non-null values
+        let non_null_count = target_vals.iter().filter(|v| v.is_some()).count();
+        if non_null_count < 10 {
+            continue;
+        }
+
+        let mut best_match: Option<(String, f64)> = None; // (expr, error_rate)
+
+        for i in 0..numeric_data.len() {
+            if i == target_idx {
+                continue;
+            }
+            for j in 0..numeric_data.len() {
+                if j == target_idx || j == i {
+                    continue;
+                }
+                // Only test ordered pairs (i, j) for non-commutative ops
+                let (ref name_a, ref vals_a) = numeric_data[i];
+                let (ref name_b, ref vals_b) = numeric_data[j];
+
+                // Test: target = a + b
+                if i < j {
+                    let error_rate =
+                        compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Add, n);
+                    if error_rate < 0.05
+                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    {
+                        best_match =
+                            Some((format!("${{{name_a}}} + ${{{name_b}}}"), error_rate));
+                    }
+                }
+
+                // Test: target = a - b
+                {
+                    let error_rate =
+                        compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Sub, n);
+                    if error_rate < 0.05
+                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    {
+                        best_match =
+                            Some((format!("${{{name_a}}} - ${{{name_b}}}"), error_rate));
+                    }
+                }
+
+                // Test: target = a * b
+                if i < j {
+                    let error_rate =
+                        compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Mul, n);
+                    if error_rate < 0.05
+                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    {
+                        best_match =
+                            Some((format!("${{{name_a}}} * ${{{name_b}}}"), error_rate));
+                    }
+                }
+
+                // Test: target = a / b
+                {
+                    let error_rate =
+                        compute_relation_error(target_vals, vals_a, vals_b, ArithOp::Div, n);
+                    if error_rate < 0.05
+                        && best_match.as_ref().map_or(true, |(_, e)| error_rate < *e)
+                    {
+                        best_match =
+                            Some((format!("${{{name_a}}} / ${{{name_b}}}"), error_rate));
+                    }
+                }
+            }
+        }
+
+        if let Some((expr, _error_rate)) = best_match {
+            debug!(
+                target_col = %target_name,
+                expr = %expr,
+                "detected arithmetic relationship"
+            );
+            derived_columns.push((target_name.clone(), expr));
+        }
+    }
+
+    // Resolve circular dependencies by iteratively removing the lowest-priority
+    // derived column from cycles until a valid DAG remains.
+    // Priority: division > multiplication > addition > subtraction
+    let valid_derived = resolve_derived_cycles(derived_columns);
+
+    // Apply derived specs to the analysis columns
+    for (target_name, expr) in valid_derived {
+        if let Some(col) = analysis.columns.iter_mut().find(|c| c.name == target_name) {
+            col.derived_spec = Some(GeneratorSpec::Derived { expr });
+        }
+    }
+}
+
+/// Arithmetic operation type for relationship testing.
+#[derive(Clone, Copy)]
+enum ArithOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+/// Compute the fraction of rows where `target != a op b` (within tolerance).
+///
+/// Tolerance is relative: values match if `|target - expected| / max(1, |target|) < 0.01`.
+fn compute_relation_error(
+    target: &[Option<f64>],
+    a: &[Option<f64>],
+    b: &[Option<f64>],
+    op: ArithOp,
+    n: usize,
+) -> f64 {
+    let mut checked = 0u64;
+    let mut mismatches = 0u64;
+
+    for i in 0..n {
+        let (Some(t), Some(va), Some(vb)) = (target[i], a[i], b[i]) else {
+            continue;
+        };
+
+        // Skip non-finite source values
+        if !t.is_finite() || !va.is_finite() || !vb.is_finite() {
+            continue;
+        }
+
+        let expected = match op {
+            ArithOp::Add => va + vb,
+            ArithOp::Sub => va - vb,
+            ArithOp::Mul => va * vb,
+            ArithOp::Div => {
+                if vb == 0.0 {
+                    // Count zero-divisor rows as mismatches — the generated
+                    // output would produce null for these rows.
+                    checked += 1;
+                    mismatches += 1;
+                    continue;
+                }
+                va / vb
+            }
+        };
+
+        // Guard against NaN/Inf results from overflow
+        if !expected.is_finite() {
+            checked += 1;
+            mismatches += 1;
+            continue;
+        }
+
+        checked += 1;
+        let denom = t.abs().max(expected.abs()).max(1.0);
+        let diff = (t - expected).abs() / denom;
+        if !diff.is_finite() || diff > 0.01 {
+            mismatches += 1;
+        }
+    }
+
+    if checked < 10 {
+        return 1.0; // Not enough data
+    }
+
+    mismatches as f64 / checked as f64
+}
+
+/// Extract f64 values from an Arrow array, preserving nulls as `None`.
+///
+/// Returns a Vec of length `n` with `Some(val)` for non-null numeric values
+/// and `None` for nulls. Returns `None` if the array is not numeric.
+fn extract_nullable_f64_values(
+    arr: &dyn arrow::array::Array,
+    n: usize,
+) -> Option<Vec<Option<f64>>> {
+    use arrow::array;
+    use arrow::datatypes::DataType;
+
+    macro_rules! extract_nullable {
+        ($arr:expr, $ty:ty, $n:expr) => {{
+            let a = $arr.as_any().downcast_ref::<$ty>()?;
+            Some((0..$n).map(|i| if a.is_null(i) { None } else { Some(a.value(i) as f64) }).collect())
+        }};
+    }
+
+    match arr.data_type() {
+        DataType::Int8 => extract_nullable!(arr, array::Int8Array, n),
+        DataType::Int16 => extract_nullable!(arr, array::Int16Array, n),
+        DataType::Int32 => extract_nullable!(arr, array::Int32Array, n),
+        DataType::Int64 => extract_nullable!(arr, array::Int64Array, n),
+        DataType::UInt8 => extract_nullable!(arr, array::UInt8Array, n),
+        DataType::UInt16 => extract_nullable!(arr, array::UInt16Array, n),
+        DataType::UInt32 => extract_nullable!(arr, array::UInt32Array, n),
+        DataType::UInt64 => extract_nullable!(arr, array::UInt64Array, n),
+        DataType::Float32 => extract_nullable!(arr, array::Float32Array, n),
+        DataType::Float64 => extract_nullable!(arr, array::Float64Array, n),
+        _ => None,
+    }
+}
+
+/// Extract field references from a derived expression (e.g., `${a} + ${b}` → `["a", "b"]`).
+fn extract_expr_refs(expr: &str) -> Vec<String> {
+    let mut refs = Vec::new();
+    let mut rest = expr;
+    while let Some(start) = rest.find("${") {
+        let after = &rest[start + 2..];
+        if let Some(end) = after.find('}') {
+            refs.push(after[..end].to_string());
+            rest = &after[end + 1..];
+        } else {
+            break;
+        }
+    }
+    refs
+}
+
+/// Resolve circular dependencies among detected derived columns.
+///
+/// Uses DFS cycle detection. When a cycle is found, removes the lowest-priority
+/// edge (subtraction < addition < multiplication < division). Linear chains
+/// (A derives from B, B derives from C) are valid and preserved.
+fn resolve_derived_cycles(mut candidates: Vec<(String, String)>) -> Vec<(String, String)> {
+    loop {
+        // Build set of derived column names
+        let derived_set: std::collections::HashSet<String> =
+            candidates.iter().map(|(n, _)| n.clone()).collect();
+
+        // Build dependency graph: target → list of derived sources it depends on
+        let deps: std::collections::HashMap<String, Vec<String>> = candidates
+            .iter()
+            .map(|(target, expr)| {
+                let sources = extract_expr_refs(expr);
+                let derived_sources: Vec<String> = sources
+                    .into_iter()
+                    .filter(|s| derived_set.contains(s))
+                    .collect();
+                (target.clone(), derived_sources)
+            })
+            .collect();
+
+        // Check if any column can reach itself (true cycle)
+        let cycle_idx = candidates.iter().position(|(target, _)| {
+            let mut seen = std::collections::HashSet::new();
+            reaches_self_owned(target, target, &deps, &mut seen)
+        });
+
+        match cycle_idx {
+            Some(_) => {
+                // Among cycle participants, remove the one with lowest priority
+                let mut cycle_participants: Vec<usize> = Vec::new();
+                for (i, (target, _)) in candidates.iter().enumerate() {
+                    let mut seen = std::collections::HashSet::new();
+                    if reaches_self_owned(target, target, &deps, &mut seen) {
+                        cycle_participants.push(i);
+                    }
+                }
+
+                let worst = cycle_participants
+                    .iter()
+                    .copied()
+                    .min_by_key(|&i| op_priority(&candidates[i].1))
+                    .unwrap_or(0);
+
+                candidates.remove(worst);
+            }
+            None => break,
+        }
+    }
+
+    candidates
+}
+
+/// Check if `start` can reach itself via the dependency graph (owned strings).
+fn reaches_self_owned(
+    current: &str,
+    start: &str,
+    deps: &std::collections::HashMap<String, Vec<String>>,
+    seen: &mut std::collections::HashSet<String>,
+) -> bool {
+    if let Some(neighbors) = deps.get(current) {
+        for neighbor in neighbors {
+            if neighbor == start {
+                return true;
+            }
+            if seen.insert(neighbor.clone())
+                && reaches_self_owned(neighbor, start, deps, seen)
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Assign priority to an arithmetic expression for cycle resolution.
+/// Higher priority = more likely to keep.
+fn op_priority(expr: &str) -> u8 {
+    if expr.contains(" / ") {
+        3 // Division (ratio) — highest value
+    } else if expr.contains(" * ") {
+        2
+    } else if expr.contains(" + ") {
+        1
+    } else {
+        0 // Subtraction — lowest priority (redundant with addition)
+    }
 }
 
 /// Detect cross-column constraints from source data.

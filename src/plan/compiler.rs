@@ -1828,6 +1828,8 @@ fn apply_conditional_distribution_overrides(
         };
 
         // Find and override the dependent field's generator plan.
+        // Skip if the field already has a Derived plan (arithmetic constraints
+        // take precedence over conditional distributions).
         // Also ensure the dependent field is generated after the given field
         // by bumping its dependency_order.
         let given_order = field_plans
@@ -1839,6 +1841,11 @@ fn apply_conditional_distribution_overrides(
             .iter_mut()
             .find(|fp| fp.field_name == *dependent)
         {
+            // Don't override Derived generators — they encode exact arithmetic
+            // relationships that conditional distributions would destroy.
+            if matches!(fp.generator_plan, GeneratorPlan::Derived { .. }) {
+                continue;
+            }
             fp.generator_plan = conditional_plan;
             if fp.dependency_order <= given_order {
                 fp.dependency_order = given_order + 1;

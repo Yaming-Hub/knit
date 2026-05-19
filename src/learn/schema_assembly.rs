@@ -140,6 +140,11 @@ pub struct ColumnAnalysis {
     /// Set by `detect_time_series_trends()` when this numeric column shows a
     /// significant linear trend relative to a sorted temporal column.
     pub time_series_spec: Option<crate::core::GeneratorSpec>,
+    /// Derived expression spec (populated when an arithmetic relationship is detected).
+    ///
+    /// Set by `detect_arithmetic_relations()` when this column can be expressed
+    /// as a simple arithmetic function of other columns (e.g., `total = men + women`).
+    pub derived_spec: Option<crate::core::GeneratorSpec>,
 }
 
 impl ColumnAnalysis {
@@ -165,6 +170,7 @@ impl ColumnAnalysis {
             stats: None,
             traits: None,
             time_series_spec: None,
+            derived_spec: None,
         }
     }
 
@@ -1125,6 +1131,13 @@ fn build_generator_inner(
         return build_temporal_generator(col);
     }
 
+    // Arithmetic derived column (e.g., total = men + women)
+    // Takes precedence over time-series: if a column is deterministically derived
+    // from others, we must honour that even if it also correlates with time.
+    if let Some(derived_spec) = &col.derived_spec {
+        return derived_spec.clone();
+    }
+
     // Time-series trend (linear trend + noise detected during learn)
     if let Some(ts_spec) = &col.time_series_spec {
         return ts_spec.clone();
@@ -1996,6 +2009,7 @@ mod tests {
                     stats: None,
                     traits: None,
                     time_series_spec: None,
+                    derived_spec: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -2017,6 +2031,7 @@ mod tests {
                     stats: None,
                     traits: None,
                     time_series_spec: None,
+                    derived_spec: None,
                 },
             ],
             relationships: vec![],
@@ -2070,6 +2085,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -2126,6 +2142,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2181,6 +2198,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2316,6 +2334,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2364,6 +2383,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2416,6 +2436,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -2443,6 +2464,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::OneOf { .. }));
@@ -2470,6 +2492,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(
@@ -2501,6 +2524,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(
@@ -2534,6 +2558,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2581,6 +2606,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2657,6 +2683,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2683,6 +2710,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int);
     }
@@ -2709,6 +2737,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2744,6 +2773,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         assert_eq!(
             infer_data_type(&col, None),
@@ -2782,6 +2812,7 @@ mod tests {
             stats: None,
             traits: None,
             time_series_spec: None,
+                    derived_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Datetime);
     }
@@ -2885,6 +2916,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             },
             ColumnAnalysis {
                 name: "EndDate".into(),
@@ -2906,6 +2938,7 @@ mod tests {
                 stats: None,
                 traits: None,
                 time_series_spec: None,
+                    derived_spec: None,
             },
         ];
         let mut fields = vec![

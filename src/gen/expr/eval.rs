@@ -264,6 +264,27 @@ fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
     }
 }
 
+/// Try to convert a StringArray to f64 values by parsing each string.
+///
+/// Returns `Err` if any non-null value cannot be parsed as a number.
+fn to_f64_from_str(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
+    let sa = arr.as_any().downcast_ref::<StringArray>().ok_or(EvalError {
+        message: format!("expected Utf8 array, got {:?}", arr.data_type()),
+    })?;
+    let mut out = Vec::with_capacity(sa.len());
+    for i in 0..sa.len() {
+        if sa.is_null(i) {
+            out.push(None);
+        } else {
+            let v = sa.value(i).parse::<f64>().map_err(|_| EvalError {
+                message: format!("cannot parse '{}' as number", sa.value(i)),
+            })?;
+            out.push(Some(v));
+        }
+    }
+    Ok(out)
+}
+
 fn is_numeric(dt: &DataType) -> bool {
     matches!(dt, DataType::Int64 | DataType::Float64)
 }
@@ -321,7 +342,7 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
         return Ok(Arc::new(Float64Array::from(vec![None::<f64>; left.len()])));
     }
 
-    // String concatenation via +
+    // String concatenation via + (preserve backward compat: Utf8+Utf8 always concatenates)
     if op == BinOp::Add
         && left.data_type() == &DataType::Utf8
         && right.data_type() == &DataType::Utf8
@@ -335,6 +356,42 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
                 } else {
                     Some(format!("{}{}", l.value(i), r.value(i)))
                 }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+
+    // For Sub/Mul/Div (or Add where at least one side is numeric), try parsing
+    // Utf8 inputs as numbers. This handles columns from conditional generators
+    // that produce string-typed numeric values.
+    if left.data_type() == &DataType::Utf8 || right.data_type() == &DataType::Utf8 {
+        let lv = if left.data_type() == &DataType::Utf8 {
+            to_f64_from_str(left)?
+        } else {
+            to_f64_vec(left)?
+        };
+        let rv = if right.data_type() == &DataType::Utf8 {
+            to_f64_from_str(right)?
+        } else {
+            to_f64_vec(right)?
+        };
+        let result: Float64Array = lv
+            .iter()
+            .zip(rv.iter())
+            .map(|(a, b)| match (a, b) {
+                (Some(a), Some(b)) => Some(match op {
+                    BinOp::Add => a + b,
+                    BinOp::Sub => a - b,
+                    BinOp::Mul => a * b,
+                    BinOp::Div => {
+                        if *b == 0.0 {
+                            return None;
+                        }
+                        a / b
+                    }
+                    _ => unreachable!(),
+                }),
+                _ => None,
             })
             .collect();
         return Ok(Arc::new(result));
