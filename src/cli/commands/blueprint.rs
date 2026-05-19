@@ -373,6 +373,13 @@ fn format_generator_spec(r#gen: &crate::core::GeneratorSpec) -> String {
         } => {
             format!("tuple_lookup({}, col={})", source_field, column)
         }
+        crate::core::GeneratorSpec::RowLookup {
+            file,
+            column,
+            row_count,
+        } => {
+            format!("row_lookup({}, col={}, rows={})", file, column, row_count)
+        }
     }
 }
 

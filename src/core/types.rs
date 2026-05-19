@@ -1237,6 +1237,19 @@ pub enum GeneratorSpec {
         /// Zero-based column index in the TSV to read this field's value from.
         column: usize,
     },
+    /// Read a column value from a full-row dictionary file at a randomly sampled row.
+    ///
+    /// All fields on the same entity with `RowLookup` referencing the same `file`
+    /// share the same randomly chosen row index per output record, ensuring
+    /// cross-column coherence without requiring a unique primary key column.
+    RowLookup {
+        /// Path to the full-row dictionary TSV file.
+        file: String,
+        /// Zero-based column index in the TSV to read this field's value from.
+        column: usize,
+        /// Total number of rows in the TSV file (used for uniform random sampling).
+        row_count: usize,
+    },
     /// Reference an actor entity, selecting actors weighted by persona activity rate.
     /// Used in behavioral entities to assign records to actors.
     ActorRef {
@@ -1384,6 +1397,7 @@ impl GeneratorSpec {
             Self::EventStream { .. } => "event_stream",
             Self::TimeSeries { .. } => "time_series",
             Self::TupleLookup { .. } => "tuple_lookup",
+            Self::RowLookup { .. } => "row_lookup",
         }
     }
 }

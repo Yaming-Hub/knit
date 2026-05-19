@@ -33,6 +33,7 @@ pub mod temporal;
 pub mod thread_ref;
 pub mod topology;
 pub mod tuple_lookup;
+pub mod row_lookup;
 pub mod unique;
 pub mod uuid_gen;
 pub mod weighted_fk;
@@ -212,6 +213,23 @@ pub fn create_generator_with_seen(
             source_field.clone(),
             lookup.clone(),
         )),
+        GeneratorPlan::RowLookup {
+            rows,
+            column,
+            ..
+        } => {
+            // Fallback path (e.g. nested inside Conditional) — no shared cache available,
+            // each instance gets its own cache. Cross-column coherence only works when
+            // the engine pre-computes the shared cache.
+            let cache = std::sync::Arc::new(std::sync::Mutex::new(
+                row_lookup::RowIndexCache::new()
+            ));
+            Box::new(row_lookup::RowLookupGenerator::new(
+                rows.clone(),
+                *column,
+                cache,
+            ))
+        }
         // GraphTarget generators are created by the engine (which has graphs +
         // key stores). If nested, fall back to null.
         GeneratorPlan::GraphTarget { .. } => {
