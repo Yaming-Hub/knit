@@ -2401,10 +2401,10 @@ fn resolve_dict_in_generator(
                     let line = line?;
                     let parts: Vec<&str> = line.trim().split('\t').collect();
                     if let (Some(key), Some(val)) = (parts.first(), parts.get(col_idx)) {
-                        lookup.insert(
-                            crate::cli::commands::learn::unescape_tsv_value(key),
-                            crate::cli::commands::learn::unescape_tsv_value(val),
-                        );
+                        lookup
+                            .entry(crate::cli::commands::learn::unescape_tsv_value(key))
+                            .or_default()
+                            .push(crate::cli::commands::learn::unescape_tsv_value(val));
                     } else {
                         skipped += 1;
                     }

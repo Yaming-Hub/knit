@@ -371,8 +371,8 @@ pub enum GeneratorPlan {
     TupleLookup {
         /// Name of the source field already generated in this batch.
         source_field: String,
-        /// Lookup table: maps primary column value → this field's value.
-        lookup: std::collections::HashMap<String, String>,
+        /// Lookup table: maps primary column value → list of possible values.
+        lookup: std::collections::HashMap<String, Vec<String>>,
         /// Original file path from the schema (used for resolution).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source_file: Option<String>,
