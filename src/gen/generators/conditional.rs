@@ -131,6 +131,10 @@ impl FieldGenerator for ConditionalGenerator {
         // that `interleave` can combine them without a type mismatch error.
         unify_null_arrays(&mut source_arrays);
 
+        // If branches have mixed numeric types (e.g., Int64 vs Float64), unify
+        // them to Float64 so that interleave succeeds without string fallback.
+        unify_numeric_to_float64(&mut source_arrays);
+
         // Use arrow::compute::interleave to pick values from the right arrays
         let array_refs: Vec<&dyn Array> = source_arrays.iter().map(|a| a.as_ref()).collect();
         match compute::interleave(&array_refs, &indices) {
@@ -157,12 +161,33 @@ impl FieldGenerator for ConditionalGenerator {
                     match &concrete {
                         None => concrete = Some(bt),
                         Some(prev) if *prev == bt => {}
-                        Some(_) => return DataType::Utf8, // mixed types → fallback
+                        Some(prev) if prev.is_numeric() && bt.is_numeric() => {
+                            // Mixed numeric types unify to Float64
+                            concrete = Some(DataType::Float64);
+                        }
+                        Some(_) => return DataType::Utf8, // truly mixed types → fallback
                     }
                 }
             }
             concrete.unwrap_or(dt)
         } else {
+            // Check if default is numeric but some branches differ in numeric type
+            if dt.is_numeric() {
+                let all_numeric = self
+                    .branches
+                    .iter()
+                    .all(|(_, g)| g.output_type().is_numeric() || g.output_type() == DataType::Null);
+                if all_numeric {
+                    // Unify to Float64 if there's any type mismatch
+                    let any_mismatch = self
+                        .branches
+                        .iter()
+                        .any(|(_, g)| g.output_type() != dt && g.output_type() != DataType::Null);
+                    if any_mismatch {
+                        return DataType::Float64;
+                    }
+                }
+            }
             dt
         }
     }
@@ -187,6 +212,40 @@ fn unify_null_arrays(arrays: &mut Vec<ArrayRef>) {
         for arr in arrays.iter_mut() {
             if *arr.data_type() == DataType::Null {
                 *arr = arrow::array::new_null_array(&target, arr.len());
+            }
+        }
+    }
+}
+
+/// Unify mixed numeric types (Int64, Float64, UInt64) to Float64 so that
+/// `interleave` can combine them without falling back to StringArray.
+fn unify_numeric_to_float64(arrays: &mut Vec<ArrayRef>) {
+    let has_mixed_numeric = {
+        let mut seen_int = false;
+        let mut seen_float = false;
+        for arr in arrays.iter() {
+            match arr.data_type() {
+                DataType::Int64 | DataType::UInt64 | DataType::Int32 | DataType::UInt32 => {
+                    seen_int = true;
+                }
+                DataType::Float64 | DataType::Float32 => {
+                    seen_float = true;
+                }
+                _ => {}
+            }
+        }
+        seen_int && seen_float
+    };
+
+    if !has_mixed_numeric {
+        return;
+    }
+
+    for arr in arrays.iter_mut() {
+        let dt = arr.data_type();
+        if dt.is_numeric() && *dt != DataType::Float64 {
+            if let Ok(casted) = arrow::compute::cast(arr.as_ref(), &DataType::Float64) {
+                *arr = casted;
             }
         }
     }
