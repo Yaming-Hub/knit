@@ -313,16 +313,16 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "airport1",
     "airport2",
+    "airport1",
 ]
 matrix = [
     [
     1.0,
-    0.3068947428180483,
+    0.30689474281804746,
 ],
     [
-    0.3068947428180483,
+    0.30689474281804746,
     1.0,
 ],
 ]

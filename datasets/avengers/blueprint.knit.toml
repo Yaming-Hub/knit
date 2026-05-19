@@ -18,7 +18,7 @@ nullable = false
 
 [entities.fields.generator]
 type = "dictionary"
-file = "original__URL_Death1.tsv"
+file = "original__URL_Death2.tsv"
 expansion = "sample"
 
 [entities.fields.stats]
@@ -96,16 +96,10 @@ data_type = "string"
 nullable = false
 
 [entities.fields.generator]
-type = "sequence"
-start = 0
-step = 1
-values = [
-    "YES",
-    "YES",
-    "NO",
-    "NO",
-]
-cycle = true
+type = "tuple_lookup"
+source_field = "Probationary Introl"
+file = "original__Probationary_Introl_Current_.tsv"
+column = 1
 
 [entities.fields.stats]
 distinct_count = 2
@@ -124,10 +118,16 @@ data_type = "string"
 nullable = false
 
 [entities.fields.generator]
-type = "tuple_lookup"
-source_field = "Probationary Introl"
-file = "original__Probationary_Introl_Gender.tsv"
-column = 1
+type = "sequence"
+start = 0
+step = 1
+values = [
+    "MALE",
+    "FEMALE",
+    "MALE",
+    "FEMALE",
+]
+cycle = true
 
 [entities.fields.stats]
 distinct_count = 2
@@ -146,7 +146,7 @@ data_type = "string"
 
 [entities.fields.generator]
 type = "dictionary"
-file = "original__Probationary_Introl_Gender.tsv"
+file = "original__Probationary_Introl_Current_.tsv"
 expansion = "sample"
 
 [entities.fields.nullable]
@@ -168,28 +168,9 @@ name = "Full/Reserve Avengers Intro"
 data_type = "string"
 
 [entities.fields.generator]
-type = "sequence"
-start = 0
-step = 1
-values = [
-    "Sep-63",
-    "May-65",
-    "Sep-76",
-    "Aug-75",
-    "Jul-78",
-    "Nov-88",
-    "Apr-87",
-    "Dec-87",
-    "May-88",
-    "Jan-88",
-    "Apr-90",
-    "Jan-92",
-    "Jul-93",
-    "1-Aug",
-    "5-Nov",
-    "7-Mar",
-]
-cycle = true
+type = "dictionary"
+file = "original__Full_Reserve_Avengers_Intro_Return2.tsv"
+expansion = "sample"
 
 [entities.fields.nullable]
 probability = 0.08092485549132948
@@ -278,23 +259,9 @@ data_type = "string"
 nullable = false
 
 [entities.fields.generator]
-type = "one_of"
-
-[[entities.fields.generator.choices]]
-value = "Full"
-weight = 0.7976878612716763
-
-[[entities.fields.generator.choices]]
-value = "Academy"
-weight = 0.09826589595375723
-
-[[entities.fields.generator.choices]]
-value = "Honorary"
-weight = 0.09248554913294797
-
-[[entities.fields.generator.choices]]
-value = "Probationary"
-weight = 0.011560693641618497
+type = "dictionary"
+file = "original__Honorary_Death2.tsv"
+expansion = "sample"
 
 [entities.fields.stats]
 distinct_count = 4
@@ -313,10 +280,14 @@ data_type = "string"
 nullable = false
 
 [entities.fields.generator]
-type = "tuple_lookup"
-source_field = "URL"
-file = "original__URL_Death1.tsv"
-column = 1
+type = "sequence"
+start = 0
+step = 1
+values = [
+    "YES",
+    "YES",
+]
+cycle = true
 
 [entities.fields.stats]
 distinct_count = 2
@@ -364,14 +335,10 @@ name = "Death2"
 data_type = "string"
 
 [entities.fields.generator]
-type = "sequence"
-start = 0
-step = 1
-values = [
-    "YES",
-    "NO",
-]
-cycle = true
+type = "tuple_lookup"
+source_field = "URL"
+file = "original__URL_Death2.tsv"
+column = 1
 
 [entities.fields.nullable]
 probability = 0.9017341040462428
@@ -392,16 +359,10 @@ name = "Return2"
 data_type = "string"
 
 [entities.fields.generator]
-type = "sequence"
-start = 0
-step = 1
-values = [
-    "NO",
-    "NO",
-    "YES",
-    "YES",
-]
-cycle = true
+type = "tuple_lookup"
+source_field = "Full/Reserve Avengers Intro"
+file = "original__Full_Reserve_Avengers_Intro_Return2.tsv"
+column = 1
 
 [entities.fields.nullable]
 probability = 0.9075144508670521
@@ -624,34 +585,29 @@ name = "Probationary Introl"
 field = "Probationary Introl"
 cardinality = 12
 
-[[entities.scaling.custom]]
-name = "Honorary"
-field = "Honorary"
-cardinality = 4
-
 [[correlations]]
 entity = "original"
 fields = [
-    "Year",
     "Years since joining",
-]
-matrix = [
-    [
-    1.0,
-    -1.0,
-],
-    [
-    -1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "Year",
+]
+matrix = [
+    [
+    1.0,
+    -1.0,
+],
+    [
+    -1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "Years since joining",
+    "Year",
 ]
 matrix = [
     [
@@ -668,16 +624,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Name/Alias",
-    "Probationary Introl",
+    "Current?",
+    "Full/Reserve Avengers Intro",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999999993,
+    0.892091164211846,
 ],
     [
-    0.9999999999999993,
+    0.892091164211846,
     1.0,
 ],
 ]
@@ -686,16 +642,52 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "Current?",
     "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Current?",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999994,
+],
+    [
+    0.9999999999999994,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Current?",
     "Honorary",
 ]
 matrix = [
     [
     1.0,
-    0.9933847123915228,
+    0.357580429813995,
 ],
     [
-    0.9933847123915228,
+    0.357580429813995,
     1.0,
 ],
 ]
@@ -704,8 +696,44 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Name/Alias",
-    "Death1",
+    "Current?",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    0.6572585054332524,
+],
+    [
+    0.6572585054332524,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Current?",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.8897565210026096,
+],
+    [
+    0.8897565210026096,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Return2",
 ]
 matrix = [
     [
@@ -722,8 +750,260 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "Full/Reserve Avengers Intro",
     "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9981255841065795,
+],
+    [
+    0.9981255841065795,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Gender",
+]
+matrix = [
+    [
+    1.0,
+    0.7394501283891485,
+],
+    [
+    0.7394501283891485,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999174,
+],
+    [
+    0.9999999999999174,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Honorary",
+]
+matrix = [
+    [
+    1.0,
+    0.9312087620153195,
+],
+    [
+    0.9312087620153195,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Return1",
+]
+matrix = [
+    [
+    1.0,
+    0.897267277252267,
+],
+    [
+    0.897267277252267,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    0.8128002569531252,
+],
+    [
+    0.8128002569531252,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.9428090415820645,
+],
+    [
+    0.9428090415820645,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    0.8451972761917568,
+],
+    [
+    0.8451972761917568,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "Return2",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999999,
+],
+    [
+    0.9999999999999999,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return2",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return2",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Death2",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999999,
+],
+    [
+    0.9999999999999999,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Death2",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999999,
+],
+    [
+    0.9999999999999999,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Death2",
+    "Honorary",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Death2",
+    "Notes",
 ]
 matrix = [
     [
@@ -759,33 +1039,15 @@ conditional = []
 entity = "original"
 fields = [
     "Name/Alias",
-    "Notes",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Name/Alias",
     "URL",
 ]
 matrix = [
     [
     1.0,
-    0.999999999999948,
+    0.9999999999999417,
 ],
     [
-    0.999999999999948,
+    0.9999999999999417,
     1.0,
 ],
 ]
@@ -795,15 +1057,15 @@ conditional = []
 entity = "original"
 fields = [
     "Name/Alias",
-    "Death2",
+    "Honorary",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999999999,
+    0.9933847123915226,
 ],
     [
-    0.9999999999999999,
+    0.9933847123915226,
     1.0,
 ],
 ]
@@ -831,15 +1093,15 @@ conditional = []
 entity = "original"
 fields = [
     "Name/Alias",
-    "Full/Reserve Avengers Intro",
+    "Notes",
 ]
 matrix = [
     [
     1.0,
-    0.9981255841065866,
+    1.0,
 ],
     [
-    0.9981255841065866,
+    1.0,
     1.0,
 ],
 ]
@@ -849,7 +1111,25 @@ conditional = []
 entity = "original"
 fields = [
     "Name/Alias",
-    "Current?",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999994,
+],
+    [
+    0.9999999999999994,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Name/Alias",
+    "Death1",
 ]
 matrix = [
     [
@@ -866,8 +1146,134 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "Gender",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999998,
+],
+    [
+    0.9999999999999998,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Gender",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    0.6243541472221554,
+],
+    [
+    0.6243541472221554,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Gender",
     "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.9279607271383371,
+],
+    [
+    0.9279607271383371,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
     "Honorary",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Return1",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999722,
+],
+    [
+    0.9999999999999722,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999993,
+],
+    [
+    0.9999999999999993,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Death1",
 ]
 matrix = [
     [
@@ -876,6 +1282,114 @@ matrix = [
 ],
     [
     0.9999999999999999,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    0.5790001396218002,
+],
+    [
+    0.5790001396218002,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return1",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return1",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.6546536707079772,
+],
+    [
+    0.6546536707079772,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.8713548411865626,
+],
+    [
+    0.8713548411865626,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
     1.0,
 ],
 ]
@@ -894,564 +1408,6 @@ matrix = [
 ],
     [
     0.8556534679079242,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Probationary Introl",
-    "Gender",
-]
-matrix = [
-    [
-    1.0,
-    0.9279607271383371,
-],
-    [
-    0.9279607271383371,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Probationary Introl",
-    "Notes",
-]
-matrix = [
-    [
-    1.0,
-    0.8713548411865628,
-],
-    [
-    0.8713548411865628,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Probationary Introl",
-    "URL",
-]
-matrix = [
-    [
-    1.0,
-    0.9999999999999989,
-],
-    [
-    0.9999999999999989,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Probationary Introl",
-    "Return1",
-]
-matrix = [
-    [
-    1.0,
-    0.6546536707079772,
-],
-    [
-    0.6546536707079772,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Probationary Introl",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.9428090415820644,
-],
-    [
-    0.9428090415820644,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Probationary Introl",
-    "Current?",
-]
-matrix = [
-    [
-    1.0,
-    0.8897565210026093,
-],
-    [
-    0.8897565210026093,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Honorary",
-    "Notes",
-]
-matrix = [
-    [
-    1.0,
-    0.5790001396218012,
-],
-    [
-    0.5790001396218012,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Honorary",
-    "URL",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Honorary",
-    "Death2",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Honorary",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.9312087620153194,
-],
-    [
-    0.9312087620153194,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Honorary",
-    "Current?",
-]
-matrix = [
-    [
-    1.0,
-    0.35758042981399496,
-],
-    [
-    0.35758042981399496,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Death1",
-    "Notes",
-]
-matrix = [
-    [
-    1.0,
-    0.9999999999999996,
-],
-    [
-    0.9999999999999996,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Death1",
-    "URL",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Death1",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.8451972761917564,
-],
-    [
-    0.8451972761917564,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Return2",
-    "Notes",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Return2",
-    "URL",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Return2",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Gender",
-    "Notes",
-]
-matrix = [
-    [
-    1.0,
-    0.6243541472221555,
-],
-    [
-    0.6243541472221555,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Gender",
-    "URL",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Gender",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.7394501283891481,
-],
-    [
-    0.7394501283891481,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Notes",
-    "URL",
-]
-matrix = [
-    [
-    1.0,
-    0.9999999999999729,
-],
-    [
-    0.9999999999999729,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Notes",
-    "Death2",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Notes",
-    "Return1",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Notes",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.8128002569531273,
-],
-    [
-    0.8128002569531273,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Notes",
-    "Current?",
-]
-matrix = [
-    [
-    1.0,
-    0.6572585054332524,
-],
-    [
-    0.6572585054332524,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "URL",
-    "Death2",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "URL",
-    "Return1",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "URL",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.999999999999927,
-],
-    [
-    0.999999999999927,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "URL",
-    "Current?",
-]
-matrix = [
-    [
-    1.0,
-    0.9999999999999994,
-],
-    [
-    0.9999999999999994,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Return1",
-    "Full/Reserve Avengers Intro",
-]
-matrix = [
-    [
-    1.0,
-    0.8972672772522667,
-],
-    [
-    0.8972672772522667,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Full/Reserve Avengers Intro",
-    "Current?",
-]
-matrix = [
-    [
-    1.0,
-    0.892091164211846,
-],
-    [
-    0.892091164211846,
     1.0,
 ],
 ]
@@ -1464,91 +1420,33 @@ fields = []
 matrix = []
 conditional = []
 dependent = "Appearances"
-given = "Return2"
+given = "Honorary"
 
 [[correlations.distributions]]
-when = "YES"
-distribution = "pareto"
+when = "Academy"
+distribution = "normal"
 round = true
 
 [correlations.distributions.params]
-scale = 86.0
-shape = 0.7499668156314393
+mean = 60.05882352941177
+std_dev = 35.109024461182585
 
 [[correlations.distributions]]
-when = "NO"
-distribution = "pareto"
+when = "Full"
+distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-scale = 41.0
-shape = 0.7835788028024288
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 5.002887066620638
-sigma = 1.5218656868469485
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Years since joining"
-given = "Current?"
+mu = 5.218790371788852
+sigma = 1.5198770337662995
 
 [[correlations.distributions]]
-when = "YES"
+when = "Honorary"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.03178294573643411
-
-[[correlations.distributions]]
-when = "NO"
-distribution = "gamma"
-round = true
-
-[correlations.distributions.params]
-scale = 15.872104062769406
-shape = 1.394387791583475
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 0.03765781454070526
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Appearances"
-given = "Current?"
-
-[[correlations.distributions]]
-when = "YES"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 5.036634135592746
-sigma = 1.6397847466946067
-
-[[correlations.distributions]]
-when = "NO"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.972477619854565
-sigma = 1.40647700002191
+lambda = 0.00641025641025641
 
 [correlations.default]
 kind = "log_normal"
@@ -1564,25 +1462,33 @@ fields = []
 matrix = []
 conditional = []
 dependent = "Years since joining"
-given = "Return1"
+given = "Honorary"
 
 [[correlations.distributions]]
-when = "NO"
-distribution = "pareto"
+when = "Honorary"
+distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-scale = 2.0
-shape = 0.7783188110515049
+max = 52.0
+min = 0.0
 
 [[correlations.distributions]]
-when = "YES"
-distribution = "gamma"
+when = "Academy"
+distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-scale = 11.967130196055027
-shape = 2.646742579429744
+max = 115.0
+min = 5.0
+
+[[correlations.distributions]]
+when = "Full"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.05478364430329496
 
 [correlations.default]
 kind = "exponential"
@@ -1631,33 +1537,25 @@ fields = []
 matrix = []
 conditional = []
 dependent = "Years since joining"
-given = "Honorary"
+given = "Return1"
 
 [[correlations.distributions]]
-when = "Honorary"
-distribution = "uniform"
+when = "YES"
+distribution = "gamma"
 round = true
 
 [correlations.distributions.params]
-max = 52.0
-min = 0.0
+scale = 11.967130196055027
+shape = 2.646742579429744
 
 [[correlations.distributions]]
-when = "Full"
-distribution = "exponential"
+when = "NO"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.05478364430329496
-
-[[correlations.distributions]]
-when = "Academy"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 115.0
-min = 5.0
+scale = 2.0
+shape = 0.7783188110515049
 
 [correlations.default]
 kind = "exponential"
@@ -1672,33 +1570,25 @@ fields = []
 matrix = []
 conditional = []
 dependent = "Appearances"
-given = "Honorary"
+given = "Return2"
 
 [[correlations.distributions]]
-when = "Honorary"
-distribution = "exponential"
+when = "NO"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.00641025641025641
+scale = 41.0
+shape = 0.7835788028024288
 
 [[correlations.distributions]]
-when = "Full"
-distribution = "log_normal"
+when = "YES"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 5.218790371788852
-sigma = 1.5198770337662995
-
-[[correlations.distributions]]
-when = "Academy"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 60.05882352941177
-std_dev = 35.109024461182585
+scale = 86.0
+shape = 0.7499668156314393
 
 [correlations.default]
 kind = "log_normal"
@@ -1714,16 +1604,73 @@ fields = []
 matrix = []
 conditional = []
 dependent = "Appearances"
-given = "Gender"
+given = "Current?"
 
 [[correlations.distributions]]
-when = "FEMALE"
+when = "NO"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 4.670388766356401
-sigma = 1.485832315579373
+mu = 4.972477619854565
+sigma = 1.40647700002191
+
+[[correlations.distributions]]
+when = "YES"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 5.036634135592746
+sigma = 1.6397847466946067
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 5.002887066620638
+sigma = 1.5218656868469485
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Years since joining"
+given = "Current?"
+
+[[correlations.distributions]]
+when = "YES"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.03178294573643411
+
+[[correlations.distributions]]
+when = "NO"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 15.872104062769406
+shape = 1.394387791583475
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 0.03765781454070526
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Appearances"
+given = "Gender"
 
 [[correlations.distributions]]
 when = "MALE"
@@ -1733,6 +1680,15 @@ round = true
 [correlations.distributions.params]
 mu = 5.170581861536516
 sigma = 1.5122352152344216
+
+[[correlations.distributions]]
+when = "FEMALE"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.670388766356401
+sigma = 1.485832315579373
 
 [correlations.default]
 kind = "log_normal"
@@ -1751,15 +1707,6 @@ dependent = "Appearances"
 given = "Death1"
 
 [[correlations.distributions]]
-when = "NO"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.850162354101959
-sigma = 1.3749908630355419
-
-[[correlations.distributions]]
 when = "YES"
 distribution = "log_normal"
 round = true
@@ -1767,6 +1714,15 @@ round = true
 [correlations.distributions.params]
 mu = 5.233080836214011
 sigma = 1.6938789264077978
+
+[[correlations.distributions]]
+when = "NO"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.850162354101959
+sigma = 1.3749908630355419
 
 [correlations.default]
 kind = "log_normal"

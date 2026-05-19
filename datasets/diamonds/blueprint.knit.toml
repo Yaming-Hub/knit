@@ -239,22 +239,6 @@ values = [
     "VVS1",
     "I1",
     "IF",
-    "SI2",
-    "SI1",
-    "VS1",
-    "VS2",
-    "VVS2",
-    "VVS1",
-    "I1",
-    "IF",
-    "SI2",
-    "SI1",
-    "VS1",
-    "VS2",
-    "VVS2",
-    "VVS1",
-    "I1",
-    "IF",
 ]
 cycle = true
 
@@ -576,186 +560,6 @@ source_rows = 53940
 [[correlations]]
 entity = "original"
 fields = [
-    "carat",
-    "z",
-]
-matrix = [
-    [
-    1.0,
-    0.9533873805614387,
-],
-    [
-    0.9533873805614387,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "z",
-]
-matrix = [
-    [
-    1.0,
-    0.9931834443062174,
-],
-    [
-    0.9931834443062174,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "y",
-]
-matrix = [
-    [
-    1.0,
-    0.9517221990130819,
-],
-    [
-    0.9517221990130819,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "y",
-]
-matrix = [
-    [
-    1.0,
-    0.9955717485692812,
-],
-    [
-    0.9955717485692812,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "price",
-]
-matrix = [
-    [
-    1.0,
-    0.9215913011935697,
-],
-    [
-    0.9215913011935697,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "price",
-]
-matrix = [
-    [
-    1.0,
-    0.9628827988813001,
-],
-    [
-    0.9628827988813001,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "x",
-]
-matrix = [
-    [
-    1.0,
-    0.9750942267265641,
-],
-    [
-    0.9750942267265641,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "carat",
-    "x",
-]
-matrix = [
-    [
-    1.0,
-    0.9961166041570526,
-],
-    [
-    0.9961166041570526,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "z",
-    "y",
-]
-matrix = [
-    [
-    1.0,
-    0.9520057161562895,
-],
-    [
-    0.9520057161562895,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "z",
-    "y",
-]
-matrix = [
-    [
-    1.0,
-    0.9870675117824327,
-],
-    [
-    0.9870675117824327,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "z",
     "price",
 ]
@@ -828,16 +632,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "y",
-    "price",
+    "z",
+    "carat",
 ]
 matrix = [
     [
     1.0,
-    0.8654208978642225,
+    0.9533873805614387,
 ],
     [
-    0.8654208978642225,
+    0.9533873805614387,
     1.0,
 ],
 ]
@@ -846,16 +650,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "y",
-    "price",
+    "z",
+    "carat",
 ]
 matrix = [
     [
     1.0,
-    0.9627188193892315,
+    0.9931834443062174,
 ],
     [
-    0.9627188193892315,
+    0.9931834443062174,
     1.0,
 ],
 ]
@@ -864,16 +668,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "z",
     "y",
-    "x",
 ]
 matrix = [
     [
     1.0,
-    0.9747014796704275,
+    0.9520057161562895,
 ],
     [
-    0.9747014796704275,
+    0.9520057161562895,
     1.0,
 ],
 ]
@@ -882,16 +686,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "z",
     "y",
-    "x",
 ]
 matrix = [
     [
     1.0,
-    0.9978949275849379,
+    0.9870675117824327,
 ],
     [
-    0.9978949275849379,
+    0.9870675117824327,
     1.0,
 ],
 ]
@@ -935,154 +739,183 @@ conditional = []
 
 [[correlations]]
 entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
+fields = [
+    "price",
+    "carat",
+]
+matrix = [
+    [
+    1.0,
+    0.9215913011935697,
+],
+    [
+    0.9215913011935697,
+    1.0,
+],
+]
 conditional = []
-dependent = "carat"
-given = "color"
-
-[[correlations.distributions]]
-when = "H"
-distribution = "gamma"
-
-[correlations.distributions.params]
-scale = 0.29793157055115305
-shape = 3.060431397925473
-
-[[correlations.distributions]]
-when = "D"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -0.5525351167344574
-sigma = 0.509568951829507
-
-[[correlations.distributions]]
-when = "E"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -0.5595004855016285
-sigma = 0.5238619858939542
-
-[[correlations.distributions]]
-when = "G"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -0.42059409775193307
-sigma = 0.5708125363029423
-
-[[correlations.distributions]]
-when = "F"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -0.44841242369698314
-sigma = 0.5389596917099945
-
-[[correlations.distributions]]
-when = "J"
-distribution = "gamma"
-
-[correlations.distributions.params]
-scale = 0.30534504531857015
-shape = 3.805978744224533
-
-[[correlations.distributions]]
-when = "I"
-distribution = "gamma"
-
-[correlations.distributions.params]
-scale = 0.32658505915395325
-shape = 3.1444406420421585
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = -0.3949669655482774
-sigma = 0.5848220841250429
 
 [[correlations]]
 entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
+fields = [
+    "price",
+    "carat",
+]
+matrix = [
+    [
+    1.0,
+    0.9628827988813001,
+],
+    [
+    0.9628827988813001,
+    1.0,
+],
+]
 conditional = []
-dependent = "price"
-given = "color"
 
-[[correlations.distributions]]
-when = "I"
-distribution = "gamma"
-round = true
+[[correlations]]
+entity = "original"
+fields = [
+    "price",
+    "y",
+]
+matrix = [
+    [
+    1.0,
+    0.8654208978642225,
+],
+    [
+    0.8654208978642225,
+    1.0,
+],
+]
+conditional = []
 
-[correlations.distributions.params]
-scale = 4378.904006564539
-shape = 1.1628194969010919
+[[correlations]]
+entity = "original"
+fields = [
+    "price",
+    "y",
+]
+matrix = [
+    [
+    1.0,
+    0.9627188193892315,
+],
+    [
+    0.9627188193892315,
+    1.0,
+],
+]
+conditional = []
 
-[[correlations.distributions]]
-when = "H"
-distribution = "log_normal"
-round = true
+[[correlations]]
+entity = "original"
+fields = [
+    "x",
+    "carat",
+]
+matrix = [
+    [
+    1.0,
+    0.9750942267265641,
+],
+    [
+    0.9750942267265641,
+    1.0,
+],
+]
+conditional = []
 
-[correlations.distributions.params]
-mu = 7.918445902669146
-sigma = 1.0631537395843467
+[[correlations]]
+entity = "original"
+fields = [
+    "x",
+    "carat",
+]
+matrix = [
+    [
+    1.0,
+    0.9961166041570526,
+],
+    [
+    0.9961166041570526,
+    1.0,
+],
+]
+conditional = []
 
-[[correlations.distributions]]
-when = "D"
-distribution = "log_normal"
-round = true
+[[correlations]]
+entity = "original"
+fields = [
+    "x",
+    "y",
+]
+matrix = [
+    [
+    1.0,
+    0.9747014796704275,
+],
+    [
+    0.9747014796704275,
+    1.0,
+],
+]
+conditional = []
 
-[correlations.distributions.params]
-mu = 7.616904920536967
-sigma = 0.9262901822353674
+[[correlations]]
+entity = "original"
+fields = [
+    "x",
+    "y",
+]
+matrix = [
+    [
+    1.0,
+    0.9978949275849379,
+],
+    [
+    0.9978949275849379,
+    1.0,
+],
+]
+conditional = []
 
-[[correlations.distributions]]
-when = "F"
-distribution = "log_normal"
-round = true
+[[correlations]]
+entity = "original"
+fields = [
+    "carat",
+    "y",
+]
+matrix = [
+    [
+    1.0,
+    0.9517221990130819,
+],
+    [
+    0.9517221990130819,
+    1.0,
+],
+]
+conditional = []
 
-[correlations.distributions.params]
-mu = 7.762439593363952
-sigma = 0.9674636914148415
-
-[[correlations.distributions]]
-when = "G"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.789583395130484
-sigma = 1.0276692184519838
-
-[[correlations.distributions]]
-when = "E"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.579404675448197
-sigma = 0.9253725869219571
-
-[[correlations.distributions]]
-when = "J"
-distribution = "gamma"
-round = true
-
-[correlations.distributions.params]
-scale = 3698.56580687781
-shape = 1.4394276857377826
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 7.786768479077399
-sigma = 1.014639937514435
+[[correlations]]
+entity = "original"
+fields = [
+    "carat",
+    "y",
+]
+matrix = [
+    [
+    1.0,
+    0.9955717485692812,
+],
+    [
+    0.9955717485692812,
+    1.0,
+],
+]
+conditional = []
 
 [[correlations]]
 entity = "original"
@@ -1094,20 +927,28 @@ dependent = "carat"
 given = "clarity"
 
 [[correlations.distributions]]
-when = "SI1"
+when = "VS2"
 distribution = "log_normal"
 
 [correlations.distributions.params]
-mu = -0.30153069245816827
-sigma = 0.5369799534270397
+mu = -0.4319771182220129
+sigma = 0.5701007090493591
 
 [[correlations.distributions]]
-when = "IF"
-distribution = "pareto"
+when = "VS1"
+distribution = "log_normal"
 
 [correlations.distributions.params]
-scale = 0.23
-shape = 1.534368563592327
+mu = -0.47818393699364115
+sigma = 0.5617908825710916
+
+[[correlations.distributions]]
+when = "I1"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 0.1436717088255041
+sigma = 0.4614988620216725
 
 [[correlations.distributions]]
 when = "VVS1"
@@ -1126,12 +967,12 @@ scale = 0.2476702994421846
 shape = 4.351141290733264
 
 [[correlations.distributions]]
-when = "VS2"
+when = "SI1"
 distribution = "log_normal"
 
 [correlations.distributions.params]
-mu = -0.4319771182220129
-sigma = 0.5701007090493591
+mu = -0.30153069245816827
+sigma = 0.5369799534270397
 
 [[correlations.distributions]]
 when = "VVS2"
@@ -1142,20 +983,12 @@ scale = 0.23
 shape = 1.2558870466853695
 
 [[correlations.distributions]]
-when = "VS1"
-distribution = "log_normal"
+when = "IF"
+distribution = "pareto"
 
 [correlations.distributions.params]
-mu = -0.47818393699364115
-sigma = 0.5617908825710916
-
-[[correlations.distributions]]
-when = "I1"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 0.1436717088255041
-sigma = 0.4614988620216725
+scale = 0.23
+shape = 1.534368563592327
 
 [correlations.default]
 kind = "log_normal"
@@ -1174,15 +1007,6 @@ dependent = "price"
 given = "clarity"
 
 [[correlations.distributions]]
-when = "VVS1"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.322970136595668
-sigma = 0.8936451661493334
-
-[[correlations.distributions]]
 when = "VS1"
 distribution = "log_normal"
 round = true
@@ -1190,24 +1014,6 @@ round = true
 [correlations.distributions.params]
 mu = 7.724773097091837
 sigma = 1.0458059559401576
-
-[[correlations.distributions]]
-when = "VVS2"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.530843457557153
-sigma = 1.024375882932501
-
-[[correlations.distributions]]
-when = "SI2"
-distribution = "gamma"
-round = true
-
-[correlations.distributions.params]
-scale = 3584.718640119787
-shape = 1.4123921885939617
 
 [[correlations.distributions]]
 when = "VS2"
@@ -1244,6 +1050,184 @@ round = true
 [correlations.distributions.params]
 mu = 7.405190436660518
 sigma = 0.9189940513068667
+
+[[correlations.distributions]]
+when = "SI2"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 3584.718640119787
+shape = 1.4123921885939617
+
+[[correlations.distributions]]
+when = "VVS1"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.322970136595668
+sigma = 0.8936451661493334
+
+[[correlations.distributions]]
+when = "VVS2"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.530843457557153
+sigma = 1.024375882932501
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 7.786768479077399
+sigma = 1.014639937514435
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "carat"
+given = "color"
+
+[[correlations.distributions]]
+when = "E"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -0.5595004855016285
+sigma = 0.5238619858939542
+
+[[correlations.distributions]]
+when = "H"
+distribution = "gamma"
+
+[correlations.distributions.params]
+scale = 0.29793157055115305
+shape = 3.060431397925473
+
+[[correlations.distributions]]
+when = "D"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -0.5525351167344574
+sigma = 0.509568951829507
+
+[[correlations.distributions]]
+when = "G"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -0.42059409775193307
+sigma = 0.5708125363029423
+
+[[correlations.distributions]]
+when = "J"
+distribution = "gamma"
+
+[correlations.distributions.params]
+scale = 0.30534504531857015
+shape = 3.805978744224533
+
+[[correlations.distributions]]
+when = "F"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -0.44841242369698314
+sigma = 0.5389596917099945
+
+[[correlations.distributions]]
+when = "I"
+distribution = "gamma"
+
+[correlations.distributions.params]
+scale = 0.32658505915395325
+shape = 3.1444406420421585
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = -0.3949669655482774
+sigma = 0.5848220841250429
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "price"
+given = "color"
+
+[[correlations.distributions]]
+when = "F"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.762439593363952
+sigma = 0.9674636914148415
+
+[[correlations.distributions]]
+when = "E"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.579404675448197
+sigma = 0.9253725869219571
+
+[[correlations.distributions]]
+when = "H"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.918445902669146
+sigma = 1.0631537395843467
+
+[[correlations.distributions]]
+when = "J"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 3698.56580687781
+shape = 1.4394276857377826
+
+[[correlations.distributions]]
+when = "D"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.616904920536967
+sigma = 0.9262901822353674
+
+[[correlations.distributions]]
+when = "G"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.789583395130484
+sigma = 1.0276692184519838
+
+[[correlations.distributions]]
+when = "I"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 4378.904006564539
+shape = 1.1628194969010919
 
 [correlations.default]
 kind = "log_normal"

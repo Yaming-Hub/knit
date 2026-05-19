@@ -32,11 +32,11 @@ value = "Sierra Leone"
 weight = 0.25806451612903225
 
 [[entities.fields.generator.choices]]
-value = "Senegal"
+value = "Mali"
 weight = 0.06451612903225806
 
 [[entities.fields.generator.choices]]
-value = "Mali"
+value = "Senegal"
 weight = 0.06451612903225806
 
 [entities.fields.stats]
@@ -59,11 +59,11 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 10
+value = 9
 weight = 0.12903225806451613
 
 [[entities.fields.generator.choices]]
-value = 9
+value = 10
 weight = 0.12903225806451613
 
 [[entities.fields.generator.choices]]
@@ -75,15 +75,15 @@ value = 11
 weight = 0.12903225806451613
 
 [[entities.fields.generator.choices]]
+value = 5
+weight = 0.0967741935483871
+
+[[entities.fields.generator.choices]]
 value = 12
 weight = 0.0967741935483871
 
 [[entities.fields.generator.choices]]
 value = 7
-weight = 0.0967741935483871
-
-[[entities.fields.generator.choices]]
-value = 5
 weight = 0.0967741935483871
 
 [[entities.fields.generator.choices]]
@@ -342,6 +342,45 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
+dependent = "Lat"
+given = "Country"
+
+[[correlations.distributions]]
+when = "Guinea"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 9.950000000000001
+std_dev = 0.0000000000000017763568394002505
+
+[[correlations.distributions]]
+when = "Liberia"
+distribution = "exponential"
+
+[correlations.distributions.params]
+lambda = 0.15552099533437014
+
+[[correlations.distributions]]
+when = "Sierra Leone"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 2.1353491736181316
+sigma = 0.0000000000000004440892098500626
+
+[correlations.default]
+kind = "pareto"
+
+[correlations.default.params]
+scale = 6.43
+shape = 3.03988262388238
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
 dependent = "Value"
 given = "Country"
 
@@ -377,42 +416,3 @@ kind = "gamma"
 [correlations.default.params]
 scale = 1115.6703521050154
 shape = 0.5106998910544643
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Lat"
-given = "Country"
-
-[[correlations.distributions]]
-when = "Guinea"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 9.950000000000001
-std_dev = 0.0000000000000017763568394002505
-
-[[correlations.distributions]]
-when = "Sierra Leone"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 2.1353491736181316
-sigma = 0.0000000000000004440892098500626
-
-[[correlations.distributions]]
-when = "Liberia"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 0.15552099533437014
-
-[correlations.default]
-kind = "pareto"
-
-[correlations.default.params]
-scale = 6.43
-shape = 3.03988262388238

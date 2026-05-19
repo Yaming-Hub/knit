@@ -243,6 +243,42 @@ direction = "asc"
 entity = "original"
 fields = [
     "",
+    "id",
+]
+matrix = [
+    [
+    1.0,
+    0.9995059898426446,
+],
+    [
+    0.9995059898426446,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "id",
+]
+matrix = [
+    [
+    1.0,
+    0.9995059898426446,
+],
+    [
+    0.9995059898426446,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
     "pulse",
 ]
 matrix = [
@@ -278,44 +314,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "",
     "id",
-]
-matrix = [
-    [
-    1.0,
-    0.9995059898426446,
-],
-    [
-    0.9995059898426446,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "",
-    "id",
-]
-matrix = [
-    [
-    1.0,
-    0.9995059898426446,
-],
-    [
-    0.9995059898426446,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "pulse",
-    "id",
 ]
 matrix = [
     [
@@ -332,8 +332,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "pulse",
     "id",
+    "pulse",
 ]
 matrix = [
     [
@@ -391,15 +391,6 @@ dependent = ""
 given = "diet"
 
 [[correlations.distributions]]
-when = "no fat"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 89.0
-min = 15.0
-
-[[correlations.distributions]]
 when = "low fat"
 distribution = "uniform"
 round = true
@@ -407,6 +398,15 @@ round = true
 [correlations.distributions.params]
 max = 74.0
 min = 0.0
+
+[[correlations.distributions]]
+when = "no fat"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 89.0
+min = 15.0
 
 [correlations.default]
 kind = "uniform"
@@ -425,13 +425,13 @@ dependent = "id"
 given = "kind"
 
 [[correlations.distributions]]
-when = "running"
+when = "walking"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 30.0
-min = 21.0
+max = 20.0
+min = 11.0
 
 [[correlations.distributions]]
 when = "rest"
@@ -443,13 +443,13 @@ max = 10.0
 min = 1.0
 
 [[correlations.distributions]]
-when = "walking"
+when = "running"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 20.0
-min = 11.0
+max = 30.0
+min = 21.0
 
 [correlations.default]
 kind = "uniform"
@@ -468,15 +468,6 @@ dependent = ""
 given = "kind"
 
 [[correlations.distributions]]
-when = "walking"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 59.0
-min = 30.0
-
-[[correlations.distributions]]
 when = "running"
 distribution = "uniform"
 round = true
@@ -493,6 +484,15 @@ round = true
 [correlations.distributions.params]
 max = 29.0
 min = 0.0
+
+[[correlations.distributions]]
+when = "walking"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 59.0
+min = 30.0
 
 [correlations.default]
 kind = "uniform"

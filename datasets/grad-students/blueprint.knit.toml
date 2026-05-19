@@ -103,19 +103,19 @@ value = "Computers & Mathematics"
 weight = 0.06358381502890173
 
 [[entities.fields.generator.choices]]
-value = "Agriculture & Natural Resources"
-weight = 0.057803468208092484
-
-[[entities.fields.generator.choices]]
 value = "Physical Sciences"
 weight = 0.057803468208092484
 
 [[entities.fields.generator.choices]]
-value = "Social Science"
-weight = 0.05202312138728324
+value = "Agriculture & Natural Resources"
+weight = 0.057803468208092484
 
 [[entities.fields.generator.choices]]
 value = "Psychology & Social Work"
+weight = 0.05202312138728324
+
+[[entities.fields.generator.choices]]
+value = "Social Science"
 weight = 0.05202312138728324
 
 [[entities.fields.generator.choices]]
@@ -1363,368 +1363,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "Nongrad_total",
-    "Nongrad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.9613950117969683,
-],
-    [
-    0.9613950117969683,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Nongrad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.9730160698430959,
-],
-    [
-    0.9730160698430959,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Nongrad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.9944568454669476,
-],
-    [
-    0.9944568454669476,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Nongrad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.996945269803598,
-],
-    [
-    0.996945269803598,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.8633042663523565,
-],
-    [
-    0.8633042663523565,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.9034455026086876,
-],
-    [
-    0.9034455026086876,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_total",
-]
-matrix = [
-    [
-    1.0,
-    0.8079785629250378,
-],
-    [
-    0.8079785629250378,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_total",
-]
-matrix = [
-    [
-    1.0,
-    0.8656173660716355,
-],
-    [
-    0.8656173660716355,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.8293195583269578,
-],
-    [
-    0.8293195583269578,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.87660558751408,
-],
-    [
-    0.87660558751408,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9844012734469099,
-],
-    [
-    0.9844012734469099,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9914337763232915,
-],
-    [
-    0.9914337763232915,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.8156353225401607,
-],
-    [
-    0.8156353225401607,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.8740973971018879,
-],
-    [
-    0.8740973971018879,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.8138589941210767,
-],
-    [
-    0.8138589941210767,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_total",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.8727605212046484,
-],
-    [
-    0.8727605212046484,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployment_rate",
-    "Nongrad_median",
-]
-matrix = [
-    [
-    1.0,
-    -0.30491531415992124,
-],
-    [
-    -0.30491531415992124,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployment_rate",
-    "Grad_P25",
-]
-matrix = [
-    [
-    1.0,
-    -0.34963862192276374,
-],
-    [
-    -0.34963862192276374,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployment_rate",
-    "Grad_P25",
-]
-matrix = [
-    [
-    1.0,
-    -0.3263360026319013,
-],
-    [
-    -0.3263360026319013,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployment_rate",
-    "Grad_unemployment_rate",
-]
-matrix = [
-    [
-    1.0,
-    0.3973411316299273,
-],
-    [
-    0.3973411316299273,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployment_rate",
     "Nongrad_P25",
+    "Nongrad_unemployment_rate",
 ]
 matrix = [
     [
@@ -1741,8 +1381,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "Nongrad_P25",
     "Nongrad_unemployment_rate",
-    "Nongrad_P25",
 ]
 matrix = [
     [
@@ -1759,196 +1399,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Nongrad_median",
-    "Grad_premium",
-]
-matrix = [
-    [
-    1.0,
-    -0.38652988501860164,
-],
-    [
-    -0.38652988501860164,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_premium",
-]
-matrix = [
-    [
-    1.0,
-    -0.3833916494060065,
-],
-    [
-    -0.3833916494060065,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_P75",
-]
-matrix = [
-    [
-    1.0,
-    0.5899293487971757,
-],
-    [
-    0.5899293487971757,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_P75",
-]
-matrix = [
-    [
-    1.0,
-    0.7902223767894256,
-],
-    [
-    0.7902223767894256,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.8646629995855842,
-],
-    [
-    0.8646629995855842,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.8530980170160615,
-],
-    [
-    0.8530980170160615,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_median",
-]
-matrix = [
-    [
-    1.0,
-    0.8127575255870095,
-],
-    [
-    0.8127575255870095,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Grad_median",
-]
-matrix = [
-    [
-    1.0,
-    0.8675304046430834,
-],
-    [
-    0.8675304046430834,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
     "Nongrad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.9544204546527999,
-],
-    [
-    0.9544204546527999,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
-    "Nongrad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.9572455081284507,
-],
-    [
-    0.9572455081284507,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_median",
     "Nongrad_P75",
 ]
 matrix = [
     [
     1.0,
-    0.9437109158544533,
+    0.8656822413521381,
 ],
     [
-    0.9437109158544533,
+    0.8656822413521381,
     1.0,
 ],
 ]
@@ -1957,16 +1417,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Nongrad_median",
+    "Nongrad_P25",
     "Nongrad_P75",
 ]
 matrix = [
     [
     1.0,
-    0.9582465251077572,
+    0.8980378613495044,
 ],
     [
-    0.9582465251077572,
+    0.8980378613495044,
     1.0,
 ],
 ]
@@ -1975,674 +1435,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Nongrad_unemployed",
-    "Nongrad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.9702641686884206,
-],
-    [
-    0.9702641686884206,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Nongrad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.9744020599858867,
-],
-    [
-    0.9744020599858867,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.8717883742962773,
-],
-    [
-    0.8717883742962773,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.8949826113465094,
-],
-    [
-    0.8949826113465094,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_total",
-]
-matrix = [
-    [
-    1.0,
-    0.7432463620618868,
-],
-    [
-    0.7432463620618868,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_total",
-]
-matrix = [
-    [
-    1.0,
-    0.8230927280762576,
-],
-    [
-    0.8230927280762576,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.7888506583658204,
-],
-    [
-    0.7888506583658204,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.8339384485999863,
-],
-    [
-    0.8339384485999863,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9725303060224648,
-],
-    [
-    0.9725303060224648,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9688013155376357,
-],
-    [
-    0.9688013155376357,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.7746144618894211,
-],
-    [
-    0.7746144618894211,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.8284205451734695,
-],
-    [
-    0.8284205451734695,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.7652866024097917,
-],
-    [
-    0.7652866024097917,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.8331121852456302,
-],
-    [
-    0.8331121852456302,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_unemployed",
-    "Grad_share",
-]
-matrix = [
-    [
-    1.0,
-    -0.3397692256901522,
-],
-    [
-    -0.3397692256901522,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_premium",
-    "Grad_P75",
-]
-matrix = [
-    [
-    1.0,
-    0.44776415529014274,
-],
-    [
-    0.44776415529014274,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_premium",
     "Nongrad_P25",
-]
-matrix = [
-    [
-    1.0,
-    -0.3863424736155084,
-],
-    [
-    -0.3863424736155084,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_premium",
-    "Nongrad_P25",
-]
-matrix = [
-    [
-    1.0,
-    -0.3991147112985138,
-],
-    [
-    -0.3991147112985138,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_premium",
-    "Grad_share",
-]
-matrix = [
-    [
-    1.0,
-    0.3668195107996787,
-],
-    [
-    0.3668195107996787,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_premium",
-    "Grad_share",
-]
-matrix = [
-    [
-    1.0,
-    0.3077832421647714,
-],
-    [
-    0.3077832421647714,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.8431015685740566,
-],
-    [
-    0.8431015685740566,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_unemployed",
-]
-matrix = [
-    [
-    1.0,
-    0.8886909825013846,
-],
-    [
-    0.8886909825013846,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_total",
-]
-matrix = [
-    [
-    1.0,
-    0.7642238274029564,
-],
-    [
-    0.7642238274029564,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_total",
-]
-matrix = [
-    [
-    1.0,
-    0.8439816252647974,
-],
-    [
-    0.8439816252647974,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.8029959727144312,
-],
-    [
-    0.8029959727144312,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.8603306896088184,
-],
-    [
-    0.8603306896088184,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9962898696462561,
-],
-    [
-    0.9962898696462561,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9965095419758866,
-],
-    [
-    0.9965095419758866,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.7870598311826987,
-],
-    [
-    0.7870598311826987,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.8568988354721563,
-],
-    [
-    0.8568988354721563,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.7804184050255624,
-],
-    [
-    0.7804184050255624,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.8543417496789983,
-],
-    [
-    0.8543417496789983,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Nongrad_employed",
-    "Grad_share",
-]
-matrix = [
-    [
-    1.0,
-    -0.32860136002707074,
-],
-    [
-    -0.32860136002707074,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "Grad_P75",
-    "Grad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.7113209183535462,
-],
-    [
-    0.7113209183535462,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P75",
-    "Grad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.8362051433526466,
-],
-    [
-    0.8362051433526466,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P75",
-    "Grad_median",
-]
-matrix = [
-    [
-    1.0,
-    0.9004452092415018,
-],
-    [
-    0.9004452092415018,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P75",
-    "Grad_median",
-]
-matrix = [
-    [
-    1.0,
-    0.9518046228600786,
-],
-    [
-    0.9518046228600786,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P75",
-    "Nongrad_P25",
 ]
 matrix = [
     [
@@ -2659,8 +1453,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_P75",
     "Nongrad_P25",
+    "Grad_P75",
 ]
 matrix = [
     [
@@ -2677,16 +1471,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_P75",
-    "Nongrad_P75",
+    "Nongrad_P25",
+    "Grad_median",
 ]
 matrix = [
     [
     1.0,
-    0.676786375828968,
+    0.7668054266322804,
 ],
     [
-    0.676786375828968,
+    0.7668054266322804,
     1.0,
 ],
 ]
@@ -2695,16 +1489,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_P75",
-    "Nongrad_P75",
+    "Nongrad_P25",
+    "Grad_median",
 ]
 matrix = [
     [
     1.0,
-    0.8406047866372369,
+    0.8121982356599474,
 ],
     [
-    0.8406047866372369,
+    0.8121982356599474,
     1.0,
 ],
 ]
@@ -2713,16 +1507,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_unemployed",
-    "Grad_total",
+    "Nongrad_P25",
+    "Nongrad_median",
 ]
 matrix = [
     [
     1.0,
-    0.9366660509256028,
+    0.9544204546527999,
 ],
     [
-    0.9366660509256028,
+    0.9544204546527999,
     1.0,
 ],
 ]
@@ -2731,16 +1525,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_unemployed",
-    "Grad_total",
+    "Nongrad_P25",
+    "Nongrad_median",
 ]
 matrix = [
     [
     1.0,
-    0.9490962103205154,
+    0.9572455081284507,
 ],
     [
-    0.9490962103205154,
+    0.9572455081284507,
     1.0,
 ],
 ]
@@ -2749,16 +1543,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_unemployed",
-    "Grad_full_time_year_round",
+    "Nongrad_P25",
+    "Grad_premium",
 ]
 matrix = [
     [
     1.0,
-    0.9549646501507347,
+    -0.3863424736155084,
 ],
     [
-    0.9549646501507347,
+    -0.3863424736155084,
     1.0,
 ],
 ]
@@ -2767,16 +1561,52 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_unemployed",
-    "Grad_full_time_year_round",
+    "Nongrad_P25",
+    "Grad_premium",
 ]
 matrix = [
     [
     1.0,
-    0.9474216673143063,
+    -0.3991147112985138,
 ],
     [
-    0.9474216673143063,
+    -0.3991147112985138,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P25",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8655538794889159,
+],
+    [
+    0.8655538794889159,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P25",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8520401344100833,
+],
+    [
+    0.8520401344100833,
     1.0,
 ],
 ]
@@ -2858,6 +1688,150 @@ conditional = []
 entity = "original"
 fields = [
     "Grad_unemployed",
+    "Nongrad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.8431015685740566,
+],
+    [
+    0.8431015685740566,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Nongrad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.8886909825013846,
+],
+    [
+    0.8886909825013846,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Grad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.9366660509256028,
+],
+    [
+    0.9366660509256028,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Grad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.9490962103205154,
+],
+    [
+    0.9490962103205154,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8633042663523565,
+],
+    [
+    0.8633042663523565,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.9034455026086876,
+],
+    [
+    0.9034455026086876,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.9549646501507347,
+],
+    [
+    0.9549646501507347,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.9474216673143063,
+],
+    [
+    0.9474216673143063,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployed",
     "Grad_employed",
 ]
 matrix = [
@@ -2893,16 +1867,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_P25",
-    "Grad_median",
+    "Grad_unemployed",
+    "Nongrad_unemployed",
 ]
 matrix = [
     [
     1.0,
-    0.9152484542269193,
+    0.8717883742962773,
 ],
     [
-    0.9152484542269193,
+    0.8717883742962773,
     1.0,
 ],
 ]
@@ -2911,376 +1885,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_P25",
-    "Grad_median",
+    "Grad_unemployed",
+    "Nongrad_unemployed",
 ]
 matrix = [
     [
     1.0,
-    0.9338307385433456,
+    0.8949826113465094,
 ],
     [
-    0.9338307385433456,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P25",
-    "Nongrad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.8655538794889159,
-],
-    [
-    0.8655538794889159,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P25",
-    "Nongrad_P25",
-]
-matrix = [
-    [
-    1.0,
-    0.8520401344100833,
-],
-    [
-    0.8520401344100833,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P25",
-    "Nongrad_P75",
-]
-matrix = [
-    [
-    1.0,
-    0.8217728482486178,
-],
-    [
-    0.8217728482486178,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_P25",
-    "Nongrad_P75",
-]
-matrix = [
-    [
-    1.0,
-    0.8412197760526322,
-],
-    [
-    0.8412197760526322,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9800891242092352,
-],
-    [
-    0.9800891242092352,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Grad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.9926667933676662,
-],
-    [
-    0.9926667933676662,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.7311077001498564,
-],
-    [
-    0.7311077001498564,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.8276534202316774,
-],
-    [
-    0.8276534202316774,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.982136510372104,
-],
-    [
-    0.982136510372104,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.9934594244492609,
-],
-    [
-    0.9934594244492609,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.992305869613638,
-],
-    [
-    0.992305869613638,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_total",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.9968826918708947,
-],
-    [
-    0.9968826918708947,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_full_time_year_round",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.7824516443218441,
-],
-    [
-    0.7824516443218441,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_full_time_year_round",
-    "Nongrad_full_time_year_round",
-]
-matrix = [
-    [
-    1.0,
-    0.8488186676926357,
-],
-    [
-    0.8488186676926357,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_full_time_year_round",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.9971419331265403,
-],
-    [
-    0.9971419331265403,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_full_time_year_round",
-    "Grad_sample_size",
-]
-matrix = [
-    [
-    1.0,
-    0.998097160696292,
-],
-    [
-    0.998097160696292,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_full_time_year_round",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.9953303346974471,
-],
-    [
-    0.9953303346974471,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_full_time_year_round",
-    "Grad_employed",
-]
-matrix = [
-    [
-    1.0,
-    0.9971214150956516,
-],
-    [
-    0.9971214150956516,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_unemployment_rate",
-    "Grad_share",
-]
-matrix = [
-    [
-    1.0,
-    -0.40444706878715536,
-],
-    [
-    -0.40444706878715536,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Grad_unemployment_rate",
-    "Grad_share",
-]
-matrix = [
-    [
-    1.0,
-    -0.42894623396730186,
-],
-    [
-    -0.42894623396730186,
+    0.8949826113465094,
     1.0,
 ],
 ]
@@ -3317,6 +1931,150 @@ matrix = [
 ],
     [
     0.8445674633070748,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Nongrad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.9962898696462561,
+],
+    [
+    0.9962898696462561,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Nongrad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.9965095419758866,
+],
+    [
+    0.9965095419758866,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Grad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.7311077001498564,
+],
+    [
+    0.7311077001498564,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Grad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8276534202316774,
+],
+    [
+    0.8276534202316774,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.9844012734469099,
+],
+    [
+    0.9844012734469099,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.9914337763232915,
+],
+    [
+    0.9914337763232915,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.7824516443218441,
+],
+    [
+    0.7824516443218441,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_full_time_year_round",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.8488186676926357,
+],
+    [
+    0.8488186676926357,
     1.0,
 ],
 ]
@@ -3379,16 +2137,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_median",
-    "Nongrad_P25",
+    "Nongrad_full_time_year_round",
+    "Nongrad_unemployed",
 ]
 matrix = [
     [
     1.0,
-    0.7668054266322804,
+    0.9725303060224648,
 ],
     [
-    0.7668054266322804,
+    0.9725303060224648,
     1.0,
 ],
 ]
@@ -3397,16 +2155,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_median",
-    "Nongrad_P25",
+    "Nongrad_full_time_year_round",
+    "Nongrad_unemployed",
 ]
 matrix = [
     [
     1.0,
-    0.8121982356599474,
+    0.9688013155376357,
 ],
     [
-    0.8121982356599474,
+    0.9688013155376357,
     1.0,
 ],
 ]
@@ -3415,16 +2173,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_median",
-    "Nongrad_P75",
+    "Grad_sample_size",
+    "Nongrad_employed",
 ]
 matrix = [
     [
     1.0,
-    0.8377643377078677,
+    0.7870598311826987,
 ],
     [
-    0.8377643377078677,
+    0.7870598311826987,
     1.0,
 ],
 ]
@@ -3433,16 +2191,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Grad_median",
-    "Nongrad_P75",
+    "Grad_sample_size",
+    "Nongrad_employed",
 ]
 matrix = [
     [
     1.0,
-    0.8936699059505484,
+    0.8568988354721563,
 ],
     [
-    0.8936699059505484,
+    0.8568988354721563,
     1.0,
 ],
 ]
@@ -3451,16 +2209,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Nongrad_P25",
-    "Nongrad_P75",
+    "Grad_sample_size",
+    "Grad_total",
 ]
 matrix = [
     [
     1.0,
-    0.8656822413521381,
+    0.982136510372104,
 ],
     [
-    0.8656822413521381,
+    0.982136510372104,
     1.0,
 ],
 ]
@@ -3469,16 +2227,88 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Nongrad_P25",
-    "Nongrad_P75",
+    "Grad_sample_size",
+    "Grad_total",
 ]
 matrix = [
     [
     1.0,
-    0.8980378613495044,
+    0.9934594244492609,
 ],
     [
-    0.8980378613495044,
+    0.9934594244492609,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_sample_size",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8156353225401607,
+],
+    [
+    0.8156353225401607,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_sample_size",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8740973971018879,
+],
+    [
+    0.8740973971018879,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_sample_size",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.9971419331265403,
+],
+    [
+    0.9971419331265403,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_sample_size",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.998097160696292,
+],
+    [
+    0.998097160696292,
     1.0,
 ],
 ]
@@ -3523,16 +2353,1186 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Major_category",
+    "Grad_sample_size",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.7746144618894211,
+],
+    [
+    0.7746144618894211,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_sample_size",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.8284205451734695,
+],
+    [
+    0.8284205451734695,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_unemployment_rate",
+    "Grad_unemployment_rate",
+]
+matrix = [
+    [
+    1.0,
+    0.3973411316299273,
+],
+    [
+    0.3973411316299273,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_unemployment_rate",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    -0.30491531415992124,
+],
+    [
+    -0.30491531415992124,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_unemployment_rate",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    -0.34963862192276374,
+],
+    [
+    -0.34963862192276374,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_unemployment_rate",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    -0.3263360026319013,
+],
+    [
+    -0.3263360026319013,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.7642238274029564,
+],
+    [
+    0.7642238274029564,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8439816252647974,
+],
+    [
+    0.8439816252647974,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.9944568454669476,
+],
+    [
+    0.9944568454669476,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.996945269803598,
+],
+    [
+    0.996945269803598,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.8029959727144312,
+],
+    [
+    0.8029959727144312,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.8603306896088184,
+],
+    [
+    0.8603306896088184,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.7804184050255624,
+],
+    [
+    0.7804184050255624,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.8543417496789983,
+],
+    [
+    0.8543417496789983,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Grad_share",
+]
+matrix = [
+    [
+    1.0,
+    -0.32860136002707074,
+],
+    [
+    -0.32860136002707074,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.9702641686884206,
+],
+    [
+    0.9702641686884206,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_employed",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.9744020599858867,
+],
+    [
+    0.9744020599858867,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Grad_P75",
+]
+matrix = [
+    [
+    1.0,
+    0.676786375828968,
+],
+    [
+    0.676786375828968,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Grad_P75",
+]
+matrix = [
+    [
+    1.0,
+    0.8406047866372369,
+],
+    [
+    0.8406047866372369,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Grad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.8377643377078677,
+],
+    [
+    0.8377643377078677,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Grad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.8936699059505484,
+],
+    [
+    0.8936699059505484,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.9437109158544533,
+],
+    [
+    0.9437109158544533,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.9582465251077572,
+],
+    [
+    0.9582465251077572,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8217728482486178,
+],
+    [
+    0.8217728482486178,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_P75",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8412197760526322,
+],
+    [
+    0.8412197760526322,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8079785629250378,
+],
+    [
+    0.8079785629250378,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Nongrad_total",
+]
+matrix = [
+    [
+    1.0,
+    0.8656173660716355,
+],
+    [
+    0.8656173660716355,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.9800891242092352,
+],
+    [
+    0.9800891242092352,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.9926667933676662,
+],
+    [
+    0.9926667933676662,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.992305869613638,
+],
+    [
+    0.992305869613638,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.9968826918708947,
+],
+    [
+    0.9968826918708947,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.7432463620618868,
+],
+    [
+    0.7432463620618868,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_total",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.8230927280762576,
+],
+    [
+    0.8230927280762576,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_total",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.8293195583269578,
+],
+    [
+    0.8293195583269578,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_total",
+    "Grad_full_time_year_round",
+]
+matrix = [
+    [
+    1.0,
+    0.87660558751408,
+],
+    [
+    0.87660558751408,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_total",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.8138589941210767,
+],
+    [
+    0.8138589941210767,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_total",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.8727605212046484,
+],
+    [
+    0.8727605212046484,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_total",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.9613950117969683,
+],
+    [
+    0.9613950117969683,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_total",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.9730160698430959,
+],
+    [
+    0.9730160698430959,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_full_time_year_round",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.9953303346974471,
+],
+    [
+    0.9953303346974471,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_full_time_year_round",
+    "Grad_employed",
+]
+matrix = [
+    [
+    1.0,
+    0.9971214150956516,
+],
+    [
+    0.9971214150956516,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_full_time_year_round",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.7888506583658204,
+],
+    [
+    0.7888506583658204,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_full_time_year_round",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.8339384485999863,
+],
+    [
+    0.8339384485999863,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Grad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.9004452092415018,
+],
+    [
+    0.9004452092415018,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Grad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.9518046228600786,
+],
+    [
+    0.9518046228600786,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.5899293487971757,
+],
+    [
+    0.5899293487971757,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.7902223767894256,
+],
+    [
+    0.7902223767894256,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Grad_premium",
+]
+matrix = [
+    [
+    1.0,
+    0.44776415529014274,
+],
+    [
+    0.44776415529014274,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.7113209183535462,
+],
+    [
+    0.7113209183535462,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_P75",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8362051433526466,
+],
+    [
+    0.8362051433526466,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_employed",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.7652866024097917,
+],
+    [
+    0.7652866024097917,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_employed",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    0.8331121852456302,
+],
+    [
+    0.8331121852456302,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployment_rate",
+    "Grad_share",
+]
+matrix = [
+    [
+    1.0,
+    -0.40444706878715536,
+],
+    [
+    -0.40444706878715536,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_unemployment_rate",
+    "Grad_share",
+]
+matrix = [
+    [
+    1.0,
+    -0.42894623396730186,
+],
+    [
+    -0.42894623396730186,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_median",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.8127575255870095,
+],
+    [
+    0.8127575255870095,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_median",
+    "Nongrad_median",
+]
+matrix = [
+    [
+    1.0,
+    0.8675304046430834,
+],
+    [
+    0.8675304046430834,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_median",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.9152484542269193,
+],
+    [
+    0.9152484542269193,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_median",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.9338307385433456,
+],
+    [
+    0.9338307385433456,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_share",
+    "Nongrad_unemployed",
+]
+matrix = [
+    [
+    1.0,
+    -0.3397692256901522,
+],
+    [
+    -0.3397692256901522,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_share",
+    "Grad_premium",
+]
+matrix = [
+    [
+    1.0,
+    0.3668195107996787,
+],
+    [
+    0.3668195107996787,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Grad_share",
+    "Grad_premium",
+]
+matrix = [
+    [
+    1.0,
+    0.3077832421647714,
+],
+    [
+    0.3077832421647714,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_median",
+    "Grad_premium",
+]
+matrix = [
+    [
+    1.0,
+    -0.38652988501860164,
+],
+    [
+    -0.38652988501860164,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_median",
+    "Grad_premium",
+]
+matrix = [
+    [
+    1.0,
+    -0.3833916494060065,
+],
+    [
+    -0.3833916494060065,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_median",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8646629995855842,
+],
+    [
+    0.8646629995855842,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Nongrad_median",
+    "Grad_P25",
+]
+matrix = [
+    [
+    1.0,
+    0.8530980170160615,
+],
+    [
+    0.8530980170160615,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "Major",
+    "Major_category",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999999835,
+    1.0,
 ],
     [
-    0.9999999999999835,
+    1.0,
     1.0,
 ],
 ]
@@ -3544,162 +3544,116 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Grad_premium"
+dependent = "Nongrad_P25"
 given = "Major_category"
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.52
-min = 0.293103448
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.428571429
-min = -0.025
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.666666667
-min = 0.129411765
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.525
-min = 0.19047619
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.181818182
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.375
-min = 0.120689655
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.447368421
-min = 0.236111111
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.464583333
-min = -0.018181818
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.335526316
-min = 0.14
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.416666667
-min = 0.065217391
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 2.3304220414280974
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.533333333
-min = 0.3
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.40791427953333337
-std_dev = 0.08867052354411677
 
 [[correlations.distributions]]
 when = "Industrial Arts & Consumer Services"
 distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.380952381
-min = 0.129807692
-
-[correlations.default]
-kind = "normal"
-
-[correlations.default.params]
-mean = 0.3285047440462428
-std_dev = 0.18526763180087802
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Nongrad_P75"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 74000.0
-shape = 9.328427507576615
+max = 47000.0
+min = 29000.0
 
 [[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 73266.66666666667
-std_dev = 6082.397188243757
-
-[[correlations.distributions]]
-when = "Education"
+when = "Business"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 79000.0
-min = 48000.0
+max = 53000.0
+min = 35000.0
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 53000.0
+min = 36000.0
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 44000.0
+min = 34000.0
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 32700.0
+shape = 4.763734169160811
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 42000.0
+min = 32000.0
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 34000.0
+min = 26000.0
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.413372308280243
+sigma = 0.11600958464817936
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 38000.0
+shape = 9.265819782619602
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 41000.0
+min = 25000.0
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 39000.0
+min = 28000.0
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 40500.0
+min = 30000.0
 
 [[correlations.distributions]]
 when = "Law & Public Policy"
@@ -3707,105 +3661,24 @@ distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 94000.0
-min = 70000.0
+max = 41800.0
+min = 34000.0
 
 [[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 110000.0
-min = 80000.0
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 75000.0
-shape = 11.28774254841332
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 78000.0
-shape = 4.787296269104818
-
-[[correlations.distributions]]
-when = "Arts"
+when = "Engineering"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
 max = 75000.0
-min = 59000.0
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 85000.0
-min = 50000.0
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 85000.0
-shape = 4.088387391465151
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 60000.0
-shape = 4.062116808056529
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.441924041734286
-sigma = 0.12444592521783432
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 70000.0
-shape = 6.209522878810569
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 100000.0
-min = 60000.0
+min = 40000.0
 
 [correlations.default]
 kind = "log_normal"
 
 [correlations.default.params]
-mu = 11.315241008705165
-sigma = 0.2303488184160539
+mu = 10.5739323344248
+sigma = 0.2162708052964215
 
 [[correlations]]
 entity = "original"
@@ -3817,67 +3690,13 @@ dependent = "Grad_median"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Biology & Life Science"
+when = "Psychology & Social Work"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 110000.0
-min = 58000.0
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 64000.0
-shape = 6.043071828355243
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 100000.0
-min = 80000.0
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 94327.58620689655
-std_dev = 12134.501866698656
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 67333.33333333333
-std_dev = 7904.991390816874
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 60000.0
-shape = 3.7943006048396484
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 100000.0
-min = 57000.0
+max = 75000.0
+min = 50000.0
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
@@ -3889,31 +3708,13 @@ max = 80000.0
 min = 54000.0
 
 [[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "uniform"
+when = "Humanities & Liberal Arts"
+distribution = "normal"
 round = true
 
 [correlations.distributions.params]
-max = 89000.0
-min = 68000.0
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 65000.0
-min = 50000.0
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 110000.0
-min = 65000.0
+mean = 67333.33333333333
+std_dev = 7904.991390816874
 
 [[correlations.distributions]]
 when = "Industrial Arts & Consumer Services"
@@ -3934,12 +3735,84 @@ max = 60000.0
 min = 50750.0
 
 [[correlations.distributions]]
-when = "Psychology & Social Work"
+when = "Business"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 75000.0
+max = 110000.0
+min = 65000.0
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 60000.0
+shape = 3.7943006048396484
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 89000.0
+min = 68000.0
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "normal"
+round = true
+
+[correlations.distributions.params]
+mean = 94327.58620689655
+std_dev = 12134.501866698656
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 64000.0
+shape = 6.043071828355243
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 100000.0
+min = 57000.0
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 110000.0
+min = 58000.0
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 100000.0
+min = 80000.0
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 65000.0
 min = 50000.0
 
 [correlations.default]
@@ -3955,24 +3828,147 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Nongrad_unemployment_rate"
+dependent = "Nongrad_total"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Arts"
+when = "Computers & Mathematics"
 distribution = "log_normal"
+round = true
 
 [correlations.distributions.params]
-mu = -2.5197722323574965
-sigma = 0.32053716753301514
+mu = 11.007889260546731
+sigma = 1.3485532224031043
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 6519.0
+shape = 0.5543832566838813
 
 [[correlations.distributions]]
 when = "Humanities & Liberal Arts"
-distribution = "normal"
+distribution = "log_normal"
+round = true
 
 [correlations.distributions.params]
-mean = 0.06611181999999999
-std_dev = 0.009520953297784544
+mu = 11.709597315687533
+sigma = 1.1155529002213738
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3899.0
+shape = 0.4960152659929165
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 123984.0
+min = 6242.0
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.504372048805905
+sigma = 1.6959852386486831
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 26320.0
+shape = 0.7220233668894147
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 4506.0
+shape = 0.5565555590802798
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 12.382332979550009
+sigma = 1.67026819175797
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000007449217619315183
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 5643.0
+shape = 0.480289224896734
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.0000036889947858108144
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 8921.0
+shape = 0.5966215172060352
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000004826479029250273
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 11.159290114582962
+sigma = 1.534706045997877
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Nongrad_unemployment_rate"
+given = "Major_category"
 
 [[correlations.distributions]]
 when = "Health"
@@ -3983,20 +3979,20 @@ max = 0.060999683
 min = 0.021716309
 
 [[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.092359362
-min = 0.056471818
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
+when = "Education"
 distribution = "normal"
 
 [correlations.distributions.params]
-mean = 0.04570847278571428
-std_dev = 0.011682829894789712
+mean = 0.046368384125
+std_dev = 0.024886755557757764
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "beta"
+
+[correlations.distributions.params]
+alpha = 11.208002247362518
+beta = 190.75368493465723
 
 [[correlations.distributions]]
 when = "Physical Sciences"
@@ -4007,14 +4003,6 @@ scale = 0.037532988
 shape = 3.033348915401744
 
 [[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.072280011
-min = 0.044460127
-
-[[correlations.distributions]]
 when = "Industrial Arts & Consumer Services"
 distribution = "pareto"
 
@@ -4023,28 +4011,28 @@ scale = 0.041817237
 shape = 3.8859493901558464
 
 [[correlations.distributions]]
-when = "Social Science"
+when = "Psychology & Social Work"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.067269885
-min = 0.055632913
+max = 0.092359362
+min = 0.056471818
 
 [[correlations.distributions]]
-when = "Education"
+when = "Arts"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -2.5197722323574965
+sigma = 0.32053716753301514
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
 distribution = "normal"
 
 [correlations.distributions.params]
-mean = 0.046368384125
-std_dev = 0.024886755557757764
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.04669959734482759
-std_dev = 0.014304221368836008
+mean = 0.04570847278571428
+std_dev = 0.011682829894789712
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
@@ -4063,12 +4051,36 @@ max = 0.065771065
 min = 0.038372764
 
 [[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "beta"
+when = "Humanities & Liberal Arts"
+distribution = "normal"
 
 [correlations.distributions.params]
-alpha = 11.208002247362518
-beta = 190.75368493465723
+mean = 0.06611181999999999
+std_dev = 0.009520953297784544
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.072280011
+min = 0.044460127
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.04669959734482759
+std_dev = 0.014304221368836008
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.067269885
+min = 0.055632913
 
 [correlations.default]
 kind = "normal"
@@ -4083,70 +4095,8 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Grad_employed"
+dependent = "Grad_full_time_year_round"
 given = "Major_category"
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.311717415358256
-sigma = 1.0773274999739855
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.921538229855592
-sigma = 1.648038799623378
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 1248.0
-shape = 0.47123286118994395
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.021839000637543
-sigma = 0.8917923144877307
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 4796.0
-shape = 0.5108222843572696
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00001893715232571902
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 9.981289058717994
-sigma = 1.3305830650938677
 
 [[correlations.distributions]]
 when = "Humanities & Liberal Arts"
@@ -4154,34 +4104,8 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 12217.0
-shape = 0.5781609382278599
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 10916.0
-shape = 0.5627907935686897
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000022238827213208085
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3880.0
-shape = 0.599343170369133
+scale = 8628.0
+shape = 0.5734962557249466
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
@@ -4189,7 +4113,33 @@ distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.00005577649243949645
+lambda = 0.00006871057730627054
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3045.0
+shape = 0.579209609463412
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000029522365036663087
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.755870380649311
+sigma = 1.6507856326329178
 
 [[correlations.distributions]]
 when = "Physical Sciences"
@@ -4197,8 +4147,61 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 3129.0
-shape = 0.5205275755059513
+scale = 2565.0
+shape = 0.5144609461375977
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000025876167015132384
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 9.827341864394478
+sigma = 1.3368569175877854
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3509.0
+shape = 0.5083049515137219
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.945410993144648
+sigma = 1.0652953061080965
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1040.0
+shape = 0.4811634036599202
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 9039.0
+shape = 0.576986618589567
 
 [[correlations.distributions]]
 when = "Biology & Life Science"
@@ -4206,15 +4209,24 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 5032.0
-shape = 0.5471038213039621
+scale = 3879.0
+shape = 0.5400587724748025
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.73771133627809
+sigma = 0.8823248064410384
 
 [correlations.default]
 kind = "log_normal"
 
 [correlations.default.params]
-mu = 10.42083182822164
-sigma = 1.4679482145207348
+mu = 10.178495296441545
+sigma = 1.4501174086353978
 
 [[correlations]]
 entity = "original"
@@ -4226,28 +4238,12 @@ dependent = "Grad_share"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Physical Sciences"
+when = "Humanities & Liberal Arts"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.671706684
-min = 0.261032112
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.301991283
-min = 0.11983686
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.447500969
-min = 0.09631963
+max = 0.575161177
+min = 0.270969523
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
@@ -4266,52 +4262,12 @@ max = 0.509005108
 min = 0.216157792
 
 [[correlations.distributions]]
-when = "Health"
+when = "Industrial Arts & Consumer Services"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.813717788
-min = 0.227779742
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.449243128
-min = 0.104419773
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.55695649
-min = 0.147376469
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.575161177
-min = 0.270969523
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.697310063
-min = 0.315763561
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "gamma"
-
-[correlations.distributions.params]
-scale = 0.04243084371718283
-shape = 9.271301687696823
+max = 0.447500969
+min = 0.09631963
 
 [[correlations.distributions]]
 when = "Computers & Mathematics"
@@ -4322,12 +4278,68 @@ max = 0.506671902
 min = 0.144752733
 
 [[correlations.distributions]]
+when = "Business"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.301991283
+min = 0.11983686
+
+[[correlations.distributions]]
 when = "Psychology & Social Work"
 distribution = "uniform"
 
 [correlations.distributions.params]
 max = 0.777013853
 min = 0.272541842
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.55695649
+min = 0.147376469
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.697310063
+min = 0.315763561
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.449243128
+min = 0.104419773
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.671706684
+min = 0.261032112
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "gamma"
+
+[correlations.distributions.params]
+scale = 0.04243084371718283
+shape = 9.271301687696823
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.813717788
+min = 0.227779742
 
 [[correlations.distributions]]
 when = "Education"
@@ -4354,6 +4366,15 @@ dependent = "Grad_total"
 given = "Major_category"
 
 [[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3910.0
+shape = 0.5054968775340063
+
+[[correlations.distributions]]
 when = "Education"
 distribution = "log_normal"
 round = true
@@ -4361,33 +4382,6 @@ round = true
 [correlations.distributions.params]
 mu = 11.79253390787871
 sigma = 1.0629309604970831
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 18877.0
-shape = 0.6146810867023769
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3187.0
-shape = 0.6199313495175953
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 4810.0
-shape = 0.6031886658518242
 
 [[correlations.distributions]]
 when = "Social Science"
@@ -4399,39 +4393,31 @@ scale = 14077.0
 shape = 0.550019550171761
 
 [[correlations.distributions]]
-when = "Health"
-distribution = "log_normal"
+when = "Computers & Mathematics"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 11.262910796835243
-sigma = 0.8897852054826711
+scale = 4810.0
+shape = 0.6031886658518242
 
 [[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
+when = "Humanities & Liberal Arts"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 11.153947602868875
-sigma = 1.6584392141739708
+scale = 18877.0
+shape = 0.6146810867023769
 
 [[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
+when = "Psychology & Social Work"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-max = 56807.0
-min = 3335.0
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00001780297095979377
+scale = 7007.0
+shape = 0.5304921229232029
 
 [[correlations.distributions]]
 when = "Biology & Life Science"
@@ -4443,13 +4429,39 @@ scale = 5982.0
 shape = 0.5402337394745235
 
 [[correlations.distributions]]
-when = "Engineering"
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.153947602868875
+sigma = 1.6584392141739708
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00001780297095979377
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 56807.0
+min = 3335.0
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 3940.0
-shape = 0.5057957142353751
+scale = 3187.0
+shape = 0.6199313495175953
 
 [[correlations.distributions]]
 when = "Arts"
@@ -4460,22 +4472,22 @@ round = true
 lambda = 0.000013783217554305878
 
 [[correlations.distributions]]
-when = "Physical Sciences"
+when = "Engineering"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 3910.0
-shape = 0.5054968775340063
+scale = 3940.0
+shape = 0.5057957142353751
 
 [[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "pareto"
+when = "Health"
+distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-scale = 7007.0
-shape = 0.5304921229232029
+mu = 11.262910796835243
+sigma = 0.8897852054826711
 
 [correlations.default]
 kind = "log_normal"
@@ -4490,406 +4502,126 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Grad_unemployment_rate"
+dependent = "Grad_premium"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "uniform"
+when = "Health"
+distribution = "exponential"
 
 [correlations.distributions.params]
-max = 0.058849492
-min = 0.0
+lambda = 2.3304220414280974
 
 [[correlations.distributions]]
 when = "Industrial Arts & Consumer Services"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.13851498
-min = 0.025317882
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.074243813
-min = 0.022848321
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -3.657845756818651
-sigma = 0.30669384426538326
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.059671887
-min = 0.031130244
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 0.038421666
-shape = 2.9579167157762245
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -3.331194674907668
-sigma = 0.44221815743510084
+max = 0.380952381
+min = 0.129807692
 
 [[correlations.distributions]]
 when = "Humanities & Liberal Arts"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.40791427953333337
+std_dev = 0.08867052354411677
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.063924979
-min = 0.02606824
+max = 0.464583333
+min = -0.018181818
 
 [[correlations.distributions]]
-when = "Health"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -3.7184671374750238
-sigma = 0.29934108152164224
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
+when = "Arts"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.102890173
-min = 0.024612203
+max = 0.335526316
+min = 0.14
 
 [[correlations.distributions]]
 when = "Psychology & Social Work"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.061080658
-min = 0.025600246
+max = 0.525
+min = 0.19047619
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.447368421
+min = 0.236111111
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.375
+min = 0.120689655
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.428571429
+min = -0.025
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.533333333
+min = 0.3
 
 [[correlations.distributions]]
 when = "Biology & Life Science"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.04534244
-min = 0.017611146
+max = 1.0
+min = 0.181818182
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.416666667
+min = 0.065217391
 
 [[correlations.distributions]]
 when = "Physical Sciences"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 0.037818182
-min = 0.00886918
+max = 0.666666667
+min = 0.129411765
 
 [[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "log_normal"
+when = "Law & Public Policy"
+distribution = "uniform"
 
 [correlations.distributions.params]
-mu = -3.5454043349913418
-sigma = 0.520483345666549
+max = 0.52
+min = 0.293103448
 
 [correlations.default]
 kind = "normal"
 
 [correlations.default.params]
-mean = 0.03934312463005783
-std_dev = 0.019020931066658253
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Nongrad_P25"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 38000.0
-shape = 9.265819782619602
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.413372308280243
-sigma = 0.11600958464817936
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 53000.0
-min = 35000.0
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 39000.0
-min = 28000.0
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 75000.0
-min = 40000.0
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 44000.0
-min = 34000.0
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 47000.0
-min = 29000.0
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 42000.0
-min = 32000.0
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 40500.0
-min = 30000.0
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 41000.0
-min = 25000.0
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 41800.0
-min = 34000.0
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 34000.0
-min = 26000.0
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 32700.0
-shape = 4.763734169160811
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 53000.0
-min = 36000.0
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 10.5739323344248
-sigma = 0.2162708052964215
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Nongrad_unemployed"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 441.0
-shape = 0.6092202040507314
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00008079719903043362
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 1012.0
-shape = 0.8847811899045502
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 238.0
-shape = 0.6336523272949882
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00014301675977653632
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 9.197044612591325
-sigma = 1.7043764702555826
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 357.0
-shape = 0.5584445820465347
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0002194276720993932
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 8.65300427809441
-sigma = 1.0414333547221972
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 3413.0
-min = 239.0
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 6.822561660957581
-sigma = 1.4997247942875342
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 26518.0
-min = 1001.0
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.909000423997284
-sigma = 1.412012931057435
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00020727843415948595
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 0.00011783665523719224
+mean = 0.3285047440462428
+std_dev = 0.18526763180087802
 
 [[correlations]]
 entity = "original"
@@ -4901,30 +4633,39 @@ dependent = "Grad_unemployed"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "pareto"
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-scale = 312.0
-shape = 0.6549248537318278
+max = 874.0
+min = 34.0
 
 [[correlations.distributions]]
-when = "Law & Public Policy"
+when = "Industrial Arts & Consumer Services"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.0004994506043352312
+lambda = 0.0007792496938661917
 
 [[correlations.distributions]]
-when = "Physical Sciences"
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 6.690373341302187
+sigma = 1.4126518162554573
+
+[[correlations.distributions]]
+when = "Social Science"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 28.0
-shape = 0.34202654285852374
+scale = 551.0
+shape = 0.5849069098755368
 
 [[correlations.distributions]]
 when = "Computers & Mathematics"
@@ -4934,15 +4675,6 @@ round = true
 [correlations.distributions.params]
 mu = 6.923751437221853
 sigma = 1.3262114337420219
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 483.0
-shape = 0.6660850563404302
 
 [[correlations.distributions]]
 when = "Arts"
@@ -4962,56 +4694,13 @@ scale = 188.0
 shape = 0.6610895603383016
 
 [[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00017640210271306433
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 6.690373341302187
-sigma = 1.4126518162554573
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 874.0
-min = 34.0
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.329232375680466
-sigma = 0.7776074409157858
-
-[[correlations.distributions]]
-when = "Social Science"
+when = "Education"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 551.0
-shape = 0.5849069098755368
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0007792496938661917
+scale = 483.0
+shape = 0.6660850563404302
 
 [[correlations.distributions]]
 when = "Business"
@@ -5021,6 +4710,49 @@ round = true
 [correlations.distributions.params]
 mu = 7.94445428098657
 sigma = 1.601755358329254
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 312.0
+shape = 0.6549248537318278
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00017640210271306433
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.0004994506043352312
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 28.0
+shape = 0.34202654285852374
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.329232375680466
+sigma = 0.7776074409157858
 
 [correlations.default]
 kind = "exponential"
@@ -5034,35 +4766,145 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Major_code"
+dependent = "Grad_unemployment_rate"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
+when = "Computers & Mathematics"
+distribution = "uniform"
 
 [correlations.distributions.params]
-scale = 5000.0
-shape = 221.22766672793267
+max = 0.102890173
+min = 0.024612203
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.074243813
+min = 0.022848321
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 0.038421666
+shape = 2.9579167157762245
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.061080658
+min = 0.025600246
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -3.5454043349913418
+sigma = 0.520483345666549
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.13851498
+min = 0.025317882
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -3.7184671374750238
+sigma = 0.29934108152164224
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.04534244
+min = 0.017611146
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -3.657845756818651
+sigma = 0.30669384426538326
 
 [[correlations.distributions]]
 when = "Humanities & Liberal Arts"
 distribution = "uniform"
-round = true
 
 [correlations.distributions.params]
-max = 6403.0
-min = 1501.0
+max = 0.063924979
+min = 0.02606824
 
 [[correlations.distributions]]
-when = "Health"
+when = "Social Science"
 distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.059671887
+min = 0.031130244
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.037818182
+min = 0.00886918
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -3.331194674907668
+sigma = 0.44221815743510084
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.058849492
+min = 0.0
+
+[correlations.default]
+kind = "normal"
+
+[correlations.default.params]
+mean = 0.03934312463005783
+std_dev = 0.019020931066658253
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Nongrad_employed"
+given = "Major_category"
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-max = 6199.0
-min = 4002.0
+mu = 11.313208368635111
+sigma = 1.1117053306814484
 
 [[correlations.distributions]]
 when = "Psychology & Social Work"
@@ -5070,17 +4912,104 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 5200.0
-shape = 90.99745353934125
+scale = 4368.0
+shape = 0.5479099713932015
 
 [[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "normal"
+when = "Law & Public Policy"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mean = 3475.8571428571427
-std_dev = 612.0623050851298
+scale = 6967.0
+shape = 0.6064311900565383
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3126.0
+shape = 0.5394868973034411
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.787039335111686
+sigma = 1.3403279722408772
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 12.14396359557266
+sigma = 1.6464814809892125
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00001029358783003816
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000005231204717384165
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 343760.18729810696
+shape = 0.4835900320703469
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000006697632052187949
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 16221.0
+shape = 0.6461285787724503
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 86631.0
+min = 4654.0
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 2720.0
+shape = 0.49050299112595397
 
 [[correlations.distributions]]
 when = "Engineering"
@@ -5088,53 +5017,33 @@ distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 7.8040662941696874
-sigma = 0.16971369770745515
+mu = 10.403110497488111
+sigma = 1.3928565171159117
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 10.831349476853497
+sigma = 1.5426335309793273
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Major_code"
+given = "Major_category"
 
 [[correlations.distributions]]
-when = "Social Science"
+when = "Law & Public Policy"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 5599.0
-min = 4007.0
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 6000.0
-shape = 399.3893898493975
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 2300.0
-shape = 31.56006956594465
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 6200.0
-shape = 479.2749230862763
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 2001.0
-shape = 3.875295572352571
+max = 5402.0
+min = 3201.0
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
@@ -5155,13 +5064,103 @@ max = 5901.0
 min = 2201.0
 
 [[correlations.distributions]]
-when = "Law & Public Policy"
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.8040662941696874
+sigma = 0.16971369770745515
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 5402.0
-min = 3201.0
+max = 6403.0
+min = 1501.0
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 6199.0
+min = 4002.0
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "normal"
+round = true
+
+[correlations.distributions.params]
+mean = 3475.8571428571427
+std_dev = 612.0623050851298
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 2300.0
+shape = 31.56006956594465
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 6200.0
+shape = 479.2749230862763
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 5599.0
+min = 4007.0
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 2001.0
+shape = 3.875295572352571
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 5000.0
+shape = 221.22766672793267
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 5200.0
+shape = 90.99745353934125
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 6000.0
+shape = 399.3893898493975
 
 [correlations.default]
 kind = "uniform"
@@ -5176,8 +5175,17 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Grad_full_time_year_round"
+dependent = "Nongrad_unemployed"
 given = "Major_category"
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1012.0
+shape = 0.8847811899045502
 
 [[correlations.distributions]]
 when = "Psychology & Social Work"
@@ -5185,207 +5193,8 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 3509.0
-shape = 0.5083049515137219
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000025876167015132384
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 9039.0
-shape = 0.576986618589567
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00006871057730627054
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 2565.0
-shape = 0.5144609461375977
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 1040.0
-shape = 0.4811634036599202
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3045.0
-shape = 0.579209609463412
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3879.0
-shape = 0.5400587724748025
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.73771133627809
-sigma = 0.8823248064410384
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000029522365036663087
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 9.827341864394478
-sigma = 1.3368569175877854
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 8628.0
-shape = 0.5734962557249466
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.945410993144648
-sigma = 1.0652953061080965
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.755870380649311
-sigma = 1.6507856326329178
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 10.178495296441545
-sigma = 1.4501174086353978
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Nongrad_full_time_year_round"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 12185.0
-shape = 0.6797974185444771
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.612760281919819
-sigma = 1.341528920173136
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000006589091100773559
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "gamma"
-round = true
-
-[correlations.distributions.params]
-scale = 232075.10188475542
-shape = 0.4817101730952357
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000013693886853281741
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 6063.0
-shape = 0.6259568185596325
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 2463.0
-shape = 0.5520150170464785
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000009902902045444417
+scale = 357.0
+shape = 0.5584445820465347
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
@@ -5393,44 +5202,25 @@ distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 72409.0
-min = 3917.0
+max = 3413.0
+min = 239.0
 
 [[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.252583483905251
-sigma = 1.396231639091393
-
-[[correlations.distributions]]
-when = "Physical Sciences"
+when = "Law & Public Policy"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 2163.0
-shape = 0.4845914323969992
+scale = 441.0
+shape = 0.6092202040507314
 
 [[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
+when = "Industrial Arts & Consumer Services"
+distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-mu = 11.96969541225197
-sigma = 1.6312587372977212
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3033.0
-shape = 0.5368557105202664
+lambda = 0.00020727843415948595
 
 [[correlations.distributions]]
 when = "Humanities & Liberal Arts"
@@ -5438,15 +5228,83 @@ distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 10.966566882743964
-sigma = 1.1312531965614823
+mu = 8.65300427809441
+sigma = 1.0414333547221972
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.909000423997284
+sigma = 1.412012931057435
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 9.197044612591325
+sigma = 1.7043764702555826
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.0002194276720993932
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 26518.0
+min = 1001.0
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00014301675977653632
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00008079719903043362
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 238.0
+shape = 0.6336523272949882
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 6.822561660957581
+sigma = 1.4997247942875342
 
 [correlations.default]
-kind = "log_normal"
+kind = "exponential"
 
 [correlations.default.params]
-mu = 10.57487377957627
-sigma = 1.5336219710262335
+lambda = 0.00011783665523719224
 
 [[correlations]]
 entity = "original"
@@ -5456,6 +5314,24 @@ matrix = []
 conditional = []
 dependent = "Grad_sample_size"
 given = "Major_category"
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 311.0
+shape = 0.6084036064293997
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 306.0
+shape = 0.5983587797602635
 
 [[correlations.distributions]]
 when = "Biology & Life Science"
@@ -5476,29 +5352,21 @@ mu = 7.241566226255594
 sigma = 1.6291916311260208
 
 [[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0020060180541624875
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
+when = "Computers & Mathematics"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 29.0
-shape = 0.4667742247018371
+scale = 98.0
+shape = 0.6174174227034529
 
 [[correlations.distributions]]
-when = "Arts"
+when = "Law & Public Policy"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.0009512485136741974
+lambda = 0.0009177679882525698
 
 [[correlations.distributions]]
 when = "Health"
@@ -5510,6 +5378,14 @@ mu = 7.226013005217436
 sigma = 0.8911287720254732
 
 [[correlations.distributions]]
+when = "Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.0009512485136741974
+
+[[correlations.distributions]]
 when = "Physical Sciences"
 distribution = "pareto"
 round = true
@@ -5519,22 +5395,12 @@ scale = 65.0
 shape = 0.4641766013092666
 
 [[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
+when = "Agriculture & Natural Resources"
+distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-mu = 7.5304289458719005
-sigma = 1.0673229124954067
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 98.0
-shape = 0.6174174227034529
+lambda = 0.0020060180541624875
 
 [[correlations.distributions]]
 when = "Engineering"
@@ -5546,32 +5412,6 @@ mu = 6.339404313125179
 sigma = 1.3169473950766202
 
 [[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 311.0
-shape = 0.6084036064293997
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0009177679882525698
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 306.0
-shape = 0.5983587797602635
-
-[[correlations.distributions]]
 when = "Psychology & Social Work"
 distribution = "pareto"
 round = true
@@ -5579,6 +5419,24 @@ round = true
 [correlations.distributions.params]
 scale = 119.0
 shape = 0.5404405572873462
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.5304289458719005
+sigma = 1.0673229124954067
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 29.0
+shape = 0.4667742247018371
 
 [correlations.default]
 kind = "log_normal"
@@ -5593,97 +5451,8 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Nongrad_total"
+dependent = "Nongrad_P75"
 given = "Major_category"
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 5643.0
-shape = 0.480289224896734
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.007889260546731
-sigma = 1.3485532224031043
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 26320.0
-shape = 0.7220233668894147
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 12.382332979550009
-sigma = 1.67026819175797
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.504372048805905
-sigma = 1.6959852386486831
-
-[[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 6519.0
-shape = 0.5543832566838813
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.709597315687533
-sigma = 1.1155529002213738
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000007449217619315183
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 8921.0
-shape = 0.5966215172060352
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3899.0
-shape = 0.4960152659929165
 
 [[correlations.distributions]]
 when = "Biology & Life Science"
@@ -5691,40 +5460,132 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 4506.0
-shape = 0.5565555590802798
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0000036889947858108144
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000004826479029250273
+scale = 74000.0
+shape = 9.328427507576615
 
 [[correlations.distributions]]
 when = "Agriculture & Natural Resources"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 75000.0
+shape = 11.28774254841332
+
+[[correlations.distributions]]
+when = "Physical Sciences"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 123984.0
-min = 6242.0
+max = 110000.0
+min = 80000.0
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 75000.0
+min = 59000.0
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 85000.0
+shape = 4.088387391465151
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 100000.0
+min = 60000.0
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.441924041734286
+sigma = 0.12444592521783432
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 60000.0
+shape = 4.062116808056529
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 70000.0
+shape = 6.209522878810569
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "normal"
+round = true
+
+[correlations.distributions.params]
+mean = 73266.66666666667
+std_dev = 6082.397188243757
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 78000.0
+shape = 4.787296269104818
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 85000.0
+min = 50000.0
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 79000.0
+min = 48000.0
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 94000.0
+min = 70000.0
 
 [correlations.default]
 kind = "log_normal"
 
 [correlations.default.params]
-mu = 11.159290114582962
-sigma = 1.534706045997877
+mu = 11.315241008705165
+sigma = 0.2303488184160539
 
 [[correlations]]
 entity = "original"
@@ -5732,113 +5593,8 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Nongrad_employed"
+dependent = "Nongrad_full_time_year_round"
 given = "Major_category"
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.403110497488111
-sigma = 1.3928565171159117
-
-[[correlations.distributions]]
-when = "Arts"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000006697632052187949
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 2720.0
-shape = 0.49050299112595397
-
-[[correlations.distributions]]
-when = "Law & Public Policy"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 6967.0
-shape = 0.6064311900565383
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 11.313208368635111
-sigma = 1.1117053306814484
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.000005231204717384165
-
-[[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00001029358783003816
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 3126.0
-shape = 0.5394868973034411
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 16221.0
-shape = 0.6461285787724503
-
-[[correlations.distributions]]
-when = "Business"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 12.14396359557266
-sigma = 1.6464814809892125
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 86631.0
-min = 4654.0
-
-[[correlations.distributions]]
-when = "Education"
-distribution = "gamma"
-round = true
-
-[correlations.distributions.params]
-scale = 343760.18729810696
-shape = 0.4835900320703469
 
 [[correlations.distributions]]
 when = "Computers & Mathematics"
@@ -5846,8 +5602,68 @@ distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 10.787039335111686
-sigma = 1.3403279722408772
+mu = 10.612760281919819
+sigma = 1.341528920173136
+
+[[correlations.distributions]]
+when = "Industrial Arts & Consumer Services"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000013693886853281741
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 6063.0
+shape = 0.6259568185596325
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.966566882743964
+sigma = 1.1312531965614823
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 12185.0
+shape = 0.6797974185444771
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000009902902045444417
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 2163.0
+shape = 0.4845914323969992
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000006589091100773559
 
 [[correlations.distributions]]
 when = "Psychology & Social Work"
@@ -5855,15 +5671,60 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 4368.0
-shape = 0.5479099713932015
+scale = 3033.0
+shape = 0.5368557105202664
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 2463.0
+shape = 0.5520150170464785
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 232075.10188475542
+shape = 0.4817101730952357
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.96969541225197
+sigma = 1.6312587372977212
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 72409.0
+min = 3917.0
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.252583483905251
+sigma = 1.396231639091393
 
 [correlations.default]
 kind = "log_normal"
 
 [correlations.default.params]
-mu = 10.831349476853497
-sigma = 1.5426335309793273
+mu = 10.57487377957627
+sigma = 1.5336219710262335
 
 [[correlations]]
 entity = "original"
@@ -5875,13 +5736,13 @@ dependent = "Nongrad_median"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
+when = "Computers & Mathematics"
+distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-scale = 44000.0
-shape = 4.090706654968908
+max = 92000.0
+min = 52000.0
 
 [[correlations.distributions]]
 when = "Industrial Arts & Consumer Services"
@@ -5893,42 +5754,6 @@ max = 69000.0
 min = 41600.0
 
 [[correlations.distributions]]
-when = "Business"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 76000.0
-min = 50000.0
-
-[[correlations.distributions]]
-when = "Social Science"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 70000.0
-min = 46000.0
-
-[[correlations.distributions]]
-when = "Agriculture & Natural Resources"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 65000.0
-min = 48000.0
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 58000.0
-shape = 9.938552188299125
-
-[[correlations.distributions]]
 when = "Engineering"
 distribution = "log_normal"
 round = true
@@ -5938,13 +5763,13 @@ mu = 11.274824098303913
 sigma = 0.164293310411156
 
 [[correlations.distributions]]
-when = "Education"
-distribution = "log_normal"
+when = "Physical Sciences"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 10.703368303082815
-sigma = 0.10610924833032569
+scale = 58000.0
+shape = 9.938552188299125
 
 [[correlations.distributions]]
 when = "Psychology & Social Work"
@@ -5965,6 +5790,15 @@ max = 52000.0
 min = 40000.0
 
 [[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.703368303082815
+sigma = 0.10610924833032569
+
+[[correlations.distributions]]
 when = "Biology & Life Science"
 distribution = "normal"
 round = true
@@ -5974,13 +5808,13 @@ mean = 53550.0
 std_dev = 5721.232384722718
 
 [[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
+when = "Law & Public Policy"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-max = 92000.0
-min = 52000.0
+scale = 50000.0
+shape = 11.940228955167347
 
 [[correlations.distributions]]
 when = "Arts"
@@ -5992,13 +5826,40 @@ max = 50000.0
 min = 38000.0
 
 [[correlations.distributions]]
-when = "Law & Public Policy"
+when = "Business"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 76000.0
+min = 50000.0
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 65000.0
+min = 48000.0
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 70000.0
+min = 46000.0
+
+[[correlations.distributions]]
+when = "Health"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 50000.0
-shape = 11.940228955167347
+scale = 44000.0
+shape = 4.090706654968908
 
 [correlations.default]
 kind = "log_normal"
@@ -6013,17 +5874,35 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Grad_P75"
+dependent = "Grad_employed"
 given = "Major_category"
 
 [[correlations.distributions]]
-when = "Psychology & Social Work"
-distribution = "uniform"
+when = "Industrial Arts & Consumer Services"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-max = 110000.0
-min = 65000.0
+scale = 1248.0
+shape = 0.47123286118994395
+
+[[correlations.distributions]]
+when = "Business"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.921538229855592
+sigma = 1.648038799623378
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 5032.0
+shape = 0.5471038213039621
 
 [[correlations.distributions]]
 when = "Engineering"
@@ -6031,8 +5910,111 @@ distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 11.773107659235846
-sigma = 0.15111337774394812
+mu = 9.981289058717994
+sigma = 1.3305830650938677
+
+[[correlations.distributions]]
+when = "Education"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.311717415358256
+sigma = 1.0773274999739855
+
+[[correlations.distributions]]
+when = "Law & Public Policy"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.000022238827213208085
+
+[[correlations.distributions]]
+when = "Agriculture & Natural Resources"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00005577649243949645
+
+[[correlations.distributions]]
+when = "Arts"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00001893715232571902
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 12217.0
+shape = 0.5781609382278599
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3880.0
+shape = 0.599343170369133
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 3129.0
+shape = 0.5205275755059513
+
+[[correlations.distributions]]
+when = "Psychology & Social Work"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 4796.0
+shape = 0.5108222843572696
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.021839000637543
+sigma = 0.8917923144877307
+
+[[correlations.distributions]]
+when = "Social Science"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 10916.0
+shape = 0.5627907935686897
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 10.42083182822164
+sigma = 1.4679482145207348
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Grad_P75"
+given = "Major_category"
 
 [[correlations.distributions]]
 when = "Business"
@@ -6053,6 +6035,33 @@ max = 120000.0
 min = 81000.0
 
 [[correlations.distributions]]
+when = "Health"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 83000.0
+shape = 3.260085005134016
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 160000.0
+min = 106000.0
+
+[[correlations.distributions]]
+when = "Humanities & Liberal Arts"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 130000.0
+min = 69000.0
+
+[[correlations.distributions]]
 when = "Computers & Mathematics"
 distribution = "uniform"
 round = true
@@ -6071,13 +6080,13 @@ max = 136000.0
 min = 100000.0
 
 [[correlations.distributions]]
-when = "Industrial Arts & Consumer Services"
+when = "Arts"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 124000.0
-min = 80000.0
+max = 89000.0
+min = 70000.0
 
 [[correlations.distributions]]
 when = "Social Science"
@@ -6089,31 +6098,13 @@ scale = 93000.0
 shape = 4.83914207343948
 
 [[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 83000.0
-shape = 3.260085005134016
-
-[[correlations.distributions]]
-when = "Humanities & Liberal Arts"
+when = "Industrial Arts & Consumer Services"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 130000.0
-min = 69000.0
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 90000.0
-shape = 2.589241715363751
+max = 124000.0
+min = 80000.0
 
 [[correlations.distributions]]
 when = "Education"
@@ -6125,22 +6116,31 @@ max = 86000.0
 min = 65000.0
 
 [[correlations.distributions]]
-when = "Arts"
-distribution = "uniform"
+when = "Biology & Life Science"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-max = 89000.0
-min = 70000.0
+scale = 90000.0
+shape = 2.589241715363751
 
 [[correlations.distributions]]
-when = "Physical Sciences"
+when = "Psychology & Social Work"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 160000.0
-min = 106000.0
+max = 110000.0
+min = 65000.0
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 11.773107659235846
+sigma = 0.15111337774394812
 
 [correlations.default]
 kind = "log_normal"

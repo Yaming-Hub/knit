@@ -20,19 +20,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 1949
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1956
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1960
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1958
+value = 1950
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -44,11 +32,19 @@ value = 1951
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
+value = 1949
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1959
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
 value = 1953
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = 1950
+value = 1960
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -60,11 +56,15 @@ value = 1954
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = 1959
+value = 1957
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = 1957
+value = 1958
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1956
 weight = 0.08333333333333333
 
 [entities.fields.stats]
@@ -96,35 +96,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = "January"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "November"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "June"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "March"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "July"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "September"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "February"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "December"
+value = "October"
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -132,15 +104,43 @@ value = "April"
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
+value = "August"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "December"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
 value = "May"
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = "October"
+value = "September"
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = "August"
+value = "June"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "January"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "March"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "November"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "February"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "July"
 weight = 0.08333333333333333
 
 [entities.fields.stats]
@@ -227,8 +227,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "year",
     "passengers",
+    "year",
 ]
 matrix = [
     [
@@ -245,8 +245,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "year",
     "passengers",
+    "year",
 ]
 matrix = [
     [

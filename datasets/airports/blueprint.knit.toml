@@ -100,11 +100,11 @@ value = "OK"
 weight = 0.030213270142180094
 
 [[entities.fields.generator.choices]]
-value = "OH"
+value = "FL"
 weight = 0.02962085308056872
 
 [[entities.fields.generator.choices]]
-value = "FL"
+value = "OH"
 weight = 0.02962085308056872
 
 [[entities.fields.generator.choices]]
@@ -156,19 +156,19 @@ value = "AL"
 weight = 0.021623222748815167
 
 [[entities.fields.generator.choices]]
-value = "MS"
-weight = 0.02132701421800948
-
-[[entities.fields.generator.choices]]
 value = "NC"
 weight = 0.02132701421800948
 
 [[entities.fields.generator.choices]]
-value = "PA"
-weight = 0.02103080568720379
+value = "MS"
+weight = 0.02132701421800948
 
 [[entities.fields.generator.choices]]
 value = "MT"
+weight = 0.02103080568720379
+
+[[entities.fields.generator.choices]]
+value = "PA"
 weight = 0.02103080568720379
 
 [[entities.fields.generator.choices]]
@@ -188,11 +188,11 @@ value = "AZ"
 weight = 0.017476303317535545
 
 [[entities.fields.generator.choices]]
-value = "OR"
+value = "SD"
 weight = 0.01688388625592417
 
 [[entities.fields.generator.choices]]
-value = "SD"
+value = "OR"
 weight = 0.01688388625592417
 
 [[entities.fields.generator.choices]]
@@ -228,11 +228,11 @@ value = "ID"
 weight = 0.010959715639810427
 
 [[entities.fields.generator.choices]]
-value = "UT"
+value = "NJ"
 weight = 0.010367298578199052
 
 [[entities.fields.generator.choices]]
-value = "NJ"
+value = "UT"
 weight = 0.010367298578199052
 
 [[entities.fields.generator.choices]]
@@ -335,19 +335,19 @@ value = "USA"
 weight = 0.9988151658767772
 
 [[entities.fields.generator.choices]]
-value = "N Mariana Islands"
-weight = 0.0002962085308056872
-
-[[entities.fields.generator.choices]]
 value = "Thailand"
 weight = 0.0002962085308056872
 
 [[entities.fields.generator.choices]]
-value = "Palau"
+value = "N Mariana Islands"
 weight = 0.0002962085308056872
 
 [[entities.fields.generator.choices]]
 value = "Federated States of Micronesia"
+weight = 0.0002962085308056872
+
+[[entities.fields.generator.choices]]
+value = "Palau"
 weight = 0.0002962085308056872
 
 [entities.fields.stats]
@@ -455,8 +455,8 @@ cardinality = 5
 [[correlations]]
 entity = "original"
 fields = [
-    "latitude",
     "longitude",
+    "latitude",
 ]
 matrix = [
     [
@@ -474,15 +474,33 @@ conditional = []
 entity = "original"
 fields = [
     "iata",
-    "state",
+    "city",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999996655,
+    0.999999999922099,
 ],
     [
-    0.9999999999996655,
+    0.999999999922099,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "iata",
+    "name",
+]
+matrix = [
+    [
+    1.0,
+    0.999999999967977,
+],
+    [
+    0.999999999967977,
     1.0,
 ],
 ]
@@ -510,15 +528,15 @@ conditional = []
 entity = "original"
 fields = [
     "iata",
-    "city",
+    "state",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999202367,
+    0.9999999999996975,
 ],
     [
-    0.9999999999202367,
+    0.9999999999996975,
     1.0,
 ],
 ]
@@ -527,16 +545,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "iata",
+    "city",
     "name",
 ]
 matrix = [
     [
     1.0,
-    0.999999999967397,
+    0.9912906446205476,
 ],
     [
-    0.999999999967397,
+    0.9912906446205476,
     1.0,
 ],
 ]
@@ -545,34 +563,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "state",
     "city",
-]
-matrix = [
-    [
-    1.0,
-    0.9080770646631948,
-],
-    [
-    0.9080770646631948,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "state",
-    "name",
 ]
 matrix = [
     [
     1.0,
-    0.9794167628252833,
+    0.9080770646632321,
 ],
     [
-    0.9794167628252833,
+    0.9080770646632321,
     1.0,
 ],
 ]
@@ -581,16 +581,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "name",
     "country",
-    "name",
 ]
 matrix = [
     [
     1.0,
-    0.999999999999992,
+    1.0,
 ],
     [
-    0.999999999999992,
+    1.0,
     1.0,
 ],
 ]
@@ -599,16 +599,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "city",
     "name",
+    "state",
 ]
 matrix = [
     [
     1.0,
-    0.9912906446176258,
+    0.9794167628256467,
 ],
     [
-    0.9912906446176258,
+    0.9794167628256467,
     1.0,
 ],
 ]

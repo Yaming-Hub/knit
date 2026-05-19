@@ -148,44 +148,12 @@ value = 2
 weight = 0.07692307692307693
 
 [[entities.fields.generator.choices]]
-value = 10
-weight = 0.038461538461538464
-
-[[entities.fields.generator.choices]]
 value = 12
 weight = 0.038461538461538464
 
 [[entities.fields.generator.choices]]
-value = 31
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 9
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 59
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 22
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 20
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 6
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 15
-weight = 0.019230769230769232
-
-[[entities.fields.generator.choices]]
-value = 49
-weight = 0.019230769230769232
+value = 10
+weight = 0.038461538461538464
 
 [[entities.fields.generator.choices]]
 value = 1
@@ -196,7 +164,39 @@ value = 110
 weight = 0.019230769230769232
 
 [[entities.fields.generator.choices]]
+value = 59
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 31
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 15
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 20
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 9
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 6
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
 value = 46
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 49
+weight = 0.019230769230769232
+
+[[entities.fields.generator.choices]]
+value = 22
 weight = 0.019230769230769232
 
 [entities.fields.stats]
@@ -277,44 +277,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "hurricanes",
     "population",
-]
-matrix = [
-    [
-    1.0,
-    0.418224770200661,
-],
-    [
-    0.418224770200661,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "hurricanes",
-    "population",
-]
-matrix = [
-    [
-    1.0,
-    0.33186831177066145,
-],
-    [
-    0.33186831177066145,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "engineers",
-    "population",
 ]
 matrix = [
     [
@@ -323,6 +287,42 @@ matrix = [
 ],
     [
     0.3318534961154273,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "population",
+    "hurricanes",
+]
+matrix = [
+    [
+    1.0,
+    0.418224770200661,
+],
+    [
+    0.418224770200661,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "population",
+    "hurricanes",
+]
+matrix = [
+    [
+    1.0,
+    0.33186831177066145,
+],
+    [
+    0.33186831177066145,
     1.0,
 ],
 ]

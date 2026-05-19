@@ -294,8 +294,113 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
+dependent = "pct"
+given = "group"
+
+[[correlations.distributions]]
+when = "<10000"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -2.6016165148613073
+sigma = 0.30456826586981145
+
+[[correlations.distributions]]
+when = "200000+"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -3.283573944404284
+sigma = 0.49798844428052
+
+[[correlations.distributions]]
+when = "50000 to 74999"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.1814230769230769
+std_dev = 0.0174558191243429
+
+[[correlations.distributions]]
+when = "10000 to 14999"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -2.899335674846045
+sigma = 0.22878901185659445
+
+[[correlations.distributions]]
+when = "150000 to 199999"
+distribution = "beta"
+
+[correlations.distributions.params]
+alpha = 5.927851698113654
+beta = 127.45522415732118
+
+[[correlations.distributions]]
+when = "25000 to 34999"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.126
+min = 0.068
+
+[[correlations.distributions]]
+when = "75000 to 99999"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.12040384615384614
+std_dev = 0.017411600482464176
+
+[[correlations.distributions]]
+when = "15000 to 24999"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -2.2223204156691496
+sigma = 0.189042336425879
+
+[[correlations.distributions]]
+when = "100000 to 149999"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.12411538461538461
+std_dev = 0.029311099135726364
+
+[[correlations.distributions]]
+when = "35000 to 49999"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.13769230769230764
+std_dev = 0.014488109795407642
+
+[correlations.default]
+kind = "beta"
+
+[correlations.default.params]
+alpha = 3.907749322308128
+beta = 35.17124693909088
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
 dependent = "id"
 given = "region"
+
+[[correlations.distributions]]
+when = "south"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 54.0
+min = 1.0
 
 [[correlations.distributions]]
 when = "west"
@@ -325,15 +430,6 @@ max = 55.0
 min = 17.0
 
 [[correlations.distributions]]
-when = "south"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 54.0
-min = 1.0
-
-[[correlations.distributions]]
 when = "other"
 distribution = "poisson"
 round = true
@@ -358,6 +454,15 @@ dependent = "total"
 given = "region"
 
 [[correlations.distributions]]
+when = "south"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 14.382528170704186
+sigma = 0.8947979506574374
+
+[[correlations.distributions]]
 when = "northeast"
 distribution = "pareto"
 round = true
@@ -367,13 +472,13 @@ scale = 256563.0
 shape = 0.612256200086087
 
 [[correlations.distributions]]
-when = "south"
-distribution = "log_normal"
+when = "west"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 14.382528170704186
-sigma = 0.8947979506574374
+scale = 222679.0
+shape = 0.6673623703846637
 
 [[correlations.distributions]]
 when = "midwest"
@@ -393,114 +498,9 @@ round = true
 mu = 14.042067477104627
 sigma = 0.0000000000000017763568394002505
 
-[[correlations.distributions]]
-when = "west"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 222679.0
-shape = 0.6673623703846637
-
 [correlations.default]
 kind = "log_normal"
 
 [correlations.default.params]
 mu = 14.15528164385073
 sigma = 1.002936795432661
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "pct"
-given = "group"
-
-[[correlations.distributions]]
-when = "<10000"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -2.6016165148613073
-sigma = 0.30456826586981145
-
-[[correlations.distributions]]
-when = "50000 to 74999"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.1814230769230769
-std_dev = 0.0174558191243429
-
-[[correlations.distributions]]
-when = "75000 to 99999"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.12040384615384614
-std_dev = 0.017411600482464176
-
-[[correlations.distributions]]
-when = "100000 to 149999"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.12411538461538461
-std_dev = 0.029311099135726364
-
-[[correlations.distributions]]
-when = "150000 to 199999"
-distribution = "beta"
-
-[correlations.distributions.params]
-alpha = 5.927851698113654
-beta = 127.45522415732118
-
-[[correlations.distributions]]
-when = "200000+"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -3.283573944404284
-sigma = 0.49798844428052
-
-[[correlations.distributions]]
-when = "10000 to 14999"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -2.899335674846045
-sigma = 0.22878901185659445
-
-[[correlations.distributions]]
-when = "35000 to 49999"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.13769230769230764
-std_dev = 0.014488109795407642
-
-[[correlations.distributions]]
-when = "25000 to 34999"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.126
-min = 0.068
-
-[[correlations.distributions]]
-when = "15000 to 24999"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -2.2223204156691496
-sigma = 0.189042336425879
-
-[correlations.default]
-kind = "beta"
-
-[correlations.default.params]
-alpha = 3.907749322308128
-beta = 35.17124693909088

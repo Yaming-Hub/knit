@@ -200,78 +200,6 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "Year",
-    "Spending_USD",
-]
-matrix = [
-    [
-    1.0,
-    0.8262733812538644,
-],
-    [
-    0.8262733812538644,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Year",
-    "Spending_USD",
-]
-matrix = [
-    [
-    1.0,
-    0.9315976070574148,
-],
-    [
-    0.9315976070574148,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Year",
-    "Life_Expectancy",
-]
-matrix = [
-    [
-    1.0,
-    0.9021745379694497,
-],
-    [
-    0.9021745379694497,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Year",
-    "Life_Expectancy",
-]
-matrix = [
-    [
-    1.0,
-    0.896117410433818,
-],
-    [
-    0.896117410433818,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "Spending_USD",
     "Life_Expectancy",
 ]
@@ -300,6 +228,78 @@ matrix = [
 ],
     [
     0.7474072371099253,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Spending_USD",
+    "Year",
+]
+matrix = [
+    [
+    1.0,
+    0.8262733812538644,
+],
+    [
+    0.8262733812538644,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Spending_USD",
+    "Year",
+]
+matrix = [
+    [
+    1.0,
+    0.9315976070574148,
+],
+    [
+    0.9315976070574148,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Life_Expectancy",
+    "Year",
+]
+matrix = [
+    [
+    1.0,
+    0.9021745379694497,
+],
+    [
+    0.9021745379694497,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Life_Expectancy",
+    "Year",
+]
+matrix = [
+    [
+    1.0,
+    0.896117410433818,
+],
+    [
+    0.896117410433818,
     1.0,
 ],
 ]
@@ -315,28 +315,20 @@ dependent = "Spending_USD"
 given = "Country"
 
 [[correlations.distributions]]
-when = "Germany"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 6938.983
-min = 252.311
-
-[[correlations.distributions]]
-when = "USA"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 11859.179
-min = 326.961
-
-[[correlations.distributions]]
 when = "Great Britain"
 distribution = "uniform"
 
 [correlations.distributions.params]
 max = 5018.7
 min = 123.993
+
+[[correlations.distributions]]
+when = "France"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 5468.418
+min = 192.143
 
 [[correlations.distributions]]
 when = "Canada"
@@ -355,12 +347,20 @@ max = 4665.641
 min = 150.437
 
 [[correlations.distributions]]
-when = "France"
+when = "USA"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 5468.418
-min = 192.143
+max = 11859.179
+min = 326.961
+
+[[correlations.distributions]]
+when = "Germany"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 6938.983
+min = 252.311
 
 [correlations.default]
 kind = "gamma"

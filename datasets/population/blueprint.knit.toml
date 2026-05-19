@@ -20,42 +20,6 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 1970
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1950
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1940
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 2000
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1900
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1990
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1880
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1850
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
-value = 1980
-weight = 0.06666666666666667
-
-[[entities.fields.generator.choices]]
 value = 1910
 weight = 0.06666666666666667
 
@@ -68,7 +32,11 @@ value = 1870
 weight = 0.06666666666666667
 
 [[entities.fields.generator.choices]]
-value = 1930
+value = 1900
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1880
 weight = 0.06666666666666667
 
 [[entities.fields.generator.choices]]
@@ -76,7 +44,39 @@ value = 1960
 weight = 0.06666666666666667
 
 [[entities.fields.generator.choices]]
+value = 1970
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1850
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1940
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1990
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
 value = 1920
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1950
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1980
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 2000
+weight = 0.06666666666666667
+
+[[entities.fields.generator.choices]]
+value = 1930
 weight = 0.06666666666666667
 
 [entities.fields.stats]
@@ -108,19 +108,15 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 65
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
 value = 20
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 75
+value = 80
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 60
+value = 45
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
@@ -132,15 +128,19 @@ value = 70
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 55
+value = 10
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 30
+value = 85
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 90
+value = 25
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 65
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
@@ -148,7 +148,23 @@ value = 5
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
+value = 90
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 75
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 30
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
 value = 35
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 55
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
@@ -160,27 +176,11 @@ value = 15
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 45
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 25
+value = 60
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
 value = 40
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 85
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 80
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 10
 weight = 0.05263157894736842
 
 [entities.fields.stats]
@@ -212,11 +212,11 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 2
+value = 1
 weight = 0.5
 
 [[entities.fields.generator.choices]]
-value = 1
+value = 2
 weight = 0.5
 
 [entities.fields.stats]
@@ -344,42 +344,6 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "year",
-    "people",
-]
-matrix = [
-    [
-    1.0,
-    0.672588289306252,
-],
-    [
-    0.672588289306252,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "people",
-]
-matrix = [
-    [
-    1.0,
-    0.661700862269158,
-],
-    [
-    0.661700862269158,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "people",
     "age",
 ]
@@ -408,6 +372,42 @@ matrix = [
 ],
     [
     -0.6962082768120974,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "people",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.672588289306252,
+],
+    [
+    0.672588289306252,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "people",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.661700862269158,
+],
+    [
+    0.661700862269158,
     1.0,
 ],
 ]

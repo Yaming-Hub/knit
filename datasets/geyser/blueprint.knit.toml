@@ -179,20 +179,20 @@ dependent = "duration"
 given = "kind"
 
 [[correlations.distributions]]
-when = "long"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 4.297930232558141
-std_dev = 0.4214465203926929
-
-[[correlations.distributions]]
 when = "short"
 distribution = "log_normal"
 
 [correlations.distributions.params]
 mu = 0.724722780624187
 sigma = 0.16303426469903104
+
+[[correlations.distributions]]
+when = "long"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 4.297930232558141
+std_dev = 0.4214465203926929
 
 [correlations.default]
 kind = "uniform"

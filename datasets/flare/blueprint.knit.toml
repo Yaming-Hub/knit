@@ -176,8 +176,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "id",
     "parent",
+    "id",
 ]
 matrix = [
     [
@@ -194,8 +194,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "id",
     "parent",
+    "id",
 ]
 matrix = [
     [

@@ -125,7 +125,15 @@ value = 33
 weight = 0.0784313725490196
 
 [[entities.fields.generator.choices]]
+value = 31
+weight = 0.058823529411764705
+
+[[entities.fields.generator.choices]]
 value = 32
+weight = 0.058823529411764705
+
+[[entities.fields.generator.choices]]
+value = 27
 weight = 0.058823529411764705
 
 [[entities.fields.generator.choices]]
@@ -137,19 +145,7 @@ value = 34
 weight = 0.058823529411764705
 
 [[entities.fields.generator.choices]]
-value = 27
-weight = 0.058823529411764705
-
-[[entities.fields.generator.choices]]
-value = 31
-weight = 0.058823529411764705
-
-[[entities.fields.generator.choices]]
 value = 26
-weight = 0.0392156862745098
-
-[[entities.fields.generator.choices]]
-value = 35
 weight = 0.0392156862745098
 
 [[entities.fields.generator.choices]]
@@ -161,19 +157,11 @@ value = 41
 weight = 0.0392156862745098
 
 [[entities.fields.generator.choices]]
-value = 23
-weight = 0.0196078431372549
-
-[[entities.fields.generator.choices]]
-value = 42
-weight = 0.0196078431372549
+value = 35
+weight = 0.0392156862745098
 
 [[entities.fields.generator.choices]]
 value = 16
-weight = 0.0196078431372549
-
-[[entities.fields.generator.choices]]
-value = 44
 weight = 0.0196078431372549
 
 [[entities.fields.generator.choices]]
@@ -181,7 +169,19 @@ value = 36
 weight = 0.0196078431372549
 
 [[entities.fields.generator.choices]]
+value = 42
+weight = 0.0196078431372549
+
+[[entities.fields.generator.choices]]
 value = 24
+weight = 0.0196078431372549
+
+[[entities.fields.generator.choices]]
+value = 44
+weight = 0.0196078431372549
+
+[[entities.fields.generator.choices]]
+value = 23
 weight = 0.0196078431372549
 
 [entities.fields.stats]
@@ -448,6 +448,42 @@ cardinality = 19
 [[correlations]]
 entity = "original"
 fields = [
+    "Car Insurance Premiums ($)",
+    "Losses incurred by insurance companies for collisions per insured driver ($)",
+]
+matrix = [
+    [
+    1.0,
+    0.623116438519707,
+],
+    [
+    0.623116438519707,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Car Insurance Premiums ($)",
+    "Losses incurred by insurance companies for collisions per insured driver ($)",
+]
+matrix = [
+    [
+    1.0,
+    0.6466968325791855,
+],
+    [
+    0.6466968325791855,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired",
     "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding",
 ]
@@ -458,42 +494,6 @@ matrix = [
 ],
     [
     0.3676719596921529,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Car Insurance Premiums ($)",
-    "Losses incurred by insurance companies for collisions per insured driver ($)",
-]
-matrix = [
-    [
-    1.0,
-    0.623116438519707,
-],
-    [
-    0.623116438519707,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Car Insurance Premiums ($)",
-    "Losses incurred by insurance companies for collisions per insured driver ($)",
-]
-matrix = [
-    [
-    1.0,
-    0.6466968325791855,
-],
-    [
-    0.6466968325791855,
     1.0,
 ],
 ]

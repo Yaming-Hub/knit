@@ -99,8 +99,6 @@ step = 1
 values = [
     "male",
     "male",
-    "male",
-    "female",
     "female",
     "female",
 ]
@@ -230,11 +228,11 @@ value = 2
 weight = 0.08978675645342311
 
 [[entities.fields.generator.choices]]
-value = 3
+value = 5
 weight = 0.005611672278338945
 
 [[entities.fields.generator.choices]]
-value = 5
+value = 3
 weight = 0.005611672278338945
 
 [[entities.fields.generator.choices]]
@@ -304,9 +302,10 @@ data_type = "string"
 nullable = false
 
 [entities.fields.generator]
-type = "dictionary"
-file = "original__embarked_embark_town.tsv"
-expansion = "sample"
+type = "tuple_lookup"
+source_field = "embark_town"
+file = "original__embark_town_embarked.tsv"
+column = 1
 
 [entities.fields.stats]
 distinct_count = 3
@@ -329,6 +328,9 @@ type = "sequence"
 start = 0
 step = 1
 values = [
+    "Third",
+    "First",
+    "Second",
     "Third",
     "First",
     "Second",
@@ -359,6 +361,9 @@ type = "sequence"
 start = 0
 step = 1
 values = [
+    "man",
+    "woman",
+    "child",
     "man",
     "woman",
     "child",
@@ -424,6 +429,13 @@ values = [
     "A",
     "B",
     "F",
+    "C",
+    "E",
+    "G",
+    "D",
+    "A",
+    "B",
+    "F",
 ]
 cycle = true
 
@@ -447,10 +459,9 @@ data_type = "string"
 nullable = false
 
 [entities.fields.generator]
-type = "tuple_lookup"
-source_field = "embarked"
-file = "original__embarked_embark_town.tsv"
-column = 1
+type = "dictionary"
+file = "original__embark_town_embarked.tsv"
+expansion = "sample"
 
 [entities.fields.stats]
 distinct_count = 3
@@ -602,6 +613,114 @@ cardinality = 2
 [[correlations]]
 entity = "original"
 fields = [
+    "age",
+    "sibsp",
+]
+matrix = [
+    [
+    1.0,
+    -0.3082467589236574,
+],
+    [
+    -0.3082467589236574,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "age",
+    "pclass",
+]
+matrix = [
+    [
+    1.0,
+    -0.36922601531551574,
+],
+    [
+    -0.36922601531551574,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "age",
+    "pclass",
+]
+matrix = [
+    [
+    1.0,
+    -0.36166557503434504,
+],
+    [
+    -0.36166557503434504,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "sibsp",
+    "fare",
+]
+matrix = [
+    [
+    1.0,
+    0.4471129882944581,
+],
+    [
+    0.4471129882944581,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "sibsp",
+    "parch",
+]
+matrix = [
+    [
+    1.0,
+    0.41483769862015263,
+],
+    [
+    0.41483769862015263,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "sibsp",
+    "parch",
+]
+matrix = [
+    [
+    1.0,
+    0.45001397100861634,
+],
+    [
+    0.45001397100861634,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "pclass",
     "fare",
 ]
@@ -630,42 +749,6 @@ matrix = [
 ],
     [
     -0.6880316726256096,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "pclass",
-    "age",
-]
-matrix = [
-    [
-    1.0,
-    -0.36922601531551574,
-],
-    [
-    -0.36922601531551574,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "pclass",
-    "age",
-]
-matrix = [
-    [
-    1.0,
-    -0.36166557503434504,
-],
-    [
-    -0.36166557503434504,
     1.0,
 ],
 ]
@@ -711,24 +794,6 @@ conditional = []
 entity = "original"
 fields = [
     "fare",
-    "sibsp",
-]
-matrix = [
-    [
-    1.0,
-    0.4471129882944581,
-],
-    [
-    0.4471129882944581,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fare",
     "parch",
 ]
 matrix = [
@@ -764,16 +829,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "sibsp",
-    "parch",
+    "who",
+    "sex",
 ]
 matrix = [
     [
     1.0,
-    0.41483769862015263,
+    0.9476753874512575,
 ],
     [
-    0.41483769862015263,
+    0.9476753874512575,
     1.0,
 ],
 ]
@@ -782,34 +847,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "sibsp",
-    "parch",
+    "who",
+    "deck",
 ]
 matrix = [
     [
     1.0,
-    0.45001397100861634,
+    0.3213546858934588,
 ],
     [
-    0.45001397100861634,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "sibsp",
-    "age",
-]
-matrix = [
-    [
-    1.0,
-    -0.3082467589236574,
-],
-    [
-    -0.3082467589236574,
+    0.3213546858934588,
     1.0,
 ],
 ]
@@ -836,62 +883,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "who",
-    "deck",
-]
-matrix = [
-    [
-    1.0,
-    0.32135468589345884,
-],
-    [
-    0.32135468589345884,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "who",
     "sex",
-]
-matrix = [
-    [
-    1.0,
-    0.9476753874512575,
-],
-    [
-    0.9476753874512575,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "alive",
-    "class",
-]
-matrix = [
-    [
-    1.0,
-    0.3398173880053118,
-],
-    [
-    0.3398173880053118,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "alive",
-    "sex",
 ]
 matrix = [
     [
@@ -900,24 +893,6 @@ matrix = [
 ],
     [
     0.5433513806577551,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "deck",
-    "class",
-]
-matrix = [
-    [
-    1.0,
-    0.6461176369278668,
-],
-    [
-    0.6461176369278668,
     1.0,
 ],
 ]
@@ -940,6 +915,73 @@ matrix = [
 ],
 ]
 conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "deck",
+    "class",
+]
+matrix = [
+    [
+    1.0,
+    0.6461176369278668,
+],
+    [
+    0.6461176369278668,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "alive",
+    "class",
+]
+matrix = [
+    [
+    1.0,
+    0.33981738800531175,
+],
+    [
+    0.33981738800531175,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "parch"
+given = "sex"
+
+[[correlations.distributions]]
+when = "male"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 4.242647058823529
+
+[[correlations.distributions]]
+when = "female"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.5392156862745099
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 2.6205882352941177
 
 [[correlations]]
 entity = "original"
@@ -980,36 +1022,6 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "fare"
-given = "sex"
-
-[[correlations.distributions]]
-when = "male"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 0.03917897570608137
-
-[[correlations.distributions]]
-when = "female"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 6.75
-shape = 0.7440299348444382
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 0.031051842696327606
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
 dependent = "sibsp"
 given = "sex"
 
@@ -1041,30 +1053,111 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "parch"
+dependent = "fare"
 given = "sex"
-
-[[correlations.distributions]]
-when = "female"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.5392156862745099
 
 [[correlations.distributions]]
 when = "male"
 distribution = "exponential"
-round = true
 
 [correlations.distributions.params]
-lambda = 4.242647058823529
+lambda = 0.03917897570608137
+
+[[correlations.distributions]]
+when = "female"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 6.75
+shape = 0.7440299348444382
 
 [correlations.default]
 kind = "exponential"
 
 [correlations.default.params]
-lambda = 2.6205882352941177
+lambda = 0.031051842696327606
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "pclass"
+given = "class"
+
+[[correlations.distributions]]
+when = "Second"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 0.6931471805599465
+sigma = 0.0000000000000012212453270876722
+
+[[correlations.distributions]]
+when = "Third"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 1.0986122886681104
+sigma = 0.0000000000000006661338147750939
+
+[[correlations.distributions]]
+when = "First"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 3.0
+min = 1.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "age"
+given = "class"
+
+[[correlations.distributions]]
+when = "Third"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 25.14061971830986
+std_dev = 12.477786647316464
+
+[[correlations.distributions]]
+when = "Second"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 29.87763005780347
+std_dev = 13.960552626722544
+
+[[correlations.distributions]]
+when = "First"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 38.233440860215055
+std_dev = 14.763009644103025
+
+[correlations.default]
+kind = "normal"
+
+[correlations.default.params]
+mean = 29.69911764705882
+std_dev = 14.51632115081731
 
 [[correlations]]
 entity = "original"
@@ -1073,10 +1166,10 @@ fields = []
 matrix = []
 conditional = []
 dependent = "survived"
-given = "deck"
+given = "class"
 
 [[correlations.distributions]]
-when = "E"
+when = "Second"
 distribution = "uniform"
 round = true
 
@@ -1085,43 +1178,15 @@ max = 1.0
 min = 0.0
 
 [[correlations.distributions]]
-when = "B"
-distribution = "uniform"
+when = "Third"
+distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-max = 1.0
-min = 0.0
+lambda = 4.126050420168068
 
 [[correlations.distributions]]
-when = "C"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "D"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "A"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "F"
+when = "First"
 distribution = "uniform"
 round = true
 
@@ -1142,55 +1207,69 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
+dependent = "sibsp"
+given = "class"
+
+[[correlations.distributions]]
+when = "Second"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.4864864864864864
+
+[[correlations.distributions]]
+when = "Third"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.6258278145695364
+
+[[correlations.distributions]]
+when = "First"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.4
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 1.9120171673819744
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
 dependent = "fare"
-given = "deck"
+given = "class"
 
 [[correlations.distributions]]
-when = "C"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 26.55
-shape = 0.9255089622526828
-
-[[correlations.distributions]]
-when = "F"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 7.65
-shape = 1.4165931589417105
-
-[[correlations.distributions]]
-when = "B"
+when = "First"
 distribution = "exponential"
 
 [correlations.distributions.params]
-lambda = 0.008810125285792498
+lambda = 0.011882879370207398
 
 [[correlations.distributions]]
-when = "E"
-distribution = "gamma"
+when = "Third"
+distribution = "exponential"
 
 [correlations.distributions.params]
-scale = 22.379926425248847
-shape = 2.0566061244094653
+lambda = 0.0731232010817589
 
 [[correlations.distributions]]
-when = "D"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 113.275
-min = 12.875
-
-[[correlations.distributions]]
-when = "A"
+when = "Second"
 distribution = "normal"
 
 [correlations.distributions.params]
-mean = 39.623886666666664
-std_dev = 17.3658214718017
+mean = 20.662183152173913
+std_dev = 13.380888759886036
 
 [correlations.default]
 kind = "exponential"
@@ -1204,20 +1283,482 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
+dependent = "parch"
+given = "who"
+
+[[correlations.distributions]]
+when = "child"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 2.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "man"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 6.548780487804878
+
+[[correlations.distributions]]
+when = "woman"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.7712418300653594
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 2.6205882352941177
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "age"
+given = "who"
+
+[[correlations.distributions]]
+when = "woman"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 3.403299034988477
+sigma = 0.3530625490683868
+
+[[correlations.distributions]]
+when = "man"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 3.4319459292011434
+sigma = 0.36945410776941945
+
+[[correlations.distributions]]
+when = "child"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 15.0
+min = 0.42
+
+[correlations.default]
+kind = "normal"
+
+[correlations.default.params]
+mean = 29.69911764705882
+std_dev = 14.51632115081731
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "survived"
+given = "who"
+
+[[correlations.distributions]]
+when = "child"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "man"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 6.1022727272727275
+
+[[correlations.distributions]]
+when = "woman"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 1.0
+min = 0.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "sibsp"
+given = "who"
+
+[[correlations.distributions]]
+when = "child"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.5763888888888888
+
+[[correlations.distributions]]
+when = "man"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 3.3773584905660377
+
+[[correlations.distributions]]
+when = "woman"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.6625766871165646
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 1.9120171673819744
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "fare"
+given = "who"
+
+[[correlations.distributions]]
+when = "woman"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 6.75
+shape = 0.7319221001302284
+
+[[correlations.distributions]]
+when = "child"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 3.2170977977760877
+sigma = 0.6750155721832594
+
+[[correlations.distributions]]
+when = "man"
+distribution = "exponential"
+
+[correlations.distributions.params]
+lambda = 0.040218496230276166
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 0.031051842696327606
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "parch"
+given = "embarked"
+
+[[correlations.distributions]]
+when = "S"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.4210526315789473
+
+[[correlations.distributions]]
+when = "C"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.7540983606557377
+
+[[correlations.distributions]]
+when = "Q"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 5.923076923076923
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 2.6205882352941177
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "pclass"
+given = "embarked"
+
+[[correlations.distributions]]
+when = "Q"
+distribution = "normal"
+round = true
+
+[correlations.distributions.params]
+mean = 2.909090909090909
+std_dev = 0.3668687504370266
+
+[[correlations.distributions]]
+when = "C"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 3.0
+min = 1.0
+
+[[correlations.distributions]]
+when = "S"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 3.0
+min = 1.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 3.0
+min = 1.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "survived"
+given = "embarked"
+
+[[correlations.distributions]]
+when = "S"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.967741935483871
+
+[[correlations.distributions]]
+when = "C"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "Q"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 1.0
+min = 0.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "sibsp"
+given = "embarked"
+
+[[correlations.distributions]]
+when = "C"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.5846153846153843
+
+[[correlations.distributions]]
+when = "S"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.75
+
+[[correlations.distributions]]
+when = "Q"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.3333333333333335
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 1.9120171673819744
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "fare"
+given = "embarked"
+
+[[correlations.distributions]]
+when = "C"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 3.437320288408663
+sigma = 1.1301942690443632
+
+[[correlations.distributions]]
+when = "Q"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 6.75
+shape = 2.236273115522955
+
+[[correlations.distributions]]
+when = "S"
+distribution = "exponential"
+
+[correlations.distributions.params]
+lambda = 0.03692787850003181
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 0.031051842696327606
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "parch"
+given = "deck"
+
+[[correlations.distributions]]
+when = "A"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 7.5
+
+[[correlations.distributions]]
+when = "D"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 3.3
+
+[[correlations.distributions]]
+when = "C"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.107142857142857
+
+[[correlations.distributions]]
+when = "B"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.7407407407407405
+
+[[correlations.distributions]]
+when = "F"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.8571428571428572
+
+[[correlations.distributions]]
+when = "E"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 3.2
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 2.6205882352941177
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
 dependent = "pclass"
 given = "deck"
 
 [[correlations.distributions]]
-when = "D"
-distribution = "pareto"
+when = "A"
+distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-scale = 1.0
-shape = 11.902234087333948
+lambda = 1.0
 
 [[correlations.distributions]]
-when = "A"
+when = "C"
 distribution = "exponential"
 round = true
 
@@ -1242,6 +1783,15 @@ scale = 2.0
 shape = 6.412389002178721
 
 [[correlations.distributions]]
+when = "D"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1.0
+shape = 11.902234087333948
+
+[[correlations.distributions]]
 when = "E"
 distribution = "pareto"
 round = true
@@ -1249,14 +1799,6 @@ round = true
 [correlations.distributions.params]
 scale = 1.0
 shape = 5.273196405669226
-
-[[correlations.distributions]]
-when = "C"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.0
 
 [correlations.default]
 kind = "uniform"
@@ -1275,6 +1817,30 @@ dependent = "age"
 given = "deck"
 
 [[correlations.distributions]]
+when = "E"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 38.11666666666667
+std_dev = 12.378532043645382
+
+[[correlations.distributions]]
+when = "D"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 63.0
+min = 16.0
+
+[[correlations.distributions]]
+when = "A"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 80.0
+min = 4.0
+
+[[correlations.distributions]]
 when = "B"
 distribution = "uniform"
 
@@ -1291,36 +1857,12 @@ max = 42.0
 min = 1.0
 
 [[correlations.distributions]]
-when = "D"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 63.0
-min = 16.0
-
-[[correlations.distributions]]
 when = "C"
 distribution = "normal"
 
 [correlations.distributions.params]
 mean = 36.086666666666666
 std_dev = 14.237807534824059
-
-[[correlations.distributions]]
-when = "E"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 38.11666666666667
-std_dev = 12.378532043645382
-
-[[correlations.distributions]]
-when = "A"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 80.0
-min = 4.0
 
 [correlations.default]
 kind = "normal"
@@ -1335,146 +1877,11 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "sibsp"
-given = "deck"
-
-[[correlations.distributions]]
-when = "B"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.764705882352941
-
-[[correlations.distributions]]
-when = "F"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.8571428571428572
-
-[[correlations.distributions]]
-when = "C"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.5526315789473686
-
-[[correlations.distributions]]
-when = "E"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 3.2
-
-[[correlations.distributions]]
-when = "D"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "A"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 7.5
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 1.9120171673819744
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "parch"
-given = "deck"
-
-[[correlations.distributions]]
-when = "C"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.107142857142857
-
-[[correlations.distributions]]
-when = "E"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 3.2
-
-[[correlations.distributions]]
-when = "A"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 7.5
-
-[[correlations.distributions]]
-when = "F"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.8571428571428572
-
-[[correlations.distributions]]
-when = "D"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 3.3
-
-[[correlations.distributions]]
-when = "B"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.7407407407407405
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 2.6205882352941177
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
 dependent = "survived"
-given = "who"
+given = "deck"
 
 [[correlations.distributions]]
-when = "man"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 6.1022727272727275
-
-[[correlations.distributions]]
-when = "woman"
+when = "C"
 distribution = "uniform"
 round = true
 
@@ -1483,7 +1890,43 @@ max = 1.0
 min = 0.0
 
 [[correlations.distributions]]
-when = "child"
+when = "A"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "E"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "B"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "D"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "F"
 distribution = "uniform"
 round = true
 
@@ -1504,110 +1947,57 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "fare"
-given = "who"
-
-[[correlations.distributions]]
-when = "woman"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 6.75
-shape = 0.7319221001302284
-
-[[correlations.distributions]]
-when = "man"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 0.040218496230276166
-
-[[correlations.distributions]]
-when = "child"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.2170977977760877
-sigma = 0.6750155721832594
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 0.031051842696327606
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "age"
-given = "who"
-
-[[correlations.distributions]]
-when = "man"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.4319459292011434
-sigma = 0.36945410776941945
-
-[[correlations.distributions]]
-when = "woman"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.403299034988477
-sigma = 0.3530625490683868
-
-[[correlations.distributions]]
-when = "child"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 15.0
-min = 0.42
-
-[correlations.default]
-kind = "normal"
-
-[correlations.default.params]
-mean = 29.69911764705882
-std_dev = 14.51632115081731
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
 dependent = "sibsp"
-given = "who"
+given = "deck"
 
 [[correlations.distributions]]
-when = "woman"
+when = "C"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 1.6625766871165646
+lambda = 1.5526315789473686
 
 [[correlations.distributions]]
-when = "man"
+when = "D"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 1.0
+min = 0.0
+
+[[correlations.distributions]]
+when = "E"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 3.3773584905660377
+lambda = 3.2
 
 [[correlations.distributions]]
-when = "child"
+when = "A"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.5763888888888888
+lambda = 7.5
+
+[[correlations.distributions]]
+when = "B"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.764705882352941
+
+[[correlations.distributions]]
+when = "F"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.8571428571428572
 
 [correlations.default]
 kind = "exponential"
@@ -1621,39 +2011,143 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "parch"
-given = "who"
+dependent = "fare"
+given = "deck"
 
 [[correlations.distributions]]
-when = "man"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 6.548780487804878
-
-[[correlations.distributions]]
-when = "woman"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.7712418300653594
-
-[[correlations.distributions]]
-when = "child"
+when = "D"
 distribution = "uniform"
+
+[correlations.distributions.params]
+max = 113.275
+min = 12.875
+
+[[correlations.distributions]]
+when = "A"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 39.623886666666664
+std_dev = 17.3658214718017
+
+[[correlations.distributions]]
+when = "B"
+distribution = "exponential"
+
+[correlations.distributions.params]
+lambda = 0.008810125285792498
+
+[[correlations.distributions]]
+when = "F"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 7.65
+shape = 1.4165931589417105
+
+[[correlations.distributions]]
+when = "E"
+distribution = "gamma"
+
+[correlations.distributions.params]
+scale = 22.379926425248847
+shape = 2.0566061244094653
+
+[[correlations.distributions]]
+when = "C"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 26.55
+shape = 0.9255089622526828
+
+[correlations.default]
+kind = "exponential"
+
+[correlations.default.params]
+lambda = 0.031051842696327606
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "parch"
+given = "embark_town"
+
+[[correlations.distributions]]
+when = "Cherbourg"
+distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-max = 2.0
-min = 0.0
+lambda = 2.7540983606557377
+
+[[correlations.distributions]]
+when = "Southampton"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 2.4210526315789473
+
+[[correlations.distributions]]
+when = "Queenstown"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 5.923076923076923
 
 [correlations.default]
 kind = "exponential"
 
 [correlations.default.params]
 lambda = 2.6205882352941177
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "pclass"
+given = "embark_town"
+
+[[correlations.distributions]]
+when = "Cherbourg"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 3.0
+min = 1.0
+
+[[correlations.distributions]]
+when = "Queenstown"
+distribution = "normal"
+round = true
+
+[correlations.distributions.params]
+mean = 2.909090909090909
+std_dev = 0.3668687504370266
+
+[[correlations.distributions]]
+when = "Southampton"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 3.0
+min = 1.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 3.0
+min = 1.0
 
 [[correlations]]
 entity = "original"
@@ -1703,97 +2197,8 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "fare"
-given = "embark_town"
-
-[[correlations.distributions]]
-when = "Cherbourg"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.437320288408663
-sigma = 1.1301942690443632
-
-[[correlations.distributions]]
-when = "Queenstown"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 6.75
-shape = 2.236273115522955
-
-[[correlations.distributions]]
-when = "Southampton"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 0.03692787850003181
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 0.031051842696327606
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "pclass"
-given = "embark_town"
-
-[[correlations.distributions]]
-when = "Cherbourg"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 3.0
-min = 1.0
-
-[[correlations.distributions]]
-when = "Southampton"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 3.0
-min = 1.0
-
-[[correlations.distributions]]
-when = "Queenstown"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 2.909090909090909
-std_dev = 0.3668687504370266
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 3.0
-min = 1.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
 dependent = "sibsp"
 given = "embark_town"
-
-[[correlations.distributions]]
-when = "Southampton"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.75
 
 [[correlations.distributions]]
 when = "Cherbourg"
@@ -1811,6 +2216,14 @@ round = true
 [correlations.distributions.params]
 lambda = 2.3333333333333335
 
+[[correlations.distributions]]
+when = "Southampton"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 1.75
+
 [correlations.default]
 kind = "exponential"
 
@@ -1823,61 +2236,31 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "parch"
+dependent = "fare"
 given = "embark_town"
-
-[[correlations.distributions]]
-when = "Queenstown"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 5.923076923076923
 
 [[correlations.distributions]]
 when = "Southampton"
 distribution = "exponential"
-round = true
 
 [correlations.distributions.params]
-lambda = 2.4210526315789473
+lambda = 0.03692787850003181
 
 [[correlations.distributions]]
 when = "Cherbourg"
-distribution = "exponential"
-round = true
+distribution = "log_normal"
 
 [correlations.distributions.params]
-lambda = 2.7540983606557377
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 2.6205882352941177
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "fare"
-given = "alive"
+mu = 3.437320288408663
+sigma = 1.1301942690443632
 
 [[correlations.distributions]]
-when = "no"
-distribution = "exponential"
+when = "Queenstown"
+distribution = "pareto"
 
 [correlations.distributions.params]
-lambda = 0.04521227571097976
-
-[[correlations.distributions]]
-when = "yes"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 0.020663117629195583
+scale = 6.75
+shape = 2.236273115522955
 
 [correlations.default]
 kind = "exponential"
@@ -1922,397 +2305,25 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "survived"
-given = "class"
-
-[[correlations.distributions]]
-when = "Third"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 4.126050420168068
-
-[[correlations.distributions]]
-when = "First"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "Second"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 1.0
-min = 0.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
 dependent = "fare"
-given = "class"
+given = "alive"
 
 [[correlations.distributions]]
-when = "Third"
+when = "no"
 distribution = "exponential"
 
 [correlations.distributions.params]
-lambda = 0.0731232010817589
+lambda = 0.04521227571097976
 
 [[correlations.distributions]]
-when = "First"
+when = "yes"
 distribution = "exponential"
 
 [correlations.distributions.params]
-lambda = 0.011882879370207398
-
-[[correlations.distributions]]
-when = "Second"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 20.662183152173913
-std_dev = 13.380888759886036
+lambda = 0.020663117629195583
 
 [correlations.default]
 kind = "exponential"
 
 [correlations.default.params]
 lambda = 0.031051842696327606
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "pclass"
-given = "class"
-
-[[correlations.distributions]]
-when = "First"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.0
-
-[[correlations.distributions]]
-when = "Second"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 0.6931471805599465
-sigma = 0.0000000000000012212453270876722
-
-[[correlations.distributions]]
-when = "Third"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 1.0986122886681104
-sigma = 0.0000000000000006661338147750939
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 3.0
-min = 1.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "age"
-given = "class"
-
-[[correlations.distributions]]
-when = "First"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 38.233440860215055
-std_dev = 14.763009644103025
-
-[[correlations.distributions]]
-when = "Third"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 25.14061971830986
-std_dev = 12.477786647316464
-
-[[correlations.distributions]]
-when = "Second"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 29.87763005780347
-std_dev = 13.960552626722544
-
-[correlations.default]
-kind = "normal"
-
-[correlations.default.params]
-mean = 29.69911764705882
-std_dev = 14.51632115081731
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "sibsp"
-given = "class"
-
-[[correlations.distributions]]
-when = "Third"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.6258278145695364
-
-[[correlations.distributions]]
-when = "First"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.4
-
-[[correlations.distributions]]
-when = "Second"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.4864864864864864
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 1.9120171673819744
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "survived"
-given = "embarked"
-
-[[correlations.distributions]]
-when = "Q"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "C"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 1.0
-min = 0.0
-
-[[correlations.distributions]]
-when = "S"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.967741935483871
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 1.0
-min = 0.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "fare"
-given = "embarked"
-
-[[correlations.distributions]]
-when = "Q"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 6.75
-shape = 2.236273115522955
-
-[[correlations.distributions]]
-when = "S"
-distribution = "exponential"
-
-[correlations.distributions.params]
-lambda = 0.03692787850003181
-
-[[correlations.distributions]]
-when = "C"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.437320288408663
-sigma = 1.1301942690443632
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 0.031051842696327606
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "pclass"
-given = "embarked"
-
-[[correlations.distributions]]
-when = "C"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 3.0
-min = 1.0
-
-[[correlations.distributions]]
-when = "S"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 3.0
-min = 1.0
-
-[[correlations.distributions]]
-when = "Q"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 2.909090909090909
-std_dev = 0.3668687504370266
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 3.0
-min = 1.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "sibsp"
-given = "embarked"
-
-[[correlations.distributions]]
-when = "Q"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.3333333333333335
-
-[[correlations.distributions]]
-when = "S"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 1.75
-
-[[correlations.distributions]]
-when = "C"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.5846153846153843
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 1.9120171673819744
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "parch"
-given = "embarked"
-
-[[correlations.distributions]]
-when = "C"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.7540983606557377
-
-[[correlations.distributions]]
-when = "S"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 2.4210526315789473
-
-[[correlations.distributions]]
-when = "Q"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 5.923076923076923
-
-[correlations.default]
-kind = "exponential"
-
-[correlations.default.params]
-lambda = 2.6205882352941177

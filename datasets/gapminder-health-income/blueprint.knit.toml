@@ -236,16 +236,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "country",
     "region",
+    "country",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999999956,
+    0.9999999999999885,
 ],
     [
-    0.9999999999999956,
+    0.9999999999999885,
     1.0,
 ],
 ]
@@ -261,15 +261,6 @@ dependent = "income"
 given = "region"
 
 [[correlations.distributions]]
-when = "south_asia"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 14408.0
-min = 1925.0
-
-[[correlations.distributions]]
 when = "sub_saharan_africa"
 distribution = "log_normal"
 round = true
@@ -279,13 +270,22 @@ mu = 7.929661040683373
 sigma = 0.9920695927415193
 
 [[correlations.distributions]]
-when = "america"
+when = "south_asia"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 14408.0
+min = 1925.0
+
+[[correlations.distributions]]
+when = "middle_east_north_africa"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 9.434547745057072
-sigma = 0.6552998346136625
+mu = 9.755859551946426
+sigma = 1.0462405638661798
 
 [[correlations.distributions]]
 when = "east_asia_pacific"
@@ -306,13 +306,13 @@ scale = 10257.978190544849
 shape = 2.701742924891904
 
 [[correlations.distributions]]
-when = "middle_east_north_africa"
+when = "america"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 9.755859551946426
-sigma = 1.0462405638661798
+mu = 9.434547745057072
+sigma = 0.6552998346136625
 
 [correlations.default]
 kind = "log_normal"
@@ -331,13 +331,13 @@ dependent = "population"
 given = "region"
 
 [[correlations.distributions]]
-when = "europe_central_asia"
+when = "america"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 15.738240779172209
-sigma = 1.527199695185738
+mu = 15.283652423009759
+sigma = 2.2696517392345306
 
 [[correlations.distributions]]
 when = "east_asia_pacific"
@@ -349,6 +349,15 @@ mu = 15.510988563473157
 sigma = 2.7403168653698153
 
 [[correlations.distributions]]
+when = "europe_central_asia"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 15.738240779172209
+sigma = 1.527199695185738
+
+[[correlations.distributions]]
 when = "sub_saharan_africa"
 distribution = "log_normal"
 round = true
@@ -358,13 +367,13 @@ mu = 15.921832455350092
 sigma = 1.5849984037765568
 
 [[correlations.distributions]]
-when = "america"
+when = "south_asia"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 15.283652423009759
-sigma = 2.2696517392345306
+mu = 17.07775496445477
+sigma = 2.5814362559798716
 
 [[correlations.distributions]]
 when = "middle_east_north_africa"
@@ -373,15 +382,6 @@ round = true
 
 [correlations.distributions.params]
 lambda = 0.00000004720213621197386
-
-[[correlations.distributions]]
-when = "south_asia"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 17.07775496445477
-sigma = 2.5814362559798716
 
 [correlations.default]
 kind = "log_normal"
