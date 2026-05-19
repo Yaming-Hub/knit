@@ -1683,6 +1683,7 @@ fn infer_arrow_type(gp: &crate::plan::GeneratorPlan) -> ArrowDataType {
             ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Millisecond, None)
         }
         crate::plan::GeneratorPlan::TupleLookup { .. } => ArrowDataType::Utf8,
+        crate::plan::GeneratorPlan::RowLookup { .. } => ArrowDataType::Utf8,
     }
 }
 
@@ -2422,6 +2423,55 @@ fn resolve_dict_in_generator(
                     column = col_idx,
                     "loaded tuple lookup"
                 );
+            }
+        }
+        crate::plan::GeneratorPlan::RowLookup {
+            source_file,
+            rows,
+            column,
+        } => {
+            // Only load if rows haven't been populated yet
+            if rows.is_empty() {
+                if let Some(file_path) = source_file.as_ref() {
+                    if Path::new(file_path).is_absolute() {
+                        bail!(
+                            "row lookup file path must be relative, got: '{}'",
+                            file_path
+                        );
+                    }
+                    if file_path.contains("..") {
+                        bail!(
+                            "row lookup file path must not contain '..': '{}'",
+                            file_path
+                        );
+                    }
+                    let full_path = schema_dir.join(file_path);
+                    let file = std::fs::File::open(&full_path).with_context(|| {
+                        format!(
+                            "failed to open row lookup file '{}' (resolved to '{}')",
+                            file_path,
+                            full_path.display()
+                        )
+                    })?;
+                    let reader = std::io::BufReader::new(file);
+                    let mut loaded_rows: Vec<Vec<String>> = Vec::new();
+                    for line in reader.lines() {
+                        let line = line?;
+                        let parts: Vec<String> = line
+                            .trim()
+                            .split('\t')
+                            .map(|p| crate::cli::commands::learn::unescape_tsv_value(p))
+                            .collect();
+                        loaded_rows.push(parts);
+                    }
+                    tracing::debug!(
+                        row_lookup_file = %full_path.display(),
+                        rows_loaded = loaded_rows.len(),
+                        column = *column,
+                        "loaded row lookup"
+                    );
+                    *rows = std::sync::Arc::new(loaded_rows);
+                }
             }
         }
         _ => {}

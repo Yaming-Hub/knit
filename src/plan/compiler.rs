@@ -926,6 +926,18 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     column: *column,
                 }
             }
+            GeneratorSpec::RowLookup {
+                file,
+                column,
+                ..
+            } => {
+                // Rows are loaded by the CLI layer after compilation.
+                GeneratorPlan::RowLookup {
+                    rows: std::sync::Arc::new(Vec::new()),
+                    column: *column,
+                    source_file: Some(file.clone()),
+                }
+            }
             GeneratorSpec::ExternalLookup {
                 source,
                 column,

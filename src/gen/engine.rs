@@ -828,6 +828,22 @@ impl GenerationEngine {
         plan: &ExecutionPlan,
         shared_seen: &HashMap<usize, Arc<parking_lot::Mutex<HashSet<String>>>>,
     ) -> Vec<Box<dyn FieldGenerator>> {
+        // Pre-compute shared row-index caches for RowLookup generators.
+        // All RowLookup fields sharing the same source_file get the same cache
+        // so they produce coherent (same-row) output.
+        let mut row_index_caches: HashMap<String, Arc<std::sync::Mutex<crate::r#gen::generators::row_lookup::RowIndexCache>>> = HashMap::new();
+        for fp in &ep.field_plans {
+            if let GeneratorPlan::RowLookup { source_file, .. } = &fp.generator_plan {
+                if let Some(sf) = source_file {
+                    row_index_caches
+                        .entry(sf.clone())
+                        .or_insert_with(|| Arc::new(std::sync::Mutex::new(
+                            crate::r#gen::generators::row_lookup::RowIndexCache::new()
+                        )));
+                }
+            }
+        }
+
         ep.field_plans
             .iter()
             .enumerate()
@@ -1075,6 +1091,20 @@ impl GenerationEngine {
                     )
                 }
                 other => {
+                    // Handle RowLookup with shared index cache for cross-column coherence
+                    if let GeneratorPlan::RowLookup { rows, column, source_file } = other {
+                        let cache = source_file.as_ref()
+                            .and_then(|sf| row_index_caches.get(sf))
+                            .cloned()
+                            .unwrap_or_else(|| Arc::new(std::sync::Mutex::new(
+                                crate::r#gen::generators::row_lookup::RowIndexCache::new()
+                            )));
+                        return Box::new(crate::r#gen::generators::row_lookup::RowLookupGenerator::new(
+                            rows.clone(),
+                            *column,
+                            cache,
+                        )) as Box<dyn FieldGenerator>;
+                    }
                     // Thread the shared seen-set (if any) through to nested
                     // Unique generators inside Conditional/Composite.
                     let seen = shared_seen.get(&field_idx);

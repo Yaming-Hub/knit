@@ -379,6 +379,21 @@ pub enum GeneratorPlan {
         /// Column index in the tuple file (for lazy loading).
         column: usize,
     },
+    /// Row-based lookup — reads a column from a pre-loaded TSV at a random row index.
+    ///
+    /// All fields on the same entity sharing the same `file` get the same
+    /// random row index per output record, preserving cross-column coherence.
+    /// The row index is chosen uniformly from `[0, rows.len())`.
+    RowLookup {
+        /// All rows loaded from the TSV file (each row is a Vec of column values).
+        #[serde(skip)]
+        rows: std::sync::Arc<Vec<Vec<String>>>,
+        /// Zero-based column index within each row to read this field's value from.
+        column: usize,
+        /// Original file path from the schema (used for resolution/loading).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_file: Option<String>,
+    },
     /// Graph-aware FK — samples target actor from source actor's graph neighbors.
     ///
     /// At runtime, reads the source field column from `batch_columns`, maps each

@@ -295,6 +295,9 @@ fn generator_label(gp: &crate::plan::GeneratorPlan) -> String {
         } => {
             format!("tuple_lookup({}, col={})", source_field, column)
         }
+        crate::plan::GeneratorPlan::RowLookup { column, rows, .. } => {
+            format!("row_lookup(col={}, rows={})", column, rows.len())
+        }
     }
 }
 

@@ -3058,16 +3058,6 @@ fn extract_full_row_dictionaries(
             continue;
         }
 
-        // Choose primary column: first string column that isn't a date/numeric type
-        let primary_idx = entity.fields.iter().position(|f| {
-            matches!(
-                f.data_type,
-                crate::core::DataType::String | crate::core::DataType::Uuid
-            )
-        });
-        let Some(primary_idx) = primary_idx else { continue };
-        let primary_name = field_names[primary_idx].clone();
-
         // Remove any existing tuple dict or dictionary files for this entity's columns
         // since the full-row dictionary supersedes them.
         let old_files: Vec<String> = entity.fields.iter().filter_map(|f| {
@@ -3093,8 +3083,7 @@ fn extract_full_row_dictionaries(
             }
         }
 
-        // Write full-row TSV file with primary column at position 0
-        // (TupleLookup loader uses parts[0] as the key)
+        // Write full-row TSV file (columns in field order)
         let file_name = format!(
             "{}__fullrow.tsv",
             sanitize_filename(&entity.name),
@@ -3103,58 +3092,20 @@ fn extract_full_row_dictionaries(
         let mut file = std::fs::File::create(&file_path)
             .with_context(|| format!("failed to create full-row dictionary {file_name}"))?;
         for row in &unique_rows {
-            // Primary column first, then remaining columns in order
-            let mut tsv_row = vec![escape_tsv_value(&row[primary_idx])];
-            for (i, val) in row.iter().enumerate() {
-                if i != primary_idx {
-                    tsv_row.push(escape_tsv_value(val));
-                }
-            }
-            writeln!(file, "{}", tsv_row.join("\t"))?;
+            let escaped: Vec<String> = row.iter().map(|v| escape_tsv_value(v)).collect();
+            writeln!(file, "{}", escaped.join("\t"))?;
         }
 
-        // Write primary-only dictionary file
-        let primary_dict_name = format!(
-            "{}_{}.dict.txt",
-            sanitize_filename(&entity.name),
-            sanitize_filename(&primary_name)
-        );
-        let primary_dict_path = output_dir.join(&primary_dict_name);
-        let mut pdict = std::fs::File::create(&primary_dict_path)
-            .with_context(|| format!("failed to create primary dict {primary_dict_name}"))?;
-        for row in &unique_rows {
-            let pv = &row[primary_idx];
-            if !pv.contains('\n') && !pv.contains('\r') {
-                writeln!(pdict, "{pv}")?;
-            }
-        }
+        let row_count = unique_rows.len();
 
-        // Set primary column to Dictionary generator (reads from primary-only file)
-        if let Some(field) = entity.fields.iter_mut().find(|f| f.name == primary_name) {
-            field.generator = Some(crate::core::GeneratorSpec::Dictionary {
-                file: primary_dict_name,
-                expansion: "sample".to_string(),
-            });
-        }
-
-        // Set all other columns to TupleLookup with adjusted TSV column index
-        // (primary is at position 0, others shift accordingly)
+        // Set all columns to RowLookup — the engine picks a shared random row
+        // index per output record for all RowLookup fields sharing the same file.
         for (col_idx, col_name) in field_names.iter().enumerate() {
-            if col_idx == primary_idx {
-                continue;
-            }
-            // In the TSV, primary is at 0; fields before primary shift right by 1,
-            // fields after primary keep their original index.
-            let tsv_col = if col_idx < primary_idx {
-                col_idx + 1
-            } else {
-                col_idx
-            };
             if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
-                field.generator = Some(crate::core::GeneratorSpec::TupleLookup {
-                    source_field: primary_name.clone(),
+                field.generator = Some(crate::core::GeneratorSpec::RowLookup {
                     file: file_name.clone(),
-                    column: tsv_col,
+                    column: col_idx,
+                    row_count,
                 });
             }
         }
