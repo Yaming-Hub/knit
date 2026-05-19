@@ -128,7 +128,13 @@ fn coerce_to_logical_type(
             if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
                 let i32s: arrow::array::Int32Array = str_arr
                     .iter()
-                    .map(|v| v.and_then(|s| s.parse::<f64>().ok().map(|f| f as i32)))
+                    .map(|v| {
+                        v.and_then(|s| {
+                            s.parse::<i32>()
+                                .ok()
+                                .or_else(|| s.parse::<f64>().ok().map(|f| f as i32))
+                        })
+                    })
                     .collect();
                 return Arc::new(i32s);
             }
@@ -141,7 +147,13 @@ fn coerce_to_logical_type(
             if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
                 let i64s: Int64Array = str_arr
                     .iter()
-                    .map(|v| v.and_then(|s| s.parse::<f64>().ok().map(|f| f as i64)))
+                    .map(|v| {
+                        v.and_then(|s| {
+                            s.parse::<i64>()
+                                .ok()
+                                .or_else(|| s.parse::<f64>().ok().map(|f| f as i64))
+                        })
+                    })
                     .collect();
                 return Arc::new(i64s);
             }

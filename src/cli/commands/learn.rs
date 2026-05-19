@@ -2950,7 +2950,7 @@ pub fn unescape_tsv_value(s: &str) -> String {
 
 /// Extract full-row dictionaries for small, mostly-categorical tables.
 ///
-/// When a table has ≤1000 unique rows and ≥50% of its columns are string/categorical,
+/// When a table has <1000 rows and ≥50% of its columns are string/categorical,
 /// this function writes ALL unique rows as a TSV dictionary and sets the first string
 /// column as a Dictionary generator with all others as TupleLookup. This provides
 /// perfect row-level coherence for small reference/lookup tables.
