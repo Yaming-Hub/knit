@@ -264,6 +264,27 @@ fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
     }
 }
 
+/// Try to convert a StringArray to f64 values by parsing each string.
+///
+/// Returns `Err` if any non-null value cannot be parsed as a number.
+fn to_f64_from_str(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
+    let sa = arr.as_any().downcast_ref::<StringArray>().ok_or(EvalError {
+        message: format!("expected Utf8 array, got {:?}", arr.data_type()),
+    })?;
+    let mut out = Vec::with_capacity(sa.len());
+    for i in 0..sa.len() {
+        if sa.is_null(i) {
+            out.push(None);
+        } else {
+            let v = sa.value(i).parse::<f64>().map_err(|_| EvalError {
+                message: format!("cannot parse '{}' as number", sa.value(i)),
+            })?;
+            out.push(Some(v));
+        }
+    }
+    Ok(out)
+}
+
 fn is_numeric(dt: &DataType) -> bool {
     matches!(dt, DataType::Int64 | DataType::Float64)
 }
@@ -326,6 +347,20 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
         && left.data_type() == &DataType::Utf8
         && right.data_type() == &DataType::Utf8
     {
+        // Try numeric conversion first — string columns that contain numbers
+        // (e.g., from conditional generators) should do arithmetic, not concat.
+        if let (Ok(lv), Ok(rv)) = (to_f64_from_str(left), to_f64_from_str(right)) {
+            let result: Float64Array = lv
+                .iter()
+                .zip(rv.iter())
+                .map(|(a, b)| match (a, b) {
+                    (Some(a), Some(b)) => Some(a + b),
+                    _ => None,
+                })
+                .collect();
+            return Ok(Arc::new(result));
+        }
+        // Fall back to string concatenation
         let l = require_str(left)?;
         let r = require_str(right)?;
         let result: StringArray = (0..l.len())
@@ -335,6 +370,40 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
                 } else {
                     Some(format!("{}{}", l.value(i), r.value(i)))
                 }
+            })
+            .collect();
+        return Ok(Arc::new(result));
+    }
+
+    // For Sub/Mul/Div with Utf8 inputs, try parsing strings as numbers
+    if left.data_type() == &DataType::Utf8 || right.data_type() == &DataType::Utf8 {
+        let lv = if left.data_type() == &DataType::Utf8 {
+            to_f64_from_str(left)?
+        } else {
+            to_f64_vec(left)?
+        };
+        let rv = if right.data_type() == &DataType::Utf8 {
+            to_f64_from_str(right)?
+        } else {
+            to_f64_vec(right)?
+        };
+        let result: Float64Array = lv
+            .iter()
+            .zip(rv.iter())
+            .map(|(a, b)| match (a, b) {
+                (Some(a), Some(b)) => Some(match op {
+                    BinOp::Add => a + b,
+                    BinOp::Sub => a - b,
+                    BinOp::Mul => a * b,
+                    BinOp::Div => {
+                        if *b == 0.0 {
+                            return None;
+                        }
+                        a / b
+                    }
+                    _ => unreachable!(),
+                }),
+                _ => None,
             })
             .collect();
         return Ok(Arc::new(result));
