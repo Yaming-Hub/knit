@@ -135,6 +135,11 @@ pub struct ColumnAnalysis {
     pub stats: Option<crate::core::ColumnStats>,
     /// Auto-detected qualitative traits for this column.
     pub traits: Option<crate::core::FieldTraits>,
+    /// Time-series generator spec (populated when a temporal trend is detected).
+    ///
+    /// Set by `detect_time_series_trends()` when this numeric column shows a
+    /// significant linear trend relative to a sorted temporal column.
+    pub time_series_spec: Option<crate::core::GeneratorSpec>,
 }
 
 impl ColumnAnalysis {
@@ -159,6 +164,7 @@ impl ColumnAnalysis {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         }
     }
 
@@ -1119,6 +1125,11 @@ fn build_generator_inner(
         return build_temporal_generator(col);
     }
 
+    // Time-series trend (linear trend + noise detected during learn)
+    if let Some(ts_spec) = &col.time_series_spec {
+        return ts_spec.clone();
+    }
+
     // Distribution
     if let Some(fit) = &col.distribution {
         // For string sources with numeric content, prefer categorical or string handling
@@ -1984,6 +1995,7 @@ mod tests {
                     is_actor_column: false,
                     stats: None,
                     traits: None,
+                    time_series_spec: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -2004,6 +2016,7 @@ mod tests {
                     is_actor_column: false,
                     stats: None,
                     traits: None,
+                    time_series_spec: None,
                 },
             ],
             relationships: vec![],
@@ -2056,6 +2069,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
@@ -2111,6 +2125,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2165,6 +2180,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2299,6 +2315,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2346,6 +2363,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2397,6 +2415,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::UuidGen { version: 4 }));
@@ -2423,6 +2442,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::OneOf { .. }));
@@ -2449,6 +2469,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(
@@ -2479,6 +2500,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         let r#gen = build_generator(&col, None);
         assert!(
@@ -2511,6 +2533,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2557,6 +2580,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             }],
             relationships: vec![],
             correlations: vec![],
@@ -2632,6 +2656,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2657,6 +2682,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int);
     }
@@ -2682,6 +2708,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
@@ -2716,6 +2743,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         assert_eq!(
             infer_data_type(&col, None),
@@ -2753,6 +2781,7 @@ mod tests {
             is_actor_column: false,
             stats: None,
             traits: None,
+            time_series_spec: None,
         };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Datetime);
     }
@@ -2855,6 +2884,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             },
             ColumnAnalysis {
                 name: "EndDate".into(),
@@ -2875,6 +2905,7 @@ mod tests {
                 is_actor_column: false,
                 stats: None,
                 traits: None,
+                time_series_spec: None,
             },
         ];
         let mut fields = vec![

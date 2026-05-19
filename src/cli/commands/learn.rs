@@ -1090,6 +1090,9 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
         analysis.sort_order = Some(sort_order);
     }
 
+    // Detect time-series trends in numeric columns relative to a sorted temporal column
+    detect_time_series_trends(&combined, &mut analysis);
+
     // Detect cross-column constraints from source data
     let constraints = detect_column_constraints(&combined, &analysis.columns);
     if !constraints.is_empty() {
@@ -1270,6 +1273,195 @@ fn check_sorted_float(iter: impl Iterator<Item = f64>) -> Option<crate::core::So
         return Some(SortDirection::Desc);
     }
     None
+}
+
+/// Detect linear time-series trends in numeric columns.
+///
+/// When a table has a sorted temporal column (date sequence), this function
+/// checks each numeric column for a significant linear trend. If the R² of
+/// a simple linear regression (value ~ row_index) exceeds a threshold, the
+/// column is annotated with a `TimeSeries` generator spec containing
+/// `Trend { slope }` and `Noise { std_dev }` components fitted from the data.
+///
+/// This replaces the default `Distribution` generator for trending columns,
+/// preserving temporal structure in the generated output.
+fn detect_time_series_trends(
+    batch: &RecordBatch,
+    analysis: &mut crate::learn::schema_assembly::TableAnalysis,
+) {
+    use crate::core::{GeneratorSpec, TimeSeriesComponent};
+
+    // Need a sorted temporal column as the time axis
+    let sort_col_name = match &analysis.sort_order {
+        Some(so) => so.column.clone(),
+        None => return,
+    };
+
+    // Verify the sort column is temporal
+    let sort_col_is_temporal = analysis.columns.iter().any(|c| {
+        c.name == sort_col_name && c.temporal_pattern.is_some()
+    });
+    if !sort_col_is_temporal {
+        return;
+    }
+
+    // Need at least 10 rows for meaningful trend detection
+    let n = batch.num_rows();
+    if n < 10 {
+        return;
+    }
+
+    // Minimum R² threshold for trend significance
+    const R2_THRESHOLD: f64 = 0.3;
+
+    // For each numeric column, fit linear regression: value = baseline + slope * t
+    for col in &mut analysis.columns {
+        // Skip the sort column itself, non-numeric columns, PKs, and columns already assigned
+        if col.name == sort_col_name
+            || col.is_primary_key
+            || col.temporal_pattern.is_some()
+            || col.time_series_spec.is_some()
+        {
+            continue;
+        }
+
+        // Only process numeric columns (those with a distribution fit)
+        if col.distribution.is_none() {
+            continue;
+        }
+
+        // Extract numeric values from the batch
+        let values = extract_f64_column(batch, &col.name);
+        if values.len() < 10 {
+            continue;
+        }
+
+        // Compute linear regression: y = baseline + slope * x
+        // where x is the original row index (preserving position for NULL gaps)
+        let n_f = values.len() as f64;
+        let mean_x: f64 = values.iter().map(|(i, _)| *i as f64).sum::<f64>() / n_f;
+        let mean_y: f64 = values.iter().map(|(_, y)| *y).sum::<f64>() / n_f;
+
+        let mut ss_xy = 0.0;
+        let mut ss_xx = 0.0;
+        let mut ss_yy = 0.0;
+        for &(i, y) in &values {
+            let x = i as f64;
+            let dx = x - mean_x;
+            let dy = y - mean_y;
+            ss_xy += dx * dy;
+            ss_xx += dx * dx;
+            ss_yy += dy * dy;
+        }
+
+        if ss_xx < f64::EPSILON || ss_yy < f64::EPSILON {
+            continue;
+        }
+
+        let slope = ss_xy / ss_xx;
+        let r_squared = (ss_xy * ss_xy) / (ss_xx * ss_yy);
+
+        if r_squared < R2_THRESHOLD {
+            continue;
+        }
+
+        // Compute residual standard deviation (noise)
+        let residual_var: f64 = values
+            .iter()
+            .map(|&(i, y)| {
+                let predicted = mean_y + slope * (i as f64 - mean_x);
+                let r = y - predicted;
+                r * r
+            })
+            .sum::<f64>() / (n_f - 2.0);
+        let noise_std = residual_var.sqrt();
+
+        // Compute min/max for clamping
+        let min_val = values.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
+        let max_val = values.iter().map(|(_, y)| *y).fold(f64::NEG_INFINITY, f64::max);
+
+        // The baseline is the value at t=0 (first row)
+        let baseline = mean_y - slope * mean_x;
+
+        let mut components = vec![
+            TimeSeriesComponent::Trend { slope, degree: 1 },
+        ];
+        if noise_std > f64::EPSILON {
+            components.push(TimeSeriesComponent::Noise { std_dev: noise_std });
+        }
+
+        tracing::debug!(
+            column = %col.name,
+            slope = slope,
+            r_squared = r_squared,
+            noise_std = noise_std,
+            baseline = baseline,
+            "detected time-series trend"
+        );
+
+        col.time_series_spec = Some(GeneratorSpec::TimeSeries {
+            baseline,
+            components,
+            min: Some(min_val),
+            max: Some(max_val),
+            timestamp_field: None,
+        });
+    }
+}
+
+/// Extract a column's values as (row_index, f64) from a RecordBatch.
+///
+/// Handles Int8..Int64, UInt8..UInt64, Float32, Float64, and Utf8 (parsed).
+/// Preserves original row indices so regression aligns with the generator's
+/// use of global row index as the time variable.
+/// Returns an empty vec if the column is not found or not numeric.
+fn extract_f64_column(batch: &RecordBatch, col_name: &str) -> Vec<(usize, f64)> {
+    use arrow::array::*;
+    use arrow::datatypes::DataType as ArrowDT;
+
+    let idx = match batch.schema().index_of(col_name) {
+        Ok(i) => i,
+        Err(_) => return Vec::new(),
+    };
+    let arr = batch.column(idx);
+    let n = arr.len();
+    let mut out = Vec::with_capacity(n);
+
+    macro_rules! extract_typed {
+        ($arr:expr, $ty:ty) => {{
+            let a = $arr.as_any().downcast_ref::<$ty>().unwrap();
+            for i in 0..n {
+                if !a.is_null(i) {
+                    out.push((i, a.value(i) as f64));
+                }
+            }
+        }};
+    }
+
+    match arr.data_type() {
+        ArrowDT::Float64 => extract_typed!(arr, Float64Array),
+        ArrowDT::Float32 => extract_typed!(arr, Float32Array),
+        ArrowDT::Int64 => extract_typed!(arr, Int64Array),
+        ArrowDT::Int32 => extract_typed!(arr, Int32Array),
+        ArrowDT::Int16 => extract_typed!(arr, Int16Array),
+        ArrowDT::Int8 => extract_typed!(arr, Int8Array),
+        ArrowDT::UInt64 => extract_typed!(arr, UInt64Array),
+        ArrowDT::UInt32 => extract_typed!(arr, UInt32Array),
+        ArrowDT::UInt16 => extract_typed!(arr, UInt16Array),
+        ArrowDT::UInt8 => extract_typed!(arr, UInt8Array),
+        ArrowDT::Utf8 => {
+            let a = arr.as_any().downcast_ref::<StringArray>().unwrap();
+            for i in 0..n {
+                if !a.is_null(i) {
+                    if let Ok(v) = a.value(i).parse::<f64>() {
+                        out.push((i, v));
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    out
 }
 
 /// Detect cross-column constraints from source data.
