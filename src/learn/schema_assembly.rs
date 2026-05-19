@@ -779,29 +779,6 @@ fn epoch_to_date_string(epoch_secs: f64, has_time: bool) -> String {
     }
 }
 
-/// Compute a reasonable jitter string for a given step interval.
-/// Returns None for very short intervals, or ~10% of the step otherwise.
-fn compute_jitter(step: &str) -> Option<String> {
-    // Parse the step duration (simplified: look for Nd, Nh, Nm patterns)
-    let step_lower = step.to_lowercase();
-    if step_lower.ends_with('d') {
-        if let Ok(days) = step_lower.trim_end_matches('d').parse::<u64>() {
-            if days >= 7 {
-                return Some(format!("{}d", (days / 5).max(1)));
-            } else if days >= 1 {
-                return Some("12h".to_string());
-            }
-        }
-    } else if step_lower.ends_with('h') {
-        if let Ok(hours) = step_lower.trim_end_matches('h').parse::<u64>() {
-            if hours >= 2 {
-                return Some(format!("{}m", (hours * 6).max(10)));
-            }
-        }
-    }
-    None
-}
-
 // ── Actor column detection ──────────────────────────────────────────
 
 /// Actor-related name prefixes that suggest a human/person column.

@@ -93,6 +93,8 @@ fn coerce_to_logical_type(
     arr: arrow::array::ArrayRef,
     data_type: &crate::core::DataType,
 ) -> arrow::array::ArrayRef {
+    use arrow::array::StringArray;
+
     match data_type {
         crate::core::DataType::Bool => {
             if arr.as_any().is::<arrow::array::BooleanArray>() {
@@ -101,6 +103,13 @@ fn coerce_to_logical_type(
             if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
                 let bools: arrow::array::BooleanArray =
                     i64_arr.iter().map(|v| v.map(|x| x != 0)).collect();
+                return Arc::new(bools);
+            }
+            if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
+                let bools: arrow::array::BooleanArray = str_arr
+                    .iter()
+                    .map(|v| v.map(|s| matches!(s.to_lowercase().as_str(), "true" | "yes" | "1")))
+                    .collect();
                 return Arc::new(bools);
             }
             arr
@@ -115,6 +124,44 @@ fn coerce_to_logical_type(
                     .map(|v| v.map(|x| x.clamp(i32::MIN as i64, i32::MAX as i64) as i32))
                     .collect();
                 return Arc::new(i32s);
+            }
+            if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
+                let i32s: arrow::array::Int32Array = str_arr
+                    .iter()
+                    .map(|v| v.and_then(|s| s.parse::<f64>().ok().map(|f| f as i32)))
+                    .collect();
+                return Arc::new(i32s);
+            }
+            arr
+        }
+        crate::core::DataType::Int => {
+            if arr.as_any().is::<Int64Array>() {
+                return arr;
+            }
+            if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
+                let i64s: Int64Array = str_arr
+                    .iter()
+                    .map(|v| v.and_then(|s| s.parse::<f64>().ok().map(|f| f as i64)))
+                    .collect();
+                return Arc::new(i64s);
+            }
+            arr
+        }
+        crate::core::DataType::Float => {
+            if arr.as_any().is::<arrow::array::Float64Array>() {
+                return arr;
+            }
+            if let Some(i64_arr) = arr.as_any().downcast_ref::<Int64Array>() {
+                let f64s: arrow::array::Float64Array =
+                    i64_arr.iter().map(|v| v.map(|x| x as f64)).collect();
+                return Arc::new(f64s);
+            }
+            if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
+                let f64s: arrow::array::Float64Array = str_arr
+                    .iter()
+                    .map(|v| v.and_then(|s| s.parse::<f64>().ok()))
+                    .collect();
+                return Arc::new(f64s);
             }
             arr
         }

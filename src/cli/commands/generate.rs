@@ -1180,7 +1180,9 @@ fn resolve_arrow_type(fp: &crate::plan::FieldPlan) -> ArrowDataType {
     // If the declared data_type has a specific narrow type, use it
     match &fp.data_type {
         crate::core::DataType::Bool => return ArrowDataType::Boolean,
+        crate::core::DataType::Int => return ArrowDataType::Int64,
         crate::core::DataType::Int32 => return ArrowDataType::Int32,
+        crate::core::DataType::Float => return ArrowDataType::Float64,
         crate::core::DataType::Datetime => {
             return ArrowDataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None);
         }

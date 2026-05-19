@@ -490,6 +490,9 @@ fn run_batch(
     // 5b. Extract dictionaries for high-cardinality string columns
     let use_structured = resolve_use_structured(output, model_format);
     let output_dir = resolve_asset_dir(output, use_structured);
+    // Ensure the output directory exists before writing dictionary files
+    std::fs::create_dir_all(&output_dir)
+        .with_context(|| format!("failed to create output dir: {}", output_dir.display()))?;
     let dict_count = extract_dictionaries(&mut data_model, &tables, &output_dir, cli.quiet)?;
 
     // 5b-tuple. Extract tuple dictionaries for co-occurring column groups
@@ -497,6 +500,13 @@ fn run_batch(
         extract_tuple_dictionaries(&mut data_model, &table_analyses, &output_dir)?;
     if tuple_count > 0 && !cli.quiet {
         eprintln!("  Extracted {tuple_count} tuple dictionaries");
+    }
+
+    // 5b-fullrow. Extract full-row dictionaries for small categorical tables
+    let fullrow_count =
+        extract_full_row_dictionaries(&mut data_model, &tables, &output_dir, cli.quiet)?;
+    if fullrow_count > 0 && !cli.quiet {
+        eprintln!("  Extracted {fullrow_count} full-row dictionary table(s)");
     }
 
     // 5b2. Copy companion schema dictionary files (if any)
@@ -2936,6 +2946,249 @@ pub fn unescape_tsv_value(s: &str) -> String {
         }
     }
     result
+}
+
+/// Extract full-row dictionaries for small, mostly-categorical tables.
+///
+/// When a table has ≤1000 unique rows and ≥50% of its columns are string/categorical,
+/// this function writes ALL unique rows as a TSV dictionary and sets the first string
+/// column as a Dictionary generator with all others as TupleLookup. This provides
+/// perfect row-level coherence for small reference/lookup tables.
+fn extract_full_row_dictionaries(
+    model: &mut crate::core::DataModel,
+    tables: &[crate::learn::ingest::IngestionResult],
+    output_dir: &Path,
+    quiet: bool,
+) -> Result<usize> {
+    use arrow::array::Array;
+    use std::collections::HashSet;
+    use std::io::Write;
+
+    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 1000;
+    const MIN_STRING_COLUMN_RATIO: f64 = 0.5;
+
+    let mut count = 0;
+
+    for entity in &mut model.entities {
+        // Skip if entity already has all columns covered by tuple dicts
+        let all_covered = entity.fields.iter().all(|f| {
+            matches!(
+                f.generator,
+                Some(crate::core::GeneratorSpec::Dictionary { .. })
+                    | Some(crate::core::GeneratorSpec::TupleLookup { .. })
+            )
+        });
+        if all_covered {
+            continue;
+        }
+
+        // Skip entities with a primary key — these generate new rows, not lookups
+        let has_pk = entity.fields.iter().any(|f| f.primary_key.unwrap_or(false));
+        if has_pk {
+            continue;
+        }
+
+        // Check column composition: need ≥50% string/categorical columns
+        let total_cols = entity.fields.len();
+        if total_cols < 2 {
+            continue;
+        }
+        let string_cols = entity.fields.iter().filter(|f| {
+            matches!(
+                f.data_type,
+                crate::core::DataType::String | crate::core::DataType::Uuid
+            ) || matches!(
+                &f.generator,
+                Some(crate::core::GeneratorSpec::OneOf { .. })
+                    | Some(crate::core::GeneratorSpec::Dictionary { .. })
+                    | Some(crate::core::GeneratorSpec::Faker { .. })
+            )
+        }).count();
+        let string_ratio = string_cols as f64 / total_cols as f64;
+        if string_ratio < MIN_STRING_COLUMN_RATIO {
+            continue;
+        }
+
+        // Find source data
+        let source_table = tables.iter().find(|t| t.entity == entity.name);
+        let Some(table) = source_table else { continue };
+
+        // Count total rows
+        let total_rows: usize = table.batches.iter().map(|b| b.num_rows()).sum();
+        if total_rows == 0 || total_rows >= MAX_ROWS_FOR_FULL_ROW_DICT {
+            continue;
+        }
+
+        // Collect column names from entity fields (in field order)
+        let field_names: Vec<String> = entity.fields.iter().map(|f| f.name.clone()).collect();
+
+        // Extract unique rows as string tuples
+        let mut unique_rows: Vec<Vec<String>> = Vec::new();
+        let mut seen: HashSet<Vec<String>> = HashSet::new();
+
+        for batch in &table.batches {
+            for row_idx in 0..batch.num_rows() {
+                let mut row: Vec<String> = Vec::with_capacity(field_names.len());
+                let mut valid = true;
+                for col_name in &field_names {
+                    let col_idx = match batch.schema().index_of(col_name) {
+                        Ok(idx) => idx,
+                        Err(_) => { valid = false; break; }
+                    };
+                    let col = batch.column(col_idx);
+                    if col.is_null(row_idx) {
+                        row.push(String::new());
+                    } else {
+                        let val = arrow::util::display::array_value_to_string(col, row_idx)
+                            .unwrap_or_default();
+                        row.push(val);
+                    }
+                }
+                if !valid {
+                    continue;
+                }
+                if seen.insert(row.clone()) {
+                    unique_rows.push(row);
+                }
+            }
+        }
+
+        // Only apply full-row dict if unique rows ≤ threshold
+        if unique_rows.is_empty() || unique_rows.len() > MAX_ROWS_FOR_FULL_ROW_DICT {
+            continue;
+        }
+
+        // Choose primary column: first string column that isn't a date/numeric type
+        let primary_idx = entity.fields.iter().position(|f| {
+            matches!(
+                f.data_type,
+                crate::core::DataType::String | crate::core::DataType::Uuid
+            )
+        });
+        let Some(primary_idx) = primary_idx else { continue };
+        let primary_name = field_names[primary_idx].clone();
+
+        // Remove any existing tuple dict or dictionary files for this entity's columns
+        // since the full-row dictionary supersedes them.
+        let old_files: Vec<String> = entity.fields.iter().filter_map(|f| {
+            match &f.generator {
+                Some(crate::core::GeneratorSpec::Dictionary { file, .. })
+                | Some(crate::core::GeneratorSpec::TupleLookup { file, .. }) => {
+                    Some(file.clone())
+                }
+                _ => None,
+            }
+        }).collect();
+        for old_file in &old_files {
+            let old_path = output_dir.join(old_file);
+            let _ = std::fs::remove_file(&old_path);
+        }
+        for field in entity.fields.iter_mut() {
+            if matches!(
+                &field.generator,
+                Some(crate::core::GeneratorSpec::Dictionary { .. })
+                    | Some(crate::core::GeneratorSpec::TupleLookup { .. })
+            ) {
+                field.generator = None;
+            }
+        }
+
+        // Write full-row TSV file
+        let file_name = format!(
+            "{}__fullrow.tsv",
+            sanitize_filename(&entity.name),
+        );
+        let file_path = output_dir.join(&file_name);
+        let mut file = std::fs::File::create(&file_path)
+            .with_context(|| format!("failed to create full-row dictionary {file_name}"))?;
+        for row in &unique_rows {
+            let escaped: Vec<String> = row.iter().map(|v| escape_tsv_value(v)).collect();
+            writeln!(file, "{}", escaped.join("\t"))?;
+        }
+
+        // Write primary-only dictionary file
+        let primary_dict_name = format!(
+            "{}_{}.dict.txt",
+            sanitize_filename(&entity.name),
+            sanitize_filename(&primary_name)
+        );
+        let primary_dict_path = output_dir.join(&primary_dict_name);
+        let mut pdict = std::fs::File::create(&primary_dict_path)
+            .with_context(|| format!("failed to create primary dict {primary_dict_name}"))?;
+        for row in &unique_rows {
+            let pv = &row[primary_idx];
+            if !pv.contains('\n') && !pv.contains('\r') {
+                writeln!(pdict, "{pv}")?;
+            }
+        }
+
+        // Set primary column to Dictionary generator (reads from primary-only file)
+        if let Some(field) = entity.fields.iter_mut().find(|f| f.name == primary_name) {
+            field.generator = Some(crate::core::GeneratorSpec::Dictionary {
+                file: primary_dict_name,
+                expansion: "sample".to_string(),
+            });
+        }
+
+        // Set all other columns to TupleLookup
+        for (col_idx, col_name) in field_names.iter().enumerate() {
+            if col_idx == primary_idx {
+                continue;
+            }
+            if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
+                field.generator = Some(crate::core::GeneratorSpec::TupleLookup {
+                    source_field: primary_name.clone(),
+                    file: file_name.clone(),
+                    column: col_idx,
+                });
+            }
+        }
+
+        // Remove conditional_distribution correlations targeting columns that
+        // are now covered by the full-row dictionary (TupleLookup provides exact
+        // values, making distribution-based correlations counterproductive).
+        model.correlations.retain(|corr| {
+            let is_cond_dist = corr
+                .correlation_type
+                .as_deref()
+                .map(|t| t == "conditional_distribution")
+                .unwrap_or(false);
+            if !is_cond_dist || corr.entity != entity.name {
+                return true; // keep non-conditional or other-entity correlations
+            }
+            // Drop if the dependent field is one of our full-row dict columns
+            if let Some(dep) = &corr.dependent {
+                if field_names.contains(dep) {
+                    tracing::debug!(
+                        entity = %entity.name,
+                        dependent = %dep,
+                        "removing conditional_distribution override (superseded by full-row dictionary)"
+                    );
+                    return false;
+                }
+            }
+            true
+        });
+
+        count += 1;
+        if !quiet {
+            eprintln!(
+                "  {} full-row dictionary: {} ({} unique rows, {} columns)",
+                "📦".dimmed(),
+                entity.name,
+                unique_rows.len(),
+                field_names.len(),
+            );
+        }
+        tracing::info!(
+            entity = %entity.name,
+            unique_rows = unique_rows.len(),
+            columns = field_names.len(),
+            "extracted full-row dictionary"
+        );
+    }
+
+    Ok(count)
 }
 
 /// Extract dictionaries from state reservoir samples for incremental finalize.
