@@ -1490,14 +1490,13 @@ fn detect_geographic_tuples(
     if batches.is_empty() {
         return;
     }
-    let batch = &batches[0];
-    let schema = batch.schema();
-    let n = batch.num_rows();
-    if n < 5 {
+    let schema = batches[0].schema();
+    let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+    if total_rows < 5 {
         return;
     }
 
-    // Find candidate lat/lon columns by value range
+    // Find candidate lat/lon columns by value range across ALL batches
     let mut lat_candidates: Vec<usize> = Vec::new();
     let mut lon_candidates: Vec<usize> = Vec::new();
 
@@ -1505,10 +1504,14 @@ fn detect_geographic_tuples(
         if !field.data_type().is_numeric() {
             continue;
         }
-        let values = extract_nullable_f64_values(batch.column(col_idx).as_ref(), n);
-        let Some(vals) = values else { continue };
-
-        let non_null: Vec<f64> = vals.iter().filter_map(|v| *v).collect();
+        // Collect values across all batches
+        let mut non_null: Vec<f64> = Vec::new();
+        for batch in batches {
+            let n = batch.num_rows();
+            if let Some(vals) = extract_nullable_f64_values(batch.column(col_idx).as_ref(), n) {
+                non_null.extend(vals.iter().filter_map(|v| *v));
+            }
+        }
         if non_null.len() < 5 {
             continue;
         }
@@ -1526,13 +1529,41 @@ fn detect_geographic_tuples(
         }
     }
 
+    // If no explicit lon candidates, try pairing lat candidates that are adjacent
+    // (handles European/African data where all lon values are in [-90, 90]).
+    // Use column name hints or pair by adjacency when exactly two candidates exist.
+    if lon_candidates.is_empty() && lat_candidates.len() >= 2 {
+        // Look for adjacent lat candidate pairs — the second is likely longitude
+        let mut paired = false;
+        for i in 0..lat_candidates.len() {
+            for j in (i + 1)..lat_candidates.len() {
+                let a = lat_candidates[i];
+                let b = lat_candidates[j];
+                let distance = (a as isize - b as isize).unsigned_abs();
+                if distance <= 2 {
+                    // Treat the first as lat, second as lon (by schema order)
+                    lon_candidates.push(b);
+                    paired = true;
+                    break;
+                }
+            }
+            if paired {
+                break;
+            }
+        }
+        // Remove the lon candidate from lat_candidates
+        for l in &lon_candidates {
+            lat_candidates.retain(|x| x != l);
+        }
+    }
+
     // Match lat/lon pairs: prefer adjacent columns in schema order
     let mut used_lats: std::collections::HashSet<usize> = std::collections::HashSet::new();
     let mut used_lons: std::collections::HashSet<usize> = std::collections::HashSet::new();
     let mut geo_pairs: Vec<(usize, usize)> = Vec::new(); // (lat_idx, lon_idx)
 
     for &lat_idx in &lat_candidates {
-        // Find nearest lon that's adjacent (within 1 position)
+        // Find nearest lon that's adjacent (within 2 positions)
         let best_lon = lon_candidates
             .iter()
             .filter(|&&l| !used_lons.contains(&l))
@@ -1582,7 +1613,7 @@ fn detect_geographic_tuples(
             if !group.columns.contains(lon_name) {
                 group.columns.push(lon_name.clone());
             }
-            // Re-extract tuples to include the new columns
+            // Re-extract tuples to include the new columns (across all batches)
             let all_cols: Vec<usize> = group
                 .columns
                 .iter()
@@ -1590,23 +1621,25 @@ fn detect_geographic_tuples(
                 .collect();
             let mut tuples: Vec<Vec<String>> = Vec::new();
             let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-            for row in 0..n {
-                let mut values: Vec<String> = Vec::new();
-                let mut any_null = false;
-                for &ci in &all_cols {
-                    let col = batch.column(ci);
-                    if col.is_null(row) {
-                        any_null = true;
-                        break;
+            for batch in batches {
+                for row in 0..batch.num_rows() {
+                    let mut values: Vec<String> = Vec::new();
+                    let mut any_null = false;
+                    for &ci in &all_cols {
+                        let col = batch.column(ci);
+                        if col.is_null(row) {
+                            any_null = true;
+                            break;
+                        }
+                        values.push(array_value_to_string(col.as_ref(), row));
                     }
-                    values.push(array_value_to_string(col.as_ref(), row));
-                }
-                if any_null {
-                    continue;
-                }
-                let key = values.join("\t");
-                if seen.insert(key) {
-                    tuples.push(values);
+                    if any_null {
+                        continue;
+                    }
+                    let key = values.join("\t");
+                    if seen.insert(key) {
+                        tuples.push(values);
+                    }
                 }
             }
             group.tuples = tuples;
@@ -1662,30 +1695,32 @@ fn detect_geographic_tuples(
             group_cols.push(lat_name.clone());
             group_cols.push(lon_name.clone());
 
-            // Extract unique tuples
+            // Extract unique tuples (across all batches)
             let all_cols: Vec<usize> = group_cols
                 .iter()
                 .filter_map(|name| col_names.iter().position(|n| n == name))
                 .collect();
             let mut tuples: Vec<Vec<String>> = Vec::new();
             let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-            for row in 0..n {
-                let mut values: Vec<String> = Vec::new();
-                let mut any_null = false;
-                for &ci in &all_cols {
-                    let col = batch.column(ci);
-                    if col.is_null(row) {
-                        any_null = true;
-                        break;
+            for batch in batches {
+                for row in 0..batch.num_rows() {
+                    let mut values: Vec<String> = Vec::new();
+                    let mut any_null = false;
+                    for &ci in &all_cols {
+                        let col = batch.column(ci);
+                        if col.is_null(row) {
+                            any_null = true;
+                            break;
+                        }
+                        values.push(array_value_to_string(col.as_ref(), row));
                     }
-                    values.push(array_value_to_string(col.as_ref(), row));
-                }
-                if any_null {
-                    continue;
-                }
-                let key = values.join("\t");
-                if seen.insert(key) {
-                    tuples.push(values);
+                    if any_null {
+                        continue;
+                    }
+                    let key = values.join("\t");
+                    if seen.insert(key) {
+                        tuples.push(values);
+                    }
                 }
             }
 
@@ -3795,7 +3830,10 @@ fn extract_full_row_dictionaries(
     use std::io::Write;
 
     const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 5000;
-    const MIN_STRING_COLUMN_RATIO: f64 = 0.2;
+    const MIN_STRING_COLUMN_RATIO: f64 = 0.5;
+    // For small schemas (≤6 columns), relax the string ratio requirement
+    // since they are often reference/lookup tables regardless of column types.
+    const SMALL_SCHEMA_THRESHOLD: usize = 6;
 
     let mut count = 0;
 
@@ -3818,7 +3856,9 @@ fn extract_full_row_dictionaries(
             continue;
         }
 
-        // Check column composition: need ≥50% string/categorical columns
+        // Check column composition: need ≥50% string/categorical columns,
+        // or ≥1 string column for small schemas (≤6 columns) which are
+        // likely reference/lookup tables.
         let total_cols = entity.fields.len();
         if total_cols < 2 {
             continue;
@@ -3834,8 +3874,11 @@ fn extract_full_row_dictionaries(
                     | Some(crate::core::GeneratorSpec::Faker { .. })
             )
         }).count();
+        if string_cols == 0 {
+            continue;
+        }
         let string_ratio = string_cols as f64 / total_cols as f64;
-        if string_ratio < MIN_STRING_COLUMN_RATIO {
+        if total_cols > SMALL_SCHEMA_THRESHOLD && string_ratio < MIN_STRING_COLUMN_RATIO {
             continue;
         }
 

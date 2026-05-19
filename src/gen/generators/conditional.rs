@@ -217,27 +217,21 @@ fn unify_null_arrays(arrays: &mut Vec<ArrayRef>) {
     }
 }
 
-/// Unify mixed numeric types (Int64, Float64, UInt64) to Float64 so that
-/// `interleave` can combine them without falling back to StringArray.
+/// Unify mixed numeric types to Float64 so that `interleave` can combine them
+/// without falling back to StringArray. Triggers when numeric branch arrays
+/// have different concrete types (e.g., Int64 vs Float64, UInt8 vs Int32).
 fn unify_numeric_to_float64(arrays: &mut Vec<ArrayRef>) {
-    let has_mixed_numeric = {
-        let mut seen_int = false;
-        let mut seen_float = false;
-        for arr in arrays.iter() {
-            match arr.data_type() {
-                DataType::Int64 | DataType::UInt64 | DataType::Int32 | DataType::UInt32 => {
-                    seen_int = true;
-                }
-                DataType::Float64 | DataType::Float32 => {
-                    seen_float = true;
-                }
-                _ => {}
-            }
+    // Collect distinct numeric data types across branches (ignore Null arrays).
+    let mut numeric_types: std::collections::HashSet<DataType> = std::collections::HashSet::new();
+    for arr in arrays.iter() {
+        let dt = arr.data_type();
+        if dt.is_numeric() {
+            numeric_types.insert(dt.clone());
         }
-        seen_int && seen_float
-    };
+    }
 
-    if !has_mixed_numeric {
+    // Only unify when there are 2+ distinct numeric types.
+    if numeric_types.len() < 2 {
         return;
     }
 
@@ -319,7 +313,11 @@ fn array_value_as_string(arr: &ArrayRef, i: usize) -> String {
     } else if let Some(ba) = arr.as_any().downcast_ref::<BooleanArray>() {
         ba.value(i).to_string()
     } else {
-        String::new()
+        // Generic numeric fallback: cast single value to string via Arrow
+        arrow::compute::cast(arr, &DataType::Utf8)
+            .ok()
+            .and_then(|s| s.as_any().downcast_ref::<StringArray>().map(|sa| sa.value(i).to_string()))
+            .unwrap_or_default()
     }
 }
 
