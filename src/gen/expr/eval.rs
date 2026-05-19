@@ -342,25 +342,11 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
         return Ok(Arc::new(Float64Array::from(vec![None::<f64>; left.len()])));
     }
 
-    // String concatenation via +
+    // String concatenation via + (preserve backward compat: Utf8+Utf8 always concatenates)
     if op == BinOp::Add
         && left.data_type() == &DataType::Utf8
         && right.data_type() == &DataType::Utf8
     {
-        // Try numeric conversion first — string columns that contain numbers
-        // (e.g., from conditional generators) should do arithmetic, not concat.
-        if let (Ok(lv), Ok(rv)) = (to_f64_from_str(left), to_f64_from_str(right)) {
-            let result: Float64Array = lv
-                .iter()
-                .zip(rv.iter())
-                .map(|(a, b)| match (a, b) {
-                    (Some(a), Some(b)) => Some(a + b),
-                    _ => None,
-                })
-                .collect();
-            return Ok(Arc::new(result));
-        }
-        // Fall back to string concatenation
         let l = require_str(left)?;
         let r = require_str(right)?;
         let result: StringArray = (0..l.len())
@@ -375,7 +361,9 @@ fn eval_arith(left: &ArrayRef, right: &ArrayRef, op: BinOp) -> Result<ArrayRef, 
         return Ok(Arc::new(result));
     }
 
-    // For Sub/Mul/Div with Utf8 inputs, try parsing strings as numbers
+    // For Sub/Mul/Div (or Add where at least one side is numeric), try parsing
+    // Utf8 inputs as numbers. This handles columns from conditional generators
+    // that produce string-typed numeric values.
     if left.data_type() == &DataType::Utf8 || right.data_type() == &DataType::Utf8 {
         let lv = if left.data_type() == &DataType::Utf8 {
             to_f64_from_str(left)?

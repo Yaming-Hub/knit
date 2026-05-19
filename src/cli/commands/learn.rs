@@ -1624,21 +1624,38 @@ fn compute_relation_error(
             continue;
         };
 
+        // Skip non-finite source values
+        if !t.is_finite() || !va.is_finite() || !vb.is_finite() {
+            continue;
+        }
+
         let expected = match op {
             ArithOp::Add => va + vb,
             ArithOp::Sub => va - vb,
             ArithOp::Mul => va * vb,
             ArithOp::Div => {
                 if vb == 0.0 {
-                    continue; // Skip div-by-zero rows
+                    // Count zero-divisor rows as mismatches — the generated
+                    // output would produce null for these rows.
+                    checked += 1;
+                    mismatches += 1;
+                    continue;
                 }
                 va / vb
             }
         };
 
+        // Guard against NaN/Inf results from overflow
+        if !expected.is_finite() {
+            checked += 1;
+            mismatches += 1;
+            continue;
+        }
+
         checked += 1;
         let denom = t.abs().max(expected.abs()).max(1.0);
-        if (t - expected).abs() / denom > 0.01 {
+        let diff = (t - expected).abs() / denom;
+        if !diff.is_finite() || diff > 0.01 {
             mismatches += 1;
         }
     }

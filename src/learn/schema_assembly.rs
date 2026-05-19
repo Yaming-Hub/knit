@@ -1131,14 +1131,16 @@ fn build_generator_inner(
         return build_temporal_generator(col);
     }
 
+    // Arithmetic derived column (e.g., total = men + women)
+    // Takes precedence over time-series: if a column is deterministically derived
+    // from others, we must honour that even if it also correlates with time.
+    if let Some(derived_spec) = &col.derived_spec {
+        return derived_spec.clone();
+    }
+
     // Time-series trend (linear trend + noise detected during learn)
     if let Some(ts_spec) = &col.time_series_spec {
         return ts_spec.clone();
-    }
-
-    // Arithmetic derived column (e.g., total = men + women)
-    if let Some(derived_spec) = &col.derived_spec {
-        return derived_spec.clone();
     }
 
     // Distribution
