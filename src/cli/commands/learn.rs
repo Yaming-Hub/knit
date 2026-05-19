@@ -434,6 +434,9 @@ fn run_batch(
         }
         table_analyses[i].tuple_groups = tuple_groups;
 
+        // Detect geographic coordinate columns and merge into tuple groups
+        detect_geographic_tuples(&mut table_analyses[i], &table.batches);
+
         // Detect derived text columns (e.g., full_name = first + " " + last)
         let derived_text = detect_derived_text_columns(&profiles, &table.batches);
         if !derived_text.is_empty() {
@@ -1465,6 +1468,297 @@ fn extract_f64_column(batch: &RecordBatch, col_name: &str) -> Vec<(usize, f64)> 
         _ => {}
     }
     out
+}
+
+/// Detect geographic coordinate columns (lat/lon pairs) and merge them into
+/// existing tuple groups or create new groups.
+///
+/// Detection is purely data-driven:
+/// - Latitude: float column where all non-null values are in [-90, 90]
+/// - Longitude: float column where all non-null values are in [-180, 180]
+///   (and at least some values outside [-90, 90] to disambiguate from lat)
+///
+/// When a lat/lon pair is found, it is attached to the nearest existing tuple
+/// group (if any group shares adjacent string columns), or forms a new group
+/// with neighboring string columns.
+fn detect_geographic_tuples(
+    analysis: &mut TableAnalysis,
+    batches: &[arrow::record_batch::RecordBatch],
+) {
+    use arrow::array::Array;
+
+    if batches.is_empty() {
+        return;
+    }
+    let batch = &batches[0];
+    let schema = batch.schema();
+    let n = batch.num_rows();
+    if n < 5 {
+        return;
+    }
+
+    // Find candidate lat/lon columns by value range
+    let mut lat_candidates: Vec<usize> = Vec::new();
+    let mut lon_candidates: Vec<usize> = Vec::new();
+
+    for (col_idx, field) in schema.fields().iter().enumerate() {
+        if !field.data_type().is_numeric() {
+            continue;
+        }
+        let values = extract_nullable_f64_values(batch.column(col_idx).as_ref(), n);
+        let Some(vals) = values else { continue };
+
+        let non_null: Vec<f64> = vals.iter().filter_map(|v| *v).collect();
+        if non_null.len() < 5 {
+            continue;
+        }
+
+        let min_val = non_null.iter().cloned().fold(f64::INFINITY, f64::min);
+        let max_val = non_null.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+
+        // Latitude: all values in [-90, 90]
+        if min_val >= -90.0 && max_val <= 90.0 {
+            lat_candidates.push(col_idx);
+        }
+        // Longitude: all values in [-180, 180] with some outside [-90, 90]
+        if min_val >= -180.0 && max_val <= 180.0 && (min_val < -90.0 || max_val > 90.0) {
+            lon_candidates.push(col_idx);
+        }
+    }
+
+    // Match lat/lon pairs: prefer adjacent columns in schema order
+    let mut used_lats: std::collections::HashSet<usize> = std::collections::HashSet::new();
+    let mut used_lons: std::collections::HashSet<usize> = std::collections::HashSet::new();
+    let mut geo_pairs: Vec<(usize, usize)> = Vec::new(); // (lat_idx, lon_idx)
+
+    for &lat_idx in &lat_candidates {
+        // Find nearest lon that's adjacent (within 1 position)
+        let best_lon = lon_candidates
+            .iter()
+            .filter(|&&l| !used_lons.contains(&l))
+            .min_by_key(|&&l| (l as isize - lat_idx as isize).unsigned_abs());
+        if let Some(&lon_idx) = best_lon {
+            let distance = (lon_idx as isize - lat_idx as isize).unsigned_abs();
+            if distance <= 2 {
+                used_lats.insert(lat_idx);
+                used_lons.insert(lon_idx);
+                geo_pairs.push((lat_idx, lon_idx));
+            }
+        }
+    }
+
+    if geo_pairs.is_empty() {
+        return;
+    }
+
+    // For each geo pair, find associated string columns and build/extend tuple groups
+    let col_names: Vec<String> = schema.fields().iter().map(|f| f.name().clone()).collect();
+
+    for (lat_idx, lon_idx) in &geo_pairs {
+        let lat_name = &col_names[*lat_idx];
+        let lon_name = &col_names[*lon_idx];
+
+        // Check if an existing tuple group already contains related columns
+        // (look for groups whose columns are adjacent to this lat/lon pair)
+        let geo_min = (*lat_idx).min(*lon_idx);
+        let geo_max = (*lat_idx).max(*lon_idx);
+
+        let existing_group = analysis.tuple_groups.iter_mut().find(|g| {
+            g.columns.iter().any(|col_name| {
+                if let Some(idx) = col_names.iter().position(|n| n == col_name) {
+                    // Column is within 3 positions of the lat/lon pair
+                    idx <= geo_max + 3 && idx + 3 >= geo_min
+                } else {
+                    false
+                }
+            })
+        });
+
+        if let Some(group) = existing_group {
+            // Extend existing group with lat/lon columns
+            if !group.columns.contains(lat_name) {
+                group.columns.push(lat_name.clone());
+            }
+            if !group.columns.contains(lon_name) {
+                group.columns.push(lon_name.clone());
+            }
+            // Re-extract tuples to include the new columns
+            let all_cols: Vec<usize> = group
+                .columns
+                .iter()
+                .filter_map(|name| col_names.iter().position(|n| n == name))
+                .collect();
+            let mut tuples: Vec<Vec<String>> = Vec::new();
+            let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+            for row in 0..n {
+                let mut values: Vec<String> = Vec::new();
+                let mut any_null = false;
+                for &ci in &all_cols {
+                    let col = batch.column(ci);
+                    if col.is_null(row) {
+                        any_null = true;
+                        break;
+                    }
+                    values.push(array_value_to_string(col.as_ref(), row));
+                }
+                if any_null {
+                    continue;
+                }
+                let key = values.join("\t");
+                if seen.insert(key) {
+                    tuples.push(values);
+                }
+            }
+            group.tuples = tuples;
+        } else {
+            // Create a new tuple group with nearby columns + lat/lon
+            let mut group_cols: Vec<String> = Vec::new();
+            let total_columns = col_names.len();
+
+            // Find string columns within 3 positions (or all string columns if schema is small)
+            let search_range = if total_columns <= 8 {
+                0..total_columns
+            } else {
+                geo_min.saturating_sub(3)..(geo_max + 4).min(total_columns)
+            };
+
+            for idx in search_range {
+                if idx == *lat_idx || idx == *lon_idx {
+                    continue;
+                }
+                let field = &schema.fields()[idx];
+                // Only include string columns in the tuple (numeric columns
+                // use their own generators; Dictionary/TupleLookup produces strings).
+                if *field.data_type() == arrow::datatypes::DataType::Utf8 {
+                    group_cols.push(col_names[idx].clone());
+                }
+            }
+
+            // Only create a group if there's at least one string column
+            if group_cols.is_empty() {
+                continue;
+            }
+
+            // Put highest-cardinality string column first (as primary)
+            group_cols.sort_by(|a, b| {
+                let card_a = analysis
+                    .columns
+                    .iter()
+                    .find(|c| c.name == *a)
+                    .and_then(|c| c.stats.as_ref())
+                    .and_then(|s| s.distinct_count)
+                    .unwrap_or(0);
+                let card_b = analysis
+                    .columns
+                    .iter()
+                    .find(|c| c.name == *b)
+                    .and_then(|c| c.stats.as_ref())
+                    .and_then(|s| s.distinct_count)
+                    .unwrap_or(0);
+                card_b.cmp(&card_a)
+            });
+
+            // Add lat/lon after string columns
+            group_cols.push(lat_name.clone());
+            group_cols.push(lon_name.clone());
+
+            // Extract unique tuples
+            let all_cols: Vec<usize> = group_cols
+                .iter()
+                .filter_map(|name| col_names.iter().position(|n| n == name))
+                .collect();
+            let mut tuples: Vec<Vec<String>> = Vec::new();
+            let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+            for row in 0..n {
+                let mut values: Vec<String> = Vec::new();
+                let mut any_null = false;
+                for &ci in &all_cols {
+                    let col = batch.column(ci);
+                    if col.is_null(row) {
+                        any_null = true;
+                        break;
+                    }
+                    values.push(array_value_to_string(col.as_ref(), row));
+                }
+                if any_null {
+                    continue;
+                }
+                let key = values.join("\t");
+                if seen.insert(key) {
+                    tuples.push(values);
+                }
+            }
+
+            if tuples.len() >= 3 {
+                tracing::debug!(
+                    lat = %lat_name,
+                    lon = %lon_name,
+                    columns = ?group_cols,
+                    tuples = tuples.len(),
+                    "geographic tuple group created"
+                );
+                analysis.tuple_groups.push(
+                    crate::learn::correlation::TupleGroup {
+                        columns: group_cols,
+                        tuples,
+                    },
+                );
+            }
+        }
+    }
+}
+
+/// Convert an Arrow array value at a given row to a string representation.
+fn array_value_to_string(arr: &dyn arrow::array::Array, row: usize) -> String {
+    use arrow::array::Array;
+    if arr.is_null(row) {
+        return String::new();
+    }
+    match arr.data_type() {
+        arrow::datatypes::DataType::Utf8 => {
+            let sa = arr
+                .as_any()
+                .downcast_ref::<arrow::array::StringArray>()
+                .unwrap();
+            sa.value(row).to_string()
+        }
+        arrow::datatypes::DataType::Int64 => {
+            let ia = arr
+                .as_any()
+                .downcast_ref::<arrow::array::Int64Array>()
+                .unwrap();
+            ia.value(row).to_string()
+        }
+        arrow::datatypes::DataType::Float64 => {
+            let fa = arr
+                .as_any()
+                .downcast_ref::<arrow::array::Float64Array>()
+                .unwrap();
+            fa.value(row).to_string()
+        }
+        arrow::datatypes::DataType::Int32 => {
+            let ia = arr
+                .as_any()
+                .downcast_ref::<arrow::array::Int32Array>()
+                .unwrap();
+            ia.value(row).to_string()
+        }
+        arrow::datatypes::DataType::Float32 => {
+            let fa = arr
+                .as_any()
+                .downcast_ref::<arrow::array::Float32Array>()
+                .unwrap();
+            fa.value(row).to_string()
+        }
+        arrow::datatypes::DataType::UInt64 => {
+            let ua = arr
+                .as_any()
+                .downcast_ref::<arrow::array::UInt64Array>()
+                .unwrap();
+            ua.value(row).to_string()
+        }
+        _ => format!("{:?}", arr.data_type()),
+    }
 }
 
 /// Detect arithmetic relationships between numeric columns.
@@ -3500,8 +3794,8 @@ fn extract_full_row_dictionaries(
     use std::collections::HashSet;
     use std::io::Write;
 
-    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 1000;
-    const MIN_STRING_COLUMN_RATIO: f64 = 0.5;
+    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 5000;
+    const MIN_STRING_COLUMN_RATIO: f64 = 0.2;
 
     let mut count = 0;
 
