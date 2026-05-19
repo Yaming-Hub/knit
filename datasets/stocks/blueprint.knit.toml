@@ -1345,28 +1345,12 @@ dependent = "price"
 given = "symbol"
 
 [[correlations.distributions]]
-when = "MSFT"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.1942824219703834
-sigma = 0.16542129239088366
-
-[[correlations.distributions]]
 when = "AMZN"
 distribution = "gamma"
 
 [correlations.distributions.params]
 scale = 17.253024738427435
 shape = 2.781371608646148
-
-[[correlations.distributions]]
-when = "AAPL"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 7.07
-shape = 0.6139915609245135
 
 [[correlations.distributions]]
 when = "IBM"
@@ -1383,6 +1367,22 @@ distribution = "normal"
 [correlations.distributions.params]
 mean = 415.8704411764705
 std_dev = 134.07301217043056
+
+[[correlations.distributions]]
+when = "MSFT"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 3.1942824219703834
+sigma = 0.16542129239088366
+
+[[correlations.distributions]]
+when = "AAPL"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 7.07
+shape = 0.6139915609245135
 
 [correlations.default]
 kind = "log_normal"

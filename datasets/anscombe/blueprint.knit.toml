@@ -24,15 +24,15 @@ value = "II"
 weight = 0.25
 
 [[entities.fields.generator.choices]]
-value = "III"
-weight = 0.25
-
-[[entities.fields.generator.choices]]
 value = "I"
 weight = 0.25
 
 [[entities.fields.generator.choices]]
 value = "IV"
+weight = 0.25
+
+[[entities.fields.generator.choices]]
+value = "III"
 weight = 0.25
 
 [entities.fields.stats]
@@ -60,27 +60,7 @@ value = 8.0
 weight = 0.29545454545454547
 
 [[entities.fields.generator.choices]]
-value = 13.0
-weight = 0.06818181818181818
-
-[[entities.fields.generator.choices]]
-value = 5.0
-weight = 0.06818181818181818
-
-[[entities.fields.generator.choices]]
-value = 7.0
-weight = 0.06818181818181818
-
-[[entities.fields.generator.choices]]
-value = 11.0
-weight = 0.06818181818181818
-
-[[entities.fields.generator.choices]]
 value = 12.0
-weight = 0.06818181818181818
-
-[[entities.fields.generator.choices]]
-value = 9.0
 weight = 0.06818181818181818
 
 [[entities.fields.generator.choices]]
@@ -88,7 +68,15 @@ value = 14.0
 weight = 0.06818181818181818
 
 [[entities.fields.generator.choices]]
-value = 6.0
+value = 7.0
+weight = 0.06818181818181818
+
+[[entities.fields.generator.choices]]
+value = 5.0
+weight = 0.06818181818181818
+
+[[entities.fields.generator.choices]]
+value = 11.0
 weight = 0.06818181818181818
 
 [[entities.fields.generator.choices]]
@@ -96,7 +84,19 @@ value = 10.0
 weight = 0.06818181818181818
 
 [[entities.fields.generator.choices]]
+value = 13.0
+weight = 0.06818181818181818
+
+[[entities.fields.generator.choices]]
+value = 6.0
+weight = 0.06818181818181818
+
+[[entities.fields.generator.choices]]
 value = 4.0
+weight = 0.06818181818181818
+
+[[entities.fields.generator.choices]]
+value = 9.0
 weight = 0.06818181818181818
 
 [[entities.fields.generator.choices]]
@@ -192,8 +192,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "X",
     "Y",
+    "X",
 ]
 matrix = [
     [
@@ -210,8 +210,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "X",
     "Y",
+    "X",
 ]
 matrix = [
     [

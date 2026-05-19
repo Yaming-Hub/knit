@@ -425,16 +425,16 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "Women",
-    "ShareWomen",
+    "Rank",
+    "Major_code",
 ]
 matrix = [
     [
     1.0,
-    0.35435313226133974,
+    0.49336601552053094,
 ],
     [
-    0.35435313226133974,
+    0.49336601552053094,
     1.0,
 ],
 ]
@@ -443,16 +443,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Women",
-    "ShareWomen",
+    "Rank",
+    "Major_code",
 ]
 matrix = [
     [
     1.0,
-    0.5383185235816815,
+    0.46518113465481886,
 ],
     [
-    0.5383185235816815,
+    0.46518113465481886,
     1.0,
 ],
 ]
@@ -461,16 +461,52 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Women",
+    "Rank",
+    "ShareWomen",
+]
+matrix = [
+    [
+    1.0,
+    0.6468688721705917,
+],
+    [
+    0.6468688721705917,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
+    "ShareWomen",
+]
+matrix = [
+    [
+    1.0,
+    0.6685440874914559,
+],
+    [
+    0.6685440874914559,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
     "Median",
 ]
 matrix = [
     [
     1.0,
-    -0.4182912814524178,
+    -0.8893016487576588,
 ],
     [
-    -0.4182912814524178,
+    -0.8893016487576588,
     1.0,
 ],
 ]
@@ -479,80 +515,26 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Women",
-    "Men",
-]
-matrix = [
-    [
-    1.0,
-    0.5148989840649927,
-],
-    [
-    0.5148989840649927,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Women",
-    "Men",
-]
-matrix = [
-    [
-    1.0,
-    0.7119343814080656,
-],
-    [
-    0.7119343814080656,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Women",
-    "Total",
-]
-matrix = [
-    [
-    1.0,
-    0.9097514637152169,
-],
-    [
-    0.9097514637152169,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Women",
-    "Total",
-]
-matrix = [
-    [
-    1.0,
-    0.9360765550239234,
-],
-    [
-    0.9360765550239234,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Women",
     "Rank",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.9982349426280002,
+],
+    [
+    -0.9982349426280002,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
+    "Women",
 ]
 matrix = [
     [
@@ -561,6 +543,150 @@ matrix = [
 ],
     [
     0.42660287081339715,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Major_code",
+    "ShareWomen",
+]
+matrix = [
+    [
+    1.0,
+    0.748909006056308,
+],
+    [
+    0.748909006056308,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Major_code",
+    "ShareWomen",
+]
+matrix = [
+    [
+    1.0,
+    0.6556390977443609,
+],
+    [
+    0.6556390977443609,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Major_code",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.42216371681168535,
+],
+    [
+    -0.42216371681168535,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Major_code",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.4496795612156754,
+],
+    [
+    -0.4496795612156754,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Total",
+    "Men",
+]
+matrix = [
+    [
+    1.0,
+    0.8243206398399399,
+],
+    [
+    0.8243206398399399,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Total",
+    "Men",
+]
+matrix = [
+    [
+    1.0,
+    0.888010936431989,
+],
+    [
+    0.888010936431989,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Total",
+    "Women",
+]
+matrix = [
+    [
+    1.0,
+    0.9097514637152169,
+],
+    [
+    0.9097514637152169,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Total",
+    "Women",
+]
+matrix = [
+    [
+    1.0,
+    0.9360765550239234,
+],
+    [
+    0.9360765550239234,
     1.0,
 ],
 ]
@@ -606,15 +732,15 @@ conditional = []
 entity = "original"
 fields = [
     "ShareWomen",
-    "Major_code",
+    "Women",
 ]
 matrix = [
     [
     1.0,
-    0.748909006056308,
+    0.35435313226133974,
 ],
     [
-    0.748909006056308,
+    0.35435313226133974,
     1.0,
 ],
 ]
@@ -624,51 +750,15 @@ conditional = []
 entity = "original"
 fields = [
     "ShareWomen",
-    "Major_code",
+    "Women",
 ]
 matrix = [
     [
     1.0,
-    0.6556390977443609,
+    0.5383185235816815,
 ],
     [
-    0.6556390977443609,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "ShareWomen",
-    "Rank",
-]
-matrix = [
-    [
-    1.0,
-    0.6468688721705917,
-],
-    [
-    0.6468688721705917,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "ShareWomen",
-    "Rank",
-]
-matrix = [
-    [
-    1.0,
-    0.6685440874914559,
-],
-    [
-    0.6685440874914559,
+    0.5383185235816815,
     1.0,
 ],
 ]
@@ -678,105 +768,15 @@ conditional = []
 entity = "original"
 fields = [
     "Median",
-    "Major_code",
+    "Women",
 ]
 matrix = [
     [
     1.0,
-    -0.42216371681168535,
+    -0.4182912814524178,
 ],
     [
-    -0.42216371681168535,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Median",
-    "Major_code",
-]
-matrix = [
-    [
-    1.0,
-    -0.4496795612156754,
-],
-    [
-    -0.4496795612156754,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Median",
-    "Rank",
-]
-matrix = [
-    [
-    1.0,
-    -0.8893016487576588,
-],
-    [
-    -0.8893016487576588,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Median",
-    "Rank",
-]
-matrix = [
-    [
-    1.0,
-    -0.9982349426280002,
-],
-    [
-    -0.9982349426280002,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Major_code",
-    "Rank",
-]
-matrix = [
-    [
-    1.0,
-    0.49336601552053094,
-],
-    [
-    0.49336601552053094,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Major_code",
-    "Rank",
-]
-matrix = [
-    [
-    1.0,
-    0.46518113465481886,
-],
-    [
-    0.46518113465481886,
+    -0.4182912814524178,
     1.0,
 ],
 ]
@@ -786,15 +786,15 @@ conditional = []
 entity = "original"
 fields = [
     "Men",
-    "Total",
+    "Women",
 ]
 matrix = [
     [
     1.0,
-    0.8243206398399399,
+    0.5148989840649927,
 ],
     [
-    0.8243206398399399,
+    0.5148989840649927,
     1.0,
 ],
 ]
@@ -804,15 +804,15 @@ conditional = []
 entity = "original"
 fields = [
     "Men",
-    "Total",
+    "Women",
 ]
 matrix = [
     [
     1.0,
-    0.888010936431989,
+    0.7119343814080656,
 ],
     [
-    0.888010936431989,
+    0.7119343814080656,
     1.0,
 ],
 ]
@@ -827,10 +827,10 @@ fields = [
 matrix = [
     [
     1.0,
-    0.999999999999999,
+    0.9999999999999988,
 ],
     [
-    0.999999999999999,
+    0.9999999999999988,
     1.0,
 ],
 ]
@@ -844,30 +844,6 @@ matrix = []
 conditional = []
 dependent = "ShareWomen"
 given = "Major_category"
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.526475764
-min = 0.178981938
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.707718502
-min = 0.515406449
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 0.451464886
-min = 0.077453027
 
 [[correlations.distributions]]
 when = "Health"
@@ -885,6 +861,30 @@ distribution = "uniform"
 max = 0.75047259
 min = 0.281936407
 
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.526475764
+min = 0.178981938
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.451464886
+min = 0.077453027
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 0.707718502
+min = 0.515406449
+
 [correlations.default]
 kind = "beta"
 
@@ -898,129 +898,17 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Women"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00012183910592248818
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 7219.0
-shape = 0.9939155317451354
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.398699282719775
-sigma = 1.5708680101758363
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 8.807269697059464
-sigma = 1.3124576801626426
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 542.0
-shape = 0.5624867212048487
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 8.241557223601284
-sigma = 1.6509805324639764
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Major_code"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 7.8040662941696874
-sigma = 0.16971369770745515
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 6199.0
-min = 4002.0
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 5000.0
-shape = 221.22766672793267
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "normal"
-round = true
-
-[correlations.distributions.params]
-mean = 3475.8571428571427
-std_dev = 612.0623050851298
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 2001.0
-shape = 3.875295572352571
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 6199.0
-min = 1301.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
 dependent = "Total"
 given = "Major_category"
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 8.927766719980049
+sigma = 1.3956197097209901
 
 [[correlations.distributions]]
 when = "Physical Sciences"
@@ -1041,13 +929,13 @@ mu = 9.324870702658243
 sigma = 1.4075172372420774
 
 [[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
+when = "Health"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 8.927766719980049
-sigma = 1.3956197097209901
+scale = 11123.0
+shape = 1.228300974944684
 
 [[correlations.distributions]]
 when = "Biology & Life Science"
@@ -1057,15 +945,6 @@ round = true
 [correlations.distributions.params]
 mu = 9.343329251984406
 sigma = 1.3088417803877053
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 11123.0
-shape = 1.228300974944684
 
 [correlations.default]
 kind = "log_normal"
@@ -1080,8 +959,217 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
+dependent = "Major_code"
+given = "Major_category"
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 5000.0
+shape = 221.22766672793267
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.8040662941696874
+sigma = 0.16971369770745515
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 6199.0
+min = 4002.0
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 2001.0
+shape = 3.875295572352571
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "normal"
+round = true
+
+[correlations.distributions.params]
+mean = 3475.8571428571427
+std_dev = 612.0623050851298
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 6199.0
+min = 1301.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Rank"
+given = "Major_category"
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 47.0
+min = 1.0
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 63.0
+min = 7.0
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 75.0
+min = 27.0
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 62.0
+min = 19.0
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 76.0
+min = 36.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 76.0
+min = 1.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Men"
+given = "Major_category"
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 8.937047845184251
+sigma = 1.3981812324517484
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 8.645744018909324
+sigma = 1.3719569989166884
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00015890461750334362
+
+[[correlations.distributions]]
+when = "Physical Sciences"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 528.0
+shape = 0.5664429988473929
+
+[[correlations.distributions]]
+when = "Biology & Life Science"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 8.450405690573
+sigma = 1.323858782997942
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 8.523312901027392
+sigma = 1.3630930320547716
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
 dependent = "Median"
 given = "Major_category"
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 10.934530143294046
+sigma = 0.20753757789754798
+
+[[correlations.distributions]]
+when = "Health"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 48000.0
+min = 28000.0
+
+[[correlations.distributions]]
+when = "Computers & Mathematics"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 53000.0
+min = 35000.0
 
 [[correlations.distributions]]
 when = "Physical Sciences"
@@ -1101,33 +1189,6 @@ round = true
 mean = 36421.42857142857
 std_dev = 4364.168808347713
 
-[[correlations.distributions]]
-when = "Health"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 48000.0
-min = 28000.0
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 10.934530143294046
-sigma = 0.20753757789754798
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 53000.0
-min = 35000.0
-
 [correlations.default]
 kind = "log_normal"
 
@@ -1141,68 +1202,7 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Rank"
-given = "Major_category"
-
-[[correlations.distributions]]
-when = "Physical Sciences"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 63.0
-min = 7.0
-
-[[correlations.distributions]]
-when = "Engineering"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 47.0
-min = 1.0
-
-[[correlations.distributions]]
-when = "Health"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 75.0
-min = 27.0
-
-[[correlations.distributions]]
-when = "Biology & Life Science"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 76.0
-min = 36.0
-
-[[correlations.distributions]]
-when = "Computers & Mathematics"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 62.0
-min = 19.0
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 76.0
-min = 1.0
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Men"
+dependent = "Women"
 given = "Major_category"
 
 [[correlations.distributions]]
@@ -1211,34 +1211,25 @@ distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 8.450405690573
-sigma = 1.323858782997942
+mu = 8.807269697059464
+sigma = 1.3124576801626426
 
 [[correlations.distributions]]
 when = "Computers & Mathematics"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 8.937047845184251
-sigma = 1.3981812324517484
-
-[[correlations.distributions]]
-when = "Health"
 distribution = "exponential"
 round = true
 
 [correlations.distributions.params]
-lambda = 0.00015890461750334362
+lambda = 0.00012183910592248818
 
 [[correlations.distributions]]
-when = "Engineering"
-distribution = "log_normal"
+when = "Health"
+distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-mu = 8.645744018909324
-sigma = 1.3719569989166884
+scale = 7219.0
+shape = 0.9939155317451354
 
 [[correlations.distributions]]
 when = "Physical Sciences"
@@ -1246,12 +1237,21 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 528.0
-shape = 0.5664429988473929
+scale = 542.0
+shape = 0.5624867212048487
+
+[[correlations.distributions]]
+when = "Engineering"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.398699282719775
+sigma = 1.5708680101758363
 
 [correlations.default]
 kind = "log_normal"
 
 [correlations.default.params]
-mu = 8.523312901027392
-sigma = 1.3630930320547716
+mu = 8.241557223601284
+sigma = 1.6509805324639764

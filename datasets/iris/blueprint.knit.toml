@@ -156,15 +156,15 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
+value = "versicolor"
+weight = 0.3333333333333333
+
+[[entities.fields.generator.choices]]
 value = "virginica"
 weight = 0.3333333333333333
 
 [[entities.fields.generator.choices]]
 value = "setosa"
-weight = 0.3333333333333333
-
-[[entities.fields.generator.choices]]
-value = "versicolor"
 weight = 0.3333333333333333
 
 [entities.fields.stats]
@@ -240,44 +240,44 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "sepal_length",
-    "petal_length",
-]
-matrix = [
-    [
-    1.0,
-    0.8717537758865828,
-],
-    [
-    0.8717537758865828,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "sepal_length",
-    "petal_length",
-]
-matrix = [
-    [
-    1.0,
-    0.8818981264349859,
-],
-    [
-    0.8818981264349859,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "sepal_length",
     "petal_width",
+    "petal_length",
+]
+matrix = [
+    [
+    1.0,
+    0.9628654314027955,
+],
+    [
+    0.9628654314027955,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "petal_width",
+    "petal_length",
+]
+matrix = [
+    [
+    1.0,
+    0.9376668235763413,
+],
+    [
+    0.9376668235763413,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "petal_width",
+    "sepal_length",
 ]
 matrix = [
     [
@@ -294,8 +294,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "petal_width",
     "sepal_length",
-    "petal_width",
 ]
 matrix = [
     [
@@ -312,44 +312,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "sepal_width",
-    "petal_length",
-]
-matrix = [
-    [
-    1.0,
-    -0.42844010433054003,
-],
-    [
-    -0.42844010433054003,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "sepal_width",
-    "petal_length",
-]
-matrix = [
-    [
-    1.0,
-    -0.30963508601557777,
-],
-    [
-    -0.30963508601557777,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "sepal_width",
     "petal_width",
+    "sepal_width",
 ]
 matrix = [
     [
@@ -367,15 +331,15 @@ conditional = []
 entity = "original"
 fields = [
     "petal_length",
-    "petal_width",
+    "sepal_length",
 ]
 matrix = [
     [
     1.0,
-    0.9628654314027955,
+    0.8717537758865828,
 ],
     [
-    0.9628654314027955,
+    0.8717537758865828,
     1.0,
 ],
 ]
@@ -385,15 +349,15 @@ conditional = []
 entity = "original"
 fields = [
     "petal_length",
-    "petal_width",
+    "sepal_length",
 ]
 matrix = [
     [
     1.0,
-    0.9376668235763413,
+    0.8818981264349859,
 ],
     [
-    0.9376668235763413,
+    0.8818981264349859,
     1.0,
 ],
 ]
@@ -401,43 +365,39 @@ conditional = []
 
 [[correlations]]
 entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
+fields = [
+    "petal_length",
+    "sepal_width",
+]
+matrix = [
+    [
+    1.0,
+    -0.42844010433054003,
+],
+    [
+    -0.42844010433054003,
+    1.0,
+],
+]
 conditional = []
-dependent = "petal_length"
-given = "species"
 
-[[correlations.distributions]]
-when = "setosa"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 1.4620000000000002
-std_dev = 0.17191858538273286
-
-[[correlations.distributions]]
-when = "versicolor"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 4.26
-std_dev = 0.46518813398452025
-
-[[correlations.distributions]]
-when = "virginica"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 1.7094260198829934
-sigma = 0.09680044817909754
-
-[correlations.default]
-kind = "uniform"
-
-[correlations.default.params]
-max = 6.9
-min = 1.0
+[[correlations]]
+entity = "original"
+fields = [
+    "petal_length",
+    "sepal_width",
+]
+matrix = [
+    [
+    1.0,
+    -0.30963508601557777,
+],
+    [
+    -0.30963508601557777,
+    1.0,
+],
+]
+conditional = []
 
 [[correlations]]
 entity = "original"
@@ -449,20 +409,20 @@ dependent = "petal_width"
 given = "species"
 
 [[correlations.distributions]]
-when = "setosa"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = -1.4846488496657155
-sigma = 0.40457810126280963
-
-[[correlations.distributions]]
 when = "versicolor"
 distribution = "uniform"
 
 [correlations.distributions.params]
 max = 1.8
 min = 1.0
+
+[[correlations.distributions]]
+when = "setosa"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = -1.4846488496657155
+sigma = 0.40457810126280963
 
 [[correlations.distributions]]
 when = "virginica"
@@ -478,3 +438,43 @@ kind = "uniform"
 [correlations.default.params]
 max = 2.5
 min = 0.1
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "petal_length"
+given = "species"
+
+[[correlations.distributions]]
+when = "virginica"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 1.7094260198829934
+sigma = 0.09680044817909754
+
+[[correlations.distributions]]
+when = "versicolor"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 4.26
+std_dev = 0.46518813398452025
+
+[[correlations.distributions]]
+when = "setosa"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 1.4620000000000002
+std_dev = 0.17191858538273286
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 6.9
+min = 1.0

@@ -20,27 +20,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 1960
-weight = 0.09090909090909091
-
-[[entities.fields.generator.choices]]
-value = 1990
-weight = 0.09090909090909091
-
-[[entities.fields.generator.choices]]
-value = 1995
-weight = 0.09090909090909091
-
-[[entities.fields.generator.choices]]
-value = 1965
-weight = 0.09090909090909091
-
-[[entities.fields.generator.choices]]
-value = 1970
-weight = 0.09090909090909091
-
-[[entities.fields.generator.choices]]
-value = 2005
+value = 1985
 weight = 0.09090909090909091
 
 [[entities.fields.generator.choices]]
@@ -48,19 +28,39 @@ value = 1955
 weight = 0.09090909090909091
 
 [[entities.fields.generator.choices]]
-value = 1980
-weight = 0.09090909090909091
-
-[[entities.fields.generator.choices]]
 value = 2000
 weight = 0.09090909090909091
 
 [[entities.fields.generator.choices]]
-value = 1985
+value = 1990
+weight = 0.09090909090909091
+
+[[entities.fields.generator.choices]]
+value = 1960
 weight = 0.09090909090909091
 
 [[entities.fields.generator.choices]]
 value = 1975
+weight = 0.09090909090909091
+
+[[entities.fields.generator.choices]]
+value = 1970
+weight = 0.09090909090909091
+
+[[entities.fields.generator.choices]]
+value = 1965
+weight = 0.09090909090909091
+
+[[entities.fields.generator.choices]]
+value = 1980
+weight = 0.09090909090909091
+
+[[entities.fields.generator.choices]]
+value = 1995
+weight = 0.09090909090909091
+
+[[entities.fields.generator.choices]]
+value = 2005
 weight = 0.09090909090909091
 
 [entities.fields.stats]
@@ -92,47 +92,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = "India"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Israel"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "China"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "North Korea"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Indonesia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Ecuador"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Egypt"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Iraq"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "United States"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Saudi Arabia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "El Salvador"
+value = "Kenya"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -140,91 +100,19 @@ value = "Spain"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Belgium"
+value = "New Zealand"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Canada"
+value = "France"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Brazil"
+value = "United States"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Australia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Turkey"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Rwanda"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "South Africa"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Italy"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Argentina"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Venezuela"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Chile"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Austria"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Georgia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Portugal"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "United Kingdom"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Nigeria"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Greece"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Lebanon"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Bahamas"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Norway"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Germany"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Bolivia"
+value = "Netherlands"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -236,27 +124,11 @@ value = "Barbados"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Finland"
+value = "Greece"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Switzerland"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Pakistan"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Peru"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Poland"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Colombia"
+value = "Nigeria"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -264,27 +136,27 @@ value = "Iran"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Cuba"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
 value = "Dominican Republic"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Bangladesh"
+value = "Rwanda"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Mexico"
+value = "Saudi Arabia"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Kenya"
+value = "Indonesia"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "France"
+value = "Poland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Iraq"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -292,31 +164,11 @@ value = "Ireland"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Costa Rica"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Jamaica"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Iceland"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "South Korea"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
 value = "Philippines"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Japan"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Grenada"
+value = "China"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -324,7 +176,83 @@ value = "Haiti"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "New Zealand"
+value = "Austria"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Japan"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Lebanon"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "El Salvador"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Switzerland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Mexico"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Peru"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Australia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Venezuela"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Colombia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Georgia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Belgium"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Norway"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Canada"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "United Kingdom"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "India"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Finland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "South Korea"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Cuba"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Iceland"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -332,11 +260,83 @@ value = "Croatia"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Netherlands"
+value = "North Korea"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Portugal"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Bahamas"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Israel"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Chile"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Argentina"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Grenada"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Bangladesh"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
 value = "Hong Kong, China"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Pakistan"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Turkey"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "South Africa"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Ecuador"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Italy"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Germany"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Bolivia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Costa Rica"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Brazil"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Egypt"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Jamaica"
 weight = 0.016129032258064516
 
 [entities.fields.stats]
@@ -593,6 +593,78 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
+    "life_expect",
+    "fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8335735273158446,
+],
+    [
+    -0.8335735273158446,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8557524264239551,
+],
+    [
+    -0.8557524264239551,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.5072117640877327,
+],
+    [
+    0.5072117640877327,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.5412020990718822,
+],
+    [
+    0.5412020990718822,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "fertility",
     "year",
 ]
@@ -621,78 +693,6 @@ matrix = [
 ],
     [
     -0.4966885068972552,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fertility",
-    "life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8335735273158446,
-],
-    [
-    -0.8335735273158446,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fertility",
-    "life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8557524264239551,
-],
-    [
-    -0.8557524264239551,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "life_expect",
-]
-matrix = [
-    [
-    1.0,
-    0.5072117640877327,
-],
-    [
-    0.5072117640877327,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "life_expect",
-]
-matrix = [
-    [
-    1.0,
-    0.5412020990718822,
-],
-    [
-    0.5412020990718822,
     1.0,
 ],
 ]

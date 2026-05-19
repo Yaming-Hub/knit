@@ -24,11 +24,11 @@ value = "All natural disasters"
 weight = 0.14570361145703611
 
 [[entities.fields.generator.choices]]
-value = "Earthquake"
+value = "Extreme weather"
 weight = 0.1382316313823163
 
 [[entities.fields.generator.choices]]
-value = "Extreme weather"
+value = "Earthquake"
 weight = 0.1382316313823163
 
 [[entities.fields.generator.choices]]
@@ -179,24 +179,6 @@ dependent = "Deaths"
 given = "Entity"
 
 [[correlations.distributions]]
-when = "Epidemic"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 8.433029060448114
-sigma = 2.4292223738491034
-
-[[correlations.distributions]]
-when = "Volcanic activity"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.8347173863081645
-sigma = 2.473325557650647
-
-[[correlations.distributions]]
 when = "Landslide"
 distribution = "log_normal"
 round = true
@@ -206,6 +188,24 @@ mu = 5.910015328674287
 sigma = 1.2625091580612948
 
 [[correlations.distributions]]
+when = "Epidemic"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 8.433029060448114
+sigma = 2.4292223738491034
+
+[[correlations.distributions]]
+when = "Extreme weather"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 7.9812955696877275
+sigma = 1.6925882769451233
+
+[[correlations.distributions]]
 when = "Flood"
 distribution = "log_normal"
 round = true
@@ -213,15 +213,6 @@ round = true
 [correlations.distributions.params]
 mu = 8.151045929728824
 sigma = 1.9468941050694943
-
-[[correlations.distributions]]
-when = "Extreme temperature"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 6.392809233325655
-sigma = 1.458005669756427
 
 [[correlations.distributions]]
 when = "All natural disasters"
@@ -242,6 +233,15 @@ mu = 8.256485338094892
 sigma = 2.142984033323911
 
 [[correlations.distributions]]
+when = "Extreme temperature"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 6.392809233325655
+sigma = 1.458005669756427
+
+[[correlations.distributions]]
 when = "Wildfire"
 distribution = "log_normal"
 round = true
@@ -251,13 +251,13 @@ mu = 3.579673811365238
 sigma = 1.3984903308226742
 
 [[correlations.distributions]]
-when = "Mass movement (dry)"
+when = "Volcanic activity"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 4.119951952537789
-sigma = 1.269271418282932
+mu = 4.8347173863081645
+sigma = 2.473325557650647
 
 [[correlations.distributions]]
 when = "Drought"
@@ -269,13 +269,13 @@ scale = 8.0
 shape = 0.1712506155691955
 
 [[correlations.distributions]]
-when = "Extreme weather"
+when = "Mass movement (dry)"
 distribution = "log_normal"
 round = true
 
 [correlations.distributions.params]
-mu = 7.9812955696877275
-sigma = 1.6925882769451233
+mu = 4.119951952537789
+sigma = 1.269271418282932
 
 [correlations.default]
 kind = "log_normal"

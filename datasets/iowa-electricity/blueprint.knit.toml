@@ -41,15 +41,15 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = "Fossil Fuels"
-weight = 0.3333333333333333
-
-[[entities.fields.generator.choices]]
 value = "Nuclear Energy"
 weight = 0.3333333333333333
 
 [[entities.fields.generator.choices]]
 value = "Renewables"
+weight = 0.3333333333333333
+
+[[entities.fields.generator.choices]]
+value = "Fossil Fuels"
 weight = 0.3333333333333333
 
 [entities.fields.stats]
@@ -129,15 +129,6 @@ dependent = "net_generation"
 given = "source"
 
 [[correlations.distributions]]
-when = "Nuclear Energy"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 5321.0
-min = 3853.0
-
-[[correlations.distributions]]
 when = "Renewables"
 distribution = "uniform"
 round = true
@@ -154,6 +145,15 @@ round = true
 [correlations.distributions.params]
 max = 42750.0
 min = 28437.0
+
+[[correlations.distributions]]
+when = "Nuclear Energy"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 5321.0
+min = 3853.0
 
 [correlations.default]
 kind = "uniform"

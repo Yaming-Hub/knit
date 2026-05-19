@@ -4320,78 +4320,6 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "APPLE_FRAME",
-    "BRIDGE",
-]
-matrix = [
-    [
-    1.0,
-    0.3751332385900968,
-],
-    [
-    0.3751332385900968,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "APPLE_FRAME",
-    "BRIDGE",
-]
-matrix = [
-    [
-    1.0,
-    0.3751332385900987,
-],
-    [
-    0.3751332385900987,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "APPLE_FRAME",
-    "BUILDING",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "APPLE_FRAME",
-    "BUILDING",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "CLOUDS",
     "CUMULUS",
 ]
@@ -4420,6 +4348,978 @@ matrix = [
 ],
     [
     0.5460948883216592,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "RIVER",
+    "LAKE",
+]
+matrix = [
+    [
+    1.0,
+    -0.4666185796451764,
+],
+    [
+    -0.4666185796451764,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "RIVER",
+    "LAKE",
+]
+matrix = [
+    [
+    1.0,
+    -0.46661857964517767,
+],
+    [
+    -0.46661857964517767,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "RIVER",
+    "WATERFALL",
+]
+matrix = [
+    [
+    1.0,
+    0.3948043197178468,
+],
+    [
+    0.3948043197178468,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "RIVER",
+    "WATERFALL",
+]
+matrix = [
+    [
+    1.0,
+    0.39480431971784735,
+],
+    [
+    0.39480431971784735,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ROCKS",
+    "WAVES",
+]
+matrix = [
+    [
+    1.0,
+    0.30665618835597336,
+],
+    [
+    0.30665618835597336,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ROCKS",
+    "WAVES",
+]
+matrix = [
+    [
+    1.0,
+    0.3066561883559734,
+],
+    [
+    0.3066561883559734,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "SNOWY_MOUNTAIN",
+    "CONIFER",
+]
+matrix = [
+    [
+    1.0,
+    0.4101347486420602,
+],
+    [
+    0.4101347486420602,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "SNOWY_MOUNTAIN",
+    "CONIFER",
+]
+matrix = [
+    [
+    1.0,
+    0.4101347486420577,
+],
+    [
+    0.4101347486420577,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "SNOWY_MOUNTAIN",
+    "MOUNTAIN",
+]
+matrix = [
+    [
+    1.0,
+    0.7503825554954253,
+],
+    [
+    0.7503825554954253,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "SNOWY_MOUNTAIN",
+    "MOUNTAIN",
+]
+matrix = [
+    [
+    1.0,
+    0.7503825554954198,
+],
+    [
+    0.7503825554954198,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "SNOWY_MOUNTAIN",
+    "MOUNTAINS",
+]
+matrix = [
+    [
+    1.0,
+    0.4441052888331546,
+],
+    [
+    0.4441052888331546,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "SNOWY_MOUNTAIN",
+    "MOUNTAINS",
+]
+matrix = [
+    [
+    1.0,
+    0.44410528883315264,
+],
+    [
+    0.44410528883315264,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "GUEST",
+    "STEVE_ROSS",
+]
+matrix = [
+    [
+    1.0,
+    0.6971150462836825,
+],
+    [
+    0.6971150462836825,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "GUEST",
+    "STEVE_ROSS",
+]
+matrix = [
+    [
+    1.0,
+    0.6971150462836834,
+],
+    [
+    0.6971150462836834,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "GUEST",
+    "PORTRAIT",
+]
+matrix = [
+    [
+    1.0,
+    0.36039750781097946,
+],
+    [
+    0.36039750781097946,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "GUEST",
+    "PORTRAIT",
+]
+matrix = [
+    [
+    1.0,
+    0.36039750781097757,
+],
+    [
+    0.36039750781097757,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "PERSON",
+    "FIRE",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "PERSON",
+    "FIRE",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "WAVES",
+]
+matrix = [
+    [
+    1.0,
+    0.8470897879022495,
+],
+    [
+    0.8470897879022495,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "WAVES",
+]
+matrix = [
+    [
+    1.0,
+    0.8470897879022476,
+],
+    [
+    0.8470897879022476,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "CLIFF",
+]
+matrix = [
+    [
+    1.0,
+    0.3176229079078132,
+],
+    [
+    0.3176229079078132,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "CLIFF",
+]
+matrix = [
+    [
+    1.0,
+    0.3176229079078116,
+],
+    [
+    0.3176229079078116,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "TREES",
+]
+matrix = [
+    [
+    1.0,
+    -0.5787044318849554,
+],
+    [
+    -0.5787044318849554,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "TREES",
+]
+matrix = [
+    [
+    1.0,
+    -0.5787044318849511,
+],
+    [
+    -0.5787044318849511,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    -0.688180083733004,
+],
+    [
+    -0.688180083733004,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    -0.6881800837329992,
+],
+    [
+    -0.6881800837329992,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "PALM_TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.4296726821263267,
+],
+    [
+    0.4296726821263267,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "PALM_TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.429672682126325,
+],
+    [
+    0.429672682126325,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "OCEAN",
+]
+matrix = [
+    [
+    1.0,
+    0.8555979618608535,
+],
+    [
+    0.8555979618608535,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BEACH",
+    "OCEAN",
+]
+matrix = [
+    [
+    1.0,
+    0.8555979618608411,
+],
+    [
+    0.8555979618608411,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "DECIDUOUS",
+    "CONIFER",
+]
+matrix = [
+    [
+    1.0,
+    -0.37487792068706266,
+],
+    [
+    -0.37487792068706266,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "DECIDUOUS",
+    "CONIFER",
+]
+matrix = [
+    [
+    1.0,
+    -0.3748779206870617,
+],
+    [
+    -0.3748779206870617,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "DECIDUOUS",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    0.38737147648056275,
+],
+    [
+    0.38737147648056275,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "DECIDUOUS",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    0.38737147648056486,
+],
+    [
+    0.38737147648056486,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "LIGHTHOUSE",
+    "CLIFF",
+]
+matrix = [
+    [
+    1.0,
+    0.3504616713487835,
+],
+    [
+    0.3504616713487835,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "LIGHTHOUSE",
+    "CLIFF",
+]
+matrix = [
+    [
+    1.0,
+    0.3504616713487755,
+],
+    [
+    0.3504616713487755,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "NIGHT",
+    "MOON",
+]
+matrix = [
+    [
+    1.0,
+    0.5169842621132014,
+],
+    [
+    0.5169842621132014,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "NIGHT",
+    "MOON",
+]
+matrix = [
+    [
+    1.0,
+    0.5169842621131975,
+],
+    [
+    0.5169842621131975,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "NIGHT",
+    "AURORA_BOREALIS",
+]
+matrix = [
+    [
+    1.0,
+    0.421589224833344,
+],
+    [
+    0.421589224833344,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "NIGHT",
+    "AURORA_BOREALIS",
+]
+matrix = [
+    [
+    1.0,
+    0.42158922483334327,
+],
+    [
+    0.42158922483334327,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "FLORIDA_FRAME",
+    "PALM_TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.3299999162436877,
+],
+    [
+    0.3299999162436877,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "FLORIDA_FRAME",
+    "PALM_TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.3299999162436867,
+],
+    [
+    0.3299999162436867,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "MOUNTAIN",
+]
+matrix = [
+    [
+    1.0,
+    0.4553426202459437,
+],
+    [
+    0.4553426202459437,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "MOUNTAIN",
+]
+matrix = [
+    [
+    1.0,
+    0.4553426202459413,
+],
+    [
+    0.4553426202459413,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.41252389759983604,
+],
+    [
+    0.41252389759983604,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.4125238975998354,
+],
+    [
+    0.4125238975998354,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "MOUNTAINS",
+]
+matrix = [
+    [
+    1.0,
+    0.36849960631020184,
+],
+    [
+    0.36849960631020184,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "MOUNTAINS",
+]
+matrix = [
+    [
+    1.0,
+    0.3684996063102012,
+],
+    [
+    0.3684996063102012,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    0.3593538408811193,
+],
+    [
+    0.3593538408811193,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CONIFER",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    0.35935384088111855,
+],
+    [
+    0.35935384088111855,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "MOUNTAIN",
+    "MOUNTAINS",
+]
+matrix = [
+    [
+    1.0,
+    0.6914918649865467,
+],
+    [
+    0.6914918649865467,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "MOUNTAIN",
+    "MOUNTAINS",
+]
+matrix = [
+    [
+    1.0,
+    0.691491864986545,
+],
+    [
+    0.691491864986545,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "OVAL_FRAME",
+    "FRAMED",
+]
+matrix = [
+    [
+    1.0,
+    0.8291659387872709,
+],
+    [
+    0.8291659387872709,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "OVAL_FRAME",
+    "FRAMED",
+]
+matrix = [
+    [
+    1.0,
+    0.8291659387872689,
+],
+    [
+    0.8291659387872689,
     1.0,
 ],
 ]
@@ -4536,16 +5436,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "PERSON",
-    "FIRE",
+    "BRIDGE",
+    "APPLE_FRAME",
 ]
 matrix = [
     [
     1.0,
-    1.0,
+    0.3751332385900968,
 ],
     [
-    1.0,
+    0.3751332385900968,
     1.0,
 ],
 ]
@@ -4554,16 +5454,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "PERSON",
-    "FIRE",
+    "BRIDGE",
+    "APPLE_FRAME",
 ]
 matrix = [
     [
     1.0,
-    1.0,
+    0.3751332385900987,
 ],
     [
-    1.0,
+    0.3751332385900987,
     1.0,
 ],
 ]
@@ -4572,16 +5472,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "BARN",
-    "FENCE",
+    "DOCK",
+    "BOAT",
 ]
 matrix = [
     [
     1.0,
-    0.3123302026949514,
+    0.7062267475149115,
 ],
     [
-    0.3123302026949514,
+    0.7062267475149115,
     1.0,
 ],
 ]
@@ -4590,196 +5490,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "BARN",
-    "FENCE",
+    "DOCK",
+    "BOAT",
 ]
 matrix = [
     [
     1.0,
-    0.31233020269495476,
+    0.7062267475148988,
 ],
     [
-    0.31233020269495476,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "FLORIDA_FRAME",
-    "PALM_TREES",
-]
-matrix = [
-    [
-    1.0,
-    0.3299999162436877,
-],
-    [
-    0.3299999162436877,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "FLORIDA_FRAME",
-    "PALM_TREES",
-]
-matrix = [
-    [
-    1.0,
-    0.3299999162436867,
-],
-    [
-    0.3299999162436867,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "AURORA_BOREALIS",
-    "NIGHT",
-]
-matrix = [
-    [
-    1.0,
-    0.421589224833344,
-],
-    [
-    0.421589224833344,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "AURORA_BOREALIS",
-    "NIGHT",
-]
-matrix = [
-    [
-    1.0,
-    0.42158922483334327,
-],
-    [
-    0.42158922483334327,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "LAKE",
-    "RIVER",
-]
-matrix = [
-    [
-    1.0,
-    -0.4666185796451764,
-],
-    [
-    -0.4666185796451764,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "LAKE",
-    "RIVER",
-]
-matrix = [
-    [
-    1.0,
-    -0.46661857964517767,
-],
-    [
-    -0.46661857964517767,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "GUEST",
-    "STEVE_ROSS",
-]
-matrix = [
-    [
-    1.0,
-    0.6971150462836825,
-],
-    [
-    0.6971150462836825,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "GUEST",
-    "STEVE_ROSS",
-]
-matrix = [
-    [
-    1.0,
-    0.6971150462836834,
-],
-    [
-    0.6971150462836834,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "GUEST",
-    "PORTRAIT",
-]
-matrix = [
-    [
-    1.0,
-    0.36039750781097946,
-],
-    [
-    0.36039750781097946,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "GUEST",
-    "PORTRAIT",
-]
-matrix = [
-    [
-    1.0,
-    0.36039750781097757,
-],
-    [
-    0.36039750781097757,
+    0.7062267475148988,
     1.0,
 ],
 ]
@@ -4824,16 +5544,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "FRAMED",
-    "OVAL_FRAME",
+    "SNOW",
+    "WINTER",
 ]
 matrix = [
     [
     1.0,
-    0.8291659387872709,
+    0.9166611354391966,
 ],
     [
-    0.8291659387872709,
+    0.9166611354391966,
     1.0,
 ],
 ]
@@ -4842,16 +5562,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "FRAMED",
-    "OVAL_FRAME",
+    "SNOW",
+    "WINTER",
 ]
 matrix = [
     [
     1.0,
-    0.8291659387872689,
+    0.916661135439191,
 ],
     [
-    0.8291659387872689,
+    0.916661135439191,
     1.0,
 ],
 ]
@@ -4860,16 +5580,88 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "BARN",
+    "FENCE",
+]
+matrix = [
+    [
+    1.0,
+    0.3123302026949514,
+],
+    [
+    0.3123302026949514,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "BARN",
+    "FENCE",
+]
+matrix = [
+    [
+    1.0,
+    0.31233020269495476,
+],
+    [
+    0.31233020269495476,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "CLIFF",
+]
+matrix = [
+    [
+    1.0,
+    0.3408266412405266,
+],
+    [
+    0.3408266412405266,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "CLIFF",
+]
+matrix = [
+    [
+    1.0,
+    0.340826641240524,
+],
+    [
+    0.340826641240524,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
     "TREES",
-    "CONIFER",
 ]
 matrix = [
     [
     1.0,
-    0.41252389759983604,
+    -0.565288863725827,
 ],
     [
-    0.41252389759983604,
+    -0.565288863725827,
     1.0,
 ],
 ]
@@ -4878,16 +5670,160 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "WAVES",
     "TREES",
-    "CONIFER",
 ]
 matrix = [
     [
     1.0,
-    0.4125238975998354,
+    -0.5652888637258223,
 ],
     [
-    0.4125238975998354,
+    -0.5652888637258223,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    -0.6853915883639728,
+],
+    [
+    -0.6853915883639728,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "TREE",
+]
+matrix = [
+    [
+    1.0,
+    -0.6853915883639716,
+],
+    [
+    -0.6853915883639716,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "PALM_TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.49790543663230524,
+],
+    [
+    0.49790543663230524,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "PALM_TREES",
+]
+matrix = [
+    [
+    1.0,
+    0.497905436632307,
+],
+    [
+    0.497905436632307,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "OCEAN",
+]
+matrix = [
+    [
+    1.0,
+    0.9691880644983998,
+],
+    [
+    0.9691880644983998,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "WAVES",
+    "OCEAN",
+]
+matrix = [
+    [
+    1.0,
+    0.9691880644984,
+],
+    [
+    0.9691880644984,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CLIFF",
+    "OCEAN",
+]
+matrix = [
+    [
+    1.0,
+    0.3296490128910816,
+],
+    [
+    0.3296490128910816,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CLIFF",
+    "OCEAN",
+]
+matrix = [
+    [
+    1.0,
+    0.32964901289108317,
+],
+    [
+    0.32964901289108317,
     1.0,
 ],
 ]
@@ -4933,78 +5869,6 @@ conditional = []
 entity = "original"
 fields = [
     "TREES",
-    "WAVES",
-]
-matrix = [
-    [
-    1.0,
-    -0.565288863725827,
-],
-    [
-    -0.565288863725827,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREES",
-    "WAVES",
-]
-matrix = [
-    [
-    1.0,
-    -0.5652888637258223,
-],
-    [
-    -0.5652888637258223,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREES",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    -0.5787044318849554,
-],
-    [
-    -0.5787044318849554,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREES",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    -0.5787044318849511,
-],
-    [
-    -0.5787044318849511,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREES",
     "OCEAN",
 ]
 matrix = [
@@ -5040,16 +5904,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "MOON",
-    "NIGHT",
+    "BUILDING",
+    "APPLE_FRAME",
 ]
 matrix = [
     [
     1.0,
-    0.5169842621132014,
+    1.0,
 ],
     [
-    0.5169842621132014,
+    1.0,
     1.0,
 ],
 ]
@@ -5058,16 +5922,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "MOON",
-    "NIGHT",
+    "BUILDING",
+    "APPLE_FRAME",
 ]
 matrix = [
     [
     1.0,
-    0.5169842621131975,
+    1.0,
 ],
     [
-    0.5169842621131975,
+    1.0,
     1.0,
 ],
 ]
@@ -5076,196 +5940,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "CONIFER",
-    "TREE",
-]
-matrix = [
-    [
-    1.0,
-    0.3593538408811193,
-],
-    [
-    0.3593538408811193,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "TREE",
-]
-matrix = [
-    [
-    1.0,
-    0.35935384088111855,
-],
-    [
-    0.35935384088111855,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "SNOWY_MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.4101347486420602,
-],
-    [
-    0.4101347486420602,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "SNOWY_MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.4101347486420577,
-],
-    [
-    0.4101347486420577,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "MOUNTAINS",
-]
-matrix = [
-    [
-    1.0,
-    0.36849960631020184,
-],
-    [
-    0.36849960631020184,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "MOUNTAINS",
-]
-matrix = [
-    [
-    1.0,
-    0.3684996063102012,
-],
-    [
-    0.3684996063102012,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.4553426202459437,
-],
-    [
-    0.4553426202459437,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.4553426202459413,
-],
-    [
-    0.4553426202459413,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "DECIDUOUS",
-]
-matrix = [
-    [
-    1.0,
-    -0.37487792068706266,
-],
-    [
-    -0.37487792068706266,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CONIFER",
-    "DECIDUOUS",
-]
-matrix = [
-    [
-    1.0,
-    -0.3748779206870617,
-],
-    [
-    -0.3748779206870617,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "SNOW",
+    "CABIN",
     "WINTER",
 ]
 matrix = [
     [
     1.0,
-    0.9166611354391966,
+    0.3005293760305463,
 ],
     [
-    0.9166611354391966,
+    0.3005293760305463,
     1.0,
 ],
 ]
@@ -5274,160 +5958,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "SNOW",
+    "CABIN",
     "WINTER",
 ]
 matrix = [
     [
     1.0,
-    0.916661135439191,
+    0.3005293760305476,
 ],
     [
-    0.916661135439191,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WATERFALL",
-    "RIVER",
-]
-matrix = [
-    [
-    1.0,
-    0.3948043197178468,
-],
-    [
-    0.3948043197178468,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WATERFALL",
-    "RIVER",
-]
-matrix = [
-    [
-    1.0,
-    0.39480431971784735,
-],
-    [
-    0.39480431971784735,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREE",
-    "WAVES",
-]
-matrix = [
-    [
-    1.0,
-    -0.6853915883639728,
-],
-    [
-    -0.6853915883639728,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREE",
-    "WAVES",
-]
-matrix = [
-    [
-    1.0,
-    -0.6853915883639716,
-],
-    [
-    -0.6853915883639716,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREE",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    -0.688180083733004,
-],
-    [
-    -0.688180083733004,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREE",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    -0.6881800837329992,
-],
-    [
-    -0.6881800837329992,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREE",
-    "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    -0.7189056374487314,
-],
-    [
-    -0.7189056374487314,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "TREE",
-    "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    -0.7189056374487325,
-],
-    [
-    -0.7189056374487325,
+    0.3005293760305476,
     1.0,
 ],
 ]
@@ -5473,15 +6013,15 @@ conditional = []
 entity = "original"
 fields = [
     "TREE",
-    "DECIDUOUS",
+    "OCEAN",
 ]
 matrix = [
     [
     1.0,
-    0.38737147648056275,
+    -0.7189056374487314,
 ],
     [
-    0.38737147648056275,
+    -0.7189056374487314,
     1.0,
 ],
 ]
@@ -5491,213 +6031,15 @@ conditional = []
 entity = "original"
 fields = [
     "TREE",
-    "DECIDUOUS",
-]
-matrix = [
-    [
-    1.0,
-    0.38737147648056486,
-],
-    [
-    0.38737147648056486,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "SNOWY_MOUNTAIN",
-    "MOUNTAINS",
-]
-matrix = [
-    [
-    1.0,
-    0.4441052888331546,
-],
-    [
-    0.4441052888331546,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "SNOWY_MOUNTAIN",
-    "MOUNTAINS",
-]
-matrix = [
-    [
-    1.0,
-    0.44410528883315264,
-],
-    [
-    0.44410528883315264,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "SNOWY_MOUNTAIN",
-    "MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.7503825554954253,
-],
-    [
-    0.7503825554954253,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "SNOWY_MOUNTAIN",
-    "MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.7503825554954198,
-],
-    [
-    0.7503825554954198,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "DOCK",
-    "BOAT",
-]
-matrix = [
-    [
-    1.0,
-    0.7062267475149115,
-],
-    [
-    0.7062267475149115,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "DOCK",
-    "BOAT",
-]
-matrix = [
-    [
-    1.0,
-    0.7062267475148988,
-],
-    [
-    0.7062267475148988,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
-    "WAVES",
-]
-matrix = [
-    [
-    1.0,
-    0.3408266412405266,
-],
-    [
-    0.3408266412405266,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
-    "WAVES",
-]
-matrix = [
-    [
-    1.0,
-    0.340826641240524,
-],
-    [
-    0.340826641240524,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    0.3176229079078132,
-],
-    [
-    0.3176229079078132,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    0.3176229079078116,
-],
-    [
-    0.3176229079078116,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
     "OCEAN",
 ]
 matrix = [
     [
     1.0,
-    0.3296490128910816,
+    -0.7189056374487325,
 ],
     [
-    0.3296490128910816,
+    -0.7189056374487325,
     1.0,
 ],
 ]
@@ -5706,350 +6048,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "CLIFF",
-    "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    0.32964901289108317,
-],
-    [
-    0.32964901289108317,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
-    "LIGHTHOUSE",
-]
-matrix = [
-    [
-    1.0,
-    0.3504616713487835,
-],
-    [
-    0.3504616713487835,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "CLIFF",
-    "LIGHTHOUSE",
-]
-matrix = [
-    [
-    1.0,
-    0.3504616713487755,
-],
-    [
-    0.3504616713487755,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    0.8470897879022495,
-],
-    [
-    0.8470897879022495,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "BEACH",
-]
-matrix = [
-    [
-    1.0,
-    0.8470897879022476,
-],
-    [
-    0.8470897879022476,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "ROCKS",
-]
-matrix = [
-    [
-    1.0,
-    0.30665618835597336,
-],
-    [
-    0.30665618835597336,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "ROCKS",
-]
-matrix = [
-    [
-    1.0,
-    0.3066561883559734,
-],
-    [
-    0.3066561883559734,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    0.9691880644983998,
-],
-    [
-    0.9691880644983998,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    0.9691880644984,
-],
-    [
-    0.9691880644984,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
     "PALM_TREES",
-]
-matrix = [
-    [
-    1.0,
-    0.49790543663230524,
-],
-    [
-    0.49790543663230524,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WAVES",
-    "PALM_TREES",
-]
-matrix = [
-    [
-    1.0,
-    0.497905436632307,
-],
-    [
-    0.497905436632307,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "BEACH",
     "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    0.8555979618608535,
-],
-    [
-    0.8555979618608535,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "BEACH",
-    "OCEAN",
-]
-matrix = [
-    [
-    1.0,
-    0.8555979618608411,
-],
-    [
-    0.8555979618608411,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "BEACH",
-    "PALM_TREES",
-]
-matrix = [
-    [
-    1.0,
-    0.4296726821263267,
-],
-    [
-    0.4296726821263267,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "BEACH",
-    "PALM_TREES",
-]
-matrix = [
-    [
-    1.0,
-    0.429672682126325,
-],
-    [
-    0.429672682126325,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WINTER",
-    "CABIN",
-]
-matrix = [
-    [
-    1.0,
-    0.3005293760305463,
-],
-    [
-    0.3005293760305463,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "WINTER",
-    "CABIN",
-]
-matrix = [
-    [
-    1.0,
-    0.3005293760305476,
-],
-    [
-    0.3005293760305476,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "MOUNTAINS",
-    "MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.6914918649865467,
-],
-    [
-    0.6914918649865467,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "MOUNTAINS",
-    "MOUNTAIN",
-]
-matrix = [
-    [
-    1.0,
-    0.691491864986545,
-],
-    [
-    0.691491864986545,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "OCEAN",
-    "PALM_TREES",
 ]
 matrix = [
     [
@@ -6066,8 +6066,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "OCEAN",
     "PALM_TREES",
+    "OCEAN",
 ]
 matrix = [
     [
@@ -6084,16 +6084,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "TITLE",
     "EPISODE",
+    "TITLE",
 ]
 matrix = [
     [
     1.0,
-    0.9999999999999156,
+    0.9999999999999162,
 ],
     [
-    0.9999999999999156,
+    0.9999999999999162,
     1.0,
 ],
 ]

@@ -386,88 +386,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "last_name",
-    "first_name",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "last_name",
-    "race",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "last_name",
-    "address",
-]
-matrix = [
-    [
-    1.0,
-    0.9635157357819785,
-],
-    [
-    0.9635157357819785,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "last_name",
-    "type",
-]
-matrix = [
-    [
-    1.0,
-    0.9358266959957232,
-],
-    [
-    0.9358266959957232,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "last_name",
+    "gender",
     "neighborhood",
 ]
 matrix = [
     [
     1.0,
-    0.9578190943061322,
+    0.7379992257061365,
 ],
     [
-    0.9578190943061322,
+    0.7379992257061365,
     1.0,
 ],
 ]
@@ -476,16 +404,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "last_name",
     "gender",
+    "address",
 ]
 matrix = [
     [
     1.0,
-    0.958980113006968,
+    0.9449111825230692,
 ],
     [
-    0.958980113006968,
+    0.9449111825230692,
     1.0,
 ],
 ]
@@ -494,16 +422,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "first_name",
-    "race",
+    "gender",
+    "last_name",
 ]
 matrix = [
     [
     1.0,
-    1.0,
+    0.9589801130069674,
 ],
     [
-    1.0,
+    0.9589801130069674,
     1.0,
 ],
 ]
@@ -512,7 +440,43 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "gender",
+    "type",
+]
+matrix = [
+    [
+    1.0,
+    0.48181205582971576,
+],
+    [
+    0.48181205582971576,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "gender",
     "first_name",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999994,
+],
+    [
+    0.9999999999999994,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "neighborhood",
     "address",
 ]
 matrix = [
@@ -530,7 +494,115 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "neighborhood",
+    "race",
+]
+matrix = [
+    [
+    1.0,
+    0.7418451110273773,
+],
+    [
+    0.7418451110273773,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "neighborhood",
+    "last_name",
+]
+matrix = [
+    [
+    1.0,
+    0.9578190943061318,
+],
+    [
+    0.9578190943061318,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "neighborhood",
+    "type",
+]
+matrix = [
+    [
+    1.0,
+    0.8150304849255792,
+],
+    [
+    0.8150304849255792,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "neighborhood",
     "first_name",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "address",
+    "race",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "address",
+    "last_name",
+]
+matrix = [
+    [
+    1.0,
+    0.9635157357819769,
+],
+    [
+    0.9635157357819769,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "address",
     "type",
 ]
 matrix = [
@@ -548,26 +620,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "address",
     "first_name",
-    "neighborhood",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "first_name",
-    "gender",
 ]
 matrix = [
     [
@@ -585,15 +639,15 @@ conditional = []
 entity = "original"
 fields = [
     "race",
-    "address",
+    "last_name",
 ]
 matrix = [
     [
     1.0,
-    1.0,
+    0.9999999999999989,
 ],
     [
-    1.0,
+    0.9999999999999989,
     1.0,
 ],
 ]
@@ -621,15 +675,15 @@ conditional = []
 entity = "original"
 fields = [
     "race",
-    "neighborhood",
+    "first_name",
 ]
 matrix = [
     [
     1.0,
-    0.7418451110273779,
+    1.0,
 ],
     [
-    0.7418451110273779,
+    1.0,
     1.0,
 ],
 ]
@@ -638,34 +692,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "address",
+    "last_name",
     "type",
 ]
 matrix = [
     [
     1.0,
-    1.0,
+    0.9358266959957232,
 ],
     [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "address",
-    "neighborhood",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
+    0.9358266959957232,
     1.0,
 ],
 ]
@@ -674,16 +710,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "address",
-    "gender",
+    "last_name",
+    "first_name",
 ]
 matrix = [
     [
     1.0,
-    0.944911182523068,
+    1.0,
 ],
     [
-    0.944911182523068,
+    1.0,
     1.0,
 ],
 ]
@@ -693,51 +729,15 @@ conditional = []
 entity = "original"
 fields = [
     "type",
-    "neighborhood",
+    "first_name",
 ]
 matrix = [
     [
     1.0,
-    0.8150304849255793,
-],
-    [
-    0.8150304849255793,
     1.0,
 ],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "type",
-    "gender",
-]
-matrix = [
     [
     1.0,
-    0.48181205582971576,
-],
-    [
-    0.48181205582971576,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "neighborhood",
-    "gender",
-]
-matrix = [
-    [
-    1.0,
-    0.7379992257061365,
-],
-    [
-    0.7379992257061365,
     1.0,
 ],
 ]
@@ -751,15 +751,6 @@ matrix = []
 conditional = []
 dependent = "age"
 given = "type"
-
-[[correlations.distributions]]
-when = "Not riot-related"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 56.0
-min = 15.0
 
 [[correlations.distributions]]
 when = "Death"
@@ -778,6 +769,15 @@ round = true
 [correlations.distributions.params]
 mu = 3.4211116706746583
 sigma = 0.37844623163970714
+
+[[correlations.distributions]]
+when = "Not riot-related"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 56.0
+min = 15.0
 
 [[correlations.distributions]]
 when = "Officer-involved shooting"
@@ -805,15 +805,6 @@ dependent = "age"
 given = "gender"
 
 [[correlations.distributions]]
-when = "Female"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 87.0
-min = 24.0
-
-[[correlations.distributions]]
 when = "Male"
 distribution = "log_normal"
 round = true
@@ -821,6 +812,15 @@ round = true
 [correlations.distributions.params]
 mu = 3.332134915131677
 sigma = 0.361604487913829
+
+[[correlations.distributions]]
+when = "Female"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 87.0
+min = 24.0
 
 [correlations.default]
 kind = "log_normal"

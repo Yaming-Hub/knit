@@ -41,11 +41,11 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 2017
+value = 2019
 weight = 0.375
 
 [[entities.fields.generator.choices]]
-value = 2019
+value = 2017
 weight = 0.375
 
 [[entities.fields.generator.choices]]
@@ -198,8 +198,8 @@ cardinality = 3
 [[correlations]]
 entity = "original"
 fields = [
-    "Year",
     "Score",
+    "Year",
 ]
 matrix = [
     [
@@ -216,8 +216,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Year",
     "Score",
+    "Year",
 ]
 matrix = [
     [
@@ -256,95 +256,15 @@ fields = []
 matrix = []
 conditional = []
 dependent = "Score"
-given = "Model"
-
-[[correlations.distributions]]
-when = "T5"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 97.5
-min = 71.6
-
-[[correlations.distributions]]
-when = "BiLSTM+ELMo"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 89.3
-min = 32.1
-
-[[correlations.distributions]]
-when = "BiLSTM+CoVe"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 81.9
-min = 18.5
-
-[[correlations.distributions]]
-when = "RoBERTa"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 96.7
-min = 67.8
-
-[[correlations.distributions]]
-when = "ERNIE"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 97.8
-min = 75.2
-
-[[correlations.distributions]]
-when = "BiLSTM"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 82.8
-min = 11.6
-
-[[correlations.distributions]]
-when = "BERT"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 94.9
-min = 60.5
-
-[[correlations.distributions]]
-when = "BiLSTM+Attn"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 83.9
-min = 18.6
-
-[correlations.default]
-kind = "normal"
-
-[correlations.default.params]
-mean = 75.57968749999998
-std_dev = 19.138403633854722
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Score"
 given = "Task"
 
 [[correlations.distributions]]
-when = "QQP"
+when = "MNLI"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 75.2
-min = 60.1
+max = 92.3
+min = 65.4
 
 [[correlations.distributions]]
 when = "SST-2"
@@ -355,12 +275,28 @@ max = 97.8
 min = 81.9
 
 [[correlations.distributions]]
+when = "MRPC"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 93.9
+min = 78.7
+
+[[correlations.distributions]]
 when = "RTE"
 distribution = "uniform"
 
 [correlations.distributions.params]
 max = 92.8
 min = 52.7
+
+[[correlations.distributions]]
+when = "STS-B"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 93.1
+min = 64.4
 
 [[correlations.distributions]]
 when = "QNLI"
@@ -379,28 +315,92 @@ max = 75.5
 min = 11.6
 
 [[correlations.distributions]]
-when = "MRPC"
+when = "QQP"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 93.9
-min = 78.7
+max = 75.2
+min = 60.1
+
+[correlations.default]
+kind = "normal"
+
+[correlations.default.params]
+mean = 75.57968749999998
+std_dev = 19.138403633854722
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Score"
+given = "Model"
 
 [[correlations.distributions]]
-when = "MNLI"
+when = "BERT"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 92.3
-min = 65.4
+max = 94.9
+min = 60.5
 
 [[correlations.distributions]]
-when = "STS-B"
+when = "T5"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = 93.1
-min = 64.4
+max = 97.5
+min = 71.6
+
+[[correlations.distributions]]
+when = "RoBERTa"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 96.7
+min = 67.8
+
+[[correlations.distributions]]
+when = "BiLSTM"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 82.8
+min = 11.6
+
+[[correlations.distributions]]
+when = "BiLSTM+Attn"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 83.9
+min = 18.6
+
+[[correlations.distributions]]
+when = "ERNIE"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 97.8
+min = 75.2
+
+[[correlations.distributions]]
+when = "BiLSTM+ELMo"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 89.3
+min = 32.1
+
+[[correlations.distributions]]
+when = "BiLSTM+CoVe"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 81.9
+min = 18.5
 
 [correlations.default]
 kind = "normal"

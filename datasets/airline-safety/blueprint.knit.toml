@@ -87,11 +87,11 @@ value = 1
 weight = 0.125
 
 [[entities.fields.generator.choices]]
-value = 8
+value = 7
 weight = 0.08928571428571429
 
 [[entities.fields.generator.choices]]
-value = 7
+value = 8
 weight = 0.08928571428571429
 
 [[entities.fields.generator.choices]]
@@ -119,11 +119,11 @@ value = 10
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
-value = 25
+value = 19
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
-value = 9
+value = 14
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
@@ -131,11 +131,15 @@ value = 24
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
-value = 19
+value = 9
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
 value = 16
+weight = 0.017857142857142856
+
+[[entities.fields.generator.choices]]
+value = 25
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
@@ -144,10 +148,6 @@ weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
 value = 76
-weight = 0.017857142857142856
-
-[[entities.fields.generator.choices]]
-value = 14
 weight = 0.017857142857142856
 
 [entities.fields.stats]
@@ -203,7 +203,7 @@ value = 5
 weight = 0.05357142857142857
 
 [[entities.fields.generator.choices]]
-value = 12
+value = 14
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
@@ -211,15 +211,15 @@ value = 6
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
+value = 7
+weight = 0.017857142857142856
+
+[[entities.fields.generator.choices]]
 value = 8
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
-value = 14
-weight = 0.017857142857142856
-
-[[entities.fields.generator.choices]]
-value = 7
+value = 12
 weight = 0.017857142857142856
 
 [entities.fields.stats]
@@ -312,10 +312,6 @@ value = 6
 weight = 0.07142857142857142
 
 [[entities.fields.generator.choices]]
-value = 11
-weight = 0.03571428571428571
-
-[[entities.fields.generator.choices]]
 value = 7
 weight = 0.03571428571428571
 
@@ -324,11 +320,15 @@ value = 8
 weight = 0.03571428571428571
 
 [[entities.fields.generator.choices]]
+value = 11
+weight = 0.03571428571428571
+
+[[entities.fields.generator.choices]]
 value = 14
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
-value = 17
+value = 24
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
@@ -336,7 +336,7 @@ value = 10
 weight = 0.017857142857142856
 
 [[entities.fields.generator.choices]]
-value = 24
+value = 17
 weight = 0.017857142857142856
 
 [entities.fields.stats]
@@ -551,16 +551,232 @@ cardinality = 4
 [[correlations]]
 entity = "original"
 fields = [
+    "incidents_00_14",
     "fatal_accidents_00_14",
+]
+matrix = [
+    [
+    1.0,
+    0.5980711383495719,
+],
+    [
+    0.5980711383495719,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "fatal_accidents_00_14",
+]
+matrix = [
+    [
+    1.0,
+    0.5568776413676715,
+],
+    [
+    0.5568776413676715,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "fatal_accidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.5729230144414172,
+],
+    [
+    0.5729230144414172,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "fatal_accidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.34628048355265195,
+],
+    [
+    0.34628048355265195,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "incidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.4030088296410955,
+],
+    [
+    0.4030088296410955,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "incidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.495821818541418,
+],
+    [
+    0.495821818541418,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "avail_seat_km_per_week",
+]
+matrix = [
+    [
+    1.0,
+    0.7259167117625855,
+],
+    [
+    0.7259167117625855,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
+    "avail_seat_km_per_week",
+]
+matrix = [
+    [
+    1.0,
+    0.4610152365077957,
+],
+    [
+    0.4610152365077957,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "incidents_00_14",
     "fatalities_00_14",
 ]
 matrix = [
     [
     1.0,
-    0.6958641997699668,
+    0.4995836799922703,
 ],
     [
-    0.6958641997699668,
+    0.4995836799922703,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatalities_85_99",
+    "fatal_accidents_00_14",
+]
+matrix = [
+    [
+    1.0,
+    0.31122498201618765,
+],
+    [
+    0.31122498201618765,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatalities_85_99",
+    "fatal_accidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.5408664386801441,
+],
+    [
+    0.5408664386801441,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatalities_85_99",
+    "fatal_accidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.836670053928162,
+],
+    [
+    0.836670053928162,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatalities_85_99",
+    "incidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.6588383881036716,
+],
+    [
+    0.6588383881036716,
     1.0,
 ],
 ]
@@ -570,15 +786,33 @@ conditional = []
 entity = "original"
 fields = [
     "fatal_accidents_00_14",
-    "fatalities_00_14",
+    "fatal_accidents_85_99",
 ]
 matrix = [
     [
     1.0,
-    0.9468482655357578,
+    0.4987577757413317,
 ],
     [
-    0.9468482655357578,
+    0.4987577757413317,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatal_accidents_00_14",
+    "fatal_accidents_85_99",
+]
+matrix = [
+    [
+    1.0,
+    0.4938274147445612,
+],
+    [
+    0.4938274147445612,
     1.0,
 ],
 ]
@@ -642,151 +876,43 @@ conditional = []
 entity = "original"
 fields = [
     "fatal_accidents_00_14",
-    "fatal_accidents_85_99",
-]
-matrix = [
-    [
-    1.0,
-    0.4987577757413317,
-],
-    [
-    0.4987577757413317,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatal_accidents_00_14",
-    "fatal_accidents_85_99",
-]
-matrix = [
-    [
-    1.0,
-    0.4938274147445612,
-],
-    [
-    0.4938274147445612,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatal_accidents_00_14",
-    "fatalities_85_99",
-]
-matrix = [
-    [
-    1.0,
-    0.31122498201618765,
-],
-    [
-    0.31122498201618765,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatal_accidents_00_14",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.5980711383495719,
-],
-    [
-    0.5980711383495719,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatal_accidents_00_14",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.5568776413676715,
-],
-    [
-    0.5568776413676715,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "fatalities_00_14",
+]
+matrix = [
+    [
+    1.0,
+    0.6958641997699668,
+],
+    [
+    0.6958641997699668,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatal_accidents_00_14",
+    "fatalities_00_14",
+]
+matrix = [
+    [
+    1.0,
+    0.9468482655357578,
+],
+    [
+    0.9468482655357578,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fatal_accidents_85_99",
     "incidents_85_99",
-]
-matrix = [
-    [
-    1.0,
-    0.4564533993526978,
-],
-    [
-    0.4564533993526978,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatalities_00_14",
-    "fatal_accidents_85_99",
-]
-matrix = [
-    [
-    1.0,
-    0.39203774371707906,
-],
-    [
-    0.39203774371707906,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatalities_00_14",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.4995836799922703,
-],
-    [
-    0.4995836799922703,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "incidents_85_99",
-    "fatal_accidents_85_99",
 ]
 matrix = [
     [
@@ -803,8 +929,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "incidents_85_99",
     "fatal_accidents_85_99",
+    "incidents_85_99",
 ]
 matrix = [
     [
@@ -821,62 +947,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "incidents_85_99",
-    "fatalities_85_99",
-]
-matrix = [
-    [
-    1.0,
-    0.6588383881036716,
-],
-    [
-    0.6588383881036716,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "incidents_85_99",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.4030088296410955,
-],
-    [
-    0.4030088296410955,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "incidents_85_99",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.495821818541418,
-],
-    [
-    0.495821818541418,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "avail_seat_km_per_week",
     "fatal_accidents_85_99",
+    "avail_seat_km_per_week",
 ]
 matrix = [
     [
@@ -893,52 +965,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "avail_seat_km_per_week",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.7259167117625855,
-],
-    [
-    0.7259167117625855,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "avail_seat_km_per_week",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.4610152365077957,
-],
-    [
-    0.4610152365077957,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "fatal_accidents_85_99",
-    "fatalities_85_99",
+    "fatalities_00_14",
 ]
 matrix = [
     [
     1.0,
-    0.5408664386801441,
+    0.39203774371707906,
 ],
     [
-    0.5408664386801441,
+    0.39203774371707906,
     1.0,
 ],
 ]
@@ -947,52 +983,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "fatal_accidents_85_99",
-    "fatalities_85_99",
+    "incidents_85_99",
+    "fatalities_00_14",
 ]
 matrix = [
     [
     1.0,
-    0.836670053928162,
+    0.4564533993526978,
 ],
     [
-    0.836670053928162,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatal_accidents_85_99",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.5729230144414172,
-],
-    [
-    0.5729230144414172,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fatal_accidents_85_99",
-    "incidents_00_14",
-]
-matrix = [
-    [
-    1.0,
-    0.34628048355265195,
-],
-    [
-    0.34628048355265195,
+    0.4564533993526978,
     1.0,
 ],
 ]

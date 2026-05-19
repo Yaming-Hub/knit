@@ -54,11 +54,71 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 1
+value = 8
 weight = 0.05
 
 [[entities.fields.generator.choices]]
 value = 2
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 12
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 13
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 20
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 10
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 4
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 18
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 7
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 5
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 6
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 16
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 1
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 15
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 17
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 19
+weight = 0.05
+
+[[entities.fields.generator.choices]]
+value = 11
 weight = 0.05
 
 [[entities.fields.generator.choices]]
@@ -71,66 +131,6 @@ weight = 0.05
 
 [[entities.fields.generator.choices]]
 value = 3
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 15
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 12
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 20
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 10
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 18
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 19
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 11
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 16
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 17
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 8
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 13
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 5
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 4
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 7
-weight = 0.05
-
-[[entities.fields.generator.choices]]
-value = 6
 weight = 0.05
 
 [entities.fields.stats]
@@ -189,15 +189,15 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 3
-weight = 0.3333333333333333
-
-[[entities.fields.generator.choices]]
 value = 1
 weight = 0.3333333333333333
 
 [[entities.fields.generator.choices]]
 value = 2
+weight = 0.3333333333333333
+
+[[entities.fields.generator.choices]]
+value = 3
 weight = 0.3333333333333333
 
 [entities.fields.stats]
@@ -310,16 +310,16 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "subject",
-    "",
+    "solutions",
+    "score",
 ]
 matrix = [
     [
     1.0,
-    0.33296265394890956,
+    0.3046570186615426,
 ],
     [
-    0.33296265394890956,
+    0.3046570186615426,
     1.0,
 ],
 ]
@@ -328,16 +328,34 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "subject",
+    "solutions",
     "",
 ]
 matrix = [
     [
     1.0,
-    0.33296265394890956,
+    0.9429400145689537,
 ],
     [
-    0.33296265394890956,
+    0.9429400145689537,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "solutions",
+    "",
+]
+matrix = [
+    [
+    1.0,
+    0.9429400145689538,
+],
+    [
+    0.9429400145689538,
     1.0,
 ],
 ]
@@ -382,16 +400,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "subject",
     "",
-    "solutions",
 ]
 matrix = [
     [
     1.0,
-    0.9429400145689537,
+    0.33296265394890956,
 ],
     [
-    0.9429400145689537,
+    0.33296265394890956,
     1.0,
 ],
 ]
@@ -400,16 +418,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "subject",
     "",
-    "solutions",
 ]
 matrix = [
     [
     1.0,
-    0.9429400145689538,
+    0.33296265394890956,
 ],
     [
-    0.9429400145689538,
+    0.33296265394890956,
     1.0,
 ],
 ]
@@ -418,8 +436,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "",
     "score",
+    "",
 ]
 matrix = [
     [
@@ -436,8 +454,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "score",
     "",
-    "score",
 ]
 matrix = [
     [
@@ -446,24 +464,6 @@ matrix = [
 ],
     [
     0.4150852522999622,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "solutions",
-    "score",
-]
-matrix = [
-    [
-    1.0,
-    0.3046570186615426,
-],
-    [
-    0.3046570186615426,
     1.0,
 ],
 ]
@@ -479,15 +479,6 @@ dependent = ""
 given = "attention"
 
 [[correlations.distributions]]
-when = "focused"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 59.0
-min = 10.0
-
-[[correlations.distributions]]
 when = "divided"
 distribution = "uniform"
 round = true
@@ -495,6 +486,15 @@ round = true
 [correlations.distributions.params]
 max = 49.0
 min = 0.0
+
+[[correlations.distributions]]
+when = "focused"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 59.0
+min = 10.0
 
 [correlations.default]
 kind = "uniform"
@@ -513,15 +513,6 @@ dependent = "subject"
 given = "attention"
 
 [[correlations.distributions]]
-when = "focused"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 20.0
-min = 11.0
-
-[[correlations.distributions]]
 when = "divided"
 distribution = "uniform"
 round = true
@@ -529,6 +520,15 @@ round = true
 [correlations.distributions.params]
 max = 10.0
 min = 1.0
+
+[[correlations.distributions]]
+when = "focused"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 20.0
+min = 11.0
 
 [correlations.default]
 kind = "uniform"

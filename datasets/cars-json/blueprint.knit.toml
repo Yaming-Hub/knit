@@ -291,11 +291,11 @@ value = "1979-01-01"
 weight = 0.07142857142857142
 
 [[entities.fields.generator.choices]]
-value = "1971-01-01"
+value = "1980-01-01"
 weight = 0.07142857142857142
 
 [[entities.fields.generator.choices]]
-value = "1980-01-01"
+value = "1971-01-01"
 weight = 0.07142857142857142
 
 [[entities.fields.generator.choices]]
@@ -493,80 +493,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "Horsepower",
-    "Cylinders",
-]
-matrix = [
-    [
-    1.0,
-    0.8441582976660665,
-],
-    [
-    0.8441582976660665,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
-    "Cylinders",
-]
-matrix = [
-    [
-    1.0,
-    0.8168451255054467,
-],
-    [
-    0.8168451255054467,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
-    "Acceleration",
-]
-matrix = [
-    [
-    1.0,
-    -0.697124443855188,
-],
-    [
-    -0.697124443855188,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
-    "Acceleration",
-]
-matrix = [
-    [
-    1.0,
-    -0.6681141652404474,
-],
-    [
-    -0.6681141652404474,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
     "Miles_per_Gallon",
+    "Horsepower",
 ]
 matrix = [
     [
@@ -583,8 +511,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Horsepower",
     "Miles_per_Gallon",
+    "Horsepower",
 ]
 matrix = [
     [
@@ -601,116 +529,44 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Horsepower",
-    "Weight_in_lbs",
-]
-matrix = [
-    [
-    1.0,
-    0.866586222390841,
-],
-    [
-    0.866586222390841,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
-    "Weight_in_lbs",
-]
-matrix = [
-    [
-    1.0,
-    0.8812030863572985,
-],
-    [
-    0.8812030863572985,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
-    "Displacement",
-]
-matrix = [
-    [
-    1.0,
-    0.8983263139804305,
-],
-    [
-    0.8983263139804305,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Horsepower",
-    "Displacement",
-]
-matrix = [
-    [
-    1.0,
-    0.8777386180979827,
-],
-    [
-    0.8777386180979827,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
-    "Acceleration",
-]
-matrix = [
-    [
-    1.0,
-    -0.522451512421053,
-],
-    [
-    -0.522451512421053,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
-    "Acceleration",
-]
-matrix = [
-    [
-    1.0,
-    -0.4917066209678721,
-],
-    [
-    -0.4917066209678721,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
     "Miles_per_Gallon",
+    "Displacement",
+]
+matrix = [
+    [
+    1.0,
+    -0.8042028248058989,
+],
+    [
+    -0.8042028248058989,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Miles_per_Gallon",
+    "Displacement",
+]
+matrix = [
+    [
+    1.0,
+    -0.8556920118178749,
+],
+    [
+    -0.8556920118178749,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Miles_per_Gallon",
+    "Cylinders",
 ]
 matrix = [
     [
@@ -727,8 +583,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Cylinders",
     "Miles_per_Gallon",
+    "Cylinders",
 ]
 matrix = [
     [
@@ -737,186 +593,6 @@ matrix = [
 ],
     [
     -0.8218644914450964,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
-    "Weight_in_lbs",
-]
-matrix = [
-    [
-    1.0,
-    0.8952204775128882,
-],
-    [
-    0.8952204775128882,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
-    "Weight_in_lbs",
-]
-matrix = [
-    [
-    1.0,
-    0.8738115033348904,
-],
-    [
-    0.8738115033348904,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
-    "Displacement",
-]
-matrix = [
-    [
-    1.0,
-    0.9517870386276701,
-],
-    [
-    0.9517870386276701,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Cylinders",
-    "Displacement",
-]
-matrix = [
-    [
-    1.0,
-    0.9126696037405306,
-],
-    [
-    0.9126696037405306,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Acceleration",
-    "Miles_per_Gallon",
-]
-matrix = [
-    [
-    1.0,
-    0.42028891210165037,
-],
-    [
-    0.42028891210165037,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Acceleration",
-    "Miles_per_Gallon",
-]
-matrix = [
-    [
-    1.0,
-    0.43867747957086217,
-],
-    [
-    0.43867747957086217,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Acceleration",
-    "Weight_in_lbs",
-]
-matrix = [
-    [
-    1.0,
-    -0.43008580509162725,
-],
-    [
-    -0.43008580509162725,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Acceleration",
-    "Weight_in_lbs",
-]
-matrix = [
-    [
-    1.0,
-    -0.41962048400759827,
-],
-    [
-    -0.41962048400759827,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Acceleration",
-    "Displacement",
-]
-matrix = [
-    [
-    1.0,
-    -0.5579836330725136,
-],
-    [
-    -0.5579836330725136,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Acceleration",
-    "Displacement",
-]
-matrix = [
-    [
-    1.0,
-    -0.5128519403811804,
-],
-    [
-    -0.5128519403811804,
     1.0,
 ],
 ]
@@ -962,15 +638,15 @@ conditional = []
 entity = "original"
 fields = [
     "Miles_per_Gallon",
-    "Displacement",
+    "Acceleration",
 ]
 matrix = [
     [
     1.0,
-    -0.8042028248058989,
+    0.42028891210165037,
 ],
     [
-    -0.8042028248058989,
+    0.42028891210165037,
     1.0,
 ],
 ]
@@ -980,15 +656,15 @@ conditional = []
 entity = "original"
 fields = [
     "Miles_per_Gallon",
-    "Displacement",
+    "Acceleration",
 ]
 matrix = [
     [
     1.0,
-    -0.8556920118178749,
+    0.43867747957086217,
 ],
     [
-    -0.8556920118178749,
+    0.43867747957086217,
     1.0,
 ],
 ]
@@ -997,8 +673,188 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Weight_in_lbs",
+    "Horsepower",
     "Displacement",
+]
+matrix = [
+    [
+    1.0,
+    0.8983263139804305,
+],
+    [
+    0.8983263139804305,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Displacement",
+]
+matrix = [
+    [
+    1.0,
+    0.8777386180979827,
+],
+    [
+    0.8777386180979827,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Cylinders",
+]
+matrix = [
+    [
+    1.0,
+    0.8441582976660665,
+],
+    [
+    0.8441582976660665,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Cylinders",
+]
+matrix = [
+    [
+    1.0,
+    0.8168451255054467,
+],
+    [
+    0.8168451255054467,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Weight_in_lbs",
+]
+matrix = [
+    [
+    1.0,
+    0.866586222390841,
+],
+    [
+    0.866586222390841,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Weight_in_lbs",
+]
+matrix = [
+    [
+    1.0,
+    0.8812030863572985,
+],
+    [
+    0.8812030863572985,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.697124443855188,
+],
+    [
+    -0.697124443855188,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Horsepower",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.6681141652404474,
+],
+    [
+    -0.6681141652404474,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Displacement",
+    "Cylinders",
+]
+matrix = [
+    [
+    1.0,
+    0.9517870386276701,
+],
+    [
+    0.9517870386276701,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Displacement",
+    "Cylinders",
+]
+matrix = [
+    [
+    1.0,
+    0.9126696037405306,
+],
+    [
+    0.9126696037405306,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Displacement",
+    "Weight_in_lbs",
 ]
 matrix = [
     [
@@ -1015,8 +871,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Weight_in_lbs",
     "Displacement",
+    "Weight_in_lbs",
 ]
 matrix = [
     [
@@ -1025,6 +881,168 @@ matrix = [
 ],
     [
     0.9456638464137659,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Displacement",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.5579836330725136,
+],
+    [
+    -0.5579836330725136,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Displacement",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.5128519403811804,
+],
+    [
+    -0.5128519403811804,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Cylinders",
+    "Weight_in_lbs",
+]
+matrix = [
+    [
+    1.0,
+    0.8952204775128882,
+],
+    [
+    0.8952204775128882,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Cylinders",
+    "Weight_in_lbs",
+]
+matrix = [
+    [
+    1.0,
+    0.8738115033348904,
+],
+    [
+    0.8738115033348904,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Cylinders",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.522451512421053,
+],
+    [
+    -0.522451512421053,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Cylinders",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.4917066209678721,
+],
+    [
+    -0.4917066209678721,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Weight_in_lbs",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.43008580509162725,
+],
+    [
+    -0.43008580509162725,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Weight_in_lbs",
+    "Acceleration",
+]
+matrix = [
+    [
+    1.0,
+    -0.41962048400759827,
+],
+    [
+    -0.41962048400759827,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Origin",
+    "Name",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999928,
+],
+    [
+    0.9999999999999928,
     1.0,
 ],
 ]
@@ -1039,460 +1057,14 @@ fields = [
 matrix = [
     [
     1.0,
-    0.8586988951531612,
+    0.858698895153161,
 ],
     [
-    0.8586988951531612,
+    0.858698895153161,
     1.0,
 ],
 ]
 conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "Name",
-    "Origin",
-]
-matrix = [
-    [
-    1.0,
-    0.9999999999999964,
-],
-    [
-    0.9999999999999964,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Miles_per_Gallon"
-given = "Year"
-
-[[correlations.distributions]]
-when = "1978-01-01"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 16.2
-shape = 2.773641899567281
-
-[[correlations.distributions]]
-when = "1976-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 33.0
-min = 13.0
-
-[[correlations.distributions]]
-when = "1977-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 36.0
-min = 15.0
-
-[[correlations.distributions]]
-when = "1975-01-01"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 2.9813715022686877
-sigma = 0.23342131305195507
-
-[[correlations.distributions]]
-when = "1974-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 32.0
-min = 13.0
-
-[[correlations.distributions]]
-when = "1970-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 27.0
-min = 9.0
-
-[[correlations.distributions]]
-when = "1971-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 35.0
-min = 12.0
-
-[[correlations.distributions]]
-when = "1972-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 28.0
-min = 11.0
-
-[[correlations.distributions]]
-when = "1973-01-01"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 2.8039918590886694
-sigma = 0.26234080184709946
-
-[[correlations.distributions]]
-when = "1982-01-01"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 31.044999999999998
-std_dev = 5.440785023015215
-
-[[correlations.distributions]]
-when = "1979-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 37.3
-min = 15.5
-
-[[correlations.distributions]]
-when = "1980-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 46.6
-min = 19.1
-
-[correlations.default]
-kind = "gamma"
-
-[correlations.default.params]
-scale = 2.5914193569033355
-shape = 9.07401297350066
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Displacement"
-given = "Year"
-
-[[correlations.distributions]]
-when = "1974-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 350.0
-min = 71.0
-
-[[correlations.distributions]]
-when = "1976-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 351.0
-min = 85.0
-
-[[correlations.distributions]]
-when = "1971-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 400.0
-min = 71.0
-
-[[correlations.distributions]]
-when = "1979-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 360.0
-min = 85.0
-
-[[correlations.distributions]]
-when = "1978-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 318.0
-min = 78.0
-
-[[correlations.distributions]]
-when = "1980-01-01"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 4.715868933300042
-sigma = 0.2626416324932435
-
-[[correlations.distributions]]
-when = "1973-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 455.0
-min = 68.0
-
-[[correlations.distributions]]
-when = "1977-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 400.0
-min = 79.0
-
-[[correlations.distributions]]
-when = "1982-01-01"
-distribution = "pareto"
-
-[correlations.distributions.params]
-scale = 79.0
-shape = 2.1733599377814707
-
-[[correlations.distributions]]
-when = "1972-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 429.0
-min = 70.0
-
-[[correlations.distributions]]
-when = "1970-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 455.0
-min = 97.0
-
-[[correlations.distributions]]
-when = "1975-01-01"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 400.0
-min = 90.0
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 5.129426915099524
-sigma = 0.5326614271313922
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Horsepower"
-given = "Year"
-
-[[correlations.distributions]]
-when = "1972-01-01"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 208.0
-min = 54.0
-
-[[correlations.distributions]]
-when = "1980-01-01"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.324852828055786
-sigma = 0.22317019138518443
-
-[[correlations.distributions]]
-when = "1979-01-01"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 155.0
-min = 65.0
-
-[[correlations.distributions]]
-when = "1971-01-01"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 180.0
-min = 48.0
-
-[[correlations.distributions]]
-when = "1973-01-01"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 230.0
-min = 46.0
-
-[[correlations.distributions]]
-when = "1982-01-01"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.385308521919971
-sigma = 0.19066296230722454
-
-[[correlations.distributions]]
-when = "1974-01-01"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 150.0
-min = 52.0
-
-[[correlations.distributions]]
-when = "1977-01-01"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.602136633801819
-sigma = 0.31913237204295886
-
-[[correlations.distributions]]
-when = "1975-01-01"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.583516274499386
-sigma = 0.25370758149678174
-
-[[correlations.distributions]]
-when = "1978-01-01"
-distribution = "gamma"
-round = true
-
-[correlations.distributions.params]
-scale = 7.885661434630508
-shape = 12.642496164827518
-
-[[correlations.distributions]]
-when = "1970-01-01"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 225.0
-min = 46.0
-
-[[correlations.distributions]]
-when = "1976-01-01"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 4.567420062278444
-sigma = 0.3127004894742076
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 4.592983282952307
-sigma = 0.3460420300635705
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Miles_per_Gallon"
-given = "Origin"
-
-[[correlations.distributions]]
-when = "Europe"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 3.3005717450499628
-sigma = 0.235026576032752
-
-[[correlations.distributions]]
-when = "USA"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 2.9521321458985432
-sigma = 0.30648791268494596
-
-[[correlations.distributions]]
-when = "Japan"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 30.450632911392397
-std_dev = 6.051380706928184
-
-[correlations.default]
-kind = "gamma"
-
-[correlations.default.params]
-scale = 2.5914193569033355
-shape = 9.07401297350066
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "Displacement"
-given = "Origin"
-
-[[correlations.distributions]]
-when = "Japan"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 4.608685402686416
-sigma = 0.2121496583603339
-
-[[correlations.distributions]]
-when = "USA"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 455.0
-min = 85.0
-
-[[correlations.distributions]]
-when = "Europe"
-distribution = "log_normal"
-
-[correlations.distributions.params]
-mu = 4.676439868746646
-sigma = 0.19317222849341986
-
-[correlations.default]
-kind = "log_normal"
-
-[correlations.default.params]
-mu = 5.129426915099524
-sigma = 0.5326614271313922
 
 [[correlations]]
 entity = "original"
@@ -1543,7 +1115,7 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Weight_in_lbs"
+dependent = "Cylinders"
 given = "Origin"
 
 [[correlations.distributions]]
@@ -1552,8 +1124,82 @@ distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 1825.0
-shape = 3.7312925437920454
+scale = 4.0
+shape = 31.85976693842183
+
+[[correlations.distributions]]
+when = "Japan"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 1.4025229985735852
+sigma = 0.12811434258904958
+
+[[correlations.distributions]]
+when = "USA"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 8.0
+min = 4.0
+
+[correlations.default]
+kind = "uniform"
+
+[correlations.default.params]
+max = 8.0
+min = 3.0
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Displacement"
+given = "Origin"
+
+[[correlations.distributions]]
+when = "Japan"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 4.608685402686416
+sigma = 0.2121496583603339
+
+[[correlations.distributions]]
+when = "Europe"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 4.676439868746646
+sigma = 0.19317222849341986
+
+[[correlations.distributions]]
+when = "USA"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 455.0
+min = 85.0
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 5.129426915099524
+sigma = 0.5326614271313922
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Weight_in_lbs"
+given = "Origin"
 
 [[correlations.distributions]]
 when = "USA"
@@ -1563,6 +1209,15 @@ round = true
 [correlations.distributions.params]
 mean = 3372.700787401575
 std_dev = 790.135873045513
+
+[[correlations.distributions]]
+when = "Europe"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1825.0
+shape = 3.7312925437920454
 
 [[correlations.distributions]]
 when = "Japan"
@@ -1586,39 +1241,384 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Cylinders"
+dependent = "Miles_per_Gallon"
 given = "Origin"
 
 [[correlations.distributions]]
-when = "Japan"
+when = "USA"
 distribution = "log_normal"
-round = true
 
 [correlations.distributions.params]
-mu = 1.4025229985735852
-sigma = 0.12811434258904958
+mu = 2.9521321458985432
+sigma = 0.30648791268494596
+
+[[correlations.distributions]]
+when = "Japan"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 30.450632911392397
+std_dev = 6.051380706928184
 
 [[correlations.distributions]]
 when = "Europe"
-distribution = "pareto"
-round = true
+distribution = "log_normal"
 
 [correlations.distributions.params]
-scale = 4.0
-shape = 31.85976693842183
+mu = 3.3005717450499628
+sigma = 0.235026576032752
+
+[correlations.default]
+kind = "gamma"
+
+[correlations.default.params]
+scale = 2.5914193569033355
+shape = 9.07401297350066
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Horsepower"
+given = "Year"
 
 [[correlations.distributions]]
-when = "USA"
+when = "1971-01-01"
 distribution = "uniform"
 round = true
 
 [correlations.distributions.params]
-max = 8.0
-min = 4.0
+max = 180.0
+min = 48.0
+
+[[correlations.distributions]]
+when = "1970-01-01"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 225.0
+min = 46.0
+
+[[correlations.distributions]]
+when = "1979-01-01"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 155.0
+min = 65.0
+
+[[correlations.distributions]]
+when = "1975-01-01"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.583516274499386
+sigma = 0.25370758149678174
+
+[[correlations.distributions]]
+when = "1976-01-01"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.567420062278444
+sigma = 0.3127004894742076
+
+[[correlations.distributions]]
+when = "1980-01-01"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.324852828055786
+sigma = 0.22317019138518443
+
+[[correlations.distributions]]
+when = "1977-01-01"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.602136633801819
+sigma = 0.31913237204295886
+
+[[correlations.distributions]]
+when = "1974-01-01"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 150.0
+min = 52.0
+
+[[correlations.distributions]]
+when = "1973-01-01"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 230.0
+min = 46.0
+
+[[correlations.distributions]]
+when = "1978-01-01"
+distribution = "gamma"
+round = true
+
+[correlations.distributions.params]
+scale = 7.885661434630508
+shape = 12.642496164827518
+
+[[correlations.distributions]]
+when = "1972-01-01"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 208.0
+min = 54.0
+
+[[correlations.distributions]]
+when = "1982-01-01"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 4.385308521919971
+sigma = 0.19066296230722454
 
 [correlations.default]
-kind = "uniform"
+kind = "log_normal"
 
 [correlations.default.params]
-max = 8.0
-min = 3.0
+mu = 4.592983282952307
+sigma = 0.3460420300635705
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Displacement"
+given = "Year"
+
+[[correlations.distributions]]
+when = "1980-01-01"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 4.715868933300042
+sigma = 0.2626416324932435
+
+[[correlations.distributions]]
+when = "1977-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 400.0
+min = 79.0
+
+[[correlations.distributions]]
+when = "1973-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 455.0
+min = 68.0
+
+[[correlations.distributions]]
+when = "1972-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 429.0
+min = 70.0
+
+[[correlations.distributions]]
+when = "1979-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 360.0
+min = 85.0
+
+[[correlations.distributions]]
+when = "1982-01-01"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 79.0
+shape = 2.1733599377814707
+
+[[correlations.distributions]]
+when = "1971-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 400.0
+min = 71.0
+
+[[correlations.distributions]]
+when = "1975-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 400.0
+min = 90.0
+
+[[correlations.distributions]]
+when = "1970-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 455.0
+min = 97.0
+
+[[correlations.distributions]]
+when = "1974-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 350.0
+min = 71.0
+
+[[correlations.distributions]]
+when = "1976-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 351.0
+min = 85.0
+
+[[correlations.distributions]]
+when = "1978-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 318.0
+min = 78.0
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 5.129426915099524
+sigma = 0.5326614271313922
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "Miles_per_Gallon"
+given = "Year"
+
+[[correlations.distributions]]
+when = "1977-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 36.0
+min = 15.0
+
+[[correlations.distributions]]
+when = "1972-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 28.0
+min = 11.0
+
+[[correlations.distributions]]
+when = "1973-01-01"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 2.8039918590886694
+sigma = 0.26234080184709946
+
+[[correlations.distributions]]
+when = "1978-01-01"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 16.2
+shape = 2.773641899567281
+
+[[correlations.distributions]]
+when = "1975-01-01"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 2.9813715022686877
+sigma = 0.23342131305195507
+
+[[correlations.distributions]]
+when = "1982-01-01"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 31.044999999999998
+std_dev = 5.440785023015215
+
+[[correlations.distributions]]
+when = "1970-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 27.0
+min = 9.0
+
+[[correlations.distributions]]
+when = "1971-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 35.0
+min = 12.0
+
+[[correlations.distributions]]
+when = "1974-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 32.0
+min = 13.0
+
+[[correlations.distributions]]
+when = "1980-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 46.6
+min = 19.1
+
+[[correlations.distributions]]
+when = "1976-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 33.0
+min = 13.0
+
+[[correlations.distributions]]
+when = "1979-01-01"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 37.3
+min = 15.5
+
+[correlations.default]
+kind = "gamma"
+
+[correlations.default.params]
+scale = 2.5914193569033355
+shape = 9.07401297350066

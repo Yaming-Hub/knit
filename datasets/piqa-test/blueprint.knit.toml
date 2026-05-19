@@ -84,16 +84,34 @@ source_rows = 3084
 [[correlations]]
 entity = "original"
 fields = [
+    "sol1",
     "sol2",
+]
+matrix = [
+    [
+    1.0,
+    0.9996751664590364,
+],
+    [
+    0.9996751664590364,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "sol1",
     "goal",
 ]
 matrix = [
     [
     1.0,
-    0.9993306558641126,
+    0.9995398740505179,
 ],
     [
-    0.9993306558641126,
+    0.9995398740505179,
     1.0,
 ],
 ]
@@ -103,33 +121,15 @@ conditional = []
 entity = "original"
 fields = [
     "sol2",
-    "sol1",
-]
-matrix = [
-    [
-    1.0,
-    0.9996751664594559,
-],
-    [
-    0.9996751664594559,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "goal",
-    "sol1",
 ]
 matrix = [
     [
     1.0,
-    0.9995398740501453,
+    0.9993306558648039,
 ],
     [
-    0.9995398740501453,
+    0.9993306558648039,
     1.0,
 ],
 ]

@@ -91,6 +91,10 @@ step = 1
 values = [
     "Female",
     "Female",
+    "Female",
+    "Female",
+    "Male",
+    "Male",
     "Male",
     "Male",
 ]
@@ -118,8 +122,12 @@ start = 0
 step = 1
 values = [
     "No",
-    "Yes",
     "No",
+    "No",
+    "No",
+    "Yes",
+    "Yes",
+    "Yes",
     "Yes",
 ]
 cycle = true
@@ -220,11 +228,11 @@ value = 5
 weight = 0.020491803278688523
 
 [[entities.fields.generator.choices]]
-value = 6
+value = 1
 weight = 0.01639344262295082
 
 [[entities.fields.generator.choices]]
-value = 1
+value = 6
 weight = 0.01639344262295082
 
 [entities.fields.stats]
@@ -395,8 +403,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "time",
     "day",
+    "time",
 ]
 matrix = [
     [

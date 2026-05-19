@@ -20,34 +20,6 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = "W&M"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "Elizabeth"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "George IV"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "Charles II"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "George I"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "George II"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = "George III"
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
 value = "Charles I"
 weight = 0.08333333333333333
 
@@ -60,11 +32,39 @@ value = "Cromwell"
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = "Anne"
+value = "Elizabeth"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "Charles II"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "W&M"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "George III"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "George II"
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
 value = "James II"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "George IV"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "George I"
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = "Anne"
 weight = 0.08333333333333333
 
 [entities.fields.stats]
@@ -87,31 +87,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 1660
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1760
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1702
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1689
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1714
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1565
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1649
+value = 1603
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -127,11 +103,35 @@ value = 1685
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = 1603
+value = 1565
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1702
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1649
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1689
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
 value = 1820
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1660
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1714
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1760
 weight = 0.08333333333333333
 
 [entities.fields.stats]
@@ -167,7 +167,7 @@ value = 1820
 weight = 0.16666666666666666
 
 [[entities.fields.generator.choices]]
-value = 1714
+value = 1727
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -175,27 +175,11 @@ value = 1688
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
+value = 1649
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
 value = 1760
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1660
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1685
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1625
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1727
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1702
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -203,7 +187,23 @@ value = 1603
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
-value = 1649
+value = 1702
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1625
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1685
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1660
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1714
 weight = 0.08333333333333333
 
 [entities.fields.stats]
@@ -235,43 +235,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 4
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 9
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 2
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 3
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 10
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
 value = 6
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 7
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 8
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 11
-weight = 0.08333333333333333
-
-[[entities.fields.generator.choices]]
-value = 1
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
@@ -279,7 +243,43 @@ value = 0
 weight = 0.08333333333333333
 
 [[entities.fields.generator.choices]]
+value = 9
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 10
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 11
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 7
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 4
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 2
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 8
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
 value = 5
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 1
+weight = 0.08333333333333333
+
+[[entities.fields.generator.choices]]
+value = 3
 weight = 0.08333333333333333
 
 [entities.fields.stats]
@@ -394,8 +394,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "start",
     "index",
+    "start",
 ]
 matrix = [
     [
@@ -412,52 +412,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "start",
     "index",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "start",
-    "end",
 ]
 matrix = [
     [
     1.0,
-    0.971229404914231,
-],
-    [
-    0.971229404914231,
     1.0,
 ],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "start",
-    "end",
-]
-matrix = [
     [
     1.0,
-    0.9982502173821434,
-],
-    [
-    0.9982502173821434,
     1.0,
 ],
 ]
@@ -485,6 +449,42 @@ conditional = []
 entity = "original"
 fields = [
     "index",
+    "end",
+]
+matrix = [
+    [
+    1.0,
+    0.9982502173821434,
+],
+    [
+    0.9982502173821434,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "start",
+    "end",
+]
+matrix = [
+    [
+    1.0,
+    0.971229404914231,
+],
+    [
+    0.971229404914231,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "start",
     "end",
 ]
 matrix = [

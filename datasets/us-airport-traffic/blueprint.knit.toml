@@ -261,60 +261,6 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "city",
-    "airport",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "city",
-    "state",
-]
-matrix = [
-    [
-    1.0,
-    0.9795242398072491,
-],
-    [
-    0.9795242398072491,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "city",
-    "iata",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "airport",
     "state",
 ]
@@ -339,10 +285,28 @@ fields = [
 matrix = [
     [
     1.0,
-    0.9999999999998093,
+    0.9999999999998118,
 ],
     [
-    0.9999999999998093,
+    0.9999999999998118,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "airport",
+    "city",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
     1.0,
 ],
 ]
@@ -353,6 +317,42 @@ entity = "original"
 fields = [
     "state",
     "iata",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "state",
+    "city",
+]
+matrix = [
+    [
+    1.0,
+    0.9795242398072199,
+],
+    [
+    0.9795242398072199,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "iata",
+    "city",
 ]
 matrix = [
     [
@@ -376,93 +376,6 @@ dependent = "cnt"
 given = "state"
 
 [[correlations.distributions]]
-when = "WY"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 56.0
-shape = 1.3761138330558713
-
-[[correlations.distributions]]
-when = "TN"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0008532423208191126
-
-[[correlations.distributions]]
-when = "MS"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.00243427458617332
-
-[[correlations.distributions]]
-when = "IL"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 258.0
-shape = 0.7325556590112493
-
-[[correlations.distributions]]
-when = "AL"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 956.0
-min = 214.0
-
-[[correlations.distributions]]
-when = "MT"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 288.0
-min = 23.0
-
-[[correlations.distributions]]
-when = "NC"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 50.0
-shape = 0.42566917749784905
-
-[[correlations.distributions]]
-when = "VA"
-distribution = "exponential"
-round = true
-
-[correlations.distributions.params]
-lambda = 0.0004703352818652153
-
-[[correlations.distributions]]
-when = "ID"
-distribution = "uniform"
-round = true
-
-[correlations.distributions.params]
-max = 319.0
-min = 102.0
-
-[[correlations.distributions]]
-when = "TX"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 6.721972445579103
-sigma = 1.5287156380655826
-
-[[correlations.distributions]]
 when = "FL"
 distribution = "exponential"
 round = true
@@ -471,31 +384,13 @@ round = true
 lambda = 0.00034005123438598085
 
 [[correlations.distributions]]
-when = "LA"
+when = "CO"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 168.0
-shape = 0.7700580589240602
-
-[[correlations.distributions]]
-when = "OR"
-distribution = "pareto"
-round = true
-
-[correlations.distributions.params]
-scale = 168.0
-shape = 1.0201991006834024
-
-[[correlations.distributions]]
-when = "CA"
-distribution = "log_normal"
-round = true
-
-[correlations.distributions.params]
-mu = 6.775415723748983
-sigma = 1.6257724768316033
+scale = 104.0
+shape = 0.6411335392445995
 
 [[correlations.distributions]]
 when = "NY"
@@ -507,6 +402,59 @@ mu = 6.722284174619399
 sigma = 1.3686694697456425
 
 [[correlations.distributions]]
+when = "PA"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 60.0
+shape = 0.41867271168556813
+
+[[correlations.distributions]]
+when = "LA"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 168.0
+shape = 0.7700580589240602
+
+[[correlations.distributions]]
+when = "TN"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.0008532423208191126
+
+[[correlations.distributions]]
+when = "TX"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 6.721972445579103
+sigma = 1.5287156380655826
+
+[[correlations.distributions]]
+when = "WY"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 56.0
+shape = 1.3761138330558713
+
+[[correlations.distributions]]
+when = "CA"
+distribution = "log_normal"
+round = true
+
+[correlations.distributions.params]
+mu = 6.775415723748983
+sigma = 1.6257724768316033
+
+[[correlations.distributions]]
 when = "WI"
 distribution = "pareto"
 round = true
@@ -514,6 +462,15 @@ round = true
 [correlations.distributions.params]
 scale = 48.0
 shape = 0.6102819328420939
+
+[[correlations.distributions]]
+when = "MT"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 288.0
+min = 23.0
 
 [[correlations.distributions]]
 when = "GA"
@@ -525,22 +482,65 @@ scale = 112.0
 shape = 0.710112861465088
 
 [[correlations.distributions]]
-when = "PA"
+when = "NC"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 60.0
-shape = 0.41867271168556813
+scale = 50.0
+shape = 0.42566917749784905
 
 [[correlations.distributions]]
-when = "CO"
+when = "OR"
 distribution = "pareto"
 round = true
 
 [correlations.distributions.params]
-scale = 104.0
-shape = 0.6411335392445995
+scale = 168.0
+shape = 1.0201991006834024
+
+[[correlations.distributions]]
+when = "VA"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.0004703352818652153
+
+[[correlations.distributions]]
+when = "IL"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 258.0
+shape = 0.7325556590112493
+
+[[correlations.distributions]]
+when = "ID"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 319.0
+min = 102.0
+
+[[correlations.distributions]]
+when = "AL"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 956.0
+min = 214.0
+
+[[correlations.distributions]]
+when = "MS"
+distribution = "exponential"
+round = true
+
+[correlations.distributions.params]
+lambda = 0.00243427458617332
 
 [correlations.default]
 kind = "log_normal"
@@ -559,76 +559,20 @@ dependent = "long"
 given = "state"
 
 [[correlations.distributions]]
-when = "WI"
+when = "IL"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = -87.89658333
-min = -91.48507194
+max = -87.75242444
+min = -90.50753917
 
 [[correlations.distributions]]
-when = "AL"
+when = "OR"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = -85.44962889
-min = -88.24283333
-
-[[correlations.distributions]]
-when = "GA"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -81.20213889
-min = -84.93886111
-
-[[correlations.distributions]]
-when = "ID"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -112.0701667
-min = -117.0153944
-
-[[correlations.distributions]]
-when = "CO"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -104.6670019
-min = -108.5267347
-
-[[correlations.distributions]]
-when = "WY"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -104.8118381
-min = -110.7377389
-
-[[correlations.distributions]]
-when = "CA"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -116.5062531
-min = -124.1086189
-
-[[correlations.distributions]]
-when = "NY"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -73.10021194
-min = -78.73216667
-
-[[correlations.distributions]]
-when = "MT"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -108.5428611
-min = -114.2550694
+max = -121.1499633
+min = -124.2460278
 
 [[correlations.distributions]]
 when = "TN"
@@ -647,22 +591,6 @@ max = -88.59136861
 min = -90.348816
 
 [[correlations.distributions]]
-when = "LA"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -90.25802778
-min = -93.82559833
-
-[[correlations.distributions]]
-when = "VA"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = -76.20122222
-min = -79.97542833
-
-[[correlations.distributions]]
 when = "NC"
 distribution = "uniform"
 
@@ -671,12 +599,12 @@ max = -77.04294444
 min = -82.54180556
 
 [[correlations.distributions]]
-when = "IL"
+when = "LA"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = -87.75242444
-min = -90.50753917
+max = -90.25802778
+min = -93.82559833
 
 [[correlations.distributions]]
 when = "TX"
@@ -687,12 +615,60 @@ max = -95.27888889
 min = -106.3778056
 
 [[correlations.distributions]]
-when = "OR"
+when = "WI"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = -121.1499633
-min = -124.2460278
+max = -87.89658333
+min = -91.48507194
+
+[[correlations.distributions]]
+when = "PA"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -75.24114083
+min = -80.23287083
+
+[[correlations.distributions]]
+when = "VA"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -76.20122222
+min = -79.97542833
+
+[[correlations.distributions]]
+when = "CO"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -104.6670019
+min = -108.5267347
+
+[[correlations.distributions]]
+when = "GA"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -81.20213889
+min = -84.93886111
+
+[[correlations.distributions]]
+when = "MT"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -108.5428611
+min = -114.2550694
+
+[[correlations.distributions]]
+when = "CA"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -116.5062531
+min = -124.1086189
 
 [[correlations.distributions]]
 when = "FL"
@@ -703,12 +679,36 @@ max = -80.09559417
 min = -87.18744444
 
 [[correlations.distributions]]
-when = "PA"
+when = "ID"
 distribution = "uniform"
 
 [correlations.distributions.params]
-max = -75.24114083
-min = -80.23287083
+max = -112.0701667
+min = -117.0153944
+
+[[correlations.distributions]]
+when = "AL"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -85.44962889
+min = -88.24283333
+
+[[correlations.distributions]]
+when = "WY"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -104.8118381
+min = -110.7377389
+
+[[correlations.distributions]]
+when = "NY"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = -73.10021194
+min = -78.73216667
 
 [correlations.default]
 kind = "uniform"

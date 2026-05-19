@@ -138,11 +138,11 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 1932
+value = 1931
 weight = 0.5
 
 [[entities.fields.generator.choices]]
-value = 1931
+value = 1932
 weight = 0.5
 
 [entities.fields.stats]
@@ -290,6 +290,22 @@ dependent = "yield"
 given = "site"
 
 [[correlations.distributions]]
+when = "Morris"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 47.16667
+min = 22.6
+
+[[correlations.distributions]]
+when = "Grand Rapids"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 34.7
+min = 14.43333
+
+[[correlations.distributions]]
 when = "Waseca"
 distribution = "uniform"
 
@@ -304,22 +320,6 @@ distribution = "uniform"
 [correlations.distributions.params]
 max = 49.86667
 min = 20.63333
-
-[[correlations.distributions]]
-when = "Grand Rapids"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 34.7
-min = 14.43333
-
-[[correlations.distributions]]
-when = "Morris"
-distribution = "uniform"
-
-[correlations.distributions.params]
-max = 47.16667
-min = 22.6
 
 [[correlations.distributions]]
 when = "Duluth"

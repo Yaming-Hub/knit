@@ -45,18 +45,6 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = 2000
-weight = 0.1
-
-[[entities.fields.generator.choices]]
-value = 1995
-weight = 0.1
-
-[[entities.fields.generator.choices]]
-value = 1990
-weight = 0.1
-
-[[entities.fields.generator.choices]]
 value = 1970
 weight = 0.1
 
@@ -65,7 +53,11 @@ value = 1980
 weight = 0.1
 
 [[entities.fields.generator.choices]]
-value = 1985
+value = 1965
+weight = 0.1
+
+[[entities.fields.generator.choices]]
+value = 2000
 weight = 0.1
 
 [[entities.fields.generator.choices]]
@@ -73,11 +65,19 @@ value = 1975
 weight = 0.1
 
 [[entities.fields.generator.choices]]
-value = 1955
+value = 1990
 weight = 0.1
 
 [[entities.fields.generator.choices]]
-value = 1965
+value = 1985
+weight = 0.1
+
+[[entities.fields.generator.choices]]
+value = 1995
+weight = 0.1
+
+[[entities.fields.generator.choices]]
+value = 1955
 weight = 0.1
 
 [[entities.fields.generator.choices]]
@@ -253,35 +253,7 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
-value = "Kenya"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Italy"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "India"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Bolivia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "China"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Poland"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Spain"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Finland"
+value = "Portugal"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -289,175 +261,7 @@ value = "Australia"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Saudi Arabia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Chile"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Cuba"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Peru"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Argentina"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Japan"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Hong Kong, China"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Iran"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "El Salvador"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Canada"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Iraq"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "United States"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Ecuador"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Brazil"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Netherlands"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Barbados"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Haiti"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Grenada"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Dominican Republic"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "New Zealand"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Greece"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Germany"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Philippines"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Turkey"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Colombia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
 value = "Indonesia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Bahamas"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Georgia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Afghanistan"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Croatia"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Belgium"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Iceland"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Costa Rica"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "North Korea"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Pakistan"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Venezuela"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Nigeria"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Mexico"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Jamaica"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Rwanda"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "South Africa"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Ireland"
-weight = 0.016129032258064516
-
-[[entities.fields.generator.choices]]
-value = "Switzerland"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -465,7 +269,51 @@ value = "Austria"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "United Kingdom"
+value = "Afghanistan"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Bolivia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Chile"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Iran"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Mexico"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Nigeria"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Georgia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Italy"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Colombia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Pakistan"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Cuba"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Haiti"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -473,19 +321,79 @@ value = "Israel"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Lebanon"
+value = "Turkey"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Norway"
+value = "Iraq"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "France"
+value = "Japan"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Egypt"
+value = "Belgium"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Dominican Republic"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Bahamas"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "El Salvador"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Ireland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Argentina"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Barbados"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "United Kingdom"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "New Zealand"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "North Korea"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Philippines"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Saudi Arabia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Ecuador"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Jamaica"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "India"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Peru"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
@@ -493,11 +401,103 @@ value = "South Korea"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
-value = "Portugal"
+value = "South Africa"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Kenya"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Venezuela"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Lebanon"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Germany"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Norway"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Egypt"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Finland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Netherlands"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Croatia"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Spain"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Grenada"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Rwanda"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Hong Kong, China"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "China"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Canada"
 weight = 0.016129032258064516
 
 [[entities.fields.generator.choices]]
 value = "Bangladesh"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Poland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Greece"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "France"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Brazil"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Switzerland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Iceland"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "United States"
+weight = 0.016129032258064516
+
+[[entities.fields.generator.choices]]
+value = "Costa Rica"
 weight = 0.016129032258064516
 
 [entities.fields.stats]
@@ -703,196 +703,16 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "year",
-    "n_fertility",
-]
-matrix = [
-    [
-    1.0,
-    -0.42934510014510624,
-],
-    [
-    -0.42934510014510624,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "n_fertility",
-]
-matrix = [
-    [
-    1.0,
-    -0.44944094539578966,
-],
-    [
-    -0.44944094539578966,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "p_fertility",
-]
-matrix = [
-    [
-    1.0,
-    -0.39659488758152595,
-],
-    [
-    -0.39659488758152595,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "p_fertility",
-]
-matrix = [
-    [
-    1.0,
-    -0.41586109456376136,
-],
-    [
-    -0.41586109456376136,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "p_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    0.450087646353469,
-],
-    [
-    0.450087646353469,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "p_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    0.47227535817459687,
-],
-    [
-    0.47227535817459687,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
     "fertility",
-]
-matrix = [
-    [
-    1.0,
-    -0.4377733635923912,
-],
-    [
-    -0.4377733635923912,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "fertility",
-]
-matrix = [
-    [
-    1.0,
-    -0.46023195916110743,
-],
-    [
-    -0.46023195916110743,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "n_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    0.43916495155193763,
-],
-    [
-    0.43916495155193763,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
-    "n_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    0.47418430178303456,
-],
-    [
-    0.47418430178303456,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "year",
     "life_expect",
 ]
 matrix = [
     [
     1.0,
-    0.4783341802969815,
+    -0.8266282357800007,
 ],
     [
-    0.4783341802969815,
+    -0.8266282357800007,
     1.0,
 ],
 ]
@@ -901,16 +721,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "year",
+    "fertility",
     "life_expect",
 ]
 matrix = [
     [
     1.0,
-    0.50973566365817,
+    -0.8520709027704185,
 ],
     [
-    0.50973566365817,
+    -0.8520709027704185,
     1.0,
 ],
 ]
@@ -919,80 +739,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "n_fertility",
-    "p_fertility",
-]
-matrix = [
-    [
-    1.0,
-    0.9479065868764391,
-],
-    [
-    0.9479065868764391,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "n_fertility",
-    "p_fertility",
-]
-matrix = [
-    [
-    1.0,
-    0.9495117746448476,
-],
-    [
-    0.9495117746448476,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "n_fertility",
-    "p_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8382091517688035,
-],
-    [
-    -0.8382091517688035,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "n_fertility",
-    "p_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8455095825092966,
-],
-    [
-    -0.8455095825092966,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "n_fertility",
     "fertility",
+    "p_fertility",
 ]
 matrix = [
     [
@@ -1009,8 +757,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "n_fertility",
     "fertility",
+    "p_fertility",
 ]
 matrix = [
     [
@@ -1027,44 +775,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "n_fertility",
-    "n_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8290328894528592,
-],
-    [
-    -0.8290328894528592,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "n_fertility",
-    "n_life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8526987537188193,
-],
-    [
-    -0.8526987537188193,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "n_fertility",
-    "life_expect",
+    "fertility",
+    "p_life_expect",
 ]
 matrix = [
     [
@@ -1081,8 +793,296 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
+    "fertility",
+    "p_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    -0.8506759909141104,
+],
+    [
+    -0.8506759909141104,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fertility",
+    "n_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    -0.8201573608720886,
+],
+    [
+    -0.8201573608720886,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fertility",
+    "n_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    -0.8506746654736181,
+],
+    [
+    -0.8506746654736181,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fertility",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    -0.4377733635923912,
+],
+    [
+    -0.4377733635923912,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fertility",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    -0.46023195916110743,
+],
+    [
+    -0.46023195916110743,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fertility",
     "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    0.9811491481922694,
+],
+    [
+    0.9811491481922694,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fertility",
+    "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    0.9808392844736009,
+],
+    [
+    0.9808392844736009,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
     "life_expect",
+    "p_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8201573608720886,
+],
+    [
+    -0.8201573608720886,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "p_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8506746654736181,
+],
+    [
+    -0.8506746654736181,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "p_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    0.9676822810487342,
+],
+    [
+    0.9676822810487342,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "p_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    0.9880744564571646,
+],
+    [
+    0.9880744564571646,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "n_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    0.9676822810487342,
+],
+    [
+    0.9676822810487342,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "n_life_expect",
+]
+matrix = [
+    [
+    1.0,
+    0.9880744564571646,
+],
+    [
+    0.9880744564571646,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.4783341802969815,
+],
+    [
+    0.4783341802969815,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.50973566365817,
+],
+    [
+    0.50973566365817,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8373275309687552,
+],
+    [
+    -0.8373275309687552,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "n_fertility",
 ]
 matrix = [
     [
@@ -1136,42 +1136,6 @@ conditional = []
 entity = "original"
 fields = [
     "p_fertility",
-    "fertility",
-]
-matrix = [
-    [
-    1.0,
-    0.9811491481922694,
-],
-    [
-    0.9811491481922694,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "p_fertility",
-    "fertility",
-]
-matrix = [
-    [
-    1.0,
-    0.9808392844736009,
-],
-    [
-    0.9808392844736009,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "p_fertility",
     "n_life_expect",
 ]
 matrix = [
@@ -1208,15 +1172,15 @@ conditional = []
 entity = "original"
 fields = [
     "p_fertility",
-    "life_expect",
+    "year",
 ]
 matrix = [
     [
     1.0,
-    -0.8201573608720886,
+    -0.39659488758152595,
 ],
     [
-    -0.8201573608720886,
+    -0.39659488758152595,
     1.0,
 ],
 ]
@@ -1226,15 +1190,15 @@ conditional = []
 entity = "original"
 fields = [
     "p_fertility",
-    "life_expect",
+    "year",
 ]
 matrix = [
     [
     1.0,
-    -0.8506746654736181,
+    -0.41586109456376136,
 ],
     [
-    -0.8506746654736181,
+    -0.41586109456376136,
     1.0,
 ],
 ]
@@ -1243,16 +1207,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "p_life_expect",
-    "fertility",
+    "p_fertility",
+    "n_fertility",
 ]
 matrix = [
     [
     1.0,
-    -0.8373275309687552,
+    0.9479065868764391,
 ],
     [
-    -0.8373275309687552,
+    0.9479065868764391,
     1.0,
 ],
 ]
@@ -1261,16 +1225,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "p_life_expect",
-    "fertility",
+    "p_fertility",
+    "n_fertility",
 ]
 matrix = [
     [
     1.0,
-    -0.8506759909141104,
+    0.9495117746448476,
 ],
     [
-    -0.8506759909141104,
+    0.9495117746448476,
     1.0,
 ],
 ]
@@ -1316,15 +1280,15 @@ conditional = []
 entity = "original"
 fields = [
     "p_life_expect",
-    "life_expect",
+    "year",
 ]
 matrix = [
     [
     1.0,
-    0.9676822810487342,
+    0.450087646353469,
 ],
     [
-    0.9676822810487342,
+    0.450087646353469,
     1.0,
 ],
 ]
@@ -1334,15 +1298,15 @@ conditional = []
 entity = "original"
 fields = [
     "p_life_expect",
-    "life_expect",
+    "year",
 ]
 matrix = [
     [
     1.0,
-    0.9880744564571646,
+    0.47227535817459687,
 ],
     [
-    0.9880744564571646,
+    0.47227535817459687,
     1.0,
 ],
 ]
@@ -1351,16 +1315,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "fertility",
-    "n_life_expect",
+    "p_life_expect",
+    "n_fertility",
 ]
 matrix = [
     [
     1.0,
-    -0.8201573608720886,
+    -0.8382091517688035,
 ],
     [
-    -0.8201573608720886,
+    -0.8382091517688035,
     1.0,
 ],
 ]
@@ -1369,52 +1333,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "fertility",
-    "n_life_expect",
+    "p_life_expect",
+    "n_fertility",
 ]
 matrix = [
     [
     1.0,
-    -0.8506746654736181,
+    -0.8455095825092966,
 ],
     [
-    -0.8506746654736181,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fertility",
-    "life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8266282357800007,
-],
-    [
-    -0.8266282357800007,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
-    "fertility",
-    "life_expect",
-]
-matrix = [
-    [
-    1.0,
-    -0.8520709027704185,
-],
-    [
-    -0.8520709027704185,
+    -0.8455095825092966,
     1.0,
 ],
 ]
@@ -1424,15 +1352,15 @@ conditional = []
 entity = "original"
 fields = [
     "n_life_expect",
-    "life_expect",
+    "year",
 ]
 matrix = [
     [
     1.0,
-    0.9676822810487342,
+    0.43916495155193763,
 ],
     [
-    0.9676822810487342,
+    0.43916495155193763,
     1.0,
 ],
 ]
@@ -1442,15 +1370,87 @@ conditional = []
 entity = "original"
 fields = [
     "n_life_expect",
-    "life_expect",
+    "year",
 ]
 matrix = [
     [
     1.0,
-    0.9880744564571646,
+    0.47418430178303456,
 ],
     [
-    0.9880744564571646,
+    0.47418430178303456,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "n_life_expect",
+    "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8290328894528592,
+],
+    [
+    -0.8290328894528592,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "n_life_expect",
+    "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8526987537188193,
+],
+    [
+    -0.8526987537188193,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.42934510014510624,
+],
+    [
+    -0.42934510014510624,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "n_fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.44944094539578966,
+],
+    [
+    -0.44944094539578966,
     1.0,
 ],
 ]

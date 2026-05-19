@@ -237,8 +237,8 @@ direction = "asc"
 [[correlations]]
 entity = "original"
 fields = [
-    "Streptomycin",
     "Neomycin",
+    "Streptomycin",
 ]
 matrix = [
     [
@@ -255,8 +255,8 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Streptomycin",
     "Neomycin",
+    "Streptomycin",
 ]
 matrix = [
     [
@@ -273,8 +273,26 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Bacteria",
+    "Genus",
     "Gram_Staining",
+]
+matrix = [
+    [
+    1.0,
+    0.7777777777777778,
+],
+    [
+    0.7777777777777778,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Genus",
+    "Bacteria",
 ]
 matrix = [
     [
@@ -291,34 +309,16 @@ conditional = []
 [[correlations]]
 entity = "original"
 fields = [
-    "Bacteria",
-    "Genus",
-]
-matrix = [
-    [
-    1.0,
-    1.0,
-],
-    [
-    1.0,
-    1.0,
-],
-]
-conditional = []
-
-[[correlations]]
-entity = "original"
-fields = [
     "Gram_Staining",
-    "Genus",
+    "Bacteria",
 ]
 matrix = [
     [
     1.0,
-    0.7777777777777778,
+    1.0,
 ],
     [
-    0.7777777777777778,
+    1.0,
     1.0,
 ],
 ]
@@ -330,16 +330,16 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Penicillin"
+dependent = "Neomycin"
 given = "Gram_Staining"
 
 [[correlations.distributions]]
 when = "negative"
-distribution = "pareto"
+distribution = "log_normal"
 
 [correlations.distributions.params]
-scale = 1.0
-shape = 1.2575111333356692
+mu = -1.7229547177154314
+sigma = 1.8209376190750342
 
 [[correlations.distributions]]
 when = "positive"
@@ -347,14 +347,14 @@ distribution = "pareto"
 
 [correlations.distributions.params]
 scale = 0.001
-shape = 0.4523793612722809
+shape = 0.1968039277616304
 
 [correlations.default]
-kind = "pareto"
+kind = "log_normal"
 
 [correlations.default.params]
-scale = 0.001
-shape = 0.14210414144734335
+mu = -1.7682802250138743
+sigma = 3.1234800375577834
 
 [[correlations]]
 entity = "original"
@@ -393,7 +393,7 @@ type = "conditional_distribution"
 fields = []
 matrix = []
 conditional = []
-dependent = "Neomycin"
+dependent = "Penicillin"
 given = "Gram_Staining"
 
 [[correlations.distributions]]
@@ -402,19 +402,19 @@ distribution = "pareto"
 
 [correlations.distributions.params]
 scale = 0.001
-shape = 0.1968039277616304
+shape = 0.4523793612722809
 
 [[correlations.distributions]]
 when = "negative"
-distribution = "log_normal"
+distribution = "pareto"
 
 [correlations.distributions.params]
-mu = -1.7229547177154314
-sigma = 1.8209376190750342
+scale = 1.0
+shape = 1.2575111333356692
 
 [correlations.default]
-kind = "log_normal"
+kind = "pareto"
 
 [correlations.default.params]
-mu = -1.7682802250138743
-sigma = 3.1234800375577834
+scale = 0.001
+shape = 0.14210414144734335

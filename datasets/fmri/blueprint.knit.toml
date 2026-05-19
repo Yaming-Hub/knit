@@ -72,11 +72,15 @@ nullable = false
 type = "one_of"
 
 [[entities.fields.generator.choices]]
+value = 10
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
 value = 0
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 12
+value = 16
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
@@ -84,11 +88,23 @@ value = 4
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 5
+value = 6
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
 value = 7
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 15
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 2
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 13
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
@@ -104,35 +120,7 @@ value = 14
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 3
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 16
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
 value = 9
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 10
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 6
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 18
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 13
-weight = 0.05263157894736842
-
-[[entities.fields.generator.choices]]
-value = 15
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
@@ -144,7 +132,19 @@ value = 1
 weight = 0.05263157894736842
 
 [[entities.fields.generator.choices]]
-value = 2
+value = 3
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 5
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 18
+weight = 0.05263157894736842
+
+[[entities.fields.generator.choices]]
+value = 12
 weight = 0.05263157894736842
 
 [entities.fields.stats]
@@ -179,30 +179,6 @@ step = 1
 values = [
     "stim",
     "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "stim",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
-    "cue",
     "cue",
     "cue",
 ]
@@ -339,71 +315,7 @@ fields = []
 matrix = []
 conditional = []
 dependent = "signal"
-given = "region"
-
-[[correlations.distributions]]
-when = "frontal"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.0012980820495732412
-std_dev = 0.07589557641011767
-
-[[correlations.distributions]]
-when = "parietal"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.005781455078620778
-std_dev = 0.10889815919760026
-
-[correlations.default]
-kind = "normal"
-
-[correlations.default.params]
-mean = 0.003539768564097037
-std_dev = 0.09388556308642108
-
-[[correlations]]
-entity = "original"
-type = "conditional_distribution"
-fields = []
-matrix = []
-conditional = []
-dependent = "signal"
 given = "subject"
-
-[[correlations.distributions]]
-when = "s7"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.0047107039987517
-std_dev = 0.06402293224709484
-
-[[correlations.distributions]]
-when = "s12"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.0010298152055710865
-std_dev = 0.06618888517117483
-
-[[correlations.distributions]]
-when = "s6"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.0019222005998399741
-std_dev = 0.08900051961429095
-
-[[correlations.distributions]]
-when = "s8"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.002349269443679107
-std_dev = 0.08298832558667585
 
 [[correlations.distributions]]
 when = "s13"
@@ -422,44 +334,12 @@ mean = -0.002674324098949473
 std_dev = 0.08600127587146658
 
 [[correlations.distributions]]
-when = "s10"
+when = "s6"
 distribution = "normal"
 
 [correlations.distributions.params]
-mean = 0.006743812664380666
-std_dev = 0.06787945505117615
-
-[[correlations.distributions]]
-when = "s9"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.0012104478827251618
-std_dev = 0.09331541074853875
-
-[[correlations.distributions]]
-when = "s4"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = 0.011625102880747494
-std_dev = 0.14564671704983914
-
-[[correlations.distributions]]
-when = "s5"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = -0.0008399721673513297
-std_dev = 0.08036187198099137
-
-[[correlations.distributions]]
-when = "s2"
-distribution = "normal"
-
-[correlations.distributions.params]
-mean = -0.0019263684793798643
-std_dev = 0.06327846498431478
+mean = 0.0019222005998399741
+std_dev = 0.08900051961429095
 
 [[correlations.distributions]]
 when = "s1"
@@ -478,12 +358,76 @@ mean = 0.0038265112370995443
 std_dev = 0.05371385352271105
 
 [[correlations.distributions]]
+when = "s10"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.006743812664380666
+std_dev = 0.06787945505117615
+
+[[correlations.distributions]]
+when = "s4"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.011625102880747494
+std_dev = 0.14564671704983914
+
+[[correlations.distributions]]
+when = "s9"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.0012104478827251618
+std_dev = 0.09331541074853875
+
+[[correlations.distributions]]
+when = "s12"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.0010298152055710865
+std_dev = 0.06618888517117483
+
+[[correlations.distributions]]
+when = "s5"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = -0.0008399721673513297
+std_dev = 0.08036187198099137
+
+[[correlations.distributions]]
+when = "s8"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.002349269443679107
+std_dev = 0.08298832558667585
+
+[[correlations.distributions]]
+when = "s7"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.0047107039987517
+std_dev = 0.06402293224709484
+
+[[correlations.distributions]]
 when = "s3"
 distribution = "normal"
 
 [correlations.distributions.params]
 mean = 0.00774878701755072
 std_dev = 0.11446749006235228
+
+[[correlations.distributions]]
+when = "s2"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = -0.0019263684793798643
+std_dev = 0.06327846498431478
 
 [correlations.default]
 kind = "normal"
@@ -516,6 +460,38 @@ distribution = "normal"
 [correlations.distributions.params]
 mean = 0.013748411381632497
 std_dev = 0.12306352356752204
+
+[correlations.default]
+kind = "normal"
+
+[correlations.default.params]
+mean = 0.003539768564097037
+std_dev = 0.09388556308642108
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "signal"
+given = "region"
+
+[[correlations.distributions]]
+when = "frontal"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.0012980820495732412
+std_dev = 0.07589557641011767
+
+[[correlations.distributions]]
+when = "parietal"
+distribution = "normal"
+
+[correlations.distributions.params]
+mean = 0.005781455078620778
+std_dev = 0.10889815919760026
 
 [correlations.default]
 kind = "normal"
