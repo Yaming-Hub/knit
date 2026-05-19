@@ -3093,7 +3093,8 @@ fn extract_full_row_dictionaries(
             }
         }
 
-        // Write full-row TSV file
+        // Write full-row TSV file with primary column at position 0
+        // (TupleLookup loader uses parts[0] as the key)
         let file_name = format!(
             "{}__fullrow.tsv",
             sanitize_filename(&entity.name),
@@ -3102,8 +3103,14 @@ fn extract_full_row_dictionaries(
         let mut file = std::fs::File::create(&file_path)
             .with_context(|| format!("failed to create full-row dictionary {file_name}"))?;
         for row in &unique_rows {
-            let escaped: Vec<String> = row.iter().map(|v| escape_tsv_value(v)).collect();
-            writeln!(file, "{}", escaped.join("\t"))?;
+            // Primary column first, then remaining columns in order
+            let mut tsv_row = vec![escape_tsv_value(&row[primary_idx])];
+            for (i, val) in row.iter().enumerate() {
+                if i != primary_idx {
+                    tsv_row.push(escape_tsv_value(val));
+                }
+            }
+            writeln!(file, "{}", tsv_row.join("\t"))?;
         }
 
         // Write primary-only dictionary file
@@ -3130,16 +3137,24 @@ fn extract_full_row_dictionaries(
             });
         }
 
-        // Set all other columns to TupleLookup
+        // Set all other columns to TupleLookup with adjusted TSV column index
+        // (primary is at position 0, others shift accordingly)
         for (col_idx, col_name) in field_names.iter().enumerate() {
             if col_idx == primary_idx {
                 continue;
             }
+            // In the TSV, primary is at 0; fields before primary shift right by 1,
+            // fields after primary keep their original index.
+            let tsv_col = if col_idx < primary_idx {
+                col_idx + 1
+            } else {
+                col_idx
+            };
             if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *col_name) {
                 field.generator = Some(crate::core::GeneratorSpec::TupleLookup {
                     source_field: primary_name.clone(),
                     file: file_name.clone(),
-                    column: col_idx,
+                    column: tsv_col,
                 });
             }
         }
