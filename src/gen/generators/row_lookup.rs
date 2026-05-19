@@ -104,8 +104,22 @@ impl FieldGenerator for RowLookupGenerator {
             let mut cache = self.index_cache.lock().unwrap();
             if cache.batch_key != batch_key || cache.indices.len() != count {
                 // First generator in this batch — compute row indices.
-                let new_indices: Vec<usize> =
-                    (0..count).map(|_| gen_row_index(rng, row_count)).collect();
+                // When the requested count fits within the dictionary, sample
+                // WITHOUT replacement (shuffle) to avoid duplicates. This is
+                // critical for datasets where every row should be unique.
+                let new_indices = if count <= row_count {
+                    let mut pool: Vec<usize> = (0..row_count).collect();
+                    // Fisher-Yates shuffle, then take first `count` elements
+                    for i in (1..pool.len()).rev() {
+                        let j = gen_row_index(rng, i + 1);
+                        pool.swap(i, j);
+                    }
+                    pool.truncate(count);
+                    pool
+                } else {
+                    // More rows requested than available — sample with replacement
+                    (0..count).map(|_| gen_row_index(rng, row_count)).collect()
+                };
                 cache.batch_key = batch_key;
                 cache.indices = new_indices;
             }

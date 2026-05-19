@@ -3568,11 +3568,11 @@ fn extract_dictionaries(
             }
 
             // Write dictionary file (sanitize filename components)
-            let dict_filename = format!(
+            let dict_filename = truncate_filename(format!(
                 "{}_{}.dict.txt",
                 sanitize_filename_component(&entity.name),
                 sanitize_filename_component(&field.name)
-            );
+            ));
             let dict_path = output_dir.join(&dict_filename);
             let mut file = std::fs::File::create(&dict_path).with_context(|| {
                 format!("failed to create dictionary file '{}'", dict_path.display())
@@ -3697,7 +3697,7 @@ fn extract_tuple_dictionaries(
                 continue;
             }
 
-            let file_name = format!(
+            let file_name = truncate_filename(format!(
                 "{}__{}.tsv",
                 sanitize_filename(&entity.name),
                 group
@@ -3706,7 +3706,7 @@ fn extract_tuple_dictionaries(
                     .map(|c| sanitize_filename(c))
                     .collect::<Vec<_>>()
                     .join("_")
-            );
+            ));
             let file_path = output_dir.join(&file_name);
 
             // Write TSV file (escape tabs/newlines in values)
@@ -3724,11 +3724,11 @@ fn extract_tuple_dictionaries(
             // Write a separate primary-only dictionary file (one value per line).
             // Use raw values (not TSV-escaped) because the Dictionary generator
             // reads lines verbatim, and TupleLookup keys in the TSV are also raw.
-            let primary_dict_name = format!(
+            let primary_dict_name = truncate_filename(format!(
                 "{}_{}.dict.txt",
                 sanitize_filename(&entity.name),
                 sanitize_filename(primary)
-            );
+            ));
             let primary_dict_path = output_dir.join(&primary_dict_name);
             let mut pdict = std::fs::File::create(&primary_dict_path)
                 .with_context(|| format!("failed to create primary dict {primary_dict_name}"))?;
@@ -3779,6 +3779,33 @@ fn sanitize_filename(s: &str) -> String {
     s.chars()
         .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
         .collect()
+}
+
+/// Maximum filename length (excluding directory path).
+///
+/// Windows MAX_PATH is 260 chars total. We reserve headroom for the output
+/// directory path and file extension. 200 chars for the stem is safe.
+const MAX_FILENAME_LEN: usize = 200;
+
+/// Truncate a filename stem if it exceeds [`MAX_FILENAME_LEN`], appending a
+/// short hash suffix to preserve uniqueness.
+fn truncate_filename(name: String) -> String {
+    if name.len() <= MAX_FILENAME_LEN {
+        return name;
+    }
+    // Use a simple FNV-like hash of the full name for uniqueness
+    let hash = {
+        let mut h: u64 = 0xcbf29ce484222325;
+        for b in name.as_bytes() {
+            h ^= *b as u64;
+            h = h.wrapping_mul(0x100000001b3);
+        }
+        h
+    };
+    let suffix = format!("_{:016x}", hash);
+    let keep = MAX_FILENAME_LEN - suffix.len();
+    let truncated = &name[..keep];
+    format!("{}{}", truncated, suffix)
 }
 
 /// Escape tab, newline, and carriage return characters for TSV output.
@@ -4136,11 +4163,11 @@ fn extract_dictionaries_from_state(
             }
 
             // Write dictionary file
-            let dict_filename = format!(
+            let dict_filename = truncate_filename(format!(
                 "{}_{}.dict.txt",
                 sanitize_filename_component(&entity.name),
                 sanitize_filename_component(&field.name)
-            );
+            ));
             let dict_path = output_dir.join(&dict_filename);
             let mut file = std::fs::File::create(&dict_path).with_context(|| {
                 format!("failed to create dictionary file '{}'", dict_path.display())
