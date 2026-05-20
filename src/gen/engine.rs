@@ -1565,6 +1565,13 @@ impl GenerationEngine {
 
         // Phase 1: Generate raw field values (no post-processing yet)
         for (i, fp) in ep.field_plans.iter().enumerate() {
+            tracing::trace!(
+                field = %fp.field_name,
+                dep_order = fp.dependency_order,
+                schema_pos = fp.schema_position,
+                available_cols = ?batch_columns.keys().collect::<Vec<_>>(),
+                "generating field"
+            );
             let ctx = GenContext::new(
                 &batch_columns,
                 row_offset,

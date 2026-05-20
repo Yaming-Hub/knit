@@ -1078,9 +1078,11 @@ fn sort_batches(
         .map_err(|_| anyhow::anyhow!("sort column '{}' not found", sort_order.column))?;
 
     let sort_col = combined.column(col_idx);
+    let descending = matches!(sort_order.direction, crate::core::SortDirection::Desc);
     let options = arrow::compute::SortOptions {
-        descending: matches!(sort_order.direction, crate::core::SortDirection::Desc),
-        nulls_first: true,
+        descending,
+        // Nulls last: matches SQL convention and typical source data ordering
+        nulls_first: false,
     };
 
     let indices = sort_to_indices(sort_col.as_ref(), Some(options), None)
