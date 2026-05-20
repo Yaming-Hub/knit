@@ -417,7 +417,9 @@ fn build_entity(
     // Reorder fields so derived columns come after their dependencies.
     // The generation engine processes columns in order, so `Total = ${Men} + ${Women}`
     // must appear after both Men and Women.
-    reorder_derived_fields(&mut fields);
+    // Note: field order in the blueprint is preserved as-is to match the
+    // original source column order. The compiler handles generation ordering
+    // via dependency_order in FieldPlan, and restores schema order for output.
 
     // Upgrade sort-key date columns from Faker("date") to Sequence for
     // monotonic, duplicate-free date generation.
@@ -1492,121 +1494,6 @@ fn build_temporal_generator(col: &ColumnAnalysis) -> GeneratorSpec {
         method: method.into(),
         args,
     }
-}
-
-/// Reorder fields so that derived columns appear after the columns they reference.
-///
-/// The generation engine processes columns in declaration order. If column `Total`
-/// has generator `Derived { expr: "${Men} + ${Women}" }`, it must come after both
-/// `Men` and `Women` in the field list. This function performs a stable topological
-/// sort: non-derived fields keep their original order, and derived fields are moved
-/// to the earliest valid position after all their dependencies.
-fn reorder_derived_fields(fields: &mut Vec<Field>) {
-    use std::collections::{HashMap, HashSet, VecDeque};
-
-    // Extract dependency info: field_name → set of referenced field names
-    let mut deps: HashMap<&str, HashSet<&str>> = HashMap::new();
-    let field_names: HashSet<&str> = fields.iter().map(|f| f.name.as_str()).collect();
-
-    for field in fields.iter() {
-        if let Some(GeneratorSpec::Derived { ref expr }) = field.generator {
-            let mut refs = HashSet::new();
-            // Parse ${...} references from the expression
-            let mut remaining = expr.as_str();
-            while let Some(start) = remaining.find("${") {
-                remaining = &remaining[start + 2..];
-                if let Some(end) = remaining.find('}') {
-                    let ref_name = &remaining[..end];
-                    if field_names.contains(ref_name) {
-                        refs.insert(ref_name);
-                    }
-                    remaining = &remaining[end + 1..];
-                } else {
-                    break;
-                }
-            }
-            if !refs.is_empty() {
-                deps.insert(field.name.as_str(), refs);
-            }
-        }
-        // Also handle Relative generators that reference an anchor column
-        if let Some(GeneratorSpec::Relative { ref anchor, .. }) = field.generator {
-            if field_names.contains(anchor.as_str()) {
-                let mut refs = HashSet::new();
-                refs.insert(anchor.as_str());
-                deps.insert(field.name.as_str(), refs);
-            }
-        }
-    }
-
-    // If no derived fields, nothing to reorder
-    if deps.is_empty() {
-        return;
-    }
-
-    // Topological sort using Kahn's algorithm, preserving original order for ties
-    let n = fields.len();
-    let name_to_idx: HashMap<&str, usize> = fields
-        .iter()
-        .enumerate()
-        .map(|(i, f)| (f.name.as_str(), i))
-        .collect();
-
-    // Build in-degree and adjacency for the subset of fields with deps
-    let mut in_degree = vec![0usize; n];
-    let mut dependents: Vec<Vec<usize>> = vec![vec![]; n];
-
-    for (field_name, ref_set) in &deps {
-        if let Some(&field_idx) = name_to_idx.get(field_name) {
-            for &dep_name in ref_set {
-                if let Some(&dep_idx) = name_to_idx.get(dep_name) {
-                    dependents[dep_idx].push(field_idx);
-                    in_degree[field_idx] += 1;
-                }
-            }
-        }
-    }
-
-    // Start with all fields that have zero in-degree, in original order
-    let mut queue: VecDeque<usize> = VecDeque::new();
-    for i in 0..n {
-        if in_degree[i] == 0 {
-            queue.push_back(i);
-        }
-    }
-
-    let mut order: Vec<usize> = Vec::with_capacity(n);
-    while let Some(idx) = queue.pop_front() {
-        order.push(idx);
-        // Sort dependents by original index to maintain stability
-        let mut next: Vec<usize> = dependents[idx].clone();
-        next.sort_unstable();
-        for dep_idx in next {
-            in_degree[dep_idx] -= 1;
-            if in_degree[dep_idx] == 0 {
-                queue.push_back(dep_idx);
-            }
-        }
-    }
-
-    // If we got a valid topological order (no cycles), apply it
-    if order.len() == n {
-        // Check if order differs from original
-        let is_same = order.iter().enumerate().all(|(i, &idx)| i == idx);
-        if !is_same {
-            // Rebuild fields in topological order
-            let old_fields = std::mem::take(fields);
-            let mut indexed: Vec<Option<Field>> = old_fields.into_iter().map(Some).collect();
-            let mut reordered: Vec<Field> = Vec::with_capacity(n);
-            for &idx in &order {
-                if let Some(f) = indexed[idx].take() {
-                    reordered.push(f);
-                }
-            }
-            *fields = reordered;
-        }
-    }
-    // If there's a cycle, leave order unchanged (shouldn't happen in practice)
 }
 
 /// Detect paired temporal columns (e.g. StartDate/EndDate) and rewrite the "end"
