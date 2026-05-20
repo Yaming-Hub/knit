@@ -678,25 +678,39 @@ fn upgrade_sort_date_to_sequence(
     let col_analysis = columns.iter().find(|c| c.name == sort_order.column);
     let Some(col) = col_analysis else { return };
 
-    // Only upgrade date columns (not datetime) that currently use Faker("date").
-    // Datetime columns may have sub-day cadences that this heuristic would destroy.
-    let is_date_type = matches!(
+    // Upgrade date or datetime columns that are detected as sorted.
+    // Date-only columns use Faker("date"), datetime columns use Faker("datetime").
+    // Both benefit from a Sequence generator when sorted with a known interval.
+    let is_temporal = matches!(
         col.inferred_type,
         Some(InferredType::Date(_))
-    ) || (col.temporal_range.is_some() && !col.has_time_component);
-    if !is_date_type {
+    ) || col.temporal_range.is_some();
+    if !is_temporal {
         return;
+    }
+
+    // For datetime columns (sub-day precision), only upgrade when a FixedInterval
+    // pattern was detected. Irregular or bursty datetime columns should not be
+    // flattened into uniform sequences.
+    if col.has_time_component {
+        let has_fixed_interval = matches!(
+            &col.temporal_pattern,
+            Some(spec) if matches!(spec.pattern, crate::learn::temporal::TemporalPattern::FixedInterval { .. })
+        );
+        if !has_fixed_interval {
+            return;
+        }
     }
 
     let field = fields.iter_mut().find(|f| f.name == sort_order.column);
     let Some(field) = field else { return };
 
-    // Only upgrade Faker("date") generators (not already Sequence/TimeSeries)
-    let is_faker_date = matches!(
+    // Only upgrade Faker("date"/"datetime") generators (not already Sequence/TimeSeries)
+    let is_faker_temporal = matches!(
         &field.generator,
-        Some(GeneratorSpec::Faker { method, .. }) if method == "date"
+        Some(GeneratorSpec::Faker { method, .. }) if method == "date" || method == "datetime"
     );
-    if !is_faker_date {
+    if !is_faker_temporal {
         return;
     }
 
@@ -774,8 +788,11 @@ fn round_to_interval(seconds: f64) -> String {
     } else if seconds >= MINUTE * 0.75 {
         let minutes = (seconds / MINUTE).round() as u64;
         format!("{}m", minutes.max(1))
+    } else if seconds >= 1.0 {
+        let secs = seconds.round() as u64;
+        format!("{}s", secs.max(1))
     } else {
-        "1d".to_string() // minimum: daily
+        "1s".to_string() // minimum: 1 second
     }
 }
 
