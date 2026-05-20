@@ -1127,15 +1127,14 @@ fn build_generator_inner(
     }
 
     // Temporal pattern
-    if col.temporal_pattern.is_some() {
-        return build_temporal_generator(col);
-    }
-
-    // Arithmetic derived column (e.g., total = men + women)
-    // Takes precedence over time-series: if a column is deterministically derived
-    // from others, we must honour that even if it also correlates with time.
+    // Arithmetic/temporal derived column (e.g., total = men + women, or dropoff = pickup + duration)
+    // Takes precedence over all other generators including temporal patterns.
     if let Some(derived_spec) = &col.derived_spec {
         return derived_spec.clone();
+    }
+
+    if col.temporal_pattern.is_some() {
+        return build_temporal_generator(col);
     }
 
     // Time-series trend (linear trend + noise detected during learn)

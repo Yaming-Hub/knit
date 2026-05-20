@@ -1090,7 +1090,54 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
             direction = ?sort_order.direction,
             "detected sort order"
         );
-        analysis.sort_order = Some(sort_order);
+        analysis.sort_order = Some(sort_order.clone());
+
+        // For sorted numeric columns with high uniqueness, replace distribution
+        // with a linear time-series (effectively a sequence). This ensures columns
+        // like "year" (1880..2023) generate monotonically increasing values.
+        if let Some(col) = analysis.columns.iter_mut().find(|c| c.name == sort_order.column) {
+            if col.temporal_pattern.is_none() && col.distribution.is_some() {
+                let values = extract_f64_column(&combined, &col.name);
+                let n_valid = values.len() as f64;
+                let distinct_count = {
+                    let mut uniq = std::collections::HashSet::new();
+                    for &(_, v) in &values {
+                        uniq.insert(v.to_bits());
+                    }
+                    uniq.len()
+                };
+                // If >=80% of values are unique, convert to sequence-like time_series
+                if n_valid > 1.0 && distinct_count as f64 / n_valid >= 0.8 && values.len() >= 10 {
+                    let min_val = values.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
+                    let max_val = values.iter().map(|(_, y)| *y).fold(f64::NEG_INFINITY, f64::max);
+                    let step = (max_val - min_val) / (n_valid - 1.0);
+
+                    // Honor descending direction: negate slope so output counts down
+                    let is_desc = matches!(sort_order.direction, crate::core::SortDirection::Desc);
+                    let (baseline, slope) = if is_desc {
+                        (max_val, -step)
+                    } else {
+                        (min_val, step)
+                    };
+
+                    use crate::core::TimeSeriesComponent;
+                    col.time_series_spec = Some(crate::core::GeneratorSpec::TimeSeries {
+                        baseline,
+                        components: vec![TimeSeriesComponent::Trend { slope, degree: 1 }],
+                        min: Some(min_val),
+                        max: Some(max_val),
+                        timestamp_field: None,
+                    });
+                    tracing::debug!(
+                        column = %sort_order.column,
+                        start = baseline,
+                        step = slope,
+                        descending = is_desc,
+                        "sort column converted to sequence time-series"
+                    );
+                }
+            }
+        }
     }
 
     // Detect time-series trends in numeric columns relative to a sorted temporal column
@@ -1098,6 +1145,9 @@ fn analyse_table(table: &IngestionResult) -> Result<(TableAnalysis, TableProfile
 
     // Detect arithmetic relationships between numeric columns (e.g., total = men + women)
     detect_arithmetic_relations(&combined, &mut analysis);
+
+    // Detect temporal ordering (e.g., dropoff > pickup) and emit duration-based derivation
+    detect_temporal_ordering(&combined, &mut analysis);
 
     // Detect cross-column constraints from source data
     let constraints = detect_column_constraints(&combined, &analysis.columns);
@@ -1297,17 +1347,19 @@ fn detect_time_series_trends(
 ) {
     use crate::core::{GeneratorSpec, TimeSeriesComponent};
 
-    // Need a sorted temporal column as the time axis
+    // Need a sorted column as the time axis (temporal or monotonic integer)
     let sort_col_name = match &analysis.sort_order {
         Some(so) => so.column.clone(),
         None => return,
     };
 
-    // Verify the sort column is temporal
-    let sort_col_is_temporal = analysis.columns.iter().any(|c| {
-        c.name == sort_col_name && c.temporal_pattern.is_some()
+    // Accept sorted temporal columns OR sorted integer/float columns as time axis.
+    // Integer sequences like "year" (1880, 1881, ...) are valid time indices.
+    let sort_col_is_valid_axis = analysis.columns.iter().any(|c| {
+        c.name == sort_col_name
+            && (c.temporal_pattern.is_some() || c.distribution.is_some())
     });
-    if !sort_col_is_temporal {
+    if !sort_col_is_valid_axis {
         return;
     }
 
@@ -1321,6 +1373,7 @@ fn detect_time_series_trends(
     const R2_THRESHOLD: f64 = 0.3;
 
     // For each numeric column, fit linear regression: value = baseline + slope * t
+    // Also try log-linear fit for exponential growth (e.g., stock prices)
     for col in &mut analysis.columns {
         // Skip the sort column itself, non-numeric columns, PKs, and columns already assigned
         if col.name == sort_col_name
@@ -1367,15 +1420,23 @@ fn detect_time_series_trends(
         let slope = ss_xy / ss_xx;
         let r_squared = (ss_xy * ss_xy) / (ss_xx * ss_yy);
 
-        if r_squared < R2_THRESHOLD {
+        // If linear R² is below threshold, try log-linear fit for exponential growth
+        let (final_slope, final_r2) = if r_squared >= R2_THRESHOLD {
+            (slope, r_squared)
+        } else {
+            // Linear R² too low — skip this column.
+            // Note: exponential growth patterns (e.g., stock prices) would need a dedicated
+            // exponential generator component, which doesn't exist yet. Emitting a linear
+            // approximation for exponential data produces poor results.
             continue;
-        }
+        };
 
-        // Compute residual standard deviation (noise)
+        // Compute residual standard deviation (noise).
+        // Safe: values.len() >= 10 (checked above), so n_f - 2.0 >= 8.0
         let residual_var: f64 = values
             .iter()
             .map(|&(i, y)| {
-                let predicted = mean_y + slope * (i as f64 - mean_x);
+                let predicted = mean_y + final_slope * (i as f64 - mean_x);
                 let r = y - predicted;
                 r * r
             })
@@ -1387,10 +1448,10 @@ fn detect_time_series_trends(
         let max_val = values.iter().map(|(_, y)| *y).fold(f64::NEG_INFINITY, f64::max);
 
         // The baseline is the value at t=0 (first row)
-        let baseline = mean_y - slope * mean_x;
+        let baseline = mean_y - final_slope * mean_x;
 
         let mut components = vec![
-            TimeSeriesComponent::Trend { slope, degree: 1 },
+            TimeSeriesComponent::Trend { slope: final_slope, degree: 1 },
         ];
         if noise_std > f64::EPSILON {
             components.push(TimeSeriesComponent::Noise { std_dev: noise_std });
@@ -1398,8 +1459,8 @@ fn detect_time_series_trends(
 
         tracing::debug!(
             column = %col.name,
-            slope = slope,
-            r_squared = r_squared,
+            slope = final_slope,
+            r_squared = final_r2,
             noise_std = noise_std,
             baseline = baseline,
             "detected time-series trend"
@@ -1413,6 +1474,201 @@ fn detect_time_series_trends(
             timestamp_field: None,
         });
     }
+}
+
+/// Detect temporal ordering between datetime column pairs.
+///
+/// When two datetime columns always satisfy `col_b >= col_a` (within tolerance),
+/// emit a derived spec for col_b as `col_a + duration` where duration statistics
+/// are fitted from the observed differences.
+fn detect_temporal_ordering(
+    batch: &RecordBatch,
+    analysis: &mut crate::learn::schema_assembly::TableAnalysis,
+) {
+    use crate::core::GeneratorSpec;
+
+    let n = batch.num_rows();
+    if n < 10 {
+        return;
+    }
+
+    // Find all temporal columns
+    let temporal_cols: Vec<String> = analysis
+        .columns
+        .iter()
+        .filter(|c| c.temporal_pattern.is_some())
+        .map(|c| c.name.clone())
+        .collect();
+
+    if temporal_cols.len() < 2 {
+        return;
+    }
+
+    // For each pair of temporal columns, check ordering
+    for i in 0..temporal_cols.len() {
+        for j in (i + 1)..temporal_cols.len() {
+            let col_a = &temporal_cols[i];
+            let col_b = &temporal_cols[j];
+
+            // Extract timestamps as epoch seconds
+            let ts_a = extract_timestamps_as_epoch(batch, col_a);
+            let ts_b = extract_timestamps_as_epoch(batch, col_b);
+
+            if ts_a.len() < 10 || ts_b.len() < 10 || ts_a.len() != ts_b.len() {
+                continue;
+            }
+
+            // Check: is col_b >= col_a for >=95% of rows?
+            let mut total = 0u64;
+            let mut ordered = 0u64;
+            let mut diffs: Vec<f64> = Vec::new();
+            for k in 0..ts_a.len() {
+                if let (Some(a), Some(b)) = (ts_a[k], ts_b[k]) {
+                    total += 1;
+                    if b >= a {
+                        ordered += 1;
+                        diffs.push(b - a);
+                    }
+                }
+            }
+
+            if total < 10 {
+                continue;
+            }
+
+            let (base_col, derived_col) =
+                if ordered as f64 / total as f64 >= 0.95 {
+                    (col_a.clone(), col_b.clone())
+                } else {
+                    // Try reverse: col_a >= col_b
+                    let mut rev_ordered = 0u64;
+                    let mut rev_diffs: Vec<f64> = Vec::new();
+                    for k in 0..ts_a.len() {
+                        if let (Some(a), Some(b)) = (ts_a[k], ts_b[k]) {
+                            if a >= b {
+                                rev_ordered += 1;
+                                rev_diffs.push(a - b);
+                            }
+                        }
+                    }
+                    if rev_ordered as f64 / total as f64 >= 0.95 {
+                        diffs = rev_diffs;
+                        (col_b.clone(), col_a.clone())
+                    } else {
+                        continue;
+                    }
+                };
+
+            if diffs.is_empty() {
+                continue;
+            }
+
+            // Compute duration statistics (mean and std in seconds)
+            let n_diffs = diffs.len() as f64;
+            let mean_dur = diffs.iter().sum::<f64>() / n_diffs;
+            let var_dur = diffs.iter().map(|d| (d - mean_dur).powi(2)).sum::<f64>() / n_diffs;
+            let std_dur = var_dur.sqrt();
+
+            // Emit Relative temporal spec: derived_col = base_col + Normal(mean, std)
+            use crate::core::{RelativeOffset, Value as CoreValue};
+            let offset = RelativeOffset::Simple(CoreValue::Float(mean_dur));
+
+            tracing::debug!(
+                base = %base_col,
+                derived = %derived_col,
+                mean_duration_secs = mean_dur,
+                std_duration_secs = std_dur,
+                "detected temporal ordering constraint"
+            );
+
+            if let Some(col) = analysis.columns.iter_mut().find(|c| c.name == derived_col) {
+                col.derived_spec = Some(GeneratorSpec::Relative {
+                    anchor: base_col.clone(),
+                    offset,
+                });
+                // NOTE: we do NOT clear temporal_pattern here — it is still needed by
+                // infer_data_type() to preserve the Datetime/Date type. The schema_assembly
+                // build_generator() function now checks derived_spec BEFORE temporal_pattern,
+                // so the Relative generator will be used for generation while the column
+                // retains its correct temporal data type.
+            }
+        }
+    }
+}
+
+/// Extract timestamps from a column as epoch seconds (f64).
+fn extract_timestamps_as_epoch(
+    batch: &RecordBatch,
+    col_name: &str,
+) -> Vec<Option<f64>> {
+    use arrow::array::*;
+    use arrow::datatypes::DataType;
+
+    let Some(arr) = batch.column_by_name(col_name) else {
+        return Vec::new();
+    };
+    let n = arr.len();
+    let mut result = Vec::with_capacity(n);
+
+    match arr.data_type() {
+        DataType::Timestamp(unit, _) => {
+            use arrow::datatypes::TimeUnit;
+            let multiplier = match unit {
+                TimeUnit::Second => 1.0,
+                TimeUnit::Millisecond => 0.001,
+                TimeUnit::Microsecond => 0.000_001,
+                TimeUnit::Nanosecond => 0.000_000_001,
+            };
+            if let Some(a) = arr.as_any().downcast_ref::<TimestampNanosecondArray>() {
+                for i in 0..n {
+                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64 * 0.000_000_001) });
+                }
+            } else if let Some(a) = arr.as_any().downcast_ref::<TimestampMicrosecondArray>() {
+                for i in 0..n {
+                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64 * 0.000_001) });
+                }
+            } else if let Some(a) = arr.as_any().downcast_ref::<TimestampMillisecondArray>() {
+                for i in 0..n {
+                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64 * 0.001) });
+                }
+            } else if let Some(a) = arr.as_any().downcast_ref::<TimestampSecondArray>() {
+                for i in 0..n {
+                    result.push(if a.is_null(i) { None } else { Some(a.value(i) as f64) });
+                }
+            } else {
+                // Generic timestamp: use the multiplier
+                let _ = multiplier;
+                return Vec::new();
+            }
+        }
+        DataType::Utf8 => {
+            // Parse string timestamps
+            let a = arr.as_any().downcast_ref::<StringArray>();
+            let Some(a) = a else { return Vec::new() };
+            for i in 0..n {
+                if a.is_null(i) {
+                    result.push(None);
+                } else {
+                    let s = a.value(i);
+                    // Try common datetime formats
+                    if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S") {
+                        result.push(Some(dt.and_utc().timestamp() as f64));
+                    } else if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") {
+                        result.push(Some(dt.and_utc().timestamp() as f64));
+                    } else if let Ok(d) = chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d") {
+                        result.push(Some(
+                            d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp() as f64,
+                        ));
+                    } else {
+                        result.push(None);
+                    }
+                }
+            }
+        }
+        _ => return Vec::new(),
+    }
+
+    result
 }
 
 /// Extract a column's values as (row_index, f64) from a RecordBatch.
@@ -1438,7 +1694,10 @@ fn extract_f64_column(batch: &RecordBatch, col_name: &str) -> Vec<(usize, f64)> 
             let a = $arr.as_any().downcast_ref::<$ty>().unwrap();
             for i in 0..n {
                 if !a.is_null(i) {
-                    out.push((i, a.value(i) as f64));
+                    let val = a.value(i) as f64;
+                    if val.is_finite() {
+                        out.push((i, val));
+                    }
                 }
             }
         }};
@@ -1460,7 +1719,9 @@ fn extract_f64_column(batch: &RecordBatch, col_name: &str) -> Vec<(usize, f64)> 
             for i in 0..n {
                 if !a.is_null(i) {
                     if let Ok(v) = a.value(i).parse::<f64>() {
-                        out.push((i, v));
+                        if v.is_finite() {
+                            out.push((i, v));
+                        }
                     }
                 }
             }
@@ -1745,7 +2006,6 @@ fn detect_geographic_tuples(
 
 /// Convert an Arrow array value at a given row to a string representation.
 fn array_value_to_string(arr: &dyn arrow::array::Array, row: usize) -> String {
-    use arrow::array::Array;
     if arr.is_null(row) {
         return String::new();
     }
@@ -1908,6 +2168,107 @@ fn detect_arithmetic_relations(batch: &RecordBatch, analysis: &mut TableAnalysis
                 target_col = %target_name,
                 expr = %expr,
                 "detected arithmetic relationship"
+            );
+            derived_columns.push((target_name.clone(), expr));
+        }
+    }
+
+    // Second pass: detect multi-column sums (target ≈ a + b + c + ...).
+    // For each column not already derived, check if it equals the sum of a subset
+    // of other columns. Uses greedy addition: add columns that reduce the residual.
+    for target_idx in 0..numeric_data.len() {
+        let (ref target_name, ref target_vals) = numeric_data[target_idx];
+
+        // Skip if already found via triple detection
+        if derived_columns.iter().any(|(name, _)| name == target_name) {
+            continue;
+        }
+
+        let non_null_count = target_vals.iter().filter(|v| v.is_some()).count();
+        if non_null_count < 10 {
+            continue;
+        }
+
+        // Only try multi-sum when there are enough other columns
+        if numeric_data.len() < 4 {
+            continue;
+        }
+
+        // Compute target mean to filter: target should be larger than most components
+        let target_mean: f64 = target_vals.iter().filter_map(|v| *v).sum::<f64>()
+            / non_null_count as f64;
+        if target_mean.abs() < f64::EPSILON {
+            continue;
+        }
+
+        // Collect candidate addend columns (those with smaller mean than target)
+        let mut candidates: Vec<usize> = Vec::new();
+        for i in 0..numeric_data.len() {
+            if i == target_idx {
+                continue;
+            }
+            let (_, ref vals) = numeric_data[i];
+            let count = vals.iter().filter(|v| v.is_some()).count();
+            if count < 10 {
+                continue;
+            }
+            let mean: f64 = vals.iter().filter_map(|v| *v).sum::<f64>() / count as f64;
+            // Only include columns with same sign and smaller magnitude
+            if mean.signum() == target_mean.signum() && mean.abs() < target_mean.abs() * 0.95 {
+                candidates.push(i);
+            }
+        }
+
+        if candidates.len() < 3 {
+            continue;
+        }
+
+        // Greedy: try summing ALL candidates and check if it matches
+        let mut sum_vals: Vec<Option<f64>> = vec![Some(0.0); n];
+        let mut used_cols: Vec<usize> = Vec::new();
+        for &c_idx in &candidates {
+            let (_, ref vals) = numeric_data[c_idx];
+            let mut new_sum = sum_vals.clone();
+            for i in 0..n {
+                match (new_sum[i], vals[i]) {
+                    (Some(s), Some(v)) => new_sum[i] = Some(s + v),
+                    _ => new_sum[i] = None,
+                }
+            }
+            sum_vals = new_sum;
+            used_cols.push(c_idx);
+        }
+
+        // Check error rate of the full sum
+        let mut checked = 0u64;
+        let mut mismatches = 0u64;
+        for i in 0..n {
+            let (Some(t), Some(s)) = (target_vals[i], sum_vals[i]) else {
+                continue;
+            };
+            if !t.is_finite() || !s.is_finite() {
+                continue;
+            }
+            checked += 1;
+            let denom = t.abs().max(s.abs()).max(1.0);
+            let diff = (t - s).abs() / denom;
+            if !diff.is_finite() || diff > 0.02 {
+                mismatches += 1;
+            }
+        }
+
+        if checked >= 10 && (mismatches as f64 / checked as f64) < 0.05 {
+            // Build the sum expression
+            let expr_parts: Vec<String> = used_cols
+                .iter()
+                .map(|&idx| format!("${{{}}}", numeric_data[idx].0))
+                .collect();
+            let expr = expr_parts.join(" + ");
+            debug!(
+                target_col = %target_name,
+                expr = %expr,
+                components = used_cols.len(),
+                "detected multi-column sum"
             );
             derived_columns.push((target_name.clone(), expr));
         }
@@ -3647,19 +4008,19 @@ fn extract_tuple_dictionaries(
 
             let primary = &group.columns[0];
 
-            // For 2-column tuples, skip if the primary already has a Dictionary
-            // (the standalone dictionary is sufficient; TupleLookup only adds value
-            // when there are 3+ columns forming a coherent entity).
+            // For 2-column tuples where the primary already has a Dictionary,
+            // replace it with a tuple dictionary to preserve cross-column coherence.
+            // The standalone dictionary loses the relationship between columns.
             if group.columns.len() == 2 {
-                let primary_has_dict = entity.fields.iter().any(|f| {
-                    f.name == *primary
-                        && matches!(
-                            f.generator,
-                            Some(crate::core::GeneratorSpec::Dictionary { .. })
-                        )
-                });
-                if primary_has_dict {
-                    continue;
+                if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *primary) {
+                    if let Some(crate::core::GeneratorSpec::Dictionary { ref file, .. }) =
+                        field.generator
+                    {
+                        // Remove the standalone dictionary file — tuple subsumes it
+                        let old_path = output_dir.join(file);
+                        let _ = std::fs::remove_file(&old_path);
+                        field.generator = None;
+                    }
                 }
             }
 
@@ -4301,6 +4662,21 @@ fn extract_unique_strings_from_batches(batches: &[RecordBatch], col_name: &str) 
 /// - Otherwise → "sample"
 fn detect_expansion_strategy(values: &[String]) -> String {
     if values.is_empty() || values.len() < 5 {
+        return "sample".to_string();
+    }
+
+    // High-cardinality columns (many distinct values) should use sample mode.
+    // Combinatorial expansion on names/identifiers produces nonsense combinations.
+    // Note: callers typically pass deduplicated values, so uniqueness_ratio ≈ 1.0;
+    // the effective threshold is unique_count > 50.
+    let unique_count = {
+        let mut set = HashSet::new();
+        for v in values {
+            set.insert(v.as_str());
+        }
+        set.len()
+    };
+    if unique_count > 50 {
         return "sample".to_string();
     }
 
