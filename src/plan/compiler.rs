@@ -141,6 +141,12 @@ pub fn compile(model: &DataModel) -> Result<ExecutionPlan, PlanError> {
                 &model.correlations,
             );
 
+            // Recompute dependency order for Derived fields: conditional overrides
+            // may have bumped their dependencies' dep_order above the Derived's own,
+            // causing the Derived to be generated before its inputs.
+            recompute_derived_order(&mut field_plans);
+            field_plans.sort_by_key(|fp| fp.dependency_order);
+
             // Append edge property fields from relationships where this entity
             // is the FK-holding side (from == entity_name).
             for rel in &model.relationships {
@@ -1748,6 +1754,60 @@ fn cholesky_decompose(matrix: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
         }
     }
     Some(l)
+}
+
+/// Recompute `dependency_order` for fields whose dependencies may have been
+/// bumped by conditional distribution overrides.
+///
+/// Uses iterative fixed-point to handle chained dependencies (e.g., A = B + C,
+/// D = A + E — if B/C get bumped, A is recomputed, then D sees A's new order).
+///
+/// Handles Derived, Temporal (with base_field), Correlated, and Conditional
+/// generator types.
+fn recompute_derived_order(field_plans: &mut [FieldPlan]) {
+    use std::collections::HashMap;
+
+    // Iterate until no changes (fixed-point convergence)
+    loop {
+        let order_map: HashMap<String, u32> = field_plans
+            .iter()
+            .map(|fp| (fp.field_name.clone(), fp.dependency_order))
+            .collect();
+
+        let mut changed = false;
+
+        for fp in field_plans.iter_mut() {
+            let max_dep: Option<u32> = match &fp.generator_plan {
+                GeneratorPlan::Derived { depends_on, .. } => depends_on
+                    .iter()
+                    .filter_map(|name| order_map.get(name))
+                    .copied()
+                    .max(),
+                GeneratorPlan::Temporal {
+                    base_field: Some(field),
+                    ..
+                } => order_map.get(field).copied(),
+                GeneratorPlan::Correlated { target_field, .. } => {
+                    order_map.get(target_field).copied()
+                }
+                GeneratorPlan::Conditional { field, .. } => {
+                    order_map.get(field).copied()
+                }
+                _ => None,
+            };
+
+            if let Some(max_dep) = max_dep {
+                if max_dep >= fp.dependency_order {
+                    fp.dependency_order = max_dep + 1;
+                    changed = true;
+                }
+            }
+        }
+
+        if !changed {
+            break;
+        }
+    }
 }
 
 /// Apply conditional distribution correlations by replacing the dependent
