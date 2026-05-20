@@ -1248,6 +1248,11 @@ fn check_column_sorted(arr: &dyn arrow::array::Array) -> Option<crate::core::Sor
             let vals: Vec<&str> = (0..a.len()).filter(|&i| !a.is_null(i)).map(|i| a.value(i)).collect();
             check_sorted_ord(&vals)
         }
+        DataType::Timestamp(TimeUnit::Second, _) => {
+            let a = arr.as_any().downcast_ref::<array::TimestampSecondArray>()?;
+            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            check_sorted_ord(&vals)
+        }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
             let a = arr.as_any().downcast_ref::<array::TimestampMillisecondArray>()?;
             let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
@@ -1255,6 +1260,11 @@ fn check_column_sorted(arr: &dyn arrow::array::Array) -> Option<crate::core::Sor
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
             let a = arr.as_any().downcast_ref::<array::TimestampMicrosecondArray>()?;
+            let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
+            check_sorted_ord(&vals)
+        }
+        DataType::Timestamp(TimeUnit::Nanosecond, _) => {
+            let a = arr.as_any().downcast_ref::<array::TimestampNanosecondArray>()?;
             let vals: Vec<i64> = a.iter().filter_map(|v| v).collect();
             check_sorted_ord(&vals)
         }
