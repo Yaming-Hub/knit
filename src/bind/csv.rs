@@ -21,6 +21,9 @@ pub struct CsvSinkConfig {
     pub header: bool,
     /// Representation for null values (default: empty string).
     pub null_value: String,
+    /// Timestamp format string (chrono strftime syntax).
+    /// Defaults to `%Y-%m-%d %H:%M:%S` (space separator, no fractional seconds).
+    pub timestamp_format: Option<String>,
 }
 
 impl Default for CsvSinkConfig {
@@ -29,6 +32,7 @@ impl Default for CsvSinkConfig {
             delimiter: b',',
             header: true,
             null_value: String::new(),
+            timestamp_format: Some("%Y-%m-%d %H:%M:%S".to_string()),
         }
     }
 }
@@ -70,8 +74,13 @@ impl<W: Write + Send> CsvSink<W> {
         let csv_writer = WriterBuilder::new()
             .with_delimiter(config.delimiter)
             .with_header(config.header)
-            .with_null(config.null_value.clone())
-            .build(counting);
+            .with_null(config.null_value.clone());
+        let csv_writer = if let Some(ref fmt) = config.timestamp_format {
+            csv_writer.with_timestamp_format(fmt.clone())
+        } else {
+            csv_writer
+        };
+        let csv_writer = csv_writer.build(counting);
 
         Self {
             writer: csv_writer,
@@ -191,6 +200,7 @@ mod tests {
             delimiter: b'\t',
             header: true,
             null_value: String::new(),
+            timestamp_format: None,
         };
         let mut sink = CsvSink::new(buf.clone(), &config);
         sink.write_batch(&sample_batch()).unwrap();

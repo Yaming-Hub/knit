@@ -115,6 +115,7 @@ pub fn create_sink(
                 delimiter: config.csv_delimiter,
                 header: config.csv_header,
                 null_value: config.null_representation.clone(),
+                timestamp_format: Some("%Y-%m-%d %H:%M:%S".to_string()),
             };
             let sink = CsvSink::new(writer, &csv_config);
             Ok(Box::new(sink))
