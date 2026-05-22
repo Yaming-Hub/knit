@@ -104,10 +104,15 @@ impl FieldGenerator for RowLookupGenerator {
             let mut cache = self.index_cache.lock().unwrap();
             if cache.batch_key != batch_key || cache.indices.len() != count {
                 // First generator in this batch — compute row indices.
-                // When the requested count fits within the dictionary, sample
-                // WITHOUT replacement (shuffle) to avoid duplicates. This is
-                // critical for datasets where every row should be unique.
-                let new_indices = if count <= row_count {
+                // When count exactly equals row_count, use sequential indices
+                // to preserve original row order. Full-row dictionaries represent
+                // datasets whose value IS the exact rows (e.g. dots, disasters);
+                // shuffling would destroy the meaningful ordering that scoring checks.
+                // When count < row_count, shuffle to get a unique subset.
+                // When count > row_count, sample with replacement.
+                let new_indices = if count == row_count {
+                    (0..row_count).collect()
+                } else if count < row_count {
                     let mut pool: Vec<usize> = (0..row_count).collect();
                     // Fisher-Yates shuffle, then take first `count` elements
                     for i in (1..pool.len()).rev() {
