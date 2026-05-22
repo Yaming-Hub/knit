@@ -1453,10 +1453,6 @@ fn detect_time_series_trends(
             .sum::<f64>() / (n_f - 2.0);
         let noise_std = residual_var.sqrt();
 
-        // Compute min/max for clamping
-        let min_val = values.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
-        let max_val = values.iter().map(|(_, y)| *y).fold(f64::NEG_INFINITY, f64::max);
-
         // The baseline is the value at t=0 (first row)
         let baseline = mean_y - final_slope * mean_x;
 
@@ -1476,11 +1472,15 @@ fn detect_time_series_trends(
             "detected time-series trend"
         );
 
+        // Don't set min/max for trended time series — the regression intercept
+        // (baseline) can be well below the observed minimum, causing early values
+        // to be clamped to a constant. Let the trend + noise model generate values
+        // naturally.
         col.time_series_spec = Some(GeneratorSpec::TimeSeries {
             baseline,
             components,
-            min: Some(min_val),
-            max: Some(max_val),
+            min: None,
+            max: None,
             timestamp_field: None,
         });
     }
@@ -2537,11 +2537,28 @@ fn detect_column_constraints(
         }
     }
 
-    // Emit Range constraints from observed min/max for each numeric column
+    // Emit Range constraints from observed min/max for each numeric column.
+    // For time-series columns, use a soft floor (0 for non-negative data) instead
+    // of tight [min, max] clamping which breaks trended series where the regression
+    // baseline differs from the observed bounds.
     for (name, vals) in &numeric_cols {
+        let is_time_series =
+            columns.iter().any(|c| c.name == *name && c.time_series_spec.is_some());
         let min = vals.iter().copied().fold(f64::INFINITY, f64::min);
         let max = vals.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-        if min.is_finite() && max.is_finite() && min < max {
+        if !min.is_finite() || !max.is_finite() || min >= max {
+            continue;
+        }
+        if is_time_series {
+            // Only emit a non-negativity floor when all observed values are >= 0.
+            if min >= 0.0 {
+                constraints.push(Constraint::Range {
+                    field: name.to_string(),
+                    min: Some(Value::Float(0.0)),
+                    max: None,
+                });
+            }
+        } else {
             constraints.push(Constraint::Range {
                 field: name.to_string(),
                 min: Some(Value::Float(min)),
