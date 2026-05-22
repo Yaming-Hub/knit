@@ -2021,7 +2021,7 @@ fn validate_generator(
                     message: "dictionary generator requires a non-empty 'file' path".to_string(),
                 });
             }
-            let valid_expansions = ["sample", "combinatorial", "suffix"];
+            let valid_expansions = ["sample", "shuffle", "combinatorial", "suffix"];
             if !valid_expansions.contains(&expansion.as_str()) {
                 errors.push(BlueprintError::Validation {
                     path: path.to_string(),

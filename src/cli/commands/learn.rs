@@ -3963,9 +3963,16 @@ fn extract_dictionaries(
                 writeln!(file, "{}", val)?;
             }
 
-            // Determine expansion strategy based on value structure
+            // Determine expansion strategy based on value structure.
+            // Use "shuffle" (each value exactly once) when distinct values == row count,
+            // indicating every row has a unique value for this column.
             let owned_clean: Vec<String> = clean_values.iter().map(|s| s.to_string()).collect();
-            let expansion = detect_expansion_strategy(&owned_clean);
+            let row_count = table.batches.iter().map(|b| b.num_rows()).sum::<usize>();
+            let expansion = if clean_values.len() == row_count {
+                "shuffle".to_string()
+            } else {
+                detect_expansion_strategy(&owned_clean)
+            };
 
             // Replace generator with dictionary reference
             field.generator = Some(crate::core::GeneratorSpec::Dictionary {
@@ -4103,20 +4110,33 @@ fn extract_tuple_dictionaries(
             let primary_dict_path = output_dir.join(&primary_dict_name);
             let mut pdict = std::fs::File::create(&primary_dict_path)
                 .with_context(|| format!("failed to create primary dict {primary_dict_name}"))?;
+            let mut written_count = 0usize;
             for tuple in &group.tuples {
                 if let Some(pv) = tuple.first() {
                     // Skip values with newlines (would break line-based dict format)
                     if !pv.contains('\n') && !pv.contains('\r') {
                         writeln!(pdict, "{pv}")?;
+                        written_count += 1;
                     }
                 }
             }
 
             // Set primary column to Dictionary generator (reads from primary-only file)
+            // Use "shuffle" when every tuple is unique (distinct_count == row_count),
+            // ensuring each value appears exactly once in the output.
+            let row_count = match &entity.count {
+                crate::core::CountSpec::Fixed(n) => *n as usize,
+                _ => 0,
+            };
+            let expansion = if written_count == row_count && row_count > 0 {
+                "shuffle".to_string()
+            } else {
+                "sample".to_string()
+            };
             if let Some(field) = entity.fields.iter_mut().find(|f| f.name == *primary) {
                 field.generator = Some(crate::core::GeneratorSpec::Dictionary {
                     file: primary_dict_name,
-                    expansion: "sample".to_string(),
+                    expansion,
                 });
             }
 
@@ -4227,11 +4247,14 @@ fn extract_full_row_dictionaries(
     use std::collections::HashSet;
     use std::io::Write;
 
-    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 5000;
+    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 6000;
     const MIN_STRING_COLUMN_RATIO: f64 = 0.5;
     // For small schemas (≤6 columns), relax the string ratio requirement
     // since they are often reference/lookup tables regardless of column types.
     const SMALL_SCHEMA_THRESHOLD: usize = 6;
+    // For very small tables (≤200 rows), always use full-row dict regardless
+    // of string ratio — row coherence matters more than column type distribution.
+    const SMALL_TABLE_ALWAYS_THRESHOLD: usize = 200;
 
     let mut count = 0;
 
@@ -4276,9 +4299,6 @@ fn extract_full_row_dictionaries(
             continue;
         }
         let string_ratio = string_cols as f64 / total_cols as f64;
-        if total_cols > SMALL_SCHEMA_THRESHOLD && string_ratio < MIN_STRING_COLUMN_RATIO {
-            continue;
-        }
 
         // Find source data
         let source_table = tables.iter().find(|t| t.entity == entity.name);
@@ -4287,6 +4307,12 @@ fn extract_full_row_dictionaries(
         // Count total rows
         let total_rows: usize = table.batches.iter().map(|b| b.num_rows()).sum();
         if total_rows == 0 || total_rows >= MAX_ROWS_FOR_FULL_ROW_DICT {
+            continue;
+        }
+
+        // Skip string ratio check for small schemas or small tables
+        let is_small_table = total_rows <= SMALL_TABLE_ALWAYS_THRESHOLD;
+        if total_cols > SMALL_SCHEMA_THRESHOLD && string_ratio < MIN_STRING_COLUMN_RATIO && !is_small_table {
             continue;
         }
 

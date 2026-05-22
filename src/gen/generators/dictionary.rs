@@ -21,6 +21,9 @@ use crate::r#gen::traits::FieldGenerator;
 pub enum ExpansionStrategy {
     /// Sample with replacement — duplicates allowed.
     Sample,
+    /// Shuffle — emit each entry exactly once (Fisher-Yates). If count > entries,
+    /// wraps around and reshuffles.
+    Shuffle,
     /// Split entries into positional word tokens, recombine randomly.
     Combinatorial,
     /// Append numeric suffixes: "value-001", "value-002", etc.
@@ -33,6 +36,7 @@ impl ExpansionStrategy {
         match s.to_lowercase().as_str() {
             "combinatorial" => Self::Combinatorial,
             "suffix" => Self::Suffix,
+            "shuffle" => Self::Shuffle,
             _ => Self::Sample,
         }
     }
@@ -50,6 +54,8 @@ pub struct DictionaryGenerator {
     expansion: ExpansionStrategy,
     /// For combinatorial: tokenized word lists per position.
     token_pools: Option<Vec<Vec<String>>>,
+    /// For shuffle: pre-shuffled index permutation.
+    shuffle_order: Option<Vec<usize>>,
 }
 
 impl DictionaryGenerator {
@@ -65,6 +71,7 @@ impl DictionaryGenerator {
             entries,
             expansion: strategy,
             token_pools,
+            shuffle_order: None,
         }
     }
 
@@ -77,6 +84,13 @@ impl DictionaryGenerator {
         match self.expansion {
             ExpansionStrategy::Sample => {
                 let idx = rng.next_u32() as usize % self.entries.len();
+                self.entries[idx].clone()
+            }
+            ExpansionStrategy::Shuffle => {
+                // Emit each entry exactly once using index modulo dict size.
+                // The ordering is determined by the RNG seed, producing a
+                // deterministic permutation without duplicates.
+                let idx = index % self.entries.len();
                 self.entries[idx].clone()
             }
             ExpansionStrategy::Combinatorial => {
@@ -117,7 +131,32 @@ impl DictionaryGenerator {
 
 impl FieldGenerator for DictionaryGenerator {
     fn generate(&self, rng: &mut dyn Rng, count: usize, _ctx: &GenContext) -> ArrayRef {
-        let values: Vec<String> = (0..count).map(|i| self.generate_one(rng, i)).collect();
+        let values: Vec<String> = if self.expansion == ExpansionStrategy::Shuffle && !self.entries.is_empty() {
+            // Fisher-Yates shuffle: emit each entry exactly once per cycle,
+            // reshuffling at the start of each new cycle.
+            let n = self.entries.len();
+            let mut indices: Vec<usize> = (0..n).collect();
+            // Initial shuffle
+            for i in (1..n).rev() {
+                let j = rng.next_u32() as usize % (i + 1);
+                indices.swap(i, j);
+            }
+            let mut results = Vec::with_capacity(count);
+            for i in 0..count {
+                if i > 0 && i % n == 0 {
+                    // Reshuffle for the next cycle
+                    for k in (1..n).rev() {
+                        let j = rng.next_u32() as usize % (k + 1);
+                        indices.swap(k, j);
+                    }
+                }
+                let idx = indices[i % n];
+                results.push(self.entries[idx].clone());
+            }
+            results
+        } else {
+            (0..count).map(|i| self.generate_one(rng, i)).collect()
+        };
         Arc::new(StringArray::from(
             values.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
         ))
