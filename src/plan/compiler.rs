@@ -641,6 +641,53 @@ fn compile_field_plans(
             (generator_plan, vec![])
         };
 
+        // Apply range constraints as clamp bounds for distribution generators.
+        // This ensures generated values stay within the observed data range.
+        let generator_plan = if let GeneratorPlan::Distribution {
+            kind,
+            params,
+            array_params,
+            clamp_min: _,
+            clamp_max: _,
+            round,
+        } = generator_plan
+        {
+            let mut lo: Option<f64> = None;
+            let mut hi: Option<f64> = None;
+            for c in &entity.constraints {
+                if let crate::core::Constraint::Range {
+                    field: cfield,
+                    min,
+                    max,
+                } = c
+                {
+                    if cfield == &field.name {
+                        lo = min.as_ref().and_then(|v| match v {
+                            crate::core::Value::Float(f) => Some(*f),
+                            crate::core::Value::Int(i) => Some(*i as f64),
+                            _ => None,
+                        });
+                        hi = max.as_ref().and_then(|v| match v {
+                            crate::core::Value::Float(f) => Some(*f),
+                            crate::core::Value::Int(i) => Some(*i as f64),
+                            _ => None,
+                        });
+                        break;
+                    }
+                }
+            }
+            GeneratorPlan::Distribution {
+                kind,
+                params,
+                array_params,
+                clamp_min: lo,
+                clamp_max: hi,
+                round,
+            }
+        } else {
+            generator_plan
+        };
+
         plans.push(FieldPlan {
             field_name: field.name.clone(),
             data_type: field.data_type.clone(),
