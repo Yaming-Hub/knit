@@ -1441,20 +1441,42 @@ fn detect_time_series_trends(
             continue;
         };
 
-        // Compute residual standard deviation (noise).
-        // Safe: values.len() >= 10 (checked above), so n_f - 2.0 >= 8.0
-        let residual_var: f64 = values
-            .iter()
-            .map(|&(i, y)| {
-                let predicted = mean_y + final_slope * (i as f64 - mean_x);
-                let r = y - predicted;
-                r * r
-            })
-            .sum::<f64>() / (n_f - 2.0);
-        let noise_std = residual_var.sqrt();
+        // Compute noise as standard deviation of first-differences minus the trend.
+        // This captures step-to-step volatility rather than total variance around
+        // the regression line, which can be orders of magnitude larger for strongly
+        // trending series (e.g., stock prices where residual std >> per-step slope).
+        let noise_std = if values.len() >= 3 {
+            let diffs: Vec<f64> = values
+                .windows(2)
+                .map(|w| {
+                    let dt = (w[1].0 as f64) - (w[0].0 as f64);
+                    let dy = w[1].1 - w[0].1;
+                    // Remove the expected trend contribution from the difference
+                    dy - final_slope * dt
+                })
+                .collect();
+            let n_diffs = diffs.len() as f64;
+            let mean_diff: f64 = diffs.iter().sum::<f64>() / n_diffs;
+            let var: f64 = diffs.iter().map(|d| (d - mean_diff).powi(2)).sum::<f64>()
+                / (n_diffs - 1.0).max(1.0);
+            var.sqrt()
+        } else {
+            // Fallback to residual std for very short series
+            let residual_var: f64 = values
+                .iter()
+                .map(|&(i, y)| {
+                    let predicted = mean_y + final_slope * (i as f64 - mean_x);
+                    (y - predicted).powi(2)
+                })
+                .sum::<f64>() / (n_f - 2.0);
+            residual_var.sqrt()
+        };
 
-        // The baseline is the value at t=0 (first row)
-        let baseline = mean_y - final_slope * mean_x;
+        // Use the first observed value as baseline. The regression intercept
+        // (mean_y - slope * mean_x) can be far from the actual starting value for
+        // non-linear data (e.g., exponential stock prices), causing impossible
+        // negative baselines. The first value ensures generation starts correctly.
+        let baseline = values[0].1;
 
         let mut components = vec![
             TimeSeriesComponent::Trend { slope: final_slope, degree: 1 },
