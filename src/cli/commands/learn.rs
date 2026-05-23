@@ -1405,6 +1405,20 @@ fn detect_time_series_trends(
             continue;
         }
 
+        // Skip columns with low distinct-value ratio — these are likely foreign keys
+        // or categorical integers, not continuous time-series values. Real time-series
+        // columns (prices, temperatures, measurements) have nearly 100% unique values.
+        let distinct_count = {
+            let mut sorted: Vec<i64> = values.iter().map(|(_, v)| (*v * 1e6) as i64).collect();
+            sorted.sort_unstable();
+            sorted.dedup();
+            sorted.len()
+        };
+        let distinct_ratio = distinct_count as f64 / values.len() as f64;
+        if distinct_ratio < 0.5 {
+            continue;
+        }
+
         // Compute linear regression: y = baseline + slope * x
         // where x is the original row index (preserving position for NULL gaps)
         let n_f = values.len() as f64;
