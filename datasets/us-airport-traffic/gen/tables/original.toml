@@ -1,0 +1,242 @@
+[table]
+name = "original"
+count = 221
+
+[table.stats]
+source_rows = 221
+
+[table.sort_by]
+column = "country"
+direction = "asc"
+
+[[columns]]
+name = "iata"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 221
+
+[columns.stats]
+distinct_count = 221
+null_rate = 0.0
+min_length = 3
+max_length = 3
+avg_length = 3.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "airport"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 221
+
+[columns.stats]
+distinct_count = 221
+null_rate = 0.0
+min_length = 4
+max_length = 39
+avg_length = 20.85972850678733
+
+[columns.traits]
+semantic = "text"
+pii = true
+cardinality = "unique"
+
+[[columns]]
+name = "city"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 221
+
+[columns.stats]
+distinct_count = 210
+null_rate = 0.004524886877828055
+min_length = 4
+max_length = 30
+avg_length = 9.1
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "state"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 221
+
+[columns.stats]
+distinct_count = 47
+null_rate = 0.004524886877828055
+min_length = 2
+max_length = 2
+avg_length = 2.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "medium"
+
+[[columns]]
+name = "country"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 221
+
+[columns.stats]
+distinct_count = 1
+null_rate = 0.0
+min_length = 3
+max_length = 3
+avg_length = 3.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[columns]]
+name = "lat"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 221
+
+[columns.stats]
+distinct_count = 221
+null_rate = 0.0
+min = 25.79325
+max = 48.79275
+mean = 37.72199960022625
+std = 5.460631448803514
+
+[columns.stats.percentiles]
+p25 = 33.66363889
+p50 = 38.03697222
+p75 = 41.88458833
+p95 = 46.37449806
+p99 = 48.25937778
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "long"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 6
+row_count = 221
+
+[columns.stats]
+distinct_count = 221
+null_rate = 0.0
+min = -124.2460278
+max = -70.30875
+mean = -94.65000604447967
+std = 15.067309188746574
+
+[columns.stats.percentiles]
+p25 = -106.9176953
+p50 = -90.70916722
+p75 = -82.40742056
+p95 = -74.10483833
+p99 = -71.42822111
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "uniform"
+
+[[columns]]
+name = "cnt"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 7
+row_count = 221
+
+[columns.stats]
+distinct_count = 184
+null_rate = 0.0
+min = 23.0
+max = 25129.0
+mean = 1998.764705882353
+std = 3751.5808787549245
+
+[columns.stats.percentiles]
+p25 = 168.0
+p50 = 479.0
+p75 = 1622.0
+p95 = 9182.0
+p99 = 20662.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "lat"
+min = 25.79325
+max = 48.79275
+
+[[constraints]]
+type = "range"
+field = "long"
+min = -124.2460278
+max = -70.30875
+
+[[constraints]]
+type = "range"
+field = "cnt"
+min = 23.0
+max = 25129.0
+
+[[constraints]]
+type = "check"
+expr = "long <= lat"
+
+[[constraints]]
+type = "check"
+expr = "long <= cnt"

@@ -1,0 +1,192 @@
+[table]
+name = "original"
+count = 90
+
+[table.stats]
+source_rows = 90
+
+[table.sort_by]
+column = ""
+direction = "asc"
+
+[[columns]]
+name = ""
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 90
+
+[columns.stats]
+distinct_count = 90
+null_rate = 0.0
+min = 0.0
+max = 89.0
+mean = 44.5
+std = 26.124700955226263
+
+[columns.stats.percentiles]
+p25 = 22.0
+p50 = 45.0
+p75 = 67.0
+p95 = 85.0
+p99 = 88.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "id"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 90
+
+[columns.stats]
+distinct_count = 30
+null_rate = 0.0
+min = 1.0
+max = 30.0
+mean = 15.5
+std = 8.703931695865503
+
+[columns.stats.percentiles]
+p25 = 8.0
+p50 = 16.0
+p75 = 23.0
+p95 = 29.0
+p99 = 30.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "diet"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 90
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 6
+max_length = 7
+avg_length = 6.5
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "pulse"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 90
+
+[columns.stats]
+distinct_count = 39
+null_rate = 0.0
+min = 80.0
+max = 150.0
+mean = 99.7
+std = 14.858470893849434
+
+[columns.stats.percentiles]
+p25 = 90.0
+p50 = 96.0
+p75 = 103.0
+p95 = 135.0
+p99 = 143.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "time"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 90
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min_length = 5
+max_length = 6
+avg_length = 5.666666666666667
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "kind"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 90
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min_length = 4
+max_length = 7
+avg_length = 6.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[constraints]]
+type = "range"
+field = ""
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "id"
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "pulse"
+min = 0.0
+
+[[constraints]]
+type = "check"
+expr = " <= pulse"
+
+[[constraints]]
+type = "check"
+expr = "id <= pulse"

@@ -1,0 +1,447 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Rank"
+min = 1.0
+max = 173.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Major_code"
+min = 1100.0
+max = 6403.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Total"
+min = 124.0
+max = 393735.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Men"
+min = 119.0
+max = 173809.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Women"
+min = 0.0
+max = 307087.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "ShareWomen"
+min = 0.0
+max = 0.968953683
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Sample_size"
+min = 2.0
+max = 4212.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Employed"
+min = 0.0
+max = 307933.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Full_time"
+min = 111.0
+max = 251540.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Part_time"
+min = 0.0
+max = 115172.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Full_time_year_round"
+min = 111.0
+max = 199897.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Unemployed"
+min = 0.0
+max = 28169.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Unemployment_rate"
+min = 0.0
+max = 0.177226407
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Median"
+min = 22000.0
+max = 110000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "P25th"
+min = 18500.0
+max = 95000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "P75th"
+min = 22000.0
+max = 125000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "College_jobs"
+min = 0.0
+max = 151643.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Non_college_jobs"
+min = 0.0
+max = 148395.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Low_wage_jobs"
+min = 0.0
+max = 48207.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= Full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Rank"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Rank <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= Men"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Men"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Sample_size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ShareWomen <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= Full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Sample_size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Sample_size <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Part_time <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "College_jobs <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Non_college_jobs <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Low_wage_jobs <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Part_time <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Full_time_year_round <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Low_wage_jobs <= Full_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Part_time"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Low_wage_jobs <= Full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Unemployed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Non_college_jobs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= College_jobs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Non_college_jobs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "P25th <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Median <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "P25th <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Low_wage_jobs <= Non_college_jobs"

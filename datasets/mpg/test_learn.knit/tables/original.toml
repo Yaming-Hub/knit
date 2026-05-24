@@ -1,0 +1,487 @@
+[table]
+name = "original"
+count = 398
+
+[table.stats]
+source_rows = 398
+
+[[table.scaling.custom]]
+name = "cylinders"
+field = "cylinders"
+cardinality = 5
+
+[[table.scaling.custom]]
+name = "model_year"
+field = "model_year"
+cardinality = 13
+
+[[table.scaling.custom]]
+name = "origin"
+field = "origin"
+cardinality = 3
+
+[table.sort_by]
+column = "model_year"
+direction = "asc"
+
+[[columns]]
+name = "mpg"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 2.5914193569033355
+shape = 9.07401297350066
+
+[columns.stats]
+distinct_count = 129
+null_rate = 0.0
+min = 9.0
+max = 46.6
+mean = 23.5145728643216
+std = 7.815984312565781
+
+[columns.stats.percentiles]
+p25 = 17.5
+p50 = 23.0
+p75 = 29.0
+p95 = 37.0
+p99 = 43.4
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "cylinders"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 4
+weight = 0.5125628140703518
+
+[[columns.generator.choices]]
+value = 8
+weight = 0.25879396984924624
+
+[[columns.generator.choices]]
+value = 6
+weight = 0.21105527638190955
+
+[[columns.generator.choices]]
+value = 3
+weight = 0.010050251256281407
+
+[[columns.generator.choices]]
+value = 5
+weight = 0.007537688442211055
+
+[columns.stats]
+distinct_count = 5
+null_rate = 0.0
+min = 3.0
+max = 8.0
+mean = 5.454773869346734
+std = 1.7010042445332152
+
+[columns.stats.percentiles]
+p25 = 4.0
+p50 = 4.0
+p75 = 8.0
+p95 = 8.0
+p99 = 8.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "displacement"
+data_type = "float"
+nullable = false
+precision = 0
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+
+[columns.generator.params]
+mu = 5.123173847894801
+sigma = 0.5306108547157526
+
+[columns.stats]
+distinct_count = 82
+null_rate = 0.0
+min = 68.0
+max = 455.0
+mean = 193.42587939698493
+std = 104.26983817119593
+
+[columns.stats.percentiles]
+p25 = 104.0
+p50 = 151.0
+p75 = 262.0
+p95 = 400.0
+p99 = 440.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "horsepower"
+data_type = "int"
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 4.587931382423751
+sigma = 0.3429406140914995
+
+[columns.nullable]
+probability = 0.01507537688442211
+
+[columns.stats]
+distinct_count = 93
+null_rate = 0.01507537688442211
+min = 46.0
+max = 230.0
+mean = 104.46938775510205
+std = 38.49115993282851
+
+[columns.stats.percentiles]
+p25 = 75.0
+p50 = 94.0
+p75 = 125.0
+p95 = 180.0
+p99 = 220.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "weight"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 7.956890111251137
+sigma = 0.28031214790157094
+
+[columns.stats]
+distinct_count = 351
+null_rate = 0.0
+min = 1613.0
+max = 5140.0
+mean = 2970.424623115578
+std = 846.8417741973267
+
+[columns.stats.percentiles]
+p25 = 2223.0
+p50 = 2807.0
+p75 = 3609.0
+p95 = 4464.0
+p99 = 4951.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "acceleration"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 0.4872621082202872
+shape = 31.95013564490656
+
+[columns.stats]
+distinct_count = 95
+null_rate = 0.0
+min = 8.0
+max = 24.8
+mean = 15.568090452261314
+std = 2.757688929812678
+
+[columns.stats.percentiles]
+p25 = 13.8
+p50 = 15.5
+p75 = 17.2
+p95 = 20.4
+p99 = 22.2
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "model_year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 73
+weight = 0.10050251256281408
+
+[[columns.generator.choices]]
+value = 78
+weight = 0.09045226130653267
+
+[[columns.generator.choices]]
+value = 76
+weight = 0.08542713567839195
+
+[[columns.generator.choices]]
+value = 82
+weight = 0.07788944723618091
+
+[[columns.generator.choices]]
+value = 75
+weight = 0.07537688442211055
+
+[[columns.generator.choices]]
+value = 81
+weight = 0.0728643216080402
+
+[[columns.generator.choices]]
+value = 70
+weight = 0.0728643216080402
+
+[[columns.generator.choices]]
+value = 79
+weight = 0.0728643216080402
+
+[[columns.generator.choices]]
+value = 80
+weight = 0.0728643216080402
+
+[[columns.generator.choices]]
+value = 72
+weight = 0.07035175879396985
+
+[[columns.generator.choices]]
+value = 77
+weight = 0.07035175879396985
+
+[[columns.generator.choices]]
+value = 71
+weight = 0.07035175879396985
+
+[[columns.generator.choices]]
+value = 74
+weight = 0.0678391959798995
+
+[columns.stats]
+distinct_count = 13
+null_rate = 0.0
+min = 70.0
+max = 82.0
+mean = 76.01005025125629
+std = 3.697626646732623
+
+[columns.stats.percentiles]
+p25 = 73.0
+p50 = 76.0
+p75 = 79.0
+p95 = 82.0
+p99 = 82.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "origin"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "usa"
+weight = 0.6256281407035176
+
+[[columns.generator.choices]]
+value = "japan"
+weight = 0.1984924623115578
+
+[[columns.generator.choices]]
+value = "europe"
+weight = 0.17587939698492464
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min_length = 3
+max_length = 6
+avg_length = 3.9246231155778895
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[columns]]
+name = "name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_name.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 305
+null_rate = 0.0
+min_length = 6
+max_length = 36
+avg_length = 16.09547738693467
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[constraints]]
+type = "range"
+field = "mpg"
+min = 9.0
+max = 46.6
+
+[[constraints]]
+type = "range"
+field = "cylinders"
+min = 3.0
+max = 8.0
+
+[[constraints]]
+type = "range"
+field = "displacement"
+min = 68.0
+max = 455.0
+
+[[constraints]]
+type = "range"
+field = "horsepower"
+min = 46.0
+max = 230.0
+
+[[constraints]]
+type = "range"
+field = "weight"
+min = 1613.0
+max = 5140.0
+
+[[constraints]]
+type = "range"
+field = "acceleration"
+min = 8.0
+max = 24.8
+
+[[constraints]]
+type = "range"
+field = "model_year"
+min = 70.0
+max = 82.0
+
+[[constraints]]
+type = "check"
+expr = "cylinders <= mpg"
+
+[[constraints]]
+type = "check"
+expr = "mpg <= displacement"
+
+[[constraints]]
+type = "check"
+expr = "mpg <= horsepower"
+
+[[constraints]]
+type = "check"
+expr = "mpg <= weight"
+
+[[constraints]]
+type = "check"
+expr = "mpg <= model_year"
+
+[[constraints]]
+type = "check"
+expr = "cylinders <= displacement"
+
+[[constraints]]
+type = "check"
+expr = "cylinders <= horsepower"
+
+[[constraints]]
+type = "check"
+expr = "cylinders <= weight"
+
+[[constraints]]
+type = "check"
+expr = "cylinders <= acceleration"
+
+[[constraints]]
+type = "check"
+expr = "cylinders <= model_year"
+
+[[constraints]]
+type = "check"
+expr = "displacement <= weight"
+
+[[constraints]]
+type = "check"
+expr = "acceleration <= displacement"
+
+[[constraints]]
+type = "check"
+expr = "horsepower <= weight"
+
+[[constraints]]
+type = "check"
+expr = "acceleration <= horsepower"
+
+[[constraints]]
+type = "check"
+expr = "acceleration <= weight"
+
+[[constraints]]
+type = "check"
+expr = "model_year <= weight"
+
+[[constraints]]
+type = "check"
+expr = "acceleration <= model_year"

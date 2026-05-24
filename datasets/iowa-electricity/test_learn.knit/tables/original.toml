@@ -1,0 +1,94 @@
+[table]
+name = "original"
+count = 51
+
+[table.stats]
+source_rows = 51
+
+[[table.scaling.custom]]
+name = "source"
+field = "source"
+cardinality = 3
+
+[table.sort_by]
+column = "source"
+direction = "asc"
+
+[[columns]]
+name = "year"
+data_type = "date"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 51
+
+[columns.stats]
+null_rate = 0.0
+min_temporal = "2001-01-01T00:00:00"
+max_temporal = "2017-01-01T00:00:00"
+
+[columns.traits]
+semantic = "timestamp"
+
+[[columns]]
+name = "source"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 51
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min_length = 10
+max_length = 14
+avg_length = 12.0
+
+[columns.traits]
+semantic = "categorical"
+pii = true
+cardinality = "medium"
+
+[[columns]]
+name = "net_generation"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 51
+
+[columns.stats]
+distinct_count = 51
+null_rate = 0.0
+min = 1437.0
+max = 42750.0
+mean = 16950.039215686276
+std = 14895.200210753508
+
+[columns.stats.percentiles]
+p25 = 4538.0
+p50 = 8560.0
+p75 = 35250.0
+p95 = 41389.0
+p99 = 42750.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "net_generation"
+min = 1437.0
+max = 42750.0

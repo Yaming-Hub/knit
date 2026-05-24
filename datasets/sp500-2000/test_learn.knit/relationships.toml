@@ -1,0 +1,106 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "open"
+min = 679.280029
+max = 3380.449951
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "high"
+min = 695.27002
+max = 3393.52002
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "low"
+min = 666.789978
+max = 3378.830078
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "close"
+min = 676.530029
+max = 3386.149902
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "adjclose"
+min = 676.530029
+max = 3386.149902
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "volume"
+min = 356070000.0
+max = 11456230000.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "open <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= open"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "open <= volume"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "close <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "adjclose <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "high <= volume"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= close"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= adjclose"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= volume"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "close <= adjclose"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "close <= volume"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "adjclose <= volume"

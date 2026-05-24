@@ -1,0 +1,6 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Extent"
+min = 3.34
+max = 16.412

@@ -1,0 +1,265 @@
+[table]
+name = "original"
+count = 682
+
+[table.stats]
+source_rows = 682
+
+[[table.scaling.custom]]
+name = "year"
+field = "year"
+cardinality = 11
+
+[[table.scaling.custom]]
+name = "cluster"
+field = "cluster"
+cardinality = 6
+
+[table.sort_by]
+column = "country"
+direction = "asc"
+
+[[columns]]
+name = "year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 682
+
+[columns.stats]
+distinct_count = 11
+null_rate = 0.0
+min = 1955.0
+max = 2005.0
+mean = 1980.0
+std = 15.822992991065282
+
+[columns.stats.percentiles]
+p25 = 1965.0
+p50 = 1980.0
+p75 = 1995.0
+p95 = 2005.0
+p99 = 2005.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "country"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 682
+
+[columns.stats]
+distinct_count = 62
+null_rate = 0.0
+min_length = 4
+max_length = 18
+avg_length = 7.854838709677419
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "cluster"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 682
+
+[columns.stats]
+distinct_count = 6
+null_rate = 0.0
+min = 0.0
+max = 5.0
+mean = 2.467741935483871
+std = 1.457065585779787
+
+[columns.stats.percentiles]
+p25 = 1.0
+p50 = 3.0
+p75 = 3.0
+p95 = 5.0
+p99 = 5.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "pop"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 682
+
+[columns.stats]
+distinct_count = 682
+null_rate = 0.0
+min = 82656.0
+max = 1304887562.0
+mean = 57619716.583577715
+std = 159136221.70659468
+
+[columns.stats.percentiles]
+p25 = 4803325.0
+p50 = 12626507.0
+p75 = 45659575.0
+p95 = 186797334.0
+p99 = 982372466.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "life_expect"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 682
+
+[columns.stats]
+distinct_count = 614
+null_rate = 0.0
+min = 27.79
+max = 82.5
+mean = 66.98322580645166
+std = 9.595358819299555
+
+[columns.stats.percentiles]
+p25 = 61.44
+p50 = 69.77
+p75 = 73.96
+p95 = 78.9
+p99 = 80.75
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "fertility"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 682
+
+[columns.stats]
+distinct_count = 398
+null_rate = 0.0
+min = 0.96
+max = 8.23
+mean = 3.716730205278594
+std = 1.9181074741691835
+
+[columns.stats.percentiles]
+p25 = 2.05
+p50 = 3.12
+p75 = 5.43
+p95 = 7.08
+p99 = 8.02
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "year"
+min = 1955.0
+max = 2005.0
+
+[[constraints]]
+type = "range"
+field = "cluster"
+min = 0.0
+max = 5.0
+
+[[constraints]]
+type = "range"
+field = "pop"
+min = 82656.0
+max = 1304887562.0
+
+[[constraints]]
+type = "range"
+field = "life_expect"
+min = 27.79
+max = 82.5
+
+[[constraints]]
+type = "range"
+field = "fertility"
+min = 0.96
+max = 8.23
+
+[[constraints]]
+type = "check"
+expr = "cluster <= year"
+
+[[constraints]]
+type = "check"
+expr = "year <= pop"
+
+[[constraints]]
+type = "check"
+expr = "life_expect <= year"
+
+[[constraints]]
+type = "check"
+expr = "fertility <= year"
+
+[[constraints]]
+type = "check"
+expr = "cluster <= pop"
+
+[[constraints]]
+type = "check"
+expr = "cluster <= life_expect"
+
+[[constraints]]
+type = "check"
+expr = "life_expect <= pop"
+
+[[constraints]]
+type = "check"
+expr = "fertility <= pop"
+
+[[constraints]]
+type = "check"
+expr = "fertility <= life_expect"

@@ -1,0 +1,827 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "Year",
+    "Years since joining",
+]
+matrix = [
+    [
+    1.0,
+    -1.0,
+],
+    [
+    -1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Year",
+    "Years since joining",
+]
+matrix = [
+    [
+    1.0,
+    -1.0,
+],
+    [
+    -1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return2",
+    "Notes",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return2",
+    "Full/Reserve Avengers Intro",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return2",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999999,
+],
+    [
+    0.9999999999999999,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return2",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Return1",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Honorary",
+]
+matrix = [
+    [
+    1.0,
+    0.5790001396218006,
+],
+    [
+    0.5790001396218006,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.8713548411865621,
+],
+    [
+    0.8713548411865621,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Gender",
+]
+matrix = [
+    [
+    1.0,
+    0.6243541472221555,
+],
+    [
+    0.6243541472221555,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Full/Reserve Avengers Intro",
+]
+matrix = [
+    [
+    1.0,
+    0.812800256953128,
+],
+    [
+    0.812800256953128,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999722,
+],
+    [
+    0.9999999999999722,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Death2",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Notes",
+    "Current?",
+]
+matrix = [
+    [
+    1.0,
+    0.6572585054332525,
+],
+    [
+    0.6572585054332525,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return1",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    0.6546536707079772,
+],
+    [
+    0.6546536707079772,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return1",
+    "Full/Reserve Avengers Intro",
+]
+matrix = [
+    [
+    1.0,
+    0.8972672772522667,
+],
+    [
+    0.8972672772522667,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return1",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Return1",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Probationary Introl",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Full/Reserve Avengers Intro",
+]
+matrix = [
+    [
+    1.0,
+    0.9312087620153202,
+],
+    [
+    0.9312087620153202,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9933847123915235,
+],
+    [
+    0.9933847123915235,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999993,
+],
+    [
+    0.9999999999999993,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Death2",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Honorary",
+    "Current?",
+]
+matrix = [
+    [
+    1.0,
+    0.35758042981399496,
+],
+    [
+    0.35758042981399496,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Probationary Introl",
+    "Gender",
+]
+matrix = [
+    [
+    1.0,
+    0.927960727138337,
+],
+    [
+    0.927960727138337,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Probationary Introl",
+    "Full/Reserve Avengers Intro",
+]
+matrix = [
+    [
+    1.0,
+    0.9428090415820644,
+],
+    [
+    0.9428090415820644,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Probationary Introl",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999992,
+],
+    [
+    0.9999999999999992,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Probationary Introl",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999988,
+],
+    [
+    0.9999999999999988,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Probationary Introl",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    0.8556534679079242,
+],
+    [
+    0.8556534679079242,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Probationary Introl",
+    "Current?",
+]
+matrix = [
+    [
+    1.0,
+    0.8897565210026093,
+],
+    [
+    0.8897565210026093,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Gender",
+    "Full/Reserve Avengers Intro",
+]
+matrix = [
+    [
+    1.0,
+    0.7394501283891484,
+],
+    [
+    0.7394501283891484,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Gender",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999997,
+],
+    [
+    0.9999999999999997,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Gender",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Name/Alias",
+]
+matrix = [
+    [
+    1.0,
+    0.9981255841065853,
+],
+    [
+    0.9981255841065853,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.999999999999934,
+],
+    [
+    0.999999999999934,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    0.8451972761917567,
+],
+    [
+    0.8451972761917567,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Full/Reserve Avengers Intro",
+    "Current?",
+]
+matrix = [
+    [
+    1.0,
+    0.892091164211846,
+],
+    [
+    0.892091164211846,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Name/Alias",
+    "URL",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999489,
+],
+    [
+    0.9999999999999489,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Name/Alias",
+    "Death2",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999999,
+],
+    [
+    0.9999999999999999,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Name/Alias",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Name/Alias",
+    "Current?",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Death2",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Death1",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "URL",
+    "Current?",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999991,
+],
+    [
+    0.9999999999999991,
+    1.0,
+],
+]
+conditional = []

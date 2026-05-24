@@ -1,0 +1,434 @@
+[table]
+name = "original"
+count = 51
+
+[table.stats]
+source_rows = 51
+
+[[table.scaling.custom]]
+name = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired"
+field = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired"
+cardinality = 19
+
+[[columns]]
+name = "State"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "faker"
+method = "state"
+args = []
+
+[columns.stats]
+distinct_count = 51
+null_rate = 0.0
+min_length = 4
+max_length = 20
+avg_length = 8.666666666666666
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "Number of drivers involved in fatal collisions per billion miles"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 15.79019607843137
+std_dev = 4.0813903293334715
+
+[columns.stats]
+distinct_count = 45
+null_rate = 0.0
+min = 5.9
+max = 23.9
+mean = 15.79019607843137
+std = 4.122002178648662
+
+[columns.stats.percentiles]
+p25 = 12.8
+p50 = 15.6
+p75 = 18.6
+p95 = 23.8
+p99 = 23.9
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+round = true
+
+[columns.generator.params]
+mean = 31.725490196078432
+std_dev = 9.538525457163843
+
+[columns.stats]
+distinct_count = 29
+null_rate = 0.0
+min = 13.0
+max = 54.0
+mean = 31.725490196078432
+std = 9.633438495931863
+
+[columns.stats.percentiles]
+p25 = 23.0
+p50 = 34.0
+p75 = 38.0
+p95 = 46.0
+p99 = 54.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 29
+weight = 0.13725490196078433
+
+[[columns.generator.choices]]
+value = 28
+weight = 0.11764705882352941
+
+[[columns.generator.choices]]
+value = 30
+weight = 0.09803921568627451
+
+[[columns.generator.choices]]
+value = 33
+weight = 0.0784313725490196
+
+[[columns.generator.choices]]
+value = 27
+weight = 0.058823529411764705
+
+[[columns.generator.choices]]
+value = 25
+weight = 0.058823529411764705
+
+[[columns.generator.choices]]
+value = 34
+weight = 0.058823529411764705
+
+[[columns.generator.choices]]
+value = 32
+weight = 0.058823529411764705
+
+[[columns.generator.choices]]
+value = 31
+weight = 0.058823529411764705
+
+[[columns.generator.choices]]
+value = 38
+weight = 0.0392156862745098
+
+[[columns.generator.choices]]
+value = 35
+weight = 0.0392156862745098
+
+[[columns.generator.choices]]
+value = 41
+weight = 0.0392156862745098
+
+[[columns.generator.choices]]
+value = 26
+weight = 0.0392156862745098
+
+[[columns.generator.choices]]
+value = 24
+weight = 0.0196078431372549
+
+[[columns.generator.choices]]
+value = 44
+weight = 0.0196078431372549
+
+[[columns.generator.choices]]
+value = 23
+weight = 0.0196078431372549
+
+[[columns.generator.choices]]
+value = 36
+weight = 0.0196078431372549
+
+[[columns.generator.choices]]
+value = 16
+weight = 0.0196078431372549
+
+[[columns.generator.choices]]
+value = 42
+weight = 0.0196078431372549
+
+[columns.stats]
+distinct_count = 19
+null_rate = 0.0
+min = 16.0
+max = 44.0
+mean = 30.686274509803923
+std = 5.132212762847744
+
+[columns.stats.percentiles]
+p25 = 28.0
+p50 = 30.0
+p75 = 33.0
+p95 = 41.0
+p99 = 44.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Percentage Of Drivers Involved In Fatal Collisions Who Were Not Distracted"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+round = true
+
+[columns.generator.params]
+mean = 85.92156862745098
+std_dev = 15.00959580291418
+
+[columns.stats]
+distinct_count = 26
+null_rate = 0.0
+min = 10.0
+max = 100.0
+mean = 85.92156862745098
+std = 15.158948693435049
+
+[columns.stats.percentiles]
+p25 = 84.0
+p50 = 88.0
+p75 = 95.0
+p95 = 99.0
+p99 = 100.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Percentage Of Drivers Involved In Fatal Collisions Who Had Not Been Involved In Any Previous Accidents"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 100.0
+min = 76.0
+
+[columns.stats]
+distinct_count = 22
+null_rate = 0.0
+min = 76.0
+max = 100.0
+mean = 88.72549019607843
+std = 6.960110434102463
+
+[columns.stats.percentiles]
+p25 = 84.0
+p50 = 88.0
+p75 = 95.0
+p95 = 99.0
+p99 = 100.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Car Insurance Premiums ($)"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+
+[columns.generator.params]
+max = 1301.52
+min = 641.96
+
+[columns.stats]
+distinct_count = 51
+null_rate = 0.0
+min = 641.96
+max = 1301.52
+mean = 886.9576470588236
+std = 178.29628479122314
+
+[columns.stats.percentiles]
+p25 = 768.95
+p50 = 858.97
+p75 = 1011.14
+p95 = 1273.89
+p99 = 1301.52
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Losses incurred by insurance companies for collisions per insured driver ($)"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 4.49635192378636
+shape = 29.911612688369335
+
+[columns.stats]
+distinct_count = 51
+null_rate = 0.0
+min = 82.75
+max = 194.78
+mean = 134.49313725490197
+std = 24.83592249063409
+
+[columns.stats.percentiles]
+p25 = 114.82
+p50 = 136.05
+p75 = 152.26
+p95 = 178.86
+p99 = 194.78
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "Number of drivers involved in fatal collisions per billion miles"
+min = 5.9
+max = 23.9
+
+[[constraints]]
+type = "range"
+field = "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding"
+min = 13.0
+max = 54.0
+
+[[constraints]]
+type = "range"
+field = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired"
+min = 16.0
+max = 44.0
+
+[[constraints]]
+type = "range"
+field = "Percentage Of Drivers Involved In Fatal Collisions Who Were Not Distracted"
+min = 10.0
+max = 100.0
+
+[[constraints]]
+type = "range"
+field = "Percentage Of Drivers Involved In Fatal Collisions Who Had Not Been Involved In Any Previous Accidents"
+min = 76.0
+max = 100.0
+
+[[constraints]]
+type = "range"
+field = "Car Insurance Premiums ($)"
+min = 641.96
+max = 1301.52
+
+[[constraints]]
+type = "range"
+field = "Losses incurred by insurance companies for collisions per insured driver ($)"
+min = 82.75
+max = 194.78
+
+[[constraints]]
+type = "check"
+expr = "Number of drivers involved in fatal collisions per billion miles <= Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired"
+
+[[constraints]]
+type = "check"
+expr = "Number of drivers involved in fatal collisions per billion miles <= Percentage Of Drivers Involved In Fatal Collisions Who Had Not Been Involved In Any Previous Accidents"
+
+[[constraints]]
+type = "check"
+expr = "Number of drivers involved in fatal collisions per billion miles <= Car Insurance Premiums ($)"
+
+[[constraints]]
+type = "check"
+expr = "Number of drivers involved in fatal collisions per billion miles <= Losses incurred by insurance companies for collisions per insured driver ($)"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding <= Percentage Of Drivers Involved In Fatal Collisions Who Had Not Been Involved In Any Previous Accidents"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding <= Car Insurance Premiums ($)"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding <= Losses incurred by insurance companies for collisions per insured driver ($)"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired <= Percentage Of Drivers Involved In Fatal Collisions Who Had Not Been Involved In Any Previous Accidents"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired <= Car Insurance Premiums ($)"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired <= Losses incurred by insurance companies for collisions per insured driver ($)"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Were Not Distracted <= Car Insurance Premiums ($)"
+
+[[constraints]]
+type = "check"
+expr = "Percentage Of Drivers Involved In Fatal Collisions Who Had Not Been Involved In Any Previous Accidents <= Car Insurance Premiums ($)"
+
+[[constraints]]
+type = "check"
+expr = "Losses incurred by insurance companies for collisions per insured driver ($) <= Car Insurance Premiums ($)"

@@ -1,0 +1,133 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "mpg"
+min = 9.0
+max = 46.6
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "cylinders"
+min = 3.0
+max = 8.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "displacement"
+min = 68.0
+max = 455.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "horsepower"
+min = 46.0
+max = 230.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "weight"
+min = 1613.0
+max = 5140.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "acceleration"
+min = 8.0
+max = 24.8
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "model_year"
+min = 70.0
+max = 82.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cylinders <= mpg"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "mpg <= displacement"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "mpg <= horsepower"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "mpg <= weight"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "mpg <= model_year"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cylinders <= displacement"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cylinders <= horsepower"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cylinders <= weight"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cylinders <= acceleration"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cylinders <= model_year"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "displacement <= weight"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "acceleration <= displacement"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "horsepower <= weight"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "acceleration <= horsepower"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "acceleration <= weight"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "model_year <= weight"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "acceleration <= model_year"

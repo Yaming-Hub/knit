@@ -1,0 +1,428 @@
+You are evaluating synthetic data quality. For each of the 10 datasets below, compare the GENERATED data against the ORIGINAL data and rate it 1-100.
+
+Rate based on:
+1. Column value realism (do values look like real data for this domain?)
+2. Distribution fidelity (similar ranges, proportions, patterns as original?)
+3. Row coherence (do column values within a row make sense together?)
+4. Structural correctness (right data types, no garbled text, proper formatting?)
+5. Domain authenticity (would this fool a domain expert at first glance?)
+
+RESPOND WITH ONLY a JSON array: [{"dataset": "name", "score": N, "reason": "one sentence"}, ...]
+
+### Dataset: candy-power-ranking
+ORIGINAL:
+```
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,.73199999,.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,.60399997,.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,.011,.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,.011,.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,.90600002,.51099998,52.341465
+Boston Baked Beans,0,0,0,1,0,0,0,0,1,.31299999,.51099998,23.417824
+Junior Mints,1,0,0,0,0,0,0,0,1,.197,.51099998,57.21925
+Nik L Nip,0,1,0,0,0,0,0,0,1,.197,.97600001,22.445341
+Red vines,0,1,0,0,0,0,0,0,1,.58099997,.116,37.348522
+Sour Patch Kids,0,1,0,0,0,0,0,0,1,.068999998,.116,59.863998
+Twizzlers,0,1,0,0,0,0,0,0,0,.22,.116,45.466282
+Warheads,0,1,0,0,0,0,1,0,0,.093000002,.116,39.011898
+Welch's Fruit Snacks,0,1,0,0,0,0,0,0,1,.31299999,.31299999,44.375519
+Werther's Original Caramel,0,0,1,0,0,0,1,0,0,.186,.26699999,41.904308
+Whoppers,1,0,0,0,0,1,0,0,1,.87199998,.84799999,49.524113
+```
+GENERATED:
+```
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+Snickers Crisper,1,0,1,1,0,1,0,1,0,0.60399997,0.65100002,59.529251
+Super Bubble,0,1,0,0,0,0,0,0,0,0.162,0.116,27.303865
+Mike & Ike,0,1,0,0,0,0,0,0,1,0.87199998,0.32499999,46.411716
+Sugar Daddy,0,0,1,0,0,0,0,0,0,0.41800001,0.32499999,32.230995
+Pop Rocks,0,1,0,0,0,0,1,0,1,0.60399997,0.83700001,41.265511
+Werther's Original Caramel,0,0,1,0,0,0,1,0,0,0.186,0.26699999,41.904308
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+Fun Dip,0,1,0,0,0,0,1,0,0,0.73199999,0.32499999,39.185505
+Junior Mints,1,0,0,0,0,0,0,0,1,0.197,0.51099998,57.21925
+Fruit Chews,0,1,0,0,0,0,0,0,1,0.127,0.034000002,43.088924
+Milky Way Simply Caramel,1,0,1,0,0,0,0,1,0,0.96499997,0.86000001,64.35334
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+Mounds,1,0,0,0,0,0,0,1,0,0.31299999,0.86000001,47.829754
+Haribo Sour Bears,0,1,0,0,0,0,0,0,1,0.465,0.465,51.41243
+Trolli Sour Bites,0,1,0,0,0,0,0,0,1,0.31299999,0.255,47.173229
+```
+
+---
+
+### Dataset: car-crashes
+ORIGINAL:
+```
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+17.8,4.806,4.272,13.706000000000001,15.13,780.45,133.8,KS
+17.6,2.64,5.456,1.76,17.6,896.07,155.77,MS
+14.9,1.9370000000000003,5.215,13.857000000000001,13.41,732.28,114.82,NE
+11.2,1.7919999999999998,3.1359999999999997,9.632,8.735999999999999,1301.52,159.85,NJ
+19.4,6.013999999999999,6.401999999999999,19.011999999999997,16.683999999999997,669.31,96.87,SD
+12.7,2.413,3.429,11.049,11.175999999999998,768.95,153.72,VA
+10.6,4.452,3.498,8.692,9.116,890.03,111.62,WA
+23.8,8.092,6.664,23.086,20.706,992.61,152.56,WV
+13.8,4.968,4.554,5.382000000000001,11.592,670.31,106.62,WI
+17.4,7.308,5.568,14.094,15.659999999999998,791.14,122.04,WY
+```
+GENERATED:
+```
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+23.8,8.092,6.664,23.086,20.706,992.61,152.56,WV
+14.5,3.625,4.205,13.775,13.775,710.46,108.92,IN
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+17.8,4.806,4.272,13.706000000000001,15.13,780.45,133.8,KS
+13.6,4.08,4.08,13.056,12.92,716.2,109.61,VT
+14.7,5.439,4.704,13.965,14.552999999999999,1029.87,138.71,NV
+23.9,5.496999999999999,10.038,23.660999999999998,20.554000000000002,688.75,109.72,ND
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+12.5,4.25,4.0,8.875,12.375,1048.78,192.7,MD
+8.2,1.886,2.87,7.1339999999999995,6.56,1011.14,135.63,MA
+5.9,2.0060000000000002,1.5930000000000002,5.9,5.9,1273.89,136.05,DC
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+12.8,4.224,3.3280000000000003,8.576,11.52,804.71,104.61,OR
+20.5,7.175,6.765,14.965,20.09,1281.55,194.78,LA
+15.6,2.964,3.9,14.82,14.508,913.15,142.8,GA
+```
+
+---
+
+### Dataset: co2-concentration
+ORIGINAL:
+```
+Date,CO2,adjusted CO2
+1958-03-01,315.70,314.44
+1958-04-01,317.46,315.16
+1958-05-01,317.51,314.71
+1958-07-01,315.86,315.19
+1958-08-01,314.93,316.19
+1965-03-01,320.89,319.59
+1982-05-01,344.14,341.10
+1988-10-01,348.88,352.18
+1997-08-01,362.50,363.94
+2016-02-01,404.16,403.41
+2019-12-01,411.85,412.78
+2020-01-01,413.37,413.32
+2020-02-01,414.09,413.33
+2020-03-01,414.51,412.94
+2020-04-01,416.18,413.35
+```
+GENERATED:
+```
+Date,CO2,adjusted CO2
+1958-03-01,313.21,314.44
+1958-03-31,313.21,314.44
+1958-04-30,313.21,314.44
+1958-05-30,313.21,314.44
+1958-06-29,313.21,314.44
+1977-02-19,339.93,345.05
+1993-08-24,370.82,369.42
+1994-06-20,367.11,359.42
+1994-10-18,365.99,360.32
+2016-10-22,395.72,404.2
+2018-08-13,402.95,400.18
+2018-09-12,407.17,405.55
+2018-10-12,412.97,401.6
+2018-11-11,397.83,409.76
+2018-12-11,401.28,406.27
+```
+
+---
+
+### Dataset: college-majors-all
+ORIGINAL:
+```
+Major_code,Major,Major_category,Total,Employed,Employed_full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th
+1100,GENERAL AGRICULTURE,Agriculture & Natural Resources,128148,90245,74078,2423,0.026147106,50000,34000,80000
+1101,AGRICULTURE PRODUCTION AND MANAGEMENT,Agriculture & Natural Resources,95326,76865,64240,2266,0.028636059,54000,36000,80000
+1102,AGRICULTURAL ECONOMICS,Agriculture & Natural Resources,33955,26321,22810,821,0.030248324,63000,40000,98000
+1103,ANIMAL SCIENCES,Agriculture & Natural Resources,103549,81177,64937,3619,0.0426789,46000,30000,72000
+1104,FOOD SCIENCE,Agriculture & Natural Resources,24280,17281,12722,894,0.049188446,62000,38500,90000
+1501,AREA ETHNIC AND CIVILIZATION STUDIES,Humanities & Liberal Arts,103740,75798,50530,5525,0.067938959,46000,32000,71000
+2601,LINGUISTICS AND COMPARATIVE LANGUAGE AND LITERATURE,Humanities & Liberal Arts,75791,45657,30428,4043,0.081348089,48000,30000,70000
+5005,GEOSCIENCES,Physical Sciences,8267,6129,5020,274,0.042792441,57000,36000,80000
+6004,COMMERCIAL ART AND GRAPHIC DESIGN,Arts,504657,379980,266671,30330,0.073919719,46600,32000,70000
+6206,MARKETING AND MARKETING RESEARCH,Business,1114624,890125,704912,51839,0.055032889,56000,38500,90000
+6211,HOSPITALITY MANAGEMENT,Business,200854,163393,122499,8862,0.051446983,49000,33000,70000
+6212,MANAGEMENT INFORMATION SYSTEMS AND STATISTICS,Business,156673,134478,118249,6186,0.043977137,72000,50000,1.00E+05
+6299,MISCELLANEOUS BUSINESS & MEDICAL ADMINISTRATION,Business,102753,77471,61603,4308,0.052678561,53000,36000,83000
+6402,HISTORY,Humanities & Liberal Arts,712509,478416,354163,33725,0.065851006,50000,35000,80000
+6403,UNITED STATES HISTORY,Humanities & Liberal Arts,17746,11887,8204,943,0.07349961,50000,39000,81000
+```
+GENERATED:
+```
+Major_code,Major,Major_category,Total,Employed,Employed_full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th
+1100,GENERAL AGRICULTURE,Agriculture & Natural Resources,128148,90245,74078,2423,0.026147106,50000,34000,80000
+1101,AGRICULTURE PRODUCTION AND MANAGEMENT,Agriculture & Natural Resources,95326,76865,64240,2266,0.028636059,54000,36000,80000
+1102,AGRICULTURAL ECONOMICS,Agriculture & Natural Resources,33955,26321,22810,821,0.030248324,63000,40000,98000
+1103,ANIMAL SCIENCES,Agriculture & Natural Resources,103549,81177,64937,3619,0.0426789,46000,30000,72000
+1104,FOOD SCIENCE,Agriculture & Natural Resources,24280,17281,12722,894,0.049188446,62000,38500,90000
+1903,MASS MEDIA,Communications & Journalism,211213,170474,125489,15431,0.08300476,48000,32000,70000
+2309,SECONDARY TEACHER EDUCATION,Education,224262,129486,88917,5925,0.043755677,45000,34000,60000
+3702,STATISTICS AND DECISION SCIENCE,Computers & Mathematics,24806,18808,14468,1138,0.057054046,70000,43000,102000
+5002,ATMOSPHERIC SCIENCES AND METEOROLOGY,Physical Sciences,14051,11252,9098,429,0.036726308,60000,39000,90000
+6203,BUSINESS MANAGEMENT AND ADMINISTRATION,Business,3123510,2354398,1939384,147261,0.058865337,58000,39500,86000
+6211,HOSPITALITY MANAGEMENT,Business,200854,163393,122499,8862,0.051446983,49000,33000,70000
+6212,MANAGEMENT INFORMATION SYSTEMS AND STATISTICS,Business,156673,134478,118249,6186,0.043977137,72000,50000,100000
+6299,MISCELLANEOUS BUSINESS & MEDICAL ADMINISTRATION,Business,102753,77471,61603,4308,0.052678561,53000,36000,83000
+6402,HISTORY,Humanities & Liberal Arts,712509,478416,354163,33725,0.065851006,50000,35000,80000
+6403,UNITED STATES HISTORY,Humanities & Liberal Arts,17746,11887,8204,943,0.07349961,50000,39000,81000
+```
+
+---
+
+### Dataset: covid-icu-beds
+ORIGINAL:
+```
+MMSA,total_percent_at_risk,high_risk_per_ICU_bed,high_risk_per_hospital,icu_beds,hospitals,total_at_risk
+"San Juan-Carolina-Caguas, PR",52.88%,NA,NA,NA,NA,923725.203
+"Manhattan, KS",47.29%,4489.84875,8979.6975,8,4,35918.79
+"Hilton Head Island-Bluffton-Beaufort, SC",62.72%,3904.163571,36438.86,28,3,109316.58
+"Kahului-Wailuku-Lahaina, HI",59.13%,3860.557,19302.785,20,4,77211.14
+"Spartanburg, SC",66.12%,3786.115556,85187.6,45,2,170375.2
+"Charlotte-Concord-Gastonia, NC-SC",60.63%,2919.072935,65192.62889,402,18,1173467.32
+"St. Cloud, MN",54.67%,2022.670976,20732.3775,41,4,82929.51
+"Jacksonville, FL",65.10%,1578.970678,64079.89333,487,12,768958.72
+"Chicago-Naperville-Elgin, IL-IN-WI",56.02%,1548.761447,45614.71214,2474,84,3831635.82
+"Fargo, ND-MN",51.26%,870.3837838,48306.3,111,2,96612.6
+"Charleston, WV",75.97%,831.6897436,25948.72,156,5,129743.6
+"Duluth, MN-WI",60.34%,730.5231351,12286.07091,185,11,135146.78
+"Reno, NV",57.86%,638.8247432,42290.198,331,5,211450.99
+"Gainesville, FL",56.38%,621.4499524,65252.245,210,2,130504.49
+"Rochester, MN",54.72%,413.6677064,22544.89,218,4,90179.56
+```
+GENERATED:
+```
+MMSA,total_percent_at_risk,high_risk_per_ICU_bed,high_risk_per_hospital,icu_beds,hospitals,total_at_risk
+"Lincoln, NE",53.81%,1274.84037,27536.552,108,5,137682.76
+"Wilmington, DE-MD-NJ, Metropolitan Division",61.40%,2441.704685,69832.754,143,5,349163.77
+"Camden, NJ, Metropolitan Division",63.56%,2109.945288,77804.2325,295,8,622433.86
+"North Platte, NE",64.19%,944.2910526,17941.53,19,1,17941.53
+"Rochester, MN",54.72%,413.6677064,22544.89,218,4,90179.56
+"Albuquerque, NM",60.33%,3091.331014,71100.61333,138,6,426603.68
+"Worcester, MA-CT",58.26%,2472.280229,43264.904,175,10,432649.04
+"Greenville-Anderson-Mauldin, SC",62.84%,2198.10445,43962.089,200,10,439620.89
+"Colorado Springs, CO",55.96%,3251.603053,77225.5725,95,4,308902.29
+"Charleston-North Charleston, SC",61.97%,1713.245747,63104.55167,221,6,378627.31
+"Milwaukee-Waukesha-West Allis, WI",58.69%,1411.037416,44359.48875,503,16,709751.82
+"Gainesville, FL",56.38%,621.4499524,65252.245,210,2,130504.49
+"Augusta-Richmond County, GA-SC",65.67%,1016.301672,43410.6,299,7,303874.2
+"Kansas City, MO-KS",59.01%,1309.019106,28838.08758,727,33,951656.89
+"Claremont-Lebanon, NH-VT",63.34%,2016.79875,12548.97,56,9,112940.73
+```
+
+---
+
+### Dataset: dc-characters
+ORIGINAL:
+```
+page_id,name,urlslug,ID,ALIGN,EYE,HAIR,SEX,GSM,ALIVE,APPEARANCES,FIRST APPEARANCE,YEAR
+1422,Batman (Bruce Wayne),\/wiki\/Batman_(Bruce_Wayne),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,3093,"1939, May",1939
+23387,Superman (Clark Kent),\/wiki\/Superman_(Clark_Kent),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,2496,"1986, October",1986
+1458,Green Lantern (Hal Jordan),\/wiki\/Green_Lantern_(Hal_Jordan),Secret Identity,Good Characters,Brown Eyes,Brown Hair,Male Characters,,Living Characters,1565,"1959, October",1959
+1659,James Gordon (New Earth),\/wiki\/James_Gordon_(New_Earth),Public Identity,Good Characters,Brown Eyes,White Hair,Male Characters,,Living Characters,1316,"1987, February",1987
+1576,Richard Grayson (New Earth),\/wiki\/Richard_Grayson_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,1237,"1940, April",1940
+4899,Valentina Vostok (New Earth),\/wiki\/Valentina_Vostok_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Blond Hair,Female Characters,,Deceased Characters,79,"1977, September",1977
+44894,Myrra Rhodes (New Earth),\/wiki\/Myrra_Rhodes_(New_Earth),Secret Identity,Good Characters,,,Female Characters,,Living Characters,10,"1980, November",1980
+158717,"Jason Grant, Jr. (New Earth)","\/wiki\/Jason_Grant,_Jr._(New_Earth)",Public Identity,Good Characters,,Blond Hair,Male Characters,,Living Characters,4,"1970, February",1970
+380414,Sally Marsden (New Earth),\/wiki\/Sally_Marsden_(New_Earth),Public Identity,,Green Eyes,Red Hair,Female Characters,,Living Characters,2,"1998, May",1998
+194108,Timebomb (New Earth),\/wiki\/Timebomb_(New_Earth),Secret Identity,Bad Characters,,,Male Characters,,Living Characters,2,"1991, January",1991
+66302,Nadine West (New Earth),\/wiki\/Nadine_West_(New_Earth),Public Identity,Good Characters,,,Female Characters,,Living Characters,,,
+283475,Warren Harding (New Earth),\/wiki\/Warren_Harding_(New_Earth),Public Identity,Good Characters,,,Male Characters,,Living Characters,,,
+283478,William Harrison (New Earth),\/wiki\/William_Harrison_(New_Earth),Public Identity,Good Characters,,,Male Characters,,Living Characters,,,
+283471,William McKinley (New Earth),\/wiki\/William_McKinley_(New_Earth),Public Identity,Good Characters,,,Male Characters,,Living Characters,,,
+150660,Mookie (New Earth),\/wiki\/Mookie_(New_Earth),Public Identity,Bad Characters,Blue Eyes,Blond Hair,Male Characters,,Living Characters,,,
+```
+GENERATED:
+```
+page_id,name,urlslug,ID,ALIGN,EYE,HAIR,SEX,GSM,ALIVE,APPEARANCES,FIRST APPEARANCE,YEAR
+1800,Mortimer Drake (New Earth),\/wiki\/Mortimer_Drake_(New_Earth),Secret Identity,Bad Characters,Brown Eyes,,Male Characters,,Living Characters,3093,"1943, November",1984
+61650,Liana Kerzner (New Earth),\/wiki\/Liana_Kerzner_(New_Earth),,Neutral Characters,,Red Hair,Female Characters,,Living Characters,3093,"2008, November",1960
+2171,Knockout (New Earth),\/wiki\/Knockout_(New_Earth),,Bad Characters,,,Female Characters,,Living Characters,3034,"1994, February",1987
+22707,Joshua Barbazon (New Earth),\/wiki\/Joshua_Barbazon_(New_Earth),Public Identity,Good Characters,Blue Eyes,Blond Hair,Male Characters,,Living Characters,2506,1989,2013
+5841,Frostbite (New Earth),\/wiki\/Frostbite_(New_Earth),,Good Characters,,Blue Hair,Male Characters,,Living Characters,2365,"1997, June",1999
+128322,Todd Rice (New Earth),\/wiki\/Todd_Rice_(New_Earth),Public Identity,Good Characters,Brown Eyes,Brown Hair,Male Characters,,Living Characters,101,"1983, September",1949
+5119,Knockout (New Earth),\/wiki\/Knockout_(New_Earth),Secret Identity,Bad Characters,,Red Hair,Female Characters,,Living Characters,25,"1994, February",1971
+7106,Sigrid Nansen (New Earth),\/wiki\/Sigrid_Nansen_(New_Earth),Public Identity,Good Characters,,White Hair,Female Characters,,Living Characters,20,"1986, November",1990
+404010,Frostbite (New Earth),\/wiki\/Frostbite_(New_Earth),Secret Identity,Good Characters,Blue Eyes,,Male Characters,,Living Characters,19,"1997, June",2011
+56806,Ramsey Robinson (New Earth),\/wiki\/Ramsey_Robinson_(New_Earth),Secret Identity,Good Characters,Blue Eyes,,Male Characters,,Living Characters,8,"2004, November",2009
+189047,Daria Hernandez (New Earth),\/wiki\/Daria_Hernandez_(New_Earth),,Neutral Characters,,Brown Hair,Female Characters,,Living Characters,,"2003, July",2009
+133431,Achilles Warkiller (New Earth),\/wiki\/Achilles_Warkiller_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Blond Hair,Male Characters,,Living Characters,,"2009, May",1973
+4474,Mortimer Drake (New Earth),\/wiki\/Mortimer_Drake_(New_Earth),Secret Identity,Bad Characters,Brown Eyes,,Male Characters,,Living Characters,,"1943, November",1969
+2185,Knockout (New Earth),\/wiki\/Knockout_(New_Earth),,Bad Characters,Blue Eyes,Red Hair,Female Characters,,Living Characters,,"1994, February",2001
+190721,Katherine Kane (New Earth),\/wiki\/Katherine_Kane_(New_Earth),Secret Identity,Good Characters,Green Eyes,Red Hair,Female Characters,,Living Characters,,"2006, June",1996
+```
+
+---
+
+### Dataset: diamonds
+ORIGINAL:
+```
+"carat","cut","color","clarity","depth","table","price","x","y","z"
+0.23,"Ideal","E","SI2",61.5,55,326,3.95,3.98,2.43
+0.21,"Premium","E","SI1",59.8,61,326,3.89,3.84,2.31
+0.23,"Good","E","VS1",56.9,65,327,4.05,4.07,2.31
+0.29,"Premium","I","VS2",62.4,58,334,4.2,4.23,2.63
+0.31,"Good","J","SI2",63.3,58,335,4.34,4.35,2.75
+2.5,"Fair","G","I1",65.1,59,8711,8.55,8.39,5.53
+1.52,"Good","D","SI2",63.2,58,8868,7.25,7.31,4.6
+1.52,"Good","H","VS1",63.5,60,11804,7.24,7.28,4.61
+0.33,"Ideal","G","VVS2",63,57,965,4.42,4.38,2.77
+0.54,"Premium","E","VS2",60.7,56,1760,5.32,5.29,3.22
+0.72,"Ideal","D","SI1",60.8,57,2757,5.75,5.76,3.5
+0.72,"Good","D","SI1",63.1,55,2757,5.69,5.75,3.61
+0.7,"Very Good","D","SI1",62.8,60,2757,5.66,5.68,3.56
+0.86,"Premium","H","SI2",61,58,2757,6.15,6.12,3.74
+0.75,"Ideal","D","SI2",62.2,55,2757,5.83,5.87,3.64
+```
+GENERATED:
+```
+carat,cut,color,clarity,depth,table,price,x,y,z
+0.58,Ideal,G,VVS1,61.4,59.0,468,5.15,5.14,2.76
+0.48,Premium,E,VS2,62.2,61.0,5566,6.23,6.35,4.49
+0.31,Fair,E,I1,61.2,60.0,2099,9.04,4.96,5.1
+0.89,Ideal,E,VVS2,62.2,57.0,1228,5.68,7.38,2.88
+1.03,Premium,H,SI1,60.8,54.0,1602,5.6,5.21,3.9
+0.81,Very Good,E,VS2,61.8,55.0,9357,3.9,4.02,3.37
+0.2,Very Good,D,VS1,60.3,60.0,1253,4.9,6.9,4.2
+0.5,Very Good,G,SI2,60.5,59.0,1353,6.15,7.01,3.88
+0.74,Good,D,SI1,60.4,57.0,2555,6.06,5.06,3.62
+1.16,Ideal,G,SI2,60.2,59.0,546,7.33,4.96,2.97
+0.43,Very Good,G,VS1,61.9,59.0,1907,5.83,6.2,3.1
+1.04,Ideal,H,SI1,56.6,54.0,2513,5.48,5.73,3.36
+1.0,Premium,J,VS2,62.9,57.0,2373,4.06,5.63,2.91
+1.25,Ideal,G,SI2,61.1,66.0,1191,7.15,5.75,3.51
+0.7,Good,D,SI1,63.3,61.0,2786,6.01,5.22,3.05
+```
+
+---
+
+### Dataset: disasters
+ORIGINAL:
+```
+Entity,Year,Deaths
+All natural disasters,1900,1267360
+All natural disasters,1901,200018
+All natural disasters,1902,46037
+All natural disasters,1903,6506
+All natural disasters,1905,22758
+All natural disasters,1907,1325641
+Drought,1986,84
+Earthquake,1906,31966
+Mass movement (dry),2013,46
+Volcanic activity,1906,700
+Wildfire,2013,35
+Wildfire,2014,16
+Wildfire,2015,67
+Wildfire,2016,39
+Wildfire,2017,75
+```
+GENERATED:
+```
+Entity,Year,Deaths
+All natural disasters,1950,6728
+All natural disasters,2017,2087
+All natural disasters,1935,272817
+All natural disasters,1991,189707
+All natural disasters,1968,21461
+All natural disasters,2006,29893
+Earthquake,2011,20946
+Extreme temperature,2003,74698
+Landslide,1996,1155
+Wildfire,2016,39
+Wildfire,2014,16
+Wildfire,1984,17
+Wildfire,2013,35
+Wildfire,1978,2
+Wildfire,2006,13
+```
+
+---
+
+### Dataset: dots
+ORIGINAL:
+```
+align,choice,time,coherence,firing_rate
+dots,T1,-80,0.0,33.1899674031
+dots,T1,-80,3.2,31.6917255152
+dots,T1,-80,6.4,34.2798399644
+dots,T1,-80,12.8,32.6318742985
+dots,T1,-80,25.6,35.0604874577
+dots,T2,-80,0.0,34.9701072622
+dots,T2,640,6.4,37.8523264371
+sacc,T1,240,0.0,8.86454183267
+sacc,T1,240,25.6,9.93150684932
+sacc,T2,140,3.2,29.6439628483
+sacc,T2,300,3.2,33.2817337461
+sacc,T2,300,6.4,27.5839793282
+sacc,T2,300,12.8,28.5115303983
+sacc,T2,300,25.6,27.0098039216
+sacc,T2,300,51.2,30.9593023256
+```
+GENERATED:
+```
+align,choice,time,coherence,firing_rate
+dots,T2,600,3.2,38.9859711621
+dots,T1,620,3.2,49.6072463942
+dots,T1,300,25.6,53.9921770122
+dots,T1,280,6.4,47.6079465912
+dots,T1,440,6.4,52.8451380575
+dots,T1,360,6.4,50.4307958419
+dots,T1,600,3.2,50.4609948656
+sacc,T2,-180,12.8,35.0061872356
+sacc,T2,-400,6.4,40.9429357455
+sacc,T2,240,12.8,26.9916142558
+sacc,T1,220,0.0,8.71513944223
+sacc,T1,280,0.0,6.47410358566
+sacc,T2,-280,3.2,39.5680329223
+sacc,T2,280,3.2,30.4953560372
+sacc,T1,-560,3.2,44.6334707376
+```
+
+---
+
+### Dataset: dowjones
+ORIGINAL:
+```
+Date,Price
+1914-12-01,55.0
+1915-01-01,56.55
+1915-02-01,56.0
+1915-03-01,58.3
+1915-04-01,66.45
+1915-08-01,79.25
+1927-05-01,168.8
+1951-05-01,254.36
+1954-11-01,375.75
+1959-08-01,660.58
+1968-08-01,883.72
+1968-09-01,922.8
+1968-10-01,955.47
+1968-11-01,964.12
+1968-12-01,965.39
+```
+GENERATED:
+```
+Date,Price
+1914-12-01,46.85
+1914-12-31,46.85
+1915-01-30,120.72
+1915-03-01,108.56
+1915-03-31,46.85
+1917-05-19,46.85
+1960-10-30,428.43
+1961-12-24,688.08
+1965-03-08,350.92
+1966-09-29,595.61
+1967-10-24,464.06
+1967-11-23,705.7
+1967-12-23,719.47
+1968-01-22,643.52
+1968-02-21,534.28
+```

@@ -1,0 +1,30 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = ""
+min = 0.0
+max = 89.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "id"
+min = 1.0
+max = 30.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "pulse"
+min = 80.0
+max = 150.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = " <= pulse"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "id <= pulse"

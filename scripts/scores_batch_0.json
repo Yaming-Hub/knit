@@ -1,0 +1,92 @@
+[
+  {
+    "dataset": "aa-flight-paths",
+    "score": 34,
+    "reason": "Headers match, but many airport/coordinate pairings look random or impossible (for example self-routes and mismatched locations). Counts and ranges are only loosely plausible, so relationships between columns are weak."
+  },
+  {
+    "dataset": "airline-safety",
+    "score": 68,
+    "reason": "Schema and airline domain are preserved and the accident metrics are numerically plausible. However several values look inflated or duplicated, so distribution realism and cross-column consistency are only moderate."
+  },
+  {
+    "dataset": "airports",
+    "score": 26,
+    "reason": "Columns match, but many city/state/airport name combinations are nonsensical and several coordinates fall far outside realistic US airport locations. Structural format is fine, but domain fidelity is poor."
+  },
+  {
+    "dataset": "alcohol-by-country",
+    "score": 43,
+    "reason": "Country names are valid, but the alcohol values collapse to repeated high numbers and do not resemble the original ranking pattern. Domain is plausible, yet the distribution is much less realistic."
+  },
+  {
+    "dataset": "anscombe",
+    "score": 58,
+    "reason": "The JSON structure and core fields are correct and the values stay in a similar numeric range. But the hallmark per-series relationships of Anscombe's quartet are not well preserved, with uneven series counts and altered X/Y structure."
+  },
+  {
+    "dataset": "apple-stock-2014",
+    "score": 28,
+    "reason": "Format matches, but the generated dates include duplicates and likely non-trading days, and prices jump well outside the original band. Temporal structure and distribution fidelity are weak."
+  },
+  {
+    "dataset": "attention",
+    "score": 42,
+    "reason": "Column layout is preserved and the attention labels remain in-domain. Still, subject/index values are duplicated, solutions no longer follow the original pattern, and the relationships among fields are noticeably distorted."
+  },
+  {
+    "dataset": "avengers",
+    "score": 10,
+    "reason": "Although the column count is preserved, many fields are garbled with tab contamination, empty status values, and nonsensical name combinations. This badly breaks categorical fidelity and cross-column relationships."
+  },
+  {
+    "dataset": "bad-drivers",
+    "score": 74,
+    "reason": "Structure is strong and the state names plus most numeric ranges stay believable for the domain. A few duplicates and outliers remain, but overall the synthetic table is fairly close."
+  },
+  {
+    "dataset": "barley",
+    "score": 81,
+    "reason": "The generated data preserves the expected fields, row volume, site names, varieties, and year coverage very well. Yield values look realistic, with only minor evidence that the joint distribution differs from the original."
+  },
+  {
+    "dataset": "biopics",
+    "score": 18,
+    "reason": "The schema is retained, but many text fields are clearly garbled or merged across columns, producing unrealistic directors, subjects, and cast names. Domain plausibility and column relationships are badly degraded."
+  },
+  {
+    "dataset": "bob-ross",
+    "score": 60,
+    "reason": "Episode formatting and the wide binary feature structure are preserved well, and the 0/1 fields look plausible. The main weakness is the title text, which is obviously garbled and concatenated from multiple phrases."
+  },
+  {
+    "dataset": "burtin",
+    "score": 24,
+    "reason": "Numeric antibiotic values look plausible and the overall shape matches, but the Bacteria field absorbs gram-stain text and the Gram_Staining column is null throughout. That breaks an important categorical relationship in the dataset."
+  },
+  {
+    "dataset": "candy-power-ranking",
+    "score": 55,
+    "reason": "Columns and candy-name domain are correct, and numeric/binary formatting is consistent. However several trait combinations look implausible for the named candies, so feature relationships are only partly preserved."
+  },
+  {
+    "dataset": "car-crashes",
+    "score": 69,
+    "reason": "The table structure, abbreviations, and most numeric ranges remain credible, and the synthetic sample looks broadly like the original domain. Some variable relationships drift, but overall fidelity is decent."
+  },
+  {
+    "dataset": "cars-json",
+    "score": 52,
+    "reason": "Keys, row count, and broad automotive domain are preserved, and years/origins remain plausible. But many vehicle attribute combinations are unrealistic, with odd cylinder counts and repeated models reducing relational fidelity."
+  },
+  {
+    "dataset": "co2-concentration",
+    "score": 22,
+    "reason": "Schema matches, but the generated dates are irregular and the CO2 levels are far above the original 1958 range. The time-series distribution and temporal structure are therefore poor."
+  },
+  {
+    "dataset": "college-majors-all",
+    "score": 37,
+    "reason": "The columns are correct, but many majors are paired with the wrong category and some employment-related fields violate basic consistency such as full-time counts exceeding employed counts. Structural format is right, but semantics are weak."
+  }
+]

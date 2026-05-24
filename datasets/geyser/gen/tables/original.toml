@@ -1,0 +1,111 @@
+[table]
+name = "original"
+count = 272
+
+[table.stats]
+source_rows = 272
+
+[[table.scaling.custom]]
+name = "kind"
+field = "kind"
+cardinality = 2
+
+[[columns]]
+name = "duration"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "kind"
+file = "original__kind_duration_waiting.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 126
+null_rate = 0.0
+min = 1.6
+max = 5.1
+mean = 3.4877830882352945
+std = 1.1413712511052077
+
+[columns.stats.percentiles]
+p25 = 2.167
+p50 = 4.0
+p75 = 4.45
+p95 = 4.817
+p99 = 5.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "waiting"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "kind"
+file = "original__kind_duration_waiting.tsv"
+column = 2
+
+[columns.stats]
+distinct_count = 51
+null_rate = 0.0
+min = 43.0
+max = 96.0
+mean = 70.8970588235294
+std = 13.59497378999939
+
+[columns.stats.percentiles]
+p25 = 58.0
+p50 = 76.0
+p75 = 82.0
+p95 = 89.0
+p99 = 93.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "kind"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_kind.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 4
+max_length = 5
+avg_length = 4.367647058823529
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[constraints]]
+type = "range"
+field = "duration"
+min = 1.6
+max = 5.1
+
+[[constraints]]
+type = "range"
+field = "waiting"
+min = 43.0
+max = 96.0
+
+[[constraints]]
+type = "check"
+expr = "duration <= waiting"

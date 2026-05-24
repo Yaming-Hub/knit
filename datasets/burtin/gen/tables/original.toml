@@ -1,0 +1,205 @@
+[table]
+name = "original"
+count = 16
+
+[table.stats]
+source_rows = 16
+
+[[table.scaling.custom]]
+name = "Bacteria"
+field = "Bacteria"
+cardinality = 16
+
+[[table.scaling.custom]]
+name = "Gram_Staining"
+field = "Gram_Staining"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "Genus"
+field = "Genus"
+cardinality = 4
+
+[table.sort_by]
+column = "Bacteria"
+direction = "asc"
+
+[[columns]]
+name = "Bacteria"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 16
+
+[columns.stats]
+distinct_count = 16
+null_rate = 0.0
+min_length = 16
+max_length = 31
+avg_length = 21.375
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "Penicillin"
+data_type = "float"
+nullable = false
+precision = 3
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 16
+
+[columns.stats]
+distinct_count = 11
+null_rate = 0.0
+min = 0.001
+max = 870.0
+mean = 217.8780625
+std = 373.49506012805915
+
+[columns.stats.percentiles]
+p25 = 0.007
+p50 = 1.0
+p75 = 100.0
+p95 = 850.0
+p99 = 870.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Streptomycin"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 16
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 0.01
+max = 14.0
+mean = 3.065
+std = 4.5026910472146175
+
+[columns.stats.percentiles]
+p25 = 0.4
+p50 = 1.0
+p75 = 2.0
+p95 = 11.0
+p99 = 14.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Neomycin"
+data_type = "float"
+nullable = false
+precision = 3
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 16
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 0.001
+max = 40.0
+mean = 4.0891874999999995
+std = 10.13316450880474
+
+[columns.stats.percentiles]
+p25 = 0.02
+p50 = 0.1
+p75 = 1.6
+p95 = 10.0
+p99 = 40.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Gram_Staining"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 16
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 8
+max_length = 8
+avg_length = 8.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "Genus"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 16
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.0
+min_length = 5
+max_length = 14
+avg_length = 8.25
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[constraints]]
+type = "range"
+field = "Penicillin"
+min = 0.001
+max = 870.0
+
+[[constraints]]
+type = "range"
+field = "Streptomycin"
+min = 0.01
+max = 14.0
+
+[[constraints]]
+type = "range"
+field = "Neomycin"
+min = 0.001
+max = 40.0

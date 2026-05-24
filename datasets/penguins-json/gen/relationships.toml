@@ -1,0 +1,57 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Beak Length (mm)"
+min = 32.1
+max = 59.6
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Beak Depth (mm)"
+min = 13.1
+max = 21.5
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Flipper Length (mm)"
+min = 172.0
+max = 231.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Body Mass (g)"
+min = 2700.0
+max = 6300.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Beak Depth (mm) <= Beak Length (mm)"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Beak Length (mm) <= Flipper Length (mm)"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Beak Length (mm) <= Body Mass (g)"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Beak Depth (mm) <= Flipper Length (mm)"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Beak Depth (mm) <= Body Mass (g)"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Flipper Length (mm) <= Body Mass (g)"

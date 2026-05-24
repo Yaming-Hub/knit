@@ -1,0 +1,197 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "spirit_servings",
+    "beer_servings",
+]
+matrix = [
+    [
+    1.0,
+    0.45881887413938227,
+],
+    [
+    0.45881887413938227,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "spirit_servings",
+    "beer_servings",
+]
+matrix = [
+    [
+    1.0,
+    0.6203809806528146,
+],
+    [
+    0.6203809806528146,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "spirit_servings",
+    "wine_servings",
+]
+matrix = [
+    [
+    1.0,
+    0.554263740251065,
+],
+    [
+    0.554263740251065,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "spirit_servings",
+    "total_litres_of_pure_alcohol",
+]
+matrix = [
+    [
+    1.0,
+    0.6549681750838595,
+],
+    [
+    0.6549681750838595,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "spirit_servings",
+    "total_litres_of_pure_alcohol",
+]
+matrix = [
+    [
+    1.0,
+    0.7243814697578975,
+],
+    [
+    0.7243814697578975,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "beer_servings",
+    "wine_servings",
+]
+matrix = [
+    [
+    1.0,
+    0.5271716935065214,
+],
+    [
+    0.5271716935065214,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "beer_servings",
+    "wine_servings",
+]
+matrix = [
+    [
+    1.0,
+    0.716275424269424,
+],
+    [
+    0.716275424269424,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "beer_servings",
+    "total_litres_of_pure_alcohol",
+]
+matrix = [
+    [
+    1.0,
+    0.8358386279352705,
+],
+    [
+    0.8358386279352705,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "beer_servings",
+    "total_litres_of_pure_alcohol",
+]
+matrix = [
+    [
+    1.0,
+    0.8763145215917296,
+],
+    [
+    0.8763145215917296,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "wine_servings",
+    "total_litres_of_pure_alcohol",
+]
+matrix = [
+    [
+    1.0,
+    0.6675983418034831,
+],
+    [
+    0.6675983418034831,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "wine_servings",
+    "total_litres_of_pure_alcohol",
+]
+matrix = [
+    [
+    1.0,
+    0.7522325629955219,
+],
+    [
+    0.7522325629955219,
+    1.0,
+],
+]
+conditional = []

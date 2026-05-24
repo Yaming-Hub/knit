@@ -1,0 +1,413 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "ShareWomen",
+]
+matrix = [
+    [
+    1.0,
+    0.35435313226133974,
+],
+    [
+    0.35435313226133974,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "ShareWomen",
+]
+matrix = [
+    [
+    1.0,
+    0.5383185235816815,
+],
+    [
+    0.5383185235816815,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "Men",
+]
+matrix = [
+    [
+    1.0,
+    0.5148989840649927,
+],
+    [
+    0.5148989840649927,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "Men",
+]
+matrix = [
+    [
+    1.0,
+    0.7119343814080656,
+],
+    [
+    0.7119343814080656,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "Rank",
+]
+matrix = [
+    [
+    1.0,
+    0.42660287081339715,
+],
+    [
+    0.42660287081339715,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "Total",
+]
+matrix = [
+    [
+    1.0,
+    0.9097514637152169,
+],
+    [
+    0.9097514637152169,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "Total",
+]
+matrix = [
+    [
+    1.0,
+    0.9360765550239234,
+],
+    [
+    0.9360765550239234,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Women",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.4182912814524178,
+],
+    [
+    -0.4182912814524178,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ShareWomen",
+    "Rank",
+]
+matrix = [
+    [
+    1.0,
+    0.6468688721705917,
+],
+    [
+    0.6468688721705917,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ShareWomen",
+    "Rank",
+]
+matrix = [
+    [
+    1.0,
+    0.6685440874914559,
+],
+    [
+    0.6685440874914559,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ShareWomen",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.5825887161066744,
+],
+    [
+    -0.5825887161066744,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ShareWomen",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.6409536028620191,
+],
+    [
+    -0.6409536028620191,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ShareWomen",
+    "Major_code",
+]
+matrix = [
+    [
+    1.0,
+    0.748909006056308,
+],
+    [
+    0.748909006056308,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "ShareWomen",
+    "Major_code",
+]
+matrix = [
+    [
+    1.0,
+    0.6556390977443609,
+],
+    [
+    0.6556390977443609,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Men",
+    "Total",
+]
+matrix = [
+    [
+    1.0,
+    0.8243206398399399,
+],
+    [
+    0.8243206398399399,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Men",
+    "Total",
+]
+matrix = [
+    [
+    1.0,
+    0.888010936431989,
+],
+    [
+    0.888010936431989,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.8893016487576588,
+],
+    [
+    -0.8893016487576588,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
+    "Median",
+]
+matrix = [
+    [
+    1.0,
+    -0.9982349426280002,
+],
+    [
+    -0.9982349426280002,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
+    "Major_code",
+]
+matrix = [
+    [
+    1.0,
+    0.49336601552053094,
+],
+    [
+    0.49336601552053094,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Rank",
+    "Major_code",
+]
+matrix = [
+    [
+    1.0,
+    0.46518113465481886,
+],
+    [
+    0.46518113465481886,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Median",
+    "Major_code",
+]
+matrix = [
+    [
+    1.0,
+    -0.42216371681168535,
+],
+    [
+    -0.42216371681168535,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Median",
+    "Major_code",
+]
+matrix = [
+    [
+    1.0,
+    -0.4496795612156754,
+],
+    [
+    -0.4496795612156754,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "Major",
+    "Major_category",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999984,
+],
+    [
+    0.9999999999999984,
+    1.0,
+],
+]
+conditional = []

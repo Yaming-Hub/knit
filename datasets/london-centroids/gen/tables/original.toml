@@ -1,0 +1,107 @@
+[table]
+name = "original"
+count = 33
+
+[table.stats]
+source_rows = 33
+
+[[columns]]
+name = "name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_name.dict.txt"
+expansion = "shuffle"
+
+[columns.stats]
+distinct_count = 33
+null_rate = 0.0
+min_length = 5
+max_length = 22
+avg_length = 10.06060606060606
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "cx"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "name"
+file = "original__name_cx_cy.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 33
+null_rate = 0.0
+min = -0.4456619192134244
+max = 0.22111695897456907
+mean = -0.1196699856867176
+std = 0.15786634751663797
+
+[columns.stats.percentiles]
+p25 = -0.2100178905687616
+p50 = -0.10747319126297968
+p75 = -0.020251210147097444
+p95 = 0.13352186486629006
+p99 = 0.22111695897456907
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "cy"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "name"
+file = "original__name_cx_cy.tsv"
+column = 2
+
+[columns.stats]
+distinct_count = 33
+null_rate = 0.0
+min = 51.355317416374
+max = 51.650991897325454
+mean = 51.504154916134055
+std = 0.07528833198926718
+
+[columns.stats.percentiles]
+p25 = 51.45307915598091
+p50 = 51.515056063777294
+p75 = 51.54976532427057
+p95 = 51.59771852185307
+p99 = 51.650991897325454
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "cx"
+min = -0.4456619192134244
+max = 0.22111695897456907
+
+[[constraints]]
+type = "range"
+field = "cy"
+min = 51.355317416374
+max = 51.650991897325454
+
+[[constraints]]
+type = "check"
+expr = "cx <= cy"

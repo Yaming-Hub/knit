@@ -1,0 +1,92 @@
+[
+  {
+    "dataset": "nq-efficientqa-dev-noann",
+    "score": 92,
+    "reason": "Single question column matches perfectly; generated rows are fluent open-domain questions with similar length and format, though they do not mirror the original topical mix."
+  },
+  {
+    "dataset": "nq-efficientqa-sample",
+    "score": 70,
+    "reason": "Question/answer schema and formatting match, and values look like valid QA content, but many answers are clearly mismatched to their questions so column relationships are weak."
+  },
+  {
+    "dataset": "nq-efficientqa-test",
+    "score": 56,
+    "reason": "All annotation fields are present and formatted correctly, but many answers and prediction lists are semantically unrelated to the questions, weakening fidelity across columns."
+  },
+  {
+    "dataset": "nq-efficientqa-test-noann",
+    "score": 93,
+    "reason": "This is a one-column question dataset and the synthetic rows stay in the same open-domain query style with matching structure and row count."
+  },
+  {
+    "dataset": "nq-open-dev",
+    "score": 64,
+    "reason": "Schema and answer-list formatting match, but many synthetic answers are obviously unrelated to the paired questions, so realism is acceptable while QA relationships are poor."
+  },
+  {
+    "dataset": "nq-open-train",
+    "score": 68,
+    "reason": "Generated questions and answer lists look like the same dataset family, but most question-answer pairings are not coherent even though the overall structure is preserved."
+  },
+  {
+    "dataset": "obesity",
+    "score": 79,
+    "reason": "Columns and numeric ranges are close to the source, and state abbreviations stay in-domain, but duplicate states and sequential ids break the original id-state relationship."
+  },
+  {
+    "dataset": "ohlc",
+    "score": 68,
+    "reason": "Financial columns, value ranges, and return magnitudes look plausible, but duplicate dates, some OHLC consistency violations, and extra signal values reduce structural fidelity."
+  },
+  {
+    "dataset": "penguins",
+    "score": 82,
+    "reason": "CSV schema, categories, and overall body-mass range are strong, but the generated Adelie/Torgersen measurements drift high enough to create less realistic species-specific relationships."
+  },
+  {
+    "dataset": "penguins-json",
+    "score": 78,
+    "reason": "JSON schema and penguin-domain values are strong, but species-island combinations are frequently invalid and a few sex values are missing or malformed."
+  },
+  {
+    "dataset": "piqa-test",
+    "score": 48,
+    "reason": "Goal/solution columns and text lengths are preserved, but many synthetic solutions are garbled or unrelated to the stated goal, so practical coherence is low."
+  },
+  {
+    "dataset": "piqa-train",
+    "score": 45,
+    "reason": "The format is correct, but the generated goals and solutions often mix unrelated domains and produce nonsensical instruction pairs, badly weakening realism."
+  },
+  {
+    "dataset": "piqa-valid",
+    "score": 47,
+    "reason": "Schema fidelity is fine, yet many examples contain implausible or mismatched actions for the goal, so cross-column consistency is poor."
+  },
+  {
+    "dataset": "planets",
+    "score": 88,
+    "reason": "Column structure is preserved and numeric/date ranges are realistic for exoplanet records; the synthetic data stays in-domain with only moderate distribution drift."
+  },
+  {
+    "dataset": "population",
+    "score": 62,
+    "reason": "The fields and broad demographic domain are correct, but duplicate year-age-sex combinations and inflated people counts hurt structural and relational fidelity."
+  },
+  {
+    "dataset": "population-engineers-hurricanes",
+    "score": 60,
+    "reason": "Columns and basic numeric scales are plausible, but state-level combinations are often unrealistic, with duplicated states and clearly wrong population-hurricane pairings."
+  },
+  {
+    "dataset": "recent-grads",
+    "score": 66,
+    "reason": "The wide tabular schema is preserved and many numeric ranges are plausible, but major/category pairings and key numeric relationships like Men+Women≈Total often break."
+  },
+  {
+    "dataset": "seaice",
+    "score": 66,
+    "reason": "Date and extent fields match and values stay numeric, but the January trend is much noisier than the source, with duplicate dates and implausibly low extents."
+  }
+]

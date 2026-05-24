@@ -1,0 +1,52 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "year"
+min = 1850.0
+max = 2000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "age"
+min = 0.0
+max = 90.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "sex"
+min = 1.0
+max = 2.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "people"
+min = 5259.0
+max = 11635647.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "age <= year"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "sex <= year"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "year <= people"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "age <= people"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "sex <= people"

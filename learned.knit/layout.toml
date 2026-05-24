@@ -1,0 +1,36 @@
+companions = [
+    "blueprint.knit.toml",
+    'gen\correlations.toml',
+    'gen\knit.toml',
+    'gen\layout.toml',
+    'gen\relationships.toml',
+    'gen\tables\original.toml',
+    "original_Major.dict.txt",
+    'test_learn.knit\correlations.toml',
+    'test_learn.knit\knit.toml',
+    'test_learn.knit\layout.toml',
+    'test_learn.knit\original_Major.dict.txt',
+    'test_learn.knit\relationships.toml',
+    'test_learn.knit\tables\original.toml',
+]
+
+[[folders]]
+table = "original__fullrow"
+
+[[folders]]
+table = "women-stem_original"
+
+[[folders]]
+table = "out_original"
+
+[[folders]]
+table = "test_output_original"
+
+[[folders]]
+table = "test_output2_original"
+
+[[folders]]
+table = "test_output3_original"
+
+[[folders]]
+table = "test_output4_original"

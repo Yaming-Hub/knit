@@ -1,0 +1,212 @@
+[table]
+name = "original"
+count = 1461
+
+[table.stats]
+source_rows = 1461
+
+[[table.scaling.custom]]
+name = "weather"
+field = "weather"
+cardinality = 5
+
+[table.sort_by]
+column = "date"
+direction = "asc"
+
+[[columns]]
+name = "date"
+data_type = "date"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 1461
+
+[columns.stats]
+null_rate = 0.0
+min_temporal = "2012-01-01T00:00:00"
+max_temporal = "2015-12-31T00:00:00"
+
+[columns.traits]
+semantic = "timestamp"
+
+[[columns]]
+name = "precipitation"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 1461
+
+[columns.stats]
+distinct_count = 111
+null_rate = 0.0
+min = 0.0
+max = 55.9
+mean = 3.0294318959616726
+std = 6.680194322314735
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 2.8
+p95 = 17.0
+p99 = 32.3
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "temp_max"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 1461
+
+[columns.stats]
+distinct_count = 67
+null_rate = 0.0
+min = -1.6
+max = 35.6
+mean = 16.43908281998629
+std = 7.349758097360182
+
+[columns.stats.percentiles]
+p25 = 10.6
+p50 = 15.6
+p75 = 22.2
+p95 = 28.9
+p99 = 33.3
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "temp_min"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 1461
+
+[columns.stats]
+distinct_count = 55
+null_rate = 0.0
+min = -7.1
+max = 18.3
+mean = 8.2347707049966
+std = 5.023004179961281
+
+[columns.stats.percentiles]
+p25 = 4.4
+p50 = 8.3
+p75 = 12.2
+p95 = 15.6
+p99 = 17.2
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "wind"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 1461
+
+[columns.stats]
+distinct_count = 79
+null_rate = 0.0
+min = 0.4
+max = 9.5
+mean = 3.2411362080766537
+std = 1.4378250588746158
+
+[columns.stats.percentiles]
+p25 = 2.2
+p50 = 3.0
+p75 = 4.0
+p95 = 6.0
+p99 = 7.5
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "weather"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 1461
+
+[columns.stats]
+distinct_count = 5
+null_rate = 0.0
+min_length = 3
+max_length = 7
+avg_length = 3.6016427104722792
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[constraints]]
+type = "range"
+field = "precipitation"
+min = 0.0
+max = 55.9
+
+[[constraints]]
+type = "range"
+field = "temp_max"
+min = -1.6
+max = 35.6
+
+[[constraints]]
+type = "range"
+field = "temp_min"
+min = -7.1
+max = 18.3
+
+[[constraints]]
+type = "range"
+field = "wind"
+min = 0.4
+max = 9.5
+
+[[constraints]]
+type = "check"
+expr = "temp_min <= temp_max"

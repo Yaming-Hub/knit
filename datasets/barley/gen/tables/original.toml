@@ -1,0 +1,138 @@
+[table]
+name = "original"
+count = 120
+
+[table.stats]
+source_rows = 120
+
+[[table.scaling.custom]]
+name = "year"
+field = "year"
+cardinality = 2
+
+[table.sort_by]
+column = "year"
+direction = "asc"
+
+[[columns]]
+name = "yield"
+data_type = "float"
+nullable = false
+precision = 5
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 120
+
+[columns.stats]
+distinct_count = 114
+null_rate = 0.0
+min = 14.43333
+max = 65.7667
+mean = 34.420555333333326
+std = 10.334706218846058
+
+[columns.stats.percentiles]
+p25 = 26.9
+p50 = 32.96667
+p75 = 41.33333
+p95 = 50.23333
+p99 = 63.8333
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "variety"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 120
+
+[columns.stats]
+distinct_count = 10
+null_rate = 0.0
+min_length = 5
+max_length = 16
+avg_length = 8.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 120
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 1931.0
+max = 1932.0
+mean = 1931.5
+std = 0.5020964452534338
+
+[columns.stats.percentiles]
+p25 = 1931.0
+p50 = 1932.0
+p75 = 1932.0
+p95 = 1932.0
+p99 = 1932.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "site"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 120
+
+[columns.stats]
+distinct_count = 6
+null_rate = 0.0
+min_length = 6
+max_length = 15
+avg_length = 9.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[constraints]]
+type = "range"
+field = "yield"
+min = 14.43333
+max = 65.7667
+
+[[constraints]]
+type = "range"
+field = "year"
+min = 1931.0
+max = 1932.0
+
+[[constraints]]
+type = "check"
+expr = "yield <= year"

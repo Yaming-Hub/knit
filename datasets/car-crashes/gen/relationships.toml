@@ -1,0 +1,133 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "total"
+min = 5.9
+max = 23.9
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "speeding"
+min = 1.7919999999999998
+max = 9.45
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "alcohol"
+min = 1.5930000000000002
+max = 10.038
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "not_distracted"
+min = 1.76
+max = 23.660999999999998
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "no_previous"
+min = 5.9
+max = 21.28
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "ins_premium"
+min = 641.96
+max = 1301.52
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "ins_losses"
+min = 82.75
+max = 194.78
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "speeding <= total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "alcohol <= total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "not_distracted <= total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "no_previous <= total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "total <= ins_premium"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "total <= ins_losses"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "speeding <= no_previous"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "speeding <= ins_premium"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "speeding <= ins_losses"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "alcohol <= no_previous"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "alcohol <= ins_premium"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "alcohol <= ins_losses"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "not_distracted <= ins_premium"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "not_distracted <= ins_losses"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "no_previous <= ins_premium"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "no_previous <= ins_losses"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ins_losses <= ins_premium"

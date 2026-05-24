@@ -1,0 +1,156 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Major_code"
+min = 0.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Total"
+min = 2396.0
+max = 3123510.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Employed"
+min = 1492.0
+max = 2354398.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Employed_full_time_year_round"
+min = 1093.0
+max = 1939384.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Unemployed"
+min = 0.0
+max = 147261.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Unemployment_rate"
+min = 0.0
+max = 0.156147487
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Median"
+min = 35000.0
+max = 125000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "P25th"
+min = 24900.0
+max = 78000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "P75th"
+min = 45800.0
+max = 210000.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Employed <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Employed_full_time_year_round <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployed <= Employed_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Employed_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Unemployed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= P25th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Unemployment_rate <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "P25th <= Median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Median <= P75th"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "P25th <= P75th"

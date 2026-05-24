@@ -1,0 +1,161 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.33296265394890956,
+],
+    [
+    0.33296265394890956,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.33296265394890956,
+],
+    [
+    0.33296265394890956,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "score",
+]
+matrix = [
+    [
+    1.0,
+    0.43794215125616337,
+],
+    [
+    0.43794215125616337,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "score",
+]
+matrix = [
+    [
+    1.0,
+    0.4150852522999622,
+],
+    [
+    0.4150852522999622,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "solutions",
+]
+matrix = [
+    [
+    1.0,
+    0.9429400145689537,
+],
+    [
+    0.9429400145689537,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "",
+    "solutions",
+]
+matrix = [
+    [
+    1.0,
+    0.9429400145689538,
+],
+    [
+    0.9429400145689538,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject",
+    "score",
+]
+matrix = [
+    [
+    1.0,
+    0.45250978106401496,
+],
+    [
+    0.45250978106401496,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject",
+    "score",
+]
+matrix = [
+    [
+    1.0,
+    0.4572296914804239,
+],
+    [
+    0.4572296914804239,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "score",
+    "solutions",
+]
+matrix = [
+    [
+    1.0,
+    0.3046570186615426,
+],
+    [
+    0.3046570186615426,
+    1.0,
+],
+]
+conditional = []

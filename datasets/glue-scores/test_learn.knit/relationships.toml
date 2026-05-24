@@ -1,0 +1,18 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Year"
+min = 2017.0
+max = 2019.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Score"
+min = 11.6
+max = 97.8
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Score <= Year"

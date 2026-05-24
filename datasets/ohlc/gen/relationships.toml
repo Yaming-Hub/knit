@@ -1,0 +1,79 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "open"
+min = 23.71
+max = 31.54
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "high"
+min = 23.87
+max = 33.05
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "low"
+min = 23.0
+max = 30.64
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "close"
+min = 23.09
+max = 32.68
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "ret"
+min = -10.8433734939759
+max = 15.4907975460123
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "open <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= open"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ret <= open"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "close <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ret <= high"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "low <= close"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ret <= low"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "ret <= close"

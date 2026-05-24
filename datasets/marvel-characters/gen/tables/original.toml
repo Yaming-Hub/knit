@@ -1,0 +1,376 @@
+[table]
+name = "original"
+count = 16376
+
+[table.stats]
+source_rows = 16376
+
+[[table.scaling.custom]]
+name = "GSM"
+field = "GSM"
+cardinality = 6
+
+[table.sort_by]
+column = "APPEARANCES"
+direction = "desc"
+
+[[columns]]
+name = "page_id"
+data_type = "int"
+nullable = false
+primary_key = true
+
+[columns.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[columns.stats]
+distinct_count = 16376
+null_rate = 0.0
+min = 1025.0
+max = 755278.0
+mean = 300232.08237664873
+std = 253460.40339914995
+
+[columns.stats.percentiles]
+p25 = 28310.0
+p50 = 282579.0
+p75 = 509075.0
+p95 = 709670.0
+p99 = 749549.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 16376
+null_rate = 0.0
+min_length = 4
+max_length = 69
+avg_length = 24.328224230581338
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "urlslug"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_urlslug.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 16376
+null_rate = 0.0
+min_length = 6
+max_length = 71
+avg_length = 26.38495359062042
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "ID"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 6
+
+[columns.nullable]
+probability = 0.23021494870542256
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.23021494870542256
+min_length = 15
+max_length = 29
+avg_length = 15.158495954307472
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "low"
+
+[[columns]]
+name = "ALIGN"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 8
+
+[columns.nullable]
+probability = 0.17171470444553005
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.17171470444553005
+min_length = 14
+max_length = 18
+avg_length = 14.992922441757594
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "low"
+
+[[columns]]
+name = "EYE"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 4
+
+[columns.nullable]
+probability = 0.5964215925744992
+
+[columns.stats]
+distinct_count = 24
+null_rate = 0.5964215925744992
+min_length = 7
+max_length = 15
+avg_length = 9.600544711756696
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "low"
+
+[[columns]]
+name = "HAIR"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 3
+
+[columns.nullable]
+probability = 0.26038104543234003
+
+[columns.stats]
+distinct_count = 25
+null_rate = 0.26038104543234003
+min_length = 4
+max_length = 21
+avg_length = 9.216479524438574
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "low"
+
+[[columns]]
+name = "SEX"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 7
+
+[columns.nullable]
+probability = 0.052149487054225695
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.052149487054225695
+min_length = 15
+max_length = 22
+avg_length = 15.503994330627496
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "low"
+
+[[columns]]
+name = "GSM"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 5
+
+[columns.nullable]
+probability = 0.9945041524181729
+
+[columns.stats]
+distinct_count = 6
+null_rate = 0.9945041524181729
+min_length = 13
+max_length = 22
+avg_length = 20.511111111111113
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "medium"
+
+[[columns]]
+name = "ALIVE"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 9
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.00018319491939423546
+min_length = 17
+max_length = 19
+avg_length = 17.45990349966408
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "low"
+
+[[columns]]
+name = "APPEARANCES"
+data_type = "int"
+
+[columns.generator]
+type = "distribution"
+kind = "pareto"
+round = true
+
+[columns.generator.params]
+scale = 1.0
+shape = 0.7455135294288417
+
+[columns.nullable]
+probability = 0.06692721055202736
+
+[columns.stats]
+distinct_count = 358
+null_rate = 0.06692721055202736
+min = 1.0
+max = 4043.0
+mean = 17.033376963350786
+std = 96.3729593753336
+
+[columns.stats.percentiles]
+p25 = 1.0
+p50 = 3.0
+p75 = 8.0
+p95 = 49.0
+p99 = 260.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "FIRST APPEARANCE"
+data_type = "string"
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "urlslug"
+file = "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE.tsv"
+column = 2
+
+[columns.nullable]
+probability = 0.04976795310210064
+
+[columns.stats]
+distinct_count = 832
+null_rate = 0.04976795310210064
+min_length = 6
+max_length = 6
+avg_length = 6.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "medium"
+
+[[columns]]
+name = "Year"
+data_type = "int"
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 2013.0
+min = 1939.0
+
+[columns.nullable]
+probability = 0.04976795310210064
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.04976795310210064
+min = 1939.0
+max = 2013.0
+mean = 1984.9518025833815
+std = 19.66357118164269
+
+[columns.stats.percentiles]
+p25 = 1974.0
+p50 = 1990.0
+p75 = 2000.0
+p95 = 2010.0
+p99 = 2013.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "page_id"
+min = 1025.0
+max = 755278.0
+
+[[constraints]]
+type = "range"
+field = "APPEARANCES"
+min = 1.0
+max = 4043.0
+
+[[constraints]]
+type = "range"
+field = "Year"
+min = 1939.0
+max = 2013.0

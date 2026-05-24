@@ -1,0 +1,6 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "net_generation"
+min = 1437.0
+max = 42750.0

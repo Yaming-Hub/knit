@@ -1,0 +1,107 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "city",
+    "airport",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "city",
+    "state",
+]
+matrix = [
+    [
+    1.0,
+    0.97952423980725,
+],
+    [
+    0.97952423980725,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "city",
+    "iata",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "airport",
+    "state",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "airport",
+    "iata",
+]
+matrix = [
+    [
+    1.0,
+    0.99999999999981,
+],
+    [
+    0.99999999999981,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "state",
+    "iata",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []

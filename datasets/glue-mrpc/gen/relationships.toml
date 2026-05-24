@@ -1,0 +1,18 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "label"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "idx"
+min = 9.0
+max = 4053.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "label <= idx"

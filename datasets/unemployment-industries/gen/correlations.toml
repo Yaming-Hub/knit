@@ -1,0 +1,35 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "count",
+    "rate",
+]
+matrix = [
+    [
+    1.0,
+    0.4411036437638866,
+],
+    [
+    0.4411036437638866,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "count",
+    "rate",
+]
+matrix = [
+    [
+    1.0,
+    0.3599496572211498,
+],
+    [
+    0.3599496572211498,
+    1.0,
+],
+]
+conditional = []

@@ -1,0 +1,156 @@
+[table]
+name = "original"
+count = 3228
+
+[table.stats]
+source_rows = 3228
+
+[table.sort_by]
+column = "pop"
+direction = "desc"
+
+[[columns]]
+name = "name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 3228
+
+[columns.stats]
+distinct_count = 2741
+null_rate = 0.0
+min_length = 4
+max_length = 32
+avg_length = 10.785006195786865
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "pop"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 3228
+
+[columns.stats]
+distinct_count = 3073
+null_rate = 0.0
+min = 7094.0
+max = 8287238.0
+mean = 48874.270446096656
+std = 193918.35307600044
+
+[columns.stats.percentiles]
+p25 = 11063.0
+p50 = 18894.0
+p75 = 41025.0
+p95 = 142994.0
+p99 = 524192.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "lat"
+data_type = "float"
+nullable = false
+precision = 7
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 3228
+
+[columns.stats]
+distinct_count = 2716
+null_rate = 0.0
+min = 24.833333
+max = 49.1
+mean = 38.07904656152413
+std = 4.968242647664075
+
+[columns.stats.percentiles]
+p25 = 34.14154
+p50 = 38.7840035
+p75 = 41.5867418
+p95 = 45.4542879
+p99 = 47.759853
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "lon"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 3228
+
+[columns.stats]
+distinct_count = 2716
+null_rate = 0.0
+min = -124.2639442
+max = -68.0119714
+mean = -92.95693813807941
+std = 15.293930924582838
+
+[columns.stats.percentiles]
+p25 = -99.7733181
+p50 = -88.9344303
+p75 = -81.4625919
+p95 = -73.8712155
+p99 = -71.066163
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "pop"
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "lat"
+min = 24.833333
+max = 49.1
+
+[[constraints]]
+type = "range"
+field = "lon"
+min = -124.2639442
+max = -68.0119714
+
+[[constraints]]
+type = "check"
+expr = "lat <= pop"
+
+[[constraints]]
+type = "check"
+expr = "lon <= pop"
+
+[[constraints]]
+type = "check"
+expr = "lon <= lat"

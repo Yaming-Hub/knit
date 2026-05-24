@@ -1,0 +1,289 @@
+[table]
+name = "original"
+count = 178
+
+[table.stats]
+source_rows = 178
+
+[table.sort_by]
+column = "airline"
+direction = "asc"
+
+[[columns]]
+name = "start_lat"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 178
+
+[columns.stats]
+distinct_count = 57
+null_rate = 0.0
+min = 18.33730556
+max = 47.44898194
+mean = 34.09816854623599
+std = 6.710889713403346
+
+[columns.stats.percentiles]
+p25 = 32.11608333
+p50 = 33.94253611
+p75 = 39.64256778
+p95 = 41.979595
+p99 = 44.88054694
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "start_lon"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 178
+
+[columns.stats]
+distinct_count = 57
+null_rate = 0.0
+min = -157.9224072
+max = -64.97336111
+mean = -94.10521861764032
+std = 18.214488360924168
+
+[columns.stats.percentiles]
+p25 = -97.66987194
+p50 = -93.2169225
+p75 = -80.29055556
+p95 = -71.00517917
+p99 = -66.00183333
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "end_lat"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 178
+
+[columns.stats]
+distinct_count = 58
+null_rate = 0.0
+min = 17.70188889
+max = 47.44898194
+mean = 34.68586255089892
+std = 6.385237223928804
+
+[columns.stats.percentiles]
+p25 = 32.89595056
+p50 = 33.94253611
+p75 = 40.63975111
+p95 = 42.3643475
+p99 = 45.58872222
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "end_lon"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 178
+
+[columns.stats]
+distinct_count = 58
+null_rate = 0.0
+min = -159.3389581
+max = -64.79855556
+mean = -92.68157741848304
+std = 17.44081799648526
+
+[columns.stats.percentiles]
+p25 = -97.0372
+p50 = -87.90446417
+p75 = -80.29055556
+p95 = -71.00517917
+p99 = -66.00183333
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "airline"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 178
+
+[columns.stats]
+distinct_count = 1
+null_rate = 0.0
+min_length = 2
+max_length = 2
+avg_length = 2.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[columns]]
+name = "airport1"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 178
+
+[columns.stats]
+distinct_count = 57
+null_rate = 0.0
+min_length = 3
+max_length = 3
+avg_length = 3.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "airport2"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 6
+row_count = 178
+
+[columns.stats]
+distinct_count = 58
+null_rate = 0.0
+min_length = 3
+max_length = 3
+avg_length = 3.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "cnt"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 7
+row_count = 178
+
+[columns.stats]
+distinct_count = 80
+null_rate = 0.0
+min = 4.0
+max = 914.0
+mean = 234.90449438202248
+std = 190.26620329233359
+
+[columns.stats.percentiles]
+p25 = 104.0
+p50 = 168.0
+p75 = 326.0
+p95 = 578.0
+p99 = 826.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "start_lat"
+min = 18.33730556
+max = 47.44898194
+
+[[constraints]]
+type = "range"
+field = "start_lon"
+min = -157.9224072
+max = -64.97336111
+
+[[constraints]]
+type = "range"
+field = "end_lat"
+min = 17.70188889
+max = 47.44898194
+
+[[constraints]]
+type = "range"
+field = "end_lon"
+min = -159.3389581
+max = -64.79855556
+
+[[constraints]]
+type = "range"
+field = "cnt"
+min = 4.0
+max = 914.0
+
+[[constraints]]
+type = "check"
+expr = "start_lon <= start_lat"
+
+[[constraints]]
+type = "check"
+expr = "end_lon <= start_lat"
+
+[[constraints]]
+type = "check"
+expr = "start_lon <= end_lat"
+
+[[constraints]]
+type = "check"
+expr = "start_lon <= cnt"
+
+[[constraints]]
+type = "check"
+expr = "end_lon <= end_lat"
+
+[[constraints]]
+type = "check"
+expr = "end_lon <= cnt"

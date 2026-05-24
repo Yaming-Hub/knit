@@ -1,0 +1,18 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "year"
+min = 1880.0
+max = 2023.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "temp"
+min = -0.48
+max = 1.17
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "temp <= year"

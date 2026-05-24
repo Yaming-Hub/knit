@@ -1,0 +1,65 @@
+[table]
+name = "original"
+count = 955
+
+[table.stats]
+source_rows = 955
+
+[[columns]]
+name = "time"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 955
+
+[columns.stats]
+distinct_count = 955
+null_rate = 0.0
+min_length = 19
+max_length = 19
+avg_length = 19.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "count"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 955
+
+[columns.stats]
+distinct_count = 26
+null_rate = 0.0
+min = 1.0
+max = 54.0
+mean = 2.5958115183246075
+std = 4.100414567944031
+
+[columns.stats.percentiles]
+p25 = 1.0
+p50 = 1.0
+p75 = 2.0
+p95 = 8.0
+p99 = 20.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "count"
+min = 1.0
+max = 54.0

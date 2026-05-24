@@ -1,0 +1,10 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "year"
+min = 0.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "temp <= year"

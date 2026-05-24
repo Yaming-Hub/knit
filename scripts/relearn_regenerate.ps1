@@ -32,7 +32,7 @@ foreach ($ds in $datasets) {
         continue
     }
     
-    $blueprint = Join-Path $dir "blueprint.knit.toml"
+    $blueprint = Join-Path $dir "blueprint.knit.json"
     $generated = Join-Path $dir "generated.csv"
     
     # Step 1: Learn

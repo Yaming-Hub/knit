@@ -1,0 +1,399 @@
+--- Dataset: recent-grads ---
+ORIGINAL (sample):
+Rank,Major_code,Major,Total,Men,Women,Major_category,ShareWomen,Sample_size,Employed,Full_time,Part_time,Full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th,College_jobs,Non_college_jobs,Low_wage_jobs
+1,2419,PETROLEUM ENGINEERING,2339,2057,282,Engineering,0.120564344,36,1976,1849,270,1207,37,0.018380527,110000,95000,125000,1534,364,193
+2,2416,MINING AND MINERAL ENGINEERING,756,679,77,Engineering,0.101851852,7,640,556,170,388,85,0.117241379,75000,55000,90000,350,257,50
+3,2415,METALLURGICAL ENGINEERING,856,725,131,Engineering,0.153037383,3,648,558,133,340,16,0.024096386,73000,50000,105000,456,176,0
+4,2417,NAVAL ARCHITECTURE AND MARINE ENGINEERING,1258,1123,135,Engineering,0.107313196,16,758,1069,150,692,40,0.050125313,70000,43000,80000,529,102,0
+5,2405,CHEMICAL ENGINEERING,3
+
+GENERATED (sample):
+Rank,Major_code,Major,Total,Men,Women,Major_category,ShareWomen,Sample_size,Employed,Full_time,Part_time,Full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th,College_jobs,Non_college_jobs,Low_wage_jobs
+1.0,2321.0,BUSINESS ECONOMICS,51076.0,3200.0,183.0,Engineering,0.406581845,62.0,24141.0,7277.0,1596.0,1805.0,393.0,0.056461331,54111.0,34565.0,125000.0,4765.0,14000.0,241.0
+1.0,2840.0,FORESTRY,2056.0,266.0,1488.0,Engineering,0.361963901,42.0,6705.0,124252.0,377.0,2568.0,355.0,0.023792212,69042.0,41768.0,70080.0,4668.0,2255.0,1664.0
+3.0,2466.0,MECHANICAL ENGINEERING,28977.0,14412.0,3954.0,Engineering,0.330870301,60.0,11545.0,17344.0,262.0,6466.0,47.0,0.118736081,53371.0,42908.0,77850.0,2657.0,4219.0,113.0
+3.0,2392.0,COUNSELING PSYCHOLOGY,7380.0,1749.0,5335.0,Engineering,0.1125
+
+--- Dataset: seaice ---
+ORIGINAL (sample):
+Date,Extent
+1980-01-01,14.2
+1980-01-03,14.302
+1980-01-05,14.414
+1980-01-07,14.518
+1980-01-09,14.594
+1980-01-11,14.665
+1980-01-13,14.771
+1980-01-15,14.831
+1980-01-17,14.957
+1980-01-19,15.12
+1980-01-21,15.141
+1980-01-23,15.195
+1980-01-25,15.209
+1980-01-27,15.124
+1980-01-29,15.258
+1980-01-31,15.491
+1980-02-02,15.401
+1980-02-04,15.639
+1980-02-06,15.76
+1980-02-08,15.888
+1980-02-10,15.895
+1980-02-12,15.97
+1980-02-14,16.017
+1980-02-16,16.095
+1980-02-18,16.095
+1980-02-20,16.17
+1980-02-22,16.066
+1980-02-24,16.087
+1980-02-26,16.069
+1980-02-28,16.22
+
+GENERATED (sample):
+Date,Extent
+1980-01-02,10.969
+1980-01-03,9.071
+1980-01-03,13.48
+1980-01-04,14.489
+1980-01-06,13.948
+1980-01-10,12.358
+1980-01-10,14.606
+1980-01-11,15.487
+1980-01-12,14.561
+1980-01-13,5.066
+1980-01-13,11.283
+1980-01-14,3.768
+1980-01-14,4.877
+1980-01-15,6.647
+1980-01-16,13.105
+1980-01-17,11.064
+1980-01-17,7.125
+1980-01-18,10.6
+1980-01-19,15.645
+1980-01-21,15.391
+1980-01-22,14.003
+1980-01-25,15.12
+1980-01-25,3.462
+1980-01-26,11.288
+1980-01-27,9.026
+1980-01-29,10.02
+1980-01-31,4.3
+1980-02-03,7.201
+1980-02-04,15.543
+1980-02-05,8.429
+
+--- Dataset: seattle-weather ---
+ORIGINAL (sample):
+date,precipitation,temp_max,temp_min,wind,weather
+2012-01-01,0.0,12.8,5.0,4.7,drizzle
+2012-01-02,10.9,10.6,2.8,4.5,rain
+2012-01-03,0.8,11.7,7.2,2.3,rain
+2012-01-04,20.3,12.2,5.6,4.7,rain
+2012-01-05,1.3,8.9,2.8,6.1,rain
+2012-01-06,2.5,4.4,2.2,2.2,rain
+2012-01-07,0.0,7.2,2.8,2.3,rain
+2012-01-08,0.0,10.0,2.8,2.0,sun
+2012-01-09,4.3,9.4,5.0,3.4,rain
+2012-01-10,1.0,6.1,0.6,3.4,rain
+2012-01-11,0.0,6.1,-1.1,5.1,sun
+2012-01-12,0.0,6.1,-1.7,1.9,sun
+2012-01-13,0.0,5.0,-2.8,1.3,sun
+2012-01-14,4.1,4.4,0.6,5.3,snow
+2012-01-15,5.3,1.1,-3.3,3.2,snow
+2012-01-16,2.5,1.7,-2.8,5.0,snow
+2012-01-17,8.1,3.3,0.0,5.6,snow
+2012-01-18,19.8,0.0,-2.8,5.0,snow
+2012-01-19,15.2,-1.1,-2.8,1.6,snow
+2012-01-20,13.5,7.2,-1.1,2.3,snow
+2012-01-21,3.0,8.3,3.3,8.2,rain
+2012-01-22,6.1,6.7,2.2,4.8,rain
+2012-01-23,0.0,8.3,1.1,3.6,r
+
+GENERATED (sample):
+date,precipitation,temp_max,temp_min,wind,weather
+2012-01-02,10.6,7.0,6.5,3.5,rain
+2012-01-02,2.3,15.1,13.2,2.6,sun
+2012-01-06,9.5,21.7,11.8,2.4,sun
+2012-01-09,5.2,15.3,14.7,3.0,fog
+2012-01-10,7.4,26.8,7.7,3.0,sun
+2012-01-10,2.2,14.8,3.7,4.3,rain
+2012-01-12,3.2,25.2,1.3,1.6,sun
+2012-01-14,15.4,19.3,13.2,1.0,rain
+2012-01-16,6.6,14.8,10.8,3.8,rain
+2012-01-17,1.0,12.9,4.9,1.2,drizzle
+2012-01-18,7.5,17.9,11.7,4.0,sun
+2012-01-18,11.5,6.0,4.7,1.9,rain
+2012-01-19,3.5,19.2,2.5,3.1,sun
+2012-01-22,0.7,16.5,3.6,3.9,rain
+2012-01-25,3.1,8.5,6.9,2.7,rain
+2012-01-26,3.6,19.2,8.4,4.1,rain
+2012-01-27,3.1,17.0,5.5,1.7,fog
+2012-01-29,6.4,16.8,9.6,6.0,rain
+2012-01-29,1.2,19.5,14.6,1.9,sun
+2012-01-29,9.5,11.1,8.2,2.8,sun
+2012-01-30,3.6,12.7,6.7,2.7,fog
+2012-01-31,3.0,19.7,9.6,3.5,sun
+2012-02-02,18.0,10.3,8.4,1
+
+--- Dataset: seattle-weather-hourly ---
+ORIGINAL (sample):
+date,pressure,temperature,wind
+2010-01-01T01:00:00,1016.6,4.0,3.8
+2010-01-01T02:00:00,1016.6,3.9,3.8
+2010-01-01T03:00:00,1016.7,3.8,3.8
+2010-01-01T04:00:00,1016.7,3.8,3.7
+2010-01-01T05:00:00,1016.5,3.7,3.8
+2010-01-01T06:00:00,1016.4,3.7,3.8
+2010-01-01T07:00:00,1016.5,3.7,3.9
+2010-01-01T08:00:00,1016.6,3.7,3.9
+2010-01-01T09:00:00,1017.0,4.0,3.9
+2010-01-01T10:00:00,1017.4,4.5,3.9
+2010-01-01T11:00:00,1017.4,5.2,3.9
+2010-01-01T12:00:00,1017.1,5.8,4.0
+2010-01-01T13:00:00,1016.7,6.2,4.1
+2010-01-01T14:00:00,1016.4,6.4,4.2
+2010-01-01T15:00:00,1016.3,6.3,4.1
+2010-01-01T16:00:00,1016.4,5.9,4.0
+2010-01-01T17:00:00,1016.5,5.4,4.1
+2010-01-01T18:00:00,1016.4,5.1,4.2
+2010-01-01T19:00:00,1016.4,4.9,4.1
+2010-01-01T20:00:00,1016.4,4.8,4.2
+2010-01-01T21:00:00,1016.5,4.7,4.1
+2010-01-01T22:00:00,1016.5,4.6,4.0
+
+GENERATED (sample):
+date,pressure,temperature,wind
+2010-10-18T14:28:10,1017.4,12.2,3.7
+2010-01-17T21:28:53,1017.7,4.9,2.3
+2010-08-16T07:31:55,1017.7,14.8,4.6
+2010-09-04T13:01:11,1017.8,16.4,4.1
+2010-07-05T20:27:29,1016.8,15.8,3.3
+2010-07-01T20:09:31,1017.3,18.0,2.8
+2010-08-20T10:09:56,1018.3,22.9,4.6
+2010-12-13T15:39:46,1017.6,9.4,3.9
+2010-12-22T19:42:13,1018.6,15.7,4.2
+2010-04-14T23:18:01,1016.6,13.7,3.1
+2010-04-04T12:37:15,1017.9,3.1,4.0
+2010-11-23T20:05:18,1016.7,11.1,3.6
+2010-05-24T07:21:01,1016.2,9.4,4.0
+2010-12-31T19:15:01,1018.4,24.4,3.5
+2010-01-15T11:35:47,1017.0,16.9,4.4
+2010-07-26T23:59:46,1016.3,14.5,3.8
+2010-11-06T11:02:12,1017.2,4.0,3.7
+2010-07-18T00:44:25,1017.5,18.1,3.5
+2010-07-26T03:14:42,1017.4,10.1,3.3
+2010-07-17T09:47:25,1017.3,14.1,3.2
+2010-11-27T06:05:28,1017.4,5.5,3.5
+2010-12-12T11:40:41
+
+--- Dataset: sp500 ---
+ORIGINAL (sample):
+date,price
+Jan 1 2000,1394.46
+Feb 1 2000,1366.42
+Mar 1 2000,1498.58
+Apr 1 2000,1452.43
+May 1 2000,1420.6
+Jun 1 2000,1454.6
+Jul 1 2000,1430.83
+Aug 1 2000,1517.68
+Sep 1 2000,1436.51
+Oct 1 2000,1429.4
+Nov 1 2000,1314.95
+Dec 1 2000,1320.28
+Jan 1 2001,1366.01
+Feb 1 2001,1239.94
+Mar 1 2001,1160.33
+Apr 1 2001,1249.46
+May 1 2001,1255.82
+Jun 1 2001,1224.38
+Jul 1 2001,1211.23
+Aug 1 2001,1133.58
+Sep 1 2001,1040.94
+Oct 1 2001,1059.78
+Nov 1 2001,1139.45
+Dec 1 2001,1148.08
+Jan 1 2002,1130.2
+Feb 1 2002,1106.73
+Mar 1 2002,1147.39
+Apr 1 2002,1076.92
+May 1 2002,1067.14
+Jun 1 2002,989.82
+
+GENERATED (sample):
+date,price
+Jun 1 2000,820.35
+Nov 1 2004,1084.65
+May 1 2009,1233.66
+Aug 1 2000,1175.79
+Mar 1 2004,1172.54
+Dec 1 2006,1031.15
+Apr 1 2010,1153.96
+Sep 1 2007,1319.13
+Jun 1 2008,1154.76
+Sep 1 2009,1277.66
+Apr 1 2003,1025.25
+Aug 1 2007,1090.15
+Jul 1 2001,1130.87
+Feb 1 2008,1047.71
+Feb 1 2008,1311.0
+Sep 1 2001,1126.61
+Jun 1 2004,1156.64
+Feb 1 2005,1236.96
+Apr 1 2001,876.65
+Dec 1 2001,1412.78
+Oct 1 2004,1046.62
+Nov 1 2006,1152.39
+Mar 1 2008,1006.33
+Jan 1 2009,1003.08
+Oct 1 2010,1044.34
+Jul 1 2001,1329.11
+Dec 1 2009,1253.78
+Jul 1 2001,1491.36
+Jul 1 2004,1278.16
+Jun 1 2008,1528.85
+
+--- Dataset: sp500-2000 ---
+ORIGINAL (sample):
+date,open,high,low,close,adjclose,volume
+2000-01-03,1469.250000,1478.000000,1438.359985,1455.219971,1455.219971,931800000
+2000-01-04,1455.219971,1455.219971,1397.430054,1399.420044,1399.420044,1009000000
+2000-01-05,1399.420044,1413.270020,1377.680054,1402.109985,1402.109985,1085500000
+2000-01-06,1402.109985,1411.900024,1392.099976,1403.449951,1403.449951,1092300000
+2000-01-07,1403.449951,1441.469971,1400.729980,1441.469971,1441.469971,1225200000
+2000-01-10,1441.469971,1464.359985,1441.469971,1457.599976,1457.599976,1064800000
+2000-01-11,1457.599976,1458.660034,1434.420044,1438.560059,1438.560059,1014000000
+2000-01-12,1438.560059,1442.599976,1427.079956,1432.250000,1432.250000,974600000
+2000-01-13,1432.250000,1454.199951,1432.250000,1449.680054,1449.680054,1030400000
+2000-01-14,1449.680054,
+
+GENERATED (sample):
+date,open,high,low,close,adjclose,volume
+2000-01-03,2302.814478,1720.001759,1039.112175,1141.300924,1671.951584,5926604805
+2000-01-05,2218.938131,2220.353998,748.210607,1414.753053,2113.063479,1067674936
+2000-01-06,1794.957061,3120.036008,1206.470323,1336.618858,1502.991484,2957744084
+2000-01-10,1464.798812,2467.730061,724.088759,1370.264951,1478.6869,1808946185
+2000-01-11,2753.945285,2017.502222,722.09575,728.300972,1942.360526,2462591102
+2000-01-12,1644.303857,1760.683425,1043.204036,1675.644139,1760.376702,5606658387
+2000-01-13,1588.125299,2131.491612,992.28846,1204.517693,1978.603047,4093523182
+2000-01-16,2656.348446,3380.449951,1781.466704,1909.217007,2664.73618,1366769138
+2000-01-18,1454.700131,1800.860119,1115.945894,1395.523691,1425.547559,3476872918
+2000-01-19,1311.957293,1842.223
+
+--- Dataset: species ---
+ORIGINAL (sample):
+item_id,common_name,scientific_name,gap_species_code,county_id,habitat_yearround_pct
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,53000,0.0481
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,53073,0.1605
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,30105,0.0027
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,30029,0.1209
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,16021,0.1085
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,30071,0.0049
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,38079,0.0
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,30053,0.1302
+58fa3f0be4b0b7ea545248
+
+GENERATED (sample):
+item_id,common_name,scientific_name,gap_species_code,county_id,habitat_yearround_pct
+58fa3f0be4b0b7ea54524859	aAMBUx,Common Gartersnake	Thamnophis sirtalis,Turdus migratorius	58fa449fe4b0b7ea54524c5e,,25919,0.7134
+58fa3f0be4b0b7ea54524859	aAMBUx,White-tailed Deer	Odocoileus virginianus,Turdus migratorius	58fa449fe4b0b7ea54524c5e,,14544,0.1365
+58fa3f0be4b0b7ea54524859	aAMBUx,Common Gartersnake	Thamnophis sirtalis,Turdus migratorius	58fa449fe4b0b7ea54524c5e,,8914,0.1313
+58fa3f0be4b0b7ea54524859	aAMBUx,Common Gartersnake	Thamnophis sirtalis,Lithobates catesbeianus	58fa3f0be4b0b7ea54524859,,12938,0.8218
+58fa3f0be4b0b7ea54524859	aAMBUx,American Bullfrog	Lithobates catesbeianus,Thamnophis sirtalis	58fe0f4fe4b0074928294636,,26632,0.87
+58fa3f0be4b0b7ea54524859	aAMBUx,Common Gartersnake	Thamnophis 
+
+--- Dataset: steak-survey ---
+ORIGINAL (sample):
+RespondentID,"Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",Do you ever smoke cigarettes?,Do you ever drink alcohol?,Do you ever gamble?,Have you ever been skydiving?,Do you ever drive above the speed limit?,Have you ever cheated on your significant other?,Do you eat steak?,How do you like your steak prepared?,Gender,Age,Household Income,Education,Location (Census Region)
+,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response
+3237565956,Lottery B,,,,,,,,,,,,,
+3234982343,Lottery A,No,Yes,No,No,N
+
+GENERATED (sample):
+RespondentID,"Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",Do you ever smoke cigarettes?,Do you ever drink alcohol?,Do you ever gamble?,Have you ever been skydiving?,Do you ever drive above the speed limit?,Have you ever cheated on your significant other?,Do you eat steak?,How do you like your steak prepared?,Gender,Age,Household Income,Education,Location (Census Region)
+3235313485,Lottery A,No,Yes,No,No,Yes,No,,Medium	Yes,Female,18-29,"$50,000 - $99,999",Graduate degree,Pacific
+3235250038,Lottery A,No,Yes,No,Yes,Yes,Yes,,Response	Response,Male,45-60,"$100,000 - $
+
+--- Dataset: stocks ---
+ORIGINAL (sample):
+symbol,date,price
+MSFT,Jan 1 2000,39.81
+MSFT,Feb 1 2000,36.35
+MSFT,Mar 1 2000,43.22
+MSFT,Apr 1 2000,28.37
+MSFT,May 1 2000,25.45
+MSFT,Jun 1 2000,32.54
+MSFT,Jul 1 2000,28.4
+MSFT,Aug 1 2000,28.4
+MSFT,Sep 1 2000,24.53
+MSFT,Oct 1 2000,28.02
+MSFT,Nov 1 2000,23.34
+MSFT,Dec 1 2000,17.65
+MSFT,Jan 1 2001,24.84
+MSFT,Feb 1 2001,24
+MSFT,Mar 1 2001,22.25
+MSFT,Apr 1 2001,27.56
+MSFT,May 1 2001,28.14
+MSFT,Jun 1 2001,29.7
+MSFT,Jul 1 2001,26.93
+MSFT,Aug 1 2001,23.21
+MSFT,Sep 1 2001,20.82
+MSFT,Oct 1 2001,23.65
+MSFT,Nov 1 2001,26.12
+MSFT,Dec 1 2001,26.95
+MSFT,Jan 1 2002,25.92
+MSFT,Feb 1 2002,23.73
+MSFT,Mar 1 2002,24.53
+MSFT,Apr 1 2002,21.26
+MSFT,May 1 2002,20.71
+MSFT,Jun 1 2002,22.25
+
+GENERATED (sample):
+symbol,date,price
+MSFT,Jan 1 2000,27.72
+MSFT,Feb 1 2000,24.8
+MSFT,Mar 1 2000,30.44
+MSFT,Apr 1 2000,29.98
+MSFT,May 1 2000,25.81
+MSFT,Jun 1 2000,27.5
+MSFT,Jul 1 2000,25.19
+MSFT,Aug 1 2000,28.03
+MSFT,Sep 1 2000,18.77
+MSFT,Oct 1 2000,23.39
+MSFT,Nov 1 2000,18.09
+MSFT,Dec 1 2000,22.34
+MSFT,Jan 1 2001,23.83
+MSFT,Feb 1 2001,17.98
+MSFT,Mar 1 2001,17.46
+MSFT,Apr 1 2001,30.31
+MSFT,May 1 2001,22.11
+MSFT,Jun 1 2001,24.96
+MSFT,Jul 1 2001,28.31
+MSFT,Aug 1 2001,26.13
+MSFT,Sep 1 2001,20.87
+MSFT,Oct 1 2001,27.66
+MSFT,Nov 1 2001,27.46
+MSFT,Dec 1 2001,19.76
+MSFT,Jan 1 2002,21.24
+MSFT,Feb 1 2002,19.7
+MSFT,Mar 1 2002,23.45
+MSFT,Apr 1 2002,25.42
+MSFT,May 1 2002,23.43
+MSFT,Jun 1 2002,32.17
+
+--- Dataset: taxis ---
+ORIGINAL (sample):
+pickup,dropoff,passengers,distance,fare,tip,tolls,total,color,payment,pickup_zone,dropoff_zone,pickup_borough,dropoff_borough
+2019-03-23 20:21:09,2019-03-23 20:27:24,1,1.6,7.0,2.15,0.0,12.95,yellow,credit card,Lenox Hill West,UN/Turtle Bay South,Manhattan,Manhattan
+2019-03-04 16:11:55,2019-03-04 16:19:00,1,0.79,5.0,0.0,0.0,9.3,yellow,cash,Upper West Side South,Upper West Side South,Manhattan,Manhattan
+2019-03-27 17:53:01,2019-03-27 18:00:25,1,1.37,7.5,2.36,0.0,14.16,yellow,credit card,Alphabet City,West Village,Manhattan,Manhattan
+2019-03-10 01:23:59,2019-03-10 01:49:51,1,7.7,27.0,6.15,0.0,36.95,yellow,credit card,Hudson Sq,Yorkville West,Manhattan,Manhattan
+2019-03-30 13:27:42,2019-03-30 13:37:14,3,2.16,9.0,1.1,0.0,13.4,yellow,credit card,Midtown East,Yorkville West,Manhattan,Manhattan
+20
+
+GENERATED (sample):
+pickup,dropoff,passengers,distance,fare,tip,tolls,total,color,payment,pickup_zone,dropoff_zone,pickup_borough,dropoff_borough
+2019-03-25T21:43:53,2019-03-11T00:53:53,1,4.54,3.7,0.87,0.03,26.73,yellow,credit card,Crown Heights North	Brooklyn,Cypress Hills,,Manhattan
+2019-03-22T13:01:11,2019-03-02T00:22:47,1,4.55,23.68,0.16,0.38,31.3,yellow,credit card,Riverdale/North Riverdale/Fieldston	Bronx,South Jamaica,,Bronx
+2019-03-07T19:42:13,2019-03-02T21:35:23,1,2.86,5.1,3.14,0.6,39.79,yellow,credit card,Williamsburg (South Side)	Brooklyn,Boerum Hill,,Bronx
+2019-03-02T23:18:01,2019-03-27T13:28:16,1,2.58,8.1,1.67,0.15,9.68,yellow,credit card,Flatlands	Brooklyn,Highbridge,,Staten Island
+2019-03-19T12:37:15,2019-03-02T16:13:48,1,1.74,18.3,0.46,0.17,18.5,yellow,credit card,East Elmhurst	Queens,East Wil

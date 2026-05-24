@@ -1,0 +1,89 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "temp_min",
+    "temp_max",
+]
+matrix = [
+    [
+    1.0,
+    0.8756866637108154,
+],
+    [
+    0.8756866637108154,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "temp_min",
+    "temp_max",
+]
+matrix = [
+    [
+    1.0,
+    0.8863477132201557,
+],
+    [
+    0.8863477132201557,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "temp_max",
+    "precipitation",
+]
+matrix = [
+    [
+    1.0,
+    -0.4027342345710667,
+],
+    [
+    -0.4027342345710667,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "wind",
+    "precipitation",
+]
+matrix = [
+    [
+    1.0,
+    0.3280450899352905,
+],
+    [
+    0.3280450899352905,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "wind",
+    "precipitation",
+]
+matrix = [
+    [
+    1.0,
+    0.33148666187746373,
+],
+    [
+    0.33148666187746373,
+    1.0,
+],
+]
+conditional = []

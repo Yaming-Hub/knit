@@ -1,0 +1,35 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "day_of_week",
+    "births",
+]
+matrix = [
+    [
+    1.0,
+    -0.6934876082663515,
+],
+    [
+    -0.6934876082663515,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "day_of_week",
+    "births",
+]
+matrix = [
+    [
+    1.0,
+    -0.5579318552283172,
+],
+    [
+    -0.5579318552283172,
+    1.0,
+],
+]
+conditional = []

@@ -322,7 +322,7 @@ INFO  learn: AnalyzedUser — 8 rows, 19 columns
 INFO  learn: Collab — 60 rows, 166 columns, partitioned by PartitionDate (13 partitions)
 INFO  learn: detected 2 relationships (Collab→AnalyzedUser, PeopleHistorical→AnalyzedUser)
 INFO  learn: found 30 companion files (3 blueprints, 27 dictionaries)
-INFO  learn: model written to blueprint.knit.toml (11,905 lines)
+INFO  learn: model written to blueprint.knit.json (11,905 lines)
 ```
 
 **`debug`** — A user running with `-v` or an AI diagnosing issues sees
@@ -666,7 +666,7 @@ At the end of each pipeline run, knit prints a structured summary to stderr:
   Correlations:    12 significant pairs
   Companions:      30 files (3 blueprints, 27 dictionaries)
   Decisions:       215 total (4 low-confidence)
-  Output:          blueprint.knit.toml (11,905 lines)
+  Output:          blueprint.knit.json (11,905 lines)
   Duration:        2.3s
 ══════════════════════════════════════════════
 ```

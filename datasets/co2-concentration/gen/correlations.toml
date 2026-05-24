@@ -1,0 +1,35 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "CO2",
+    "adjusted CO2",
+]
+matrix = [
+    [
+    1.0,
+    0.997280996964127,
+],
+    [
+    0.997280996964127,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "CO2",
+    "adjusted CO2",
+]
+matrix = [
+    [
+    1.0,
+    0.9964297052200691,
+],
+    [
+    0.9964297052200691,
+    1.0,
+],
+]
+conditional = []

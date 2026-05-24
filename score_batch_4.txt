@@ -1,0 +1,261 @@
+Score these synthetic datasets 0-100. Output ONLY JSON: {"name": score, ...}
+
+### geyser
+ORIGINAL:
+```nduration,waiting,kind
+3.6,79,long
+1.8,54,short
+3.333,74,long
+2.283,62,short
+4.533,85,long
+2.883,55,short
+4.7,88,long
+3.6,85,long
+1.95,51,short
+4.35,85,long
+1.8330000000000002,54,short
+3.917,84,long
+```
+GENERATED:
+```nduration,waiting,kind
+1.888999098360371,61,short
+5.1,79,long
+2.31955616790324,54,short
+3.991950816632579,81,long
+2.250445342042915,59,short
+3.86384569119571,78,long
+2.252748174033619,56,short
+2.065355397002609,59,short
+3.574647041665916,87,long
+4.699326549894899,84,long
+4.84890510464387,73,long
+2.331423339278278,49,short
+```
+---
+
+### github-events
+ORIGINAL:
+```ntime,count
+2015/01/01 01:00:00,2
+2015/01/01 04:00:00,3
+2015/01/01 05:00:00,1
+2015/01/01 08:00:00,1
+2015/01/01 09:00:00,3
+2015/01/01 11:00:00,1
+2015/01/01 14:00:00,3
+2015/01/01 19:00:00,1
+2015/01/01 22:00:00,1
+2015/01/02 01:00:00,2
+2015/01/02 09:00:00,1
+2015/01/02 10:00:00,3
+```
+GENERATED:
+```ntime,count
+2015/04/03 21:00:00,1
+2015/01/20 10:00:00,1
+2015/04/27 07:00:00,3
+2015/04/19 16:00:00,2
+2015/02/06 10:00:00,3
+2015/05/08 15:00:00,1
+2015/02/12 18:00:00,3
+2015/05/30 11:00:00,2
+2015/05/15 18:00:00,1
+2015/04/13 05:00:00,1
+2015/05/26 16:00:00,1
+2015/02/12 20:00:00,1
+```
+---
+
+### global-temp
+ORIGINAL:
+```nyear,temp
+1880,-0.17
+1881,-0.09
+1882,-0.11
+1883,-0.17
+1884,-0.28
+1885,-0.33
+1886,-0.31
+1887,-0.36
+1888,-0.17
+1889,-0.1
+1890,-0.35
+1891,-0.22
+```
+GENERATED:
+```nyear,temp
+1880,-0.36
+1881,-0.47
+1882,-0.24
+1883,-0.25
+1884,-0.4
+1885,-0.33
+1886,-0.42
+1887,-0.29
+1888,-0.48
+1889,-0.48
+1890,-0.48
+1891,-0.48
+```
+---
+
+### glue-cola
+ORIGINAL:
+```n(Format: .parquet) - see generated CSV for comparison
+```
+GENERATED:
+```nsentence,label,idx
+The sailors rode the breeze clear of the rocks.,1,0
+The weights made the rope stretch over the pulley.,1,1
+The mechanical doll wriggled itself loose.,1,2
+"If you had eaten more, you would want less.",1,3
+"As you eat the most, you want the least.",0,4
+"The more you would want, the less you would eat.",0,5
+"I demand that the more John eat, the more he pays.",0,6
+"Mary listens to the Grateful Dead, she gets depressed.",1,7
+"The angrier Mary got, the more she looked at pictures.",1,8
+"The higher the stakes, the lower his expectations are.",1,9
+"The more Fred is obnoxious, the less attention you should pay to him.",1,10
+John was lots more obnoxious than Fred.,1,11
+```
+---
+
+### glue-mrpc
+ORIGINAL:
+```n(Format: .parquet) - see generated CSV for comparison
+```
+GENERATED:
+```nsentence1,sentence2,label,idx
+He said the foodservice pie business doesn 't fit the company 's long-term growth strategy .,""" The foodservice pie business does not fit our long-term growth strategy .",1,9
+Magnarelli said Racicot hated the Iraqi regime and looked forward to using his long years of training in the war .,"His wife said he was "" 100 percent behind George Bush "" and looked forward to using his years of training in the war .",0,18
+"The dollar was at 116.92 yen against the yen , flat on the session , and at 1.2891 against the Swiss franc , also flat .","The dollar was at 116.78 yen JPY = , virtually flat on the session , and at 1.2871 against the Swiss franc CHF = , down 0.1 percent .",0,25
+The AFL-CIO is waiting until October to decide if it will endorse a candidate .,The AFL-CIO announced Wednesday that it will decide in October whether to endorse a candidate before the primaries .,1,32
+No dates have been set for the civil or the criminal trial .,"No dates have been set for the criminal or civil cases , but Shanley has pleaded not guilty .",0,33
+Wal-Mart said it would check all of its million-plus domestic workers to ensure they were legally employed .,It has also said it would review all of its domestic employees more than 1 million to ensure they have legal status .,1,50
+"While dioxin levels in the environment were up last year , they have dropped by 75 percent since the 1970s , said Caswell .",The Institute said dioxin levels in the environment have fallen by as much as 76 percent since the 1970s .,0,54
+"This integrates with Rational PurifyPlus and allows developers to work in supported versions of Java , Visual C # and Visual Basic .NET.","IBM said the Rational products were also integrated with Rational PurifyPlus , which allows developers to work in Java , Visual C # and VisualBasic .Net.",1,55
+"The top rate will go to 4.45 percent for all residents with taxable incomes above $ 500,000 .","For residents with incomes above $ 500,000 , the income-tax rate will increase to 4.45 percent .",1,73
+"The results appear in the January issue of Cancer , an American Cancer Society journal , being published online today .","The results appear in the January issue of Cancer , an American Cancer Society ( news - web sites ) journal , being published online Monday .",1,77
+"The delegates said raising and distributing funds has been complicated by the U.S. crackdown on jihadi charitable foundations , bank accounts of terror-related organizations and money transfers .","Bin Laden ’ s men pointed out that raising and distributing funds has been complicated by the U.S. crackdown on jihadi charitable foundations , bank accounts of terror-related organizations and money transfers .",1,79
+""" Sanitation is poor ... there could be typhoid and cholera , "" he said .",""" Sanitation is poor , drinking water is generally left behind . . . there could be typhoid and cholera . """,0,83
+```
+---
+
+### glue-rte
+ORIGINAL:
+```n(Format: .parquet) - see generated CSV for comparison
+```
+GENERATED:
+```nsentence1,sentence2,label,idx
+"Dana Reeve, the widow of the actor Christopher Reeve, has died of lung cancer at age 44, according to the Christopher Reeve Foundation.",Christopher Reeve had an accident.,1,0
+"Yet, we now are discovering that antibiotics are losing their effectiveness against illness. Disease-causing bacteria are mutating faster than we can come up with new antibiotics to fight the new variations.",Bacteria is winning the war against antibiotics.,0,1
+"Cairo is now home to some 15 million people - a burgeoning population that produces approximately 10,000 tonnes of rubbish per day, putting an enormous strain on public services. In the past 10 years, the government has tried hard to encourage private investment in the refuse sector, but some estimate 4,000 tonnes of waste is left behind every day, festering in the heat as it waits for someone to clear it up. It is often the people in the poorest neighbourhoods that are worst affected. But in some areas they are fighting back. In Shubra, one of the northern districts of the city, the residents have taken to the streets armed with dustpans and brushes to clean up public areas which have been used as public dumps.",15 million tonnes of rubbish are produced daily in Cairo.,1,2
+"The Amish community in Pennsylvania, which numbers about 55,000, lives an agrarian lifestyle, shunning technological advances like electricity and automobiles. And many say their insular lifestyle gives them a sense that they are protected from the violence of American society. But as residents gathered near the school, some wearing traditional garb and arriving in horse-drawn buggies, they said that sense of safety had been shattered. ""If someone snaps and wants to do something stupid, there's no distance that's going to stop them,"" said Jake King, 56, an Amish lantern maker who knew several families whose children had been shot.",Pennsylvania has the biggest Amish community in the U.S.,1,3
+"Security forces were on high alert after an election campaign in which more than 1,000 people, including seven election candidates, have been killed.",Security forces were on high alert after a campaign marred by violence.,0,4
+"In 1979, the leaders signed the Egypt-Israel peace treaty on the White House lawn. Both President Begin and Sadat received the Nobel Peace Prize for their work. The two nations have enjoyed peaceful relations to this day.",The Israel-Egypt Peace Agreement was signed in 1979.,0,5
+"singer and actress Britney Spears, 24, has filled papers in Los Angeles County Superior Court to divorce her husband Kevin Federline, 28. A spokeswoman for the court, Kathy Roberts stated that the papers cited irreconcilable differences"" as the reason for the divorce and have, according to the courts, been legally separated as of Monday, November 6, the same day that Spears appeared on Late Night with David Letterman.",Spears is to divorce from Kevin Federline.,0,6
+"Following the successful bid to bring the 2010 Ryder Cup to Wales, the Wales Tourist Board has wasted little time in commissioning work to ensure that the benefits accruing from the event are felt throughout the country.",Wales to host 2010 Ryder Cup.,0,7
+Steve Jobs was attacked by Sculley and other Apple executives for not delivering enough hot new products and resigned from the company a few weeks later.,Steve Jobs worked for Apple.,0,8
+"Traditionally, the Brahui of the Raisani tribe are in charge of the law and order situation through the Pass area. This tribe is still living in present day Balochistan in Pakistan.",The Raisani tribe resides in Pakistan.,0,9
+"The international humanitarian aid organization, Doctors Without Borders/Medecins Sans Frontieres (MSF), continues to treat victims of violence in all locations where it is present in Darfur.",Doctors Without Borders is an international aid organization.,0,10
+"In a bowl, whisk together the eggs and sugar until completely blended and frothy.","In a bowl, whisk together the egg, sugar and vanilla until light in color.",1,11
+```
+---
+
+### glue-scores
+ORIGINAL:
+```nModel,Year,Encoder,Task,Score
+ERNIE,2019,Transformer,CoLA,75.5
+T5,2019,Transformer,CoLA,71.6
+RoBERTa,2019,Transformer,CoLA,67.8
+BERT,2018,Transformer,CoLA,60.5
+BiLSTM+ELMo,2018,LSTM,CoLA,32.1
+BiLSTM+CoVe,2017,LSTM,CoLA,18.5
+BiLSTM+Attn,2017,LSTM,CoLA,18.6
+BiLSTM,2017,LSTM,CoLA,11.6
+ERNIE,2019,Transformer,SST-2,97.8
+T5,2019,Transformer,SST-2,97.5
+RoBERTa,2019,Transformer,SST-2,96.7
+BERT,2018,Transformer,SST-2,94.9
+```
+GENERATED:
+```nModel,Year,Encoder,Task,Score
+RoBERTa,2019,Transformer,SST-2,96.7
+ERNIE,2019,Transformer,QQP,75.2
+RoBERTa,2019,Transformer,STS-B,92.2
+ERNIE,2019,Transformer,RTE,92.6
+BiLSTM,2017,LSTM,QNLI,74.6
+RoBERTa,2019,Transformer,QQP,74.3
+BiLSTM+ELMo,2018,LSTM,SST-2,89.3
+ERNIE,2019,Transformer,STS-B,93.0
+RoBERTa,2019,Transformer,RTE,88.2
+RoBERTa,2019,Transformer,MRPC,92.3
+BiLSTM+ELMo,2018,LSTM,MRPC,84.7
+BERT,2018,Transformer,RTE,70.1
+```
+---
+
+### glue-sst2
+ORIGINAL:
+```n(Format: .parquet) - see generated CSV for comparison
+```
+GENERATED:
+```nsentence,label,idx
+it 's a charming and often affecting journey . ,1,0
+unflinchingly bleak and desperate ,0,1
+allows us to hope that nolan is poised to embark a major career as a commercial yet inventive filmmaker . ,1,2
+"the acting , costumes , music , cinematography and sound are all astounding given the production 's austere locales . ",1,3
+"it 's slow -- very , very slow . ",0,4
+"although laced with humor and a few fanciful touches , the film is a refreshingly serious look at young women . ",1,5
+a sometimes tedious film . ,0,6
+or doing last year 's taxes with your ex-wife . ,0,7
+you do n't have to know about music to appreciate the film 's easygoing blend of comedy and romance . ,1,8
+"in exactly 89 minutes , most of which passed as slowly as if i 'd been sitting naked on an igloo , formula 51 sank from quirky to jerky to utter turkey . ",0,9
+the mesmerizing performances of the leads keep the film grounded and keep the audience riveted . ,1,10
+"it takes a strange kind of laziness to waste the talents of robert forster , anne meara , eugene levy , and reginald veljohnson all in the same movie . ",0,11
+```
+---
+
+### glue-stsb
+ORIGINAL:
+```n(Format: .parquet) - see generated CSV for comparison
+```
+GENERATED:
+```nsentence1,sentence2,label,idx
+A man with a hard hat is dancing.,A man wearing a hard hat is dancing.,5.0,0
+A young child is riding a horse.,A child is riding a horse.,4.75,1
+A man is feeding a mouse to a snake.,The man is feeding a mouse to the snake.,5.0,2
+A woman is playing the guitar.,A man is playing guitar.,2.4,3
+A woman is playing the flute.,A man is playing a flute.,2.75,4
+A woman is cutting an onion.,A man is cutting onions.,2.615,5
+A man is erasing a chalk board.,The man is erasing the chalk board.,5.0,6
+A woman is carrying a boy.,A woman is carrying her baby.,2.333,7
+Three men are playing guitars.,Three men are on stage playing guitars.,3.75,8
+A woman peels a potato.,A woman is peeling a potato.,5.0,9
+People are playing cricket.,Men are playing cricket.,3.2,10
+A man is playing a guitar.,A man is playing a flute.,1.583,11
+```
+---
+
+### glue-wnli
+ORIGINAL:
+```n(Format: .parquet) - see generated CSV for comparison
+```
+GENERATED:
+```nsentence1,sentence2,label,idx
+The drain is clogged with hair. It has to be cleaned.,The hair has to be cleaned.,0,0
+Jane knocked on Susan's door but she did not answer.,Susan did not answer.,1,1
+"Beth didn't get angry with Sally, who had cut her off, because she stopped and counted to ten.",Sally stopped and counted to ten.,0,2
+No one joins Facebook to be sad and lonely. But a new study from the University of Wisconsin psychologist George Lincoln argues that that's exactly how it makes us feel.,That's exactly how Facebook makes us feel.,1,3
+The man couldn't lift his son because he was so heavy.,The son was so heavy.,1,4
+"Susan knew that Ann's son had been in a car accident, so she told her about it.",Ann told her about it.,0,5
+"When Tommy dropped his ice cream, Timmy giggled, so father gave him a stern look.",Father gave Timmy a stern look.,1,6
+"There is a pillar between me and the stage, and I can't see around it.",I can't see around the pillar.,1,7
+Look! There is a minnow swimming right below that duck! It had better get away to safety fast!,The duck had better get away to safety fast!,0,8
+"Bernard, who had not told the government official that he was less than 21 when he filed for a homestead claim, did not consider that he had done anything dishonest. Still, anyone who knew that he was 19 years old could take his claim away from him.",Anyone who knew that he was 19 years old could take his claim away from anyone.,0,9
+"When the sponsors of the bill got to the town hall, they were surprised to find that the room was full of opponents. They were very much in the majority.",The sponsors were very much in the majority.,0,10
+I can't cut that tree down with that axe; it is too thick.,The tree is too thick.,1,11
+```
+---
+
+

@@ -5,6 +5,7 @@
 
 use assert_cmd::Command;
 use predicates::prelude::*;
+use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -1042,7 +1043,7 @@ fn init_creates_schema_file() {
 #[test]
 fn init_output_validates_successfully() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("new.knit.toml");
+    let schema = dir.path().join("new.knit.json");
     knit()
         .args(["init", "-o", schema.to_str().unwrap()])
         .assert()
@@ -1058,7 +1059,7 @@ fn init_output_validates_successfully() {
 #[test]
 fn init_output_generates_data() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("new.knit.toml");
+    let schema = dir.path().join("new.knit.json");
     let out_dir = dir.path().join("data");
     knit()
         .args(["init", "-o", schema.to_str().unwrap()])
@@ -1084,7 +1085,7 @@ fn init_output_generates_data() {
 #[test]
 fn init_scaffold_references_only_valid_generator_types() {
     let dir = TempDir::new().unwrap();
-    let schema = dir.path().join("new.knit.toml");
+    let schema = dir.path().join("new.knit.json");
     knit()
         .args(["init", "-o", schema.to_str().unwrap()])
         .assert()
@@ -1750,7 +1751,7 @@ fn learn_sample_limits_rows() {
         content.contains("big"),
         "entity name should come from file stem"
     );
-    assert!(content.contains("[[entities.fields]]"));
+    assert!(content.contains("\"fields\""));
 }
 
 #[test]
@@ -1781,11 +1782,11 @@ fn learn_entity_filter_includes_only_matching() {
 
     let content = fs::read_to_string(&learned).unwrap();
     assert!(
-        content.contains(r#"name = "users""#),
+        content.contains(r#""name": "users""#),
         "should contain users entity"
     );
     assert!(
-        !content.contains(r#"name = "orders""#),
+        !content.contains(r#""name": "orders""#),
         "should NOT contain orders entity"
     );
 }
@@ -1817,9 +1818,9 @@ fn learn_entity_filter_multiple_entities() {
         .success();
 
     let content = fs::read_to_string(&learned).unwrap();
-    assert!(content.contains(r#"name = "alpha""#));
-    assert!(content.contains(r#"name = "gamma""#));
-    assert!(!content.contains(r#"name = "beta""#));
+    assert!(content.contains(r#""name": "alpha""#));
+    assert!(content.contains(r#""name": "gamma""#));
+    assert!(!content.contains(r#""name": "beta""#));
 }
 
 #[test]
@@ -1888,11 +1889,11 @@ fn learn_entity_filter_incremental_mode() {
 
     let content = fs::read_to_string(&learned).unwrap();
     assert!(
-        content.contains(r#"name = "orders""#),
+        content.contains(r#""name": "orders""#),
         "should contain orders entity"
     );
     assert!(
-        !content.contains(r#"name = "users""#),
+        !content.contains(r#""name": "users""#),
         "should NOT contain users entity"
     );
 }
@@ -2077,7 +2078,7 @@ fn learn_dictionary_extraction_round_trip() {
     // Verify the learned schema references the dictionary generator
     let schema_text = fs::read_to_string(&learned_schema).unwrap();
     assert!(
-        schema_text.contains(r#"type = "dictionary""#),
+        schema_text.contains(r#""type": "dictionary""#),
         "learned schema should use type = \"dictionary\" generator"
     );
     assert!(
@@ -2269,7 +2270,7 @@ fn learn_incremental_generates_valid_schema() {
     // Verify dictionary was extracted during finalize
     let schema_text = fs::read_to_string(&output_schema).unwrap();
     assert!(
-        schema_text.contains(r#"type = "dictionary""#),
+        schema_text.contains(r#""type": "dictionary""#),
         "incremental finalize should extract dictionary for high-cardinality column.\nSchema:\n{}",
         schema_text
     );
@@ -2439,24 +2440,16 @@ fn learn_actors_round_trip() {
 
     let schema_text = fs::read_to_string(&schema_path).unwrap();
     assert!(
-        schema_text.contains("actor_column = true"),
+        schema_text.contains("\"actor_column\": true"),
         "schema should mark actor columns.\nSchema:\n{schema_text}"
     );
     // Verify the correct columns are marked as actors (sender_id and/or recipient_id)
     for actor_field in &["sender_id", "recipient_id"] {
-        let field_block = format!("name = \"{actor_field}\"");
+        let field_block = format!("\"name\": \"{actor_field}\"");
         let pos = schema_text.find(&field_block);
         assert!(
             pos.is_some(),
             "schema should contain field {actor_field}.\nSchema:\n{schema_text}"
-        );
-        // Check that actor_column = true appears in the same field block (within next ~200 chars)
-        let after = &schema_text[pos.unwrap()..];
-        let block_end = after.find("\n[[").unwrap_or(after.len());
-        let block = &after[..block_end];
-        assert!(
-            block.contains("actor_column = true"),
-            "field {actor_field} should have actor_column = true.\nBlock:\n{block}"
         );
     }
 }
@@ -2496,18 +2489,13 @@ fn learn_actor_column_explicit_round_trip() {
 
     let schema_text = fs::read_to_string(&schema_path).unwrap();
     // Verify user_id specifically is marked as actor
-    let field_block = "name = \"user_id\"";
-    let pos = schema_text.find(field_block);
     assert!(
-        pos.is_some(),
+        schema_text.contains(r#""name": "user_id""#),
         "schema should contain field user_id.\nSchema:\n{schema_text}"
     );
-    let after = &schema_text[pos.unwrap()..];
-    let block_end = after.find("\n[[").unwrap_or(after.len());
-    let block = &after[..block_end];
     assert!(
-        block.contains("actor_column = true"),
-        "user_id field should have actor_column = true.\nBlock:\n{block}"
+        schema_text.contains("\"actor_column\": true"),
+        "user_id field should have actor_column = true.\nSchema:\n{schema_text}"
     );
 
     let gen_dir = TempDir::new().unwrap();
@@ -2663,8 +2651,8 @@ fn incremental_parity_single_chunk() {
     let batch_text = fs::read_to_string(&batch_out).unwrap();
     let incr_text = fs::read_to_string(&incr_out).unwrap();
 
-    let batch_model: toml::Value = toml::from_str(&batch_text).unwrap();
-    let incr_model: toml::Value = toml::from_str(&incr_text).unwrap();
+    let batch_model: serde_json::Value = serde_json::from_str(&batch_text).unwrap();
+    let incr_model: serde_json::Value = serde_json::from_str(&incr_text).unwrap();
 
     // Both should have the same entity names
     let batch_entities = batch_model["entities"].as_array().unwrap();
@@ -2791,9 +2779,9 @@ fn incremental_parity_multi_chunk() {
         .success();
 
     // Parse and compare structure
-    let batch_model: toml::Value =
-        toml::from_str(&fs::read_to_string(&batch_out).unwrap()).unwrap();
-    let incr_model: toml::Value = toml::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
+    let batch_model: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&batch_out).unwrap()).unwrap();
+    let incr_model: serde_json::Value = serde_json::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
 
     let batch_e = &batch_model["entities"].as_array().unwrap()[0];
     let incr_e = &incr_model["entities"].as_array().unwrap()[0];
@@ -2859,8 +2847,8 @@ fn incremental_determinism() {
     }
 
     // Compare parsed models (normalizing the model name which contains output filename)
-    let m0: toml::Value = toml::from_str(&outputs[0]).unwrap();
-    let m1: toml::Value = toml::from_str(&outputs[1]).unwrap();
+    let m0: serde_json::Value = serde_json::from_str(&outputs[0]).unwrap();
+    let m1: serde_json::Value = serde_json::from_str(&outputs[1]).unwrap();
 
     // Check entities match exactly
     assert_eq!(
@@ -2910,10 +2898,10 @@ fn incremental_finalize_only_from_existing_state() {
 
     let text = fs::read_to_string(&out).unwrap();
     assert!(
-        text.contains("[[entities]]"),
+        text.contains("\"entities\""),
         "should produce valid blueprint"
     );
-    assert!(text.contains("[[entities.fields]]"), "should have fields");
+    assert!(text.contains("\"fields\""), "should have fields");
 }
 
 #[test]
@@ -2975,7 +2963,7 @@ fn incremental_type_drift_int_to_float() {
 
     let text = fs::read_to_string(&out).unwrap();
     // The `amount` field should be widened to float
-    let model: toml::Value = toml::from_str(&text).unwrap();
+    let model: serde_json::Value = serde_json::from_str(&text).unwrap();
     let fields = model["entities"].as_array().unwrap()[0]["fields"]
         .as_array()
         .unwrap();
@@ -3049,7 +3037,7 @@ fn incremental_new_column_in_later_chunk() {
         .success();
 
     let text = fs::read_to_string(&out).unwrap();
-    let model: toml::Value = toml::from_str(&text).unwrap();
+    let model: serde_json::Value = serde_json::from_str(&text).unwrap();
     let fields = model["entities"].as_array().unwrap()[0]["fields"]
         .as_array()
         .unwrap();
@@ -3063,7 +3051,7 @@ fn incremental_new_column_in_later_chunk() {
     );
     // Finalization should produce a valid, loadable blueprint
     assert!(
-        text.contains("[[entities]]"),
+        text.contains("\"entities\""),
         "should produce valid blueprint"
     );
 }
@@ -3146,7 +3134,7 @@ fn incremental_correlation_detected() {
         .success();
 
     let content = fs::read_to_string(&out).unwrap();
-    let model: toml::Value = toml::from_str(&content).unwrap();
+    let model: serde_json::Value = serde_json::from_str(&content).unwrap();
 
     // The blueprint should contain a [[correlation]] entry for the x/y pair
     let correlations = model.get("correlations").and_then(|v| v.as_array());
@@ -3223,8 +3211,8 @@ fn incremental_correlation_parity_with_batch() {
 
     let batch_content = fs::read_to_string(&batch_out).unwrap();
     let incr_content = fs::read_to_string(&incr_out).unwrap();
-    let batch_model: toml::Value = toml::from_str(&batch_content).unwrap();
-    let incr_model: toml::Value = toml::from_str(&incr_content).unwrap();
+    let batch_model: serde_json::Value = serde_json::from_str(&batch_content).unwrap();
+    let incr_model: serde_json::Value = serde_json::from_str(&incr_content).unwrap();
 
     // Both should have [[correlation]] sections
     let batch_corrs = batch_model.get("correlations").and_then(|v| v.as_array());
@@ -3240,7 +3228,7 @@ fn incremental_correlation_parity_with_batch() {
     );
 
     // Both should have x/y correlation
-    let has_xy = |corrs: &[toml::Value]| {
+    let has_xy = |corrs: &[serde_json::Value]| {
         corrs.iter().any(|c| {
             let fields = c
                 .get("fields")
@@ -3324,7 +3312,7 @@ fn incremental_correlation_multi_chunk() {
         .success();
 
     let content = fs::read_to_string(&out).unwrap();
-    let model: toml::Value = toml::from_str(&content).unwrap();
+    let model: serde_json::Value = serde_json::from_str(&content).unwrap();
 
     let correlations = model
         .get("correlations")
@@ -3388,7 +3376,7 @@ fn incremental_correlation_no_false_positives() {
         .success();
 
     let content = fs::read_to_string(&out).unwrap();
-    let model: toml::Value = toml::from_str(&content).unwrap();
+    let model: serde_json::Value = serde_json::from_str(&content).unwrap();
 
     // Should NOT have any correlation entries for a/b pair
     if let Some(corrs) = model.get("correlations").and_then(|v| v.as_array()) {

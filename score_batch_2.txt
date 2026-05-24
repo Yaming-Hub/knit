@@ -1,0 +1,309 @@
+Score these synthetic datasets 0-100. Output ONLY JSON: {"name": score, ...}
+
+### co2-concentration
+ORIGINAL:
+```nDate,CO2,adjusted CO2
+1958-03-01,315.70,314.44
+1958-04-01,317.46,315.16
+1958-05-01,317.51,314.71
+1958-07-01,315.86,315.19
+1958-08-01,314.93,316.19
+1958-09-01,313.21,316.08
+1958-11-01,313.33,315.20
+1958-12-01,314.67,315.43
+1959-01-01,315.58,315.54
+1959-02-01,316.49,315.86
+1959-03-01,316.65,315.38
+1959-04-01,317.72,315.42
+```
+GENERATED:
+```nDate,CO2,adjusted CO2
+1958-03-01,313.21,314.44
+1958-03-31,313.21,314.44
+1958-04-30,313.21,314.44
+1958-05-30,313.21,314.44
+1958-06-29,313.21,314.44
+1958-07-29,313.21,314.44
+1958-08-28,313.21,314.44
+1958-09-27,313.21,314.44
+1958-10-27,313.21,314.44
+1958-11-26,313.21,314.44
+1958-12-26,313.21,314.44
+1959-01-25,313.21,314.44
+```
+---
+
+### college-majors-all
+ORIGINAL:
+```nMajor_code,Major,Major_category,Total,Employed,Employed_full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th
+1100,GENERAL AGRICULTURE,Agriculture & Natural Resources,128148,90245,74078,2423,0.026147106,50000,34000,80000
+1101,AGRICULTURE PRODUCTION AND MANAGEMENT,Agriculture & Natural Resources,95326,76865,64240,2266,0.028636059,54000,36000,80000
+1102,AGRICULTURAL ECONOMICS,Agriculture & Natural Resources,33955,26321,22810,821,0.030248324,63000,40000,98000
+1103,ANIMAL SCIENCES,Agriculture & Natural Resources,103549,81177,64937,3619,0.0426789,46000,30000,72000
+1104,FOOD SCIENCE,Agriculture & Natural Resources,24280,17281,12722,894,0.049188446,62000,38500,90000
+1105,PLANT SCIENCE AND AGRONOMY,Agriculture & Natural Resources,79409,63043,51077,2070,0.031790887,50000,35000,75000
+1106,SOIL SCIENCE,Agriculture & Natural Resources,6586,4926,4042,264,0.050867052,63000,39400,88000
+1199,MISCELLANEOUS AGRICULTURE,Agriculture & Natural Resources,8549,6392,5074,261,0.039230422,52000,35000,75000
+1301,ENVIRONMENTAL SCIENCE,Biology & Life Science,106106,87602,65238,4736,0.051289827,52000,38000,75000
+1302,FORESTRY,Agriculture & Natural Resources,69447,48228,39613,2144,0.042563329,58000,40500,80000
+1303,NATURAL RESOURCES MANAGEMENT,Agriculture & Natural Resources,83188,65937,50595,3789,0.054341279,52000,37100,75000
+1401,ARCHITECTURE,Engineering,294692,216770,163020,20394,0.085991129,63000,40400,93500
+```
+GENERATED:
+```nMajor_code,Major,Major_category,Total,Employed,Employed_full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th
+1100,GENERAL AGRICULTURE,Agriculture & Natural Resources,128148,90245,74078,2423,0.026147106,50000,34000,80000
+1101,AGRICULTURE PRODUCTION AND MANAGEMENT,Agriculture & Natural Resources,95326,76865,64240,2266,0.028636059,54000,36000,80000
+1102,AGRICULTURAL ECONOMICS,Agriculture & Natural Resources,33955,26321,22810,821,0.030248324,63000,40000,98000
+1103,ANIMAL SCIENCES,Agriculture & Natural Resources,103549,81177,64937,3619,0.0426789,46000,30000,72000
+1104,FOOD SCIENCE,Agriculture & Natural Resources,24280,17281,12722,894,0.049188446,62000,38500,90000
+1105,PLANT SCIENCE AND AGRONOMY,Agriculture & Natural Resources,79409,63043,51077,2070,0.031790887,50000,35000,75000
+1106,SOIL SCIENCE,Agriculture & Natural Resources,6586,4926,4042,264,0.050867052,63000,39400,88000
+1199,MISCELLANEOUS AGRICULTURE,Agriculture & Natural Resources,8549,6392,5074,261,0.039230422,52000,35000,75000
+1301,ENVIRONMENTAL SCIENCE,Biology & Life Science,106106,87602,65238,4736,0.051289827,52000,38000,75000
+1302,FORESTRY,Agriculture & Natural Resources,69447,48228,39613,2144,0.042563329,58000,40500,80000
+1303,NATURAL RESOURCES MANAGEMENT,Agriculture & Natural Resources,83188,65937,50595,3789,0.054341279,52000,37100,75000
+1401,ARCHITECTURE,Engineering,294692,216770,163020,20394,0.085991129,63000,40400,93500
+```
+---
+
+### countries
+ORIGINAL:
+```n(Format: .json) - see generated CSV for comparison
+```
+GENERATED:
+```n_comment,year,fertility,life_expect,n_fertility,n_life_expect,country,p_fertility,p_life_expect
+,1965,5.54,66.56,3.34,64.18,Afghanistan,6.07,65.77
+,1985,4.49,71.3,4.8,69.08,Afghanistan,1.68,65.86
+,1985,3.37,71.97,1.4,62.75,Afghanistan,,62.31
+,1975,7.1,60.47,8.23,59.63,Afghanistan,5.29,39.08
+,1980,5.38,62.16,5.35,71.04,Afghanistan,4.36,57.26
+,1975,8.08,55.0,,63.93,Afghanistan,1.56,63.96
+,1985,2.94,64.56,2.83,65.92,Afghanistan,,66.11
+,2000,6.09,66.37,1.03,68.68,Afghanistan,7.84,
+,1990,7.66,80.07,3.87,75.84,Argentina,5.1,63.21
+,1970,3.73,73.68,2.35,76.35,Argentina,7.85,60.56
+,2000,1.64,81.57,4.88,69.79,Argentina,7.54,62.49
+,1965,3.61,75.03,3.95,64.65,Argentina,3.13,60.43
+```
+---
+
+### covid-icu-beds
+ORIGINAL:
+```nMMSA,total_percent_at_risk,high_risk_per_ICU_bed,high_risk_per_hospital,icu_beds,hospitals,total_at_risk
+"San Juan-Carolina-Caguas, PR",52.88%,NA,NA,NA,NA,923725.203
+"Manhattan, KS",47.29%,4489.84875,8979.6975,8,4,35918.79
+"Hilton Head Island-Bluffton-Beaufort, SC",62.72%,3904.163571,36438.86,28,3,109316.58
+"Kahului-Wailuku-Lahaina, HI",59.13%,3860.557,19302.785,20,4,77211.14
+"Spartanburg, SC",66.12%,3786.115556,85187.6,45,2,170375.2
+"Baton Rouge, LA",66.60%,3459.7325,39000.62091,124,11,429006.83
+"Rockingham County-Strafford County, NH, Metropolitan Division",57.72%,3365.052,40380.624,60,5,201903.12
+"Salisbury, MD-DE",68.32%,3292.271176,37312.40667,68,6,223874.44
+"Wichita Falls, TX",67.11%,3279.425,19676.55,24,4,78706.2
+"Colorado Springs, CO",55.96%,3251.603053,77225.5725,95,4,308902.29
+"Cambridge-Newton-Framingham, MA, Metropolitan Division",52.17%,3161.025223,62035.12,314,16,992561.92
+"Albuquerque, NM",60.33%,3091.331014,71100.61333,138,6,426603.68
+```
+GENERATED:
+```nMMSA,total_percent_at_risk,high_risk_per_ICU_bed,high_risk_per_hospital,icu_beds,hospitals,total_at_risk
+"Lincoln, NE",53.81%,1274.84037,27536.552,108,5,137682.76
+"Wilmington, DE-MD-NJ, Metropolitan Division",61.40%,2441.704685,69832.754,143,5,349163.77
+"Camden, NJ, Metropolitan Division",63.56%,2109.945288,77804.2325,295,8,622433.86
+"North Platte, NE",64.19%,944.2910526,17941.53,19,1,17941.53
+"Rochester, MN",54.72%,413.6677064,22544.89,218,4,90179.56
+"Houston-The Woodlands-Sugar Land, TX",55.82%,2421.507063,52172.47036,1185,55,2869485.87
+"Baton Rouge, LA",66.60%,3459.7325,39000.62091,124,11,429006.83
+"New York-Jersey City-White Plains, NY-NJ, Metropolitan Division",54.38%,2302.129085,75184.16695,2678,82,6165101.69
+"Buffalo-Cheektowaga-Niagara Falls, NY",65.12%,2000.767381,65358.40111,294,9,588225.61
+"Austin-Round Rock, TX",51.27%,1937.338662,39300.29857,426,21,825306.27
+"Lansing-East Lansing, MI",61.69%,1060.187421,46860.284,221,5,234301.42
+"Lexington-Fayette, KY",63.39%,915.7096043,31820.90875,278,8,254567.27
+```
+---
+
+### crimea
+ORIGINAL:
+```n(Format: .json) - see generated CSV for comparison
+```
+GENERATED:
+```ndate,wounds,other,disease,army_size
+1854-04-01,0,5,1,8571
+1854-05-01,0,9,12,23333
+1854-06-01,0,6,11,28333
+1854-07-01,0,23,359,28722
+1854-08-01,1,30,828,30246
+1854-09-01,81,70,788,30290
+1854-10-01,132,128,503,30643
+1854-11-01,287,106,844,29736
+1854-12-01,114,131,1725,32779
+1855-01-01,83,324,2761,32393
+1855-02-01,42,361,2120,30919
+1855-03-01,32,172,1205,30107
+```
+---
+
+### dc-characters
+ORIGINAL:
+```npage_id,name,urlslug,ID,ALIGN,EYE,HAIR,SEX,GSM,ALIVE,APPEARANCES,FIRST APPEARANCE,YEAR
+1422,Batman (Bruce Wayne),\/wiki\/Batman_(Bruce_Wayne),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,3093,"1939, May",1939
+23387,Superman (Clark Kent),\/wiki\/Superman_(Clark_Kent),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,2496,"1986, October",1986
+1458,Green Lantern (Hal Jordan),\/wiki\/Green_Lantern_(Hal_Jordan),Secret Identity,Good Characters,Brown Eyes,Brown Hair,Male Characters,,Living Characters,1565,"1959, October",1959
+1659,James Gordon (New Earth),\/wiki\/James_Gordon_(New_Earth),Public Identity,Good Characters,Brown Eyes,White Hair,Male Characters,,Living Characters,1316,"1987, February",1987
+1576,Richard Grayson (New Earth),\/wiki\/Richard_Grayson_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,1237,"1940, April",1940
+1448,Wonder Woman (Diana Prince),\/wiki\/Wonder_Woman_(Diana_Prince),Public Identity,Good Characters,Blue Eyes,Black Hair,Female Characters,,Living Characters,1231,"1941, December",1941
+1486,Aquaman (Arthur Curry),\/wiki\/Aquaman_(Arthur_Curry),Public Identity,Good Characters,Blue Eyes,Blond Hair,Male Characters,,Living Characters,1121,"1941, November",1941
+1451,Timothy Drake (New Earth),\/wiki\/Timothy_Drake_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,1095,"1989, August",1989
+71760,Dinah Laurel Lance (New Earth),\/wiki\/Dinah_Laurel_Lance_(New_Earth),Public Identity,Good Characters,Blue Eyes,Blond Hair,Female Characters,,Living Characters,1075,"1969, November",1969
+1380,Flash (Barry Allen),\/wiki\/Flash_(Barry_Allen),Secret Identity,Good Characters,Blue Eyes,Blond Hair,Male Characters,,Living Characters,1028,"1956, October",1956
+403631,GenderTest,\/wiki\/GenderTest,Secret Identity,Good Characters,Blue Eyes,Blond Hair,Female Characters,,Living Characters,1028,"1956, October",1956
+1459,Alan Scott (New Earth),\/wiki\/Alan_Scott_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Blond Hair,Male Characters,,Deceased Characters,969,"1940, July",1940
+```
+GENERATED:
+```npage_id,name,urlslug,ID,ALIGN,EYE,HAIR,SEX,GSM,ALIVE,APPEARANCES,FIRST APPEARANCE,YEAR
+123301,Kevin Mayer (New Earth),\/wiki\/Kevin_Mayer_(New_Earth),Public Identity,Good Characters,,Black Hair,Male Characters,,Living Characters,3093,1988,1978
+10218,Courtney Mason (New Earth),\/wiki\/Courtney_Mason_(New_Earth),,Good Characters,Blue Eyes,Blond Hair,Female Characters,,Deceased Characters,3093,"1993, July",1941
+111184,Joshua Barbazon (New Earth),\/wiki\/Joshua_Barbazon_(New_Earth),Public Identity,Good Characters,Blue Eyes,,Male Characters,,Living Characters,3093,1989,1999
+323361,Mallory Kimball (New Earth),\/wiki\/Mallory_Kimball_(New_Earth),Public Identity,Good Characters,,Brown Hair,Female Characters,,Living Characters,3093,"2006, July",1973
+187673,Twilight II (New Earth),\/wiki\/Twilight_II_(New_Earth),Secret Identity,Bad Characters,Blue Eyes,White Hair,Female Characters,,Living Characters,3093,"1997, November",2001
+265432,Renee Montoya (New Earth),\/wiki\/Renee_Montoya_(New_Earth),,Good Characters,Brown Eyes,Black Hair,Female Characters,,Living Characters,3093,"1992, March",2011
+2365,John Constantine (New Earth),\/wiki\/John_Constantine_(New_Earth),Public Identity,Good Characters,Blue Eyes,,Male Characters,,Living Characters,3093,"1984, June",1987
+1380,Kevin Mayer (New Earth),\/wiki\/Kevin_Mayer_(New_Earth),,Good Characters,Brown Eyes,Black Hair,Male Characters,,Living Characters,3093,1988,2008
+250792,Ramsey Robinson (New Earth),\/wiki\/Ramsey_Robinson_(New_Earth),Secret Identity,Good Characters,Blue Eyes,Black Hair,Male Characters,,Living Characters,3093,"2004, November",2009
+95986,Twilight II (New Earth),\/wiki\/Twilight_II_(New_Earth),Secret Identity,Bad Characters,,White Hair,Female Characters,,Living Characters,3093,"1997, November",1988
+395778,Mallory Kimball (New Earth),\/wiki\/Mallory_Kimball_(New_Earth),Public Identity,Good Characters,Brown Eyes,Brown Hair,Female Characters,,Living Characters,3093,"2006, July",1979
+52366,Twilight II (New Earth),\/wiki\/Twilight_II_(New_Earth),Secret Identity,Bad Characters,Blue Eyes,White Hair,Female Characters,,Living Characters,3093,"1997, November",2002
+```
+---
+
+### diamonds
+ORIGINAL:
+```n"carat","cut","color","clarity","depth","table","price","x","y","z"
+0.23,"Ideal","E","SI2",61.5,55,326,3.95,3.98,2.43
+0.21,"Premium","E","SI1",59.8,61,326,3.89,3.84,2.31
+0.23,"Good","E","VS1",56.9,65,327,4.05,4.07,2.31
+0.29,"Premium","I","VS2",62.4,58,334,4.2,4.23,2.63
+0.31,"Good","J","SI2",63.3,58,335,4.34,4.35,2.75
+0.24,"Very Good","J","VVS2",62.8,57,336,3.94,3.96,2.48
+0.24,"Very Good","I","VVS1",62.3,57,336,3.95,3.98,2.47
+0.26,"Very Good","H","SI1",61.9,55,337,4.07,4.11,2.53
+0.22,"Fair","E","VS2",65.1,61,337,3.87,3.78,2.49
+0.23,"Very Good","H","VS1",59.4,61,338,4,4.05,2.39
+0.3,"Good","J","SI1",64,55,339,4.25,4.28,2.73
+0.23,"Ideal","J","VS1",62.8,56,340,3.93,3.9,2.46
+```
+GENERATED:
+```ncarat,cut,color,clarity,depth,table,price,x,y,z
+1.03,Very Good,G,VVS1,61.7,53.0,786,5.15,5.14,2.76
+0.28,Very Good,G,VS2,63.3,60.0,9347,6.23,6.35,4.49
+0.49,Premium,H,I1,65.6,57.0,3955,9.04,4.96,5.1
+0.98,Very Good,H,VVS2,61.8,58.0,2418,5.68,7.38,2.88
+1.16,Good,I,SI1,60.3,60.0,9395,5.6,5.21,3.9
+1.38,Premium,I,VS2,62.3,61.0,7227,6.76,4.34,2.75
+0.9,Premium,I,SI2,62.0,55.0,2023,7.51,4.03,2.97
+0.81,Fair,H,SI2,62.4,59.0,6430,6.22,5.33,3.52
+0.34,Very Good,D,VS2,62.5,60.0,875,3.91,5.8,2.83
+1.06,Premium,H,VVS2,63.5,56.0,1069,8.67,4.43,3.33
+0.55,Premium,H,VS2,63.4,58.0,552,5.72,6.21,3.25
+0.28,Premium,E,SI2,62.8,59.0,18809,3.87,6.26,2.9
+```
+---
+
+### disasters
+ORIGINAL:
+```nEntity,Year,Deaths
+All natural disasters,1900,1267360
+All natural disasters,1901,200018
+All natural disasters,1902,46037
+All natural disasters,1903,6506
+All natural disasters,1905,22758
+All natural disasters,1906,42970
+All natural disasters,1907,1325641
+All natural disasters,1908,75033
+All natural disasters,1909,1511524
+All natural disasters,1910,148233
+All natural disasters,1911,102408
+All natural disasters,1912,52093
+```
+GENERATED:
+```nEntity,Year,Deaths
+All natural disasters,1950,6728
+All natural disasters,2017,2087
+All natural disasters,1935,272817
+All natural disasters,1991,189707
+All natural disasters,1968,21461
+All natural disasters,1981,119697
+All natural disasters,1954,41872
+All natural disasters,1905,22758
+All natural disasters,1943,1910322
+All natural disasters,1900,1267360
+All natural disasters,1961,17341
+All natural disasters,2013,22225
+```
+---
+
+### dots
+ORIGINAL:
+```nalign,choice,time,coherence,firing_rate
+dots,T1,-80,0.0,33.1899674031
+dots,T1,-80,3.2,31.6917255152
+dots,T1,-80,6.4,34.2798399644
+dots,T1,-80,12.8,32.6318742985
+dots,T1,-80,25.6,35.0604874577
+dots,T1,-80,51.2,34.9875710227
+dots,T1,-60,0.0,32.8685258964
+dots,T1,-60,3.2,35.119047619
+dots,T1,-60,6.4,34.8410757946
+dots,T1,-60,12.8,35.6481481481
+dots,T1,-60,25.6,33.6105675147
+dots,T1,-60,51.2,34.27734375
+```
+GENERATED:
+```nalign,choice,time,coherence,firing_rate
+dots,T2,600,3.2,38.9859711621
+dots,T1,620,3.2,49.6072463942
+dots,T1,300,25.6,53.9921770122
+dots,T1,280,6.4,47.6079465912
+dots,T1,440,6.4,52.8451380575
+dots,T1,80,0.0,36.5537848606
+dots,T1,-60,25.6,33.6105675147
+dots,T1,580,3.2,50.928916973
+dots,T1,560,6.4,51.2677935943
+dots,T1,600,6.4,58.3763412771
+dots,T2,640,0.0,41.3093764734
+dots,T1,160,3.2,33.0191183554
+```
+---
+
+### dowjones
+ORIGINAL:
+```nDate,Price
+1914-12-01,55.0
+1915-01-01,56.55
+1915-02-01,56.0
+1915-03-01,58.3
+1915-04-01,66.45
+1915-05-01,65.95
+1915-06-01,68.4
+1915-07-01,71.85
+1915-08-01,79.25
+1915-09-01,85.5
+1915-10-01,92.35
+1915-11-01,94.35
+```
+GENERATED:
+```nDate,Price
+1914-12-01,46.85
+1914-12-31,46.85
+1915-01-30,120.72
+1915-03-01,108.56
+1915-03-31,46.85
+1915-04-30,46.85
+1915-05-30,46.85
+1915-06-29,54.18
+1915-07-29,46.85
+1915-08-28,46.85
+1915-09-27,46.85
+1915-10-27,46.85
+```
+---
+
+

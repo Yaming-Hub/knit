@@ -1,0 +1,220 @@
+[table]
+name = "original"
+count = 244
+
+[table.stats]
+source_rows = 244
+
+[[table.scaling.custom]]
+name = "size"
+field = "size"
+cardinality = 6
+
+[[columns]]
+name = "total_bill"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 243
+
+[columns.stats]
+distinct_count = 229
+null_rate = 0.0
+min = 3.07
+max = 50.81
+mean = 19.785942622950827
+std = 8.902411954856857
+
+[columns.stats.percentiles]
+p25 = 13.37
+p50 = 17.81
+p75 = 24.08
+p95 = 38.07
+p99 = 48.27
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "tip"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 243
+
+[columns.stats]
+distinct_count = 123
+null_rate = 0.0
+min = 1.0
+max = 10.0
+mean = 2.9982786885245907
+std = 1.3836381890011815
+
+[columns.stats.percentiles]
+p25 = 2.0
+p50 = 2.92
+p75 = 3.55
+p95 = 5.2
+p99 = 7.58
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "sex"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 243
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 4
+max_length = 6
+avg_length = 4.713114754098361
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[columns]]
+name = "smoker"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 243
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 2
+max_length = 3
+avg_length = 2.3811475409836067
+
+[columns.traits]
+semantic = "boolean"
+cardinality = "low"
+
+[[columns]]
+name = "day"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 243
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.0
+min_length = 3
+max_length = 4
+avg_length = 3.2540983606557377
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "time"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 243
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 5
+max_length = 6
+avg_length = 5.721311475409836
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[columns]]
+name = "size"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 6
+row_count = 243
+
+[columns.stats]
+distinct_count = 6
+null_rate = 0.0
+min = 1.0
+max = 6.0
+mean = 2.569672131147541
+std = 0.951099804732234
+
+[columns.stats.percentiles]
+p25 = 2.0
+p50 = 2.0
+p75 = 3.0
+p95 = 4.0
+p99 = 6.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "total_bill"
+min = 3.07
+max = 50.81
+
+[[constraints]]
+type = "range"
+field = "tip"
+min = 1.0
+max = 10.0
+
+[[constraints]]
+type = "range"
+field = "size"
+min = 1.0
+max = 6.0
+
+[[constraints]]
+type = "check"
+expr = "tip <= total_bill"
+
+[[constraints]]
+type = "check"
+expr = "size <= total_bill"

@@ -1,0 +1,372 @@
+[table]
+name = "original__fullrow"
+count = 75
+
+[table.stats]
+source_rows = 75
+
+[[table.scaling.custom]]
+name = "Engineering"
+field = "Engineering"
+cardinality = 5
+
+[table.sort_by]
+column = "1"
+direction = "asc"
+
+[[columns]]
+name = "1"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 0
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min = 2.0
+max = 76.0
+mean = 39.0
+std = 21.79449471770337
+
+[columns.stats.percentiles]
+p25 = 21.0
+p50 = 39.0
+p75 = 58.0
+p95 = 72.0
+p99 = 75.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "2419"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 1
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min = 1301.0
+max = 6199.0
+mean = 3595.5066666666667
+std = 1440.743139450566
+
+[columns.stats.percentiles]
+p25 = 2410.0
+p50 = 3602.0
+p75 = 5003.0
+p95 = 6107.0
+p99 = 6110.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "PETROLEUM ENGINEERING"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 2
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min_length = 6
+max_length = 58
+avg_length = 25.533333333333335
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "Engineering"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 3
+row_count = 75
+
+[columns.stats]
+distinct_count = 5
+null_rate = 0.0
+min_length = 6
+max_length = 23
+avg_length = 14.813333333333333
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "2339"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 4
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min = 609.0
+max = 280709.0
+mean = 25824.306666666667
+std = 44211.18766384735
+
+[columns.stats.percentiles]
+p25 = 4043.0
+p50 = 11123.0
+p75 = 32142.0
+p95 = 81527.0
+p99 = 209394.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "2057"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 5
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min = 488.0
+max = 111762.0
+mean = 12944.013333333334
+std = 21414.166231532614
+
+[columns.stats.percentiles]
+p25 = 2200.0
+p50 = 4747.0
+p75 = 12453.0
+p95 = 45683.0
+p99 = 99743.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "282"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 6
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min = 77.0
+max = 187621.0
+mean = 12880.293333333333
+std = 29215.47876335851
+
+[columns.stats.percentiles]
+p25 = 1299.0
+p50 = 5276.0
+p75 = 13638.0
+p95 = 35004.0
+p99 = 168947.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "0.120564344"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 7
+row_count = 75
+
+[columns.stats]
+distinct_count = 75
+null_rate = 0.0
+min = 0.077453027
+max = 0.967998119
+mean = 0.4411474391999999
+std = 0.23078892799289458
+
+[columns.stats.percentiles]
+p25 = 0.251388889
+p50 = 0.434298441
+p75 = 0.59420765
+p95 = 0.864456079
+p99 = 0.927807246
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "110000"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow__fullrow.tsv"
+column = 8
+row_count = 75
+
+[columns.stats]
+distinct_count = 40
+null_rate = 0.0
+min = 26000.0
+max = 75000.0
+mean = 45266.666666666664
+std = 10971.367321391666
+
+[columns.stats.percentiles]
+p25 = 36200.0
+p50 = 44000.0
+p75 = 52000.0
+p95 = 65000.0
+p99 = 73000.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "1"
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "2419"
+min = 1301.0
+max = 6199.0
+
+[[constraints]]
+type = "range"
+field = "2339"
+min = 609.0
+max = 280709.0
+
+[[constraints]]
+type = "range"
+field = "2057"
+min = 488.0
+max = 111762.0
+
+[[constraints]]
+type = "range"
+field = "282"
+min = 77.0
+max = 187621.0
+
+[[constraints]]
+type = "range"
+field = "0.120564344"
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "110000"
+min = 0.0
+
+[[constraints]]
+type = "check"
+expr = "1 <= 2419"
+
+[[constraints]]
+type = "check"
+expr = "1 <= 2339"
+
+[[constraints]]
+type = "check"
+expr = "1 <= 2057"
+
+[[constraints]]
+type = "check"
+expr = "1 <= 282"
+
+[[constraints]]
+type = "check"
+expr = "0.120564344 <= 1"
+
+[[constraints]]
+type = "check"
+expr = "1 <= 110000"
+
+[[constraints]]
+type = "check"
+expr = "0.120564344 <= 2419"
+
+[[constraints]]
+type = "check"
+expr = "2419 <= 110000"
+
+[[constraints]]
+type = "check"
+expr = "2057 <= 2339"
+
+[[constraints]]
+type = "check"
+expr = "282 <= 2339"
+
+[[constraints]]
+type = "check"
+expr = "0.120564344 <= 2339"
+
+[[constraints]]
+type = "check"
+expr = "0.120564344 <= 2057"
+
+[[constraints]]
+type = "check"
+expr = "0.120564344 <= 282"
+
+[[constraints]]
+type = "check"
+expr = "0.120564344 <= 110000"

@@ -1,0 +1,18 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "year"
+min = 1949.0
+max = 1960.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "passengers"
+min = 104.0
+max = 622.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "passengers <= year"

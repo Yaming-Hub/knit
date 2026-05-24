@@ -1,0 +1,18 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "duration"
+min = 1.6
+max = 5.1
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "waiting"
+min = 43.0
+max = 96.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "duration <= waiting"

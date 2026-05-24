@@ -1,0 +1,1341 @@
+[table]
+name = "original"
+count = 173
+
+[table.stats]
+source_rows = 173
+
+[[table.scaling.custom]]
+name = "Major_category"
+field = "Major_category"
+cardinality = 16
+
+[table.sort_by]
+column = "Grad_share"
+direction = "asc"
+
+[[columns]]
+name = "Major_code"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 6403.0
+min = 1100.0
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1100.0
+max = 6403.0
+mean = 3879.815028901734
+std = 1687.7531404980978
+
+[columns.stats.percentiles]
+p25 = 2403.0
+p50 = 3608.0
+p75 = 5503.0
+p95 = 6205.0
+p99 = 6299.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Major"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_Major.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min_length = 5
+max_length = 65
+avg_length = 25.3121387283237
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "Major_category"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "Engineering"
+weight = 0.1676300578034682
+
+[[columns.generator.choices]]
+value = "Education"
+weight = 0.09248554913294797
+
+[[columns.generator.choices]]
+value = "Humanities & Liberal Arts"
+weight = 0.08670520231213873
+
+[[columns.generator.choices]]
+value = "Biology & Life Science"
+weight = 0.08092485549132948
+
+[[columns.generator.choices]]
+value = "Business"
+weight = 0.07514450867052024
+
+[[columns.generator.choices]]
+value = "Health"
+weight = 0.06936416184971098
+
+[[columns.generator.choices]]
+value = "Computers & Mathematics"
+weight = 0.06358381502890173
+
+[[columns.generator.choices]]
+value = "Agriculture & Natural Resources"
+weight = 0.057803468208092484
+
+[[columns.generator.choices]]
+value = "Physical Sciences"
+weight = 0.057803468208092484
+
+[[columns.generator.choices]]
+value = "Psychology & Social Work"
+weight = 0.05202312138728324
+
+[[columns.generator.choices]]
+value = "Social Science"
+weight = 0.05202312138728324
+
+[[columns.generator.choices]]
+value = "Arts"
+weight = 0.046242774566473986
+
+[[columns.generator.choices]]
+value = "Industrial Arts & Consumer Services"
+weight = 0.04046242774566474
+
+[[columns.generator.choices]]
+value = "Law & Public Policy"
+weight = 0.028901734104046242
+
+[[columns.generator.choices]]
+value = "Communications & Journalism"
+weight = 0.023121387283236993
+
+[[columns.generator.choices]]
+value = "Interdisciplinary"
+weight = 0.005780346820809248
+
+[columns.stats]
+distinct_count = 16
+null_rate = 0.0
+min_length = 4
+max_length = 35
+avg_length = 16.728323699421967
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "Grad_total"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.715517892242483
+sigma = 1.4637667670253607
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1542.0
+max = 1184158.0
+mean = 127672.02312138729
+std = 219551.16431623802
+
+[columns.stats.percentiles]
+p25 = 15284.0
+p50 = 37872.0
+p75 = 148255.0
+p95 = 573467.0
+p99 = 1105607.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_sample_size"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 6.70481623063589
+sigma = 1.448590567134846
+
+[columns.stats]
+distinct_count = 167
+null_rate = 0.0
+min = 22.0
+max = 21994.0
+mean = 2250.872832369942
+std = 3805.9230821168976
+
+[columns.stats.percentiles]
+p25 = 314.0
+p50 = 688.0
+p75 = 2528.0
+p95 = 10432.0
+p99 = 16129.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_employed"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.42083182822164
+sigma = 1.4679482145207348
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1008.0
+max = 915341.0
+mean = 94037.03468208092
+std = 159723.86005438637
+
+[columns.stats.percentiles]
+p25 = 12659.0
+p50 = 28930.0
+p75 = 109944.0
+p95 = 451610.0
+p99 = 698049.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_full_time_year_round"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.178495296441545
+sigma = 1.4501174086353978
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 770.0
+max = 703347.0
+mean = 72861.18497109826
+std = 123153.61586218532
+
+[columns.stats.percentiles]
+p25 = 9894.0
+p50 = 22523.0
+p75 = 80794.0
+p95 = 347910.0
+p99 = 527935.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_unemployed"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+round = true
+
+[columns.generator.params]
+lambda = 0.00028519053365248293
+
+[columns.stats]
+distinct_count = 169
+null_rate = 0.0
+min = 0.0
+max = 35718.0
+mean = 3506.42774566474
+std = 5909.871450391788
+
+[columns.stats.percentiles]
+p25 = 453.0
+p50 = 1179.0
+p75 = 3329.0
+p95 = 17668.0
+p99 = 25330.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_unemployment_rate"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "derived"
+expr = "${Grad_unemployed} / ${Grad_employed}"
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 0.0
+max = 0.13851498
+mean = 0.03934312463005783
+std = 0.019076144335384983
+
+[columns.stats.percentiles]
+p25 = 0.02606824
+p50 = 0.036654034
+p75 = 0.048050929
+p95 = 0.073866788
+p99 = 0.096472931
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_median"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 11.224783319431605
+sigma = 0.21672925022020342
+
+[columns.stats]
+distinct_count = 60
+null_rate = 0.0
+min = 47000.0
+max = 135000.0
+mean = 76755.78034682081
+std = 16912.10248843645
+
+[columns.stats.percentiles]
+p25 = 65000.0
+p50 = 75000.0
+p75 = 90000.0
+p95 = 105000.0
+p99 = 111000.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Grad_P25"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.850176211991828
+sigma = 0.1995408906057101
+
+[columns.stats]
+distinct_count = 50
+null_rate = 0.0
+min = 24500.0
+max = 85000.0
+mean = 52596.508670520234
+std = 10896.842594552223
+
+[columns.stats.percentiles]
+p25 = 45000.0
+p50 = 50000.0
+p75 = 60000.0
+p95 = 74000.0
+p99 = 80000.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Grad_P75"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 11.59531085984492
+sigma = 0.24708404824833272
+
+[columns.stats]
+distinct_count = 69
+null_rate = 0.0
+min = 65000.0
+max = 294000.0
+mean = 112087.34104046243
+std = 30266.551533434373
+
+[columns.stats.percentiles]
+p25 = 93000.0
+p50 = 108000.0
+p75 = 130000.0
+p95 = 150000.0
+p99 = 200000.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Nongrad_total"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 11.159290114582962
+sigma = 1.534706045997877
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 2232.0
+max = 2996892.0
+mean = 214720.31213872833
+std = 399680.02355140686
+
+[columns.stats.percentiles]
+p25 = 20564.0
+p50 = 68993.0
+p75 = 184971.0
+p95 = 896111.0
+p99 = 1708418.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Nongrad_employed"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.831349476853497
+sigma = 1.5426335309793273
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1328.0
+max = 2253649.0
+mean = 154553.5202312139
+std = 290066.2816355782
+
+[columns.stats.percentiles]
+p25 = 15914.0
+p50 = 50092.0
+p75 = 129179.0
+p95 = 650188.0
+p99 = 1282267.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Nongrad_full_time_year_round"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.57487377957627
+sigma = 1.5336219710262335
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 980.0
+max = 1882507.0
+mean = 120736.82080924856
+std = 233525.58501030193
+
+[columns.stats.percentiles]
+p25 = 11755.0
+p50 = 38384.0
+p75 = 103629.0
+p95 = 528057.0
+p99 = 1065334.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Nongrad_unemployed"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+round = true
+
+[columns.generator.params]
+lambda = 0.00011783665523719224
+
+[columns.stats]
+distinct_count = 167
+null_rate = 0.0
+min = 0.0
+max = 136978.0
+mean = 8486.323699421966
+std = 16135.491563968191
+
+[columns.stats.percentiles]
+p25 = 880.0
+p50 = 3157.0
+p75 = 7409.0
+p95 = 32472.0
+p99 = 68954.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Nongrad_unemployment_rate"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "derived"
+expr = "${Nongrad_unemployed} / ${Nongrad_employed}"
+
+[columns.stats]
+distinct_count = 172
+null_rate = 0.0
+min = 0.0
+max = 0.160906607
+mean = 0.053947396398843946
+std = 0.019329256542035978
+
+[columns.stats.percentiles]
+p25 = 0.041980786
+p50 = 0.051030882
+p75 = 0.064386655
+p95 = 0.082621234
+p99 = 0.101796407
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Nongrad_median"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.949244133927724
+sigma = 0.2349345559482329
+
+[columns.stats]
+distinct_count = 54
+null_rate = 0.0
+min = 37000.0
+max = 126000.0
+mean = 58583.815028901736
+std = 15028.468079042394
+
+[columns.stats.percentiles]
+p25 = 48700.0
+p50 = 55000.0
+p75 = 65000.0
+p95 = 87000.0
+p99 = 100000.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Nongrad_P25"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.5739323344248
+sigma = 0.2162708052964215
+
+[columns.stats]
+distinct_count = 53
+null_rate = 0.0
+min = 25000.0
+max = 80000.0
+mean = 40078.17919075144
+std = 9509.01752299299
+
+[columns.stats.percentiles]
+p25 = 34000.0
+p50 = 38000.0
+p75 = 44000.0
+p95 = 60000.0
+p99 = 66000.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Nongrad_P75"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 11.315241008705165
+sigma = 0.2303488184160539
+
+[columns.stats]
+distinct_count = 64
+null_rate = 0.0
+min = 48000.0
+max = 215000.0
+mean = 84332.94797687861
+std = 20861.431281101373
+
+[columns.stats.percentiles]
+p25 = 72000.0
+p50 = 80000.0
+p75 = 97000.0
+p95 = 123000.0
+p99 = 130000.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Grad_share"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 0.06836070384271598
+shape = 5.860012708627222
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 0.09631963
+max = 0.931174994
+mean = 0.40059459328901736
+std = 0.16596428246026157
+
+[columns.stats.percentiles]
+p25 = 0.267566748
+p50 = 0.398745066
+p75 = 0.499117062
+p95 = 0.681670435
+p99 = 0.813717788
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Grad_premium"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 0.3285047440462428
+std_dev = 0.18526763180087802
+
+[columns.stats]
+distinct_count = 133
+null_rate = 0.0
+min = -0.025
+max = 1.647058824
+mean = 0.3285047440462428
+std = 0.18580541996199054
+
+[columns.stats.percentiles]
+p25 = 0.230769231
+p50 = 0.320754717
+p75 = 0.4
+p95 = 0.576923077
+p99 = 0.8
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "Major_code"
+min = 1100.0
+max = 6403.0
+
+[[constraints]]
+type = "range"
+field = "Grad_total"
+min = 1542.0
+max = 1184158.0
+
+[[constraints]]
+type = "range"
+field = "Grad_sample_size"
+min = 22.0
+max = 21994.0
+
+[[constraints]]
+type = "range"
+field = "Grad_employed"
+min = 1008.0
+max = 915341.0
+
+[[constraints]]
+type = "range"
+field = "Grad_full_time_year_round"
+min = 770.0
+max = 703347.0
+
+[[constraints]]
+type = "range"
+field = "Grad_unemployed"
+min = 0.0
+max = 35718.0
+
+[[constraints]]
+type = "range"
+field = "Grad_unemployment_rate"
+min = 0.0
+max = 0.13851498
+
+[[constraints]]
+type = "range"
+field = "Grad_median"
+min = 47000.0
+max = 135000.0
+
+[[constraints]]
+type = "range"
+field = "Grad_P25"
+min = 24500.0
+max = 85000.0
+
+[[constraints]]
+type = "range"
+field = "Grad_P75"
+min = 65000.0
+max = 294000.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_total"
+min = 2232.0
+max = 2996892.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_employed"
+min = 1328.0
+max = 2253649.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_full_time_year_round"
+min = 980.0
+max = 1882507.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_unemployed"
+min = 0.0
+max = 136978.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_unemployment_rate"
+min = 0.0
+max = 0.160906607
+
+[[constraints]]
+type = "range"
+field = "Nongrad_median"
+min = 37000.0
+max = 126000.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_P25"
+min = 25000.0
+max = 80000.0
+
+[[constraints]]
+type = "range"
+field = "Nongrad_P75"
+min = 48000.0
+max = 215000.0
+
+[[constraints]]
+type = "range"
+field = "Grad_share"
+min = 0.09631963
+max = 0.931174994
+
+[[constraints]]
+type = "range"
+field = "Grad_premium"
+min = -0.025
+max = 1.647058824
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Nongrad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_employed <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_full_time_year_round <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployed <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Grad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_sample_size"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_sample_size"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Nongrad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_sample_size <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_sample_size"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_sample_size"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployed <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Grad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_unemployed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployed <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_share"
+
+[[constraints]]
+type = "check"
+expr = "Grad_P25 <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_median <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_P25 <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_P25 <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_P25 <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_median <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_P25 <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Grad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_employed <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_full_time_year_round <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployed <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Nongrad_total"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployed <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Nongrad_employed"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployed <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Nongrad_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_unemployed"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_share"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_P25 <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_median <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Nongrad_median"
+
+[[constraints]]
+type = "check"
+expr = "Nongrad_P25 <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Nongrad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Nongrad_P25"
+
+[[constraints]]
+type = "check"
+expr = "Grad_share <= Nongrad_P75"
+
+[[constraints]]
+type = "check"
+expr = "Grad_premium <= Nongrad_P75"

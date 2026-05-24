@@ -22,7 +22,7 @@ independently.
 ### 2.1 Discover Dimensions
 
 ```bash
-knit scale blueprint.knit.toml --analyze
+knit scale blueprint.knit.json --analyze
 ```
 
 Output:
@@ -38,26 +38,26 @@ Output:
   rows          built-in   77 total         Uniform row scaling (--count)
 
 Suggested commands:
-  knit scale blueprint.knit.toml -o out/ --actors 100
-  knit scale blueprint.knit.toml -o out/ --time 52w
-  knit scale blueprint.knit.toml -o out/ --dim location=10
-  knit scale blueprint.knit.toml -o out/ --actors 100 --time 52w --dim location=10
+  knit scale blueprint.knit.json -o out/ --actors 100
+  knit scale blueprint.knit.json -o out/ --time 52w
+  knit scale blueprint.knit.json -o out/ --dim location=10
+  knit scale blueprint.knit.json -o out/ --actors 100 --time 52w --dim location=10
 ```
 
 ### 2.2 Generate Scaled Data
 
 ```bash
 # Scale people to 100, extend time to 52 weeks
-knit scale blueprint.knit.toml -o output/ --actors 100 --time 52w --format csv
+knit scale blueprint.knit.json -o output/ --actors 100 --time 52w --format csv
 
 # Scale a custom dimension (location) from 3 to 20 values
-knit scale blueprint.knit.toml -o output/ --dim location=20
+knit scale blueprint.knit.json -o output/ --dim location=20
 
 # Combine all dimensions
-knit scale blueprint.knit.toml -o output/ --actors 100 --time 52w --dim location=20
+knit scale blueprint.knit.json -o output/ --actors 100 --time 52w --dim location=20
 
 # Preview what would be generated without writing files
-knit scale blueprint.knit.toml --actors 100 --time 52w --dry-run
+knit scale blueprint.knit.json --actors 100 --time 52w --dry-run
 ```
 
 ---
@@ -181,7 +181,7 @@ total_rows ≈ actors × time_periods × density_per_actor_per_period × dim_sca
 The `--dry-run` flag shows computed counts before generating:
 
 ```bash
-knit scale blueprint.knit.toml --actors 100 --time 52w --dim location=10 --dry-run
+knit scale blueprint.knit.json --actors 100 --time 52w --dim location=10 --dry-run
 
 # Output:
 # ═══ Scaling Plan (dry run) ═══

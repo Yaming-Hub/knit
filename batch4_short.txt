@@ -1,0 +1,181 @@
+=== planets ===
+ORIGINAL:
+method,number,orbital_period,mass,distance,year
+Radial Velocity,1,269.3,7.1,77.4,2006
+Radial Velocity,1,874.774,2.21,56.95,2008
+Radial Velocity,1,763.0,2.6,19.84,2011
+Radial Velocity,1,326.03,19.4,110.62,2007
+Radial Velocity,1,516.22,10.5,119.47,2009
+
+GENERATED:
+method,number,orbital_period,mass,distance,year
+Radial Velocity,1,17.991,,,2005
+Radial Velocity,1,43.6,,36.14,2008
+Radial Velocity,1,493.7,1.1,20.43,2001
+Transit,1,4.61442,,225.0,2012
+Transit,5,5.90124,,303.0,2011
+
+---
+=== population-engineers-hurricanes ===
+ORIGINAL:
+state,id,population,engineers,hurricanes
+Alabama,1,4863300,0.003421545,22
+Alaska,2,741894,0.001590524,0
+Arizona,4,6931071,0.004774154,0
+Arkansas,5,2988248,0.002439557,0
+California,6,39250017,0.007125857,0
+
+GENERATED:
+state,id,population,engineers,hurricanes
+Vermont,1,1039410,0.004643016,0
+Georgia,2,1624866,0.004939686,20
+Alabama,3,1020254,0.003421545,22
+New Jersey,4,2993568,0.007724327,2
+Indiana,5,4921761,0.002724236,0
+
+---
+=== recent-grads ===
+ORIGINAL:
+Rank,Major_code,Major,Total,Men,Women,Major_category,ShareWomen,Sample_size,Employed,Full_time,Part_time,Full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th,College_jobs,Non_college_jobs,Low_wage_jobs
+1,2419,PETROLEUM ENGINEERING,2339,2057,282,Engineering,0.120564344,36,1976,1849,270,1207,37,0.018380527,110000,95000,125000,1534,364,193
+2,2416,MINING AND MINERAL ENGINEERING,756,679,77,Engineering,0.101851852,7,640,556,170,388,85,0.117241379,75000,55000,90000,350,257,50
+3,2415,METALLURGICAL ENGINEERING,856,725,131,Engineering,0.153037383,3,648,558,133,340,16,0.024096386,73000,50000,105000,456,176,0
+4,2417,NAVAL ARCHITECTURE AND MARINE ENGINEERING,1258,1123,135,Engineering,0.107313196,16,758,1069,150,692,40,0.050125313,70000,43000,80000,529,102,0
+5,2405,CHEMICAL ENGINEERING,32260,21239,11021,Engineering,0.341630502,289,25694,23170,5180,16697,1672,0.061097712,65000,50000,75000,18314,4440,972
+
+GENERATED:
+Rank,Major_code,Major,Total,Men,Women,Major_category,ShareWomen,Sample_size,Employed,Full_time,Part_time,Full_time_year_round,Unemployed,Unemployment_rate,Median,P25th,P75th,College_jobs,Non_college_jobs,Low_wage_jobs
+1,2430,INTERNATIONAL RELATIONS,2069,1507,562,Engineering,0.271628806,74,24707,3066,5151,2127,453,0.034531347,68038,45372,102738,5836,4014,774
+2,2530,COMMUNICATION DISORDERS SCIENCES AND SERVICES,5381,4220,1161,Engineering,0.215759153,339,11753,5734,6940,810,3617,0.067317055,68253,55750,114042,6684,1065,3824
+2,2321,COUNSELING PSYCHOLOGY,4724,4342,382,Engineering,0.080863675,655,10453,1373,1762,938,423,0.023914446,50393,37267,63841,4429,1056,751
+2,2647,NEUROSCIENCE,33920,33649,271,Engineering,0.007989387,407,20426,13071,1337,1300,62,0.05368919,79174,49205,53418,3510,6276,757
+2,2181,GENERAL SOCIAL SCIENCES,886,755,131,Engineering,0.14785553,1262,12766,10271,150,10775,455,0.020325591,57092,44344,67223,743,12478,123
+
+---
+=== seaice ===
+ORIGINAL:
+Date,Extent
+1980-01-01,14.2
+1980-01-03,14.302
+1980-01-05,14.414
+1980-01-07,14.518
+1980-01-09,14.594
+
+GENERATED:
+Date,Extent
+1980-01-01,14.169
+1980-01-02,10.711
+1980-01-03,15.151
+1980-01-04,14.83
+1980-01-05,11.705
+
+---
+=== seattle-weather ===
+ORIGINAL:
+date,precipitation,temp_max,temp_min,wind,weather
+2012-01-01,0.0,12.8,5.0,4.7,drizzle
+2012-01-02,10.9,10.6,2.8,4.5,rain
+2012-01-03,0.8,11.7,7.2,2.3,rain
+2012-01-04,20.3,12.2,5.6,4.7,rain
+2012-01-05,1.3,8.9,2.8,6.1,rain
+
+GENERATED:
+date,precipitation,temp_max,temp_min,wind,weather
+2012-01-01,0.0,12.8,5.0,4.7,drizzle
+2012-01-02,10.9,10.6,2.8,4.5,rain
+2012-01-03,0.8,11.7,7.2,2.3,rain
+2012-01-04,20.3,12.2,5.6,4.7,rain
+2012-01-05,1.3,8.9,2.8,6.1,rain
+
+---
+=== seattle-weather-hourly ===
+ORIGINAL:
+date,pressure,temperature,wind
+2010-01-01T01:00:00,1016.6,4.0,3.8
+2010-01-01T02:00:00,1016.6,3.9,3.8
+2010-01-01T03:00:00,1016.7,3.8,3.8
+2010-01-01T04:00:00,1016.7,3.8,3.7
+2010-01-01T05:00:00,1016.5,3.7,3.8
+
+GENERATED:
+date,pressure,temperature,wind
+2010-10-18T14:28:10,1017.4,12.2,3.7
+2010-01-17T21:28:53,1017.7,4.9,2.3
+2010-08-16T07:31:55,1017.7,14.8,4.6
+2010-09-04T13:01:11,1017.8,16.4,4.1
+2010-07-05T20:27:29,1016.8,15.8,3.3
+
+---
+=== sp500 ===
+ORIGINAL:
+date,price
+Jan 1 2000,1394.46
+Feb 1 2000,1366.42
+Mar 1 2000,1498.58
+Apr 1 2000,1452.43
+May 1 2000,1420.6
+
+GENERATED:
+date,price
+Jan 1 2009,825.88
+Oct 1 2003,1050.71
+Jan 1 2001,1366.01
+May 1 2007,1530.62
+Aug 1 2006,1303.82
+
+---
+=== sp500-2000 ===
+ORIGINAL:
+date,open,high,low,close,adjclose,volume
+2000-01-03,1469.250000,1478.000000,1438.359985,1455.219971,1455.219971,931800000
+2000-01-04,1455.219971,1455.219971,1397.430054,1399.420044,1399.420044,1009000000
+2000-01-05,1399.420044,1413.270020,1377.680054,1402.109985,1402.109985,1085500000
+2000-01-06,1402.109985,1411.900024,1392.099976,1403.449951,1403.449951,1092300000
+2000-01-07,1403.449951,1441.469971,1400.729980,1441.469971,1441.469971,1225200000
+
+GENERATED:
+date,open,high,low,close,adjclose,volume
+2000-01-03,999.079609,1157.064463,666.789978,676.530029,678.782914,1983719104
+2000-01-04,766.500508,1224.902453,666.789978,769.992668,1000.09216,1425468185
+2000-01-05,962.46385,1196.229002,839.768055,858.53242,894.678482,853645143
+2000-01-06,782.806891,1164.654663,676.530029,676.530029,695.27002,2164798401
+2000-01-07,850.947607,1416.151498,666.789978,676.530029,882.45042,641315469
+
+---
+=== species ===
+ORIGINAL:
+item_id,common_name,scientific_name,gap_species_code,county_id,habitat_yearround_pct
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,53000,0.0481
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,53073,0.1605
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,30105,0.0027
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,30029,0.1209
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,16021,0.1085
+
+GENERATED:
+item_id,common_name,scientific_name,gap_species_code,county_id,habitat_yearround_pct
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,49967,0.5141
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,56031,0.2274
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,43622,0.2384
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,1280,0.2526
+58fa3f0be4b0b7ea54524859,American Bullfrog,Lithobates catesbeianus,aAMBUx,53110,0.4067
+
+---
+=== steak-survey ===
+ORIGINAL:
+RespondentID,"Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",Do you ever smoke cigarettes?,Do you ever drink alcohol?,Do you ever gamble?,Have you ever been skydiving?,Do you ever drive above the speed limit?,Have you ever cheated on your significant other?,Do you eat steak?,How do you like your steak prepared?,Gender,Age,Household Income,Education,Location (Census Region)
+,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response
+3237565956,Lottery B,,,,,,,,,,,,,
+3234982343,Lottery A,No,Yes,No,No,No,No,Yes,Medium rare,Male,> 60,"$50,000 - $99,999",Some college or Associate degree,East North Central
+3234973379,Lottery A,No,Yes,Yes,No,Yes,Yes,Yes,Rare,Male,> 60,"$150,000+",Graduate degree,South Atlantic
+3234972383,Lottery B,Yes,Yes,Yes,No,Yes,Yes,Yes,Medium,Male,> 60,"$50,000 - $99,999",Bachelor degree,New England
+
+GENERATED:
+RespondentID,"Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",Do you ever smoke cigarettes?,Do you ever drink alcohol?,Do you ever gamble?,Have you ever been skydiving?,Do you ever drive above the speed limit?,Have you ever cheated on your significant other?,Do you eat steak?,How do you like your steak prepared?,Gender,Age,Household Income,Education,Location (Census Region)
+,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,Response,
+3237565956,Lottery B,,,,,,,,,,,,,
+3234982343,Lottery A,No,Yes,No,No,No,,Yes,Medium rare,Male,> 60,"$50,000 - $99,999",Some college or Associate degree,East North Central
+3234973379,Lottery A,No,Yes,Yes,No,Yes,Yes,Yes,Rare,Male,> 60,"$150,000+",Graduate degree,South Atlantic
+3234972383,Lottery B,Yes,Yes,Yes,No,Yes,Yes,Yes,Medium,Male,,"$50,000 - $99,999",Bachelor degree,New England
+
+---
+

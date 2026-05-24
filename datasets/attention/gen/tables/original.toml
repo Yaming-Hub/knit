@@ -1,0 +1,199 @@
+[table]
+name = "original"
+count = 60
+
+[table.stats]
+source_rows = 60
+
+[[table.scaling.custom]]
+name = "subject"
+field = "subject"
+cardinality = 20
+
+[[table.scaling.custom]]
+name = "attention"
+field = "attention"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "solutions"
+field = "solutions"
+cardinality = 3
+
+[table.sort_by]
+column = ""
+direction = "asc"
+
+[[columns]]
+name = ""
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 60
+
+[columns.stats]
+distinct_count = 60
+null_rate = 0.0
+min = 0.0
+max = 59.0
+mean = 29.5
+std = 17.46424919657298
+
+[columns.stats.percentiles]
+p25 = 15.0
+p50 = 30.0
+p75 = 44.0
+p95 = 56.0
+p99 = 58.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "subject"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 60
+
+[columns.stats]
+distinct_count = 20
+null_rate = 0.0
+min = 1.0
+max = 20.0
+mean = 10.5
+std = 5.814942761716051
+
+[columns.stats.percentiles]
+p25 = 6.0
+p50 = 11.0
+p75 = 15.0
+p95 = 19.0
+p99 = 20.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "attention"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 60
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 7
+max_length = 7
+avg_length = 7.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "solutions"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 60
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min = 1.0
+max = 3.0
+mean = 2.0
+std = 0.8233869695926183
+
+[columns.stats.percentiles]
+p25 = 1.0
+p50 = 2.0
+p75 = 3.0
+p95 = 3.0
+p99 = 3.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "score"
+data_type = "float"
+nullable = false
+precision = 0
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 60
+
+[columns.stats]
+distinct_count = 9
+null_rate = 0.0
+min = 2.0
+max = 9.0
+mean = 5.958333333333333
+std = 1.6216011826217394
+
+[columns.stats.percentiles]
+p25 = 5.0
+p50 = 6.0
+p75 = 7.0
+p95 = 8.0
+p99 = 9.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = ""
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "subject"
+min = 1.0
+max = 20.0
+
+[[constraints]]
+type = "range"
+field = "solutions"
+min = 1.0
+max = 3.0
+
+[[constraints]]
+type = "range"
+field = "score"
+min = 2.0
+max = 9.0
+
+[[constraints]]
+type = "check"
+expr = "solutions <= score"

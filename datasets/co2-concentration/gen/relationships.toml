@@ -1,0 +1,11 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "CO2"
+min = 0.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "adjusted CO2"
+min = 0.0

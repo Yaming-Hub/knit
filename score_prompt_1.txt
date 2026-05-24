@@ -1,0 +1,784 @@
+Dataset: biopics
+ORIGINAL:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_1:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_2:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_3:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_4:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_5:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_6:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_7:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_8:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+SEED_9:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,Asian American,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,,0,Male,Steve Coogan
+
+SEED_10:
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+21,http://www.imdb.com/title/tt0478087/,US,2008,$81.2M,Robert Luketic,1,Jeff Ma,Other,Known,,1,Male,Jim Sturgess
+24 Hour Party People,http://www.imdb.com/title/tt0274309/,UK,2002,$1.13M,Michael Winterbottom,1,Tony Wilson,Musician,Known,White,0,Male,Steve Coogan
+
+---
+Dataset: bob-ross
+ORIGINAL:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S01E01,"""A WALK IN THE WOODS""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E02,"""MT. MCKINLEY""",0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S01E03,"""EBONY SUNSET""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1,0
+S01E04,"""WINTER MIST""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E05,"""QUIET STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E06,"""WINTER MOON""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,1,1,0,0,0,0,0,1,0
+S01E07,"""AUTUMN MOUNTAINS""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_1:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S27E06,"""DAISIES AT DAWN""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,0,1,1,0,0,0,0,0,0,0
+S21E11,"""DESERT GLOW""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S03E03,"""BUBBLING STREAM""",0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0,0,1,0,0,0,0
+S08E07,"""WINTER HIDEAWAY""",0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0
+S14E12,"""MISTY FOREST OVAL""",0,0,0,1,0,0,0,0,1,0,0,0,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S23E01,"""FROSTY WINTER MORN""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S24E02,"""WAYSIDE POND""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_2:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S05E04,"""WINTER STILLNESS""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0
+S31E13,"""WILDERNESS DAY""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S30E05,"""COPPER WINTER""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0
+S13E08,"""MOUNTAIN EXHIBITION""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+S12E08,"""EVENING WATERFALL""",0,0,0,1,0,0,0,1,0,0,0,0,1,1,1,1,1,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S26E01,"""IN THE STILLNESS OF MORNING""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0
+S25E01,"""HIDE-A-WAY COVE""",0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1,1,0,0,0,0,0,1,0
+
+SEED_3:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S10E04,"""SECLUDED BRIDGE""",0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,1,1,0,0,1,0,0,1,1,0,0,0,0,0,1,0
+S24E02,"""WAYSIDE POND""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,0
+S17E09,"""LAKE VIEW""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S20E02,"""NEW DAY'S DAWN""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,0,0,0
+S13E08,"""MOUNTAIN EXHIBITION""",0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S06E09,"""HIGH CHATEAU""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0
+S18E07,"""GOLDEN MORNING MIST""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_4:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S03E12,"""HIDDEN LAKE""",0,0,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+S31E08,"""TRAIL'S END""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0
+S20E03,"""PASTEL WINTER""",0,0,0,0,0,0,0,1,0,1,0,1,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S26E06,"""ARCTIC WINTER DAY""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S06E03,"""MORNING MIST""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S31E04,"""TRANQUILITY COVE""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0,1,0,0,0,0,0,1,0
+S01E11,"""WINTER GLOW""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_5:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S11E04,"""HIDDEN STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S04E01,"""PURPLE SPLENDOR""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S13E05,"""MOUNTAIN VIEW""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E09,"""SEASCAPE""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S21E03,"""ROYAL MAJESTY""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,0,0,0
+S10E09,"""MOUNTAIN OVAL""",0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S13E12,"""OVAL ESSENCE""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_6:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S01E04,"""WINTER MIST""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,1,0,1,1,0,0,0,0,0,0,0
+S17E02,"""THE OLD HOME PLACE""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S05E07,"""BUBBLING BROOK""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0
+S09E05,"""WINTER OVAL""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S28E04,"""GOLDEN RAYS OF SUNLIGHT""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S30E10,"""SEASIDE HARMONY""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0
+S03E06,"""COVERED BRIDGE""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+
+SEED_7:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S04E13,"""MOUNTAIN CHALLENGE""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0
+S17E06,"""A MILD WINTER'S DAY""",0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S10E11,"""TRIPLE VIEW""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0
+S06E13,"""BLAZE OF COLOR""",0,0,0,1,0,0,0,0,0,0,0,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0
+S16E01,"""TWO SEASONS""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,1,0,0,1,1,0,1,0,0,0,1,0
+S11E03,"""DAISY DELIGHT""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0
+S21E09,"""INDIAN SUMMER""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_8:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S20E03,"""PASTEL WINTER""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,1,0,1,0,1,1,0,0,0,0,0,1,0
+S16E11,"""WATERFALL WONDER""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0
+S09E01,"""WINTER EVERGREENS""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S11E11,"""GOLDEN GLOW""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S03E04,"""WINTER NIGHT""",0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S16E13,"""WOODED STREAM OVAL""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+S21E10,"""BLUE WINTER""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0
+
+SEED_9:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S30E07,"""THROUGH THE WINDOW""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S29E12,"""AURORA'S DANCE""",0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S02E09,"""BLACK & WHITE SEASCAPE""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S28E07,"""THE OLD WEATHERED BARN""",0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S15E08,"""FALL STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0
+S27E06,"""DAISIES AT DAWN""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,1,1,0,0,0,0
+S27E03,"""RUSTIC WINTER WOODS""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+
+SEED_10:
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,LIGHTHOUSE,MILL,MOON,MOUNTAIN,MOUNTAINS,NIGHT,OCEAN,OVAL_FRAME,PALM_TREES,PATH,PERSON,PORTRAIT,RECTANGLE_3D_FRAME,RECTANGULAR_FRAME,RIVER,ROCKS,SEASHELL_FRAME,SNOW,SNOWY_MOUNTAIN,SPLIT_FRAME,STEVE_ROSS,STRUCTURE,SUN,TOMB_FRAME,TREE,TREES,TRIPLE_FRAME,WATERFALL,WAVES,WINDMILL,WINDOW_FRAME,WINTER,WOOD_FRAMED
+S23E08,"""VALLEY WATERFALL""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S11E07,"""LAKESIDE PATH""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S07E01,"""WINTER CABIN""",0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S19E08,"""SCENIC SECLUSION""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S19E05,"""CAMPER'S HAVEN""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0
+S25E10,"""JUST BEFORE THE STORM""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S13E05,"""MOUNTAIN VIEW""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+
+---
+Dataset: burtin
+ORIGINAL:
+[
+  {
+    "Bacteria":"Aerobacter aerogenes",
+    "Penicillin":870,
+    "Streptomycin":1,
+    "Neomycin":1.6,
+    "Gram_Staining":"negative",
+    "Genus": "other"
+
+SEED_1:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_2:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_3:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_4:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_5:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_6:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_7:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_8:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_9:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+SEED_10:
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Klebsiella pneumoniae,850.0,1.2,1.0,negative,other
+Mycobacterium tuberculosis,800.0,5.0,2.0,negative,other
+
+---
+Dataset: candy-power-ranking
+ORIGINAL:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,.73199999,.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,.60399997,.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,.011,.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,.011,.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,.90600002,.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,.465,.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,.60399997,.76700002,56.914547
+
+SEED_1:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_2:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_3:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_4:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_5:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_6:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_7:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_8:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_9:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+SEED_10:
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,0.73199999,0.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,0.60399997,0.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,0.011,0.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,0.011,0.51099998,46.116505
+Air Heads,0,1,0,0,0,0,0,0,0,0.90600002,0.51099998,52.341465
+Almond Joy,1,0,0,1,0,0,0,1,0,0.465,0.76700002,50.347546
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+
+---
+Dataset: car-crashes
+ORIGINAL:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_1:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_2:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_3:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_4:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_5:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_6:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_7:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_8:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_9:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+SEED_10:
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+12.0,4.2,3.36,10.92,10.68,878.41,165.63,CA
+13.6,5.032,3.8080000000000003,10.743999999999998,12.92,835.5,139.91,CO
+10.8,4.968,3.888,9.396,8.856,1068.73,167.02,CT
+
+---
+Dataset: cars-json
+ORIGINAL:
+[
+   {
+      "Name":"chevrolet chevelle malibu",
+      "Miles_per_Gallon":18,
+      "Cylinders":8,
+      "Displacement":307,
+      "Horsepower":130,
+      "Weight_in_lbs":3504,
+
+SEED_1:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+mercedes benz 300d,25.8,4,82.0,128,2098,16.3,1970-01-01,Europe
+ford ranger,18.9,5,391.0,109,4103,15.0,1970-01-01,USA
+subaru,21.5,4,123.0,112,1738,14.9,1970-01-01,Japan
+dodge d100,13.0,5,423.0,127,2924,20.0,1970-01-01,USA
+dodge aspen 6,19.0,6,343.0,110,2173,12.6,1970-01-01,USA
+mazda glc,39.8,4,107.0,59,2102,12.8,1970-01-01,Japan
+subaru,26.3,4,75.0,116,2492,22.5,1970-01-01,Japan
+
+SEED_2:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+amc matador,9.0,8,446.0,61,3523,15.3,1970-01-01,USA
+oldsmobile omega brougham,28.7,8,407.0,189,4308,14.9,1970-01-01,USA
+volvo 144ea,27.0,4,114.0,47,2277,16.0,1970-01-01,Europe
+plymouth custom suburb,31.4,8,420.0,111,3091,19.3,1970-01-01,USA
+peugeot 604sl,21.2,4,100.0,95,3160,16.7,1970-01-01,Europe
+chevrolet impala,15.8,7,334.0,175,2055,18.5,1970-01-01,USA
+ford mustang ii 2+2,24.9,5,232.0,97,4111,22.2,1970-01-01,USA
+
+SEED_3:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+plymouth sapporo,20.0,5,277.0,131,3418,19.6,1970-01-01,USA
+chevrolet vega,11.7,6,440.0,195,4939,12.5,1970-01-01,USA
+mercury monarch ghia,23.7,4,392.0,117,4274,17.9,1970-01-01,USA
+peugeot 504,,4,114.0,119,3699,16.6,1970-01-01,Europe
+audi 100ls,24.2,4,115.0,105,1962,12.9,1970-01-01,Europe
+chevrolet chevette,17.7,6,259.0,94,2984,19.8,1970-01-01,USA
+opel manta,34.4,4,118.0,99,1889,17.4,1970-01-01,Europe
+
+SEED_4:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+honda civic (auto),29.5,4,126.0,48,1934,13.3,1970-01-01,Japan
+peugeot 504,33.0,4,111.0,82,2310,17.3,1970-01-01,Europe
+buick opel isuzu deluxe,14.8,6,416.0,103,3332,16.2,1970-01-01,USA
+chevrolet vega,21.4,7,213.0,74,4905,17.3,1970-01-01,USA
+amc concord,11.7,4,153.0,110,4698,18.5,1970-01-01,USA
+toyota corona,26.0,3,109.0,72,2508,13.7,1970-01-01,Japan
+volkswagen jetta,26.8,4,146.0,86,1919,16.0,1970-01-01,Europe
+
+SEED_5:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+volkswagen dasher,35.2,4,188.0,61,1883,18.1,1970-01-01,Europe
+dodge challenger se,18.4,6,193.0,161,4737,22.5,1970-01-01,USA
+chevrolet nova,10.3,7,331.0,116,2551,15.6,1970-01-01,USA
+toyota corona hardtop,34.2,4,127.0,78,1768,11.0,1970-01-01,Japan
+toyota celica gt liftback,30.0,4,95.0,78,2916,14.6,1970-01-01,Japan
+ford mustang cobra,22.0,7,383.0,169,3099,10.4,1970-01-01,USA
+dodge colt,16.5,6,226.0,116,4207,12.1,1970-01-01,USA
+
+SEED_6:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+plymouth fury iii,17.9,8,89.0,149,3299,13.8,1970-01-01,USA
+hi 1200d,,7,297.0,207,4310,13.2,1970-01-01,USA
+ford ltd landau,19.5,7,396.0,85,3443,15.3,1970-01-01,USA
+chevrolet monte carlo,14.4,7,275.0,80,2913,17.4,1970-01-01,USA
+opel manta,21.0,4,96.0,98,2189,12.4,1970-01-01,Europe
+buick century,27.6,8,189.0,165,3283,16.6,1970-01-01,USA
+plymouth reliant,,6,281.0,123,3414,15.1,1970-01-01,USA
+
+SEED_7:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+honda civic,14.0,4,77.0,85,2877,14.1,1970-01-01,Japan
+volkswagen dasher,33.2,4,107.0,69,3184,18.8,1970-01-01,Europe
+plymouth horizon,16.6,8,364.0,73,2665,17.7,1970-01-01,USA
+chevrolet citation,30.1,7,291.0,106,2539,13.5,1970-01-01,USA
+plymouth volare premier v8,25.7,8,356.0,140,4670,11.8,1970-01-01,USA
+amc concord,18.2,5,114.0,63,2970,15.0,1970-01-01,USA
+buick electra 225 custom,19.8,5,415.0,101,2599,11.0,1970-01-01,USA
+
+SEED_8:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+ford pinto,,7,207.0,62,3302,16.7,1970-01-01,USA
+amc pacer d/l,20.2,4,437.0,108,3176,12.7,1970-01-01,USA
+mercury monarch,25.1,7,260.0,82,2283,17.7,1970-01-01,USA
+dodge coronet custom,13.1,6,395.0,183,2107,20.1,1970-01-01,USA
+volvo 145e (sw),28.6,4,77.0,79,2188,16.2,1970-01-01,Europe
+datsun 810 maxima,29.1,4,85.0,55,2223,15.2,1970-01-01,Japan
+ford mustang,9.0,4,188.0,110,4100,14.5,1970-01-01,USA
+
+SEED_9:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+volkswagen scirocco,44.0,5,117.0,82,2040,10.8,1970-01-01,Europe
+chevrolet monte carlo landau,18.5,4,407.0,120,3268,19.0,1970-01-01,USA
+volvo diesel,27.4,4,106.0,123,3072,16.0,1970-01-01,Europe
+chevrolet vega,28.0,5,291.0,130,2685,15.6,1970-01-01,USA
+buick century limited,16.7,8,404.0,97,1840,15.5,1970-01-01,USA
+renault 12tl,25.3,4,116.0,72,2746,16.5,1970-01-01,Europe
+amc ambassador dpl,21.1,5,360.0,89,3849,14.8,1970-01-01,USA
+
+SEED_10:
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+datsun 710,34.9,4,78.0,108,2337,18.0,1970-01-01,Japan
+oldsmobile omega,27.8,6,353.0,104,2671,15.5,1970-01-01,USA
+chevrolet nova,28.0,7,324.0,100,2327,14.5,1970-01-01,USA
+chevrolet monte carlo landau,27.2,4,363.0,122,2966,16.1,1970-01-01,USA
+honda civic 1500 gl,36.5,5,69.0,87,2496,19.7,1970-01-01,Japan
+honda prelude,31.5,4,173.0,99,2312,14.4,1970-01-01,Japan
+chevrolet nova,14.5,4,237.0,116,2601,13.0,1970-01-01,USA
+
+---
+Dataset: co2-concentration
+ORIGINAL:
+Date,CO2,adjusted CO2
+1958-03-01,315.70,314.44
+1958-04-01,317.46,315.16
+1958-05-01,317.51,314.71
+1958-07-01,315.86,315.19
+1958-08-01,314.93,316.19
+1958-09-01,313.21,316.08
+1958-11-01,313.33,315.20
+
+SEED_1:
+Date,CO2,adjusted CO2
+1958-03-01,316.49,314.5
+1958-03-31,316.43,314.31
+1958-04-30,314.6,314.66
+1958-05-30,316.34,314.41
+1958-06-29,317.19,315.36
+1958-07-29,317.04,315.02
+1958-08-28,315.35,314.98
+
+SEED_2:
+Date,CO2,adjusted CO2
+1958-03-01,314.85,314.17
+1958-03-31,315.52,314.49
+1958-04-30,313.26,314.67
+1958-05-30,315.53,314.41
+1958-06-29,316.05,315.1
+1958-07-29,316.1,315.24
+1958-08-28,318.56,315.29
+
+SEED_3:
+Date,CO2,adjusted CO2
+1958-03-01,316.23,314.28
+1958-03-31,317.44,314.56
+1958-04-30,315.62,314.57
+1958-05-30,317.45,314.36
+1958-06-29,318.18,314.59
+1958-07-29,317.17,315.22
+1958-08-28,316.3,314.99
+
+SEED_4:
+Date,CO2,adjusted CO2
+1958-03-01,316.07,314.17
+1958-03-31,316.98,313.69
+1958-04-30,315.72,315.05
+1958-05-30,313.99,314.64
+1958-06-29,317.65,315.18
+1958-07-29,318.24,314.84
+1958-08-28,316.02,315.51
+
+SEED_5:
+Date,CO2,adjusted CO2
+1958-03-01,315.28,314.73
+1958-03-31,313.88,314.19
+1958-04-30,316.56,315.07
+1958-05-30,316.59,314.73
+1958-06-29,316.82,314.74
+1958-07-29,314.24,315.81
+1958-08-28,317.28,315.34
+
+SEED_6:
+Date,CO2,adjusted CO2
+1958-03-01,315.01,314.58
+1958-03-31,313.47,315.18
+1958-04-30,317.07,315.0
+1958-05-30,315.39,315.37
+1958-06-29,318.23,316.02
+1958-07-29,317.29,314.82
+1958-08-28,317.85,315.37
+
+SEED_7:
+Date,CO2,adjusted CO2
+1958-03-01,313.08,314.37
+1958-03-31,316.64,314.52
+1958-04-30,318.94,314.96
+1958-05-30,318.59,315.19
+1958-06-29,315.73,315.06
+1958-07-29,315.92,315.23
+1958-08-28,315.3,315.41
+
+SEED_8:
+Date,CO2,adjusted CO2
+1958-03-01,317.68,314.05
+1958-03-31,314.84,315.11
+1958-04-30,313.25,314.18
+1958-05-30,315.21,314.6
+1958-06-29,316.19,315.36
+1958-07-29,316.47,315.38
+1958-08-28,315.9,314.82
+
+SEED_9:
+Date,CO2,adjusted CO2
+1958-03-01,315.57,314.5
+1958-03-31,316.65,314.4
+1958-04-30,315.93,314.52
+1958-05-30,315.95,314.62
+1958-06-29,314.19,314.67
+1958-07-29,316.18,315.68
+1958-08-28,315.47,315.54
+
+SEED_10:
+Date,CO2,adjusted CO2
+1958-03-01,313.63,314.78
+1958-03-31,314.94,314.13
+1958-04-30,315.45,314.8
+1958-05-30,315.46,314.61
+1958-06-29,315.84,314.74
+1958-07-29,315.31,314.81
+1958-08-28,319.83,314.93
+
+---
