@@ -97,12 +97,16 @@ def find_generated(ds_path: str, seed: int) -> Optional[str]:
         full = os.path.join(seed_dir, f)
         if os.path.isfile(full) and f.endswith(('.csv', '.json', '.parquet')):
             return full
-        # If the output is a directory (multi-entity output), look inside
+        # Handle multi-entity output where -o creates a directory containing
+        # per-entity files (e.g., out_seed_1/generated.csv/original.csv).
         if os.path.isdir(full):
-            for inner in os.listdir(full):
-                inner_full = os.path.join(full, inner)
-                if os.path.isfile(inner_full) and inner.endswith(('.csv', '.json', '.parquet')):
-                    return inner_full
+            try:
+                for inner in os.listdir(full):
+                    inner_full = os.path.join(full, inner)
+                    if os.path.isfile(inner_full) and inner.endswith(('.csv', '.json', '.parquet')):
+                        return inner_full
+            except OSError:
+                continue
     return None
 
 
