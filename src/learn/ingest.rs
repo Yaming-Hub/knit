@@ -495,6 +495,12 @@ fn collect_files_recursive(dir: &Path) -> LearnResult<Vec<PathBuf>> {
                 Err(_) => continue,
             };
             if ft.is_dir() && !ft.is_symlink() {
+                // Skip known output directories to prevent contamination
+                // from previously-generated data.
+                if is_output_directory(&path) {
+                    debug!(dir = %path.display(), "skipping output directory");
+                    continue;
+                }
                 if let Ok(canonical) = path.canonicalize()
                     && visited.insert(canonical)
                 {
@@ -506,6 +512,23 @@ fn collect_files_recursive(dir: &Path) -> LearnResult<Vec<PathBuf>> {
         }
     }
     Ok(files)
+}
+
+/// Check whether a directory name matches known output patterns that should
+/// be excluded from ingestion to prevent contamination.
+///
+/// Excluded patterns:
+/// - `out`, `out_seed_*`, `output` — knit generate output directories
+/// - `gen` — legacy generation output
+/// - `test_output`, `test_learn*` — test artifacts
+fn is_output_directory(path: &Path) -> bool {
+    let name = match path.file_name().and_then(|n| n.to_str()) {
+        Some(n) => n,
+        None => return false,
+    };
+    matches!(name, "out" | "output" | "gen" | "test_output")
+        || name.starts_with("out_seed_")
+        || name.starts_with("test_learn")
 }
 
 /// Ingest with an optional per-entity row limit.
@@ -1184,5 +1207,63 @@ mod tests {
         let r = &results[0];
         assert!(r.partition_by.is_none());
         assert!(r.partition_values.is_empty());
+    }
+
+    #[test]
+    fn collect_files_skips_output_directories() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+
+        // Create source file in root
+        write_csv(root, "data.csv", "id,val\n1,a\n2,b\n");
+
+        // Create output directories that should be excluded
+        let out_seed = root.join("out_seed_1");
+        std::fs::create_dir(&out_seed).unwrap();
+        write_csv(&out_seed, "data.csv", "id,val\n1,x\n2,y\n");
+
+        let out = root.join("out");
+        std::fs::create_dir(&out).unwrap();
+        write_csv(&out, "data.csv", "id,val\n1,x\n2,y\n");
+
+        let gen_dir = root.join("gen");
+        std::fs::create_dir(&gen_dir).unwrap();
+        write_csv(&gen_dir, "data.csv", "id,val\n1,x\n2,y\n");
+
+        let test_output = root.join("test_output");
+        std::fs::create_dir(&test_output).unwrap();
+        write_csv(&test_output, "data.csv", "id,val\n1,x\n2,y\n");
+
+        // Valid subdirectory should be included
+        let subdir = root.join("tables");
+        std::fs::create_dir(&subdir).unwrap();
+        write_csv(&subdir, "extra.csv", "id,val\n3,c\n");
+
+        let files = collect_files_recursive(root).unwrap();
+        let names: Vec<&str> = files
+            .iter()
+            .map(|p| p.file_name().unwrap().to_str().unwrap())
+            .collect();
+
+        // Only source files (root + valid subdir) should be collected
+        assert_eq!(files.len(), 2, "Expected 2 files, got: {:?}", names);
+        assert!(names.contains(&"data.csv"));
+        assert!(names.contains(&"extra.csv"));
+    }
+
+    #[test]
+    fn is_output_directory_patterns() {
+        assert!(is_output_directory(Path::new("/tmp/out")));
+        assert!(is_output_directory(Path::new("/tmp/out_seed_1")));
+        assert!(is_output_directory(Path::new("/tmp/out_seed_42")));
+        assert!(is_output_directory(Path::new("/tmp/output")));
+        assert!(is_output_directory(Path::new("/tmp/gen")));
+        assert!(is_output_directory(Path::new("/tmp/test_output")));
+        assert!(is_output_directory(Path::new("/tmp/test_learn.knit")));
+        // Should NOT match regular directories
+        assert!(!is_output_directory(Path::new("/tmp/data")));
+        assert!(!is_output_directory(Path::new("/tmp/tables")));
+        assert!(!is_output_directory(Path::new("/tmp/generation_config")));
+        assert!(!is_output_directory(Path::new("/tmp/outbound")));
     }
 }

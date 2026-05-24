@@ -94,8 +94,15 @@ def find_generated(ds_path: str, seed: int) -> Optional[str]:
     if not os.path.isdir(seed_dir):
         return None
     for f in os.listdir(seed_dir):
-        if f.endswith(('.csv', '.json', '.parquet')):
-            return os.path.join(seed_dir, f)
+        full = os.path.join(seed_dir, f)
+        if os.path.isfile(full) and f.endswith(('.csv', '.json', '.parquet')):
+            return full
+        # If the output is a directory (multi-entity output), look inside
+        if os.path.isdir(full):
+            for inner in os.listdir(full):
+                inner_full = os.path.join(full, inner)
+                if os.path.isfile(inner_full) and inner.endswith(('.csv', '.json', '.parquet')):
+                    return inner_full
     return None
 
 
