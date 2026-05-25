@@ -57,3 +57,7 @@ datasets/batch_*.json
 datasets/pairs.json
 datasets/quality_scores.json
 datasets/samples.json
+
+# Learner-generated tuple lookup files
+*__fullrow.*
+

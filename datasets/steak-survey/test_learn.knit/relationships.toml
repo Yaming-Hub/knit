@@ -1,6 +1,0 @@
-[[constraints]]
-table = "original"
-type = "range"
-field = "RespondentID"
-min = 3234760413.0
-max = 3237565956.0

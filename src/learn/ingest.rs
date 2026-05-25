@@ -529,6 +529,31 @@ fn is_output_directory(path: &Path) -> bool {
     matches!(name, "out" | "output" | "gen" | "test_output")
         || name.starts_with("out_seed_")
         || name.starts_with("test_learn")
+        || name.starts_with("generated.")
+}
+
+/// Check whether a file is a knit blueprint (metadata) rather than source data.
+///
+/// Blueprint files match `*.knit.json` or `*.knit.toml`.
+fn is_blueprint_file(path: &Path) -> bool {
+    let name = match path.file_name().and_then(|n| n.to_str()) {
+        Some(n) => n,
+        None => return false,
+    };
+    name.ends_with(".knit.json") || name.ends_with(".knit.toml")
+}
+
+/// Check whether a file is a learner-generated artifact rather than source data.
+///
+/// The learner creates `*__fullrow.tsv` files as tuple lookup tables.
+/// These must be excluded from subsequent ingestion runs to avoid
+/// creating spurious entities from learner artifacts.
+fn is_learner_artifact(path: &Path) -> bool {
+    let name = match path.file_name().and_then(|n| n.to_str()) {
+        Some(n) => n,
+        None => return false,
+    };
+    name.contains("__fullrow.")
 }
 
 /// Ingest with an optional per-entity row limit.
@@ -863,7 +888,11 @@ fn ingest_directory_flat(dir: &Path, max_rows: Option<usize>) -> LearnResult<Vec
                 .and_then(|e| e.to_str())
                 .unwrap_or("")
                 .to_lowercase();
-            ["csv", "tsv", "parquet", "json", "jsonl"].contains(&ext.as_str())
+            if !["csv", "tsv", "parquet", "json", "jsonl"].contains(&ext.as_str()) {
+                return false;
+            }
+            // Skip blueprint files — they are metadata, not source data
+            !is_blueprint_file(p) && !is_learner_artifact(p)
         })
         .map(|p| {
             p.file_stem()
@@ -892,6 +921,18 @@ fn ingest_directory_flat(dir: &Path, max_rows: Option<usize>) -> LearnResult<Vec
 
         if !["csv", "tsv", "parquet", "json", "jsonl"].contains(&ext.as_str()) {
             debug!(path = %path.display(), "Skipping unsupported file");
+            continue;
+        }
+
+        // Skip blueprint files — they are metadata, not source data
+        if is_blueprint_file(&path) {
+            debug!(path = %path.display(), "Skipping blueprint file");
+            continue;
+        }
+
+        // Skip learner-generated artifacts (e.g., *__fullrow.tsv)
+        if is_learner_artifact(&path) {
+            debug!(path = %path.display(), "Skipping learner artifact");
             continue;
         }
 
