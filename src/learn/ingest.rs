@@ -529,7 +529,7 @@ fn is_output_directory(path: &Path) -> bool {
     matches!(name, "out" | "output" | "gen" | "test_output")
         || name.starts_with("out_seed_")
         || name.starts_with("test_learn")
-        || name.starts_with("generated.")
+        || matches!(name, "generated.csv" | "generated.tsv" | "generated.json" | "generated.parquet")
 }
 
 /// Check whether a file is a knit blueprint (metadata) rather than source data.
@@ -545,15 +545,22 @@ fn is_blueprint_file(path: &Path) -> bool {
 
 /// Check whether a file is a learner-generated artifact rather than source data.
 ///
-/// The learner creates `*__fullrow.tsv` files as tuple lookup tables.
-/// These must be excluded from subsequent ingestion runs to avoid
-/// creating spurious entities from learner artifacts.
+/// The learner creates several types of artifact files:
+/// - `*__fullrow.tsv` — full-row lookup tables
+/// - `{entity}__{columns}.tsv` — tuple-pair dictionary files
+/// - `{entity}__{columns}__{values}.tsv` — tuple-pair subset files
+///
+/// All learner artifacts follow the pattern of containing double-underscore
+/// (`__`) in the filename. Legitimate source data files (e.g., `original.csv`)
+/// never contain this pattern.
 fn is_learner_artifact(path: &Path) -> bool {
     let name = match path.file_name().and_then(|n| n.to_str()) {
         Some(n) => n,
         None => return false,
     };
-    name.contains("__fullrow.")
+    // Learner-generated files always contain "__" and have a data extension
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+    name.contains("__") && matches!(ext, "tsv" | "csv" | "parquet")
 }
 
 /// Ingest with an optional per-entity row limit.
