@@ -1,0 +1,106 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Miles_per_Gallon"
+min = 9.0
+max = 46.6
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Cylinders"
+min = 3.0
+max = 8.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Displacement"
+min = 68.0
+max = 455.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Horsepower"
+min = 46.0
+max = 230.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Weight_in_lbs"
+min = 1613.0
+max = 5140.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Acceleration"
+min = 8.0
+max = 24.8
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Cylinders <= Miles_per_Gallon"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Miles_per_Gallon <= Displacement"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Miles_per_Gallon <= Horsepower"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Miles_per_Gallon <= Weight_in_lbs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Cylinders <= Displacement"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Cylinders <= Horsepower"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Cylinders <= Weight_in_lbs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Cylinders <= Acceleration"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Displacement <= Weight_in_lbs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Acceleration <= Displacement"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Horsepower <= Weight_in_lbs"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Acceleration <= Horsepower"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Acceleration <= Weight_in_lbs"

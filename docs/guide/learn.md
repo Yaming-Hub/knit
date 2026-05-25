@@ -16,7 +16,7 @@ statistical distributions, detects relationships, and outputs a
 
 ```bash
 knit learn data/users.csv
-knit learn data/users.csv -o my_blueprint.knit.toml
+knit learn data/users.csv -o my_blueprint.knit.json
 ```
 
 The output blueprint includes **confidence annotations** on every inferred
@@ -188,7 +188,7 @@ A common workflow is to learn a blueprint, tune it, and generate:
 
 ```bash
 # Step 1: Infer blueprint from production data
-knit learn prod_export.csv -o blueprint.knit.toml
+knit learn prod_export.csv -o blueprint.knit.json
 
 # Step 2: Review and tune the blueprint (edit in your editor)
 # - Adjust distributions
@@ -196,10 +196,10 @@ knit learn prod_export.csv -o blueprint.knit.toml
 # - Add noise profiles for testing
 
 # Step 3: Validate your tuned blueprint
-knit validate blueprint.knit.toml
+knit validate blueprint.knit.json
 
 # Step 4: Generate synthetic data
-knit generate blueprint.knit.toml -o ./synthetic_data
+knit generate blueprint.knit.json -o ./synthetic_data
 ```
 
 ---
@@ -274,7 +274,7 @@ knit learn data/chunk2.csv --state learned.state
 knit learn data/chunk3.csv --state learned.state
 
 # Generate blueprint from accumulated state
-knit learn --finalize --state learned.state -o blueprint.knit.toml
+knit learn --finalize --state learned.state -o blueprint.knit.json
 ```
 
 ### How It Works

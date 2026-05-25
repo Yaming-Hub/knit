@@ -1,0 +1,89 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "mass",
+    "orbital_period",
+]
+matrix = [
+    [
+    1.0,
+    0.5422340014145366,
+],
+    [
+    0.5422340014145366,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "mass",
+    "number",
+]
+matrix = [
+    [
+    1.0,
+    -0.4019088993007644,
+],
+    [
+    -0.4019088993007644,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "mass",
+    "distance",
+]
+matrix = [
+    [
+    1.0,
+    0.4676207440417269,
+],
+    [
+    0.4676207440417269,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "distance",
+]
+matrix = [
+    [
+    1.0,
+    0.37023462668780865,
+],
+    [
+    0.37023462668780865,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "orbital_period",
+    "distance",
+]
+matrix = [
+    [
+    1.0,
+    -0.3733840361046875,
+],
+    [
+    -0.3733840361046875,
+    1.0,
+],
+]
+conditional = []

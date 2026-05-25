@@ -1,0 +1,64 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "start_lat"
+min = 18.33730556
+max = 47.44898194
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "start_lon"
+min = -157.9224072
+max = -64.97336111
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "end_lat"
+min = 17.70188889
+max = 47.44898194
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "end_lon"
+min = -159.3389581
+max = -64.79855556
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "cnt"
+min = 4.0
+max = 914.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "start_lon <= start_lat"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "end_lon <= start_lat"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "start_lon <= end_lat"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "start_lon <= cnt"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "end_lon <= end_lat"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "end_lon <= cnt"

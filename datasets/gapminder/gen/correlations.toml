@@ -1,0 +1,107 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "life_expect",
+]
+matrix = [
+    [
+    1.0,
+    0.5072117640877327,
+],
+    [
+    0.5072117640877327,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "life_expect",
+]
+matrix = [
+    [
+    1.0,
+    0.5412020990718822,
+],
+    [
+    0.5412020990718822,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.47248741611565825,
+],
+    [
+    -0.47248741611565825,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.4966885068972552,
+],
+    [
+    -0.4966885068972552,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8335735273158446,
+],
+    [
+    -0.8335735273158446,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "life_expect",
+    "fertility",
+]
+matrix = [
+    [
+    1.0,
+    -0.8557524264239551,
+],
+    [
+    -0.8557524264239551,
+    1.0,
+],
+]
+conditional = []

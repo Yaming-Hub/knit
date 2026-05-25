@@ -1,0 +1,375 @@
+--- Dataset: obesity ---
+ORIGINAL (sample):
+[
+  {"id": 1,  "rate": 0.187, "state": "AL"},
+  {"id": 2,  "rate": 0.198, "state": "AK"},
+  {"id": 4,  "rate": 0.133, "state": "AZ"},
+  {"id": 5,  "rate": 0.175, "state": "AR"},
+  {"id": 6,  "rate": 0.151, "state": "CA"},
+  {"id": 8,  "rate": 0.100, "state": "CO"},
+  {"id": 9,  "rate": 0.125, "state": "CT"},
+  {"id": 10, "rate": 0.171, "state": "DE"},
+  {"id": 12, "rate": 0.172, "state": "FL"},
+  {"id": 13, "rate": 0.133, "state": "GA"},
+  {"id": 15, "rate": 0.108, "state": "HI"},
+  {"id": 16, "rate": 0.142, "state": "ID"},
+  {"id": 17, "rate": 0.167, "state": "IL"},
+  {"id": 18, "rate": 0.201, "state": "IN"},
+  {"id": 19, "rate": 0.175, "state": "IA"},
+  {"id": 20, "rate": 0.159, "state": "KS"},
+  {"id": 21, "rate": 0.169, "state": "KY"},
+  {"id": 22, "rate": 0.177, "state": "LA"},
+  {"id
+
+GENERATED (sample):
+id,rate,state
+1,0.173,NY
+2,0.158,MO
+3,0.186,IA
+4,0.184,KS
+5,0.164,VA
+6,0.172,MD
+7,0.16,FL
+8,0.175,MO
+9,0.12,SC
+10,0.15,DE
+11,0.114,LA
+12,0.144,NM
+13,0.153,IN
+14,0.114,MN
+15,0.11,IN
+16,0.186,AR
+17,0.142,IA
+18,0.159,NV
+19,0.176,ID
+20,0.165,MO
+21,0.134,NE
+22,0.173,ND
+23,0.172,NH
+24,0.127,WI
+25,0.137,UT
+26,0.126,MS
+27,0.15,RI
+28,0.162,CA
+29,0.15,AR
+30,0.194,IL
+
+--- Dataset: ohlc ---
+ORIGINAL (sample):
+[
+  { "date": "2009-06-01", "open": 28.7, "high": 30.05, "low": 28.45, "close": 30.04, "signal": "short", "ret": -4.89396411092985 },
+  { "date": "2009-06-02", "open": 30.04, "high": 30.13, "low": 28.3, "close": 29.63, "signal": "short", "ret": -0.322580645161295 },
+  { "date": "2009-06-03", "open": 29.62, "high": 31.79, "low": 29.62, "close": 31.02, "signal": "short", "ret": 3.68663594470045 },
+  { "date": "2009-06-04", "open": 31.02, "high": 31.02, "low": 29.92, "close": 30.18, "signal": "short", "ret": 4.51010886469673 },
+  { "date": "2009-06-05", "open": 29.39, "high": 30.81, "low": 28.85, "close": 29.62, "signal": "short", "ret": 6.08424336973478 },
+  { "date": "2009-06-08", "open": 30.84, "high": 31.82, "low": 26.41, "close": 29.77, "signal": "short", "ret": 1.2539184952978 },
+  { "d
+
+GENERATED (sample):
+date,open,high,low,close,signal,ret
+2009-06-01,29.91,27.31,24.51,25.79,long,2.498812620190615
+2009-06-01,25.42,29.58,25.03,29.08,long,0.10626132920804
+2009-06-03,27.93,31.83,23.16,30.73,short,14.209117773261799
+2009-06-04,30.98,32.6,28.09,28.12,short,3.609651189060893
+2009-06-05,29.9,29.35,27.76,29.31,neutral,-1.909867696357483
+2009-06-08,28.84,31.02,26.02,28.71,short,0.957245513428489
+2009-06-08,24.07,28.24,23.93,24.23,short,9.104831960197467
+2009-06-11,27.54,32.87,26.71,32.5,short,12.391593187416465
+2009-06-15,26.67,31.13,24.99,26.67,short,3.294970431467386
+2009-06-17,25.86,31.08,24.86,30.58,short,4.6129529708241
+2009-06-17,28.51,32.26,26.12,30.55,short,-3.340644768596595
+2009-06-17,24.69,29.95,24.57,28.98,long,0.228982442930924
+2009-06-18,28.96,31.82,28.69,29.38,long,-4.476798678763205
+
+
+--- Dataset: penguins ---
+ORIGINAL (sample):
+species,island,bill_length_mm,bill_depth_mm,flipper_length_mm,body_mass_g,sex
+Adelie,Torgersen,39.1,18.7,181,3750,MALE
+Adelie,Torgersen,39.5,17.4,186,3800,FEMALE
+Adelie,Torgersen,40.3,18,195,3250,FEMALE
+Adelie,Torgersen,,,,,
+Adelie,Torgersen,36.7,19.3,193,3450,FEMALE
+Adelie,Torgersen,39.3,20.6,190,3650,MALE
+Adelie,Torgersen,38.9,17.8,181,3625,FEMALE
+Adelie,Torgersen,39.2,19.6,195,4675,MALE
+Adelie,Torgersen,34.1,18.1,193,3475,
+Adelie,Torgersen,42,20.2,190,4250,
+Adelie,Torgersen,37.8,17.1,186,3300,
+Adelie,Torgersen,37.8,17.3,180,3700,
+Adelie,Torgersen,41.1,17.6,182,3200,FEMALE
+Adelie,Torgersen,38.6,21.2,191,3800,MALE
+Adelie,Torgersen,34.6,21.1,198,4400,MALE
+Adelie,Torgersen,36.6,17.8,185,3700,FEMALE
+Adelie,Torgersen,38.7,19,195,3450,FEMALE
+Adelie,Torgersen,42.5,20.7,197,4500,MALE
+Adelie,Torg
+
+GENERATED (sample):
+species,island,bill_length_mm,bill_depth_mm,flipper_length_mm,body_mass_g,sex
+Adelie,Torgersen,36.0,16.2,189,3701.0,MALE
+Adelie,Torgersen,42.8,19.4,225,3458.0,MALE
+Adelie,Torgersen,44.8,15.5,180,3281.0,FEMALE
+Adelie,Torgersen,56.8,19.2,215,3997.0,MALE
+Adelie,Torgersen,44.5,13.1,202,3336.0,FEMALE
+Adelie,Torgersen,37.1,19.4,215,4529.0,MALE
+Adelie,Torgersen,53.4,17.7,206,3734.0,FEMALE
+Adelie,Torgersen,41.0,19.4,207,3992.0,MALE
+Adelie,Torgersen,40.7,15.8,198,3656.0,FEMALE
+Adelie,Torgersen,52.8,15.7,200,3550.0,MALE
+Adelie,Torgersen,44.2,19.1,218,3197.0,FEMALE
+Adelie,Torgersen,47.9,15.9,173,2955.0,MALE
+Adelie,Torgersen,51.4,16.3,189,3416.0,FEMALE
+Adelie,Torgersen,58.5,17.3,218,3260.0,MALE
+Adelie,Torgersen,46.1,17.2,212,2817.0,FEMALE
+Adelie,Torgersen,46.8,16.7,222,3593.0,MALE
+Adelie,Torgersen,48.
+
+--- Dataset: penguins-json ---
+ORIGINAL (sample):
+[
+  {
+    "Species": "Adelie",
+    "Island": "Torgersen",
+    "Beak Length (mm)": 39.1,
+    "Beak Depth (mm)": 18.7,
+    "Flipper Length (mm)": 181,
+    "Body Mass (g)": 3750,
+    "Sex": "MALE"
+  },
+  {
+    "Species": "Adelie",
+    "Island": "Torgersen",
+    "Beak Length (mm)": 39.5,
+    "Beak Depth (mm)": 17.4,
+    "Flipper Length (mm)": 186,
+    "Body Mass (g)": 3800,
+    "Sex": "FEMALE"
+  },
+  {
+    "Species": "Adelie",
+    "Island": "Torgersen",
+    "Beak Length (mm)": 40.3,
+    "Beak Depth (mm)": 18,
+    "Flipper Length (mm)": 195,
+    "Body Mass (g)": 3250,
+    "Sex": "FEMALE"
+  },
+  {
+    "Species": "Adelie",
+    "Island": "Torgersen",
+
+GENERATED (sample):
+Species,Island,Beak Length (mm),Beak Depth (mm),Flipper Length (mm),Body Mass (g),Sex
+Adelie,Biscoe,37.5,15.8,206,3356.0,MALE
+Adelie,Dream,43.1,17.2,222,4067.0,FEMALE
+Adelie,Dream,41.7,19.5,216,3305.0,FEMALE
+Adelie,Biscoe,41.1,16.7,220,4453.0,FEMALE
+Adelie,Dream,34.2,14.4,231,3482.0,MALE
+Adelie,Torgersen,41.8,16.4,208,3078.0,
+Adelie,Biscoe,40.6,16.5,198,3402.0,FEMALE
+Adelie,Torgersen,45.0,19.6,215,3757.0,MALE
+Adelie,Torgersen,49.7,15.1,189,3873.0,FEMALE
+Adelie,Dream,49.5,18.6,182,3607.0,MALE
+Adelie,Biscoe,47.8,16.0,218,3053.0,MALE
+Adelie,Dream,48.1,20.3,200,3720.0,MALE
+Adelie,Dream,44.1,15.7,210,3715.0,MALE
+Adelie,Biscoe,50.1,16.5,183,3055.0,MALE
+Adelie,Dream,45.9,17.9,200,3529.0,FEMALE
+Adelie,Dream,35.9,18.4,194,3736.0,MALE
+Adelie,Biscoe,57.0,17.9,210,3936.0,MALE
+Adelie,Dream,48.7,16.3,19
+
+--- Dataset: piqa-test ---
+ORIGINAL (sample):
+{"goal": "how do you puncture a vein?", "sol1": "hit it at the wrong angle and make it bleed.", "sol2": "pop it."}
+{"goal": "hands", "sol1": "is used to put on shoe ", "sol2": "is used to put on milk jug "}
+{"goal": "What ingredients do I need to make a shortcrust for mini pies?", "sol1": "To make pie crust, you will need flour, sugar, butter, and ice cubes", "sol2": "To make pie crust, you will need flour, sugar, butter, and ice water."}
+{"goal": "roast broccoli", "sol1": "Preheat oven to 450 degrees F.    Toss the broccoli florets with the olive pits, garlic, salt, and pepper on a baking sheet. Spread them out and then roast, without stirring, until the edges are crispy and the stems are crisp tender, about 20 minutes.    Serve warm.", "sol2": "Preheat oven to 450 degrees F.    Toss the 
+
+GENERATED (sample):
+goal,sol1,sol2
+Create toy mailbox for toddlers.,Smooth out the damaged area with rough-grained sandpaper.,Use a hacksaw and saw 2 mm above the hilt.
+To allow the rainbow bread to rise for a second time,Get a sealant from your nearby hardware store and treat the wood.,can be used to hold up a painting
+"To prepare a pressure cooker for steaming, you can",soak the food in a mixture of self-lighting charcoal  briquettes and water.,You should use solid metal bars.
+How to create a jack o lantern,Drink a cup of chocolate milk.,to work inside efficiently.
+How would one use a hot glue gun?,Spray the mirror with windex and take a small section of paper towel and rub it all over the mirror until its dry.,"Whisk 1/2 cup mayonnaise, 1/3 cup sweet chili peppers in chili, 2 tablespoons each sweet pickle 
+
+--- Dataset: piqa-train ---
+ORIGINAL (sample):
+{"goal": "When boiling butter, when it's ready, you can", "sol1": "Pour it onto a plate", "sol2": "Pour it into a jar"}
+{"goal": "To permanently attach metal legs to a chair, you can", "sol1": "Weld the metal together to get it to stay firmly in place", "sol2": "Nail the metal together to get it to stay firmly in place"}
+{"goal": "how do you indent something?", "sol1": "leave a space before starting the writing", "sol2": "press the spacebar"}
+{"goal": "how do you shake something?", "sol1": "move it up and down and side to side quickly.", "sol2": "stir it very quickly."}
+{"goal": "Clean tires", "sol1": "Pour water, cape off caked on dirt. Use  speed wool to clean out crevices and sparrow spaces.", "sol2": "Pour water, scrape off caked on dirt. Use a steel wool to clean out crevices and narr
+
+GENERATED (sample):
+goal,sol1,sol2
+sandwich bag,bring the pot indoors and stick in the sink with baking soda and peroxide.,Preheat the oven to 350 degrees. Bake for about 20 minutes. Stick a toothpick in the center and bake until the toothpick comes up clean.
+How can I clean the top of a fan?,"Place flour tortillas into the spaces between the bottom of an inverted muffin,  spray with cooking oil (like pam) first, bake at 400 degrees for 15 min.","Scoop a cup of peanut butter into a bowl, and mix in half a cup of birdseed, blending with a spoon. Place it in a pine-cone bird feeder and the local birds will eat it all year long."
+shoes,Point digital clock towards you.,Place baby on top of a clothes dryer.
+Dry wet socks quickly.,"Locate a free spot in the bike stand and place your bike wheel in it, either front o
+
+--- Dataset: piqa-valid ---
+ORIGINAL (sample):
+{"goal": "How do I ready a guinea pig cage for it's new occupants?", "sol1": "Provide the guinea pig with a cage full of a few inches of bedding made of ripped paper strips, you will also need to supply it with a water bottle and a food dish.", "sol2": "Provide the guinea pig with a cage full of a few inches of bedding made of ripped jeans material, you will also need to supply it with a water bottle and a food dish."}
+{"goal": "dresser", "sol1": "replace drawer with bobby pin ", "sol2": "finish, woodgrain with  bobby pin "}
+{"goal": "To fight Ivan Drago in Rocky for sega master system.", "sol1": "Drago isn't in this game because it was released before Rocky IV.", "sol2": "You have to defeat Apollo Creed and Clubber Lang first."}
+{"goal": "Make outdoor pillow.", "sol1": "Blow into tin can 
+
+GENERATED (sample):
+goal,sol1,sol2
+What can you do when someone presses all the buttons on the elevator then gets off and you are in a hurry?,"Hook a plastic bag around the faucet head in your kitchen sink then peel potatoes, slice off melon rinds, etc straight into the bag for easy cleanup.",Apply velcro strips over rug.
+cut an onion without crying,can cut camera easily,Use a sharp kitchen knife
+How to best cut the meat to place on a grill?,can be worn on head always,Soak the meat in plain tap water for a few minutes.
+A nice canvas,Hang egg carton with egg shells from tree.,"fold the fabric in 4-6 layers, then cut using scissors"
+How to place the mounting pole for your hose reel?,"Even though they are much more expensive, anti-allergen vacuum cleaners, by preventing allergens from being present in you home, 
+
+--- Dataset: planets ---
+ORIGINAL (sample):
+method,number,orbital_period,mass,distance,year
+Radial Velocity,1,269.3,7.1,77.4,2006
+Radial Velocity,1,874.774,2.21,56.95,2008
+Radial Velocity,1,763.0,2.6,19.84,2011
+Radial Velocity,1,326.03,19.4,110.62,2007
+Radial Velocity,1,516.22,10.5,119.47,2009
+Radial Velocity,1,185.84,4.8,76.39,2008
+Radial Velocity,1,1773.4,4.64,18.15,2002
+Radial Velocity,1,798.5,,21.41,1996
+Radial Velocity,1,993.3,10.3,73.1,2008
+Radial Velocity,2,452.8,1.99,74.79,2010
+Radial Velocity,2,883.0,0.86,74.79,2010
+Radial Velocity,1,335.1,9.88,39.43,2009
+Radial Velocity,1,479.1,3.88,97.28,2008
+Radial Velocity,3,1078.0,2.53,14.08,1996
+Radial Velocity,3,2391.0,0.54,14.08,2001
+Radial Velocity,3,14002.0,1.64,14.08,2009
+Radial Velocity,1,4.230785,0.472,15.36,1995
+Radial Velocity,5,14.651,0.8,12.53,1996
+Radial Velocity,5,44.38,0
+
+GENERATED (sample):
+method,number,orbital_period,mass,distance,year
+Transit,1.0,22.7872949,,,2014
+Transit,3.0,40.0165567,0.1638,36.84,2011
+Radial Velocity,6.0,2712.1847709,0.0056,38.9,2013
+Radial Velocity,4.0,526.8560842,2.5959,25.27,2009
+Radial Velocity,2.0,247.3532765,0.4358,,2014
+Transit,1.0,2.5426272,15.3272,175.59,2005
+Transit,2.0,7.6720454,0.2006,95.32,2009
+Radial Velocity,1.0,304.6371625,,26.34,2007
+Transit,1.0,53.9007662,,382.13,2012
+Radial Velocity,1.0,189.8229769,9.6123,17.29,2013
+Radial Velocity,1.0,12.964063,0.1004,80.87,2013
+Transit,1.0,107.322407,,858.66,2011
+Transit,1.0,15.5186738,0.7489,1437.04,2005
+Radial Velocity,3.0,127.1136939,,59.79,2006
+Radial Velocity,5.0,4.7444709,6.4369,,2012
+Radial Velocity,3.0,1038.7458545,,5.06,2014
+Transit,1.0,3.9656007,,,2014
+Radial Velocity,1.0,26.712363,5.1544,
+
+--- Dataset: population ---
+ORIGINAL (sample):
+[{"year":1850,"age":0,"sex":1,"people":1483789},
+{"year":1850,"age":0,"sex":2,"people":1450376},
+{"year":1850,"age":5,"sex":1,"people":1411067},
+{"year":1850,"age":5,"sex":2,"people":1359668},
+{"year":1850,"age":10,"sex":1,"people":1260099},
+{"year":1850,"age":10,"sex":2,"people":1216114},
+{"year":1850,"age":15,"sex":1,"people":1077133},
+{"year":1850,"age":15,"sex":2,"people":1110619},
+{"year":1850,"age":20,"sex":1,"people":1017281},
+{"year":1850,"age":20,"sex":2,"people":1003841},
+{"year":1850,"age":25,"sex":1,"people":862547},
+{"year":1850,"age":25,"sex":2,"people":799482},
+{"year":1850,"age":30,"sex":1,"people":730638},
+{"year":1850,"age":30,"sex":2,"people":639636},
+{"year":1850,"age":35,"sex":1,"people":588487},
+{"year":1850,"age":35,"sex":2,"people":505012},
+{"year":1850,"age":40,"se
+
+GENERATED (sample):
+year,age,sex,people
+1850,80,1,11635647
+1850,35,2,5010231
+1850,5,2,6062461
+1850,40,2,118432
+1850,20,1,4493221
+1850,5,2,52406
+1850,70,1,450406
+1850,15,2,2833837
+1850,25,1,896427
+1850,40,1,76011
+1850,35,2,2277582
+1850,30,2,137716
+1850,70,1,1228377
+1850,40,1,1447876
+1850,5,2,4384964
+1850,65,2,642238
+1850,40,2,11635647
+1850,80,2,1619026
+1850,45,2,1857923
+1850,40,1,3113289
+1850,5,2,494931
+1850,80,2,1563528
+1850,80,2,192287
+1850,25,1,147247
+1850,45,2,3417227
+1850,45,2,1798311
+1850,70,2,125709
+1850,90,1,1031504
+1850,65,1,3083603
+1850,0,2,3423576
+
+--- Dataset: population-engineers-hurricanes ---
+ORIGINAL (sample):
+state,id,population,engineers,hurricanes
+Alabama,1,4863300,0.003421545,22
+Alaska,2,741894,0.001590524,0
+Arizona,4,6931071,0.004774154,0
+Arkansas,5,2988248,0.002439557,0
+California,6,39250017,0.007125857,0
+Colorado,8,5540545,0.008087652,0
+Connecticut,9,3576452,0.005896906,10
+Delaware,10,952065,0.004989155,2
+District of Columbia,11,681170,0.011759179,0
+Florida,12,20612439,0.003299949,110
+Georgia,13,10310371,0.004939686,20
+Hawaii,15,1428557,0.001624016,0
+Idaho,16,1683140,0.002970638,0
+Illinois,17,12801539,0.004478368,0
+Indiana,18,6633053,0.002724236,0
+Iowa,19,3134693,0.003716472,0
+Kansas,20,2907289,0.003811111,0
+Kentucky,21,4436974,0.002089262,0
+Louisiana,22,4681666,0.001176931,49
+Maine,23,1331479,0.002290686,6
+Maryland,24,6016447,0.006291088,2
+Massachusetts,25,6811779,0.010230808,10
+Michigan
+
+GENERATED (sample):
+state,id,population,engineers,hurricanes
+Montana,1,1039410,0.001629888,49
+Rhode Island,2,1624866,0.006602928,49
+Rhode Island,3,1020254,0.002929805,0
+New Mexico,4,2993568,0.007315426,0
+Nebraska,5,4921761,0.002511253,0
+Nevada,6,2977742,0.005300481,10
+New Hampshire,7,21077233,0.003442404,0
+North Dakota,8,1592200,0.004793959,0
+Pennsylvania,9,3751973,0.003533873,0
+Arkansas,10,7032068,0.003067742,0
+Tennessee,11,1054772,0.003978961,0
+Oklahoma,12,12061053,0.005938459,0
+Nebraska,13,2272850,0.000773897,0
+Mississippi,14,1189480,0.011759179,0
+New York,15,3587159,0.002423144,0
+Alaska,16,3765851,0.001343076,0
+Alabama,17,4517175,0.005974262,0
+Connecticut,18,4875891,0.004464458,0
+Nevada,19,2134905,0.004642655,0
+South Carolina,20,1920855,0.003639744,15
+Oregon,21,5255803,0.005539931,9
+Illinois,22,3062054,0.

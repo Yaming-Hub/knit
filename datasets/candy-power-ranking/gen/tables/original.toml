@@ -1,0 +1,572 @@
+[table]
+name = "original"
+count = 85
+
+[table.stats]
+source_rows = 85
+
+[[table.scaling.custom]]
+name = "chocolate"
+field = "chocolate"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "fruity"
+field = "fruity"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "caramel"
+field = "caramel"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "peanutyalmondy"
+field = "peanutyalmondy"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "nougat"
+field = "nougat"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "crispedricewafer"
+field = "crispedricewafer"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "hard"
+field = "hard"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "bar"
+field = "bar"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "pluribus"
+field = "pluribus"
+cardinality = 2
+
+[[columns]]
+name = "competitorname"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 85
+
+[columns.stats]
+distinct_count = 85
+null_rate = 0.0
+min_length = 4
+max_length = 27
+avg_length = 13.31764705882353
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "chocolate"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.43529411764705883
+std = 0.49873790290925246
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 1.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "fruity"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.4470588235294118
+std = 0.500140036412212
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 1.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "caramel"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.16470588235294117
+std = 0.373116183345764
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "peanutyalmondy"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.16470588235294117
+std = 0.373116183345764
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "nougat"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.08235294117647059
+std = 0.2765331593774861
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "crispedricewafer"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 6
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.08235294117647059
+std = 0.2765331593774861
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "hard"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 7
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.17647058823529413
+std = 0.38348249442368526
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "bar"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 8
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.24705882352941178
+std = 0.43386091563731244
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "pluribus"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 9
+row_count = 85
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.5176470588235295
+std = 0.5026540206004226
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 1.0
+p75 = 1.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "sugarpercent"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 10
+row_count = 85
+
+[columns.stats]
+distinct_count = 34
+null_rate = 0.0
+min = 0.011
+max = 0.98799998
+mean = 0.47864705145882336
+std = 0.2827778706779034
+
+[columns.stats.percentiles]
+p25 = 0.22
+p50 = 0.465
+p75 = 0.73199999
+p95 = 0.94099998
+p99 = 0.96499997
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "pricepercent"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 11
+row_count = 85
+
+[columns.stats]
+distinct_count = 29
+null_rate = 0.0
+min = 0.011
+max = 0.97600001
+mean = 0.46888235249411775
+std = 0.28573961943317433
+
+[columns.stats.percentiles]
+p25 = 0.255
+p50 = 0.465
+p75 = 0.65100002
+p95 = 0.91799998
+p99 = 0.97600001
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "winpercent"
+data_type = "float"
+nullable = false
+precision = 6
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 12
+row_count = 85
+
+[columns.stats]
+distinct_count = 85
+null_rate = 0.0
+min = 22.445341
+max = 84.18029
+mean = 50.3167638117647
+std = 14.714357413407848
+
+[columns.stats.percentiles]
+p25 = 39.141056
+p50 = 47.829754
+p75 = 59.863998
+p95 = 76.673782
+p99 = 81.866257
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "chocolate"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "fruity"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "caramel"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "peanutyalmondy"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "nougat"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "crispedricewafer"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "hard"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "bar"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "pluribus"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "sugarpercent"
+min = 0.011
+max = 0.98799998
+
+[[constraints]]
+type = "range"
+field = "pricepercent"
+min = 0.011
+max = 0.97600001
+
+[[constraints]]
+type = "range"
+field = "winpercent"
+min = 22.445341
+max = 84.18029
+
+[[constraints]]
+type = "check"
+expr = "crispedricewafer <= chocolate"
+
+[[constraints]]
+type = "check"
+expr = "chocolate <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "fruity <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "caramel <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "peanutyalmondy <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "nougat <= bar"
+
+[[constraints]]
+type = "check"
+expr = "nougat <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "crispedricewafer <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "hard <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "bar <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "pluribus <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "sugarpercent <= winpercent"
+
+[[constraints]]
+type = "check"
+expr = "pricepercent <= winpercent"

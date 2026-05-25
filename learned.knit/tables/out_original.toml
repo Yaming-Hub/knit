@@ -1,0 +1,372 @@
+[table]
+name = "out_original"
+count = 76
+
+[table.stats]
+source_rows = 76
+
+[[table.scaling.custom]]
+name = "Major_category"
+field = "Major_category"
+cardinality = 5
+
+[table.sort_by]
+column = "Rank"
+direction = "asc"
+
+[[columns]]
+name = "Rank"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 0
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min = 1.0
+max = 76.0
+mean = 38.5
+std = 22.08317610006918
+
+[columns.stats.percentiles]
+p25 = 20.0
+p50 = 39.0
+p75 = 57.0
+p95 = 72.0
+p99 = 75.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Major_code"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 1
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min = 1301.0
+max = 6199.0
+mean = 3580.0263157894738
+std = 1437.455037893329
+
+[columns.stats.percentiles]
+p25 = 2410.0
+p50 = 3602.0
+p75 = 5002.0
+p95 = 6107.0
+p99 = 6110.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Major"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 2
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min_length = 6
+max_length = 58
+avg_length = 25.473684210526315
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "Major_category"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 3
+row_count = 76
+
+[columns.stats]
+distinct_count = 5
+null_rate = 0.0
+min_length = 6
+max_length = 23
+avg_length = 14.763157894736842
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "Total"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 4
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min = 609.0
+max = 280709.0
+mean = 25515.28947368421
+std = 43998.00855336244
+
+[columns.stats.percentiles]
+p25 = 3831.0
+p50 = 11123.0
+p75 = 25965.0
+p95 = 81527.0
+p99 = 209394.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Men"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 5
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min = 488.0
+max = 111762.0
+mean = 12800.763157894737
+std = 21307.554100752423
+
+[columns.stats.percentiles]
+p25 = 2057.0
+p50 = 4747.0
+p75 = 11431.0
+p95 = 45683.0
+p99 = 99743.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Women"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 6
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min = 77.0
+max = 187621.0
+mean = 12714.526315789473
+std = 29056.01472258882
+
+[columns.stats.percentiles]
+p25 = 1247.0
+p50 = 5276.0
+p75 = 12072.0
+p95 = 35004.0
+p99 = 168947.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "ShareWomen"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 7
+row_count = 76
+
+[columns.stats]
+distinct_count = 76
+null_rate = 0.0
+min = 0.077453027
+max = 0.967998119
+mean = 0.4369292405789473
+std = 0.23217586451601754
+
+[columns.stats.percentiles]
+p25 = 0.24919024
+p50 = 0.434298441
+p75 = 0.591001011
+p95 = 0.864456079
+p99 = 0.927807246
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Median"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "out_original__fullrow.tsv"
+column = 8
+row_count = 76
+
+[columns.stats]
+distinct_count = 41
+null_rate = 0.0
+min = 26000.0
+max = 110000.0
+mean = 46118.42105263158
+std = 13187.223215686878
+
+[columns.stats.percentiles]
+p25 = 36200.0
+p50 = 44700.0
+p75 = 52000.0
+p95 = 65000.0
+p99 = 75000.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "Rank"
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "Major_code"
+min = 1301.0
+max = 6199.0
+
+[[constraints]]
+type = "range"
+field = "Total"
+min = 609.0
+max = 280709.0
+
+[[constraints]]
+type = "range"
+field = "Men"
+min = 488.0
+max = 111762.0
+
+[[constraints]]
+type = "range"
+field = "Women"
+min = 77.0
+max = 187621.0
+
+[[constraints]]
+type = "range"
+field = "ShareWomen"
+min = 0.0
+
+[[constraints]]
+type = "range"
+field = "Median"
+min = 0.0
+
+[[constraints]]
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+type = "check"
+expr = "ShareWomen <= Median"

@@ -1,0 +1,209 @@
+Atlanta
+Dallas-Fort Worth
+Phoenix
+Denver
+Houston
+San Francisco
+Los Angeles
+Orlando
+Charlotte
+Salt Lake City
+Tampa
+Newark
+Las Vegas
+Philadelphia
+Minneapolis
+Seattle
+New York
+Chantilly
+San Diego
+St Louis
+Detroit
+Miami
+Boston
+Sacramento
+Baltimore
+Santa Ana
+New Orleans
+San Jose
+Arlington
+Portland
+Ft. Myers
+West Palm Beach
+Raleigh
+San Antonio
+Ft. Lauderdale
+Kansas City
+Oakland
+Pittsburgh
+Memphis
+Milwaukee
+Cleveland
+Jacksonville
+Tucson
+Indianapolis
+Reno
+Oklahoma City
+Providence
+Tulsa
+Covington
+Columbus
+Louisville
+Ontario
+Little Rock
+Dallas
+Omaha
+Norfolk
+Dayton
+Rochester
+Fayetteville/Springdale/Rogers
+Nashville
+Albuquerque
+Jackson
+El Paso
+Richmond
+Windsor Locks
+Midland
+Baton Rouge
+Knoxville
+Colorado Springs
+Pensacola
+Syracuse
+Birmingham
+Manchester
+Palm Springs
+Sarasota
+Corpus Christi
+Huntsville
+Columbia
+Lafayette
+Santa Barbara
+Spokane
+Mobile
+Wichita
+Buffalo
+Des Moines
+Harrisburg
+Montgomery
+Newport News
+White Plains
+Monterey
+Grand Rapids
+Beaches
+Yuma
+Aspen
+Tallahassee
+Gulfport-Biloxi
+Rapid City
+Long Beach
+Wilmington
+Lexington
+Madison
+Eugene
+Savannah
+Lubbock
+Cedar Rapids
+Greer
+Greensboro
+Islip
+Moline
+Asheville
+Akron
+Bloomington
+Harlingen
+Valparaiso
+Shreveport
+Fargo
+Hayden
+Medford
+Peoria
+Laredo
+Austin
+Abilene
+Springfield
+Flint
+Bristol
+Killeen
+Charleston
+Green Bay
+Redmond
+South Bend
+Boise
+Myrtle Beach
+Minot
+Champaign/Urbana
+Roanoke
+Eagle
+Bozeman
+Grand Junction
+Burbank
+Evansville
+Gunnison
+Idaho Falls
+Fresno
+McAllen
+Redding
+Grand Forks
+Sioux Falls
+Twin Falls
+Santa Maria
+Pocatello
+Dothan
+Montrose
+Bismarck
+Casper
+Traverse City
+Monroe
+Pasco
+Manhattan
+Alexandria
+North Bend
+Santa Fe
+Klamath Falls
+Newburgh
+Charlottesville
+Valdosta
+Mosinee
+Inyokern
+Arcata/Eureka
+Brunswick
+Lincoln
+Fort Wayne
+Cody
+Paducah
+San Luis Obispo
+Wilkes-Barre/Scranton
+Columbus-Starkville-West Point
+Gillette
+New Bern
+Augusta
+Fort Smith
+Tyler
+Helena
+Great Falls
+Meridian
+Telluride
+Chattanooga
+Lewiston
+Cedar City
+Albany
+Burlington
+Kalispell
+Melbourne
+Daytona Beach
+Allentown
+Duluth
+Cheyenne
+Rock Springs
+Lewisburg
+Bellingham
+Mammoth Lakes
+Appleton
+Hollister
+St. Petersburg
+Wichita Falls
+Fayetteville
+Eau Claire
+Dubuque
+Tunica
+Billings

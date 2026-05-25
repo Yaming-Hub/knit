@@ -49,6 +49,22 @@ pub fn load_blueprint(path: &str) -> Result<DataModel, BlueprintError> {
         .to_lowercase();
     let model = match ext.as_str() {
         "json" => crate::blueprint::parse_json_file(p)?,
+        "toml" => {
+            // Try TOML first; if it fails and content looks like JSON, try JSON
+            match crate::blueprint::parse_toml_file(p) {
+                Ok(m) => m,
+                Err(_) => {
+                    let content = std::fs::read_to_string(p)
+                        .map_err(|e| BlueprintError::Other(e.to_string()))?;
+                    if content.trim_start().starts_with('{') {
+                        crate::blueprint::parse_json_file(p)?
+                    } else {
+                        // Re-parse to get original error
+                        crate::blueprint::parse_toml_file(p)?
+                    }
+                }
+            }
+        }
         _ => crate::blueprint::parse_toml_file(p)?,
     };
     warn_v1_deprecation(&model, path);
@@ -71,7 +87,7 @@ fn warn_v1_deprecation(model: &DataModel, path: &str) {
 ///
 /// - If path is an existing structured model directory (contains `knit.toml`),
 ///   or has no extension, writes as structured directory.
-/// - Otherwise writes as flat TOML.
+/// - Otherwise writes as JSON.
 ///
 /// This is the write counterpart to [`load_blueprint`].
 pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
@@ -102,44 +118,92 @@ pub fn save_blueprint(model: &DataModel, path: &str) -> Result<()> {
         model_dir::writer::write_model_directory(model, effective_path)
             .with_context(|| format!("failed to write structured model to {path}"))?;
     } else {
-        let raw = FlatSchemaOutput {
-            blueprint_version: model.blueprint_version.clone(),
-            model: FlatModelMeta {
-                name: model.name.clone(),
-                description: model.description.clone(),
-                seed: if model.seed != 0 {
-                    Some(model.seed)
-                } else {
-                    None
-                },
-                locale: if model.locale != "en" {
-                    Some(model.locale.clone())
-                } else {
-                    None
-                },
-                timezone: if model.timezone != "UTC" {
-                    Some(model.timezone.clone())
-                } else {
-                    None
-                },
-                params: model.params.clone(),
-            },
-            entities: model.entities.clone(),
-            relationships: model.relationships.clone(),
-            noise: model.noise_profiles.clone(),
-            correlations: model.correlations.clone(),
-            personas: model.personas.clone(),
-            actor_relationships: model.actor_relationships.clone(),
-            types: model.custom_types.clone(),
-            mixins: model.mixins.clone(),
-            companion_files: model.companion_files.clone(),
-        };
         let schema_text =
-            toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
+            serialize_model_to_json(model).context("failed to serialize blueprint to JSON")?;
         std::fs::write(path, &schema_text)
-            .with_context(|| format!("failed to write schema to {path}"))?;
+            .with_context(|| format!("failed to write blueprint to {path}"))?;
     }
     Ok(())
+}
+
+/// Serialize a DataModel to pretty-printed JSON.
+pub(crate) fn serialize_model_to_json(model: &DataModel) -> Result<String> {
+    use serde_json::json;
+
+    let mut obj = serde_json::Map::new();
+    obj.insert(
+        "blueprint_version".to_string(),
+        json!(model.blueprint_version),
+    );
+
+    // Model metadata — always serialize seed/locale/timezone to avoid round-trip loss
+    let mut meta = serde_json::Map::new();
+    meta.insert("name".to_string(), json!(model.name));
+    if let Some(ref desc) = model.description {
+        meta.insert("description".to_string(), json!(desc));
+    }
+    meta.insert("seed".to_string(), json!(model.seed));
+    meta.insert("locale".to_string(), json!(model.locale));
+    meta.insert("timezone".to_string(), json!(model.timezone));
+    if !model.params.is_empty() {
+        meta.insert("params".to_string(), serde_json::to_value(&model.params)?);
+    }
+    obj.insert("model".to_string(), serde_json::Value::Object(meta));
+
+    if !model.entities.is_empty() {
+        obj.insert(
+            "entities".to_string(),
+            serde_json::to_value(&model.entities)?,
+        );
+    }
+    if !model.relationships.is_empty() {
+        obj.insert(
+            "relationships".to_string(),
+            serde_json::to_value(&model.relationships)?,
+        );
+    }
+    if !model.noise_profiles.is_empty() {
+        obj.insert(
+            "noise".to_string(),
+            serde_json::to_value(&model.noise_profiles)?,
+        );
+    }
+    if !model.correlations.is_empty() {
+        obj.insert(
+            "correlations".to_string(),
+            serde_json::to_value(&model.correlations)?,
+        );
+    }
+    if !model.personas.is_empty() {
+        obj.insert(
+            "personas".to_string(),
+            serde_json::to_value(&model.personas)?,
+        );
+    }
+    if !model.actor_relationships.is_empty() {
+        obj.insert(
+            "actor_relationships".to_string(),
+            serde_json::to_value(&model.actor_relationships)?,
+        );
+    }
+    if !model.custom_types.is_empty() {
+        obj.insert(
+            "types".to_string(),
+            serde_json::to_value(&model.custom_types)?,
+        );
+    }
+    if !model.mixins.is_empty() {
+        obj.insert("mixins".to_string(), serde_json::to_value(&model.mixins)?);
+    }
+    if !model.companion_files.is_empty() {
+        obj.insert(
+            "companion_files".to_string(),
+            serde_json::to_value(&model.companion_files)?,
+        );
+    }
+
+    serde_json::to_string_pretty(&serde_json::Value::Object(obj))
+        .context("failed to serialize to JSON")
 }
 
 /// Wrapper for proper flat TOML serialization of a DataModel.

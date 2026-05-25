@@ -140,7 +140,7 @@ knit blueprint diff <a> <b>            Compare two blueprints
 
 ### 4.1 `knit init`
 
-Scaffolds a new `blueprint.knit.toml` starter blueprint with documentation comments.
+Scaffolds a new `blueprint.knit.json` starter blueprint with documentation comments.
 
 The data model blueprint language is the single source of truth for all data
 definitions. The `init` command creates a minimal, well-commented blueprint file
@@ -150,7 +150,7 @@ the user then edits to define their specific data model.
 **Usage:**
 
 ```bash
-knit init                    # creates blueprint.knit.toml in cwd
+knit init                    # creates blueprint.knit.json in cwd
 knit init -o my_blueprint.toml  # custom output path
 ```
 
@@ -161,7 +161,7 @@ knit init -o my_blueprint.toml  # custom output path
   examples of foreign keys and relationships.
 - **Self-documenting** — The generated file lists all available generator types
   and configuration options as comments.
-- **Output** — Writes a `blueprint.knit.toml` file to the current directory (or path
+- **Output** — Writes a `blueprint.knit.json` file to the current directory (or path
   specified with `-o`). Refuses to overwrite existing files.
 
 ---
@@ -205,7 +205,7 @@ Parses and validates a knit blueprint, reporting all errors.
       "code": "E001",
       "message": "Relationship 'order_user' references unknown entity 'usr'",
       "path": "relationships[0].to",
-      "file": "blueprint.knit.toml",
+      "file": "blueprint.knit.json",
       "line": 42,
       "suggestion": "Did you mean 'user'?"
     }
@@ -520,7 +520,7 @@ users locate and fix problems quickly:
 
 ```
 error[E001]: unknown entity reference
-  --> blueprint.knit.toml:42:6
+  --> blueprint.knit.json:42:6
    |
 42 | to = "usr"
    |      ^^^^^ relationship 'order_user' references entity 'usr'
@@ -535,7 +535,7 @@ error[E001]: unknown entity reference
   "error": {
     "code": "E001",
     "message": "unknown entity reference",
-    "file": "blueprint.knit.toml",
+    "file": "blueprint.knit.json",
     "line": 42,
     "path": "relationships[0].to",
     "suggestion": "Did you mean 'user'?"

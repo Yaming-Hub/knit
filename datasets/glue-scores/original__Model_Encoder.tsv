@@ -1,8 +1,0 @@
-ERNIE	Transformer
-T5	Transformer
-RoBERTa	Transformer
-BERT	Transformer
-BiLSTM+ELMo	LSTM
-BiLSTM+CoVe	LSTM
-BiLSTM+Attn	LSTM
-BiLSTM	LSTM

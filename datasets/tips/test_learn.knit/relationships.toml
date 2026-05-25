@@ -1,0 +1,30 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "total_bill"
+min = 3.07
+max = 50.81
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "tip"
+min = 1.0
+max = 10.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "size"
+min = 1.0
+max = 6.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "tip <= total_bill"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "size <= total_bill"

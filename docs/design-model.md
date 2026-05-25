@@ -26,7 +26,7 @@
 
 ## 1. Motivation
 
-Today the knit model is a single flat TOML file (`blueprint.knit.toml`). For a
+Today the knit model is a single flat TOML file (`blueprint.knit.json`). For a
 real-world dataset with 48 tables and hundreds of columns, this file grows to
 **12,000+ lines** (160 KB). Problems include:
 
@@ -665,7 +665,7 @@ Knit detects the model format by the path argument:
 
 | Input | Detection |
 |-------|-----------|
-| `path/to/blueprint.knit.toml` | Flat format (v1) — single file |
+| `path/to/blueprint.knit.json` | Flat format (v1) — single file |
 | `path/to/my_model/` | Structured format (v2) — directory with `knit.toml` |
 | `path/to/my_model/knit.toml` | Structured format (v2) — explicit manifest |
 
@@ -673,10 +673,10 @@ Knit detects the model format by the path argument:
 
 ```bash
 # Convert flat → structured
-knit model convert blueprint.knit.toml -o my_model/
+knit model convert blueprint.knit.json -o my_model/
 
 # Convert structured → flat (for compatibility or sharing as single file)
-knit model flatten my_model/ -o blueprint.knit.toml
+knit model flatten my_model/ -o blueprint.knit.json
 ```
 
 **Conversion rules (flat → structured):**
@@ -694,7 +694,7 @@ knit model flatten my_model/ -o blueprint.knit.toml
 
 ### 11.3 Full Backward Compatibility
 
-- `knit generate blueprint.knit.toml` continues to work unchanged
+- `knit generate blueprint.knit.json` continues to work unchanged
 - `knit generate my_model/` works with the new structured format
 - `knit learn` gains a `--format structured` flag (default remains flat for now)
 - Internal `DataModel` struct is unchanged — both formats deserialize to the

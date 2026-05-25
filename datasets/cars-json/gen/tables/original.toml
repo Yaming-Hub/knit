@@ -1,0 +1,422 @@
+[table]
+name = "original"
+count = 406
+
+[table.stats]
+source_rows = 406
+
+[[table.scaling.custom]]
+name = "Cylinders"
+field = "Cylinders"
+cardinality = 5
+
+[[table.scaling.custom]]
+name = "Year"
+field = "Year"
+cardinality = 12
+
+[table.sort_by]
+column = "Year"
+direction = "asc"
+
+[[columns]]
+name = "Name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_Name.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 311
+null_rate = 0.0
+min_length = 6
+max_length = 36
+avg_length = 16.266009852216747
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "Miles_per_Gallon"
+data_type = "float"
+precision = 1
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "Name"
+file = "original__Name_Origin_Miles_per_Gallon_Cylinders.tsv"
+column = 2
+
+[columns.nullable]
+probability = 0.019704433497536946
+
+[columns.stats]
+distinct_count = 129
+null_rate = 0.019704433497536946
+min = 9.0
+max = 46.6
+mean = 23.5145728643216
+std = 7.815984312565781
+
+[columns.stats.percentiles]
+p25 = 17.5
+p50 = 23.0
+p75 = 29.0
+p95 = 37.0
+p99 = 43.4
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Cylinders"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "Name"
+file = "original__Name_Origin_Miles_per_Gallon_Cylinders.tsv"
+column = 3
+
+[columns.stats]
+distinct_count = 5
+null_rate = 0.0
+min = 3.0
+max = 8.0
+mean = 5.475369458128079
+std = 1.7121596315485257
+
+[columns.stats.percentiles]
+p25 = 4.0
+p50 = 4.0
+p75 = 8.0
+p95 = 8.0
+p99 = 8.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Displacement"
+data_type = "float"
+nullable = false
+precision = 0
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+
+[columns.generator.params]
+mu = 5.129426915099524
+sigma = 0.5326614271313922
+
+[columns.stats]
+distinct_count = 83
+null_rate = 0.0
+min = 68.0
+max = 455.0
+mean = 194.7795566502463
+std = 104.92245837948876
+
+[columns.stats.percentiles]
+p25 = 105.0
+p50 = 151.0
+p75 = 302.0
+p95 = 400.0
+p99 = 440.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Horsepower"
+data_type = "int"
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 4.592983282952307
+sigma = 0.3460420300635705
+
+[columns.nullable]
+probability = 0.014778325123152709
+
+[columns.stats]
+distinct_count = 93
+null_rate = 0.014778325123152709
+min = 46.0
+max = 230.0
+mean = 105.0825
+std = 38.768779183105195
+
+[columns.stats.percentiles]
+p25 = 76.0
+p50 = 95.0
+p75 = 130.0
+p95 = 180.0
+p99 = 220.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Weight_in_lbs"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 7.959963067517805
+sigma = 0.2804208017355805
+
+[columns.stats]
+distinct_count = 356
+null_rate = 0.0
+min = 1613.0
+max = 5140.0
+mean = 2979.4137931034484
+std = 847.0043282393509
+
+[columns.stats.percentiles]
+p25 = 2226.0
+p50 = 2830.0
+p75 = 3620.0
+p95 = 4464.0
+p99 = 4951.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Acceleration"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 0.5051297198114612
+shape = 30.72419583486445
+
+[columns.stats]
+distinct_count = 96
+null_rate = 0.0
+min = 8.0
+max = 24.8
+mean = 15.519704433497544
+std = 2.8033588163425454
+
+[columns.stats.percentiles]
+p25 = 13.7
+p50 = 15.5
+p75 = 17.2
+p95 = 20.4
+p99 = 22.2
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Year"
+data_type = "date"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "1982-01-01"
+weight = 0.15024630541871922
+
+[[columns.generator.choices]]
+value = "1973-01-01"
+weight = 0.09852216748768473
+
+[[columns.generator.choices]]
+value = "1978-01-01"
+weight = 0.08866995073891626
+
+[[columns.generator.choices]]
+value = "1970-01-01"
+weight = 0.08620689655172414
+
+[[columns.generator.choices]]
+value = "1976-01-01"
+weight = 0.08374384236453201
+
+[[columns.generator.choices]]
+value = "1975-01-01"
+weight = 0.07389162561576355
+
+[[columns.generator.choices]]
+value = "1979-01-01"
+weight = 0.07142857142857142
+
+[[columns.generator.choices]]
+value = "1980-01-01"
+weight = 0.07142857142857142
+
+[[columns.generator.choices]]
+value = "1971-01-01"
+weight = 0.07142857142857142
+
+[[columns.generator.choices]]
+value = "1977-01-01"
+weight = 0.06896551724137931
+
+[[columns.generator.choices]]
+value = "1972-01-01"
+weight = 0.06896551724137931
+
+[[columns.generator.choices]]
+value = "1974-01-01"
+weight = 0.0665024630541872
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min_length = 10
+max_length = 10
+avg_length = 10.0
+
+[columns.traits]
+semantic = "phone"
+pii = true
+cardinality = "medium"
+
+[[columns]]
+name = "Origin"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "Name"
+file = "original__Name_Origin_Miles_per_Gallon_Cylinders.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min_length = 3
+max_length = 6
+avg_length = 3.9285714285714284
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "low"
+
+[[constraints]]
+type = "range"
+field = "Miles_per_Gallon"
+min = 9.0
+max = 46.6
+
+[[constraints]]
+type = "range"
+field = "Cylinders"
+min = 3.0
+max = 8.0
+
+[[constraints]]
+type = "range"
+field = "Displacement"
+min = 68.0
+max = 455.0
+
+[[constraints]]
+type = "range"
+field = "Horsepower"
+min = 46.0
+max = 230.0
+
+[[constraints]]
+type = "range"
+field = "Weight_in_lbs"
+min = 1613.0
+max = 5140.0
+
+[[constraints]]
+type = "range"
+field = "Acceleration"
+min = 8.0
+max = 24.8
+
+[[constraints]]
+type = "check"
+expr = "Cylinders <= Miles_per_Gallon"
+
+[[constraints]]
+type = "check"
+expr = "Miles_per_Gallon <= Displacement"
+
+[[constraints]]
+type = "check"
+expr = "Miles_per_Gallon <= Horsepower"
+
+[[constraints]]
+type = "check"
+expr = "Miles_per_Gallon <= Weight_in_lbs"
+
+[[constraints]]
+type = "check"
+expr = "Cylinders <= Displacement"
+
+[[constraints]]
+type = "check"
+expr = "Cylinders <= Horsepower"
+
+[[constraints]]
+type = "check"
+expr = "Cylinders <= Weight_in_lbs"
+
+[[constraints]]
+type = "check"
+expr = "Cylinders <= Acceleration"
+
+[[constraints]]
+type = "check"
+expr = "Displacement <= Weight_in_lbs"
+
+[[constraints]]
+type = "check"
+expr = "Acceleration <= Displacement"
+
+[[constraints]]
+type = "check"
+expr = "Horsepower <= Weight_in_lbs"
+
+[[constraints]]
+type = "check"
+expr = "Acceleration <= Horsepower"
+
+[[constraints]]
+type = "check"
+expr = "Acceleration <= Weight_in_lbs"

@@ -1,0 +1,915 @@
+[table]
+name = "original"
+count = 4685
+
+[table.stats]
+source_rows = 4685
+
+[[table.scaling.custom]]
+name = "season"
+field = "season"
+cardinality = 9
+
+[[columns]]
+name = "player_name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_player_name.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 1322
+null_rate = 0.0
+min_length = 4
+max_length = 24
+avg_length = 13.043116328708644
+
+[columns.traits]
+semantic = "name"
+pii = true
+cardinality = "medium"
+
+[[columns]]
+name = "player_id"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "player_name"
+file = "original__player_name_player_id.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 1314
+null_rate = 0.0
+min_length = 6
+max_length = 9
+avg_length = 8.889647812166489
+
+[columns.traits]
+semantic = "text"
+cardinality = "medium"
+
+[[columns]]
+name = "season"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 2022
+weight = 0.12934898612593382
+
+[[columns.generator.choices]]
+value = 2018
+weight = 0.11547491995731056
+
+[[columns.generator.choices]]
+value = 2021
+weight = 0.1152614727854856
+
+[[columns.generator.choices]]
+value = 2020
+weight = 0.11312700106723586
+
+[[columns.generator.choices]]
+value = 2019
+weight = 0.11312700106723586
+
+[[columns.generator.choices]]
+value = 2015
+weight = 0.10501600853788687
+
+[[columns.generator.choices]]
+value = 2017
+weight = 0.10373532550693704
+
+[[columns.generator.choices]]
+value = 2014
+weight = 0.10288153681963715
+
+[[columns.generator.choices]]
+value = 2016
+weight = 0.10202774813233724
+
+[columns.stats]
+distinct_count = 9
+null_rate = 0.0
+min = 2014.0
+max = 2022.0
+mean = 2018.1681963713982
+std = 2.597848632825448
+
+[columns.stats.percentiles]
+p25 = 2016.0
+p50 = 2018.0
+p75 = 2020.0
+p95 = 2022.0
+p99 = 2022.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "poss"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+round = true
+
+[columns.generator.params]
+lambda = 0.000409332572973688
+
+[columns.stats]
+distinct_count = 3139
+null_rate = 0.0
+min = 2.0
+max = 8026.0
+mean = 2443.001280683031
+std = 1850.8132968906154
+
+[columns.stats.percentiles]
+p25 = 709.0
+p50 = 2252.0
+p75 = 3880.0
+p95 = 5655.0
+p99 = 6604.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "mp"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+round = true
+
+[columns.generator.params]
+lambda = 0.0008426680326822096
+
+[columns.stats]
+distinct_count = 2261
+null_rate = 0.0
+min = 1.0
+max = 3948.0
+mean = 1186.7069370330844
+std = 905.9421723288277
+
+[columns.stats.percentiles]
+p25 = 341.0
+p50 = 1087.0
+p75 = 1894.0
+p95 = 2764.0
+p99 = 3217.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "raptor_box_offense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -1.1141371239911315
+std_dev = 3.7371744475847732
+
+[columns.stats]
+distinct_count = 4684
+null_rate = 0.00021344717182497332
+min = -44.18627461043486
+max = 47.55763731
+mean = -1.1141371239911315
+std = 3.7375734412812696
+
+[columns.stats.percentiles]
+p25 = -2.47744396
+p50 = -0.9235091045952206
+p75 = 0.503477661372636
+p95 = 3.465420223
+p99 = 7.470227601
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_box_defense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -0.42230471842591827
+std_dev = 3.796390179113482
+
+[columns.stats]
+distinct_count = 4684
+null_rate = 0.00021344717182497332
+min = -48.18857740421232
+max = 57.30570498
+mean = -0.42230471842591827
+std = 3.796795494886709
+
+[columns.stats.percentiles]
+p25 = -1.79792157797812
+p50 = -0.285012101143968
+p75 = 1.169492329
+p95 = 3.71480472
+p99 = 8.041043542593156
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_box_total"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "derived"
+expr = "${raptor_box_offense} + ${raptor_box_defense}"
+
+[columns.stats]
+distinct_count = 4684
+null_rate = 0.00021344717182497332
+min = -61.67452127
+max = 54.87123672
+mean = -1.536441842414263
+std = 5.459275088746162
+
+[columns.stats.percentiles]
+p25 = -3.425829939
+p50 = -1.003903297449396
+p75 = 1.02356133
+p95 = 4.647051935
+p99 = 10.01848566
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_onoff_offense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -1.5847630155271741
+std_dev = 6.411129878351083
+
+[columns.stats]
+distinct_count = 4681
+null_rate = 0.00021344717182497332
+min = -67.77747807767906
+max = 85.40682246
+mean = -1.5847630155271741
+std = 6.411814352796887
+
+[columns.stats.percentiles]
+p25 = -3.325815113
+p50 = -1.065543606
+p75 = 1.124011461
+p95 = 4.728358048
+p99 = 10.27424126
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_onoff_defense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 0.11360919397358142
+std_dev = 6.209673033677243
+
+[columns.stats]
+distinct_count = 4681
+null_rate = 0.00021344717182497332
+min = -89.09612279876131
+max = 66.5234614064033
+mean = 0.11360919397358142
+std = 6.210335999892091
+
+[columns.stats.percentiles]
+p25 = -1.858660902
+p50 = 0.01396183
+p75 = 1.979227142
+p95 = 6.248214884
+p99 = 15.65330915780976
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_onoff_total"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "derived"
+expr = "${raptor_onoff_offense} + ${raptor_onoff_defense}"
+
+[columns.stats]
+distinct_count = 4681
+null_rate = 0.00021344717182497332
+min = -156.8736008764404
+max = 123.1519526
+mean = -1.4711538215328845
+std = 8.796286556221897
+
+[columns.stats.percentiles]
+p25 = -4.002796364
+p50 = -0.899057672
+p75 = 2.00279547927314
+p95 = 6.766390659
+p99 = 16.33789848
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_offense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -1.2780509199369616
+std_dev = 4.119485477288549
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -45.32330849
+max = 53.2288638
+mean = -1.2780509199369616
+std = 4.11992519394426
+
+[columns.stats.percentiles]
+p25 = -2.6856594436998
+p50 = -1.005402042
+p75 = 0.517681248625906
+p95 = 3.522769700548162
+p99 = 7.603499118
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_defense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -0.334169632036843
+std_dev = 4.014757165966582
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -56.98251960751814
+max = 62.46920451
+mean = -0.334169632036843
+std = 4.015185703851772
+
+[columns.stats.percentiles]
+p25 = -1.769847373
+p50 = -0.2323888215211429
+p75 = 1.248537671
+p95 = 3.965153368
+p99 = 10.01015852
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "raptor_total"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "derived"
+expr = "${raptor_offense} + ${raptor_defense}"
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -67.35600057835538
+max = 72.62236053
+mean = -1.6122205519686688
+std = 5.840574868317101
+
+[columns.stats.percentiles]
+p25 = -3.51172198328628
+p50 = -1.110777183
+p75 = 1.086221389702468
+p95 = 4.881510504
+p99 = 10.4668425876139
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "war_total"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "derived"
+expr = "${war_reg_season} + ${war_playoffs}"
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -7.382977773
+max = 26.66687277
+mean = 1.7436964717639507
+std = 3.1386017188396775
+
+[columns.stats.percentiles]
+p25 = -0.095478995
+p50 = 0.5587065632955112
+p75 = 2.727875359084309
+p95 = 7.993064535
+p99 = 14.06060434
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "war_reg_season"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 1.5646226337202003
+std_dev = 2.7489760840827104
+
+[columns.stats]
+distinct_count = 4680
+null_rate = 0.0
+min = -7.382977773
+max = 23.659318
+mean = 1.5646226337202003
+std = 2.7492695116422894
+
+[columns.stats.percentiles]
+p25 = -0.0988460613595651
+p50 = 0.538688767
+p75 = 2.550723033
+p95 = 6.864424544
+p99 = 12.03068184
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "war_playoffs"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 0.17907383805911792
+std_dev = 0.6188854726745265
+
+[columns.stats]
+distinct_count = 1932
+null_rate = 0.0
+min = -1.376520078
+max = 6.18923597809314
+mean = 0.17907383805911792
+std = 0.6189515329269081
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 0.037866603
+p95 = 1.339647855
+p99 = 3.13679154895485
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "predator_offense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -1.181426210187512
+std_dev = 3.448660459459327
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -36.43326464779712
+max = 42.89028068
+mean = -1.181426210187512
+std = 3.4490285718006066
+
+[columns.stats.percentiles]
+p25 = -2.596552259
+p50 = -1.056912961
+p75 = 0.40249147
+p95 = 3.4224215408758
+p99 = 7.288802927
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "predator_defense"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -0.6181279123425384
+std_dev = 3.3688082914277118
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -37.87174503918634
+max = 42.98906324
+mean = -0.6181279123425384
+std = 3.3691678802947687
+
+[columns.stats.percentiles]
+p25 = -1.972463747
+p50 = -0.488000101
+p75 = 1.018530692044196
+p95 = 3.3445504368258
+p99 = 6.398307375
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "predator_total"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "derived"
+expr = "${predator_offense} + ${predator_defense}"
+
+[columns.stats]
+distinct_count = 4685
+null_rate = 0.0
+min = -69.09236730366824
+max = 49.10616605
+mean = -1.7995541225548126
+std = 5.193850752336959
+
+[columns.stats.percentiles]
+p25 = -3.958671143607722
+p50 = -1.435343931383994
+p75 = 0.929273144
+p95 = 4.785370646
+p99 = 9.678001457
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "pace_impact"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 0.056333609473947666
+std_dev = 0.962067042264247
+
+[columns.stats]
+distinct_count = 4684
+null_rate = 0.00021344717182497332
+min = -7.191955211393465
+max = 15.81770491704016
+mean = 0.056333609473947666
+std = 0.9621697558760557
+
+[columns.stats.percentiles]
+p25 = -0.456141151
+p50 = -0.0156910883410596
+p75 = 0.4655402317644746
+p95 = 1.437309782
+p99 = 2.9005901
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "season"
+min = 2014.0
+max = 2022.0
+
+[[constraints]]
+type = "range"
+field = "poss"
+min = 2.0
+max = 8026.0
+
+[[constraints]]
+type = "range"
+field = "mp"
+min = 1.0
+max = 3948.0
+
+[[constraints]]
+type = "range"
+field = "raptor_box_offense"
+min = -44.18627461043486
+max = 47.55763731
+
+[[constraints]]
+type = "range"
+field = "raptor_box_defense"
+min = -48.18857740421232
+max = 57.30570498
+
+[[constraints]]
+type = "range"
+field = "raptor_box_total"
+min = -61.67452127
+max = 54.87123672
+
+[[constraints]]
+type = "range"
+field = "raptor_onoff_offense"
+min = -67.77747807767906
+max = 85.40682246
+
+[[constraints]]
+type = "range"
+field = "raptor_onoff_defense"
+min = -89.09612279876131
+max = 66.5234614064033
+
+[[constraints]]
+type = "range"
+field = "raptor_onoff_total"
+min = -156.8736008764404
+max = 123.1519526
+
+[[constraints]]
+type = "range"
+field = "raptor_offense"
+min = -45.32330849
+max = 53.2288638
+
+[[constraints]]
+type = "range"
+field = "raptor_defense"
+min = -56.98251960751814
+max = 62.46920451
+
+[[constraints]]
+type = "range"
+field = "raptor_total"
+min = -67.35600057835538
+max = 72.62236053
+
+[[constraints]]
+type = "range"
+field = "war_total"
+min = -7.382977773
+max = 26.66687277
+
+[[constraints]]
+type = "range"
+field = "war_reg_season"
+min = -7.382977773
+max = 23.659318
+
+[[constraints]]
+type = "range"
+field = "war_playoffs"
+min = -1.376520078
+max = 6.18923597809314
+
+[[constraints]]
+type = "range"
+field = "predator_offense"
+min = -36.43326464779712
+max = 42.89028068
+
+[[constraints]]
+type = "range"
+field = "predator_defense"
+min = -37.87174503918634
+max = 42.98906324
+
+[[constraints]]
+type = "range"
+field = "predator_total"
+min = -69.09236730366824
+max = 49.10616605
+
+[[constraints]]
+type = "range"
+field = "pace_impact"
+min = -7.191955211393465
+max = 15.81770491704016
+
+[[constraints]]
+type = "check"
+expr = "raptor_box_offense <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_box_defense <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_box_total <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_onoff_offense <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_onoff_defense <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_onoff_total <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_offense <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_defense <= season"
+
+[[constraints]]
+type = "check"
+expr = "raptor_total <= season"
+
+[[constraints]]
+type = "check"
+expr = "war_total <= season"
+
+[[constraints]]
+type = "check"
+expr = "war_reg_season <= season"
+
+[[constraints]]
+type = "check"
+expr = "war_playoffs <= season"
+
+[[constraints]]
+type = "check"
+expr = "predator_offense <= season"
+
+[[constraints]]
+type = "check"
+expr = "predator_defense <= season"
+
+[[constraints]]
+type = "check"
+expr = "predator_total <= season"
+
+[[constraints]]
+type = "check"
+expr = "pace_impact <= season"
+
+[[constraints]]
+type = "check"
+expr = "mp <= poss"
+
+[[constraints]]
+type = "check"
+expr = "war_total <= poss"
+
+[[constraints]]
+type = "check"
+expr = "war_reg_season <= poss"
+
+[[constraints]]
+type = "check"
+expr = "war_playoffs <= poss"
+
+[[constraints]]
+type = "check"
+expr = "war_total <= mp"
+
+[[constraints]]
+type = "check"
+expr = "war_reg_season <= mp"
+
+[[constraints]]
+type = "check"
+expr = "war_playoffs <= mp"

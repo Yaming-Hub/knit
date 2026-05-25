@@ -1,0 +1,347 @@
+--- Dataset: tips ---
+ORIGINAL (sample):
+"total_bill","tip","sex","smoker","day","time","size"
+16.99,1.01,"Female","No","Sun","Dinner",2
+10.34,1.66,"Male","No","Sun","Dinner",3
+21.01,3.5,"Male","No","Sun","Dinner",3
+23.68,3.31,"Male","No","Sun","Dinner",2
+24.59,3.61,"Female","No","Sun","Dinner",4
+25.29,4.71,"Male","No","Sun","Dinner",4
+8.77,2,"Male","No","Sun","Dinner",2
+26.88,3.12,"Male","No","Sun","Dinner",4
+15.04,1.96,"Male","No","Sun","Dinner",2
+14.78,3.23,"Male","No","Sun","Dinner",2
+10.27,1.71,"Male","No","Sun","Dinner",2
+35.26,5,"Female","No","Sun","Dinner",4
+15.42,1.57,"Male","No","Sun","Dinner",2
+18.43,3,"Male","No","Sun","Dinner",4
+14.83,3.02,"Female","No","Sun","Dinner",2
+21.58,3.92,"Male","No","Sun","Dinner",2
+10.33,1.67,"Female","No","Sun","Dinner",3
+16.29,3.71,"Male","No","Sun","Dinner",3
+16.97,3.5,"Female","No","Su
+
+GENERATED (sample):
+total_bill,tip,sex,smoker,day,time,size
+25.24,3.16,Female,No,Sun,Dinner,2
+18.8,1.3,Female,Yes,Sat,Dinner,2
+32.36,2.27,Male,No,Thur,Lunch,4
+31.08,1.0,Male,Yes,Fri,Lunch,2
+20.9,2.47,Female,No,Sun,Dinner,3
+24.72,3.28,Female,Yes,Sat,Dinner,2
+19.6,2.27,Male,No,Thur,Lunch,2
+26.0,2.34,Male,Yes,Fri,Lunch,6
+9.0,2.65,Female,No,Sun,Dinner,2
+16.1,2.58,Female,Yes,Sat,Dinner,2
+8.16,2.72,Male,No,Thur,Lunch,3
+14.26,3.54,Male,Yes,Fri,Lunch,3
+16.92,2.26,Female,No,Sun,Dinner,3
+8.03,3.8,Female,Yes,Sat,Dinner,4
+7.42,2.69,Male,No,Thur,Lunch,3
+31.98,4.98,Male,Yes,Fri,Lunch,2
+13.88,4.21,Female,No,Sun,Dinner,2
+19.13,2.24,Female,Yes,Sat,Dinner,2
+26.7,6.09,Male,No,Thur,Lunch,2
+21.6,2.03,Male,Yes,Fri,Lunch,4
+11.91,5.46,Female,No,Sun,Dinner,2
+25.11,1.72,Female,Yes,Sat,Dinner,6
+24.64,4.69,Male,No,Thur,Lunch,2
+10.3,3.71
+
+--- Dataset: titanic ---
+ORIGINAL (sample):
+survived,pclass,sex,age,sibsp,parch,fare,embarked,class,who,adult_male,deck,embark_town,alive,alone
+0,3,male,22.0,1,0,7.25,S,Third,man,True,,Southampton,no,False
+1,1,female,38.0,1,0,71.2833,C,First,woman,False,C,Cherbourg,yes,False
+1,3,female,26.0,0,0,7.925,S,Third,woman,False,,Southampton,yes,True
+1,1,female,35.0,1,0,53.1,S,First,woman,False,C,Southampton,yes,False
+0,3,male,35.0,0,0,8.05,S,Third,man,True,,Southampton,no,True
+0,3,male,,0,0,8.4583,Q,Third,man,True,,Queenstown,no,True
+0,1,male,54.0,0,0,51.8625,S,First,man,True,E,Southampton,no,True
+0,3,male,2.0,3,1,21.075,S,Third,child,False,,Southampton,no,False
+1,3,female,27.0,0,2,11.1333,S,Third,woman,False,,Southampton,yes,False
+1,2,female,14.0,1,0,30.0708,C,Second,child,False,,Cherbourg,yes,False
+1,3,female,4.0,1,1,16.7,S,Third,child,Fa
+
+GENERATED (sample):
+survived,pclass,sex,age,sibsp,parch,fare,embarked,class,who,adult_male,deck,embark_town,alive,alone
+0.08767505866962422,1.3648518965801042,male,44.0,0.25598712728199535,0.040306145405546515,54.9331,Q	Queenstown,Third,man,true,,,no,false
+0.010404324845048496,1.5673948191587623,male,33.0,0.07554425595861487,0.45830842679911754,8.7913,Q	Queenstown,First,woman,true,E,,no,false
+0.6221045262005362,1.6286317369041643,male,43.0,1.8401304774019713,0.5141226446226059,7.8472,C	Cherbourg,Second,child,true,G,,no,true
+0.7567954871203129,1.2752603122069428,female,9.0,0.6046223728384564,0.1962370052079181,50.5972,C	Cherbourg,Third,man,true,,,yes,false
+0.5600459399179296,2.338217206085172,female,34.0,0.3716044622253391,0.05173070998348664,34.5948,S	Southampton,First,woman,true,,,yes,true
+0.1009447725708734
+
+--- Dataset: unemployment-industries ---
+ORIGINAL (sample):
+[{"series":"Government","year":2000,"month":1,"count":430,"rate":2.1,"date":"2000-01-01T08:00:00.000Z"},{"series":"Government","year":2000,"month":2,"count":409,"rate":2,"date":"2000-02-01T08:00:00.000Z"},{"series":"Government","year":2000,"month":3,"count":311,"rate":1.5,"date":"2000-03-01T08:00:00.000Z"},{"series":"Government","year":2000,"month":4,"count":269,"rate":1.3,"date":"2000-04-01T08:00:00.000Z"},{"series":"Government","year":2000,"month":5,"count":370,"rate":1.9,"date":"2000-05-01T07:00:00.000Z"},{"series":"Government","year":2000,"month":6,"count":603,"rate":3.1,"date":"2000-06-01T07:00:00.000Z"},{"series":"Government","year":2000,"month":7,"count":545,"rate":2.9,"date":"2000-07-01T07:00:00.000Z"},{"series":"Government","year":2000,"month":8,"count":583,"rate":3.1,"date":"2000
+
+GENERATED (sample):
+series,year,month,count,rate,date
+Government,2000,6,790.0,1.6,2024-08-14T09:58:09
+Government,2000,8,484.0,2.1,2023-09-24T07:03:55
+Government,2008,1,453.0,3.3,2021-11-18T13:00:32
+Government,2006,8,485.0,1.9,2022-10-08T20:34:46
+Government,2007,3,512.0,2.7,2022-11-06T12:34:37
+Government,2003,3,484.0,3.9,2021-10-14T05:50:21
+Government,2004,5,576.0,3.6,2023-06-18T21:34:52
+Government,2003,9,456.0,1.8,2023-06-07T19:51:02
+Government,2000,9,536.0,2.2,2022-01-22T22:31:11
+Government,2006,1,759.0,2.6,2022-12-12T07:32:59
+Government,2008,5,410.0,2.6,2020-12-18T06:41:35
+Government,2010,1,680.0,1.7,2020-05-22T21:28:47
+Government,2004,8,360.0,2.2,2021-03-12T15:13:17
+Government,2003,6,631.0,3.3,2020-01-24T09:15:40
+Government,2007,3,565.0,2.3,2021-12-29T15:56:42
+Government,2008,3,441.0,2.2,2024-01-19T20:37:3
+
+--- Dataset: us-ag-exports ---
+ORIGINAL (sample):
+code,state,category,total exports,beef,pork,poultry,dairy,fruits fresh,fruits proc,total fruits,veggies fresh,veggies proc,total veggies,corn,wheat,cotton
+AL,Alabama,state,1390.63,34.40,10.60,481.00,4.06,8.00,17.10,25.11,5.50,8.90,14.33,34.90,70.00,317.61
+AK,Alaska,state,13.31,0.20,0.10,0.00,0.19,0.00,0.00,0.00,0.60,1.00,1.56,0.00,0.00,0.00
+AZ,Arizona,state,1463.17,71.30,17.90,0.00,105.48,19.30,41.00,60.27,147.50,239.40,386.91,7.30,48.70,423.95
+AR,Arkansas,state,3586.02,53.20,29.40,562.90,3.53,2.20,4.70,6.88,4.40,7.10,11.45,69.50,114.50,665.44
+CA,California,state,16472.88,228.70,11.10,225.40,929.95,2791.80,5944.60,8736.40,803.20,1303.50,2106.79,34.60,249.30,1064.95
+CO,Colorado,state,1851.33,261.40,66.00,14.00,71.94,5.70,12.20,17.99,45.10,73.20,118.27,183.20,400.50,0.00
+CT,Connecticut,state
+
+GENERATED (sample):
+code,state,category,total exports,beef,pork,poultry,dairy,fruits fresh,fruits proc,total fruits,veggies fresh,veggies proc,total veggies,corn,wheat,cotton
+MT	Montana,,state,5055.58,131.4,126.1,69.9,25.25,62.5,107.3,420.21,25.5,26.5,90.79,199.1,126.4,286.36
+RI	Rhode Island,,state,7067.7,0.7,97.8,65.7,330.78,66.2,151.5,944.72,18.0,25.9,32.84,185.3,374.7,207.32
+RI	Rhode Island,,state,5205.24,19.3,148.0,35.8,17.21,115.3,135.32,766.6,32.1,130.8,187.58,350.4,2.1,445.38
+NM	New Mexico,,state,3466.35,11.5,113.4,187.1,21.52,42.5,81.6,210.74,2.2,49.2,59.04,362.2,246.9,33.77
+NE	Nebraska,,state,5906.61,9.3,9.7,39.3,3.71,50.62,358.0,472.3,14.8,85.07,169.8,1094.4,474.8,235.04
+NV	Nevada,,state,735.41,0.1,15.7,218.8,9.85,68.5,227.6,352.92,17.1,54.1,62.87,64.9,321.6,112.78
+NH	New Hampshire,,state,240.6,33.8
+
+--- Dataset: us-airport-traffic ---
+ORIGINAL (sample):
+iata,airport,city,state,country,lat,long,cnt
+ORD,Chicago O'Hare International,Chicago,IL,USA,41.979595,-87.90446417,25129
+ATL,William B Hartsfield-Atlanta Intl,Atlanta,GA,USA,33.64044444,-84.42694444,21925
+DFW,Dallas-Fort Worth International,Dallas-Fort Worth,TX,USA,32.89595056,-97.0372,20662
+PHX,Phoenix Sky Harbor International,Phoenix,AZ,USA,33.43416667,-112.0080556,17290
+DEN,Denver Intl,Denver,CO,USA,39.85840806,-104.6670019,13781
+IAH,George Bush Intercontinental,Houston,TX,USA,29.98047222,-95.33972222,13223
+SFO,San Francisco International,San Francisco,CA,USA,37.61900194,-122.3748433,12016
+LAX,Los Angeles International,Los Angeles,CA,USA,33.94253611,-118.4080744,11797
+MCO,Orlando International,Orlando,FL,USA,28.42888889,-81.31602778,10536
+CLT,Charlotte/Douglas International,Charlotte,N
+
+GENERATED (sample):
+iata,airport,city,state,country,lat,long,cnt
+FAT,Columbia Metropolitan,Pocatello	ID,,USA,46.16623665,-84.06395703,573.9152707188715
+RST,John F Kennedy Intl,Dothan	AL,,USA,38.05742503,-123.4612618,27.151646182299025
+LEX,Bradley International,Louisville	KY,,USA,41.27505345,-87.30569501,7883.597973329241
+HDN,Redding Municipal,Manchester	NH,,USA,39.57087124,-90.3857433,1233.246346630862
+PHL,San Antonio International,St Louis	MO,,USA,38.94927274,-101.03926337,291.5297435110842
+HDN,Long Beach (Daugherty ),Redmond	OR,,USA,36.95423572,-70.69068785,9868.013202067026
+MAF,Inyokern,Chicago	IL,,USA,29.85884207,-82.34276155,2257.4490138887227
+CAE,Yampa Valley,Harlingen	TX,,USA,34.33294756,-91.44523417,700.5463274206172
+AVL,Southwest Florida International,Greensboro	NC,,USA,32.41699796,-70.88292991,1456.
+
+--- Dataset: us-births-cdc ---
+ORIGINAL (sample):
+year,month,date_of_month,day_of_week,births
+1994,1,1,6,8096
+1994,1,2,7,7772
+1994,1,3,1,10142
+1994,1,4,2,11248
+1994,1,5,3,11053
+1994,1,6,4,11406
+1994,1,7,5,11251
+1994,1,8,6,8653
+1994,1,9,7,7910
+1994,1,10,1,10498
+1994,1,11,2,11706
+1994,1,12,3,11567
+1994,1,13,4,11212
+1994,1,14,5,11570
+1994,1,15,6,8660
+1994,1,16,7,8123
+1994,1,17,1,10567
+1994,1,18,2,11541
+1994,1,19,3,11257
+1994,1,20,4,11682
+1994,1,21,5,11811
+1994,1,22,6,8833
+1994,1,23,7,8310
+1994,1,24,1,11125
+1994,1,25,2,11981
+1994,1,26,3,11514
+1994,1,27,4,11702
+1994,1,28,5,11666
+1994,1,29,6,8988
+1994,1,30,7,8096
+
+GENERATED (sample):
+year,month,date_of_month,day_of_week,births
+1994,3,26,4,11037
+1994,4,11,3,8691
+1994,3,21,6,10669
+1994,8,8,5,11653
+1994,2,24,2,10970
+1994,10,11,1,11013
+1994,5,19,3,11805
+1994,4,29,1,9667
+1994,4,19,6,12240
+1994,5,17,3,8419
+1994,4,16,2,8822
+1994,7,10,7,8524
+1994,6,20,2,12269
+1994,1,24,5,8813
+1994,8,24,2,7766
+1994,2,22,6,10580
+1994,4,2,6,13380
+1994,2,2,5,12086
+1994,3,7,1,12787
+1994,5,15,5,10234
+1994,10,6,7,10664
+1994,2,9,3,7903
+1994,4,23,3,11621
+1994,2,14,7,10194
+1994,9,4,1,8387
+1994,7,4,3,10044
+1994,10,11,2,11583
+1994,3,13,7,12716
+1994,1,23,6,9344
+1994,7,17,3,12126
+
+--- Dataset: us-births-ssa ---
+ORIGINAL (sample):
+year,month,date_of_month,day_of_week,births
+2000,1,1,6,9083
+2000,1,2,7,8006
+2000,1,3,1,11363
+2000,1,4,2,13032
+2000,1,5,3,12558
+2000,1,6,4,12466
+2000,1,7,5,12516
+2000,1,8,6,8934
+2000,1,9,7,7949
+2000,1,10,1,11668
+2000,1,11,2,12611
+2000,1,12,3,12398
+2000,1,13,4,11815
+2000,1,14,5,12180
+2000,1,15,6,8525
+2000,1,16,7,7657
+2000,1,17,1,10824
+2000,1,18,2,12350
+2000,1,19,3,12405
+2000,1,20,4,12506
+2000,1,21,5,11953
+2000,1,22,6,8855
+2000,1,23,7,7856
+2000,1,24,1,11449
+2000,1,25,2,12593
+2000,1,26,3,12143
+2000,1,27,4,12408
+2000,1,28,5,11934
+2000,1,29,6,8805
+2000,1,30,7,7764
+
+GENERATED (sample):
+year,month,date_of_month,day_of_week,births
+2000,5,10,3,11378
+2000,8,4,5,9248
+2000,5,9,1,14413
+2000,7,18,7,11373
+2000,1,20,2,8058
+2000,5,11,1,11596
+2000,12,28,3,13116
+2000,4,25,7,9870
+2000,4,3,4,8271
+2000,3,21,4,10980
+2000,1,22,3,13293
+2000,10,28,2,12582
+2000,4,29,6,13437
+2000,6,29,4,10788
+2000,4,16,6,11576
+2000,10,21,4,12138
+2000,12,30,6,6404
+2000,6,26,2,7919
+2000,8,3,7,13536
+2000,1,30,1,10208
+2000,11,12,3,8624
+2000,7,14,1,14748
+2000,8,5,7,15930
+2000,4,13,3,11531
+2000,12,2,7,14016
+2000,2,26,4,16011
+2000,11,17,6,10655
+2000,12,23,4,11463
+2000,10,29,1,10704
+2000,9,11,4,11469
+
+--- Dataset: us-cities ---
+ORIGINAL (sample):
+name,pop,lat,lon
+New York ,8287238,40.7305991,-73.9865812
+Los Angeles ,3826423,34.053717,-118.2427266
+Chicago ,2705627,41.8755546,-87.6244212
+Houston ,2129784,29.7589382,-95.3676974
+Philadelphia ,1539313,39.952335,-75.163789
+Phoenix ,1465114,33.4467681,-112.0756724
+San Antonio ,1359174,29.4246002,-98.4951405
+San Diego ,1321016,32.7174209,-117.1627714
+Dallas ,1219399,32.7761963,-96.7968994
+San Jose ,971495,37.3438502,-121.8831349
+Austin ,839714,30.2711286,-97.7436995
+Jacksonville ,829543,30.3321838,-81.655651
+Indianapolis  ,827346,39.7683331,-86.1583502
+San Francisco ,816239,37.7792768,-122.4192704
+Columbus ,799270,39.9622601,-83.0007065
+Fort Worth ,761895,32.753177,-97.3327459
+Charlotte ,756204,35.2270869,-80.8431268
+Detroit ,702149,42.3486635,-83.0567375
+El Paso ,665503,31.8111305,-106.50
+
+GENERATED (sample):
+name,pop,lat,lon
+Xenia,8287238,44.5910514,-94.30953497
+Cudahy,8287238,31.3446466,-79.71656173
+Wood-Ridge borough,8287238,31.972438,-113.46412792
+Shelby,8287238,39.5199726,-71.39630742
+Plaquemine,8287238,37.7219049,-82.62309986
+Bountiful,8287238,45.1840858,-120.17468315
+Fairview,8287238,38.8353479,-76.82771179
+Bainbridge Island,8287238,35.4840021,-74.26550668
+Perryton,8287238,34.5255848,-113.04080242
+Arkansas City,8287238,43.3695206,-105.37738829
+Craig,6632413,41.1573208,-99.93044106
+Muskego,5974566,39.0841837,-101.62983445
+Durango,5532207,37.1071036,-114.34686589
+West Bend,5251999,47.0568563,-81.00040684
+Youngsville,4840519,46.4921766,-120.90983994
+Hobbs,4574181,36.6353535,-94.78207402
+Coolidge,4371949,46.0283088,-84.04496134
+Fridley,4347420,34.2553118,-77.34500023
+Wenatchee,4019674,43.549
+
+--- Dataset: women-stem ---
+ORIGINAL (sample):
+Rank,Major_code,Major,Major_category,Total,Men,Women,ShareWomen,Median
+1,2419,PETROLEUM ENGINEERING,Engineering,2339,2057,282,0.120564344,110000
+2,2416,MINING AND MINERAL ENGINEERING,Engineering,756,679,77,0.101851852,75000
+3,2415,METALLURGICAL ENGINEERING,Engineering,856,725,131,0.153037383,73000
+4,2417,NAVAL ARCHITECTURE AND MARINE ENGINEERING,Engineering,1258,1123,135,0.107313196,70000
+5,2418,NUCLEAR ENGINEERING,Engineering,2573,2200,373,0.144966965,65000
+6,2405,CHEMICAL ENGINEERING,Engineering,32260,21239,11021,0.341630502,65000
+7,5001,ASTRONOMY AND ASTROPHYSICS,Physical Sciences,1792,832,960,0.535714286,62000
+8,2414,MECHANICAL ENGINEERING,Engineering,91227,80320,10907,0.119558903,60000
+9,2401,AEROSPACE ENGINEERING,Engineering,15058,12953,2105,0.139792801,60000
+10,2408,ELECTRICAL ENGIN
+
+GENERATED (sample):
+Rank,Major_code,Major,Major_category,Total,Men,Women,ShareWomen,Median
+2.0,2527.0,GEOLOGICAL AND GEOPHYSICAL ENGINEERING,Engineering,2507.0,2438.0,736.0,0.19475058,53600.0
+2.0,3232.0,ARCHITECTURAL ENGINEERING,Engineering,9645.0,3533.0,1910.0,0.088741992,44211.0
+11.0,5005.0,TREATMENT THERAPY PROFESSIONS,Physical Sciences,4612.0,3448.0,589.0,0.484041097,41844.0
+15.0,3042.0,OCEANOGRAPHY,Engineering,2228.0,1050.0,121.0,0.200707968,48575.0
+15.0,2978.0,NUCLEAR ENGINEERING,Engineering,27753.0,2362.0,4269.0,0.164393549,56887.0
+16.0,2468.0,MISCELLANEOUS ENGINEERING TECHNOLOGIES,Engineering,39227.0,20100.0,6509.0,0.404553917,54849.0
+16.0,5017.0,ENVIRONMENTAL ENGINEERING,Physical Sciences,10629.0,567.0,6624.0,0.539752112,47984.0
+18.0,2221.0,PHYSICAL SCIENCES,Engineering,5195.0,2707.0,77.0,0.297982275

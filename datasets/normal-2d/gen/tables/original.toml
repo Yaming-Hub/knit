@@ -1,0 +1,86 @@
+[table]
+name = "original"
+count = 500
+
+[table.stats]
+source_rows = 500
+
+[[columns]]
+name = "u"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 0.004523911697702378
+std_dev = 0.1917777666970972
+
+[columns.stats]
+distinct_count = 500
+null_rate = 0.0
+min = -0.5780908693083983
+max = 0.532759793107122
+mean = 0.004523911697702378
+std = 0.19196983261072934
+
+[columns.stats.percentiles]
+p25 = -0.1199916308199775
+p50 = 0.005914623680815386
+p75 = 0.12222136792636
+p95 = 0.3300441041699124
+p99 = 0.4623673531699941
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "v"
+data_type = "float"
+nullable = false
+precision = 15
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = -0.01097214739824871
+std_dev = 0.1990855265718497
+
+[columns.stats]
+distinct_count = 500
+null_rate = 0.0
+min = -0.5336037670546572
+max = 0.6064095560290641
+mean = -0.01097214739824871
+std = 0.1992849112252978
+
+[columns.stats.percentiles]
+p25 = -0.14341595365728227
+p50 = -0.013472040521357129
+p75 = 0.11324251388436818
+p95 = 0.32948568774165843
+p99 = 0.4586841124693076
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "u"
+min = -0.5780908693083983
+max = 0.532759793107122
+
+[[constraints]]
+type = "range"
+field = "v"
+min = -0.5336037670546572
+max = 0.6064095560290641

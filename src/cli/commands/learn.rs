@@ -14,7 +14,6 @@ use arrow::datatypes::{DataType, TimeUnit};
 use arrow::record_batch::RecordBatch;
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
-use serde::Serialize;
 use serde_json;
 use tracing::{debug, info, info_span, warn};
 
@@ -35,47 +34,23 @@ pub struct ActorsOpts {
     pub max_personas: Option<usize>,
 }
 
-/// Intermediate struct for TOML serialization matching the knit blueprint format.
-#[derive(Serialize)]
-struct RawOutputSchema {
-    blueprint_version: String,
-    model: RawOutputModel,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    entities: Vec<crate::core::Entity>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    relationships: Vec<crate::core::Relationship>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    correlations: Vec<crate::core::Correlation>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    personas: Vec<crate::core::Persona>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    actor_relationships: Vec<crate::core::ActorRelationship>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    companion_files: Vec<String>,
-}
-
-/// Model metadata for TOML output.
-#[derive(Serialize)]
-struct RawOutputModel {
-    name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
-}
-
 /// Determine whether the output should use structured format.
 fn resolve_use_structured(output: &str, model_format: Option<crate::cli::ModelFormat>) -> bool {
     use crate::cli::ModelFormat;
     match model_format {
         Some(ModelFormat::Structured) => true,
         Some(ModelFormat::Flat) => false,
-        // Default to structured (v2) unless output path ends in .toml (case-insensitive)
+        // Default to flat file when output has a known blueprint extension;
+        // otherwise (directory, no extension) use structured format.
         None => {
             let p = Path::new(output);
             if p.is_dir() {
                 return true;
             }
             match p.extension().and_then(|e| e.to_str()) {
-                Some(ext) => !ext.eq_ignore_ascii_case("toml"),
+                Some(ext) if ext.eq_ignore_ascii_case("toml")
+                    || ext.eq_ignore_ascii_case("json") => false,
+                Some(_) => true,
                 None => true,
             }
         }
@@ -100,7 +75,7 @@ fn write_model_output(
     data_model: &crate::core::DataModel,
     output: &str,
     use_structured: bool,
-    header_comment: &str,
+    _header_comment: &str,
 ) -> Result<()> {
     if use_structured {
         let output_path = Path::new(output);
@@ -117,23 +92,9 @@ fn write_model_output(
         crate::model::writer::write_model_directory(data_model, output_path)
             .with_context(|| format!("failed to write structured model to {output}"))?;
     } else {
-        let raw = RawOutputSchema {
-            blueprint_version: data_model.blueprint_version.clone(),
-            model: RawOutputModel {
-                name: data_model.name.clone(),
-                description: data_model.description.clone(),
-            },
-            entities: data_model.entities.clone(),
-            relationships: data_model.relationships.clone(),
-            correlations: data_model.correlations.clone(),
-            personas: data_model.personas.clone(),
-            actor_relationships: data_model.actor_relationships.clone(),
-            companion_files: data_model.companion_files.clone(),
-        };
-        let schema_text =
-            toml::to_string_pretty(&raw).context("failed to serialize schema to TOML")?;
-        let full_output = format!("{header_comment}{schema_text}");
-        std::fs::write(output, &full_output)
+        let schema_text = super::serialize_model_to_json(data_model)
+            .context("failed to serialize blueprint to JSON")?;
+        std::fs::write(output, &schema_text)
             .with_context(|| format!("failed to write output to {output}"))?;
     }
     Ok(())
@@ -5221,7 +5182,7 @@ mod tests {
         writeln!(f, "5,Eve,40,active").unwrap();
         drop(f);
 
-        let output_path = dir.path().join("learned.knit.toml");
+        let output_path = dir.path().join("learned.knit.json");
         let result = run(
             Some(csv_path.to_str().unwrap()),
             output_path.to_str().unwrap(),
@@ -5239,19 +5200,19 @@ mod tests {
         assert!(output_path.exists(), "output file not created");
 
         let content = std::fs::read_to_string(&output_path).unwrap();
-        assert!(content.contains("[model]"), "should have [model] section");
+        assert!(content.contains("\"model\""), "should have model section");
         assert!(content.contains("users"), "should reference the table name");
         assert!(
-            content.contains("[[entities]]"),
-            "should have [[entities]] section"
+            content.contains("\"entities\""),
+            "should have entities section"
         );
         assert!(
-            content.contains("[[entities.fields]]"),
+            content.contains("\"fields\""),
             "should have fields"
         );
 
-        // Verify the output is valid TOML
-        let parsed: toml::Value = toml::from_str(&content).expect("output should be valid TOML");
+        // Verify the output is valid JSON
+        let parsed: serde_json::Value = serde_json::from_str(&content).expect("output should be valid JSON");
         assert!(parsed.get("model").is_some());
         assert!(parsed.get("entities").is_some());
     }
@@ -5273,7 +5234,7 @@ mod tests {
         writeln!(f, "102,1,5.25").unwrap();
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let result = run(
             Some(dir.path().to_str().unwrap()),
             output_path.to_str().unwrap(),
@@ -5294,15 +5255,16 @@ mod tests {
         assert!(content.contains("customers"));
         assert!(content.contains("orders"));
 
-        // Verify valid TOML
-        let _: toml::Value = toml::from_str(&content).expect("output should be valid TOML");
+        // Verify valid JSON
+        let _: serde_json::Value =
+            serde_json::from_str(&content).expect("output should be valid JSON");
     }
 
     #[test]
     fn learn_nonexistent_path_errors() {
         let result = run(
             Some("nonexistent_path_12345.csv"),
-            "out.toml",
+            "out.json",
             None,
             None,
             false,
@@ -5327,7 +5289,7 @@ mod tests {
         }
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let result = run(
             Some(dir.path().to_str().unwrap()),
             output_path.to_str().unwrap(),
@@ -5344,12 +5306,12 @@ mod tests {
         assert!(result.is_ok(), "learn failed: {result:?}");
 
         let content = std::fs::read_to_string(&output_path).unwrap();
-        let pk_count = content.matches("primary_key = true").count();
+        let pk_count = content.matches("\"primary_key\": true").count()
+            + content.matches("\"primary_key\":true").count();
         assert_eq!(pk_count, 1, "should have exactly 1 PK, got {pk_count}");
         // Should prefer PeopleHistoricalId (matches table name)
         assert!(
-            content.contains("name = \"PeopleHistoricalId\"")
-                && content.contains("primary_key = true"),
+            content.contains("PeopleHistoricalId") && content.contains("primary_key"),
             "PeopleHistoricalId should be the chosen PK"
         );
     }
@@ -5516,7 +5478,7 @@ mod tests {
         }
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let opts = ActorsOpts {
             explicit_columns: vec![],
             max_personas: None,
@@ -5539,7 +5501,7 @@ mod tests {
         let content = std::fs::read_to_string(&output_path).unwrap();
         // Should detect sender_id and recipient_id as actor columns
         assert!(
-            content.contains("actor_column = true"),
+            content.contains("\"actor_column\": true"),
             "should mark actor columns: {content}"
         );
     }
@@ -5558,7 +5520,7 @@ mod tests {
         }
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let opts = ActorsOpts {
             explicit_columns: vec!["user_id".to_string()],
             max_personas: None,
@@ -5580,7 +5542,7 @@ mod tests {
 
         let content = std::fs::read_to_string(&output_path).unwrap();
         assert!(
-            content.contains("actor_column = true"),
+            content.contains("\"actor_column\": true"),
             "should mark user_id as actor: {content}"
         );
     }
@@ -5589,7 +5551,7 @@ mod tests {
     fn learn_actors_with_incremental_errors() {
         let result = run(
             Some("data.csv"),
-            "out.toml",
+            "out.json",
             None,
             Some("state.json"),
             false,
@@ -5879,7 +5841,7 @@ mod tests {
         }
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let result = run(
             Some(csv_path.to_str().unwrap()),
             output_path.to_str().unwrap(),
@@ -5899,7 +5861,7 @@ mod tests {
         // The company column should use a dictionary generator since it has
         // 100 unique values — more than the one_of categorical threshold of 50
         assert!(
-            content.contains("type = \"dictionary\""),
+            content.contains("\"type\": \"dictionary\""),
             "should extract dictionary for high-cardinality string column; got:\n{content}"
         );
         // Dictionary file should exist
@@ -5929,7 +5891,7 @@ mod tests {
         }
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let result = run(
             Some(csv_path.to_str().unwrap()),
             output_path.to_str().unwrap(),
@@ -5949,7 +5911,7 @@ mod tests {
         // With 250 unique values, the OneOf cap of 200 truncated data.
         // Dictionary extraction should replace it since source has more values.
         assert!(
-            content.contains("type = \"dictionary\""),
+            content.contains("\"type\": \"dictionary\""),
             "should extract dictionary for truncated OneOf; got:\n{content}"
         );
     }
@@ -5968,7 +5930,7 @@ mod tests {
         }
         drop(f);
 
-        let output_path = dir.path().join("blueprint.knit.toml");
+        let output_path = dir.path().join("blueprint.knit.json");
         let result = run(
             Some(csv_path.to_str().unwrap()),
             output_path.to_str().unwrap(),
@@ -5988,7 +5950,7 @@ mod tests {
         // With exactly 200 unique values, the OneOf was NOT truncated.
         // Should keep the weighted OneOf, not extract a dictionary.
         assert!(
-            content.contains("type = \"one_of\""),
+            content.contains("\"type\": \"one_of\""),
             "should keep OneOf for non-truncated 200-category column; got:\n{content}"
         );
     }

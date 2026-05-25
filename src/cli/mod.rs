@@ -203,9 +203,9 @@ pub enum LogFormat {
 /// Model output format for knit learn.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum ModelFormat {
-    /// Single flat TOML file.
+    /// Single flat JSON file (default).
     Flat,
-    /// Structured directory (knit.toml, tables/, etc.) — the default for v2.
+    /// Structured directory (knit.toml, tables/, etc.).
     Structured,
 }
 
@@ -243,7 +243,7 @@ pub enum Command {
     /// Initialize a new knit project with a starter blueprint.
     Init {
         /// Output file path.
-        #[arg(short, long, default_value = "blueprint.knit.toml")]
+        #[arg(short, long, default_value = "blueprint.knit.json")]
         output: String,
         /// Path to a template file or directory to copy from.
         /// If a file, copies it as the schema (plus sibling dictionaries).
@@ -256,7 +256,7 @@ pub enum Command {
         /// Path to data file or directory to learn from.
         source: Option<String>,
         /// Output blueprint file path (or directory for structured format).
-        #[arg(short, long, default_value = "learned.knit")]
+        #[arg(short, long, default_value = "blueprint.knit.json")]
         output: String,
         /// Maximum rows to read per entity (for faster profiling of large files).
         #[arg(long)]
@@ -282,7 +282,7 @@ pub enum Command {
         /// Maximum number of personas to discover (default: auto via silhouette score).
         #[arg(long)]
         personas: Option<usize>,
-        /// Output model format: flat (single TOML file) or structured (directory, default).
+        /// Output model format: flat (single JSON file, default) or structured (directory).
         #[arg(long, value_enum)]
         model_format: Option<ModelFormat>,
         /// Interactively review low-confidence decisions before writing the blueprint.

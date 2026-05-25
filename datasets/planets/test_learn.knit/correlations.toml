@@ -1,0 +1,271 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "distance",
+    "mass",
+]
+matrix = [
+    [
+    1.0,
+    0.4676207440417269,
+],
+    [
+    0.4676207440417269,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "distance",
+    "orbital_period",
+]
+matrix = [
+    [
+    1.0,
+    -0.3733840361046875,
+],
+    [
+    -0.3733840361046875,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "distance",
+    "year",
+]
+matrix = [
+    [
+    1.0,
+    0.37023462668780865,
+],
+    [
+    0.37023462668780865,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "mass",
+    "orbital_period",
+]
+matrix = [
+    [
+    1.0,
+    0.5422340014145366,
+],
+    [
+    0.5422340014145366,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "mass",
+    "number",
+]
+matrix = [
+    [
+    1.0,
+    -0.4019088993007644,
+],
+    [
+    -0.4019088993007644,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "number"
+given = "method"
+
+[[correlations.distributions]]
+when = "Microlensing"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1.0
+shape = 8.29549648511154
+
+[[correlations.distributions]]
+when = "Pulsar Timing"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 3.0
+min = 1.0
+
+[[correlations.distributions]]
+when = "Eclipse Timing Variations"
+distribution = "uniform"
+round = true
+
+[correlations.distributions.params]
+max = 2.0
+min = 1.0
+
+[[correlations.distributions]]
+when = "Transit"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1.0
+shape = 2.07260292749393
+
+[[correlations.distributions]]
+when = "Imaging"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1.0
+shape = 6.852801444222576
+
+[[correlations.distributions]]
+when = "Radial Velocity"
+distribution = "pareto"
+round = true
+
+[correlations.distributions.params]
+scale = 1.0
+shape = 2.5890998776713734
+
+[correlations.default]
+kind = "pareto"
+
+[correlations.default.params]
+scale = 1.0
+shape = 2.4325973322224845
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "distance"
+given = "method"
+
+[[correlations.distributions]]
+when = "Microlensing"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 7720.0
+min = 1760.0
+
+[[correlations.distributions]]
+when = "Radial Velocity"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 3.6364877041061465
+sigma = 0.809182559186341
+
+[[correlations.distributions]]
+when = "Transit"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 5.901771347221421
+sigma = 0.9439414379238998
+
+[[correlations.distributions]]
+when = "Imaging"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 165.0
+min = 7.69
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 4.361163557327828
+sigma = 1.405622462036453
+
+[[correlations]]
+entity = "original"
+type = "conditional_distribution"
+fields = []
+matrix = []
+conditional = []
+dependent = "orbital_period"
+given = "method"
+
+[[correlations.distributions]]
+when = "Pulsar Timing"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 4.02397581497605
+sigma = 4.105153109547397
+
+[[correlations.distributions]]
+when = "Radial Velocity"
+distribution = "gamma"
+
+[correlations.distributions.params]
+scale = 2566.3088582279192
+shape = 0.3208322635747224
+
+[[correlations.distributions]]
+when = "Microlensing"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 5100.0
+min = 1825.0
+
+[[correlations.distributions]]
+when = "Imaging"
+distribution = "pareto"
+
+[correlations.distributions.params]
+scale = 4639.15
+shape = 0.5152836624212219
+
+[[correlations.distributions]]
+when = "Transit"
+distribution = "log_normal"
+
+[correlations.distributions.params]
+mu = 2.032702230115648
+sigma = 1.2824578352069667
+
+[[correlations.distributions]]
+when = "Eclipse Timing Variations"
+distribution = "uniform"
+
+[correlations.distributions.params]
+max = 10220.0
+min = 1916.25
+
+[correlations.default]
+kind = "log_normal"
+
+[correlations.default.params]
+mu = 4.057838581544686
+sigma = 2.5800597697302745

@@ -1,0 +1,20 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "time"
+min = -600.0
+max = 720.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "coherence"
+min = 0.0
+max = 51.2
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "firing_rate"
+min = 6.27572016461
+max = 70.0488997555

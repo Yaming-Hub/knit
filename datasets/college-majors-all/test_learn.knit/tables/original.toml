@@ -1,0 +1,550 @@
+[table]
+name = "original"
+count = 173
+
+[table.stats]
+source_rows = 173
+
+[[table.scaling.custom]]
+name = "Major_category"
+field = "Major_category"
+cardinality = 16
+
+[table.sort_by]
+column = "Major_code"
+direction = "asc"
+
+[[columns]]
+name = "Major_code"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 6403.0
+min = 1100.0
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1100.0
+max = 6403.0
+mean = 3879.815028901734
+std = 1687.7531404980978
+
+[columns.stats.percentiles]
+p25 = 2403.0
+p50 = 3608.0
+p75 = 5503.0
+p95 = 6205.0
+p99 = 6299.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Major"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_Major.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min_length = 5
+max_length = 65
+avg_length = 25.3121387283237
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "Major_category"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "Engineering"
+weight = 0.1676300578034682
+
+[[columns.generator.choices]]
+value = "Education"
+weight = 0.09248554913294797
+
+[[columns.generator.choices]]
+value = "Humanities & Liberal Arts"
+weight = 0.08670520231213873
+
+[[columns.generator.choices]]
+value = "Biology & Life Science"
+weight = 0.08092485549132948
+
+[[columns.generator.choices]]
+value = "Business"
+weight = 0.07514450867052024
+
+[[columns.generator.choices]]
+value = "Health"
+weight = 0.06936416184971098
+
+[[columns.generator.choices]]
+value = "Computers & Mathematics"
+weight = 0.06358381502890173
+
+[[columns.generator.choices]]
+value = "Physical Sciences"
+weight = 0.057803468208092484
+
+[[columns.generator.choices]]
+value = "Agriculture & Natural Resources"
+weight = 0.057803468208092484
+
+[[columns.generator.choices]]
+value = "Psychology & Social Work"
+weight = 0.05202312138728324
+
+[[columns.generator.choices]]
+value = "Social Science"
+weight = 0.05202312138728324
+
+[[columns.generator.choices]]
+value = "Arts"
+weight = 0.046242774566473986
+
+[[columns.generator.choices]]
+value = "Industrial Arts & Consumer Services"
+weight = 0.04046242774566474
+
+[[columns.generator.choices]]
+value = "Law & Public Policy"
+weight = 0.028901734104046242
+
+[[columns.generator.choices]]
+value = "Communications & Journalism"
+weight = 0.023121387283236993
+
+[[columns.generator.choices]]
+value = "Interdisciplinary"
+weight = 0.005780346820809248
+
+[columns.stats]
+distinct_count = 16
+null_rate = 0.0
+min_length = 4
+max_length = 35
+avg_length = 16.728323699421967
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "Total"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 11.250572750440023
+sigma = 1.517794838840894
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 2396.0
+max = 3123510.0
+mean = 230256.63583815028
+std = 422068.48314871115
+
+[columns.stats.percentiles]
+p25 = 24280.0
+p50 = 75791.0
+p75 = 205763.0
+p95 = 987676.0
+p99 = 1779219.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Employed"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.92168051017256
+sigma = 1.5287232197163574
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1492.0
+max = 2354398.0
+mean = 166161.98265895955
+std = 307324.39966777235
+
+[columns.stats.percentiles]
+p25 = 17281.0
+p50 = 56564.0
+p75 = 142879.0
+p95 = 708882.0
+p99 = 1335825.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Employed_full_time_year_round"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.628806478134807
+sigma = 1.5259804612591956
+
+[columns.stats]
+distinct_count = 173
+null_rate = 0.0
+min = 1093.0
+max = 1939384.0
+mean = 126307.77456647399
+std = 242425.3890733189
+
+[columns.stats.percentiles]
+p25 = 12722.0
+p50 = 39613.0
+p75 = 111025.0
+p95 = 561052.0
+p99 = 1095027.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Unemployed"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+round = true
+
+[columns.generator.params]
+lambda = 0.00010282739678477157
+
+[columns.stats]
+distinct_count = 171
+null_rate = 0.0
+min = 0.0
+max = 147261.0
+mean = 9725.034682080925
+std = 18022.04019175434
+
+[columns.stats.percentiles]
+p25 = 1101.0
+p50 = 3619.0
+p75 = 8862.0
+p95 = 36757.0
+p99 = 79066.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Unemployment_rate"
+data_type = "float"
+nullable = false
+precision = 9
+
+[columns.generator]
+type = "derived"
+expr = "${Unemployed} / ${Employed}"
+
+[columns.stats]
+distinct_count = 172
+null_rate = 0.0
+min = 0.0
+max = 0.156147487
+mean = 0.05735545328323698
+std = 0.019177100390144648
+
+[columns.stats.percentiles]
+p25 = 0.046261361
+p50 = 0.054719193
+p75 = 0.06904277
+p95 = 0.085991129
+p99 = 0.101796407
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "Median"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.918297445445539
+sigma = 0.23583417301683685
+
+[columns.stats]
+distinct_count = 58
+null_rate = 0.0
+min = 35000.0
+max = 125000.0
+mean = 56816.184971098264
+std = 14706.226865404653
+
+[columns.stats.percentiles]
+p25 = 46000.0
+p50 = 53000.0
+p75 = 65000.0
+p95 = 85000.0
+p99 = 97000.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "P25th"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 10.537895452912037
+sigma = 0.21986652587912842
+
+[columns.stats]
+distinct_count = 56
+null_rate = 0.0
+min = 24900.0
+max = 78000.0
+mean = 38697.10982658959
+std = 9414.524761349028
+
+[columns.stats.percentiles]
+p25 = 32000.0
+p50 = 36000.0
+p75 = 42000.0
+p95 = 59000.0
+p99 = 65000.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "P75th"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 11.292146640767838
+sigma = 0.23550124966898642
+
+[columns.stats]
+distinct_count = 61
+null_rate = 0.0
+min = 45800.0
+max = 210000.0
+mean = 82506.35838150288
+std = 20805.330126232395
+
+[columns.stats.percentiles]
+p25 = 70000.0
+p50 = 80000.0
+p75 = 95000.0
+p95 = 116000.0
+p99 = 128000.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "Major_code"
+min = 1100.0
+max = 6403.0
+
+[[constraints]]
+type = "range"
+field = "Total"
+min = 2396.0
+max = 3123510.0
+
+[[constraints]]
+type = "range"
+field = "Employed"
+min = 1492.0
+max = 2354398.0
+
+[[constraints]]
+type = "range"
+field = "Employed_full_time_year_round"
+min = 1093.0
+max = 1939384.0
+
+[[constraints]]
+type = "range"
+field = "Unemployed"
+min = 0.0
+max = 147261.0
+
+[[constraints]]
+type = "range"
+field = "Unemployment_rate"
+min = 0.0
+max = 0.156147487
+
+[[constraints]]
+type = "range"
+field = "Median"
+min = 35000.0
+max = 125000.0
+
+[[constraints]]
+type = "range"
+field = "P25th"
+min = 24900.0
+max = 78000.0
+
+[[constraints]]
+type = "range"
+field = "P75th"
+min = 45800.0
+max = 210000.0
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= Major_code"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= P25th"
+
+[[constraints]]
+type = "check"
+expr = "Major_code <= P75th"
+
+[[constraints]]
+type = "check"
+expr = "Employed <= Total"
+
+[[constraints]]
+type = "check"
+expr = "Employed_full_time_year_round <= Total"
+
+[[constraints]]
+type = "check"
+expr = "Unemployed <= Total"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= Total"
+
+[[constraints]]
+type = "check"
+expr = "Unemployed <= Employed"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= Employed"
+
+[[constraints]]
+type = "check"
+expr = "Unemployed <= Employed_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= Employed_full_time_year_round"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= Unemployed"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= Median"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= P25th"
+
+[[constraints]]
+type = "check"
+expr = "Unemployment_rate <= P75th"
+
+[[constraints]]
+type = "check"
+expr = "P25th <= Median"
+
+[[constraints]]
+type = "check"
+expr = "Median <= P75th"
+
+[[constraints]]
+type = "check"
+expr = "P25th <= P75th"

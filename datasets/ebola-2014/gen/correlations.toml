@@ -1,0 +1,17 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "Value",
+    "Lat",
+]
+matrix = [
+    [
+    1.0,
+    -0.4127057479145788,
+],
+    [
+    -0.4127057479145788,
+    1.0,
+],
+]
+conditional = []

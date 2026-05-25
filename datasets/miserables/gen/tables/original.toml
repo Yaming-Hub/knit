@@ -1,0 +1,40 @@
+[table]
+name = "original"
+count = 1
+
+[table.stats]
+source_rows = 1
+
+[[columns]]
+name = "nodes"
+data_type = "array"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 1
+
+[columns.stats]
+null_rate = 0.0
+
+[columns.traits]
+semantic = "categorical"
+
+[[columns]]
+name = "links"
+data_type = "array"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 1
+
+[columns.stats]
+null_rate = 0.0
+
+[columns.traits]
+semantic = "categorical"

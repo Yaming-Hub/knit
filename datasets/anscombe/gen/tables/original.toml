@@ -1,0 +1,117 @@
+[table]
+name = "original"
+count = 44
+
+[table.stats]
+source_rows = 44
+
+[[table.scaling.custom]]
+name = "Series"
+field = "Series"
+cardinality = 4
+
+[[table.scaling.custom]]
+name = "X"
+field = "X"
+cardinality = 12
+
+[table.sort_by]
+column = "Series"
+direction = "asc"
+
+[[columns]]
+name = "Series"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_Series.dict.txt"
+expansion = "shuffle"
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.0
+min_length = 1
+max_length = 3
+avg_length = 2.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "X"
+data_type = "float"
+nullable = false
+precision = 0
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "Series"
+file = "original__Series_X_Y.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 4.0
+max = 19.0
+mean = 9.0
+std = 3.198836997962679
+
+[columns.stats.percentiles]
+p25 = 7.0
+p50 = 8.0
+p75 = 11.0
+p95 = 14.0
+p99 = 19.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Y"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "Series"
+file = "original__Series_X_Y.tsv"
+column = 2
+
+[columns.stats]
+distinct_count = 43
+null_rate = 0.0
+min = 3.1
+max = 12.74
+mean = 7.500454545454545
+std = 1.9592439863084525
+
+[columns.stats.percentiles]
+p25 = 6.13
+p50 = 7.58
+p75 = 8.74
+p95 = 10.84
+p99 = 12.74
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "X"
+min = 4.0
+max = 19.0
+
+[[constraints]]
+type = "range"
+field = "Y"
+min = 3.1
+max = 12.74

@@ -56,10 +56,10 @@ knit validate <blueprint-file>
 
 ```bash
 # Validate a blueprint
-knit validate my_blueprint.knit.toml
+knit validate my_blueprint.knit.json
 
 # JSON output for CI pipelines
-knit validate my_blueprint.knit.toml --json
+knit validate my_blueprint.knit.json --json
 ```
 
 ### Output
@@ -72,12 +72,12 @@ knit validate my_blueprint.knit.toml --json
 **Invalid blueprint:**
 ```
 error[E0301]: unknown generator type "sequnce"
-  --> my_blueprint.knit.toml:12:8
+  --> my_blueprint.knit.json:12:8
    |
    = help: did you mean "sequence"?
 
 warning[W0102]: field "email" has no uniqueness constraint
-  --> my_blueprint.knit.toml:18:1
+  --> my_blueprint.knit.json:18:1
    |
    = help: consider adding a unique constraint if emails should be distinct
 ```
@@ -170,25 +170,25 @@ knit generate <blueprint-file> [OPTIONS]
 
 ```bash
 # Basic generation (Parquet output)
-knit generate blueprint.knit.toml -o ./data
+knit generate blueprint.knit.json -o ./data
 
 # CSV with no compression
-knit generate blueprint.knit.toml -o ./data --format csv --compression none
+knit generate blueprint.knit.json -o ./data --format csv --compression none
 
 # JSON Lines format
-knit generate blueprint.knit.toml -o ./data --format jsonl
+knit generate blueprint.knit.json -o ./data --format jsonl
 
 # Override seed for different data
-knit generate blueprint.knit.toml -o ./data --seed 999
+knit generate blueprint.knit.json -o ./data --seed 999
 
 # Machine-readable progress for CI
-knit generate blueprint.knit.toml -o ./data --json --quiet
+knit generate blueprint.knit.json -o ./data --json --quiet
 
 # Tune performance
-knit generate blueprint.knit.toml -o ./data --parallel 8 --batch-size 16384
+knit generate blueprint.knit.json -o ./data --parallel 8 --batch-size 16384
 
 # Generate clean data (skip noise profiles defined in blueprint)
-knit generate blueprint.knit.toml -o ./clean_data --no-noise
+knit generate blueprint.knit.json -o ./clean_data --no-noise
 ```
 
 ### Progress Output
@@ -242,7 +242,7 @@ knit init [OPTIONS]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--output <PATH>` | `-o` | Output file path (default: `blueprint.knit.toml`) |
+| `--output <PATH>` | `-o` | Output file path (default: `blueprint.knit.json`) |
 
 ### Example
 
@@ -252,7 +252,7 @@ knit init
 knit init -o my_project.knit.toml
 ```
 
-This creates a documented `blueprint.knit.toml` with an example entity and comments
+This creates a documented `blueprint.knit.json` with an example entity and comments
 explaining each generator type.
 
 ---
@@ -269,7 +269,7 @@ knit learn <PATH> [OPTIONS]
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
-| `--output <PATH>` | `-o` | `learned.knit.toml` | Output blueprint file or directory path |
+| `--output <PATH>` | `-o` | `blueprint.knit.json.toml` | Output blueprint file or directory path |
 | `--model-format <FMT>` | — | auto | Output format: `flat` (single TOML) or `structured` (directory) |
 | `--sample <N>` | — | all rows | Limit rows per entity for faster profiling |
 | `--state <PATH>` | — | — | State file for incremental learning |
@@ -624,10 +624,10 @@ knit blueprint import <sql-file> [OPTIONS]
 
 ```bash
 # Import from SQL DDL
-knit blueprint import schema.sql -o blueprint.knit.toml
+knit blueprint import schema.sql -o blueprint.knit.json
 
 # Import with custom model name
-knit blueprint import schema.sql --name ecommerce -o blueprint.knit.toml
+knit blueprint import schema.sql --name ecommerce -o blueprint.knit.json
 ```
 
 ### `knit blueprint scaffold`
@@ -865,7 +865,7 @@ The direction is auto-detected: if `<input>` is a directory containing `knit.tom
 
 ```bash
 # Convert flat blueprint to structured directory
-knit model convert blueprint.knit.toml my_model/
+knit model convert blueprint.knit.json my_model/
 
 # Convert structured directory back to flat file
 knit model convert my_model/ blueprint_flat.toml
@@ -883,7 +883,7 @@ knit model info <input>
 
 ```bash
 knit model info my_model/
-knit model info blueprint.knit.toml
+knit model info blueprint.knit.json
 ```
 
 Output includes: model name, seed, locale, entity count with field/row summaries, relationship and correlation counts.
@@ -911,10 +911,10 @@ The enrich command maps reference columns to blueprint fields by name similarity
 
 ```bash
 # Enrich blueprint with real-world sample data
-knit enrich blueprint.knit.toml --reference samples/ --output enriched.toml
+knit enrich blueprint.knit.json --reference samples/ --output enriched.toml
 
 # Enrich with row limit for large datasets
-knit enrich blueprint.knit.toml --reference big_data.parquet --sample 10000
+knit enrich blueprint.knit.json --reference big_data.parquet --sample 10000
 ```
 
 ---
@@ -939,10 +939,10 @@ knit scale <blueprint> <factor> [--output <path>]
 
 ```bash
 # Double all entity counts
-knit scale blueprint.knit.toml 2x --output scaled.toml
+knit scale blueprint.knit.json 2x --output scaled.toml
 
 # Scale to absolute count
-knit scale blueprint.knit.toml 10000 --output big.toml
+knit scale blueprint.knit.json 10000 --output big.toml
 ```
 
 ---
@@ -982,7 +982,7 @@ knit tokenize tokenized/ --output restored/ --restore --dictionary tokenized/dic
 
 ```bash
 for fmt in parquet csv json; do
-  knit generate blueprint.knit.toml -o "./data/$fmt" --format $fmt
+  knit generate blueprint.knit.json -o "./data/$fmt" --format $fmt
 done
 ```
 
@@ -990,7 +990,7 @@ done
 
 ```bash
 # In your CI pipeline
-knit validate blueprint.knit.toml --json --quiet
+knit validate blueprint.knit.json --json --quiet
 if [ $? -ne 0 ]; then
   echo "Blueprint validation failed"
   exit 1
@@ -1008,7 +1008,7 @@ knit generate fixtures.knit.toml -o ./test/fixtures --seed 12345 --quiet
 
 ```bash
 # Tune for throughput on large datasets
-knit generate big_blueprint.knit.toml \
+knit generate big_blueprint.knit.json \
   -o ./data \
   --parallel 16 \
   --batch-size 131072 \

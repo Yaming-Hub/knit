@@ -1,0 +1,317 @@
+[table]
+name = "original"
+count = 63
+
+[table.stats]
+source_rows = 63
+
+[[table.scaling.custom]]
+name = "gender"
+field = "gender"
+cardinality = 2
+
+[[table.scaling.custom]]
+name = "race"
+field = "race"
+cardinality = 4
+
+[[table.scaling.custom]]
+name = "type"
+field = "type"
+cardinality = 4
+
+[[columns]]
+name = "first_name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 63
+
+[columns.stats]
+distinct_count = 63
+null_rate = 0.0
+min_length = 4
+max_length = 14
+avg_length = 7.4603174603174605
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "last_name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 63
+
+[columns.stats]
+distinct_count = 58
+null_rate = 0.0
+min_length = 3
+max_length = 13
+avg_length = 6.555555555555555
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "age"
+data_type = "int"
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 63
+
+[columns.nullable]
+probability = 0.015873015873015872
+
+[columns.stats]
+distinct_count = 30
+null_rate = 0.015873015873015872
+min = 15.0
+max = 87.0
+mean = 32.37096774193548
+std = 14.253252572103964
+
+[columns.stats.percentiles]
+p25 = 21.0
+p50 = 31.0
+p75 = 38.0
+p95 = 56.0
+p99 = 68.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "gender"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 63
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min_length = 4
+max_length = 6
+avg_length = 4.222222222222222
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "race"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 63
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.0
+min_length = 5
+max_length = 6
+avg_length = 5.301587301587301
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "death_date"
+data_type = "date"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 5
+row_count = 63
+
+[columns.stats]
+null_rate = 0.0
+min_temporal = "1992-04-29T00:00:00"
+max_temporal = "1993-11-24T00:00:00"
+
+[columns.traits]
+semantic = "timestamp"
+
+[[columns]]
+name = "address"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 6
+row_count = 63
+
+[columns.stats]
+distinct_count = 58
+null_rate = 0.0
+min_length = 14
+max_length = 50
+avg_length = 26.174603174603174
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "neighborhood"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 7
+row_count = 63
+
+[columns.stats]
+distinct_count = 38
+null_rate = 0.0
+min_length = 5
+max_length = 22
+avg_length = 10.714285714285714
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "type"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 8
+row_count = 63
+
+[columns.stats]
+distinct_count = 4
+null_rate = 0.0
+min_length = 5
+max_length = 25
+avg_length = 11.46031746031746
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "longitude"
+data_type = "float"
+nullable = false
+precision = 7
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 9
+row_count = 63
+
+[columns.stats]
+distinct_count = 63
+null_rate = 0.0
+min = -118.4717452
+max = -117.7306469
+mean = -118.2799102522222
+std = 0.10519826121287938
+
+[columns.stats.percentiles]
+p25 = -118.3098224
+p50 = -118.2914954
+p75 = -118.2531966
+p95 = -118.141613
+p99 = -117.997106
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "latitude"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 10
+row_count = 63
+
+[columns.stats]
+distinct_count = 63
+null_rate = 0.0
+min = 33.7898575
+max = 34.287098
+mean = 34.026713431587304
+std = 0.09847129539812825
+
+[columns.stats.percentiles]
+p25 = 33.97418
+p50 = 34.005485
+p75 = 34.070238
+p95 = 34.263184
+p99 = 34.28418731
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "age"
+min = 15.0
+max = 87.0
+
+[[constraints]]
+type = "range"
+field = "longitude"
+min = -118.4717452
+max = -117.7306469
+
+[[constraints]]
+type = "range"
+field = "latitude"
+min = 33.7898575
+max = 34.287098
+
+[[constraints]]
+type = "check"
+expr = "longitude <= age"
+
+[[constraints]]
+type = "check"
+expr = "longitude <= latitude"

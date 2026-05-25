@@ -1,0 +1,72 @@
+[table]
+name = "original"
+count = 240
+
+[table.stats]
+source_rows = 240
+
+[table.sort_by]
+column = "AAPL_x"
+direction = "asc"
+
+[[columns]]
+name = "AAPL_x"
+data_type = "date"
+nullable = false
+
+[columns.generator]
+type = "sequence"
+start = "2014-01-02"
+step = "1d"
+
+[columns.stats]
+null_rate = 0.0
+min_temporal = "2014-01-02T00:00:00"
+max_temporal = "2014-12-12T00:00:00"
+
+[columns.traits]
+semantic = "timestamp"
+
+[[columns]]
+name = "AAPL_y"
+data_type = "float"
+nullable = false
+precision = 8
+
+[columns.generator]
+type = "time_series"
+baseline = 77.44539475
+
+[[columns.generator.components]]
+type = "trend"
+slope = 0.18424467090578406
+degree = 1
+
+[[columns.generator.components]]
+type = "noise"
+std_dev = 1.3347411268696714
+
+[columns.stats]
+distinct_count = 240
+null_rate = 0.0
+min = 69.00470795
+max = 118.7986564
+mean = 90.10261204204168
+std = 13.315812803542464
+
+[columns.stats.percentiles]
+p25 = 75.90452792
+p50 = 91.62042691
+p75 = 99.61107288
+p95 = 113.8188946
+p99 = 118.3453741
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "AAPL_y"
+min = 0.0

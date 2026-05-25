@@ -1,0 +1,133 @@
+[table]
+name = "original"
+count = 277
+
+[table.stats]
+source_rows = 277
+
+[[table.scaling.custom]]
+name = "label"
+field = "label"
+cardinality = 2
+
+[table.sort_by]
+column = "idx"
+direction = "asc"
+
+[[columns]]
+name = "sentence1"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 277
+
+[columns.stats]
+distinct_count = 274
+null_rate = 0.0
+min_length = 36
+max_length = 1035
+avg_length = 256.7725631768953
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "sentence2"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 277
+
+[columns.stats]
+distinct_count = 265
+null_rate = 0.0
+min_length = 22
+max_length = 172
+avg_length = 50.765342960288805
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "label"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 277
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.4729241877256318
+std = 0.5001700124288981
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 1.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "idx"
+data_type = "int32"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 277
+
+[columns.stats]
+distinct_count = 277
+null_rate = 0.0
+min = 0.0
+max = 276.0
+mean = 138.0
+std = 80.10721981611063
+
+[columns.stats.percentiles]
+p25 = 69.0
+p50 = 138.0
+p75 = 207.0
+p95 = 262.0
+p99 = 273.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "label"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "idx"
+min = 0.0
+max = 276.0

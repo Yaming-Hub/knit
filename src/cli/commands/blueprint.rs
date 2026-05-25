@@ -5175,7 +5175,7 @@ pub fn run_convert(file: &str, output: Option<&str>, format: &str) -> Result<()>
     }
 
     let content = match target_format {
-        "json" => serialize_model_to_json(&model)?,
+        "json" => super::serialize_model_to_json(&model)?,
         _ => serialize_model_to_toml_string(&model)?,
     };
 
@@ -5194,105 +5194,6 @@ pub fn run_convert(file: &str, output: Option<&str>, format: &str) -> Result<()>
     }
 
     Ok(())
-}
-
-/// Serialize a DataModel to pretty-printed JSON.
-fn serialize_model_to_json(model: &DataModel) -> Result<String> {
-    use serde_json::json;
-
-    let mut obj = serde_json::Map::new();
-    obj.insert(
-        "blueprint_version".to_string(),
-        json!(model.blueprint_version),
-    );
-
-    // Model metadata — always serialize seed/locale/timezone to avoid round-trip loss
-    let mut meta = serde_json::Map::new();
-    meta.insert("name".to_string(), json!(model.name));
-    if let Some(ref desc) = model.description {
-        meta.insert("description".to_string(), json!(desc));
-    }
-    meta.insert("seed".to_string(), json!(model.seed));
-    meta.insert("locale".to_string(), json!(model.locale));
-    meta.insert("timezone".to_string(), json!(model.timezone));
-
-    // Params belong under model (where the parser reads them)
-    if !model.params.is_empty() {
-        meta.insert("params".to_string(), serde_json::to_value(&model.params)?);
-    }
-    obj.insert("model".to_string(), serde_json::Value::Object(meta));
-
-    // Entities
-    if !model.entities.is_empty() {
-        obj.insert(
-            "entities".to_string(),
-            serde_json::to_value(&model.entities)?,
-        );
-    }
-
-    // Relationships
-    if !model.relationships.is_empty() {
-        obj.insert(
-            "relationships".to_string(),
-            serde_json::to_value(&model.relationships)?,
-        );
-    }
-
-    // Noise profiles
-    if !model.noise_profiles.is_empty() {
-        obj.insert(
-            "noise".to_string(),
-            serde_json::to_value(&model.noise_profiles)?,
-        );
-    }
-
-    // Correlations
-    if !model.correlations.is_empty() {
-        obj.insert(
-            "correlations".to_string(),
-            serde_json::to_value(&model.correlations)?,
-        );
-    }
-
-    // Personas
-    if !model.personas.is_empty() {
-        obj.insert(
-            "personas".to_string(),
-            serde_json::to_value(&model.personas)?,
-        );
-    }
-
-    // Actor relationships
-    if !model.actor_relationships.is_empty() {
-        obj.insert(
-            "actor_relationships".to_string(),
-            serde_json::to_value(&model.actor_relationships)?,
-        );
-    }
-
-    // Custom types
-    if !model.custom_types.is_empty() {
-        obj.insert(
-            "types".to_string(),
-            serde_json::to_value(&model.custom_types)?,
-        );
-    }
-
-    // Mixins
-    if !model.mixins.is_empty() {
-        obj.insert("mixins".to_string(), serde_json::to_value(&model.mixins)?);
-    }
-
-    // Companion files
-    if !model.companion_files.is_empty() {
-        obj.insert(
-            "companion_files".to_string(),
-            serde_json::to_value(&model.companion_files)?,
-        );
-    }
-
-    serde_json::to_string_pretty(&serde_json::Value::Object(obj))
-        .context("failed to serialize to JSON")
 }
 
 /// Serialize a DataModel to TOML string using serde.

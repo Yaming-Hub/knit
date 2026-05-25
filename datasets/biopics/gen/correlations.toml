@@ -1,0 +1,845 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "box_office",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999988158,
+],
+    [
+    0.9999999999988158,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "director",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "type_of_subject",
+]
+matrix = [
+    [
+    1.0,
+    0.979713250015405,
+],
+    [
+    0.979713250015405,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "race_known",
+]
+matrix = [
+    [
+    1.0,
+    0.9733907384533839,
+],
+    [
+    0.9733907384533839,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "subject_race",
+]
+matrix = [
+    [
+    1.0,
+    0.9947375622394202,
+],
+    [
+    0.9947375622394202,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "title",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.9561940203102488,
+],
+    [
+    0.9561940203102488,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "country",
+]
+matrix = [
+    [
+    1.0,
+    0.9994064858818955,
+],
+    [
+    0.9994064858818955,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "subject_sex",
+]
+matrix = [
+    [
+    1.0,
+    0.9333617680611128,
+],
+    [
+    0.9333617680611128,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "site",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.9411990033275346,
+],
+    [
+    0.9411990033275346,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "director",
+]
+matrix = [
+    [
+    1.0,
+    0.8609369525548413,
+],
+    [
+    0.8609369525548413,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "type_of_subject",
+]
+matrix = [
+    [
+    1.0,
+    0.7387715665377861,
+],
+    [
+    0.7387715665377861,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "race_known",
+]
+matrix = [
+    [
+    1.0,
+    0.6920986809975744,
+],
+    [
+    0.6920986809975744,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "subject_race",
+]
+matrix = [
+    [
+    1.0,
+    0.7984619127335091,
+],
+    [
+    0.7984619127335091,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "title",
+]
+matrix = [
+    [
+    1.0,
+    0.9982583653916114,
+],
+    [
+    0.9982583653916114,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.9675508328029109,
+],
+    [
+    0.9675508328029109,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "country",
+]
+matrix = [
+    [
+    1.0,
+    0.8106632631893959,
+],
+    [
+    0.8106632631893959,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "subject_sex",
+]
+matrix = [
+    [
+    1.0,
+    0.6732046216336446,
+],
+    [
+    0.6732046216336446,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "box_office",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.8615006803674515,
+],
+    [
+    0.8615006803674515,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "type_of_subject",
+]
+matrix = [
+    [
+    1.0,
+    0.8150267640695847,
+],
+    [
+    0.8150267640695847,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "race_known",
+]
+matrix = [
+    [
+    1.0,
+    0.8473813750792327,
+],
+    [
+    0.8473813750792327,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "subject_race",
+]
+matrix = [
+    [
+    1.0,
+    0.825516835236462,
+],
+    [
+    0.825516835236462,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "title",
+]
+matrix = [
+    [
+    1.0,
+    0.9965288832725845,
+],
+    [
+    0.9965288832725845,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.9607888009899247,
+],
+    [
+    0.9607888009899247,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "country",
+]
+matrix = [
+    [
+    1.0,
+    0.9248311647990259,
+],
+    [
+    0.9248311647990259,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "subject_sex",
+]
+matrix = [
+    [
+    1.0,
+    0.8109581753298044,
+],
+    [
+    0.8109581753298044,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "director",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.8854684767546686,
+],
+    [
+    0.8854684767546686,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "type_of_subject",
+    "race_known",
+]
+matrix = [
+    [
+    1.0,
+    0.32313045410056557,
+],
+    [
+    0.32313045410056557,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "type_of_subject",
+    "title",
+]
+matrix = [
+    [
+    1.0,
+    0.9797132500153759,
+],
+    [
+    0.9797132500153759,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "type_of_subject",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.9994815160122152,
+],
+    [
+    0.9994815160122152,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "type_of_subject",
+    "subject_sex",
+]
+matrix = [
+    [
+    1.0,
+    0.4231382660072309,
+],
+    [
+    0.4231382660072309,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "type_of_subject",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.8950917248535308,
+],
+    [
+    0.8950917248535308,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "race_known",
+    "title",
+]
+matrix = [
+    [
+    1.0,
+    0.9716300395820106,
+],
+    [
+    0.9716300395820106,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "race_known",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.9959966246226573,
+],
+    [
+    0.9959966246226573,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "race_known",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.8861968078495833,
+],
+    [
+    0.8861968078495833,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject_race",
+    "title",
+]
+matrix = [
+    [
+    1.0,
+    0.9947375622394445,
+],
+    [
+    0.9947375622394445,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject_race",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject_race",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.9379698191411514,
+],
+    [
+    0.9379698191411514,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "title",
+    "subject",
+]
+matrix = [
+    [
+    1.0,
+    0.9590568830646274,
+],
+    [
+    0.9590568830646274,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "title",
+    "country",
+]
+matrix = [
+    [
+    1.0,
+    0.9988126190860858,
+],
+    [
+    0.9988126190860858,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "title",
+    "subject_sex",
+]
+matrix = [
+    [
+    1.0,
+    0.9333617680611119,
+],
+    [
+    0.9333617680611119,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "title",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.9379484854837916,
+],
+    [
+    0.9379484854837916,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject",
+    "country",
+]
+matrix = [
+    [
+    1.0,
+    0.9681738261760173,
+],
+    [
+    0.9681738261760173,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject",
+    "subject_sex",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999947,
+],
+    [
+    0.9999999999999947,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.9578895684121337,
+],
+    [
+    0.9578895684121337,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "country",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.8914177937348304,
+],
+    [
+    0.8914177937348304,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "subject_sex",
+    "lead_actor_actress",
+]
+matrix = [
+    [
+    1.0,
+    0.9953567689602322,
+],
+    [
+    0.9953567689602322,
+    1.0,
+],
+]
+conditional = []

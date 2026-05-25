@@ -1,0 +1,5 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "AAPL_y"
+min = 0.0

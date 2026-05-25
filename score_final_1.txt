@@ -1,0 +1,315 @@
+### Dataset: attention
+ORIGINAL:
+```
+,subject,attention,solutions,score
+0,1,divided,1,2.0
+1,2,divided,1,3.0
+2,3,divided,1,3.0
+3,4,divided,1,5.0
+40,1,divided,3,7.0
+42,3,divided,3,6.0
+43,4,divided,3,5.0
+55,16,focused,3,7.0
+56,17,focused,3,6.0
+57,18,focused,3,6.0
+58,19,focused,3,6.0
+59,20,focused,3,5.0
+```
+GENERATED:
+```
+,subject,attention,solutions,score
+0,1,divided,1,2.0
+1,2,divided,1,3.0
+2,3,divided,1,3.0
+3,4,divided,1,5.0
+7,8,divided,1,5.0
+29,10,divided,2,5.0
+36,17,focused,2,7.0
+37,18,focused,2,8.0
+56,17,focused,3,6.0
+57,18,focused,3,6.0
+58,19,focused,3,6.0
+59,20,focused,3,5.0
+```
+
+---
+
+### Dataset: avengers
+ORIGINAL:
+```
+URL,Name/Alias,Appearances,Current?,Gender,Probationary Introl,Full/Reserve Avengers Intro,Year,Years since joining,Honorary,Death1,Return1,Death2,Return2,Death3,Return3,Death4,Return4,Death5,Return5,Notes
+http://marvel.wikia.com/Henry_Pym_(Earth-616),"Henry Jonathan ""Hank"" Pym",1269,YES,MALE,,Sep-63,1963,52,Full,YES,NO,,,,,,,,,Merged with Ultron in Rage of Ultron Vol. 1. A funeral was held.
+http://marvel.wikia.com/Janet_van_Dyne_(Earth-616),Janet van Dyne,1165,YES,FEMALE,,Sep-63,1963,52,Full,YES,YES,,,,,,,,,Dies in Secret Invasion V1:I8. Actually was sent tto Microverse later recovered
+http://marvel.wikia.com/Anthony_Stark_(Earth-616),"Anthony Edward ""Tony"" Stark",3068,YES,MALE,,Sep-63,1963,52,Full,YES,YES,,,,,,,,,"Death: ""Later while under the influence of Immortus Stark committed a number of horrible acts and was killed.'  This set up young Tony. Franklin Richards later broug
+http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616),Robert Bruce Banner,2089,YES,MALE,,Sep-63,1963,52,Full,YES,YES,,,,,,,,,"Dies in Ghosts of the Future arc. However ""he had actually used a hidden Pantheon base to survive"""
+http://marvel.wikia.com/Tippy-Toe_(Earth-616)#,,16,NO,FEMALE,,5-Jul,2005,10,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Deathcry_(Earth-616)#,,50,NO,FEMALE,,Jul-93,1993,22,Honorary,YES,YES,YES,NO,,,,,,, Reduced her to a pile of bones and organsby Vargas. Brought back by Chaos King. Died second time in Chaos_War:_Dead_Avengers_Vol_1_3
+http://marvel.wikia.com/Maria_Hill_(Earth-616)#,Maria Hill,359,YES,FEMALE,,10-May,2010,5,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Kevin_Masterson_(Earth-616)#,Kevin Masterson,62,YES,MALE,,,1900,115,Academy,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Adam_Brashear_(Earth-616)#,Adam Brashear,29,YES,MALE,,14-Jan,2014,1,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Victor_Alvarez_(Earth-616)#,Victor Alvarez,45,YES,MALE,,14-Jan,2014,1,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Ava_Ayala_(Earth-616)#,Ava Ayala,49,YES,FEMALE,,14-Jan,2014,1,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Kaluu_(Earth-616)#,Kaluu,35,YES,MALE,,15-Jan,2015,0,Full,NO,,,,,,,,,,NA
+```
+GENERATED:
+```
+URL,Name/Alias,Appearances,Current?,Gender,Probationary Introl,Full/Reserve Avengers Intro,Year,Years since joining,Honorary,Death1,Return1,Death2,Return2,Death3,Return3,Death4,Return4,Death5,Return5,Notes
+http://marvel.wikia.com/John_Aman_(Earth-616)#,John Aman,31,YES,MALE,,10-Dec,2010,5,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Thomas_Shepherd_(Earth-616)#,"Thomas ""Tommy"" Shepherd",59,YES,MALE,,,2006,9,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Monkey_Joe_(Earth-616)#,,7,NO,MALE,,5-May,2005,10,Full,YES,NO,,,,,,,,,Killed by Leather Boy
+http://marvel.wikia.com/Philip_Javert_(Earth-921)#,Phillip Javert,31,NO,MALE,,Dec-92,1992,23,Honorary,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Monica_Rambeau_(Earth-616)#,Monica Rambeau,348,YES,FEMALE,Jan-83,May-83,1983,32,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Kevin_Connor_(Earth-616)#,Kevin Kale Connor,44,YES,MALE,,13-Oct,2013,2,Full,YES,,,,,,,,,,Died in New_Avengers_Vol_3_32
+http://marvel.wikia.com/Loki_Laufeyson_(Ikol)_(Earth-616)#,Loki Laufeyson,77,NO,MALE,,13-Jul,2013,2,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Human_Torch_(Android)_(Earth-616)#,Jim Hammond (alias),565,NO,MALE,,Nov-89,1989,26,Full,YES,,,,,,,,,,"Dies during New Invaders. Was ""was revived as a living weapon the Thinker intended to sell."" Prior to joining the avengers he had died like 2 times in the 40s."
+http://marvel.wikia.com/Brian_Braddock_(Earth-616)#,Brian Braddock,545,NO,MALE,,10-May,2010,5,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Robert_Reynolds_(Earth-616)#,Robert Reynolds,241,NO,MALE,,5-Oct,2005,10,Full,YES,,,,,,,,,,Died during Seige. Brought back to life by the Apocalypse twins as a horseman of death in Uncanny_Avengers_Vol_1_9.
+http://marvel.wikia.com/William_Baker_(Earth-616)#,,355,NO,MALE,Feb-91,,1900,115,Probationary,YES,YES,,,,,,,,,Died in Identity_Disc_Vol_1_1. Later was revealed to be alive and working along with the Vulture.
+http://marvel.wikia.com/America_Chavez_(Earth-616)#,America Chavez,22,YES,FEMALE,,13-Jul,2013,2,Full,NO,,,,,,,,,,NA
+```
+
+---
+
+### Dataset: bad-drivers
+ORIGINAL:
+```
+State,Number of drivers involved in fatal collisions per billion miles,Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding,Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired,Percentage Of Drivers Involved In Fatal Collisions Who Were Not Distracted,Percenta
+Alabama,18.8,39,30,96,80,784.55,145.08
+Alaska,18.1,41,25,90,94,1053.48,133.93
+Arizona,18.6,35,28,84,96,899.47,110.35
+Arkansas,22.4,18,26,94,95,827.34,142.39
+Connecticut,10.8,46,36,87,82,1068.73,167.02
+District of Columbia,5.9,34,27,100,100,1273.89,136.05
+Massachusetts,8.2,23,35,87,80,1011.14,135.63
+Nebraska,14.9,13,35,93,90,732.28,114.82
+Washington,10.6,42,33,82,86,890.03,111.62
+West Virginia,23.8,34,28,97,87,992.61,152.56
+Wisconsin,13.8,36,33,39,84,670.31,106.62
+Wyoming,17.4,42,32,81,90,791.14,122.04
+```
+GENERATED:
+```
+State,Number of drivers involved in fatal collisions per billion miles,Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding,Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired,Percentage Of Drivers Involved In Fatal Collisions Who Were Not Distracted,Percenta
+West Virginia,23.8,34,28,97,87,992.61,152.56
+Indiana,14.5,25,29,95,95,710.46,108.92
+Alaska,18.1,41,25,90,94,1053.48,133.93
+Kansas,17.8,27,24,77,85,780.45,133.8
+Arizona,18.6,35,28,84,96,899.47,110.35
+Massachusetts,8.2,23,35,87,80,1011.14,135.63
+New Mexico,18.4,19,27,67,98,869.85,120.75
+Texas,19.4,40,38,91,87,1004.75,156.83
+Alabama,18.8,39,30,96,80,784.55,145.08
+Oregon,12.8,33,26,67,90,804.71,104.61
+Louisiana,20.5,35,33,73,98,1281.55,194.78
+Georgia,15.6,19,25,95,93,913.15,142.8
+```
+
+---
+
+### Dataset: barley
+(Source: non-CSV format, generated from learned model)
+GENERATED:
+```
+yield,variety,year,site
+26.3,Velvet,1931,Duluth
+47.33333,Svansota,1931,Waseca
+41.33333,Velvet,1931,Crookston
+45.66667,No. 457,1931,Crookston
+30.36667,No. 462,1931,Morris
+24.66667,No. 475,1931,University Farm
+25.56667,No. 462,1932,University Farm
+41.26667,No. 475,1932,Waseca
+58.16667,Wisconsin No. 38,1932,Waseca
+26.43334,No. 457,1932,University Farm
+19.9,No. 462,1932,Grand Rapids
+22.46667,Velvet,1932,Duluth
+```
+Score based on: Does this look like realistic, coherent data for this domain?
+
+---
+
+### Dataset: biopics
+ORIGINAL:
+```
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+Another Country,http://www.imdb.com/title/tt0086904/,UK,1984,-,Marek Kanievska,1,Guy Burgess,Military,Unknown,,0,Male,Rupert Everett
+Braveheart,http://www.imdb.com/title/tt0112573/,US,1995,$75.6M,Mel Gibson,1,William Wallace,Military,Known,White,0,Male,Mel Gibson
+Fat Man and Little Boy,http://www.imdb.com/title/tt0097336/,US,1989,$3.56M,Roland JoffÌÄå©,2,Leslie Groves,Military,Known,White,0,Male,Paul Newman
+WhiteLightnin',http://www.imdb.com/title/tt1034419/,UK,2009,-,Dominic Murphy,1,Jesco White,Other,Unknown,,0,Male,Edward Hogg
+Young Mr. Lincoln,http://www.imdb.com/title/tt0032155/,US,1939,-,John Ford,1,Abraham Lincoln,World leader,Known,White,0,Male,Henry Fonda
+Young Tom Edison,http://www.imdb.com/title/tt0033289/,US,1940,-,Norman Taurog,1,Thomas Edison,Other,Known,White,0,Male,Mickey Rooney
+Young Winston,http://www.imdb.com/title/tt0069528/,US,1972,-,Richard Attenborough,1,Winston Churchill,World leader,Known,White,0,Male,Simon Ward
+Your Cheatin' Heart,http://www.imdb.com/title/tt0058765/,US,1964,-,Gene Nelson,1,Hank Williams,Musician,Unknown,,0,Male,George Hamilton
+```
+GENERATED:
+```
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+Backbeat,http://www.imdb.com/title/tt0106339/,UK,1994,$2.39M,Iain Softley,2,John Lennon,Musician,Known,White,0,Male,Ian Hart
+A Matador's Mistress,http://www.imdb.com/title/tt0491046/,US/UK,2008,-,Menno Meyjes,2,Lupe Sino,Actress ,Known,Hispanic (White),0,Female,PenÌ©lope Cruz
+The Boy in Blue,http://www.imdb.com/title/tt0090769/,Canada,1986,$275K,Charles Jarrott,1,Ned Hanlan,Athlete,Known,White,0,Male,Nicolas Cage
+Domino,http://www.imdb.com/title/tt0421054/,US/UK,2005,$10.1M,Tony Scott,1,Domino Harvey,Other,Known,,0,Female,Keira Knightley
+Ed Gein,http://www.imdb.com/title/tt0230169/,US/UK,2000,$5.71K,Chuck Parello,1,Ed Gein,Criminal,Unknown,,0,Male,Steve Railsback
+Juarez,http://www.imdb.com/title/tt0031516/,US,1939,-,William Dieterle,1,Benito Juarez,World leader,Known,,1,Male,Paul Muni
+Bonnie and Clyde,http://www.imdb.com/title/tt0061418/,US,1967,-,Arthur Penn,2,Clyde Barrow,Criminal,Unknown,,0,Male,Warren Beatty
+Death in Granada,http://www.imdb.com/title/tt0117106/,US,1996,$226K,Marcos Zurinaga,1,Garcia Lorca,Author,Known,Hispanic (White),0,Male,Andy Garcia
+Prefontaine,http://www.imdb.com/title/tt0119937/,US,1997,$532K,Steve James,1,Steve Prefontaine,Athlete,Known,White,0,Male,Jared Leto
+Francis of Assisi,http://www.imdb.com/title/tt0054892/,US,1961,-,Michael Curtiz,1,Francis Bernardone,Historical,Known,White,0,Male,Bradford Dillman
+Story of G.I. Joe,http://www.imdb.com/title/tt0038120/,US,1945,-,William A. Wellman,1,Ernie Pyle,Media,Unknown,,0,Male,Burgess Meredith
+The Color of Time,http://www.imdb.com/title/tt2133333/,US,2012,-,"Edna Luise Biesold, Sarah-Violet Bliss",1,CK Williams,Author,Unknown,,0,Male,James Franco
+```
+
+---
+
+### Dataset: bob-ross
+ORIGINAL:
+```
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,
+S01E01,"""A WALK IN THE WOODS""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E02,"""MT. MCKINLEY""",0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S01E03,"""EBONY SUNSET""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1,0
+S01E04,"""WINTER MIST""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S06E04,"""WHISPERING STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S10E09,"""MOUNTAIN OVAL""",0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,1,0,0,0,0,0,0,0
+S13E02,"""FROZEN SOLITUDE""",0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,1,1,0,0,0,0,0,1,0
+S14E09,"""RIVERSIDE ESCAPE OVAL""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S31E10,"""BALMY BEACH""",0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0
+S31E11,"""LAKE AT THE RIDGE""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,1,0,0,0,0,0,0,0
+S31E12,"""IN THE MIDST OF WINTER""",0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0,0,0,0,1,0
+S31E13,"""WILDERNESS DAY""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+```
+GENERATED:
+```
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,FIRE,FLORIDA_FRAME,FLOWERS,FOG,FRAMED,GRASS,GUEST,HALF_CIRCLE_FRAME,HALF_OVAL_FRAME,HILLS,LAKE,LAKES,
+S15E07,"""CABIN BY THE POND""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S26E08,"""EARLY AUTUMN""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S01E09,"""SEASCAPE""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,1,0,0,0,0,0,0,0
+S05E10,"""THE WINDMILL""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S24E02,"""WAYSIDE POND""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,1,0,1,1,0,0,0,0,0,1,0
+S09E04,"""MEADOW ROAD""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S08E03,"""WARM WINTER DAY""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S03E03,"""BUBBLING STREAM""",0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,1,0,0,0,0,0,0,1,0
+S18E10,"""DOUBLE OVAL STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S09E02,"""SURF'S UP""",0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S26E02,"""DELIGHTFUL MEADOW HOME""",0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,1,0,1,0,0,0,0,0
+S22E07,"""DIMENSIONS""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+```
+
+---
+
+### Dataset: burtin
+(Source: non-CSV format, generated from learned model)
+GENERATED:
+```
+Bacteria,Penicillin,Streptomycin,Neomycin,Gram_Staining,Genus
+Aerobacter aerogenes,870.0,1.0,1.6,negative,other
+Bacillus anthracis,0.001,0.01,0.007,positive,other
+Brucella abortus,1.0,2.0,0.02,negative,other
+Diplococcus pneumoniae,0.005,11.0,10.0,positive,other
+Escherichia coli,100.0,0.4,0.1,negative,other
+Proteus vulgaris,3.0,0.1,0.1,negative,other
+Pseudomonas aeruginosa,850.0,2.0,0.4,negative,other
+Salmonella (Eberthella) typhosa,1.0,0.4,0.008,negative,Salmonella
+Staphylococcus aureus,0.03,0.03,0.001,positive,Staphylococcus
+Streptococcus fecalis,1.0,1.0,0.1,positive,Streptococcus
+Streptococcus hemolyticus,0.001,14.0,10.0,positive,Streptococcus
+Streptococcus viridans,0.005,10.0,40.0,positive,Streptococcus
+```
+Score based on: Does this look like realistic, coherent data for this domain?
+
+---
+
+### Dataset: candy-power-ranking
+ORIGINAL:
+```
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+100 Grand,1,0,1,0,0,1,0,1,0,.73199999,.86000001,66.971725
+3 Musketeers,1,0,0,0,1,0,0,1,0,.60399997,.51099998,67.602936
+One dime,0,0,0,0,0,0,0,0,0,.011,.116,32.261086
+One quarter,0,0,0,0,0,0,0,0,0,.011,.51099998,46.116505
+Junior Mints,1,0,0,0,0,0,0,0,1,.197,.51099998,57.21925
+Mr Good Bar,1,0,0,1,0,0,0,1,0,.31299999,.91799998,54.526451
+Pop Rocks,0,1,0,0,0,0,1,0,1,.60399997,.83700001,41.265511
+Trolli Sour Bites,0,1,0,0,0,0,0,0,1,.31299999,.255,47.173229
+Warheads,0,1,0,0,0,0,1,0,0,.093000002,.116,39.011898
+Welch's Fruit Snacks,0,1,0,0,0,0,0,0,1,.31299999,.31299999,44.375519
+Werther's Original Caramel,0,0,1,0,0,0,1,0,0,.186,.26699999,41.904308
+Whoppers,1,0,0,0,0,1,0,0,1,.87199998,.84799999,49.524113
+```
+GENERATED:
+```
+competitorname,chocolate,fruity,caramel,peanutyalmondy,nougat,crispedricewafer,hard,bar,pluribus,sugarpercent,pricepercent,winpercent
+Snickers Crisper,1,0,1,1,0,1,0,1,0,0.60399997,0.65100002,59.529251
+Super Bubble,0,1,0,0,0,0,0,0,0,0.162,0.116,27.303865
+Mike & Ike,0,1,0,0,0,0,0,0,1,0.87199998,0.32499999,46.411716
+Sugar Daddy,0,0,1,0,0,0,0,0,0,0.41800001,0.32499999,32.230995
+Nestle Butterfinger,1,0,0,1,0,0,0,1,0,0.60399997,0.76700002,70.735641
+Red vines,0,1,0,0,0,0,0,0,1,0.58099997,0.116,37.348522
+Whoppers,1,0,0,0,0,1,0,0,1,0.87199998,0.84799999,49.524113
+Reese's stuffed with pieces,1,0,0,1,0,0,0,0,0,0.98799998,0.65100002,72.887901
+Baby Ruth,1,0,1,1,1,0,0,1,0,0.60399997,0.76700002,56.914547
+Mounds,1,0,0,0,0,0,0,1,0,0.31299999,0.86000001,47.829754
+Haribo Sour Bears,0,1,0,0,0,0,0,0,1,0.465,0.465,51.41243
+Trolli Sour Bites,0,1,0,0,0,0,0,0,1,0.31299999,0.255,47.173229
+```
+
+---
+
+### Dataset: car-crashes
+ORIGINAL:
+```
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+18.6,6.51,5.208000000000001,15.624,17.856,899.47,110.35,AZ
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+14.7,5.439,4.704,13.965,14.552999999999999,1029.87,138.71,NV
+12.3,3.9360000000000004,3.5670000000000006,10.824000000000002,9.84,1234.31,150.01,NY
+23.9,5.496999999999999,10.038,23.660999999999998,20.554000000000002,688.75,109.72,ND
+19.5,4.095,5.655,15.99,15.795,767.91,155.57,TN
+10.6,4.452,3.498,8.692,9.116,890.03,111.62,WA
+23.8,8.092,6.664,23.086,20.706,992.61,152.56,WV
+13.8,4.968,4.554,5.382000000000001,11.592,670.31,106.62,WI
+17.4,7.308,5.568,14.094,15.659999999999998,791.14,122.04,WY
+```
+GENERATED:
+```
+total,speeding,alcohol,not_distracted,no_previous,ins_premium,ins_losses,abbrev
+23.8,8.092,6.664,23.086,20.706,992.61,152.56,WV
+14.5,3.625,4.205,13.775,13.775,710.46,108.92,IN
+18.1,7.421,4.525,16.290000000000003,17.014,1053.48,133.93,AK
+17.8,4.806,4.272,13.706000000000001,15.13,780.45,133.8,KS
+9.6,2.2079999999999997,2.784,8.448,8.448,777.18,133.35,MN
+22.4,4.032,5.824,21.055999999999997,21.28,827.34,142.39,AR
+17.9,3.759,5.190999999999999,16.468,16.826,1160.13,144.18,FL
+17.4,7.308,5.568,14.094,15.659999999999998,791.14,122.04,WY
+18.8,7.332000000000001,5.64,18.048000000000002,15.04,784.55,145.08,AL
+12.8,4.224,3.3280000000000003,8.576,11.52,804.71,104.61,OR
+20.5,7.175,6.765,14.965,20.09,1281.55,194.78,LA
+15.6,2.964,3.9,14.82,14.508,913.15,142.8,GA
+```
+
+---
+
+### Dataset: cars-json
+(Source: non-CSV format, generated from learned model)
+GENERATED:
+```
+Name,Miles_per_Gallon,Cylinders,Displacement,Horsepower,Weight_in_lbs,Acceleration,Year,Origin
+oldsmobile cutlass ciera (diesel),12.1,5,386.0,75,4471,15.1,1970-01-01,USA
+plymouth champ,12.8,5,264.0,123,2385,17.6,1970-01-01,USA
+oldsmobile starfire sx,16.9,7,422.0,128,5140,15.4,1970-01-01,USA
+plymouth custom suburb,25.2,7,377.0,100,3447,14.4,1970-01-01,USA
+ford maverick,22.9,7,156.0,202,2120,13.3,1970-01-01,USA
+pontiac sunbird coupe,21.2,5,151.0,172,3671,19.0,1972-01-01,USA
+volvo diesel,23.0,4,104.0,101,3029,16.4,1980-01-01,Europe
+mazda 626,38.8,4,149.0,,1999,16.6,1982-01-01,Japan
+dodge colt hardtop,24.5,4,301.0,89,3530,9.1,1982-01-01,USA
+audi 100 ls,,4,95.0,63,2124,11.9,1982-01-01,Europe
+buick century,26.0,8,138.0,105,2133,17.9,1982-01-01,USA
+amc matador,23.1,7,125.0,93,2342,13.2,1982-01-01,USA
+```
+Score based on: Does this look like realistic, coherent data for this domain?

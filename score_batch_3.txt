@@ -1,0 +1,297 @@
+Score these synthetic datasets 0-100. Output ONLY JSON: {"name": score, ...}
+
+### drinks
+ORIGINAL:
+```ncountry,beer_servings,spirit_servings,wine_servings,total_litres_of_pure_alcohol
+Afghanistan,0,0,0,0.0
+Albania,89,132,54,4.9
+Algeria,25,0,14,0.7
+Andorra,245,138,312,12.4
+Angola,217,57,45,5.9
+Antigua & Barbuda,102,128,45,4.9
+Argentina,193,25,221,8.3
+Armenia,21,179,11,3.8
+Australia,261,72,212,10.4
+Austria,279,75,191,9.7
+Azerbaijan,21,46,5,1.3
+Bahamas,122,176,51,6.3
+```
+GENERATED:
+```ncountry,beer_servings,spirit_servings,wine_servings,total_litres_of_pure_alcohol
+Comoros,1,3,1,0.1
+Samoa,105,18,24,2.6
+Liberia,19,152,2,3.1
+Armenia,21,179,11,3.8
+St. Lucia,171,315,71,10.1
+Nicaragua,78,118,1,3.5
+Nepal,5,6,0,0.2
+Brunei,31,2,1,0.6
+Trinidad & Tobago,197,156,7,6.4
+USA,249,158,84,8.7
+Ukraine,206,237,45,8.9
+Croatia,230,87,254,10.2
+```
+---
+
+### driving
+ORIGINAL:
+```n(Format: .json) - see generated CSV for comparison
+```
+GENERATED:
+```nside,year,miles,gas
+left,1956,3675,2.38
+right,1957,3706,2.4
+bottom,1958,3766,2.26
+top,1959,3905,2.31
+right,1960,3935,2.27
+bottom,1961,3977,2.25
+right,1962,4085,2.22
+bottom,1963,4218,2.12
+bottom,1964,4369,2.11
+bottom,1965,4538,2.14
+top,1966,4676,2.14
+bottom,1967,4827,2.14
+```
+---
+
+### ebola-2014
+ORIGINAL:
+```nCountry,Month,Year,Lat,Lon,Value
+Guinea,3,14,9.95,-9.7,122
+Guinea,4,14,9.95,-9.7,224
+Guinea,5,14,9.95,-9.7,291
+Guinea,6,14,9.95,-9.7,413
+Guinea,7,14,9.95,-9.7,460
+Guinea,8,14,9.95,-9.7,771
+Guinea,9,14,9.95,-9.7,1022
+Guinea,10,14,9.95,-9.7,
+Guinea,11,14,9.95,-9.7,
+Guinea,12,14,9.95,-9.7,
+Liberia,4,14,6.43,-9.43,35
+Liberia,5,14,6.43,-9.43,13
+```
+GENERATED:
+```nCountry,Month,Year,Lat,Lon,Value
+Guinea,3,14,9.95,-9.7,122
+Guinea,4,14,9.95,-9.7,224
+Guinea,5,14,9.95,-9.7,
+Guinea,6,14,9.95,-9.7,
+Guinea,7,14,9.95,-9.7,460
+Guinea,8,14,9.95,-9.7,771
+Guinea,9,14,9.95,-9.7,1022
+Guinea,12,14,9.95,-9.7,
+Guinea,10,14,9.95,-9.7,
+Guinea,11,14,9.95,-9.7,
+Liberia,6,14,6.43,-9.43,107
+Liberia,9,14,6.43,-9.43,3362
+```
+---
+
+### exercise
+ORIGINAL:
+```n,id,diet,pulse,time,kind
+0,1,low fat,85,1 min,rest
+1,1,low fat,85,15 min,rest
+2,1,low fat,88,30 min,rest
+3,2,low fat,90,1 min,rest
+4,2,low fat,92,15 min,rest
+5,2,low fat,93,30 min,rest
+6,3,low fat,97,1 min,rest
+7,3,low fat,97,15 min,rest
+8,3,low fat,94,30 min,rest
+9,4,low fat,80,1 min,rest
+10,4,low fat,82,15 min,rest
+11,4,low fat,83,30 min,rest
+```
+GENERATED:
+```n,id,diet,pulse,time,kind
+0,1,low fat,85,1 min,rest
+1,1,low fat,85,15 min,rest
+2,1,low fat,88,30 min,rest
+3,2,low fat,90,1 min,rest
+4,2,low fat,92,15 min,rest
+5,2,low fat,93,30 min,rest
+6,3,low fat,97,1 min,rest
+7,3,low fat,97,15 min,rest
+8,3,low fat,94,30 min,rest
+9,4,low fat,80,1 min,rest
+10,4,low fat,82,15 min,rest
+11,4,low fat,83,30 min,rest
+```
+---
+
+### flare
+ORIGINAL:
+```n(Format: .json) - see generated CSV for comparison
+```
+GENERATED:
+```nid,name,parent,size
+1,DateUtil,1,6793
+2,RectSprite,1,1241
+3,flare,35,2380
+4,TransitionEvent,3,782
+5,ShapeRenderer,1,
+6,ISchedulable,18,14547
+7,Average,1,7377
+8,AxisLayout,20,429
+9,EdgeRenderer,27,2615
+10,Distinct,1,1819
+11,BifocalDistortion,1,12271
+12,ShapePalette,47,2509
+```
+---
+
+### flights
+ORIGINAL:
+```nyear,month,passengers
+1949,January,112
+1949,February,118
+1949,March,132
+1949,April,129
+1949,May,121
+1949,June,135
+1949,July,148
+1949,August,148
+1949,September,136
+1949,October,119
+1949,November,104
+1949,December,118
+```
+GENERATED:
+```nyear,month,passengers
+1949,March,132
+1949,May,121
+1949,December,118
+1949,July,148
+1949,September,136
+1949,June,135
+1949,November,104
+1949,April,129
+1949,August,148
+1949,February,118
+1949,January,112
+1949,October,119
+```
+---
+
+### flights-airport
+ORIGINAL:
+```norigin,destination,count
+ABE,ATL,853
+ABE,BHM,1
+ABE,CLE,805
+ABE,CLT,465
+ABE,CVG,247
+ABE,DTW,997
+ABE,JFK,3
+ABE,LGA,9
+ABE,ORD,1425
+ABE,PHL,2
+ABI,DFW,2660
+ABQ,AMA,368
+```
+GENERATED:
+```norigin,destination,count
+DEN,FCA,668
+ABI,DFW,2660
+SAV,DTW,509
+BWI,SAV,1
+CVG,MEM,1226
+LAX,BWI,897
+CVG,FLL,683
+PIT,MEM,1005
+LAS,MDW,3836
+ATL,GUC,2
+CMH,GRB,1
+SAT,MCI,578
+```
+---
+
+### fmri
+ORIGINAL:
+```nsubject,timepoint,event,region,signal
+s13,18,stim,parietal,-0.017551581538
+s5,14,stim,parietal,-0.0808829319505
+s12,18,stim,parietal,-0.0810330187333
+s11,18,stim,parietal,-0.04613439017519999
+s10,18,stim,parietal,-0.0379702032642
+s9,18,stim,parietal,-0.10351309616
+s8,18,stim,parietal,-0.0644081947232
+s7,18,stim,parietal,-0.0605262017124
+s6,18,stim,parietal,-0.00702856091007
+s5,18,stim,parietal,-0.0405568546157
+s4,18,stim,parietal,-0.048812199946599986
+s3,18,stim,parietal,-0.0471481458275
+```
+GENERATED:
+```nsubject,timepoint,event,region,signal
+s10,1,stim,frontal,0.0635584004637
+s4,9,stim,parietal,-0.114241981967
+s10,8,stim,frontal,0.0282991931797
+s10,3,stim,parietal,0.0458383526337
+s9,2,stim,parietal,0.0406201814079
+s8,8,stim,parietal,0.263207487992
+s5,9,stim,parietal,-0.0748428067959
+s5,5,stim,frontal,0.236025401676
+s1,16,stim,frontal,-0.0027187873155
+s8,11,stim,parietal,-0.0280246228922
+s5,6,stim,parietal,0.221492883278
+s10,17,stim,frontal,-0.00457116262107
+```
+---
+
+### gapminder
+ORIGINAL:
+```n(Format: .json) - see generated CSV for comparison
+```
+GENERATED:
+```nyear,country,cluster,pop,life_expect,fertility
+1995,Afghanistan,0,16418912,54.33,7.71
+1990,Afghanistan,0,10694796,53.83,7.57
+1965,Afghanistan,0,9565147,46.13,7.35
+1980,Afghanistan,0,12486631,43.68,7.59
+2000,Afghanistan,0,19542982,54.73,7.53
+1985,Afghanistan,0,10512221,42.03,7.52
+1960,Afghanistan,0,8622466,45.03,7.38
+1970,Afghanistan,0,10752971,47.08,7.4
+1955,Afghanistan,0,7971931,43.88,7.42
+1975,Afghanistan,0,12157386,47.55,7.54
+2005,Afghanistan,0,24411191,57.63,6.91
+1975,Argentina,3,25875558,68.03,3.3
+```
+---
+
+### gapminder-health-income
+ORIGINAL:
+```ncountry,income,health,population,region
+Afghanistan,1925,57.63,32526562,south_asia
+Albania,10620,76,2896679,europe_central_asia
+Algeria,13434,76.5,39666519,middle_east_north_africa
+Andorra,46577,84.1,70473,europe_central_asia
+Angola,7615,61,25021974,sub_saharan_africa
+Antigua and Barbuda,21049,75.2,91818,america
+Argentina,17344,76.2,43416755,america
+Armenia,7763,74.4,3017712,europe_central_asia
+Australia,44056,81.8,23968973,east_asia_pacific
+Austria,44401,81,8544586,europe_central_asia
+Azerbaijan,16986,72.9,9753968,europe_central_asia
+Bahamas,22818,72.3,388019,america
+```
+GENERATED:
+```ncountry,income,health,population,region
+Costa Rica,14132,80.0,4807850,america
+Singapore,80794,82.1,5603740,east_asia_pacific
+Canada,43294,81.7,35939927,america
+Belgium,41240,80.4,11299192,europe_central_asia
+Afghanistan,1925,57.63,32526562,south_asia
+Indonesia,10504,70.9,257563815,east_asia_pacific
+Angola,7615,61.0,25021974,sub_saharan_africa
+Bhutan,7983,70.2,774830,south_asia
+Bulgaria,16371,74.9,7149787,europe_central_asia
+Sao Tome and Principe,3003,68.8,190344,sub_saharan_africa
+West Bank and Gaza,4319,75.2,4668466,middle_east_north_africa
+Gambia,1644,65.1,1990924,sub_saharan_africa
+```
+---
+
+

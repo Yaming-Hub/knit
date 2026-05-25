@@ -1,0 +1,47 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "id"
+min = 1.0
+max = 72.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "population"
+min = 585501.0
+max = 39250017.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "engineers"
+min = 0.000773897
+max = 0.011759179
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "hurricanes"
+min = 0.0
+max = 110.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "id <= population"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "engineers <= id"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "engineers <= population"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "hurricanes <= population"

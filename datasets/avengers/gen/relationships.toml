@@ -1,0 +1,25 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Appearances"
+min = 2.0
+max = 4333.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Year"
+min = 1900.0
+max = 2015.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Years since joining"
+min = 0.0
+max = 115.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Years since joining <= Year"

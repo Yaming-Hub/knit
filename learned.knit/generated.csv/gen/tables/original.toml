@@ -1,0 +1,158 @@
+[table]
+name = "original"
+count = 252
+
+[table.stats]
+source_rows = 252
+
+[table.sort_by]
+column = "id"
+direction = "asc"
+
+[[columns]]
+name = "id"
+data_type = "int"
+nullable = false
+primary_key = true
+
+[columns.generator]
+type = "sequence"
+start = 1
+step = 1
+
+[columns.stats]
+distinct_count = 252
+null_rate = 0.0
+min = 1.0
+max = 252.0
+mean = 126.5
+std = 72.89032857656768
+
+[columns.stats.percentiles]
+p25 = 64.0
+p50 = 127.0
+p75 = 189.0
+p95 = 239.0
+p99 = 249.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_name.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 159
+null_rate = 0.0
+min_length = 1
+max_length = 22
+avg_length = 9.198412698412698
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "parent"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 231.0
+min = 1.0
+
+[columns.stats]
+distinct_count = 161
+null_rate = 0.0
+min = 1.0
+max = 231.0
+mean = 113.55555555555556
+std = 67.39744229551283
+
+[columns.stats.percentiles]
+p25 = 54.0
+p50 = 110.0
+p75 = 172.0
+p95 = 219.0
+p99 = 228.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "size"
+data_type = "int"
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+round = true
+
+[columns.generator.params]
+mu = 7.876602160934609
+sigma = 1.094419834681734
+
+[columns.nullable]
+probability = 0.10714285714285714
+
+[columns.stats]
+distinct_count = 217
+null_rate = 0.10714285714285714
+min = 264.0
+max = 24593.0
+mean = 4701.32
+std = 5578.787602286769
+
+[columns.stats.percentiles]
+p25 = 1219.0
+p50 = 2510.0
+p75 = 5601.0
+p95 = 19340.0
+p99 = 24593.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "id"
+min = 1.0
+max = 252.0
+
+[[constraints]]
+type = "range"
+field = "parent"
+min = 1.0
+max = 231.0
+
+[[constraints]]
+type = "range"
+field = "size"
+min = 264.0
+max = 24593.0
+
+[[constraints]]
+type = "check"
+expr = "id <= size"
+
+[[constraints]]
+type = "check"
+expr = "parent <= size"

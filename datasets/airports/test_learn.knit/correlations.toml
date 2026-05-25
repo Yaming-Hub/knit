@@ -1,0 +1,161 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "latitude",
+    "longitude",
+]
+matrix = [
+    [
+    1.0,
+    -0.5588826806690763,
+],
+    [
+    -0.5588826806690763,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "country",
+    "name",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "country",
+    "iata",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999946,
+],
+    [
+    0.9999999999999946,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "name",
+    "iata",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999684895,
+],
+    [
+    0.9999999999684895,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "name",
+    "city",
+]
+matrix = [
+    [
+    1.0,
+    0.9912906446162424,
+],
+    [
+    0.9912906446162424,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "name",
+    "state",
+]
+matrix = [
+    [
+    1.0,
+    0.9794167628256816,
+],
+    [
+    0.9794167628256816,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "iata",
+    "city",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999216214,
+],
+    [
+    0.9999999999216214,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "iata",
+    "state",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999997081,
+],
+    [
+    0.9999999999997081,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "city",
+    "state",
+]
+matrix = [
+    [
+    1.0,
+    0.9080770646632217,
+],
+    [
+    0.9080770646632217,
+    1.0,
+],
+]
+conditional = []

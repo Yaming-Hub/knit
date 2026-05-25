@@ -1,0 +1,113 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "carat"
+min = 0.2
+max = 5.01
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "depth"
+min = 43.0
+max = 79.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "table"
+min = 43.0
+max = 95.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "price"
+min = 326.0
+max = 18823.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "x"
+min = 0.0
+max = 10.74
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "y"
+min = 0.0
+max = 58.9
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "z"
+min = 0.0
+max = 31.8
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "carat <= depth"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "carat <= table"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "carat <= price"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "depth <= price"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "x <= depth"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "y <= depth"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "z <= depth"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "table <= price"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "x <= table"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "z <= table"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "x <= price"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "y <= price"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "z <= price"

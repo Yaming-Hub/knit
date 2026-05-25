@@ -1,0 +1,678 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Major_code"
+min = 1100.0
+max = 6403.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_total"
+min = 1542.0
+max = 1184158.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_sample_size"
+min = 22.0
+max = 21994.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_employed"
+min = 1008.0
+max = 915341.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_full_time_year_round"
+min = 770.0
+max = 703347.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_unemployed"
+min = 0.0
+max = 35718.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_unemployment_rate"
+min = 0.0
+max = 0.13851498
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_median"
+min = 47000.0
+max = 135000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_P25"
+min = 24500.0
+max = 85000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_P75"
+min = 65000.0
+max = 294000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_total"
+min = 2232.0
+max = 2996892.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_employed"
+min = 1328.0
+max = 2253649.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_full_time_year_round"
+min = 980.0
+max = 1882507.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_unemployed"
+min = 0.0
+max = 136978.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_unemployment_rate"
+min = 0.0
+max = 0.160906607
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_median"
+min = 37000.0
+max = 126000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_P25"
+min = 25000.0
+max = 80000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Nongrad_P75"
+min = 48000.0
+max = 215000.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_share"
+min = 0.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "Grad_premium"
+min = -0.025
+max = 1.647058824
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Nongrad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Major_code <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Major_code"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_employed <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_full_time_year_round <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployed <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Grad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_sample_size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_sample_size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Nongrad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_sample_size <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_sample_size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_sample_size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployed <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Grad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_unemployed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployed <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_unemployment_rate <= Grad_share"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_P25 <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_median <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_P25 <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_P25 <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_P25 <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_median <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_P25 <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Grad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_employed <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_full_time_year_round <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployed <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Nongrad_total"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployed <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Nongrad_employed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployed <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Nongrad_full_time_year_round"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_unemployed"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_unemployment_rate <= Grad_share"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_P25 <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_median <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Nongrad_median"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Nongrad_P25 <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Nongrad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Nongrad_P25"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_share <= Nongrad_P75"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "Grad_premium <= Nongrad_P75"

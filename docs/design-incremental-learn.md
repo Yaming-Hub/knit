@@ -51,7 +51,7 @@ evidence across multiple invocations.
 flowchart TB
     subgraph batch["Batch Mode (current, unchanged)"]
         data1([All Data]) --> learn1[knit learn]
-        learn1 --> blueprint1([blueprint.knit.toml])
+        learn1 --> blueprint1([blueprint.knit.json])
     end
 
     subgraph incremental["Incremental Mode (new)"]
@@ -64,7 +64,7 @@ flowchart TB
         state2 --> updateN
         updateN --> stateN[(Final State)]
         stateN --> finalize[knit learn --finalize]
-        finalize --> blueprint2([blueprint.knit.toml])
+        finalize --> blueprint2([blueprint.knit.json])
         finalize --> dicts([*.dict.txt])
     end
 ```
@@ -102,10 +102,10 @@ knit learn data/jan/ --state learned.state
 
 ```bash
 # Generate blueprint from accumulated state
-knit learn --finalize --state learned.state -o blueprint.knit.toml
+knit learn --finalize --state learned.state -o blueprint.knit.json
 
 # Can finalize with additional data in one pass
-knit learn data/last_chunk.csv --state learned.state -o blueprint.knit.toml
+knit learn data/last_chunk.csv --state learned.state -o blueprint.knit.json
 ```
 
 ### Behavior Rules

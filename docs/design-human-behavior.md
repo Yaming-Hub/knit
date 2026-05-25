@@ -590,7 +590,7 @@ pub struct Field {
 
 ```bash
 # Learn with human behavior analysis enabled
-knit learn data/ --actors --output blueprint.knit.toml
+knit learn data/ --actors --output blueprint.knit.json
 
 # Specify actor columns explicitly (skip auto-detection)
 knit learn data/ --actor-column sender_id --actor-column receiver_id

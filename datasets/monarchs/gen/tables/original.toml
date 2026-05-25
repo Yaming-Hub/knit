@@ -1,0 +1,199 @@
+[table]
+name = "original"
+count = 12
+
+[table.stats]
+source_rows = 12
+
+[[table.scaling.custom]]
+name = "name"
+field = "name"
+cardinality = 12
+
+[[table.scaling.custom]]
+name = "start"
+field = "start"
+cardinality = 12
+
+[[table.scaling.custom]]
+name = "end"
+field = "end"
+cardinality = 11
+
+[[table.scaling.custom]]
+name = "index"
+field = "index"
+cardinality = 12
+
+[[table.scaling.custom]]
+name = "commonwealth"
+field = "commonwealth"
+cardinality = 2
+
+[table.sort_by]
+column = "start"
+direction = "asc"
+
+[[columns]]
+name = "name"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 12
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min_length = 3
+max_length = 10
+avg_length = 7.833333333333333
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "start"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 12
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 1565.0
+max = 1820.0
+mean = 1683.25
+std = 69.65385194595551
+
+[columns.stats.percentiles]
+p25 = 1649.0
+p50 = 1689.0
+p75 = 1714.0
+p95 = 1760.0
+p99 = 1820.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "end"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 12
+
+[columns.stats]
+distinct_count = 11
+null_rate = 0.0
+min = 1603.0
+max = 1820.0
+mean = 1704.4166666666667
+std = 69.21568179293335
+
+[columns.stats.percentiles]
+p25 = 1660.0
+p50 = 1702.0
+p75 = 1727.0
+p95 = 1820.0
+p99 = 1820.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "uniform"
+
+[[columns]]
+name = "index"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 12
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 0.0
+max = 11.0
+mean = 5.5
+std = 3.605551275463989
+
+[columns.stats.percentiles]
+p25 = 3.0
+p50 = 6.0
+p75 = 8.0
+p95 = 10.0
+p99 = 11.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "commonwealth"
+data_type = "bool"
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 4
+row_count = 12
+
+[columns.nullable]
+probability = 0.9166666666666666
+
+[columns.stats]
+null_rate = 0.9166666666666666
+
+[columns.traits]
+semantic = "boolean"
+
+[[constraints]]
+type = "range"
+field = "start"
+min = 1565.0
+max = 1820.0
+
+[[constraints]]
+type = "range"
+field = "end"
+min = 1603.0
+max = 1820.0
+
+[[constraints]]
+type = "range"
+field = "index"
+min = 0.0
+max = 11.0
+
+[[constraints]]
+type = "check"
+expr = "start <= end"
+
+[[constraints]]
+type = "check"
+expr = "index <= start"
+
+[[constraints]]
+type = "check"
+expr = "index <= end"

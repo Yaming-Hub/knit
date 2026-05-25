@@ -1,0 +1,35 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "year_release"
+min = 1915.0
+max = 2014.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "number_of_subjects"
+min = 1.0
+max = 4.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "person_of_color"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "number_of_subjects <= year_release"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "person_of_color <= year_release"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "person_of_color <= number_of_subjects"

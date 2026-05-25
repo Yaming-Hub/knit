@@ -1,0 +1,351 @@
+[table]
+name = "original"
+count = 3652
+
+[table.stats]
+source_rows = 3652
+
+[[table.scaling.custom]]
+name = "year"
+field = "year"
+cardinality = 10
+
+[[table.scaling.custom]]
+name = "month"
+field = "month"
+cardinality = 12
+
+[[table.scaling.custom]]
+name = "day_of_week"
+field = "day_of_week"
+cardinality = 7
+
+[table.sort_by]
+column = "year"
+direction = "asc"
+
+[[columns]]
+name = "year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 2000
+weight = 0.10021905805038335
+
+[[columns.generator.choices]]
+value = 1996
+weight = 0.10021905805038335
+
+[[columns.generator.choices]]
+value = 1998
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 1994
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 2001
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 1997
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 2002
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 1995
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 1999
+weight = 0.09994523548740417
+
+[[columns.generator.choices]]
+value = 2003
+weight = 0.09994523548740417
+
+[columns.stats]
+distinct_count = 10
+null_rate = 0.0
+min = 1994.0
+max = 2003.0
+mean = 1998.499726177437
+std = 2.8722932300500226
+
+[columns.stats.percentiles]
+p25 = 1996.0
+p50 = 1999.0
+p75 = 2001.0
+p95 = 2003.0
+p99 = 2003.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "month"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 10
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 5
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 3
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 12
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 7
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 1
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 8
+weight = 0.08488499452354874
+
+[[columns.generator.choices]]
+value = 6
+weight = 0.08214676889375684
+
+[[columns.generator.choices]]
+value = 9
+weight = 0.08214676889375684
+
+[[columns.generator.choices]]
+value = 4
+weight = 0.08214676889375684
+
+[[columns.generator.choices]]
+value = 11
+weight = 0.08214676889375684
+
+[[columns.generator.choices]]
+value = 2
+weight = 0.07721796276013143
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 1.0
+max = 12.0
+mean = 6.52354874041621
+std = 3.449005382544438
+
+[columns.stats.percentiles]
+p25 = 4.0
+p50 = 7.0
+p75 = 10.0
+p95 = 12.0
+p99 = 12.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "date_of_month"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 31.0
+min = 1.0
+
+[columns.stats]
+distinct_count = 31
+null_rate = 0.0
+min = 1.0
+max = 31.0
+mean = 15.727820372398686
+std = 8.800529313688346
+
+[columns.stats.percentiles]
+p25 = 8.0
+p50 = 16.0
+p75 = 23.0
+p95 = 29.0
+p99 = 31.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "day_of_week"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = 7
+weight = 0.1429353778751369
+
+[[columns.generator.choices]]
+value = 1
+weight = 0.1429353778751369
+
+[[columns.generator.choices]]
+value = 3
+weight = 0.1429353778751369
+
+[[columns.generator.choices]]
+value = 2
+weight = 0.1429353778751369
+
+[[columns.generator.choices]]
+value = 6
+weight = 0.1429353778751369
+
+[[columns.generator.choices]]
+value = 5
+weight = 0.1426615553121577
+
+[[columns.generator.choices]]
+value = 4
+weight = 0.1426615553121577
+
+[columns.stats]
+distinct_count = 7
+null_rate = 0.0
+min = 1.0
+max = 7.0
+mean = 3.999726177437021
+std = 2.000753057772522
+
+[columns.stats.percentiles]
+p25 = 2.0
+p50 = 4.0
+p75 = 6.0
+p95 = 7.0
+p99 = 7.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "normal"
+
+[[columns]]
+name = "births"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+round = true
+
+[columns.generator.params]
+mean = 10876.817360350493
+std_dev = 1858.3121550193623
+
+[columns.stats]
+distinct_count = 2526
+null_rate = 0.0
+min = 6443.0
+max = 14540.0
+mean = 10876.817360350493
+std = 1858.5666311800921
+
+[columns.stats.percentiles]
+p25 = 8845.0
+p50 = 11615.0
+p75 = 12274.0
+p95 = 13072.0
+p99 = 13594.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "year"
+min = 1994.0
+max = 2003.0
+
+[[constraints]]
+type = "range"
+field = "month"
+min = 1.0
+max = 12.0
+
+[[constraints]]
+type = "range"
+field = "date_of_month"
+min = 1.0
+max = 31.0
+
+[[constraints]]
+type = "range"
+field = "day_of_week"
+min = 1.0
+max = 7.0
+
+[[constraints]]
+type = "range"
+field = "births"
+min = 6443.0
+max = 14540.0
+
+[[constraints]]
+type = "check"
+expr = "month <= year"
+
+[[constraints]]
+type = "check"
+expr = "date_of_month <= year"
+
+[[constraints]]
+type = "check"
+expr = "day_of_week <= year"
+
+[[constraints]]
+type = "check"
+expr = "year <= births"
+
+[[constraints]]
+type = "check"
+expr = "month <= births"
+
+[[constraints]]
+type = "check"
+expr = "date_of_month <= births"
+
+[[constraints]]
+type = "check"
+expr = "day_of_week <= births"

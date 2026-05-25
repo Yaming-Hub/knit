@@ -1,0 +1,6 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "Price"
+min = 46.85
+max = 985.93

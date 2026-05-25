@@ -1,0 +1,811 @@
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "1"
+min = 0.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "2419"
+min = 1301.0
+max = 6199.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "2339"
+min = 609.0
+max = 280709.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "2057"
+min = 488.0
+max = 111762.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "282"
+min = 77.0
+max = 187621.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "0.120564344"
+min = 0.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "range"
+field = "110000"
+min = 0.0
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "1 <= 2419"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "1 <= 2339"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "1 <= 2057"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "1 <= 282"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "0.120564344 <= 1"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "1 <= 110000"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "0.120564344 <= 2419"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "2419 <= 110000"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "2057 <= 2339"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "282 <= 2339"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "0.120564344 <= 2339"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "0.120564344 <= 2057"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "0.120564344 <= 282"
+
+[[constraints]]
+table = "original__fullrow"
+type = "check"
+expr = "0.120564344 <= 110000"
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "Rank"
+min = 0.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "Major_code"
+min = 1301.0
+max = 6199.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "Total"
+min = 609.0
+max = 280709.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "Men"
+min = 488.0
+max = 111762.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "Women"
+min = 77.0
+max = 187621.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "ShareWomen"
+min = 0.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "range"
+field = "Median"
+min = 0.0
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "women-stem_original"
+type = "check"
+expr = "ShareWomen <= Median"
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "Rank"
+min = 0.0
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "Major_code"
+min = 1301.0
+max = 6199.0
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "Total"
+min = 609.0
+max = 280709.0
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "Men"
+min = 488.0
+max = 111762.0
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "Women"
+min = 77.0
+max = 187621.0
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "ShareWomen"
+min = 0.0
+
+[[constraints]]
+table = "out_original"
+type = "range"
+field = "Median"
+min = 0.0
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "out_original"
+type = "check"
+expr = "ShareWomen <= Median"
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "Rank"
+min = 1.0
+max = 75.0
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "Major_code"
+min = 1821.0
+max = 5943.0
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "Total"
+min = 1782.0
+max = 280709.0
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "Men"
+min = 524.0
+max = 55493.0
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "Women"
+min = 77.0
+max = 187621.0
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "ShareWomen"
+min = 0.077453027
+max = 0.967998119
+
+[[constraints]]
+table = "test_output_original"
+type = "range"
+field = "Median"
+min = 26000.0
+max = 86239.0
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "test_output_original"
+type = "check"
+expr = "ShareWomen <= Median"
+
+[[constraints]]
+table = "test_output2_original"
+type = "range"
+field = "Rank"
+min = 1.0
+max = 71.0
+
+[[constraints]]
+table = "test_output2_original"
+type = "range"
+field = "Major_code"
+min = 1406.0
+max = 6161.0
+
+[[constraints]]
+table = "test_output2_original"
+type = "range"
+field = "Men"
+min = 553.0
+max = 111762.0
+
+[[constraints]]
+table = "test_output2_original"
+type = "range"
+field = "Women"
+min = 84.0
+max = 71767.0
+
+[[constraints]]
+table = "test_output2_original"
+type = "range"
+field = "Median"
+min = 28286.0
+max = 79512.0
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Major_code <= Total"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "Median <= Total"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "test_output2_original"
+type = "check"
+expr = "ShareWomen <= Median"
+
+[[constraints]]
+table = "test_output3_original"
+type = "range"
+field = "Rank"
+min = 1.0
+max = 71.0
+
+[[constraints]]
+table = "test_output3_original"
+type = "range"
+field = "Major_code"
+min = 1406.0
+max = 6161.0
+
+[[constraints]]
+table = "test_output3_original"
+type = "range"
+field = "Men"
+min = 553.0
+max = 111762.0
+
+[[constraints]]
+table = "test_output3_original"
+type = "range"
+field = "Women"
+min = 84.0
+max = 71767.0
+
+[[constraints]]
+table = "test_output3_original"
+type = "range"
+field = "Median"
+min = 28286.0
+max = 79512.0
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Major_code <= Total"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "Median <= Total"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "test_output3_original"
+type = "check"
+expr = "ShareWomen <= Median"
+
+[[constraints]]
+table = "test_output4_original"
+type = "range"
+field = "Rank"
+min = 1.0
+max = 71.0
+
+[[constraints]]
+table = "test_output4_original"
+type = "range"
+field = "Major_code"
+min = 1406.0
+max = 6161.0
+
+[[constraints]]
+table = "test_output4_original"
+type = "range"
+field = "Men"
+min = 553.0
+max = 111762.0
+
+[[constraints]]
+table = "test_output4_original"
+type = "range"
+field = "Women"
+min = 84.0
+max = 71767.0
+
+[[constraints]]
+table = "test_output4_original"
+type = "range"
+field = "Median"
+min = 28286.0
+max = 79512.0
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Rank <= Major_code"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Rank <= Total"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Rank <= Men"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Rank <= Women"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "ShareWomen <= Rank"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Rank <= Median"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Major_code <= Total"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "ShareWomen <= Major_code"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Major_code <= Median"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Men <= Total"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Women <= Total"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "ShareWomen <= Total"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "Median <= Total"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "ShareWomen <= Men"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "ShareWomen <= Women"
+
+[[constraints]]
+table = "test_output4_original"
+type = "check"
+expr = "ShareWomen <= Median"

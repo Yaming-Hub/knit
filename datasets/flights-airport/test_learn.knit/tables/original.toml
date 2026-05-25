@@ -1,0 +1,88 @@
+[table]
+name = "original"
+count = 5366
+
+[table.stats]
+source_rows = 5366
+
+[[columns]]
+name = "origin"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_origin.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 303
+null_rate = 0.0
+min_length = 3
+max_length = 3
+avg_length = 3.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "medium"
+
+[[columns]]
+name = "destination"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_destination.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 304
+null_rate = 0.0
+min_length = 3
+max_length = 3
+avg_length = 3.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "medium"
+
+[[columns]]
+name = "count"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+round = true
+
+[columns.generator.params]
+scale = 1943.1374856424113
+shape = 0.672275010218026
+
+[columns.stats]
+distinct_count = 2341
+null_rate = 0.0
+min = 1.0
+max = 13788.0
+mean = 1306.3227730152814
+std = 1593.3731147319654
+
+[columns.stats.percentiles]
+p25 = 293.0
+p50 = 777.0
+p75 = 1719.0
+p95 = 4369.0
+p99 = 7666.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "count"
+min = 1.0
+max = 13788.0

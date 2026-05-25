@@ -1,0 +1,18 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "cx"
+min = -0.4456619192134244
+max = 0.22111695897456907
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "cy"
+min = 51.355317416374
+max = 51.650991897325454
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "cx <= cy"

@@ -1,0 +1,53 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "income",
+    "health",
+]
+matrix = [
+    [
+    1.0,
+    0.6464345423584739,
+],
+    [
+    0.6464345423584739,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "income",
+    "health",
+]
+matrix = [
+    [
+    1.0,
+    0.8317484092334368,
+],
+    [
+    0.8317484092334368,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "region",
+    "country",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []

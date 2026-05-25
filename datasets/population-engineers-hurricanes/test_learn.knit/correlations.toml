@@ -1,0 +1,53 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "engineers",
+    "population",
+]
+matrix = [
+    [
+    1.0,
+    0.3318534961154273,
+],
+    [
+    0.3318534961154273,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "hurricanes",
+    "population",
+]
+matrix = [
+    [
+    1.0,
+    0.418224770200661,
+],
+    [
+    0.418224770200661,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "hurricanes",
+    "population",
+]
+matrix = [
+    [
+    1.0,
+    0.33186831177066145,
+],
+    [
+    0.33186831177066145,
+    1.0,
+],
+]
+conditional = []

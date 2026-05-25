@@ -1,0 +1,87 @@
+[
+  {
+    "dataset": "seattle-weather",
+    "score": 66,
+    "reason": "Schema matches and weather labels stay plausible, but the synthetic January sample is much warmer than the original winter slice, with duplicate dates and no snow records."
+  },
+  {
+    "dataset": "seattle-weather-hourly",
+    "score": 61,
+    "reason": "Columns and numeric scales are close, but the generated timestamps are random across months with arbitrary seconds instead of a regular hourly sequence from the original."
+  },
+  {
+    "dataset": "sp500",
+    "score": 50,
+    "reason": "Format matches, but prices are shifted much lower and the monthly dates jump across many years with duplicates, so the time-series structure is only loosely preserved."
+  },
+  {
+    "dataset": "sp500-2000",
+    "score": 43,
+    "reason": "The OHLCV schema matches, but many market relationships are broken: highs can fall below opens, lows are far too low, volumes are inflated, and duplicate dates appear."
+  },
+  {
+    "dataset": "species",
+    "score": 64,
+    "reason": "Species identity fields match perfectly, but county_id collapses to a single value and habitat percentages are much higher than the mostly near-zero original distribution."
+  },
+  {
+    "dataset": "steak-survey",
+    "score": 32,
+    "reason": "Headers match, but several categorical fields are garbled or shifted (for example steak prep values contain tab-joined text), 'Do you eat steak?' is blank, and row semantics are damaged."
+  },
+  {
+    "dataset": "stocks",
+    "score": 89,
+    "reason": "This preserves the symbol, monthly dates, row count, and overall stock-series structure well; the main issue is a lower price distribution than the original MSFT sample."
+  },
+  {
+    "dataset": "taxis",
+    "score": 40,
+    "reason": "Numeric trip fields are somewhat plausible, but zone and borough fields are broken, short trips span multiple days, and location relationships are not preserved."
+  },
+  {
+    "dataset": "tips",
+    "score": 95,
+    "reason": "Schema, row count, value ranges, and restaurant-style categorical values are all very close; the synthetic sample keeps realistic bill-tip-size relationships with only minor distribution drift."
+  },
+  {
+    "dataset": "titanic",
+    "score": 43,
+    "reason": "Columns line up, but several discrete fields become continuous floats, embarked values disappear, text fields are partially merged, and important passenger relationships are weakened."
+  },
+  {
+    "dataset": "unemployment-industries",
+    "score": 82,
+    "reason": "JSON structure, series labels, row count, and most numeric distributions are close, but the generated date field no longer aligns with the year/month values and jumps into unrelated calendar years."
+  },
+  {
+    "dataset": "us-ag-exports",
+    "score": 42,
+    "reason": "Numeric magnitudes are in the right ballpark, but state/code fields are malformed and shifted, which breaks the core state-to-measure relationships despite the matching schema."
+  },
+  {
+    "dataset": "us-airport-traffic",
+    "score": 40,
+    "reason": "Airport traffic uses the right columns and plausible airport-like text, but airport/city/state combinations are mismatched, state is blank, and counts become unrealistic fractional values."
+  },
+  {
+    "dataset": "us-births-cdc",
+    "score": 79,
+    "reason": "The structure and numeric ranges are solid, with valid calendar-style values and realistic birth counts, but the original January-only slice becomes a mixed-month sample and loses its ordered sequence."
+  },
+  {
+    "dataset": "us-births-ssa",
+    "score": 78,
+    "reason": "Generated values stay in a believable births domain with matching columns and row count, though months and dates no longer follow the original ordered January subset."
+  },
+  {
+    "dataset": "us-cities",
+    "score": 68,
+    "reason": "The city dataset keeps the right schema and plausible US-style names and coordinates, but populations are inflated and the city-to-location relationships are not reliably preserved."
+  },
+  {
+    "dataset": "women-stem",
+    "score": 61,
+    "reason": "Majors and categories remain in the same general domain, but some major-category assignments are wrong and core numeric relationships like Total versus Men/Women are not preserved."
+  }
+]

@@ -1,0 +1,17 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "airport1",
+    "airport2",
+]
+matrix = [
+    [
+    1.0,
+    0.3068947428180481,
+],
+    [
+    0.3068947428180481,
+    1.0,
+],
+]
+conditional = []

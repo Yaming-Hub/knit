@@ -1,0 +1,30 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "id"
+min = 1.0
+max = 252.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "parent"
+min = 1.0
+max = 231.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "size"
+min = 264.0
+max = 24593.0
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "id <= size"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "parent <= size"

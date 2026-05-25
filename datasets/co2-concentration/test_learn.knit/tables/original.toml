@@ -1,0 +1,122 @@
+[table]
+name = "original"
+count = 741
+
+[table.stats]
+source_rows = 741
+
+[table.sort_by]
+column = "Date"
+direction = "asc"
+
+[[columns]]
+name = "Date"
+data_type = "date"
+nullable = false
+
+[columns.generator]
+type = "sequence"
+start = "1958-03-01"
+step = "30d"
+
+[columns.stats]
+null_rate = 0.0
+min_temporal = "1958-03-01T00:00:00"
+max_temporal = "2020-04-01T00:00:00"
+
+[columns.traits]
+semantic = "timestamp"
+
+[[columns]]
+name = "CO2"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "time_series"
+baseline = 306.5772694435649
+min = 313.21
+max = 416.18
+
+[[columns.generator.components]]
+type = "trend"
+slope = 0.13171259927168555
+degree = 1
+
+[[columns.generator.components]]
+type = "noise"
+std_dev = 4.306893865702521
+
+[columns.stats]
+distinct_count = 718
+null_rate = 0.0
+min = 313.21
+max = 416.18
+mean = 355.3109311740885
+std = 28.520048620592025
+
+[columns.stats.percentiles]
+p25 = 329.39
+p50 = 352.52
+p75 = 378.34
+p95 = 405.99
+p99 = 412.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[columns]]
+name = "adjusted CO2"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "time_series"
+baseline = 306.56806915692687
+min = 314.44
+max = 413.35
+
+[[columns.generator.components]]
+type = "trend"
+slope = 0.1317191551034651
+degree = 1
+
+[[columns.generator.components]]
+type = "noise"
+std_dev = 3.7509030983517646
+
+[columns.stats]
+distinct_count = 709
+null_rate = 0.0
+min = 314.44
+max = 413.35
+mean = 355.30415654520885
+std = 28.44289535091369
+
+[columns.stats.percentiles]
+p25 = 330.14
+p50 = 352.87
+p75 = 378.01
+p95 = 406.02
+p99 = 412.06
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "CO2"
+min = 313.21
+max = 416.18
+
+[[constraints]]
+type = "range"
+field = "adjusted CO2"
+min = 314.44
+max = 413.35

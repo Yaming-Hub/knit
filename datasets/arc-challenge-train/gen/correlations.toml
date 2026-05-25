@@ -1,0 +1,53 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "question",
+    "answerKey",
+]
+matrix = [
+    [
+    1.0,
+    1.0,
+],
+    [
+    1.0,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "question",
+    "id",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999871511,
+],
+    [
+    0.9999999999871511,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "answerKey",
+    "id",
+]
+matrix = [
+    [
+    1.0,
+    0.9999999999999633,
+],
+    [
+    0.9999999999999633,
+    1.0,
+],
+]
+conditional = []

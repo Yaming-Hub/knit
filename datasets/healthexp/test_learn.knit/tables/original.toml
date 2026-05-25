@@ -1,0 +1,186 @@
+[table]
+name = "original"
+count = 274
+
+[table.stats]
+source_rows = 274
+
+[[table.scaling.custom]]
+name = "Country"
+field = "Country"
+cardinality = 6
+
+[table.sort_by]
+column = "Year"
+direction = "asc"
+
+[[columns]]
+name = "Year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+round = true
+
+[columns.generator.params]
+max = 2020.0
+min = 1970.0
+
+[columns.stats]
+distinct_count = 51
+null_rate = 0.0
+min = 1970.0
+max = 2020.0
+mean = 1996.992700729927
+std = 14.180932537192142
+
+[columns.stats.percentiles]
+p25 = 1985.0
+p50 = 1998.0
+p75 = 2009.0
+p95 = 2018.0
+p99 = 2020.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "Country"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "USA"
+weight = 0.18613138686131386
+
+[[columns.generator.choices]]
+value = "Japan"
+weight = 0.18613138686131386
+
+[[columns.generator.choices]]
+value = "Germany"
+weight = 0.18248175182481752
+
+[[columns.generator.choices]]
+value = "Canada"
+weight = 0.16058394160583941
+
+[[columns.generator.choices]]
+value = "Great Britain"
+weight = 0.15693430656934307
+
+[[columns.generator.choices]]
+value = "France"
+weight = 0.12773722627737227
+
+[columns.stats]
+distinct_count = 6
+null_rate = 0.0
+min_length = 3
+max_length = 13
+avg_length = 6.536496350364963
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "Spending_USD"
+data_type = "float"
+nullable = false
+precision = 3
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 1720.9015305310731
+shape = 1.6208590995027436
+
+[columns.stats]
+distinct_count = 274
+null_rate = 0.0
+min = 123.993
+max = 11859.179
+mean = 2789.3389051094887
+std = 2194.9397848395724
+
+[columns.stats.percentiles]
+p25 = 1036.3
+p50 = 2303.68
+p75 = 4059.125
+p95 = 6938.983
+p99 = 10046.472
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "Life_Expectancy"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "normal"
+
+[columns.generator.params]
+mean = 77.90948905109492
+std_dev = 3.2702794186670805
+
+[columns.stats]
+distinct_count = 118
+null_rate = 0.0
+min = 70.6
+max = 84.7
+mean = 77.90948905109492
+std = 3.2762634665236385
+
+[columns.stats.percentiles]
+p25 = 75.5
+p50 = 78.1
+p75 = 80.6
+p95 = 82.7
+p99 = 84.2
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "Year"
+min = 1970.0
+max = 2020.0
+
+[[constraints]]
+type = "range"
+field = "Spending_USD"
+min = 123.993
+max = 11859.179
+
+[[constraints]]
+type = "range"
+field = "Life_Expectancy"
+min = 70.6
+max = 84.7
+
+[[constraints]]
+type = "check"
+expr = "Life_Expectancy <= Year"
+
+[[constraints]]
+type = "check"
+expr = "Life_Expectancy <= Spending_USD"

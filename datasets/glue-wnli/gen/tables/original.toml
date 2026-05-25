@@ -1,0 +1,136 @@
+[table]
+name = "original"
+count = 71
+
+[table.stats]
+source_rows = 71
+
+[[table.scaling.custom]]
+name = "label"
+field = "label"
+cardinality = 2
+
+[table.sort_by]
+column = "idx"
+direction = "asc"
+
+[[columns]]
+name = "sentence1"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "sentence2"
+file = "original__sentence2_sentence1_label_idx.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 64
+null_rate = 0.0
+min_length = 44
+max_length = 323
+avg_length = 111.83098591549296
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "sentence2"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_sentence2.dict.txt"
+expansion = "shuffle"
+
+[columns.stats]
+distinct_count = 69
+null_rate = 0.0
+min_length = 16
+max_length = 109
+avg_length = 39.46478873239437
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "label"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "sentence2"
+file = "original__sentence2_sentence1_label_idx.tsv"
+column = 2
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.43661971830985913
+std = 0.4994967286092554
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 1.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "idx"
+data_type = "int32"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "sentence2"
+file = "original__sentence2_sentence1_label_idx.tsv"
+column = 3
+
+[columns.stats]
+distinct_count = 71
+null_rate = 0.0
+min = 0.0
+max = 70.0
+mean = 35.0
+std = 20.639767440550294
+
+[columns.stats.percentiles]
+p25 = 18.0
+p50 = 35.0
+p75 = 53.0
+p95 = 67.0
+p99 = 69.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "label"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "idx"
+min = 0.0
+max = 70.0
+
+[[constraints]]
+type = "check"
+expr = "label <= idx"

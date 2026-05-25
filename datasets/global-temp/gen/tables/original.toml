@@ -1,0 +1,94 @@
+[table]
+name = "original"
+count = 144
+
+[table.stats]
+source_rows = 144
+
+[table.sort_by]
+column = "year"
+direction = "asc"
+
+[[columns]]
+name = "year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "time_series"
+baseline = 1880.0
+min = 1880.0
+max = 2023.0
+
+[[columns.generator.components]]
+type = "trend"
+slope = 1.0
+degree = 1
+
+[columns.stats]
+distinct_count = 144
+null_rate = 0.0
+min = 1880.0
+max = 2023.0
+mean = 1951.5
+std = 41.71330722922842
+
+[columns.stats.percentiles]
+p25 = 1916.0
+p50 = 1952.0
+p75 = 1987.0
+p95 = 2016.0
+p99 = 2022.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[columns]]
+name = "temp"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "time_series"
+baseline = -0.17
+
+[[columns.generator.components]]
+type = "trend"
+slope = 0.007933345390241944
+degree = 1
+
+[[columns.generator.components]]
+type = "noise"
+std_dev = 0.11307617265114733
+
+[columns.stats]
+distinct_count = 78
+null_rate = 0.0
+min = -0.48
+max = 1.17
+mean = 0.06770833333333344
+std = 0.37863523556107614
+
+[columns.stats.percentiles]
+p25 = -0.2
+p50 = -0.03
+p75 = 0.27
+p95 = 0.85
+p99 = 1.01
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "year"
+min = 0.0
+
+[[constraints]]
+type = "check"
+expr = "temp <= year"

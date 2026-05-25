@@ -1,0 +1,92 @@
+[
+  {
+    "dataset": "geyser",
+    "score": 95,
+    "reason": "Schema matches exactly; numeric ranges and the long/short split are very close, and the duration-waiting relationship is preserved well."
+  },
+  {
+    "dataset": "github-events",
+    "score": 56,
+    "reason": "Columns and timestamp format match, but generated times drift far beyond the original Jan 1-3 window and counts extend above the original 1-3 range."
+  },
+  {
+    "dataset": "global-temp",
+    "score": 38,
+    "reason": "Schema matches, but duplicated years, missing later years, and many positive temperatures break the original temporal pattern and distribution."
+  },
+  {
+    "dataset": "glue-scores",
+    "score": 41,
+    "reason": "Column headers match, but model and encoder values are merged/broken, extra task categories appear, and benchmark score relationships are inconsistent."
+  },
+  {
+    "dataset": "grad-students",
+    "score": 52,
+    "reason": "The wide schema is preserved, but many major/category combinations are implausible and several totals and employment fields have unrealistic magnitudes or decimals."
+  },
+  {
+    "dataset": "healthexp",
+    "score": 58,
+    "reason": "Countries stay in-domain and the format matches, but spending and life expectancy are far too high for 1970-1972 and country-year coverage is distorted."
+  },
+  {
+    "dataset": "income",
+    "score": 24,
+    "reason": "Keys are recognizable, but names are merged with regions, region is null throughout, ids become fractional, and the generated structure diverges sharply from the partial original snippet."
+  },
+  {
+    "dataset": "iowa-electricity",
+    "score": 79,
+    "reason": "Columns, sources, and generation magnitudes are plausible, but annual Jan-1 timestamps become random dates and source frequencies shift noticeably."
+  },
+  {
+    "dataset": "iris",
+    "score": 71,
+    "reason": "Schema and species label match, and measurements stay plausible overall, but several setosa rows have feature values closer to other iris species."
+  },
+  {
+    "dataset": "la-riots",
+    "score": 44,
+    "reason": "Fields are present, but neighborhoods are mostly lost, addresses absorb neighborhood text, and death dates move well outside the original riot period."
+  },
+  {
+    "dataset": "london-centroids",
+    "score": 87,
+    "reason": "JSON structure and coordinate ranges are strong, and borough names remain in the same domain, though several names/centroids do not align with the original set."
+  },
+  {
+    "dataset": "marvel-characters",
+    "score": 34,
+    "reason": "Columns are retained, but character names and slugs are garbled, several categorical fields are blank, and cross-field consistency is weak."
+  },
+  {
+    "dataset": "miserables",
+    "score": 57,
+    "reason": "The same graph domain is recognizable, but nodes and links are serialized as strings inside a list wrapper instead of proper structured objects."
+  },
+  {
+    "dataset": "monarchs",
+    "score": 51,
+    "reason": "The monarchy domain is recognizable, but an extra field appears and several ruler names, start years, and reign spans are mismatched or chronologically wrong."
+  },
+  {
+    "dataset": "mpg",
+    "score": 63,
+    "reason": "Schema and numeric ranges are broadly plausible, but make/origin combinations are often nonsensical and some automotive relationships are not preserved."
+  },
+  {
+    "dataset": "nba-raptor",
+    "score": 45,
+    "reason": "Columns and many stat ranges look plausible, but player names are heavily garbled, ids do not match names, and key identity-to-stat relationships break down."
+  },
+  {
+    "dataset": "normal-2d",
+    "score": 84,
+    "reason": "The generated data has the right two-column numeric shape and a realistic centered normal cloud, but the original provided snippet is truncated so structural fidelity is limited."
+  },
+  {
+    "dataset": "nq-efficientqa-dev",
+    "score": 32,
+    "reason": "NDJSON structure and fields match, but most generated answers are unrelated to their questions and frequently come from the wrong semantic domain."
+  }
+]

@@ -1,0 +1,428 @@
+You are evaluating synthetic data quality. For each of the 10 datasets below, compare the GENERATED data against the ORIGINAL data and rate it 1-100.
+
+Rate based on:
+1. Column value realism (do values look like real data for this domain?)
+2. Distribution fidelity (similar ranges, proportions, patterns as original?)
+3. Row coherence (do column values within a row make sense together?)
+4. Structural correctness (right data types, no garbled text, proper formatting?)
+5. Domain authenticity (would this fool a domain expert at first glance?)
+
+RESPOND WITH ONLY a JSON array: [{"dataset": "name", "score": N, "reason": "one sentence"}, ...]
+
+### Dataset: drinks
+ORIGINAL:
+```
+country,beer_servings,spirit_servings,wine_servings,total_litres_of_pure_alcohol
+Afghanistan,0,0,0,0.0
+Albania,89,132,54,4.9
+Algeria,25,0,14,0.7
+Andorra,245,138,312,12.4
+Angola,217,57,45,5.9
+Bahamas,122,176,51,6.3
+Egypt,6,4,1,0.2
+Germany,346,117,175,11.3
+St. Vincent & the Grenadines,120,221,11,6.3
+Sierra Leone,25,3,2,6.7
+Venezuela,333,100,3,7.7
+Vietnam,111,2,1,2.0
+Yemen,6,0,0,0.1
+Zambia,32,19,4,2.5
+Zimbabwe,64,18,4,4.7
+```
+GENERATED:
+```
+country,beer_servings,spirit_servings,wine_servings,total_litres_of_pure_alcohol
+Comoros,1,3,1,0.1
+Samoa,105,18,24,2.6
+Liberia,19,152,2,3.1
+Armenia,21,179,11,3.8
+St. Lucia,171,315,71,10.1
+DR Congo,32,3,1,2.3
+Tuvalu,6,41,9,1.0
+Bahrain,42,63,7,2.0
+Malta,149,100,120,6.6
+Turkey,51,22,7,1.4
+Bahamas,122,176,51,6.3
+Eritrea,18,0,0,0.5
+Moldova,109,226,18,6.3
+Swaziland,90,2,2,4.7
+New Zealand,203,79,175,9.3
+```
+
+---
+
+### Dataset: ebola-2014
+ORIGINAL:
+```
+Country,Month,Year,Lat,Lon,Value
+Guinea,3,14,9.95,-9.7,122
+Guinea,4,14,9.95,-9.7,224
+Guinea,5,14,9.95,-9.7,291
+Guinea,6,14,9.95,-9.7,413
+Guinea,7,14,9.95,-9.7,460
+Guinea,8,14,9.95,-9.7,771
+Liberia,12,14,6.43,-9.43,
+Senegal,8,14,14.5,-14.45,1
+Sierra Leone,5,14,8.46,-11.78,50
+Sierra Leone,7,14,8.46,-11.78,533
+Sierra Leone,8,14,8.46,-11.78,1216
+Sierra Leone,9,14,8.46,-11.78,1940
+Sierra Leone,10,14,8.46,-11.78,
+Sierra Leone,11,14,8.46,-11.78,
+Sierra Leone,12,14,8.46,-11.78,
+```
+GENERATED:
+```
+Country,Month,Year,Lat,Lon,Value
+Guinea,3,14,9.95,-9.7,122
+Guinea,4,14,9.95,-9.7,224
+Guinea,5,14,9.95,-9.7,
+Guinea,6,14,9.95,-9.7,
+Guinea,7,14,9.95,-9.7,460
+Liberia,6,14,6.43,-9.43,107
+Liberia,7,14,6.43,-9.43,329
+Liberia,5,14,6.43,-9.43,13
+Mali,11,14,17.57,-4.0,8
+Senegal,8,14,14.5,-14.45,1
+Sierra Leone,9,14,8.46,-11.78,1940
+Sierra Leone,8,14,8.46,-11.78,
+Sierra Leone,6,14,8.46,-11.78,
+Sierra Leone,11,14,8.46,-11.78,
+Sierra Leone,5,14,8.46,-11.78,50
+```
+
+---
+
+### Dataset: exercise
+ORIGINAL:
+```
+,id,diet,pulse,time,kind
+0,1,low fat,85,1 min,rest
+1,1,low fat,85,15 min,rest
+2,1,low fat,88,30 min,rest
+3,2,low fat,90,1 min,rest
+4,2,low fat,92,15 min,rest
+7,3,low fat,97,15 min,rest
+19,7,no fat,88,15 min,rest
+42,15,low fat,89,1 min,walking
+45,16,no fat,84,1 min,walking
+84,29,no fat,94,1 min,running
+85,29,no fat,135,15 min,running
+86,29,no fat,130,30 min,running
+87,30,no fat,99,1 min,running
+88,30,no fat,111,15 min,running
+89,30,no fat,150,30 min,running
+```
+GENERATED:
+```
+,id,diet,pulse,time,kind
+0,1,low fat,85,1 min,rest
+1,1,low fat,85,15 min,rest
+2,1,low fat,88,30 min,rest
+3,2,low fat,90,1 min,rest
+4,2,low fat,92,15 min,rest
+43,15,low fat,96,15 min,walking
+49,17,no fat,109,15 min,walking
+51,18,no fat,92,1 min,walking
+64,22,low fat,104,15 min,running
+82,28,no fat,124,15 min,running
+85,29,no fat,135,15 min,running
+86,29,no fat,130,30 min,running
+87,30,no fat,99,1 min,running
+88,30,no fat,111,15 min,running
+89,30,no fat,150,30 min,running
+```
+
+---
+
+### Dataset: flights
+ORIGINAL:
+```
+year,month,passengers
+1949,January,112
+1949,February,118
+1949,March,132
+1949,April,129
+1949,May,121
+1949,July,148
+1953,April,235
+1954,March,235
+1956,June,374
+1958,September,404
+1960,August,606
+1960,September,508
+1960,October,461
+1960,November,390
+1960,December,432
+```
+GENERATED:
+```
+year,month,passengers
+1949,March,132
+1949,May,121
+1949,December,118
+1949,July,148
+1949,September,136
+1951,April,163
+1951,September,184
+1953,January,196
+1955,May,270
+1959,March,406
+1960,December,432
+1960,February,391
+1960,May,472
+1960,November,390
+1960,March,419
+```
+
+---
+
+### Dataset: flights-airport
+ORIGINAL:
+```
+origin,destination,count
+ABE,ATL,853
+ABE,BHM,1
+ABE,CLE,805
+ABE,CLT,465
+ABE,CVG,247
+BGM,DTW,728
+LIH,HNL,10407
+MCO,SLC,685
+MDW,MCO,3568
+SJU,BOS,1273
+YUM,IPL,326
+YUM,LAS,99
+YUM,LAX,1044
+YUM,PHX,1961
+YUM,SLC,440
+```
+GENERATED:
+```
+origin,destination,count
+DEN,FCA,668
+ABI,DFW,2660
+SAV,DTW,509
+BWI,SAV,1
+CVG,MEM,1226
+MCI,MCO,1349
+MCO,SDF,533
+DTW,MSY,68
+LAS,CAK,43
+TPA,MSP,1005
+IAD,CVG,783
+ELP,ATL,575
+SLC,LIT,18
+MSP,DAY,692
+DTW,MSP,4947
+```
+
+---
+
+### Dataset: fmri
+ORIGINAL:
+```
+subject,timepoint,event,region,signal
+s13,18,stim,parietal,-0.017551581538
+s5,14,stim,parietal,-0.0808829319505
+s12,18,stim,parietal,-0.0810330187333
+s11,18,stim,parietal,-0.04613439017519999
+s10,18,stim,parietal,-0.0379702032642
+s13,2,stim,parietal,-0.06291590684659999
+s13,18,stim,frontal,0.0244253694066
+s12,3,cue,parietal,0.0302697426561
+s12,14,cue,frontal,-0.0033179533740100003
+s11,16,cue,parietal,0.0293067638073
+s0,8,cue,frontal,0.0181654208514
+s13,7,cue,frontal,-0.0291302997811
+s12,7,cue,frontal,-0.00493910613621
+s11,7,cue,frontal,-0.0253667098182
+s0,0,cue,parietal,-0.00689923478092
+```
+GENERATED:
+```
+subject,timepoint,event,region,signal
+s10,1,stim,frontal,0.0635584004637
+s4,9,stim,parietal,-0.114241981967
+s10,8,stim,frontal,0.0282991931797
+s10,3,stim,parietal,0.0458383526337
+s9,2,stim,parietal,0.0406201814079
+s13,12,stim,frontal,-0.0900874242966
+s4,5,cue,frontal,0.188521242471
+s1,15,cue,parietal,0.00323779436699
+s9,8,cue,parietal,-0.0398411196291
+s6,18,cue,frontal,0.0122480941706
+s3,3,cue,parietal,0.0147962077845
+s0,1,cue,frontal,0.0164397984053
+s12,18,cue,parietal,-0.0114341079411
+s12,18,cue,frontal,0.0043837206407100005
+s5,17,cue,frontal,0.00588373422725
+```
+
+---
+
+### Dataset: gapminder-health-income
+ORIGINAL:
+```
+country,income,health,population,region
+Afghanistan,1925,57.63,32526562,south_asia
+Albania,10620,76,2896679,europe_central_asia
+Algeria,13434,76.5,39666519,middle_east_north_africa
+Andorra,46577,84.1,70473,europe_central_asia
+Angola,7615,61,25021974,sub_saharan_africa
+Chad,2191,57.7,14037472,sub_saharan_africa
+"Congo, Rep.",6220,61.9,4620330,sub_saharan_africa
+Costa Rica,14132,80,4807850,america
+Egypt,11031,71.3,91508084,middle_east_north_africa
+Ghana,4099,65.5,27409893,sub_saharan_africa
+Vietnam,5623,76.5,93447601,east_asia_pacific
+West Bank and Gaza,4319,75.2,4668466,middle_east_north_africa
+Yemen,3887,67.6,26832215,middle_east_north_africa
+Zambia,4034,58.96,16211767,sub_saharan_africa
+Zimbabwe,1801,60.01,15602751,sub_saharan_africa
+```
+GENERATED:
+```
+country,income,health,population,region
+Costa Rica,14132,80.0,4807850,america
+Singapore,80794,82.1,5603740,east_asia_pacific
+Canada,43294,81.7,35939927,america
+Belgium,41240,80.4,11299192,europe_central_asia
+Afghanistan,1925,57.63,32526562,south_asia
+Maldives,14408,79.5,363657,south_asia
+Paraguay,8219,73.9,6639123,america
+Botswana,17196,66.4,2262485,sub_saharan_africa
+Kiribati,1824,62.4,112423,east_asia_pacific
+St. Vincent and the Grenadines,10435,72.9,109462,america
+Djibouti,3139,64.63,887861,middle_east_north_africa
+Central African Republic,599,53.8,4900274,sub_saharan_africa
+Zimbabwe,1801,60.01,15602751,sub_saharan_africa
+Tunisia,11126,77.3,11253554,middle_east_north_africa
+Tajikistan,2582,71.0,8481855,europe_central_asia
+```
+
+---
+
+### Dataset: geyser
+ORIGINAL:
+```
+duration,waiting,kind
+3.6,79,long
+1.8,54,short
+3.333,74,long
+2.283,62,short
+4.533,85,long
+3.917,84,long
+1.9669999999999999,56,short
+3.733,79,long
+1.867,53,short
+3.85,84,long
+4.117,81,long
+2.15,46,short
+4.417,90,long
+1.817,46,short
+4.467,74,long
+```
+GENERATED:
+```
+duration,waiting,kind
+1.888999098360371,61,short
+5.1,79,long
+2.31955616790324,54,short
+3.991950816632579,81,long
+2.250445342042915,59,short
+4.556181825097028,72,long
+4.474259572004734,90,long
+4.479197519573713,85,long
+4.328565487873047,80,long
+4.723514224678028,87,long
+3.632053091424265,80,long
+3.912984335900237,84,long
+5.1,71,long
+3.501377249951891,75,long
+4.193839128046794,83,long
+```
+
+---
+
+### Dataset: github-events
+ORIGINAL:
+```
+time,count
+2015/01/01 01:00:00,2
+2015/01/01 04:00:00,3
+2015/01/01 05:00:00,1
+2015/01/01 08:00:00,1
+2015/01/01 09:00:00,3
+2015/03/05 16:00:00,2
+2015/03/07 04:00:00,10
+2015/03/25 23:00:00,2
+2015/04/01 05:00:00,1
+2015/05/14 06:00:00,2
+2015/05/29 17:00:00,1
+2015/05/29 19:00:00,1
+2015/05/30 00:00:00,10
+2015/05/30 09:00:00,1
+2015/05/30 11:00:00,2
+```
+GENERATED:
+```
+time,count
+2015/04/03 21:00:00,1
+2015/01/20 10:00:00,1
+2015/04/27 07:00:00,3
+2015/04/19 16:00:00,2
+2015/02/06 10:00:00,3
+2015/02/17 11:00:00,1
+2015/04/14 19:00:00,1
+2015/05/04 05:00:00,1
+2015/01/07 09:00:00,1
+2015/04/24 16:00:00,2
+2015/04/17 16:00:00,3
+2015/03/11 02:00:00,1
+2015/04/09 04:00:00,1
+2015/02/23 17:00:00,1
+2015/04/20 10:00:00,1
+```
+
+---
+
+### Dataset: global-temp
+ORIGINAL:
+```
+year,temp
+1880,-0.17
+1881,-0.09
+1882,-0.11
+1883,-0.17
+1884,-0.28
+1921,-0.19
+1932,-0.16
+1967,-0.02
+1974,-0.07
+1998,0.61
+2019,0.98
+2020,1.01
+2021,0.85
+2022,0.89
+2023,1.17
+```
+GENERATED:
+```
+year,temp
+1880,-0.36
+1881,-0.47
+1882,-0.24
+1883,-0.25
+1884,-0.4
+1935,-0.18
+1953,0.03
+1958,0.18
+1987,0.44
+2009,0.47
+2019,0.84
+2020,0.88
+2021,0.64
+2022,0.55
+2023,0.8
+```

@@ -1,0 +1,35 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "temp",
+]
+matrix = [
+    [
+    1.0,
+    0.8739970360348696,
+],
+    [
+    0.8739970360348696,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "year",
+    "temp",
+]
+matrix = [
+    [
+    1.0,
+    0.8887558068392853,
+],
+    [
+    0.8887558068392853,
+    1.0,
+],
+]
+conditional = []

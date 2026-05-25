@@ -1,0 +1,6 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "AAPL_y"
+min = 69.00470795
+max = 118.7986564

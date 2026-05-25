@@ -1,0 +1,120 @@
+[table]
+name = "original"
+count = 144
+
+[table.stats]
+source_rows = 144
+
+[[table.scaling.custom]]
+name = "year"
+field = "year"
+cardinality = 12
+
+[[table.scaling.custom]]
+name = "month"
+field = "month"
+cardinality = 12
+
+[table.sort_by]
+column = "year"
+direction = "asc"
+
+[[columns]]
+name = "year"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 144
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min = 1949.0
+max = 1960.0
+mean = 1954.5
+std = 3.4641016151377544
+
+[columns.stats.percentiles]
+p25 = 1952.0
+p50 = 1955.0
+p75 = 1957.0
+p95 = 1960.0
+p99 = 1960.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "month"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 144
+
+[columns.stats]
+distinct_count = 12
+null_rate = 0.0
+min_length = 3
+max_length = 9
+avg_length = 6.166666666666667
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "passengers"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 144
+
+[columns.stats]
+distinct_count = 118
+null_rate = 0.0
+min = 104.0
+max = 622.0
+mean = 280.2986111111111
+std = 119.96631694294318
+
+[columns.stats.percentiles]
+p25 = 180.0
+p50 = 267.0
+p75 = 360.0
+p95 = 491.0
+p99 = 606.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "high"
+distribution_shape = "skewed"
+
+[[constraints]]
+type = "range"
+field = "year"
+min = 1949.0
+max = 1960.0
+
+[[constraints]]
+type = "range"
+field = "passengers"
+min = 104.0
+max = 622.0
+
+[[constraints]]
+type = "check"
+expr = "passengers <= year"

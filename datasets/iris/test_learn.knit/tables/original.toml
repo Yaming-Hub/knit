@@ -1,0 +1,226 @@
+[table]
+name = "original"
+count = 150
+
+[table.stats]
+source_rows = 150
+
+[[table.scaling.custom]]
+name = "species"
+field = "species"
+cardinality = 3
+
+[table.sort_by]
+column = "species"
+direction = "asc"
+
+[[columns]]
+name = "sepal_length"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+
+[columns.generator.params]
+mu = 1.755392880192281
+sigma = 0.14071764850448856
+
+[columns.stats]
+distinct_count = 35
+null_rate = 0.0
+min = 4.3
+max = 7.9
+mean = 5.843333333333335
+std = 0.8280661279778633
+
+[columns.stats.percentiles]
+p25 = 5.1
+p50 = 5.8
+p75 = 6.4
+p95 = 7.3
+p99 = 7.7
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "sepal_width"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 0.06172466928332611
+shape = 49.53178962044628
+
+[columns.stats]
+distinct_count = 23
+null_rate = 0.0
+min = 2.0
+max = 4.4
+mean = 3.0573333333333315
+std = 0.43586628493669827
+
+[columns.stats.percentiles]
+p25 = 2.8
+p50 = 3.0
+p75 = 3.3
+p95 = 3.8
+p99 = 4.2
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "petal_length"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+
+[columns.generator.params]
+max = 6.9
+min = 1.0
+
+[columns.stats]
+distinct_count = 43
+null_rate = 0.0
+min = 1.0
+max = 6.9
+mean = 3.758000000000001
+std = 1.7652982332594673
+
+[columns.stats.percentiles]
+p25 = 1.6
+p50 = 4.4
+p75 = 5.1
+p95 = 6.1
+p99 = 6.7
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "petal_width"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "uniform"
+
+[columns.generator.params]
+max = 2.5
+min = 0.1
+
+[columns.stats]
+distinct_count = 22
+null_rate = 0.0
+min = 0.1
+max = 2.5
+mean = 1.1993333333333331
+std = 0.7622376689603462
+
+[columns.stats.percentiles]
+p25 = 0.3
+p50 = 1.3
+p75 = 1.8
+p95 = 2.3
+p99 = 2.5
+
+[columns.traits]
+semantic = "float"
+cardinality = "medium"
+distribution_shape = "normal"
+
+[[columns]]
+name = "species"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "versicolor"
+weight = 0.3333333333333333
+
+[[columns.generator.choices]]
+value = "virginica"
+weight = 0.3333333333333333
+
+[[columns.generator.choices]]
+value = "setosa"
+weight = 0.3333333333333333
+
+[columns.stats]
+distinct_count = 3
+null_rate = 0.0
+min_length = 6
+max_length = 10
+avg_length = 8.333333333333334
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[constraints]]
+type = "range"
+field = "sepal_length"
+min = 4.3
+max = 7.9
+
+[[constraints]]
+type = "range"
+field = "sepal_width"
+min = 2.0
+max = 4.4
+
+[[constraints]]
+type = "range"
+field = "petal_length"
+min = 1.0
+max = 6.9
+
+[[constraints]]
+type = "range"
+field = "petal_width"
+min = 0.1
+max = 2.5
+
+[[constraints]]
+type = "check"
+expr = "sepal_width <= sepal_length"
+
+[[constraints]]
+type = "check"
+expr = "petal_length <= sepal_length"
+
+[[constraints]]
+type = "check"
+expr = "petal_width <= sepal_length"
+
+[[constraints]]
+type = "check"
+expr = "petal_width <= sepal_width"
+
+[[constraints]]
+type = "check"
+expr = "petal_width <= petal_length"

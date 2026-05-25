@@ -1,0 +1,17 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "id"
+min = 0.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "rate"
+min = 0.1
+max = 0.201
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "rate <= id"

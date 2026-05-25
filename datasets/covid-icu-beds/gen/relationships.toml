@@ -1,0 +1,6 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "total_at_risk"
+min = 17941.53
+max = 6165101.69

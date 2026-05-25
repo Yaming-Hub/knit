@@ -781,7 +781,7 @@ When a cycle is detected in the field DAG, the planner reports:
 
 ```
 error[E301]: cyclic field dependency in entity "invoice"
-  ┌─ blueprint.knit.toml
+  ┌─ blueprint.knit.json
   │
   │  field "a" depends on "b" (via derived expression)
   │  field "b" depends on "a" (via derived expression)

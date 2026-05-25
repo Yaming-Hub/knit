@@ -1,0 +1,15 @@
+Bacillus anthracis
+Brucella abortus
+Diplococcus pneumoniae
+Escherichia coli
+Klebsiella pneumoniae
+Mycobacterium tuberculosis
+Proteus vulgaris
+Pseudomonas aeruginosa
+Salmonella (Eberthella) typhosa
+Salmonella schottmuelleri
+Staphylococcus albus
+Staphylococcus aureus
+Streptococcus fecalis
+Streptococcus hemolyticus
+Streptococcus viridans

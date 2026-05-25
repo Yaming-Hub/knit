@@ -1,0 +1,428 @@
+You are evaluating synthetic data quality. For each of the 10 datasets below, compare the GENERATED data against the ORIGINAL data and rate it 1-100.
+
+Rate based on:
+1. Column value realism (do values look like real data for this domain?)
+2. Distribution fidelity (similar ranges, proportions, patterns as original?)
+3. Row coherence (do column values within a row make sense together?)
+4. Structural correctness (right data types, no garbled text, proper formatting?)
+5. Domain authenticity (would this fool a domain expert at first glance?)
+
+RESPOND WITH ONLY a JSON array: [{"dataset": "name", "score": N, "reason": "one sentence"}, ...]
+
+### Dataset: aa-flight-paths
+ORIGINAL:
+```
+start_lat,start_lon,end_lat,end_lon,airline,airport1,airport2,cnt
+32.89595056,-97.0372,35.04022222,-106.6091944,AA,DFW,ABQ,444
+41.979595,-87.90446417,30.19453278,-97.66987194,AA,ORD,AUS,166
+32.89595056,-97.0372,41.93887417,-72.68322833,AA,DFW,BDL,162
+18.43941667,-66.00183333,41.93887417,-72.68322833,AA,SJU,BDL,56
+32.89595056,-97.0372,33.56294306,-86.75354972,AA,DFW,BHM,168
+36.12447667,-86.67818222,32.89595056,-97.0372,AA,BNA,DFW,436
+40.77724306,-73.87260917,25.79325,-80.29055556,AA,LGA,MIA,615
+29.53369444,-98.46977778,41.979595,-87.90446417,AA,SAT,ORD,112
+32.89595056,-97.0372,26.68316194,-80.09559417,AA,DFW,PBI,112
+25.79325,-80.29055556,17.70188889,-64.79855556,AA,MIA,STX,62
+25.79325,-80.29055556,27.97547222,-82.53325,AA,MIA,TPA,298
+41.979595,-87.90446417,27.97547222,-82.53325,AA,ORD,TPA,150
+18.43941667,-66.00183333,27.97547222,-82.53325,AA,SJU,TPA,56
+32.89595056,-97.0372,36.19837222,-95.88824167,AA,DFW,TUL,390
+32.89595056,-97.0372,32.11608333,-110.9410278,AA,DFW,TUS,419
+```
+GENERATED:
+```
+start_lat,start_lon,end_lat,end_lon,airline,airport1,airport2,cnt
+36.08036111,-115.1523333,25.79325,-80.29055556,AA,LAS,MIA,168
+25.79325,-80.29055556,29.98047222,-95.33972222,AA,MIA,IAH,168
+25.79325,-80.29055556,28.42888889,-81.31602778,AA,MIA,MCO,448
+40.63975111,-73.77892556,36.08036111,-115.1523333,AA,JFK,LAS,112
+41.979595,-87.90446417,39.85840806,-104.6670019,AA,ORD,DEN,112
+41.979595,-87.90446417,26.68316194,-80.09559417,AA,ORD,PBI,150
+25.79325,-80.29055556,17.70188889,-64.79855556,AA,MIA,STX,62
+18.43941667,-66.00183333,41.93887417,-72.68322833,AA,SJU,BDL,56
+25.79325,-80.29055556,29.99338889,-90.25802778,AA,MIA,MSY,168
+39.49857611,-119.7680647,41.979595,-87.90446417,AA,RNO,ORD,56
+32.89595056,-97.0372,36.19837222,-95.88824167,AA,DFW,TUL,390
+32.89595056,-97.0372,37.64995889,-97.43304583,AA,DFW,ICT,214
+28.42888889,-81.31602778,40.63975111,-73.77892556,AA,MCO,JFK,224
+36.12447667,-86.67818222,33.94253611,-118.4080744,AA,BNA,LAX,56
+41.979595,-87.90446417,25.79325,-80.29055556,AA,ORD,MIA,505
+```
+
+---
+
+### Dataset: airline-safety
+ORIGINAL:
+```
+airline,avail_seat_km_per_week,incidents_85_99,fatal_accidents_85_99,fatalities_85_99,incidents_00_14,fatal_accidents_00_14,fatalities_00_14
+Aer Lingus,320906734,2,0,0,0,0,0
+Aeroflot*,1197672318,76,14,128,6,1,88
+Aerolineas Argentinas,385803648,6,0,0,1,0,0
+Aeromexico*,596871813,3,1,64,5,0,0
+Air Canada,1865253802,2,0,0,2,0,0
+Air France,3004002661,14,4,79,6,2,337
+Austrian Airlines,358239823,1,0,0,1,0,0
+COPA,550491507,3,1,47,0,0,0
+LAN Airlines,1001965891,3,2,21,0,0,0
+Southwest Airlines,3276525770,1,0,0,8,0,0
+United / Continental*,7139291291,19,8,319,14,2,109
+US Airways / America West*,2455687887,16,7,224,11,2,23
+Vietnam Airlines,625084918,7,3,171,1,0,0
+Virgin Atlantic,1005248585,1,0,0,0,0,0
+Xiamen Airlines,430462962,9,1,82,2,0,0
+```
+GENERATED:
+```
+airline,avail_seat_km_per_week,incidents_85_99,fatal_accidents_85_99,fatalities_85_99,incidents_00_14,fatal_accidents_00_14,fatalities_00_14
+South African,651502442,2,1,159,1,0,0
+Xiamen Airlines,430462962,9,1,82,2,0,0
+TAP - Air Portugal,619130754,0,0,0,0,0,0
+Turkish Airlines,1946098294,8,3,64,8,2,84
+El Al,335448023,1,1,4,1,0,0
+Thai Airways,1702802250,8,4,308,2,1,1
+SWISS*,792601299,2,1,229,3,0,0
+Royal Air Maroc,295705339,5,3,51,3,0,0
+Aer Lingus,320906734,2,0,0,0,0,0
+Air New Zealand*,710174817,3,0,0,5,1,7
+United / Continental*,7139291291,19,8,319,14,2,109
+Pakistan International,348563137,8,3,234,10,2,46
+KLM*,1874561773,7,1,3,1,0,0
+COPA,550491507,3,1,47,0,0,0
+Qantas*,1917428984,1,0,0,5,0,0
+```
+
+---
+
+### Dataset: airports
+ORIGINAL:
+```
+iata,name,city,state,country,latitude,longitude
+00M,Thigpen,Bay Springs,MS,USA,31.95376472,-89.23450472
+00R,Livingston Municipal,Livingston,TX,USA,30.68586111,-95.01792778
+00V,Meadow Lake,Colorado Springs,CO,USA,38.94574889,-104.5698933
+01G,Perry-Warsaw,Perry,NY,USA,42.74134667,-78.05208056
+01J,Hilliard Airpark,Hilliard,FL,USA,30.6880125,-81.90594389
+1M2,Belzoni Municipal,Belzoni,MS,USA,33.14518056,-90.51528472
+ANC,Ted Stevens Anchorage International,Anchorage,AK,USA,61.17432028,-149.9961856
+BCB,Virginia Tech,Blacksburg,VA,USA,37.20782361,-80.40832778
+CCR,Buchanan,Concord,CA,USA,37.98965639,-122.0568972
+TVR,Vicksburg Tallulah Regional,Tallulah,LA,USA,32.35160639,-91.02768917
+ZEF,Elkin Municipal,Elkin,NC,USA,36.28002361,-80.78606861
+ZER,Schuylkill Cty/Joe Zerbey,Pottsville,PA,USA,40.70644889,-76.37314667
+ZPH,Zephyrhills Municipal,Zephyrhills,FL,USA,28.22806472,-82.15591639
+ZUN,Black Rock,Zuni,NM,USA,35.08322694,-108.7917769
+ZZV,Zanesville Municipal,Zanesville,OH,USA,39.94445833,-81.89210528
+```
+GENERATED:
+```
+iata,name,city,state,country,latitude,longitude
+I12,Sidney Municipal,Sidney,OH,USA,40.24127944,-84.15101167
+TDO,Toledo-Winlock Ed Carlson Memorial,Toledo,WA,USA,46.47709083,-122.80686
+CAK,Akron-Canton Regional,Akron,OH,USA,40.91631194,-81.44246556
+49Y,Fillmore County,Preston,MN,USA,43.67676,-92.17973444
+UKL,Coffey County,Burlington,KS,USA,38.30248472,-95.7249575
+MLY,Manley Hot Springs,Manley Hot Springs,AK,USA,64.99756472,-150.6441297
+DVL,Devils Lake Municipal-Knoke,Devils Lake,ND,USA,48.11424528,-98.90877833
+CUT,Custer County,Custer,SD,USA,43.73331611,-103.6176947
+UNV,University Park,State College,PA,USA,40.84927778,-77.84869444
+HYA,Barnstable Mun Boardman/Polando,Hyannis,MA,USA,41.66933639,-70.28035583
+66D,Sturgis Municipal,Sturgis,SD,USA,44.41761111,-103.3747778
+AGC,Allegheny Cty,Pittsburgh,PA,USA,40.35440139,-79.93016889
+6S5,Ravalli County,Hamilton,MT,USA,46.25149444,-114.1255403
+ONL,O Neill Municipal,O Neill,NE,USA,42.46988889,-98.68805556
+KNB,Kanab Muni,Kanab,UT,USA,37.01110583,-112.5311936
+```
+
+---
+
+### Dataset: alcohol-by-country
+ORIGINAL:
+```
+location,alcohol
+Belarus,17.5
+Moldova,16.8
+Lithuania,15.4
+Russia,15.1
+Romania,14.4
+Germany,11.8
+Cameroon,8.4
+Netherlands Antilles,5.4
+Brunei,0.9
+Morocco,0.9
+Bangladesh,0.2
+Kuwait,0.1
+Libya,0.1
+Mauritania,0.1
+Pakistan,0.1
+```
+GENERATED:
+```
+location,alcohol
+Belarus,17.5
+Moldova,16.8
+Lithuania,15.4
+Russia,15.1
+Romania,14.4
+Paraguay,8.8
+Botswana,8.4
+Dominican Republic,6.9
+Ghana,4.8
+Israel,2.8
+Comoros,0.2
+Pakistan,0.1
+Kuwait,0.1
+Mauritania,0.1
+Libya,0.1
+```
+
+---
+
+### Dataset: apple-stock-2014
+ORIGINAL:
+```
+AAPL_x,AAPL_y
+2014-01-02,77.44539475
+2014-01-03,77.04557544
+2014-01-06,74.89697204
+2014-01-07,75.856461
+2014-01-08,75.09194679
+2014-03-31,75.5990936
+2014-04-10,74.39941392
+2014-05-23,85.61005813
+2014-06-20,90.64769552
+2014-10-31,107.1199176
+2014-12-08,113.6533452
+2014-12-09,109.7554968
+2014-12-10,113.9603314
+2014-12-11,111.8174772
+2014-12-12,110.0271393
+```
+GENERATED:
+```
+AAPL_x,AAPL_y
+2014-01-02,70.94914346
+2014-01-03,69.00470795
+2014-01-04,73.42058595
+2014-01-05,73.26324933
+2014-01-06,70.08608856
+2014-01-29,73.98054423
+2014-02-05,78.52490815
+2014-02-07,70.48197474
+2014-03-03,77.24437056
+2014-08-01,113.75062859
+2014-08-25,111.81926113
+2014-08-26,115.86656118
+2014-08-27,116.49055835
+2014-08-28,112.19877486
+2014-08-29,114.32074481
+```
+
+---
+
+### Dataset: attention
+ORIGINAL:
+```
+,subject,attention,solutions,score
+0,1,divided,1,2.0
+1,2,divided,1,3.0
+2,3,divided,1,3.0
+3,4,divided,1,5.0
+4,5,divided,1,4.0
+22,3,divided,2,5.0
+29,10,divided,2,5.0
+39,20,focused,2,6.0
+44,5,divided,3,8.0
+45,6,divided,3,6.0
+55,16,focused,3,7.0
+56,17,focused,3,6.0
+57,18,focused,3,6.0
+58,19,focused,3,6.0
+59,20,focused,3,5.0
+```
+GENERATED:
+```
+,subject,attention,solutions,score
+0,1,divided,1,2.0
+1,2,divided,1,3.0
+2,3,divided,1,3.0
+3,4,divided,1,5.0
+4,5,divided,1,4.0
+10,11,focused,1,6.0
+12,13,focused,1,6.0
+13,14,focused,1,8.0
+25,6,divided,2,5.0
+51,12,focused,3,8.0
+55,16,focused,3,7.0
+56,17,focused,3,6.0
+57,18,focused,3,6.0
+58,19,focused,3,6.0
+59,20,focused,3,5.0
+```
+
+---
+
+### Dataset: avengers
+ORIGINAL:
+```
+URL,Name/Alias,Appearances,Current?,Gender,Probationary Introl,Full/Reserve Avengers Intro,Year,Years since joining,Honorary,Death1,Return1,Death2,Return2,Death3,Return3,Death4,Return4,Death5,Return5,
+http://marvel.wikia.com/Henry_Pym_(Earth-616),"Henry Jonathan ""Hank"" Pym",1269,YES,MALE,,Sep-63,1963,52,Full,YES,NO,,,,,,,,,Merged with Ultron in Rage of Ultron Vol. 1. A funeral was held.
+http://marvel.wikia.com/Janet_van_Dyne_(Earth-616),Janet van Dyne,1165,YES,FEMALE,,Sep-63,1963,52,Full,YES,YES,,,,,,,,,Dies in Secret Invasion V1:I8. Actually was sent tto Microverse later recovered
+http://marvel.wikia.com/Anthony_Stark_(Earth-616),"Anthony Edward ""Tony"" Stark",3068,YES,MALE,,Sep-63,1963,52,Full,YES,YES,,,,,,,,,"Death: ""Later while under the influence of Immortus Stark committ
+http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616),Robert Bruce Banner,2089,YES,MALE,,Sep-63,1963,52,Full,YES,YES,,,,,,,,,"Dies in Ghosts of the Future arc. However ""he had actually used a hidde
+http://marvel.wikia.com/Thor_Odinson_(Earth-616),Thor Odinson,2402,YES,MALE,,Sep-63,1963,52,Full,YES,YES,YES,NO,,,,,,,Dies in Fear Itself brought back because that's kind of the whole point. Second de
+http://marvel.wikia.com/Charlie-27_(Earth-691)#,Charlie-27,132,NO,MALE,,Feb-78,1978,37,Honorary,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Doug_Taggert_(Earth-616)#,Doug Taggert,3,NO,MALE,,5-May,2005,10,Full,YES,NO,,,,,,,,,Accidently killed by Zaran
+http://marvel.wikia.com/Peter_Parker_(Earth-616)#,Peter Benjamin Parker,4333,YES,MALE,,Apr-90,1990,25,Full,YES,YES,YES,YES,,,,,,,Since joining the New Avengers: First death Killed by Morlun. Ressurect
+http://marvel.wikia.com/Maria_de_Guadalupe_Santiago_(Earth-616)#,Maria de Guadalupe Santiago,43,NO,FEMALE,,Jul-00,2000,15,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Alexis_(Earth-616)#,Alexis,13,YES,FEMALE,,13-Nov,2013,2,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Eric_Brooks_(Earth-616)#,Eric Brooks,198,YES,MALE,,13-Nov,2013,2,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Adam_Brashear_(Earth-616)#,Adam Brashear,29,YES,MALE,,14-Jan,2014,1,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Victor_Alvarez_(Earth-616)#,Victor Alvarez,45,YES,MALE,,14-Jan,2014,1,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Ava_Ayala_(Earth-616)#,Ava Ayala,49,YES,FEMALE,,14-Jan,2014,1,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Kaluu_(Earth-616)#,Kaluu,35,YES,MALE,,15-Jan,2015,0,Full,NO,,,,,,,,,,NA
+```
+GENERATED:
+```
+URL,Name/Alias,Appearances,Current?,Gender,Probationary Introl,Full/Reserve Avengers Intro,Year,Years since joining,Honorary,Death1,Return1,Death2,Return2,Death3,Return3,Death4,Return4,Death5,Return5,
+http://marvel.wikia.com/John_Aman_(Earth-616)#,John Aman,31,YES,MALE,,10-Dec,2010,5,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Thomas_Shepherd_(Earth-616)#,"Thomas ""Tommy"" Shepherd",59,YES,MALE,,,2006,9,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Monkey_Joe_(Earth-616)#,,7,NO,MALE,,5-May,2005,10,Full,YES,NO,,,,,,,,,Killed by Leather Boy
+http://marvel.wikia.com/Philip_Javert_(Earth-921)#,Phillip Javert,31,NO,MALE,,Dec-92,1992,23,Honorary,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Dennis_Dunphy_(Earth-616)#,Dennis Dunphy,70,NO,MALE,,Jan-88,1988,27,Full,YES,,,,,,,,,,"Died in Captain_America_348. Actually ""Dunphy miraculously survived the crash and lived 
+http://marvel.wikia.com/Charlie-27_(Earth-691)#,Charlie-27,132,NO,MALE,,Feb-78,1978,37,Honorary,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Marcus_Milton_(Earth-13034)#,Marcus Milton,65,YES,MALE,,13-Feb,2013,2,Full,YES,,,,,,,,,,Died in New_Avengers_Vol_3_32.
+http://marvel.wikia.com/Nightmask_(Earth-616)#,Adam,35,YES,MALE,,13-Oct,2013,2,Full,YES,,,,,,,,,,Died in New_Avengers_Vol_3_32
+http://marvel.wikia.com/Patricia_Walker_(Earth-616)#,Patsy Walker,557,NO,FEMALE,,Sep-76,1976,39,Full,YES,,,,,,,,,,Died during time on Defenders. Eventually ressurected by villian Grim Reaper along wit
+http://marvel.wikia.com/Ashley_Crawford_(Earth-616)#,Ashley Crawford,36,YES,FEMALE,,Jul-89,1989,26,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Eugene_Thompson_(Earth-616)#,Flash Thompson,746,YES,MALE,,12-Apr,2012,3,Honorary,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Brian_Braddock_(Earth-616)#,Brian Braddock,545,NO,MALE,,10-May,2010,5,Full,NO,,,,,,,,,,NA
+http://marvel.wikia.com/Robert_Reynolds_(Earth-616)#,Robert Reynolds,241,NO,MALE,,5-Oct,2005,10,Full,YES,,,,,,,,,,Died during Seige. Brought back to life by the Apocalypse twins as a horseman of death
+http://marvel.wikia.com/William_Baker_(Earth-616)#,,355,NO,MALE,Feb-91,,1900,115,Probationary,YES,YES,,,,,,,,,Died in Identity_Disc_Vol_1_1. Later was revealed to be alive and working along with the V
+http://marvel.wikia.com/America_Chavez_(Earth-616)#,America Chavez,22,YES,FEMALE,,13-Jul,2013,2,Full,NO,,,,,,,,,,NA
+```
+
+---
+
+### Dataset: bad-drivers
+ORIGINAL:
+```
+State,Number of drivers involved in fatal collisions per billion miles,Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding,Percentage Of Drivers Involved In Fatal Collisions Who Were 
+Alabama,18.8,39,30,96,80,784.55,145.08
+Alaska,18.1,41,25,90,94,1053.48,133.93
+Arizona,18.6,35,28,84,96,899.47,110.35
+Arkansas,22.4,18,26,94,95,827.34,142.39
+California,12,35,28,91,89,878.41,165.63
+Connecticut,10.8,46,36,87,82,1068.73,167.02
+Iowa,15.7,17,25,97,87,649.06,114.47
+Maine,15.1,38,30,87,84,661.88,96.57
+Minnesota,9.6,23,29,88,88,777.18,133.35
+Oklahoma,19.9,32,29,92,94,881.51,178.86
+Virginia,12.7,19,27,87,88,768.95,153.72
+Washington,10.6,42,33,82,86,890.03,111.62
+West Virginia,23.8,34,28,97,87,992.61,152.56
+Wisconsin,13.8,36,33,39,84,670.31,106.62
+Wyoming,17.4,42,32,81,90,791.14,122.04
+```
+GENERATED:
+```
+State,Number of drivers involved in fatal collisions per billion miles,Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding,Percentage Of Drivers Involved In Fatal Collisions Who Were 
+West Virginia,23.8,34,28,97,87,992.61,152.56
+Indiana,14.5,25,29,95,95,710.46,108.92
+Alaska,18.1,41,25,90,94,1053.48,133.93
+Kansas,17.8,27,24,77,85,780.45,133.8
+Vermont,13.6,30,30,96,95,716.2,109.61
+South Carolina,23.9,38,41,96,81,858.97,116.29
+Massachusetts,8.2,23,35,87,80,1011.14,135.63
+New Mexico,18.4,19,27,67,98,869.85,120.75
+Wyoming,17.4,42,32,81,90,791.14,122.04
+Tennessee,19.5,21,29,82,81,767.91,155.57
+District of Columbia,5.9,34,27,100,100,1273.89,136.05
+Alabama,18.8,39,30,96,80,784.55,145.08
+Oregon,12.8,33,26,67,90,804.71,104.61
+Louisiana,20.5,35,33,73,98,1281.55,194.78
+Georgia,15.6,19,25,95,93,913.15,142.8
+```
+
+---
+
+### Dataset: biopics
+ORIGINAL:
+```
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+10 Rillington Place,http://www.imdb.com/title/tt0066730/,UK,1971,-,Richard Fleischer,1,John Christie,Criminal,Unknown,,0,Male,Richard Attenborough
+12 Years a Slave,http://www.imdb.com/title/tt2024544/,US/UK,2013,$56.7M,Steve McQueen,1, Solomon Northup,Other,Known,African American,1,Male,Chiwetel Ejiofor
+127 Hours,http://www.imdb.com/title/tt1542344/,US/UK,2010,$18.3M,Danny Boyle,1,Aron Ralston,Athlete,Unknown,,0,Male,James Franco
+1987,http://www.imdb.com/title/tt2833074/,Canada,2014,-,Ricardo Trogi,1,Ricardo Trogi,Other,Known,White,0,Male,Jean-Carl Boucher
+20 Dates,http://www.imdb.com/title/tt0138987/,US,1998,$537K,Myles Berkowitz,1,Myles Berkowitz,Other,Unknown,,0,Male,Myles Berkowitz
+An American Crime,http://www.imdb.com/title/tt0802948/,US,2007,-,Tommy O'Haver,2,Gertrude Baniszewski,Criminal,Known,White,0,Female,Catherine Keener
+Cannibal! The Musical,http://www.imdb.com/title/tt0115819/,US,1993,-,Trey Parker,1,Alferd Packer,Criminal,Unknown,,0,Male,Trey Parker
+Dangerous Beauty,http://www.imdb.com/title/tt0118892/,US,1998,$4.53M,Marshall Herskovitz,1,Veronica Franco,Other,Known,White,0,Female,Catherine McCormack
+Invictus,http://www.imdb.com/title/tt1057500/,US,2009,$37.5M,Clint Eastwood,2,Nelson Mandela,World leader,Known,African,1,Male,Morgan Freeman
+My Dinner with Andre,http://www.imdb.com/title/tt0082783/,US,1981,$5.07K,Louis Malle,2,Andre Gregory,Actor,Known,White,0,Male,Andre Gregory
+Young Man with a Horn,http://www.imdb.com/title/tt0043153/,US,1950,-,Michael Curtiz,1,Bix Beiderbecke,Musician,Known,White,0,Male,Kirk Douglas
+Young Mr. Lincoln,http://www.imdb.com/title/tt0032155/,US,1939,-,John Ford,1,Abraham Lincoln,World leader,Known,White,0,Male,Henry Fonda
+Young Tom Edison,http://www.imdb.com/title/tt0033289/,US,1940,-,Norman Taurog,1,Thomas Edison,Other,Known,White,0,Male,Mickey Rooney
+Young Winston,http://www.imdb.com/title/tt0069528/,US,1972,-,Richard Attenborough,1,Winston Churchill,World leader,Known,White,0,Male,Simon Ward
+Your Cheatin' Heart,http://www.imdb.com/title/tt0058765/,US,1964,-,Gene Nelson,1,Hank Williams,Musician,Unknown,,0,Male,George Hamilton
+```
+GENERATED:
+```
+title,site,country,year_release,box_office,director,number_of_subjects,subject,type_of_subject,race_known,subject_race,person_of_color,subject_sex,lead_actor_actress
+Backbeat,http://www.imdb.com/title/tt0106339/,UK,1994,$2.39M,Iain Softley,2,John Lennon,Musician,Known,White,0,Male,Ian Hart
+A Matador's Mistress,http://www.imdb.com/title/tt0491046/,US/UK,2008,-,Menno Meyjes,2,Lupe Sino,Actress ,Known,Hispanic (White),0,Female,PenÌ©lope Cruz
+The Boy in Blue,http://www.imdb.com/title/tt0090769/,Canada,1986,$275K,Charles Jarrott,1,Ned Hanlan,Athlete,Known,White,0,Male,Nicolas Cage
+Domino,http://www.imdb.com/title/tt0421054/,US/UK,2005,$10.1M,Tony Scott,1,Domino Harvey,Other,Known,,0,Female,Keira Knightley
+Dance with a Stranger,http://www.imdb.com/title/tt0088987/,UK,1985,$138K,Mike Newell,1,Ruth Ellis,Criminal,Unknown,,0,Female,Miranda Richardson
+The Wonderful World of the Brothers Grimm,http://www.imdb.com/title/tt0056700/,US,1961,-,"Henry Levin, George Pal",2,Jacob Grimm,Author,Known,White,0,Male,Karlheinz BÌ¦hm
+The Court-Martial of Billy Mitchell,http://www.imdb.com/title/tt0047956/,US,1955,-,Otto Preminger,1,Billy Mitchell,Military,Known,White,0,Male,Gary Cooper
+Nora,http://www.imdb.com/title/tt0158033/,UK,2000,$12.3K,Pat Murphy,2,James Joyce,Author,Known,White,0,Male,Ewan McGregor
+Che: Part One,http://www.imdb.com/title/tt0892255/,US,2008,$1.73M,Steven Soderbergh,1,Che Guevara,Activist,Known,Hispanic (Latin American),0,Male,Benicio Del Toro
+Wilson,http://www.imdb.com/title/tt0037465/,US,1944,$2M,Henry King,1,Woodrow Wilson,World leader,Known,White,0,Male,Alexander Knox
+Downtown 81,http://www.imdb.com/title/tt0208993/,US,1981,$100K,Edo Bertoglio,1,Jean-Michel Basquiat,Artist,Known,Multi racial,1,Male,Jean Michel Basquiat
+Prefontaine,http://www.imdb.com/title/tt0119937/,US,1997,$532K,Steve James,1,Steve Prefontaine,Athlete,Known,White,0,Male,Jared Leto
+Francis of Assisi,http://www.imdb.com/title/tt0054892/,US,1961,-,Michael Curtiz,1,Francis Bernardone,Historical,Known,White,0,Male,Bradford Dillman
+Story of G.I. Joe,http://www.imdb.com/title/tt0038120/,US,1945,-,William A. Wellman,1,Ernie Pyle,Media,Unknown,,0,Male,Burgess Meredith
+The Color of Time,http://www.imdb.com/title/tt2133333/,US,2012,-,"Edna Luise Biesold, Sarah-Violet Bliss",1,CK Williams,Author,Unknown,,0,Male,James Franco
+```
+
+---
+
+### Dataset: bob-ross
+ORIGINAL:
+```
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,F
+S01E01,"""A WALK IN THE WOODS""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E02,"""MT. MCKINLEY""",0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S01E03,"""EBONY SUNSET""",0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1,0
+S01E04,"""WINTER MIST""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E05,"""QUIET STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S08E06,"""BUBBLING MOUNTAIN BROOK""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S14E05,"""MOUNTAIN RIVER""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0
+S21E11,"""DESERT GLOW""",0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+S26E13,"""EVENING AT THE FALLS""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0
+S29E06,"""MOUNTAIN LAKE FALLS""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0,1,0,0,0,0,0
+S31E09,"""EVERGREEN VALLEY""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S31E10,"""BALMY BEACH""",0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0
+S31E11,"""LAKE AT THE RIDGE""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,1,0,0,0,0,0,0,0
+S31E12,"""IN THE MIDST OF WINTER""",0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0,0,0,0,1,0
+S31E13,"""WILDERNESS DAY""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+```
+GENERATED:
+```
+EPISODE,TITLE,APPLE_FRAME,AURORA_BOREALIS,BARN,BEACH,BOAT,BRIDGE,BUILDING,BUSHES,CABIN,CACTUS,CIRCLE_FRAME,CIRRUS,CLIFF,CLOUDS,CONIFER,CUMULUS,DECIDUOUS,DIANE_ANDRE,DOCK,DOUBLE_OVAL_FRAME,FARM,FENCE,F
+S15E07,"""CABIN BY THE POND""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S26E08,"""EARLY AUTUMN""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S01E09,"""SEASCAPE""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,1,0,0,0,0,0,0,0
+S05E10,"""THE WINDMILL""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S06E04,"""WHISPERING STREAM""",0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S07E03,"""EVERGREENS AT SUNSET""",0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0
+S08E06,"""BUBBLING MOUNTAIN BROOK""",0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0
+S01E01,"""A WALK IN THE WOODS""",0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S01E08,"""PEACEFUL VALLEY""",0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0
+S13E02,"""FROZEN SOLITUDE""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+S30E05,"""COPPER WINTER""",0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0
+S18E10,"""DOUBLE OVAL STREAM""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S09E02,"""SURF'S UP""",0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0
+S26E02,"""DELIGHTFUL MEADOW HOME""",0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,1,0,1,0,0,0,0,0
+S22E07,"""DIMENSIONS""",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+```

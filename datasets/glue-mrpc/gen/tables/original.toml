@@ -1,0 +1,137 @@
+[table]
+name = "original"
+count = 408
+
+[table.stats]
+source_rows = 408
+
+[[table.scaling.custom]]
+name = "label"
+field = "label"
+cardinality = 2
+
+[table.sort_by]
+column = "idx"
+direction = "asc"
+
+[[columns]]
+name = "sentence1"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 0
+row_count = 408
+
+[columns.stats]
+distinct_count = 408
+null_rate = 0.0
+min_length = 51
+max_length = 222
+avg_length = 121.58578431372548
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "sentence2"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 1
+row_count = 408
+
+[columns.stats]
+distinct_count = 403
+null_rate = 0.0
+min_length = 50
+max_length = 213
+avg_length = 117.92156862745098
+
+[columns.traits]
+semantic = "text"
+cardinality = "high"
+
+[[columns]]
+name = "label"
+data_type = "int"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 2
+row_count = 408
+
+[columns.stats]
+distinct_count = 2
+null_rate = 0.0
+min = 0.0
+max = 1.0
+mean = 0.6838235294117647
+std = 0.465553580007485
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 1.0
+p75 = 1.0
+p95 = 1.0
+p99 = 1.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "low"
+distribution_shape = "skewed"
+
+[[columns]]
+name = "idx"
+data_type = "int32"
+nullable = false
+
+[columns.generator]
+type = "row_lookup"
+file = "original__fullrow.tsv"
+column = 3
+row_count = 408
+
+[columns.stats]
+distinct_count = 408
+null_rate = 0.0
+min = 9.0
+max = 4053.0
+mean = 2016.299019607843
+std = 1184.6025505421128
+
+[columns.stats.percentiles]
+p25 = 990.0
+p50 = 2009.0
+p75 = 3120.0
+p95 = 3783.0
+p99 = 4023.0
+
+[columns.traits]
+semantic = "integer"
+cardinality = "unique"
+distribution_shape = "normal"
+
+[[constraints]]
+type = "range"
+field = "label"
+min = 0.0
+max = 1.0
+
+[[constraints]]
+type = "range"
+field = "idx"
+min = 9.0
+max = 4053.0
+
+[[constraints]]
+type = "check"
+expr = "label <= idx"

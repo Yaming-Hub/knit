@@ -1,0 +1,247 @@
+[[constraints]]
+table = "original"
+type = "range"
+field = "season"
+min = 2014.0
+max = 2022.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "poss"
+min = 2.0
+max = 8026.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "mp"
+min = 1.0
+max = 3948.0
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_box_offense"
+min = -44.18627461043486
+max = 47.55763731
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_box_defense"
+min = -48.18857740421232
+max = 57.30570498
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_box_total"
+min = -61.67452127
+max = 54.87123672
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_onoff_offense"
+min = -67.77747807767906
+max = 85.40682246
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_onoff_defense"
+min = -89.09612279876131
+max = 66.5234614064033
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_onoff_total"
+min = -156.8736008764404
+max = 123.1519526
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_offense"
+min = -45.32330849
+max = 53.2288638
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_defense"
+min = -56.98251960751814
+max = 62.46920451
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "raptor_total"
+min = -67.35600057835538
+max = 72.62236053
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "war_total"
+min = -7.382977773
+max = 26.66687277
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "war_reg_season"
+min = -7.382977773
+max = 23.659318
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "war_playoffs"
+min = -1.376520078
+max = 6.18923597809314
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "predator_offense"
+min = -36.43326464779712
+max = 42.89028068
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "predator_defense"
+min = -37.87174503918634
+max = 42.98906324
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "predator_total"
+min = -69.09236730366824
+max = 49.10616605
+
+[[constraints]]
+table = "original"
+type = "range"
+field = "pace_impact"
+min = -7.191955211393465
+max = 15.81770491704016
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_box_offense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_box_defense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_box_total <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_onoff_offense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_onoff_defense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_onoff_total <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_offense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_defense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "raptor_total <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_total <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_reg_season <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_playoffs <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "predator_offense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "predator_defense <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "predator_total <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "pace_impact <= season"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "mp <= poss"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_total <= poss"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_reg_season <= poss"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_playoffs <= poss"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_total <= mp"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_reg_season <= mp"
+
+[[constraints]]
+table = "original"
+type = "check"
+expr = "war_playoffs <= mp"

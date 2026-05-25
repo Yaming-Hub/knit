@@ -1,0 +1,701 @@
+[table]
+name = "original"
+count = 50
+
+[table.stats]
+source_rows = 50
+
+[table.sort_by]
+column = "state"
+direction = "asc"
+
+[[columns]]
+name = "code"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "dictionary"
+file = "original_code.dict.txt"
+expansion = "sample"
+
+[columns.stats]
+distinct_count = 50
+null_rate = 0.0
+min_length = 2
+max_length = 2
+avg_length = 2.0
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "state"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "tuple_lookup"
+source_field = "code"
+file = "original__code_state.tsv"
+column = 1
+
+[columns.stats]
+distinct_count = 50
+null_rate = 0.0
+min_length = 4
+max_length = 14
+avg_length = 8.44
+
+[columns.traits]
+semantic = "text"
+cardinality = "unique"
+
+[[columns]]
+name = "category"
+data_type = "string"
+nullable = false
+
+[columns.generator]
+type = "one_of"
+
+[[columns.generator.choices]]
+value = "state"
+weight = 1.0
+
+[columns.stats]
+distinct_count = 1
+null_rate = 0.0
+min_length = 5
+max_length = 5
+avg_length = 5.0
+
+[columns.traits]
+semantic = "categorical"
+cardinality = "medium"
+
+[[columns]]
+name = "total exports"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 3551.7030952995897
+shape = 0.7683325229553895
+
+[columns.stats]
+distinct_count = 50
+null_rate = 0.0
+min = 13.31
+max = 16472.88
+mean = 2728.8889999999997
+std = 3144.8376078299225
+
+[columns.stats.percentiles]
+p25 = 453.39
+p50 = 1851.33
+p75 = 3770.19
+p95 = 8709.48
+p99 = 16472.88
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "beef"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "gamma"
+
+[columns.generator.params]
+scale = 339.4392841301179
+shape = 0.31933251414249714
+
+[columns.stats]
+distinct_count = 49
+null_rate = 0.0
+min = 0.1
+max = 961.0
+mean = 108.39399999999999
+std = 193.762904149607
+
+[columns.stats.percentiles]
+p25 = 12.8
+p50 = 42.6
+p75 = 107.3
+p95 = 659.3
+p99 = 961.0
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "pork"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.008177818485140907
+
+[columns.stats]
+distinct_count = 43
+null_rate = 0.0
+min = 0.0
+max = 1895.6
+mean = 122.28199999999997
+std = 303.4929066111188
+
+[columns.stats.percentiles]
+p25 = 0.5
+p50 = 16.9
+p75 = 91.3
+p95 = 702.8
+p99 = 1895.6
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "poultry"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.008873114463176577
+
+[columns.stats]
+distinct_count = 47
+null_rate = 0.0
+min = 0.0
+max = 630.4
+mean = 112.69999999999999
+std = 162.87864394407643
+
+[columns.stats.percentiles]
+p25 = 2.4
+p50 = 34.5
+p75 = 164.7
+p95 = 562.9
+p99 = 630.4
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "dairy"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "log_normal"
+
+[columns.generator.params]
+mu = 3.2960428122820993
+sigma = 1.8219087385774118
+
+[columns.stats]
+distinct_count = 50
+null_rate = 0.0
+min = 0.19
+max = 929.95
+mean = 95.7252
+std = 168.01688603475642
+
+[columns.stats.percentiles]
+p25 = 6.82
+p50 = 34.26
+p75 = 105.48
+p95 = 331.8
+p99 = 929.95
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "fruits fresh"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.01110494169905608
+
+[columns.stats]
+distinct_count = 44
+null_rate = 0.0
+min = 0.0
+max = 2791.8
+mean = 90.05
+std = 402.1648795035718
+
+[columns.stats.percentiles]
+p25 = 2.1
+p50 = 5.4
+p75 = 25.8
+p95 = 438.2
+p99 = 2791.8
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "fruits proc"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.005215504652230149
+
+[columns.stats]
+distinct_count = 46
+null_rate = 0.0
+min = 0.0
+max = 5944.6
+mean = 191.73600000000002
+std = 856.3342559195122
+
+[columns.stats.percentiles]
+p25 = 4.5
+p50 = 11.6
+p75 = 55.0
+p95 = 933.1
+p99 = 5944.6
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "total fruits"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.0035487419709712906
+
+[columns.stats]
+distinct_count = 50
+null_rate = 0.0
+min = 0.0
+max = 8736.4
+mean = 281.79
+std = 1258.4989098857707
+
+[columns.stats.percentiles]
+p25 = 6.6
+p50 = 17.04
+p75 = 80.83
+p95 = 1371.36
+p99 = 8736.4
+
+[columns.traits]
+semantic = "float"
+cardinality = "unique"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "veggies fresh"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.02250832808139011
+
+[columns.stats]
+distinct_count = 46
+null_rate = 0.0
+min = 0.0
+max = 803.2
+mean = 44.428000000000004
+std = 116.51362544477671
+
+[columns.stats.percentiles]
+p25 = 4.3
+p50 = 14.4
+p75 = 45.9
+p95 = 147.5
+p99 = 803.2
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "veggies proc"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.01386924079775873
+
+[columns.stats]
+distinct_count = 47
+null_rate = 0.0
+min = 0.0
+max = 1303.5
+mean = 72.102
+std = 189.08883290827157
+
+[columns.stats.percentiles]
+p25 = 6.9
+p50 = 23.4
+p75 = 74.5
+p95 = 239.4
+p99 = 1303.5
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "total veggies"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.008581937767220087
+
+[columns.stats]
+distinct_count = 49
+null_rate = 0.0
+min = 0.0
+max = 2106.79
+mean = 116.5238
+std = 305.6152216591234
+
+[columns.stats.percentiles]
+p25 = 11.16
+p50 = 37.89
+p75 = 120.37
+p95 = 386.91
+p99 = 2106.79
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "corn"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.0036624402106635607
+
+[columns.stats]
+distinct_count = 41
+null_rate = 0.0
+min = 0.0
+max = 2529.8
+mean = 273.04200000000003
+std = 556.8249188396801
+
+[columns.stats.percentiles]
+p25 = 5.4
+p50 = 39.5
+p75 = 183.2
+p95 = 1735.9
+p99 = 2529.8
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "wheat"
+data_type = "float"
+nullable = false
+precision = 1
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.004487846910566187
+
+[columns.stats]
+distinct_count = 43
+null_rate = 0.0
+min = 0.0
+max = 1664.5
+mean = 222.824
+std = 362.2912908313487
+
+[columns.stats.percentiles]
+p25 = 6.7
+p50 = 78.7
+p75 = 249.3
+p95 = 1198.1
+p99 = 1664.5
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[columns]]
+name = "cotton"
+data_type = "float"
+nullable = false
+precision = 2
+
+[columns.generator]
+type = "distribution"
+kind = "exponential"
+
+[columns.generator.params]
+lambda = 0.0059058024509080174
+
+[columns.stats]
+distinct_count = 18
+null_rate = 0.0
+min = 0.0
+max = 2308.76
+mean = 169.325
+std = 402.92782037182775
+
+[columns.stats.percentiles]
+p25 = 0.0
+p50 = 0.0
+p75 = 110.54
+p95 = 1064.95
+p99 = 2308.76
+
+[columns.traits]
+semantic = "float"
+cardinality = "high"
+distribution_shape = "long_tail"
+
+[[constraints]]
+type = "range"
+field = "total exports"
+min = 13.31
+max = 16472.88
+
+[[constraints]]
+type = "range"
+field = "beef"
+min = 0.1
+max = 961.0
+
+[[constraints]]
+type = "range"
+field = "pork"
+min = 0.0
+max = 1895.6
+
+[[constraints]]
+type = "range"
+field = "poultry"
+min = 0.0
+max = 630.4
+
+[[constraints]]
+type = "range"
+field = "dairy"
+min = 0.19
+max = 929.95
+
+[[constraints]]
+type = "range"
+field = "fruits fresh"
+min = 0.0
+max = 2791.8
+
+[[constraints]]
+type = "range"
+field = "fruits proc"
+min = 0.0
+max = 5944.6
+
+[[constraints]]
+type = "range"
+field = "total fruits"
+min = 0.0
+max = 8736.4
+
+[[constraints]]
+type = "range"
+field = "veggies fresh"
+min = 0.0
+max = 803.2
+
+[[constraints]]
+type = "range"
+field = "veggies proc"
+min = 0.0
+max = 1303.5
+
+[[constraints]]
+type = "range"
+field = "total veggies"
+min = 0.0
+max = 2106.79
+
+[[constraints]]
+type = "range"
+field = "corn"
+min = 0.0
+max = 2529.8
+
+[[constraints]]
+type = "range"
+field = "wheat"
+min = 0.0
+max = 1664.5
+
+[[constraints]]
+type = "range"
+field = "cotton"
+min = 0.0
+max = 2308.76
+
+[[constraints]]
+type = "check"
+expr = "beef <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "pork <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "poultry <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "dairy <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "fruits fresh <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "fruits proc <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "total fruits <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "veggies fresh <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "veggies proc <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "total veggies <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "corn <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "wheat <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "cotton <= total exports"
+
+[[constraints]]
+type = "check"
+expr = "fruits fresh <= fruits proc"
+
+[[constraints]]
+type = "check"
+expr = "fruits fresh <= total fruits"
+
+[[constraints]]
+type = "check"
+expr = "fruits proc <= total fruits"
+
+[[constraints]]
+type = "check"
+expr = "veggies fresh <= veggies proc"
+
+[[constraints]]
+type = "check"
+expr = "veggies fresh <= total veggies"
+
+[[constraints]]
+type = "check"
+expr = "veggies proc <= total veggies"

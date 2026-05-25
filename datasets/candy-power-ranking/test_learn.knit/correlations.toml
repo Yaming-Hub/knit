@@ -1,0 +1,1043 @@
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "winpercent",
+]
+matrix = [
+    [
+    1.0,
+    0.34532540996768485,
+],
+    [
+    0.34532540996768485,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "winpercent",
+]
+matrix = [
+    [
+    1.0,
+    0.352749235040752,
+],
+    [
+    0.352749235040752,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "peanutyalmondy",
+]
+matrix = [
+    [
+    1.0,
+    0.30915323317923704,
+],
+    [
+    0.30915323317923704,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "peanutyalmondy",
+]
+matrix = [
+    [
+    1.0,
+    0.3205065756100568,
+],
+    [
+    0.3205065756100568,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "crispedricewafer",
+]
+matrix = [
+    [
+    1.0,
+    0.3282653911819203,
+],
+    [
+    0.3282653911819203,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "crispedricewafer",
+]
+matrix = [
+    [
+    1.0,
+    0.3221474401181618,
+],
+    [
+    0.3221474401181618,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "sugarpercent",
+]
+matrix = [
+    [
+    1.0,
+    0.3297063875889551,
+],
+    [
+    0.3297063875889551,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "sugarpercent",
+]
+matrix = [
+    [
+    1.0,
+    0.3402744931884018,
+],
+    [
+    0.3402744931884018,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    -0.43096853466253265,
+],
+    [
+    -0.43096853466253265,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    -0.43416509298720896,
+],
+    [
+    -0.43416509298720896,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.5046753529576843,
+],
+    [
+    0.5046753529576843,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.5081926602337756,
+],
+    [
+    0.5081926602337756,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.5184065372702471,
+],
+    [
+    0.5184065372702471,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "pricepercent",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.5189033823292519,
+],
+    [
+    0.5189033823292519,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "peanutyalmondy",
+]
+matrix = [
+    [
+    1.0,
+    0.4061922021809831,
+],
+    [
+    0.4061922021809831,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "peanutyalmondy",
+]
+matrix = [
+    [
+    1.0,
+    0.382648727334072,
+],
+    [
+    0.382648727334072,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "crispedricewafer",
+]
+matrix = [
+    [
+    1.0,
+    0.32467965137668425,
+],
+    [
+    0.32467965137668425,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "crispedricewafer",
+]
+matrix = [
+    [
+    1.0,
+    0.31396261532496705,
+],
+    [
+    0.31396261532496705,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "hard",
+]
+matrix = [
+    [
+    1.0,
+    -0.31038157535722827,
+],
+    [
+    -0.31038157535722827,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "hard",
+]
+matrix = [
+    [
+    1.0,
+    -0.31947790029529777,
+],
+    [
+    -0.31947790029529777,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    -0.3809381370601434,
+],
+    [
+    -0.3809381370601434,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    -0.35008028359319904,
+],
+    [
+    -0.35008028359319904,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.6365167485397073,
+],
+    [
+    0.6365167485397073,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.6324963475805947,
+],
+    [
+    0.6324963475805947,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.42992932818934826,
+],
+    [
+    0.42992932818934826,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "winpercent",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.4469183359975098,
+],
+    [
+    0.4469183359975098,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "peanutyalmondy",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    -0.3992801433878301,
+],
+    [
+    -0.3992801433878301,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "peanutyalmondy",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    -0.3992801433878297,
+],
+    [
+    -0.3992801433878297,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "peanutyalmondy",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.377823567333138,
+],
+    [
+    0.377823567333138,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "peanutyalmondy",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.3778235673331379,
+],
+    [
+    0.3778235673331379,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "crispedricewafer",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.3412097835996446,
+],
+    [
+    0.3412097835996446,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "crispedricewafer",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    0.3412097835996448,
+],
+    [
+    0.3412097835996448,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "crispedricewafer",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.4237509348521473,
+],
+    [
+    0.4237509348521473,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "crispedricewafer",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.4237509348521476,
+],
+    [
+    0.4237509348521476,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "nougat",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.5229763603684909,
+],
+    [
+    0.5229763603684909,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "nougat",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.5229763603684907,
+],
+    [
+    0.5229763603684907,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "nougat",
+    "pluribus",
+]
+matrix = [
+    [
+    1.0,
+    -0.31033883719439576,
+],
+    [
+    -0.31033883719439576,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "nougat",
+    "pluribus",
+]
+matrix = [
+    [
+    1.0,
+    -0.3103388371943954,
+],
+    [
+    -0.3103388371943954,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "nougat",
+    "caramel",
+]
+matrix = [
+    [
+    1.0,
+    0.32849279804935544,
+],
+    [
+    0.32849279804935544,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "nougat",
+    "caramel",
+]
+matrix = [
+    [
+    1.0,
+    0.3284927980493561,
+],
+    [
+    0.3284927980493561,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "hard",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    0.3906775047367074,
+],
+    [
+    0.3906775047367074,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "hard",
+    "fruity",
+]
+matrix = [
+    [
+    1.0,
+    0.3906775047367076,
+],
+    [
+    0.3906775047367076,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "hard",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    -0.3441769072116021,
+],
+    [
+    -0.3441769072116021,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "hard",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    -0.34417690721160166,
+],
+    [
+    -0.34417690721160166,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fruity",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    -0.7417210588438842,
+],
+    [
+    -0.7417210588438842,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fruity",
+    "chocolate",
+]
+matrix = [
+    [
+    1.0,
+    -0.7417210588438836,
+],
+    [
+    -0.7417210588438836,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fruity",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    -0.5150655814471488,
+],
+    [
+    -0.5150655814471488,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fruity",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    -0.5150655814471488,
+],
+    [
+    -0.5150655814471488,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fruity",
+    "caramel",
+]
+matrix = [
+    [
+    1.0,
+    -0.33548538363601493,
+],
+    [
+    -0.33548538363601493,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "fruity",
+    "caramel",
+]
+matrix = [
+    [
+    1.0,
+    -0.33548538363601477,
+],
+    [
+    -0.33548538363601477,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "chocolate",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.5974211396032371,
+],
+    [
+    0.5974211396032371,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "chocolate",
+    "bar",
+]
+matrix = [
+    [
+    1.0,
+    0.5974211396032371,
+],
+    [
+    0.5974211396032371,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "chocolate",
+    "pluribus",
+]
+matrix = [
+    [
+    1.0,
+    -0.3396751938697572,
+],
+    [
+    -0.3396751938697572,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "chocolate",
+    "pluribus",
+]
+matrix = [
+    [
+    1.0,
+    -0.33967519386975675,
+],
+    [
+    -0.33967519386975675,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "bar",
+    "pluribus",
+]
+matrix = [
+    [
+    1.0,
+    -0.5934089200049686,
+],
+    [
+    -0.5934089200049686,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "bar",
+    "pluribus",
+]
+matrix = [
+    [
+    1.0,
+    -0.5934089200049687,
+],
+    [
+    -0.5934089200049687,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "bar",
+    "caramel",
+]
+matrix = [
+    [
+    1.0,
+    0.3339600197875756,
+],
+    [
+    0.3339600197875756,
+    1.0,
+],
+]
+conditional = []
+
+[[correlations]]
+entity = "original"
+fields = [
+    "bar",
+    "caramel",
+]
+matrix = [
+    [
+    1.0,
+    0.333960019787576,
+],
+    [
+    0.333960019787576,
+    1.0,
+],
+]
+conditional = []
