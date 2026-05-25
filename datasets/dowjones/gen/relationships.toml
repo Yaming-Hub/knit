@@ -1,5 +1,0 @@
-[[constraints]]
-table = "original"
-type = "range"
-field = "Price"
-min = 0.0

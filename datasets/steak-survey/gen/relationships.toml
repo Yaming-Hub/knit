@@ -1,5 +1,0 @@
-[[constraints]]
-table = "original"
-type = "range"
-field = "RespondentID"
-min = 0.0
