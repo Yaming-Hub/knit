@@ -1,6 +1,0 @@
-[[constraints]]
-table = "original"
-type = "range"
-field = "alcohol"
-min = 0.1
-max = 17.5

@@ -68,10 +68,21 @@ def load_parquet_as_table(path: str) -> Tuple[List[str], List[List[str]]]:
     return headers, rows
 
 
+def load_tsv(path: str) -> Tuple[List[str], List[List[str]]]:
+    """Load TSV file, return (headers, rows)."""
+    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+        reader = csv.reader(f, delimiter='\t')
+        headers = next(reader, [])
+        rows = [row for row in reader]
+    return headers, rows
+
+
 def load_data(path: str) -> Tuple[List[str], List[List[str]]]:
     """Load data from any supported format."""
     if path.endswith('.csv'):
         return load_csv(path)
+    elif path.endswith('.tsv'):
+        return load_tsv(path)
     elif path.endswith('.json'):
         return load_json_as_table(path)
     elif path.endswith('.parquet'):
@@ -81,7 +92,7 @@ def load_data(path: str) -> Tuple[List[str], List[List[str]]]:
 
 def find_original(ds_path: str) -> Optional[str]:
     """Find the original data file in a dataset directory."""
-    for ext in ['.csv', '.json']:
+    for ext in ['.csv', '.tsv', '.json', '.parquet']:
         p = os.path.join(ds_path, f'original{ext}')
         if os.path.exists(p):
             return p
@@ -89,25 +100,40 @@ def find_original(ds_path: str) -> Optional[str]:
 
 
 def find_generated(ds_path: str, seed: int) -> Optional[str]:
-    """Find generated output for a given seed."""
+    """Find generated output for a given seed.
+
+    Prefers files named 'original.*' to match the source entity,
+    falling back to the first data file found.
+    """
     seed_dir = os.path.join(ds_path, f'out_seed_{seed}')
     if not os.path.isdir(seed_dir):
         return None
-    for f in os.listdir(seed_dir):
+    # First pass: look for 'original.*' (the main entity matching source)
+    for ext in ['.csv', '.tsv', '.json', '.parquet']:
+        p = os.path.join(seed_dir, f'original{ext}')
+        if os.path.isfile(p):
+            return p
+    # Second pass: any data file
+    fallback = None
+    for f in sorted(os.listdir(seed_dir)):
         full = os.path.join(seed_dir, f)
-        if os.path.isfile(full) and f.endswith(('.csv', '.json', '.parquet')):
-            return full
-        # Handle multi-entity output where -o creates a directory containing
-        # per-entity files (e.g., out_seed_1/generated.csv/original.csv).
+        if os.path.isfile(full) and f.endswith(('.csv', '.tsv', '.json', '.parquet')):
+            if fallback is None:
+                fallback = full
+        # Handle multi-entity output directory
         if os.path.isdir(full):
             try:
-                for inner in os.listdir(full):
+                for inner in sorted(os.listdir(full)):
                     inner_full = os.path.join(full, inner)
-                    if os.path.isfile(inner_full) and inner.endswith(('.csv', '.json', '.parquet')):
-                        return inner_full
+                    if os.path.isfile(inner_full) and inner.endswith(('.csv', '.tsv', '.json', '.parquet')):
+                        # Prefer 'original.*' inside subdirs too
+                        if inner.startswith('original.'):
+                            return inner_full
+                        if fallback is None:
+                            fallback = inner_full
             except OSError:
                 continue
-    return None
+    return fallback
 
 
 def is_numeric(values: List[str]) -> bool:

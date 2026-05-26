@@ -1,6 +1,0 @@
-[[constraints]]
-table = "original"
-type = "range"
-field = "count"
-min = 1.0
-max = 54.0

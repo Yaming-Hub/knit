@@ -57,3 +57,9 @@ datasets/batch_*.json
 datasets/pairs.json
 datasets/quality_scores.json
 datasets/samples.json
+
+# Learner-generated artifact files (tuple dicts, fullrow lookups)
+datasets/**/*__*.tsv
+datasets/**/*__*.csv
+datasets/**/*__*.parquet
+
