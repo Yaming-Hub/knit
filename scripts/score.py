@@ -153,14 +153,16 @@ def is_numeric(values: List[str]) -> bool:
 
 
 def parse_numeric(values: List[str]) -> List[float]:
-    """Parse numeric values, skipping nulls."""
+    """Parse numeric values, skipping nulls, NaN, and Inf."""
     result = []
     for v in values:
         v = v.strip()
         if v == '' or v.lower() in ('null', 'none', 'na', 'nan'):
             continue
         try:
-            result.append(float(v))
+            val = float(v)
+            if not (math.isnan(val) or math.isinf(val)):
+                result.append(val)
         except ValueError:
             pass
     return result
@@ -312,6 +314,8 @@ def correlation_preservation(orig_headers: List[str], orig_rows: List[List[str]]
                 try:
                     v1 = float(row[idx1])
                     v2 = float(row[idx2])
+                    if math.isnan(v1) or math.isnan(v2) or math.isinf(v1) or math.isinf(v2):
+                        continue
                     pairs.append((v1, v2))
                 except (ValueError, IndexError):
                     pass
@@ -326,7 +330,8 @@ def correlation_preservation(orig_headers: List[str], orig_rows: List[List[str]]
         std_y = (sum((yi - mean_y) ** 2 for yi in y) / len(y)) ** 0.5
         if std_x < 1e-10 or std_y < 1e-10:
             return 0.0
-        return cov / (std_x * std_y)
+        r = cov / (std_x * std_y)
+        return r if not math.isnan(r) else 0.0
 
     # Compare correlations
     corr_diffs = []
@@ -334,7 +339,9 @@ def correlation_preservation(orig_headers: List[str], orig_rows: List[List[str]]
         for j in range(i + 1, len(numeric_cols)):
             orig_corr = get_correlation(orig_headers, orig_rows, numeric_cols[i], numeric_cols[j])
             gen_corr = get_correlation(gen_headers, gen_rows, numeric_cols[i], numeric_cols[j])
-            corr_diffs.append(abs(orig_corr - gen_corr))
+            diff = abs(orig_corr - gen_corr)
+            if not (math.isnan(diff) or math.isinf(diff)):
+                corr_diffs.append(diff)
 
     if not corr_diffs:
         return 1.0
