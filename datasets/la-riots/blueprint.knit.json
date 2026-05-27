@@ -336,1063 +336,6 @@
           }
         ]
       }
-    },
-    {
-      "name": "original__address_gender",
-      "count": 57,
-      "fields": [
-        {
-          "name": "2009 W. 6th St.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_gender_2009_W__6th_St_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 57,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.210526315789473
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Male",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "2009 W. 6th St.",
-            "file": "original__address_gender__2009_W__6th_St__Male.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.2105263157894735
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 57
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Male",
-            "field": "Male",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_gender__2009_W__6th_St__Male",
-      "count": 56,
-      "fields": [
-        {
-          "name": "Main & College streets",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_gender__2009_W__6th_St__Male_Main___College_streets.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 56,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.285714285714285
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Male",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Main & College streets",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.214285714285714
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 56
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Male",
-            "field": "Male",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male",
-      "count": 55,
-      "fields": [
-        {
-          "name": "3100 Rosecrans Ave.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male_3100_Rosecrans_Ave_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 55,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.418181818181818
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Male",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "3100 Rosecrans Ave.",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.218181818181818
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 55
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Male",
-            "field": "Male",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male",
-      "count": 54,
-      "fields": [
-        {
-          "name": "Rosecrans & Chester avenues",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male_Rosecrans___Chester_avenues.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 54,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.40740740740741
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Male",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Rosecrans & Chester avenues",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.222222222222222
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 54
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Male",
-            "field": "Male",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male",
-      "count": 53,
-      "fields": [
-        {
-          "name": "1600 W. 60th St.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male_1600_W__60th_St_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 53,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.60377358490566
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Female",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "1600 W. 60th St.",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male__1600_W__60th_St__Female.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.188679245283019
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 53
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Female",
-            "field": "Female",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male__1600_W__60th_St__Female",
-      "count": 52,
-      "fields": [
-        {
-          "name": "4404 S. Western Ave.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male__1600_W__60th_St__Female_4404_S__Western_Ave_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 52,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.73076923076923
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Male",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "4404 S. Western Ave.",
-            "file": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male__1600_W__60th_St__Female__4404_S__Western_Ave__Male.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.1923076923076925
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 52
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Male",
-            "field": "Male",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_neighborhood",
-      "count": 57,
-      "fields": [
-        {
-          "name": "2009 W. 6th St.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_neighborhood_2009_W__6th_St_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 57,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.210526315789473
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Westlake",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "2009 W. 6th St.",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 37,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 22,
-            "avg_length": 10.824561403508772
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 57
-      }
-    },
-    {
-      "name": "original__address_neighborhood__2009_W__6th_St__Westlake",
-      "count": 56,
-      "fields": [
-        {
-          "name": "Main & College streets",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake_Main___College_streets.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 56,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.285714285714285
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Chinatown",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Main & College streets",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 36,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 22,
-            "avg_length": 10.857142857142858
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 56
-      }
-    },
-    {
-      "name": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown",
-      "count": 55,
-      "fields": [
-        {
-          "name": "3100 Rosecrans Ave.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown_3100_Rosecrans_Ave_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 55,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.418181818181818
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Hawthorne",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "3100 Rosecrans Ave.",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 35,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 22,
-            "avg_length": 10.89090909090909
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 55
-      }
-    },
-    {
-      "name": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne",
-      "count": 54,
-      "fields": [
-        {
-          "name": "Rosecrans & Chester avenues",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne_Rosecrans___Chester_avenues.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 54,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.40740740740741
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Compton",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Rosecrans & Chester avenues",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 35,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 22,
-            "avg_length": 10.962962962962964
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 54
-      }
-    },
-    {
-      "name": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton",
-      "count": 53,
-      "fields": [
-        {
-          "name": "1600 W. 60th St.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton_1600_W__60th_St_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 53,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.60377358490566
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Harvard Park",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "1600 W. 60th St.",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton__1600_W__60th_St__Harvard_Park.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 34,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 22,
-            "avg_length": 10.943396226415095
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 53
-      }
-    },
-    {
-      "name": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton__1600_W__60th_St__Harvard_Park",
-      "count": 52,
-      "fields": [
-        {
-          "name": "4404 S. Western Ave.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton__1600_W__60th_St__Harvar_1b8a3efb76e04b77",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 52,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.73076923076923
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Vermont Square",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "4404 S. Western Ave.",
-            "file": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton__1600_W__60th_St__Harvar_509cddf4f8f0c377",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 34,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 22,
-            "avg_length": 10.884615384615385
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 52
-      }
-    },
-    {
-      "name": "original__address_type",
-      "count": 57,
-      "fields": [
-        {
-          "name": "2009 W. 6th St.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_type_2009_W__6th_St_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 57,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.210526315789473
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Officer-involved shooting",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "2009 W. 6th St.",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 4,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 25,
-            "avg_length": 11.333333333333334
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 57
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Officer-involved shooting",
-            "field": "Officer-involved shooting",
-            "cardinality": 4
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_type__2009_W__6th_St__Officer-involved_shooting",
-      "count": 56,
-      "fields": [
-        {
-          "name": "Main & College streets",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting_Main___College_streets.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 56,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.285714285714285
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Not riot-related",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Main & College streets",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 4,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 25,
-            "avg_length": 11.25
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 56
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Not riot-related",
-            "field": "Not riot-related",
-            "cardinality": 4
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related",
-      "count": 55,
-      "fields": [
-        {
-          "name": "3100 Rosecrans Ave.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related_3100_Rosecrans_Ave_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 55,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.418181818181818
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Homicide",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "3100 Rosecrans Ave.",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 4,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 25,
-            "avg_length": 11.309090909090909
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 55
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Homicide",
-            "field": "Homicide",
-            "cardinality": 4
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide",
-      "count": 54,
-      "fields": [
-        {
-          "name": "Rosecrans & Chester avenues",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide_Rosecrans___Chester_avenues.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 54,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.40740740740741
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Officer-involved shooting",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Rosecrans & Chester avenues",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide__Rosecrans___Chester_avenues_Officer-involved_shooting.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 4,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 25,
-            "avg_length": 11.055555555555555
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 54
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Officer-involved shooting",
-            "field": "Officer-involved shooting",
-            "cardinality": 4
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide__Rosecrans___Chester_avenues_Officer-involved_shooting",
-      "count": 53,
-      "fields": [
-        {
-          "name": "1600 W. 60th St.",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide__Rosecrans___Chester_avenues_Officer-involved__fe273a6d20f6f82c",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 53,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 50,
-            "avg_length": 26.60377358490566
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Death",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "1600 W. 60th St.",
-            "file": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide__Rosecrans___Chester_avenues_Officer-involved__f2c55d539e2e11ab",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 4,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 25,
-            "avg_length": 11.169811320754716
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 53
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Death",
-            "field": "Death",
-            "cardinality": 4
-          }
-        ]
-      }
     }
   ],
   "correlations": [
@@ -1417,178 +360,16 @@
     {
       "entity": "original",
       "fields": [
-        "race",
-        "address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race",
-        "type"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.31503117207066716
-        ],
-        [
-          0.31503117207066716,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race",
-        "neighborhood"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7418451110273778
-        ],
-        [
-          0.7418451110273778,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race",
+        "type",
         "last_name"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999998
+          0.9358266959957213
         ],
         [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race",
-        "first_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "address",
-        "type"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "address",
-        "neighborhood"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "address",
-        "gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.944911182523068
-        ],
-        [
-          0.944911182523068,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "address",
-        "last_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9635157357819759
-        ],
-        [
-          0.9635157357819759,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "address",
-        "first_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
+          0.9358266959957213,
           1.0
         ]
       ],
@@ -1598,15 +379,15 @@
       "entity": "original",
       "fields": [
         "type",
-        "neighborhood"
+        "first_name"
       ],
       "matrix": [
         [
           1.0,
-          0.8150304849255786
+          1.0
         ],
         [
-          0.8150304849255786,
+          1.0,
           1.0
         ]
       ],
@@ -1634,15 +415,15 @@
       "entity": "original",
       "fields": [
         "type",
-        "last_name"
+        "neighborhood"
       ],
       "matrix": [
         [
           1.0,
-          0.9358266959957223
+          0.815030484925579
         ],
         [
-          0.9358266959957223,
+          0.815030484925579,
           1.0
         ]
       ],
@@ -1652,15 +433,15 @@
       "entity": "original",
       "fields": [
         "type",
-        "first_name"
+        "address"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999988
+          0.9999999999999983
         ],
         [
-          0.9999999999999988,
+          0.9999999999999983,
           1.0
         ]
       ],
@@ -1669,88 +450,16 @@
     {
       "entity": "original",
       "fields": [
-        "neighborhood",
-        "gender"
+        "type",
+        "race"
       ],
       "matrix": [
         [
           1.0,
-          0.7379992257061365
+          0.3150311720706672
         ],
         [
-          0.7379992257061365,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "neighborhood",
-        "last_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9578190943061327
-        ],
-        [
-          0.9578190943061327,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "neighborhood",
-        "first_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "gender",
-        "last_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9589801130069673
-        ],
-        [
-          0.9589801130069673,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "gender",
-        "first_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999999999
-        ],
-        [
-          0.999999999999999,
+          0.3150311720706672,
           1.0
         ]
       ],
@@ -1775,226 +484,64 @@
       "conditional": []
     },
     {
-      "entity": "original__address_gender",
+      "entity": "original",
       "fields": [
-        "2009 W. 6th St.",
-        "Male"
+        "last_name",
+        "gender"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999999
+          0.958980113006968
         ],
         [
-          0.9999999999999999,
+          0.958980113006968,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__address_gender__2009_W__6th_St__Male",
+      "entity": "original",
       "fields": [
-        "Male",
-        "Main & College streets"
+        "last_name",
+        "neighborhood"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9578190943061317
         ],
         [
-          1.0,
+          0.9578190943061317,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male",
+      "entity": "original",
       "fields": [
-        "3100 Rosecrans Ave.",
-        "Male"
+        "last_name",
+        "address"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.963515735781977
         ],
         [
-          1.0,
+          0.963515735781977,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male",
+      "entity": "original",
       "fields": [
-        "Male",
-        "Rosecrans & Chester avenues"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male",
-      "fields": [
-        "1600 W. 60th St.",
-        "Female"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999997
-        ],
-        [
-          0.9999999999999997,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_gender__2009_W__6th_St__Male__Main___College_streets_Male__3100_Rosecrans_Ave__Male__Rosecrans___Chester_avenues_Male__1600_W__60th_St__Female",
-      "fields": [
-        "Male",
-        "4404 S. Western Ave."
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999992
-        ],
-        [
-          0.9999999999999992,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_neighborhood",
-      "fields": [
-        "2009 W. 6th St.",
-        "Westlake"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999845
-        ],
-        [
-          0.9999999999999845,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_neighborhood__2009_W__6th_St__Westlake",
-      "fields": [
-        "Chinatown",
-        "Main & College streets"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999906
-        ],
-        [
-          0.9999999999999906,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown",
-      "fields": [
-        "3100 Rosecrans Ave.",
-        "Hawthorne"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999916
-        ],
-        [
-          0.9999999999999916,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne",
-      "fields": [
-        "Compton",
-        "Rosecrans & Chester avenues"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999903
-        ],
-        [
-          0.9999999999999903,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton",
-      "fields": [
-        "Harvard Park",
-        "1600 W. 60th St."
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999848
-        ],
-        [
-          0.9999999999999848,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_neighborhood__2009_W__6th_St__Westlake__Main___College_streets_Chinatown__3100_Rosecrans_Ave__Hawthorne__Rosecrans___Chester_avenues_Compton__1600_W__60th_St__Harvard_Park",
-      "fields": [
-        "Vermont Square",
-        "4404 S. Western Ave."
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999848
-        ],
-        [
-          0.9999999999999848,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__address_type",
-      "fields": [
-        "2009 W. 6th St.",
-        "Officer-involved shooting"
+        "last_name",
+        "race"
       ],
       "matrix": [
         [
@@ -2009,10 +556,10 @@
       "conditional": []
     },
     {
-      "entity": "original__address_type__2009_W__6th_St__Officer-involved_shooting",
+      "entity": "original",
       "fields": [
-        "Main & College streets",
-        "Not riot-related"
+        "first_name",
+        "gender"
       ],
       "matrix": [
         [
@@ -2027,10 +574,10 @@
       "conditional": []
     },
     {
-      "entity": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related",
+      "entity": "original",
       "fields": [
-        "Homicide",
-        "3100 Rosecrans Ave."
+        "first_name",
+        "neighborhood"
       ],
       "matrix": [
         [
@@ -2045,10 +592,10 @@
       "conditional": []
     },
     {
-      "entity": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide",
+      "entity": "original",
       "fields": [
-        "Rosecrans & Chester avenues",
-        "Officer-involved shooting"
+        "first_name",
+        "address"
       ],
       "matrix": [
         [
@@ -2063,18 +610,108 @@
       "conditional": []
     },
     {
-      "entity": "original__address_type__2009_W__6th_St__Officer-involved_shooting__Main___College_streets_Not_riot-related__3100_Rosecrans_Ave__Homicide__Rosecrans___Chester_avenues_Officer-involved_shooting",
+      "entity": "original",
       "fields": [
-        "1600 W. 60th St.",
-        "Death"
+        "first_name",
+        "race"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999997
+          1.0
         ],
         [
-          0.9999999999999997,
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "gender",
+        "neighborhood"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7379992257061365
+        ],
+        [
+          0.7379992257061365,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "gender",
+        "address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9449111825230685
+        ],
+        [
+          0.9449111825230685,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "neighborhood",
+        "address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "neighborhood",
+        "race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7418451110273772
+        ],
+        [
+          0.7418451110273772,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "address",
+        "race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
           1.0
         ]
       ],

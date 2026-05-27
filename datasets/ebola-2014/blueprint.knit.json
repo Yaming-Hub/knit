@@ -270,8 +270,8 @@
     {
       "entity": "original",
       "fields": [
-        "Lat",
-        "Value"
+        "Value",
+        "Lat"
       ],
       "matrix": [
         [

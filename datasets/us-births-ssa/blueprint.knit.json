@@ -263,8 +263,8 @@
     {
       "entity": "original",
       "fields": [
-        "births",
-        "day_of_week"
+        "day_of_week",
+        "births"
       ],
       "matrix": [
         [
@@ -281,8 +281,8 @@
     {
       "entity": "original",
       "fields": [
-        "births",
-        "day_of_week"
+        "day_of_week",
+        "births"
       ],
       "matrix": [
         [

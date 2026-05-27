@@ -9,781 +9,6 @@
   },
   "entities": [
     {
-      "name": "diamonds_original__clarity_color_cut_depth_table",
-      "count": 24655,
-      "fields": [
-        {
-          "name": "SI2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "diamonds_original__clarity_color_cut_depth_table_SI2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.1093895761508823
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "E",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Ideal",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529426079902657
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "61.5",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64369904684797,
-            "std": 1.8196292162370598,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "55",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.96489555871016,
-            "std": 2.6078671989602302,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "61.5",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "55",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24655
-      }
-    },
-    {
-      "name": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55",
-      "count": 24654,
-      "fields": [
-        {
-          "name": "SI1",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55_SI1.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.1093940131418836
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "E",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Premium",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529406992780077
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "59.8",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64377382980598,
-            "std": 1.8196282318976877,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "61",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.964772450717895,
-            "std": 2.6078484463993523,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "59.8",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "61",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24654
-      }
-    },
-    {
-      "name": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61",
-      "count": 24653,
-      "fields": [
-        {
-          "name": "VS1",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61_VS1.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.1093984504928405
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "E",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Good",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529509593152963
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "56.9",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.643966251573296,
-            "std": 1.819414283337334,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "65",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.964487080679795,
-            "std": 2.607516363990244,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "56.9",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "65",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24653
-      }
-    },
-    {
-      "name": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65",
-      "count": 24652,
-      "fields": [
-        {
-          "name": "VS2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65_VS2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.109402888203797
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "I",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Premium",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529490507869544
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "62.4",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.643935583321294,
-            "std": 1.8194448141271224,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "58",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.9644856401103,
-            "std": 2.6075692422962558,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "62.4",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "58",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24652
-      }
-    },
-    {
-      "name": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58",
-      "count": 24651,
-      "fields": [
-        {
-          "name": "SI2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58_SI2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.109407326274796
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "J",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Good",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529593119954566
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "63.3",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64386840290603,
-            "std": 1.8194511432966816,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "58",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.96448419942392,
-            "std": 2.6076221238195476,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "63.3",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "58",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24651
-      }
-    },
-    {
       "name": "original",
       "count": 53940,
       "fields": [
@@ -1189,1258 +414,22 @@
       "stats": {
         "source_rows": 53940
       }
-    },
-    {
-      "name": "original__clarity_color_cut_depth_table",
-      "count": 24655,
-      "fields": [
-        {
-          "name": "SI2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__clarity_color_cut_depth_table_SI2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.1093895761508823
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "E",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Ideal",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529426079902657
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "61.5",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64369904684797,
-            "std": 1.8196292162370598,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "55",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.96489555871016,
-            "std": 2.6078671989602302,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "61.5",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "55",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24655
-      }
-    },
-    {
-      "name": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55",
-      "count": 24654,
-      "fields": [
-        {
-          "name": "SI1",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55_SI1.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.1093940131418836
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "E",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Premium",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529406992780077
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "59.8",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64377382980598,
-            "std": 1.8196282318976877,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "61",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.964772450717895,
-            "std": 2.6078484463993523,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "59.8",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "61",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24654
-      }
-    },
-    {
-      "name": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61",
-      "count": 24653,
-      "fields": [
-        {
-          "name": "VS1",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61_VS1.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.1093984504928405
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "E",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Good",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529509593152963
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "56.9",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.643966251573296,
-            "std": 1.819414283337334,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "65",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS1",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.964487080679795,
-            "std": 2.607516363990244,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "56.9",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "65",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24653
-      }
-    },
-    {
-      "name": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65",
-      "count": 24652,
-      "fields": [
-        {
-          "name": "VS2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65_VS2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.109402888203797
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "I",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Premium",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529490507869544
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "62.4",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.643935583321294,
-            "std": 1.8194448141271224,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "58",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.9644856401103,
-            "std": 2.6075692422962558,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "62.4",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "58",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24652
-      }
-    },
-    {
-      "name": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58",
-      "count": 24651,
-      "fields": [
-        {
-          "name": "SI2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58_SI2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.109407326274796
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "J",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Good",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.529593119954566
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "63.3",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64386840290603,
-            "std": 1.8194511432966816,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "58",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "SI2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.96448419942392,
-            "std": 2.6076221238195476,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "63.3",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "58",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24651
-      }
-    },
-    {
-      "name": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58",
-      "count": 24650,
-      "fields": [
-        {
-          "name": "VVS2",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58_VVS2.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 4,
-            "avg_length": 3.109371196754564
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "J",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VVS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58__VVS2_J_Very_Good_62_8_57.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "Very Good",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VVS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58__VVS2_J_Very_Good_62_8_57.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 9,
-            "avg_length": 6.52949290060852
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        },
-        {
-          "name": "62.8",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VVS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58__VVS2_J_Very_Good_62_8_57.tsv",
-            "column": 3
-          },
-          "nullable": false,
-          "precision": 1,
-          "stats": {
-            "distinct_count": 184,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 79.0,
-            "mean": 61.64382150101568,
-            "std": 1.8194731477493105,
-            "percentiles": {
-              "p25": 60.6,
-              "p50": 61.7,
-              "p75": 62.7,
-              "p95": 64.4,
-              "p99": 66.6
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "57",
-          "data_type": "float",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "VVS2",
-            "file": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58__VVS2_J_Very_Good_62_8_57.tsv",
-            "column": 4
-          },
-          "nullable": false,
-          "precision": 0,
-          "stats": {
-            "distinct_count": 127,
-            "null_rate": 0.0,
-            "min": 43.0,
-            "max": 95.0,
-            "mean": 57.96452332657197,
-            "std": 2.6076677819205876,
-            "percentiles": {
-              "p25": 56.0,
-              "p50": 58.0,
-              "p75": 60.0,
-              "p95": 62.0,
-              "p99": 65.0
-            }
-          },
-          "traits": {
-            "semantic": "float",
-            "cardinality": "low",
-            "distribution_shape": "skewed"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "62.8",
-          "min": 43.0,
-          "max": 79.0
-        },
-        {
-          "type": "range",
-          "field": "57",
-          "min": 43.0,
-          "max": 95.0
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 24650
-      }
     }
   ],
   "correlations": [
     {
-      "entity": "diamonds_original__clarity_color_cut_depth_table",
-      "fields": [
-        "61.5",
-        "55"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3229554441039873
-        ],
-        [
-          -0.3229554441039873,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table",
-      "fields": [
-        "61.5",
-        "55"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.31894564913667744
-        ],
-        [
-          -0.31894564913667744,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55",
-      "fields": [
-        "61",
-        "59.8"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.32292320619226095
-        ],
-        [
-          -0.32292320619226095,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55",
-      "fields": [
-        "61",
-        "59.8"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3188924334947264
-        ],
-        [
-          -0.3188924334947264,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61",
-      "fields": [
-        "56.9",
-        "65"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.32273004243560555
-        ],
-        [
-          -0.32273004243560555,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61",
-      "fields": [
-        "56.9",
-        "65"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.31881052844161123
-        ],
-        [
-          -0.31881052844161123,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65",
-      "fields": [
-        "62.4",
-        "58"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.32273140353747887
-        ],
-        [
-          -0.32273140353747887,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65",
-      "fields": [
-        "62.4",
-        "58"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3188223068023459
-        ],
-        [
-          -0.3188223068023459,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58",
-      "fields": [
-        "58",
-        "63.3"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3227373311979882
-        ],
-        [
-          -0.3227373311979882,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "diamonds_original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58",
-      "fields": [
-        "58",
-        "63.3"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.31884341186444015
-        ],
-        [
-          -0.31884341186444015,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
       "entity": "original",
       "fields": [
-        "price",
-        "z"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8612494438514684
-        ],
-        [
-          0.8612494438514684,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
-        "z"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9572322686120686
-        ],
-        [
-          0.9572322686120686,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
-        "carat"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9215913011935697
-        ],
-        [
-          0.9215913011935697,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
-        "carat"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9628827988813001
-        ],
-        [
-          0.9628827988813001,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
-        "y"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8654208978642225
-        ],
-        [
-          0.8654208978642225,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
-        "y"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9627188193892315
-        ],
-        [
-          0.9627188193892315,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
+        "z",
         "x"
       ],
       "matrix": [
         [
           1.0,
-          0.8844351610161778
+          0.9707717985774705
         ],
         [
-          0.8844351610161778,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "price",
-        "x"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9631961087113345
-        ],
-        [
-          0.9631961087113345,
+          0.9707717985774705,
           1.0
         ]
       ],
@@ -2450,33 +439,15 @@
       "entity": "original",
       "fields": [
         "z",
-        "carat"
+        "x"
       ],
       "matrix": [
         [
           1.0,
-          0.9533873805614387
+          0.9873553172140505
         ],
         [
-          0.9533873805614387,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "z",
-        "carat"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9931834443062174
-        ],
-        [
-          0.9931834443062174,
+          0.9873553172140505,
           1.0
         ]
       ],
@@ -2522,15 +493,15 @@
       "entity": "original",
       "fields": [
         "z",
-        "x"
+        "carat"
       ],
       "matrix": [
         [
           1.0,
-          0.9707717985774705
+          0.9533873805614387
         ],
         [
-          0.9707717985774705,
+          0.9533873805614387,
           1.0
         ]
       ],
@@ -2540,15 +511,15 @@
       "entity": "original",
       "fields": [
         "z",
-        "x"
+        "carat"
       ],
       "matrix": [
         [
           1.0,
-          0.9873553172140505
+          0.9931834443062174
         ],
         [
-          0.9873553172140505,
+          0.9931834443062174,
           1.0
         ]
       ],
@@ -2557,80 +528,44 @@
     {
       "entity": "original",
       "fields": [
-        "carat",
+        "z",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8612494438514684
+        ],
+        [
+          0.8612494438514684,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "z",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9572322686120686
+        ],
+        [
+          0.9572322686120686,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "x",
         "y"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9517221990130819
-        ],
-        [
-          0.9517221990130819,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "carat",
-        "y"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9955717485692812
-        ],
-        [
-          0.9955717485692812,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "carat",
-        "x"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9750942267265641
-        ],
-        [
-          0.9750942267265641,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "carat",
-        "x"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9961166041570526
-        ],
-        [
-          0.9961166041570526,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "y",
-        "x"
       ],
       "matrix": [
         [
@@ -2647,8 +582,8 @@
     {
       "entity": "original",
       "fields": [
-        "y",
-        "x"
+        "x",
+        "y"
       ],
       "matrix": [
         [
@@ -2664,158 +599,183 @@
     },
     {
       "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "carat",
-      "given": "color",
-      "distributions": [
-        {
-          "when": "J",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.30534504531857015,
-            "shape": 3.805978744224533
-          }
-        },
-        {
-          "when": "H",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.29793157055115305,
-            "shape": 3.060431397925473
-          }
-        },
-        {
-          "when": "F",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.44841242369698314,
-            "sigma": 0.5389596917099945
-          }
-        },
-        {
-          "when": "G",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.42059409775193307,
-            "sigma": 0.5708125363029423
-          }
-        },
-        {
-          "when": "D",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.5525351167344574,
-            "sigma": 0.509568951829507
-          }
-        },
-        {
-          "when": "I",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.32658505915395325,
-            "shape": 3.1444406420421585
-          }
-        },
-        {
-          "when": "E",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.5595004855016285,
-            "sigma": 0.5238619858939542
-          }
-        }
+      "fields": [
+        "x",
+        "carat"
       ],
-      "default": {
-        "kind": "log_normal",
-        "params": {
-          "mu": -0.3949669655482774,
-          "sigma": 0.5848220841250429
-        }
-      }
+      "matrix": [
+        [
+          1.0,
+          0.9750942267265641
+        ],
+        [
+          0.9750942267265641,
+          1.0
+        ]
+      ],
+      "conditional": []
     },
     {
       "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "price",
-      "given": "color",
-      "distributions": [
-        {
-          "when": "H",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.918445902669146,
-            "sigma": 1.0631537395843467
-          },
-          "round": true
-        },
-        {
-          "when": "F",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.762439593363952,
-            "sigma": 0.9674636914148415
-          },
-          "round": true
-        },
-        {
-          "when": "G",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.789583395130484,
-            "sigma": 1.0276692184519838
-          },
-          "round": true
-        },
-        {
-          "when": "J",
-          "distribution": "gamma",
-          "params": {
-            "scale": 3698.56580687781,
-            "shape": 1.4394276857377826
-          },
-          "round": true
-        },
-        {
-          "when": "D",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.616904920536967,
-            "sigma": 0.9262901822353674
-          },
-          "round": true
-        },
-        {
-          "when": "I",
-          "distribution": "gamma",
-          "params": {
-            "scale": 4378.904006564539,
-            "shape": 1.1628194969010919
-          },
-          "round": true
-        },
-        {
-          "when": "E",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.579404675448197,
-            "sigma": 0.9253725869219571
-          },
-          "round": true
-        }
+      "fields": [
+        "x",
+        "carat"
       ],
-      "default": {
-        "kind": "log_normal",
-        "params": {
-          "mu": 7.786768479077399,
-          "sigma": 1.014639937514435
-        }
-      }
+      "matrix": [
+        [
+          1.0,
+          0.9961166041570526
+        ],
+        [
+          0.9961166041570526,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "x",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8844351610161778
+        ],
+        [
+          0.8844351610161778,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "x",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9631961087113345
+        ],
+        [
+          0.9631961087113345,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "y",
+        "carat"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9517221990130819
+        ],
+        [
+          0.9517221990130819,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "y",
+        "carat"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9955717485692812
+        ],
+        [
+          0.9955717485692812,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "y",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8654208978642225
+        ],
+        [
+          0.8654208978642225,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "y",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9627188193892315
+        ],
+        [
+          0.9627188193892315,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "carat",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9215913011935697
+        ],
+        [
+          0.9215913011935697,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "carat",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9628827988813001
+        ],
+        [
+          0.9628827988813001,
+          1.0
+        ]
+      ],
+      "conditional": []
     },
     {
       "entity": "original",
@@ -2827,19 +787,19 @@
       "given": "clarity",
       "distributions": [
         {
-          "when": "VS2",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.4319771182220129,
-            "sigma": 0.5701007090493591
-          }
-        },
-        {
           "when": "VVS2",
           "distribution": "pareto",
           "params": {
             "scale": 0.23,
             "shape": 1.2558870466853695
+          }
+        },
+        {
+          "when": "VVS1",
+          "distribution": "pareto",
+          "params": {
+            "scale": 0.23,
+            "shape": 1.5290342087877415
           }
         },
         {
@@ -2859,11 +819,11 @@
           }
         },
         {
-          "when": "VVS1",
-          "distribution": "pareto",
+          "when": "I1",
+          "distribution": "log_normal",
           "params": {
-            "scale": 0.23,
-            "shape": 1.5290342087877415
+            "mu": 0.1436717088255041,
+            "sigma": 0.4614988620216725
           }
         },
         {
@@ -2875,11 +835,11 @@
           }
         },
         {
-          "when": "I1",
+          "when": "VS2",
           "distribution": "log_normal",
           "params": {
-            "mu": 0.1436717088255041,
-            "sigma": 0.4614988620216725
+            "mu": -0.4319771182220129,
+            "sigma": 0.5701007090493591
           }
         },
         {
@@ -2909,15 +869,6 @@
       "given": "clarity",
       "distributions": [
         {
-          "when": "VVS2",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.530843457557153,
-            "sigma": 1.024375882932501
-          },
-          "round": true
-        },
-        {
           "when": "IF",
           "distribution": "log_normal",
           "params": {
@@ -2936,20 +887,11 @@
           "round": true
         },
         {
-          "when": "SI2",
-          "distribution": "gamma",
-          "params": {
-            "scale": 3584.718640119787,
-            "shape": 1.4123921885939617
-          },
-          "round": true
-        },
-        {
-          "when": "VS2",
+          "when": "VVS2",
           "distribution": "log_normal",
           "params": {
-            "mu": 7.763029387204058,
-            "sigma": 1.0331880059650556
+            "mu": 7.530843457557153,
+            "sigma": 1.024375882932501
           },
           "round": true
         },
@@ -2963,6 +905,15 @@
           "round": true
         },
         {
+          "when": "I1",
+          "distribution": "gamma",
+          "params": {
+            "scale": 2004.8507834983748,
+            "shape": 1.9573370363806657
+          },
+          "round": true
+        },
+        {
           "when": "SI1",
           "distribution": "log_normal",
           "params": {
@@ -2972,11 +923,20 @@
           "round": true
         },
         {
-          "when": "I1",
+          "when": "VS2",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.763029387204058,
+            "sigma": 1.0331880059650556
+          },
+          "round": true
+        },
+        {
+          "when": "SI2",
           "distribution": "gamma",
           "params": {
-            "scale": 2004.8507834983748,
-            "shape": 1.9573370363806657
+            "scale": 3584.718640119787,
+            "shape": 1.4123921885939617
           },
           "round": true
         }
@@ -2990,220 +950,159 @@
       }
     },
     {
-      "entity": "original__clarity_color_cut_depth_table",
-      "fields": [
-        "61.5",
-        "55"
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "carat",
+      "given": "color",
+      "distributions": [
+        {
+          "when": "D",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.5525351167344574,
+            "sigma": 0.509568951829507
+          }
+        },
+        {
+          "when": "H",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.29793157055115305,
+            "shape": 3.060431397925473
+          }
+        },
+        {
+          "when": "F",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.44841242369698314,
+            "sigma": 0.5389596917099945
+          }
+        },
+        {
+          "when": "I",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.32658505915395325,
+            "shape": 3.1444406420421585
+          }
+        },
+        {
+          "when": "E",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.5595004855016285,
+            "sigma": 0.5238619858939542
+          }
+        },
+        {
+          "when": "J",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.30534504531857015,
+            "shape": 3.805978744224533
+          }
+        },
+        {
+          "when": "G",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.42059409775193307,
+            "sigma": 0.5708125363029423
+          }
+        }
       ],
-      "matrix": [
-        [
-          1.0,
-          -0.3229554441039873
-        ],
-        [
-          -0.3229554441039873,
-          1.0
-        ]
-      ],
-      "conditional": []
+      "default": {
+        "kind": "log_normal",
+        "params": {
+          "mu": -0.3949669655482774,
+          "sigma": 0.5848220841250429
+        }
+      }
     },
     {
-      "entity": "original__clarity_color_cut_depth_table",
-      "fields": [
-        "61.5",
-        "55"
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "price",
+      "given": "color",
+      "distributions": [
+        {
+          "when": "D",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.616904920536967,
+            "sigma": 0.9262901822353674
+          },
+          "round": true
+        },
+        {
+          "when": "J",
+          "distribution": "gamma",
+          "params": {
+            "scale": 3698.56580687781,
+            "shape": 1.4394276857377826
+          },
+          "round": true
+        },
+        {
+          "when": "H",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.918445902669146,
+            "sigma": 1.0631537395843467
+          },
+          "round": true
+        },
+        {
+          "when": "E",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.579404675448197,
+            "sigma": 0.9253725869219571
+          },
+          "round": true
+        },
+        {
+          "when": "F",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.762439593363952,
+            "sigma": 0.9674636914148415
+          },
+          "round": true
+        },
+        {
+          "when": "I",
+          "distribution": "gamma",
+          "params": {
+            "scale": 4378.904006564539,
+            "shape": 1.1628194969010919
+          },
+          "round": true
+        },
+        {
+          "when": "G",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.789583395130484,
+            "sigma": 1.0276692184519838
+          },
+          "round": true
+        }
       ],
-      "matrix": [
-        [
-          1.0,
-          -0.31894564913667744
-        ],
-        [
-          -0.31894564913667744,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55",
-      "fields": [
-        "61",
-        "59.8"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.32292320619226095
-        ],
-        [
-          -0.32292320619226095,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55",
-      "fields": [
-        "61",
-        "59.8"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3188924334947264
-        ],
-        [
-          -0.3188924334947264,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61",
-      "fields": [
-        "65",
-        "56.9"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.32273004243560555
-        ],
-        [
-          -0.32273004243560555,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61",
-      "fields": [
-        "65",
-        "56.9"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.31881052844161123
-        ],
-        [
-          -0.31881052844161123,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65",
-      "fields": [
-        "58",
-        "62.4"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.32273140353747887
-        ],
-        [
-          -0.32273140353747887,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65",
-      "fields": [
-        "58",
-        "62.4"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3188223068023459
-        ],
-        [
-          -0.3188223068023459,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58",
-      "fields": [
-        "63.3",
-        "58"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3227373311979882
-        ],
-        [
-          -0.3227373311979882,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58",
-      "fields": [
-        "63.3",
-        "58"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.31884341186444015
-        ],
-        [
-          -0.31884341186444015,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58",
-      "fields": [
-        "62.8",
-        "57"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3227313351532472
-        ],
-        [
-          -0.3227313351532472,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__clarity_color_cut_depth_table__SI2_E_Ideal_61_5_55__SI1_E_Premium_59_8_61__VS1_E_Good_56_9_65__VS2_I_Premium_62_4_58__SI2_J_Good_63_3_58",
-      "fields": [
-        "62.8",
-        "57"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3188427638071218
-        ],
-        [
-          -0.3188427638071218,
-          1.0
-        ]
-      ],
-      "conditional": []
+      "default": {
+        "kind": "log_normal",
+        "params": {
+          "mu": 7.786768479077399,
+          "sigma": 1.014639937514435
+        }
+      }
     }
   ]
 }

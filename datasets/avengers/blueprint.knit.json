@@ -560,2678 +560,9 @@
       "scaling": {
         "custom": [
           {
-            "name": "Current?",
-            "field": "Current?",
-            "cardinality": 2
-          },
-          {
-            "name": "Gender",
-            "field": "Gender",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1",
-      "count": 49,
-      "fields": [
-        {
-          "name": "Sep-63",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1_Sep-63.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 49,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.795918367346939
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "NO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Sep-63",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.693877551020408
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 49
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "NO",
-            "field": "NO",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO",
-      "count": 48,
-      "fields": [
-        {
-          "name": "Mar-64",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO_Mar-64.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 48,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.791666666666667
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mar-64",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.6875
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 48
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES",
-      "count": 47,
-      "fields": [
-        {
-          "name": "May-65",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES_May-65.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 47,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.787234042553192
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "May-65",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.6808510638297873
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 47
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES",
-      "count": 46,
-      "fields": [
-        {
-          "name": "Sep-65",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES_Sep-65.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 46,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.782608695652174
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Sep-65",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.6739130434782608
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 46
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES",
-      "count": 45,
-      "fields": [
-        {
-          "name": "Nov-68",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES_Nov-68.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 45,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.777777777777778
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Nov-68",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.6666666666666665
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 45
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES",
-      "count": 44,
-      "fields": [
-        {
-          "name": "May-73",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES_May-73.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 44,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.7727272727272725
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "May-73",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES__May-73_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.659090909090909
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 44
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES__May-73_YES",
-      "count": 43,
-      "fields": [
-        {
-          "name": "Aug-73",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES__May-73_YES_Aug-73.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 43,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.767441860465116
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Aug-73",
-            "file": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES__May-73_YES__Aug-73_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.6511627906976742
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 43
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2",
-      "count": 15,
-      "fields": [
-        {
-          "name": "Sep-63",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2_Sep-63.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 15,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.8
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "NO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Sep-63",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.533333333333333
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 15
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Sep-63",
-            "field": "Sep-63",
-            "cardinality": 15
-          },
-          {
-            "name": "NO",
-            "field": "NO",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO",
-      "count": 14,
-      "fields": [
-        {
-          "name": "May-65",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO_May-65.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 14,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.785714285714286
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "May-65",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.5
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 14
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "May-65",
-            "field": "May-65",
-            "cardinality": 14
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES",
-      "count": 13,
-      "fields": [
-        {
-          "name": "Sep-76",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES_Sep-76.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.769230769230769
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Sep-76",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.4615384615384617
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 13
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Sep-76",
-            "field": "Sep-76",
-            "cardinality": 13
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES",
-      "count": 12,
-      "fields": [
-        {
-          "name": "Aug-75",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES_Aug-75.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 12,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.75
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "NO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Aug-75",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.5
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 12
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Aug-75",
-            "field": "Aug-75",
+            "name": "Probationary Introl",
+            "field": "Probationary Introl",
             "cardinality": 12
-          },
-          {
-            "name": "NO",
-            "field": "NO",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO",
-      "count": 11,
-      "fields": [
-        {
-          "name": "Jul-78",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO_Jul-78.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 11,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.7272727272727275
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jul-78",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.4545454545454546
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 11
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jul-78",
-            "field": "Jul-78",
-            "cardinality": 11
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES",
-      "count": 10,
-      "fields": [
-        {
-          "name": "Nov-88",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES_Nov-88.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.7
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Nov-88",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES__Nov-88_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.4
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 10
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Nov-88",
-            "field": "Nov-88",
-            "cardinality": 10
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES__Nov-88_YES",
-      "count": 9,
-      "fields": [
-        {
-          "name": "Apr-87",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES__Nov-88_YES_Apr-87.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 9,
-            "null_rate": 0.0,
-            "min_length": 5,
-            "max_length": 6,
-            "avg_length": 5.666666666666667
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Apr-87",
-            "file": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES__Nov-88_YES__Apr-87_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.3333333333333335
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 9
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Apr-87",
-            "field": "Apr-87",
-            "cardinality": 9
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Honorary_Death2",
-      "count": 2,
-      "fields": [
-        {
-          "name": "Full",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__Honorary_Death2__fullrow.tsv",
-            "column": 0,
-            "row_count": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 12,
-            "avg_length": 10.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__Honorary_Death2__fullrow.tsv",
-            "column": 1,
-            "row_count": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.5
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 2
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Full",
-            "field": "Full",
-            "cardinality": 2
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Current_",
-      "count": 11,
-      "fields": [
-        {
-          "name": "Jul-75",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Current__Jul-75.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 11,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "NO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jul-75",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.1818181818181817
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 11
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jul-75",
-            "field": "Jul-75",
-            "cardinality": 11
-          },
-          {
-            "name": "NO",
-            "field": "NO",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Current___Jul-75_NO",
-      "count": 10,
-      "fields": [
-        {
-          "name": "Nov-75",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO_Nov-75.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "NO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Nov-75",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.2
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 10
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Nov-75",
-            "field": "Nov-75",
-            "cardinality": 10
-          },
-          {
-            "name": "NO",
-            "field": "NO",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO",
-      "count": 9,
-      "fields": [
-        {
-          "name": "Apr-77",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO_Apr-77.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 9,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "NO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Apr-77",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.2222222222222223
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 9
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Apr-77",
-            "field": "Apr-77",
-            "cardinality": 9
-          },
-          {
-            "name": "NO",
-            "field": "NO",
-            "cardinality": 2
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "NO",
-        "direction": "desc"
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO",
-      "count": 8,
-      "fields": [
-        {
-          "name": "Jul-80",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO_Jul-80.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jul-80",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO__Jul-80_YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.125
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 8
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jul-80",
-            "field": "Jul-80",
-            "cardinality": 8
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "YES",
-        "direction": "desc"
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO__Jul-80_YES",
-      "count": 7,
-      "fields": [
-        {
-          "name": "Jan-83",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO__Jul-80_YES__fullrow.tsv",
-            "column": 0,
-            "row_count": 7
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO__Jul-80_YES__fullrow.tsv",
-            "column": 1,
-            "row_count": 7
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 2,
-            "avg_length": 2.0
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 7
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jan-83",
-            "field": "Jan-83",
-            "cardinality": 7
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "YES",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender",
-      "count": 11,
-      "fields": [
-        {
-          "name": "Jul-75",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender_Jul-75.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 11,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jul-75",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.909090909090909
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 11
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jul-75",
-            "field": "Jul-75",
-            "cardinality": 11
-          },
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender__Jul-75_MALE",
-      "count": 10,
-      "fields": [
-        {
-          "name": "Nov-75",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE_Nov-75.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "FEMALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Nov-75",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.8
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 10
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Nov-75",
-            "field": "Nov-75",
-            "cardinality": 10
-          },
-          {
-            "name": "FEMALE",
-            "field": "FEMALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE",
-      "count": 9,
-      "fields": [
-        {
-          "name": "Apr-77",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE_Apr-77.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 9,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Apr-77",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.888888888888889
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 9
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Apr-77",
-            "field": "Apr-77",
-            "cardinality": 9
-          },
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE",
-      "count": 8,
-      "fields": [
-        {
-          "name": "Jul-80",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE_Jul-80.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "FEMALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jul-80",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.75
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 8
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jul-80",
-            "field": "Jul-80",
-            "cardinality": 8
-          },
-          {
-            "name": "FEMALE",
-            "field": "FEMALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE",
-      "count": 7,
-      "fields": [
-        {
-          "name": "Jan-83",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE_Jan-83.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 7,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "FEMALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jan-83",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.571428571428571
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 7
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jan-83",
-            "field": "Jan-83",
-            "cardinality": 7
-          },
-          {
-            "name": "FEMALE",
-            "field": "FEMALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE",
-      "count": 6,
-      "fields": [
-        {
-          "name": "Jun-83",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE_Jun-83.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 6,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Jun-83",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE__Jun-83_MALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.666666666666667
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 6
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Jun-83",
-            "field": "Jun-83",
-            "cardinality": 6
-          },
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE__Jun-83_MALE",
-      "count": 5,
-      "fields": [
-        {
-          "name": "May-84",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE__Jun-83_MALE_May-84.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "May-84",
-            "file": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE__Jun-83_MALE__May-84_MALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.8
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "high"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 5
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "May-84",
-            "field": "May-84",
-            "cardinality": 5
-          },
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death1",
-      "count": 172,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Henry_Pym_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death1_http___marvel_wikia_com_Henry_Pym__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 172,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.74418604651163
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Henry_Pym_(Earth-616)",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.395348837209302
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 172
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES",
-      "count": 171,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Janet_van_Dyne_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES_http___marvel_wikia_com_Janet_van_Dyne__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 171,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.74269005847953
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Janet_van_Dyne_(Earth-616)",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.391812865497076
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 171
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES",
-      "count": 170,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Anthony_Stark_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES_http___marvel_wikia_com_Anthony_Stark__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 170,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.747058823529414
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Anthony_Stark_(Earth-616)",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES__http___marvel_wikia_com_Anthony_Stark__Earth-616__YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.388235294117647
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 170
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES__http___marvel_wikia_com_Anthony_Stark__Earth-616__YES",
-      "count": 169,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES__http___marvel_wikia_com_Anthony_Stark__Earth-616__YES__01c52b36ced26662",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 169,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.71597633136095
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616)",
-            "file": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES__http___marvel_wikia_com_Anthony_Stark__Earth-616__YES__4075d630d6156c00",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.3846153846153846
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 169
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death2",
-      "count": 16,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Thor_Odinson_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death2_http___marvel_wikia_com_Thor_Odinson__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 16,
-            "null_rate": 0.0,
-            "min_length": 41,
-            "max_length": 55,
-            "avg_length": 48.75
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Thor_Odinson_(Earth-616)",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.9375
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 16
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "http://marvel.wikia.com/Thor_Odinson_(Earth-616)",
-            "field": "http://marvel.wikia.com/Thor_Odinson_(Earth-616)",
-            "cardinality": 16
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES",
-      "count": 15,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Clint_Barton_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES_http___marvel_wikia_com_Clint_Barton__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 15,
-            "null_rate": 0.0,
-            "min_length": 41,
-            "max_length": 55,
-            "avg_length": 48.8
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Clint_Barton_(Earth-616)",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.933333333333333
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 15
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "http://marvel.wikia.com/Clint_Barton_(Earth-616)",
-            "field": "http://marvel.wikia.com/Clint_Barton_(Earth-616)",
-            "cardinality": 15
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES",
-      "count": 14,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Heather_Douglas_(Earth-616)#",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES_http___marvel_wikia_com_Heather_Douglas__Earth-616__.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 14,
-            "null_rate": 0.0,
-            "min_length": 41,
-            "max_length": 55,
-            "avg_length": 48.57142857142857
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Heather_Douglas_(Earth-616)#",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES__http___marvel_wikia_com_Heather_Douglas__Earth-616___YES.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.9285714285714284
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 14
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "http://marvel.wikia.com/Heather_Douglas_(Earth-616)#",
-            "field": "http://marvel.wikia.com/Heather_Douglas_(Earth-616)#",
-            "cardinality": 14
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES__http___marvel_wikia_com_Heather_Douglas__Earth-616___YES",
-      "count": 13,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Matthew_Hawk_(Earth-616)#",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES__http___marvel_wikia_com_Heather_Douglas__Earth-616____8acacc2bea9b4e63",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13,
-            "null_rate": 0.0,
-            "min_length": 41,
-            "max_length": 55,
-            "avg_length": 48.53846153846154
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "YES",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Matthew_Hawk_(Earth-616)#",
-            "file": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES__http___marvel_wikia_com_Heather_Douglas__Earth-616____5b79b2dd3d5c8165",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 3,
-            "avg_length": 2.923076923076923
-          },
-          "traits": {
-            "semantic": "boolean",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 13
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "http://marvel.wikia.com/Matthew_Hawk_(Earth-616)#",
-            "field": "http://marvel.wikia.com/Matthew_Hawk_(Earth-616)#",
-            "cardinality": 13
-          },
-          {
-            "name": "YES",
-            "field": "YES",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Gender",
-      "count": 172,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Henry_Pym_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Gender_http___marvel_wikia_com_Henry_Pym__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 172,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.74418604651163
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Henry_Pym_(Earth-616)",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.674418604651163
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 172
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE",
-      "count": 171,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Janet_van_Dyne_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE_http___marvel_wikia_com_Janet_van_Dyne__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 171,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.74269005847953
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "FEMALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Janet_van_Dyne_(Earth-616)",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.666666666666667
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 171
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "FEMALE",
-            "field": "FEMALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE",
-      "count": 170,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Anthony_Stark_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE_http___marvel_wikia_com_Anthony_Stark__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 170,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.747058823529414
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Anthony_Stark_(Earth-616)",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE__http___marvel_wikia_com_Anthony_Stark__Earth-616__MALE.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.670588235294118
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 170
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE__http___marvel_wikia_com_Anthony_Stark__Earth-616__MALE",
-      "count": 169,
-      "fields": [
-        {
-          "name": "http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE__http___marvel_wikia_com_Anthony_Stark__Earth-616___d51d2d2be8e46f8b",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 169,
-            "null_rate": 0.0,
-            "min_length": 36,
-            "max_length": 67,
-            "avg_length": 49.71597633136095
-          },
-          "traits": {
-            "semantic": "url",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "MALE",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616)",
-            "file": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE__http___marvel_wikia_com_Anthony_Stark__Earth-616___595f54f675e60281",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 6,
-            "avg_length": 4.674556213017752
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 169
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "MALE",
-            "field": "MALE",
-            "cardinality": 2
           }
         ]
       }
@@ -3278,7 +609,25 @@
       "entity": "original",
       "fields": [
         "Death2",
-        "URL"
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Death2",
+        "Notes"
       ],
       "matrix": [
         [
@@ -3314,6 +663,42 @@
       "entity": "original",
       "fields": [
         "Death2",
+        "URL"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
         "Notes"
       ],
       "matrix": [
@@ -3331,8 +716,80 @@
     {
       "entity": "original",
       "fields": [
-        "Death2",
-        "Name/Alias"
+        "Name/Alias",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9981255841065793
+        ],
+        [
+          0.9981255841065793,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
+        "Honorary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.993384712391522
+        ],
+        [
+          0.993384712391522,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
+        "Death1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999993
+        ],
+        [
+          0.9999999999999993,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
+        "Return1"
       ],
       "matrix": [
         [
@@ -3349,16 +806,34 @@
     {
       "entity": "original",
       "fields": [
-        "Current?",
+        "Name/Alias",
+        "Current?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Name/Alias",
         "URL"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999994
+          0.9999999999999455
         ],
         [
-          0.9999999999999994,
+          0.9999999999999455,
           1.0
         ]
       ],
@@ -3367,412 +842,16 @@
     {
       "entity": "original",
       "fields": [
-        "Current?",
-        "Full/Reserve Avengers Intro"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.892091164211846
-        ],
-        [
-          0.892091164211846,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Current?",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.357580429813995
-        ],
-        [
-          0.357580429813995,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Current?",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8897565210026096
-        ],
-        [
-          0.8897565210026096,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Current?",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6572585054332521
-        ],
-        [
-          0.6572585054332521,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Current?",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Full/Reserve Avengers Intro"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999312
-        ],
-        [
-          0.9999999999999312,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Death1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Return1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999722
-        ],
-        [
-          0.9999999999999722,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999473
-        ],
-        [
-          0.9999999999999473,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "URL",
+        "Name/Alias",
         "Return2"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9999999999999999
         ],
         [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7394501283891484
-        ],
-        [
-          0.7394501283891484,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Death1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8451972761917567
-        ],
-        [
-          0.8451972761917567,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9312087620153205
-        ],
-        [
-          0.9312087620153205,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Return1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8972672772522673
-        ],
-        [
-          0.8972672772522673,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9428090415820644
-        ],
-        [
-          0.9428090415820644,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8128002569531179
-        ],
-        [
-          0.8128002569531179,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9981255841065699
-        ],
-        [
-          0.9981255841065699,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Return2"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9279607271383371
-        ],
-        [
-          0.9279607271383371,
+          0.9999999999999999,
           1.0
         ]
       ],
@@ -3800,7 +879,133 @@
       "entity": "original",
       "fields": [
         "Gender",
-        "Name/Alias"
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7394501283891484
+        ],
+        [
+          0.7394501283891484,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9279607271383371
+        ],
+        [
+          0.9279607271383371,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "URL"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999997
+        ],
+        [
+          0.9999999999999997,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8128002569531227
+        ],
+        [
+          0.8128002569531227,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Honorary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5790001396218005
+        ],
+        [
+          0.5790001396218005,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Death1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8713548411865627
+        ],
+        [
+          0.8713548411865627,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Return1"
       ],
       "matrix": [
         [
@@ -3809,6 +1014,240 @@
         ],
         [
           1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Current?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6572585054332524
+        ],
+        [
+          0.6572585054332524,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "URL"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999724
+        ],
+        [
+          0.9999999999999724,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Return2"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Honorary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9312087620153202
+        ],
+        [
+          0.9312087620153202,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Death1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8451972761917566
+        ],
+        [
+          0.8451972761917566,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9428090415820642
+        ],
+        [
+          0.9428090415820642,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Return1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8972672772522673
+        ],
+        [
+          0.8972672772522673,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Current?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.892091164211846
+        ],
+        [
+          0.892091164211846,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "URL"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999111
+        ],
+        [
+          0.9999999999999111,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Return2"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Honorary",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Honorary",
+        "Current?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.357580429813995
+        ],
+        [
+          0.357580429813995,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Honorary",
+        "URL"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999999999999999
+        ],
+        [
+          0.999999999999999,
           1.0
         ]
       ],
@@ -3836,15 +1275,15 @@
       "entity": "original",
       "fields": [
         "Death1",
-        "Notes"
+        "URL"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.999999999999998
         ],
         [
-          1.0,
+          0.999999999999998,
           1.0
         ]
       ],
@@ -3853,80 +1292,8 @@
     {
       "entity": "original",
       "fields": [
-        "Death1",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Honorary",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Honorary",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5790001396218014
-        ],
-        [
-          0.5790001396218014,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Honorary",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9933847123915225
-        ],
-        [
-          0.9933847123915225,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Return1",
-        "Probationary Introl"
+        "Probationary Introl",
+        "Return1"
       ],
       "matrix": [
         [
@@ -3943,34 +1310,16 @@
     {
       "entity": "original",
       "fields": [
-        "Return1",
-        "Notes"
+        "Probationary Introl",
+        "Current?"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.8897565210026093
         ],
         [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Return1",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
+          0.8897565210026093,
           1.0
         ]
       ],
@@ -3980,583 +1329,7 @@
       "entity": "original",
       "fields": [
         "Probationary Introl",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8713548411865625
-        ],
-        [
-          0.8713548411865625,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Probationary Introl",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999991
-        ],
-        [
-          0.9999999999999991,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Name/Alias"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Return2"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Return2"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1",
-      "fields": [
-        "Sep-63",
-        "NO"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO",
-      "fields": [
-        "Mar-64",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES",
-      "fields": [
-        "YES",
-        "May-65"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES",
-      "fields": [
-        "YES",
-        "Sep-65"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999987
-        ],
-        [
-          0.9999999999999987,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES",
-      "fields": [
-        "Nov-68",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES",
-      "fields": [
-        "May-73",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return1__Sep-63_NO__Mar-64_YES__May-65_YES__Sep-65_YES__Nov-68_YES__May-73_YES",
-      "fields": [
-        "Aug-73",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2",
-      "fields": [
-        "Sep-63",
-        "NO"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO",
-      "fields": [
-        "May-65",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES",
-      "fields": [
-        "Sep-76",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES",
-      "fields": [
-        "NO",
-        "Aug-75"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO",
-      "fields": [
-        "Jul-78",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES",
-      "fields": [
-        "Nov-88",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Full_Reserve_Avengers_Intro_Return2__Sep-63_NO__May-65_YES__Sep-76_YES__Aug-75_NO__Jul-78_YES__Nov-88_YES",
-      "fields": [
-        "YES",
-        "Apr-87"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Current_",
-      "fields": [
-        "Jul-75",
-        "NO"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Current___Jul-75_NO",
-      "fields": [
-        "NO",
-        "Nov-75"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO",
-      "fields": [
-        "Apr-77",
-        "NO"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Current___Jul-75_NO__Nov-75_NO__Apr-77_NO",
-      "fields": [
-        "Jul-80",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender",
-      "fields": [
-        "Jul-75",
-        "MALE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender__Jul-75_MALE",
-      "fields": [
-        "FEMALE",
-        "Nov-75"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE",
-      "fields": [
-        "Apr-77",
-        "MALE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE",
-      "fields": [
-        "Jul-80",
-        "FEMALE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE",
-      "fields": [
-        "FEMALE",
-        "Jan-83"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE",
-      "fields": [
-        "MALE",
-        "Jun-83"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__Probationary_Introl_Gender__Jul-75_MALE__Nov-75_FEMALE__Apr-77_MALE__Jul-80_FEMALE__Jan-83_FEMALE__Jun-83_MALE",
-      "fields": [
-        "May-84",
-        "MALE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Death1",
-      "fields": [
-        "http://marvel.wikia.com/Henry_Pym_(Earth-616)",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES",
-      "fields": [
-        "YES",
-        "http://marvel.wikia.com/Janet_van_Dyne_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999961
-        ],
-        [
-          0.9999999999999961,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES",
-      "fields": [
-        "YES",
-        "http://marvel.wikia.com/Anthony_Stark_(Earth-616)"
+        "URL"
       ],
       "matrix": [
         [
@@ -4571,64 +1344,10 @@
       "conditional": []
     },
     {
-      "entity": "original__URL_Death1__http___marvel_wikia_com_Henry_Pym__Earth-616__YES__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__YES__http___marvel_wikia_com_Anthony_Stark__Earth-616__YES",
+      "entity": "original",
       "fields": [
-        "YES",
-        "http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Death2",
-      "fields": [
-        "http://marvel.wikia.com/Thor_Odinson_(Earth-616)",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES",
-      "fields": [
-        "http://marvel.wikia.com/Clint_Barton_(Earth-616)",
-        "YES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES",
-      "fields": [
-        "http://marvel.wikia.com/Heather_Douglas_(Earth-616)#",
-        "YES"
+        "Return1",
+        "URL"
       ],
       "matrix": [
         [
@@ -4643,82 +1362,28 @@
       "conditional": []
     },
     {
-      "entity": "original__URL_Death2__http___marvel_wikia_com_Thor_Odinson__Earth-616__YES__http___marvel_wikia_com_Clint_Barton__Earth-616__YES__http___marvel_wikia_com_Heather_Douglas__Earth-616___YES",
+      "entity": "original",
       "fields": [
-        "YES",
-        "http://marvel.wikia.com/Matthew_Hawk_(Earth-616)#"
+        "Current?",
+        "URL"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9999999999999998
         ],
         [
-          1.0,
+          0.9999999999999998,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__URL_Gender",
+      "entity": "original",
       "fields": [
-        "MALE",
-        "http://marvel.wikia.com/Henry_Pym_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE",
-      "fields": [
-        "http://marvel.wikia.com/Janet_van_Dyne_(Earth-616)",
-        "FEMALE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE",
-      "fields": [
-        "http://marvel.wikia.com/Anthony_Stark_(Earth-616)",
-        "MALE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999999999
-        ],
-        [
-          0.999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__URL_Gender__http___marvel_wikia_com_Henry_Pym__Earth-616__MALE__http___marvel_wikia_com_Janet_van_Dyne__Earth-616__FEMALE__http___marvel_wikia_com_Anthony_Stark__Earth-616__MALE",
-      "fields": [
-        "http://marvel.wikia.com/Robert_Bruce_Banner_(Earth-616)",
-        "MALE"
+        "URL",
+        "Return2"
       ],
       "matrix": [
         [

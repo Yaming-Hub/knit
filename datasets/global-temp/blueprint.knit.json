@@ -119,8 +119,8 @@
     {
       "entity": "original",
       "fields": [
-        "year",
-        "temp"
+        "temp",
+        "year"
       ],
       "matrix": [
         [
@@ -137,8 +137,8 @@
     {
       "entity": "original",
       "fields": [
-        "year",
-        "temp"
+        "temp",
+        "year"
       ],
       "matrix": [
         [

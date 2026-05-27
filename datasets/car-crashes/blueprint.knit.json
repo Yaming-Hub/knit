@@ -383,52 +383,16 @@
     {
       "entity": "original",
       "fields": [
-        "ins_losses",
-        "ins_premium"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.623116438519707
-        ],
-        [
-          0.623116438519707,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ins_losses",
-        "ins_premium"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6466968325791855
-        ],
-        [
-          0.6466968325791855,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "speeding",
+        "not_distracted",
         "no_previous"
       ],
       "matrix": [
         [
           1.0,
-          0.5719755301227495
+          0.7473065439024139
         ],
         [
-          0.5719755301227495,
+          0.7473065439024139,
           1.0
         ]
       ],
@@ -437,16 +401,16 @@
     {
       "entity": "original",
       "fields": [
-        "speeding",
+        "not_distracted",
         "no_previous"
       ],
       "matrix": [
         [
           1.0,
-          0.5416987193990679
+          0.7981356622471605
         ],
         [
-          0.5416987193990679,
+          0.7981356622471605,
           1.0
         ]
       ],
@@ -455,52 +419,16 @@
     {
       "entity": "original",
       "fields": [
-        "speeding",
-        "total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6115476008001184
-        ],
-        [
-          0.6115476008001184,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "speeding",
-        "total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5593646088343495
-        ],
-        [
-          0.5593646088343495,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "speeding",
+        "not_distracted",
         "alcohol"
       ],
       "matrix": [
         [
           1.0,
-          0.6697185644227318
+          0.7328163816427737
         ],
         [
-          0.6697185644227318,
+          0.7328163816427737,
           1.0
         ]
       ],
@@ -509,16 +437,16 @@
     {
       "entity": "original",
       "fields": [
-        "speeding",
+        "not_distracted",
         "alcohol"
       ],
       "matrix": [
         [
           1.0,
-          0.6426535137336531
+          0.7969591384225531
         ],
         [
-          0.6426535137336531,
+          0.7969591384225531,
           1.0
         ]
       ],
@@ -527,8 +455,44 @@
     {
       "entity": "original",
       "fields": [
-        "speeding",
-        "not_distracted"
+        "not_distracted",
+        "total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8275603520837714
+        ],
+        [
+          0.8275603520837714,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "not_distracted",
+        "total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.877605056190591
+        ],
+        [
+          0.877605056190591,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "not_distracted",
+        "speeding"
       ],
       "matrix": [
         [
@@ -545,8 +509,8 @@
     {
       "entity": "original",
       "fields": [
-        "speeding",
-        "not_distracted"
+        "not_distracted",
+        "speeding"
       ],
       "matrix": [
         [
@@ -555,42 +519,6 @@
         ],
         [
           0.5628761482420019,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "no_previous",
-        "total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9561791745723076
-        ],
-        [
-          0.9561791745723076,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "no_previous",
-        "total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9582060568648609
-        ],
-        [
-          0.9582060568648609,
           1.0
         ]
       ],
@@ -636,15 +564,15 @@
       "entity": "original",
       "fields": [
         "no_previous",
-        "not_distracted"
+        "total"
       ],
       "matrix": [
         [
           1.0,
-          0.7473065439024139
+          0.9561791745723076
         ],
         [
-          0.7473065439024139,
+          0.9561791745723076,
           1.0
         ]
       ],
@@ -654,15 +582,15 @@
       "entity": "original",
       "fields": [
         "no_previous",
-        "not_distracted"
+        "total"
       ],
       "matrix": [
         [
           1.0,
-          0.7981356622471605
+          0.9582060568648609
         ],
         [
-          0.7981356622471605,
+          0.9582060568648609,
           1.0
         ]
       ],
@@ -671,8 +599,80 @@
     {
       "entity": "original",
       "fields": [
-        "total",
-        "alcohol"
+        "no_previous",
+        "speeding"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5719755301227495
+        ],
+        [
+          0.5719755301227495,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "no_previous",
+        "speeding"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5416987193990679
+        ],
+        [
+          0.5416987193990679,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "ins_premium",
+        "ins_losses"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.623116438519707
+        ],
+        [
+          0.623116438519707,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "ins_premium",
+        "ins_losses"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6466968325791855
+        ],
+        [
+          0.6466968325791855,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "alcohol",
+        "total"
       ],
       "matrix": [
         [
@@ -689,8 +689,8 @@
     {
       "entity": "original",
       "fields": [
-        "total",
-        "alcohol"
+        "alcohol",
+        "total"
       ],
       "matrix": [
         [
@@ -707,34 +707,16 @@
     {
       "entity": "original",
       "fields": [
-        "total",
-        "not_distracted"
+        "alcohol",
+        "speeding"
       ],
       "matrix": [
         [
           1.0,
-          0.8275603520837714
+          0.6697185644227318
         ],
         [
-          0.8275603520837714,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total",
-        "not_distracted"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.877605056190591
-        ],
-        [
-          0.877605056190591,
+          0.6697185644227318,
           1.0
         ]
       ],
@@ -744,15 +726,15 @@
       "entity": "original",
       "fields": [
         "alcohol",
-        "not_distracted"
+        "speeding"
       ],
       "matrix": [
         [
           1.0,
-          0.7328163816427737
+          0.6426535137336531
         ],
         [
-          0.7328163816427737,
+          0.6426535137336531,
           1.0
         ]
       ],
@@ -761,16 +743,34 @@
     {
       "entity": "original",
       "fields": [
-        "alcohol",
-        "not_distracted"
+        "total",
+        "speeding"
       ],
       "matrix": [
         [
           1.0,
-          0.7969591384225531
+          0.6115476008001184
         ],
         [
-          0.7969591384225531,
+          0.6115476008001184,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total",
+        "speeding"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5593646088343495
+        ],
+        [
+          0.5593646088343495,
           1.0
         ]
       ],

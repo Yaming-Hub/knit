@@ -372,6 +372,24 @@
     {
       "entity": "original",
       "fields": [
+        "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired",
+        "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3676719596921529
+        ],
+        [
+          0.3676719596921529,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
         "Car Insurance Premiums ($)",
         "Losses incurred by insurance companies for collisions per insured driver ($)"
       ],
@@ -400,24 +418,6 @@
         ],
         [
           0.6466968325791855,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Percentage Of Drivers Involved In Fatal Collisions Who Were Alcohol-Impaired",
-        "Percentage Of Drivers Involved In Fatal Collisions Who Were Speeding"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3676719596921529
-        ],
-        [
-          0.3676719596921529,
           1.0
         ]
       ],

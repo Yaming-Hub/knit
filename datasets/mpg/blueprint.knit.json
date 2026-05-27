@@ -9,266 +9,6 @@
   },
   "entities": [
     {
-      "name": "mpg_original__name_origin",
-      "count": 304,
-      "fields": [
-        {
-          "name": "chevrolet chevelle malibu",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "mpg_original__name_origin_chevrolet_chevelle_malibu.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 304,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.62171052631579
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "chevrolet chevelle malibu",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9671052631578947
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 304
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa",
-      "count": 303,
-      "fields": [
-        {
-          "name": "buick skylark 320",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa_buick_skylark_320.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 303,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.620462046204622
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "buick skylark 320",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9702970297029703
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 303
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa",
-      "count": 302,
-      "fields": [
-        {
-          "name": "plymouth satellite",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa_plymouth_satellite.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 302,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.6158940397351
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "plymouth satellite",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9735099337748343
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 302
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa",
-      "count": 301,
-      "fields": [
-        {
-          "name": "amc rebel sst",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa_amc_rebel_sst.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 301,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.627906976744185
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "amc rebel sst",
-            "file": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa__amc_rebel_sst_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9767441860465116
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 301
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
       "name": "original",
       "count": 398,
       "fields": [
@@ -521,15 +261,7 @@
                 "weight": 0.07537688442211055
               },
               {
-                "value": 81,
-                "weight": 0.0728643216080402
-              },
-              {
                 "value": 70,
-                "weight": 0.0728643216080402
-              },
-              {
-                "value": 79,
                 "weight": 0.0728643216080402
               },
               {
@@ -537,7 +269,15 @@
                 "weight": 0.0728643216080402
               },
               {
-                "value": 71,
+                "value": 79,
+                "weight": 0.0728643216080402
+              },
+              {
+                "value": 81,
+                "weight": 0.0728643216080402
+              },
+              {
+                "value": 77,
                 "weight": 0.07035175879396985
               },
               {
@@ -545,7 +285,7 @@
                 "weight": 0.07035175879396985
               },
               {
-                "value": 77,
+                "value": 71,
                 "weight": 0.07035175879396985
               },
               {
@@ -761,694 +501,9 @@
         "column": "model_year",
         "direction": "asc"
       }
-    },
-    {
-      "name": "original__name_origin",
-      "count": 304,
-      "fields": [
-        {
-          "name": "chevrolet chevelle malibu",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__name_origin_chevrolet_chevelle_malibu.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 304,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.62171052631579
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "chevrolet chevelle malibu",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9671052631578947
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 304
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__name_origin__chevrolet_chevelle_malibu_usa",
-      "count": 303,
-      "fields": [
-        {
-          "name": "buick skylark 320",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa_buick_skylark_320.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 303,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.620462046204622
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "buick skylark 320",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9702970297029703
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 303
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa",
-      "count": 302,
-      "fields": [
-        {
-          "name": "plymouth satellite",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa_plymouth_satellite.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 302,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.6158940397351
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "plymouth satellite",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9735099337748343
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 302
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa",
-      "count": 301,
-      "fields": [
-        {
-          "name": "amc rebel sst",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa_amc_rebel_sst.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 301,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.627906976744185
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "amc rebel sst",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa__amc_rebel_sst_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.9767441860465116
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 301
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa__amc_rebel_sst_usa",
-      "count": 300,
-      "fields": [
-        {
-          "name": "ford torino",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa__amc_rebel_sst_usa_ford_torino.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 300,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 36,
-            "avg_length": 16.64666666666667
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "usa",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "ford torino",
-            "file": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa__amc_rebel_sst_usa__ford_torino_usa.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 3,
-            "max_length": 6,
-            "avg_length": 3.98
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 300
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "usa",
-            "field": "usa",
-            "cardinality": 3
-          }
-        ]
-      }
     }
   ],
   "correlations": [
-    {
-      "entity": "mpg_original__name_origin",
-      "fields": [
-        "usa",
-        "chevrolet chevelle malibu"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999942
-        ],
-        [
-          0.9999999999999942,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa",
-      "fields": [
-        "buick skylark 320",
-        "usa"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999978
-        ],
-        [
-          0.9999999999999978,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa",
-      "fields": [
-        "plymouth satellite",
-        "usa"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "mpg_original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa",
-      "fields": [
-        "amc rebel sst",
-        "usa"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "horsepower"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.7784267838977751
-        ],
-        [
-          -0.7784267838977751,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "horsepower"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.8536164024453882
-        ],
-        [
-          -0.8536164024453882,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "cylinders"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.7753962854205557
-        ],
-        [
-          -0.7753962854205557,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "cylinders"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.8218644914450964
-        ],
-        [
-          -0.8218644914450964,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "weight"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.8317409332443352
-        ],
-        [
-          -0.8317409332443352,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "weight"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.8749473981990712
-        ],
-        [
-          -0.8749473981990712,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "acceleration"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.42028891210165037
-        ],
-        [
-          0.42028891210165037,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "acceleration"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.43867747957086217
-        ],
-        [
-          0.43867747957086217,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "model_year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5792671330833096
-        ],
-        [
-          0.5792671330833096,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "model_year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.573468703192175
-        ],
-        [
-          0.573468703192175,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "displacement"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.8042028248058989
-        ],
-        [
-          -0.8042028248058989,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mpg",
-        "displacement"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.8556920118178749
-        ],
-        [
-          -0.8556920118178749,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "horsepower",
-        "cylinders"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8429833569186564
-        ],
-        [
-          0.8429833569186564,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "horsepower",
-        "cylinders"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8161884518191116
-        ],
-        [
-          0.8161884518191116,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "horsepower",
-        "weight"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8645377375741428
-        ],
-        [
-          0.8645377375741428,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "horsepower",
-        "weight"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8788193253461962
-        ],
-        [
-          0.8788193253461962,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -1525,6 +580,42 @@
       "entity": "original",
       "fields": [
         "horsepower",
+        "cylinders"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8429833569186564
+        ],
+        [
+          0.8429833569186564,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "horsepower",
+        "cylinders"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8161884518191116
+        ],
+        [
+          0.8161884518191116,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "horsepower",
         "displacement"
       ],
       "matrix": [
@@ -1560,16 +651,16 @@
     {
       "entity": "original",
       "fields": [
-        "cylinders",
-        "weight"
+        "horsepower",
+        "mpg"
       ],
       "matrix": [
         [
           1.0,
-          0.8960167954533957
+          -0.7784267838977751
         ],
         [
-          0.8960167954533957,
+          -0.7784267838977751,
           1.0
         ]
       ],
@@ -1578,16 +669,16 @@
     {
       "entity": "original",
       "fields": [
-        "cylinders",
-        "weight"
+        "horsepower",
+        "mpg"
       ],
       "matrix": [
         [
           1.0,
-          0.8733135587408114
+          -0.8536164024453882
         ],
         [
-          0.8733135587408114,
+          -0.8536164024453882,
           1.0
         ]
       ],
@@ -1596,8 +687,44 @@
     {
       "entity": "original",
       "fields": [
-        "cylinders",
-        "acceleration"
+        "horsepower",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8645377375741428
+        ],
+        [
+          0.8645377375741428,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "horsepower",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8788193253461962
+        ],
+        [
+          0.8788193253461962,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "acceleration",
+        "cylinders"
       ],
       "matrix": [
         [
@@ -1614,8 +741,8 @@
     {
       "entity": "original",
       "fields": [
-        "cylinders",
-        "acceleration"
+        "acceleration",
+        "cylinders"
       ],
       "matrix": [
         [
@@ -1624,168 +751,6 @@
         ],
         [
           -0.4741890658657841,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "cylinders",
-        "model_year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3487457966135948
-        ],
-        [
-          -0.3487457966135948,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "cylinders",
-        "model_year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.33501238723038046
-        ],
-        [
-          -0.33501238723038046,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "cylinders",
-        "displacement"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9507213901392443
-        ],
-        [
-          0.9507213901392443,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "cylinders",
-        "displacement"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9118759147045389
-        ],
-        [
-          0.9118759147045389,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "weight",
-        "acceleration"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.4174573199403935
-        ],
-        [
-          -0.4174573199403935,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "weight",
-        "acceleration"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.40455037229022456
-        ],
-        [
-          -0.40455037229022456,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "weight",
-        "model_year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3065643342832897
-        ],
-        [
-          -0.3065643342832897,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "weight",
-        "displacement"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9328241468416345
-        ],
-        [
-          0.9328241468416345,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "weight",
-        "displacement"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9459855641801795
-        ],
-        [
-          0.9459855641801795,
           1.0
         ]
       ],
@@ -1830,6 +795,114 @@
     {
       "entity": "original",
       "fields": [
+        "acceleration",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.42028891210165037
+        ],
+        [
+          0.42028891210165037,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "acceleration",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.43867747957086217
+        ],
+        [
+          0.43867747957086217,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "acceleration",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.4174573199403935
+        ],
+        [
+          -0.4174573199403935,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "acceleration",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.40455037229022456
+        ],
+        [
+          -0.40455037229022456,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "model_year",
+        "cylinders"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3487457966135948
+        ],
+        [
+          -0.3487457966135948,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "model_year",
+        "cylinders"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.33501238723038046
+        ],
+        [
+          -0.33501238723038046,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
         "model_year",
         "displacement"
       ],
@@ -1866,16 +939,286 @@
     {
       "entity": "original",
       "fields": [
+        "model_year",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5792671330833096
+        ],
+        [
+          0.5792671330833096,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "model_year",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.573468703192175
+        ],
+        [
+          0.573468703192175,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "model_year",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3065643342832897
+        ],
+        [
+          -0.3065643342832897,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "cylinders",
+        "displacement"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9507213901392443
+        ],
+        [
+          0.9507213901392443,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "cylinders",
+        "displacement"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9118759147045389
+        ],
+        [
+          0.9118759147045389,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "cylinders",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.7753962854205557
+        ],
+        [
+          -0.7753962854205557,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "cylinders",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.8218644914450964
+        ],
+        [
+          -0.8218644914450964,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "cylinders",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8960167954533957
+        ],
+        [
+          0.8960167954533957,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "cylinders",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8733135587408114
+        ],
+        [
+          0.8733135587408114,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "displacement",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.8042028248058989
+        ],
+        [
+          -0.8042028248058989,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "displacement",
+        "mpg"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.8556920118178749
+        ],
+        [
+          -0.8556920118178749,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "displacement",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9328241468416345
+        ],
+        [
+          0.9328241468416345,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "displacement",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9459855641801795
+        ],
+        [
+          0.9459855641801795,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mpg",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.8317409332443352
+        ],
+        [
+          -0.8317409332443352,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mpg",
+        "weight"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.8749473981990712
+        ],
+        [
+          -0.8749473981990712,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
         "name",
         "origin"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999982
+          0.9999999999999989
         ],
         [
-          0.9999999999999982,
+          0.9999999999999989,
           1.0
         ]
       ],
@@ -1887,156 +1230,24 @@
       "fields": [],
       "matrix": [],
       "conditional": [],
-      "dependent": "mpg",
-      "given": "origin",
-      "distributions": [
-        {
-          "when": "japan",
-          "distribution": "normal",
-          "params": {
-            "mean": 30.450632911392397,
-            "std_dev": 6.051380706928184
-          }
-        },
-        {
-          "when": "usa",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.9521321458985432,
-            "sigma": 0.30648791268494596
-          }
-        },
-        {
-          "when": "europe",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.3005717450499628,
-            "sigma": 0.235026576032752
-          }
-        }
-      ],
-      "default": {
-        "kind": "gamma",
-        "params": {
-          "scale": 2.5914193569033355,
-          "shape": 9.07401297350066
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "horsepower",
-      "given": "origin",
-      "distributions": [
-        {
-          "when": "japan",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 4.356343630928012,
-            "sigma": 0.2157666704621968
-          },
-          "round": true
-        },
-        {
-          "when": "usa",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 4.726435323609734,
-            "sigma": 0.323285562414901
-          },
-          "round": true
-        },
-        {
-          "when": "europe",
-          "distribution": "gamma",
-          "params": {
-            "scale": 4.96983656551339,
-            "shape": 16.209551856981427
-          },
-          "round": true
-        }
-      ],
-      "default": {
-        "kind": "log_normal",
-        "params": {
-          "mu": 4.587931382423751,
-          "sigma": 0.3429406140914995
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "cylinders",
-      "given": "origin",
-      "distributions": [
-        {
-          "when": "japan",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 1.4025229985735852,
-            "sigma": 0.12811434258904958
-          },
-          "round": true
-        },
-        {
-          "when": "usa",
-          "distribution": "uniform",
-          "params": {
-            "max": 8.0,
-            "min": 4.0
-          },
-          "round": true
-        },
-        {
-          "when": "europe",
-          "distribution": "pareto",
-          "params": {
-            "scale": 4.0,
-            "shape": 30.550461447801755
-          },
-          "round": true
-        }
-      ],
-      "default": {
-        "kind": "uniform",
-        "params": {
-          "max": 8.0,
-          "min": 3.0
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
       "dependent": "weight",
       "given": "origin",
       "distributions": [
-        {
-          "when": "japan",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.695766182943783,
-            "sigma": 0.14117838226907867
-          },
-          "round": true
-        },
         {
           "when": "usa",
           "distribution": "gamma",
           "params": {
             "scale": 187.14187296622293,
             "shape": 17.964615153308966
+          },
+          "round": true
+        },
+        {
+          "when": "japan",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.695766182943783,
+            "sigma": 0.14117838226907867
           },
           "round": true
         },
@@ -2064,6 +1275,93 @@
       "fields": [],
       "matrix": [],
       "conditional": [],
+      "dependent": "cylinders",
+      "given": "origin",
+      "distributions": [
+        {
+          "when": "japan",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 1.4025229985735852,
+            "sigma": 0.12811434258904958
+          },
+          "round": true
+        },
+        {
+          "when": "europe",
+          "distribution": "pareto",
+          "params": {
+            "scale": 4.0,
+            "shape": 30.550461447801755
+          },
+          "round": true
+        },
+        {
+          "when": "usa",
+          "distribution": "uniform",
+          "params": {
+            "max": 8.0,
+            "min": 4.0
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "uniform",
+        "params": {
+          "max": 8.0,
+          "min": 3.0
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "mpg",
+      "given": "origin",
+      "distributions": [
+        {
+          "when": "europe",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.3005717450499628,
+            "sigma": 0.235026576032752
+          }
+        },
+        {
+          "when": "usa",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.9521321458985432,
+            "sigma": 0.30648791268494596
+          }
+        },
+        {
+          "when": "japan",
+          "distribution": "normal",
+          "params": {
+            "mean": 30.450632911392397,
+            "std_dev": 6.051380706928184
+          }
+        }
+      ],
+      "default": {
+        "kind": "gamma",
+        "params": {
+          "scale": 2.5914193569033355,
+          "shape": 9.07401297350066
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
       "dependent": "displacement",
       "given": "origin",
       "distributions": [
@@ -2076,19 +1374,19 @@
           }
         },
         {
-          "when": "japan",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 4.608685402686416,
-            "sigma": 0.2121496583603339
-          }
-        },
-        {
           "when": "usa",
           "distribution": "uniform",
           "params": {
             "max": 455.0,
             "min": 85.0
+          }
+        },
+        {
+          "when": "japan",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 4.608685402686416,
+            "sigma": 0.2121496583603339
           }
         }
       ],
@@ -2101,94 +1399,49 @@
       }
     },
     {
-      "entity": "original__name_origin",
-      "fields": [
-        "usa",
-        "chevrolet chevelle malibu"
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "horsepower",
+      "given": "origin",
+      "distributions": [
+        {
+          "when": "japan",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 4.356343630928012,
+            "sigma": 0.2157666704621968
+          },
+          "round": true
+        },
+        {
+          "when": "europe",
+          "distribution": "gamma",
+          "params": {
+            "scale": 4.96983656551339,
+            "shape": 16.209551856981427
+          },
+          "round": true
+        },
+        {
+          "when": "usa",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 4.726435323609734,
+            "sigma": 0.323285562414901
+          },
+          "round": true
+        }
       ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_origin__chevrolet_chevelle_malibu_usa",
-      "fields": [
-        "buick skylark 320",
-        "usa"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999978
-        ],
-        [
-          0.9999999999999978,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa",
-      "fields": [
-        "usa",
-        "plymouth satellite"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa",
-      "fields": [
-        "usa",
-        "amc rebel sst"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999997
-        ],
-        [
-          0.9999999999999997,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_origin__chevrolet_chevelle_malibu_usa__buick_skylark_320_usa__plymouth_satellite_usa__amc_rebel_sst_usa",
-      "fields": [
-        "usa",
-        "ford torino"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
+      "default": {
+        "kind": "log_normal",
+        "params": {
+          "mu": 4.587931382423751,
+          "sigma": 0.3429406140914995
+        }
+      }
     }
   ]
 }

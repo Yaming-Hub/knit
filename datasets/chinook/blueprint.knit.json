@@ -233,8 +233,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 4
           },
           "nullable": false,
@@ -254,9 +254,10 @@
           "name": "LastName",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "customer_LastName.dict.txt",
-            "expansion": "sample"
+            "type": "tuple_lookup",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "column": 2
           },
           "nullable": false,
           "stats": {
@@ -276,8 +277,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 10
           },
           "nullable": {
@@ -299,10 +300,9 @@
           "name": "Address",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
-            "column": 1
+            "type": "dictionary",
+            "file": "customer_Address.dict.txt",
+            "expansion": "sample"
           },
           "nullable": false,
           "stats": {
@@ -322,8 +322,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 6
           },
           "nullable": false,
@@ -344,8 +344,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 7
           },
           "nullable": {
@@ -368,8 +368,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 8
           },
           "nullable": false,
@@ -390,8 +390,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 5
           },
           "nullable": {
@@ -414,8 +414,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 3
           },
           "nullable": {
@@ -438,8 +438,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
             "column": 9
           },
           "nullable": {
@@ -462,9 +462,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "LastName",
-            "file": "customer__LastName_Address_Email_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
-            "column": 2
+            "source_field": "Address",
+            "file": "customer__Address_Email_LastName_Phone_FirstName_PostalCode_City_State_Country_Fax_Company.tsv",
+            "column": 1
           },
           "nullable": false,
           "stats": {
@@ -610,9 +610,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
-            "column": 5
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
+            "column": 2
           },
           "nullable": false,
           "stats": {
@@ -631,10 +631,9 @@
           "name": "FirstName",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
-            "column": 3
+            "type": "dictionary",
+            "file": "employee_FirstName.dict.txt",
+            "expansion": "shuffle"
           },
           "nullable": false,
           "stats": {
@@ -654,8 +653,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
             "column": 7
           },
           "nullable": false,
@@ -763,9 +762,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
-            "column": 1
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
+            "column": 5
           },
           "nullable": false,
           "stats": {
@@ -785,8 +784,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
             "column": 8
           },
           "nullable": false,
@@ -857,9 +856,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
-            "column": 2
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
+            "column": 1
           },
           "nullable": false,
           "stats": {
@@ -879,8 +878,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
             "column": 6
           },
           "nullable": false,
@@ -901,9 +900,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "Email",
-            "file": "employee__Email_Address_PostalCode_FirstName_Fax_LastName_Phone_Title_City.tsv",
-            "column": 4
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
+            "column": 3
           },
           "nullable": false,
           "stats": {
@@ -922,9 +921,10 @@
           "name": "Email",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "employee_Email.dict.txt",
-            "expansion": "shuffle"
+            "type": "tuple_lookup",
+            "source_field": "FirstName",
+            "file": "employee__FirstName_PostalCode_LastName_Fax_Email_Address_Phone_Title_City.tsv",
+            "column": 4
           },
           "nullable": false,
           "stats": {
@@ -1067,35 +1067,7 @@
             "type": "one_of",
             "choices": [
               {
-                "value": "Latin",
-                "weight": 0.04
-              },
-              {
-                "value": "Pop",
-                "weight": 0.04
-              },
-              {
                 "value": "Metal",
-                "weight": 0.04
-              },
-              {
-                "value": "Alternative",
-                "weight": 0.04
-              },
-              {
-                "value": "Easy Listening",
-                "weight": 0.04
-              },
-              {
-                "value": "Drama",
-                "weight": 0.04
-              },
-              {
-                "value": "Heavy Metal",
-                "weight": 0.04
-              },
-              {
-                "value": "Bossa Nova",
                 "weight": 0.04
               },
               {
@@ -1103,31 +1075,7 @@
                 "weight": 0.04
               },
               {
-                "value": "Electronica/Dance",
-                "weight": 0.04
-              },
-              {
-                "value": "TV Shows",
-                "weight": 0.04
-              },
-              {
-                "value": "Soundtrack",
-                "weight": 0.04
-              },
-              {
-                "value": "Science Fiction",
-                "weight": 0.04
-              },
-              {
-                "value": "Sci Fi & Fantasy",
-                "weight": 0.04
-              },
-              {
-                "value": "Rock And Roll",
-                "weight": 0.04
-              },
-              {
-                "value": "Rock",
+                "value": "Heavy Metal",
                 "weight": 0.04
               },
               {
@@ -1135,7 +1083,11 @@
                 "weight": 0.04
               },
               {
-                "value": "Alternative & Punk",
+                "value": "Science Fiction",
+                "weight": 0.04
+              },
+              {
+                "value": "Easy Listening",
                 "weight": 0.04
               },
               {
@@ -1147,15 +1099,11 @@
                 "weight": 0.04
               },
               {
-                "value": "Hip Hop/Rap",
-                "weight": 0.04
-              },
-              {
-                "value": "Classical",
-                "weight": 0.04
-              },
-              {
                 "value": "Comedy",
+                "weight": 0.04
+              },
+              {
+                "value": "Alternative & Punk",
                 "weight": 0.04
               },
               {
@@ -1163,7 +1111,59 @@
                 "weight": 0.04
               },
               {
+                "value": "Electronica/Dance",
+                "weight": 0.04
+              },
+              {
+                "value": "TV Shows",
+                "weight": 0.04
+              },
+              {
+                "value": "Alternative",
+                "weight": 0.04
+              },
+              {
+                "value": "Rock And Roll",
+                "weight": 0.04
+              },
+              {
+                "value": "Classical",
+                "weight": 0.04
+              },
+              {
+                "value": "Rock",
+                "weight": 0.04
+              },
+              {
+                "value": "Sci Fi & Fantasy",
+                "weight": 0.04
+              },
+              {
+                "value": "Drama",
+                "weight": 0.04
+              },
+              {
+                "value": "Bossa Nova",
+                "weight": 0.04
+              },
+              {
                 "value": "Blues",
+                "weight": 0.04
+              },
+              {
+                "value": "Soundtrack",
+                "weight": 0.04
+              },
+              {
+                "value": "Latin",
+                "weight": 0.04
+              },
+              {
+                "value": "Hip Hop/Rap",
+                "weight": 0.04
+              },
+              {
+                "value": "Pop",
                 "weight": 0.04
               }
             ]
@@ -1755,7 +1755,7 @@
             "type": "one_of",
             "choices": [
               {
-                "value": "Protected MPEG-4 video file",
+                "value": "Purchased AAC audio file",
                 "weight": 0.2
               },
               {
@@ -1763,15 +1763,15 @@
                 "weight": 0.2
               },
               {
-                "value": "Purchased AAC audio file",
-                "weight": 0.2
-              },
-              {
-                "value": "MPEG audio file",
+                "value": "Protected MPEG-4 video file",
                 "weight": 0.2
               },
               {
                 "value": "Protected AAC audio file",
+                "weight": 0.2
+              },
+              {
+                "value": "MPEG audio file",
                 "weight": 0.2
               }
             ]
@@ -1864,7 +1864,7 @@
                 "weight": 0.1111111111111111
               },
               {
-                "value": "Movies",
+                "value": "Music",
                 "weight": 0.1111111111111111
               },
               {
@@ -1872,15 +1872,11 @@
                 "weight": 0.1111111111111111
               },
               {
-                "value": "Music",
+                "value": "Movies",
                 "weight": 0.1111111111111111
               },
               {
-                "value": "90’s Music",
-                "weight": 0.05555555555555555
-              },
-              {
-                "value": "Brazilian Music",
+                "value": "Grunge",
                 "weight": 0.05555555555555555
               },
               {
@@ -1888,7 +1884,11 @@
                 "weight": 0.05555555555555555
               },
               {
-                "value": "Music Videos",
+                "value": "Classical 101 - Next Steps",
+                "weight": 0.05555555555555555
+              },
+              {
+                "value": "90’s Music",
                 "weight": 0.05555555555555555
               },
               {
@@ -1896,7 +1896,7 @@
                 "weight": 0.05555555555555555
               },
               {
-                "value": "Grunge",
+                "value": "Brazilian Music",
                 "weight": 0.05555555555555555
               },
               {
@@ -1904,15 +1904,15 @@
                 "weight": 0.05555555555555555
               },
               {
-                "value": "Classical",
-                "weight": 0.05555555555555555
-              },
-              {
                 "value": "Classical 101 - The Basics",
                 "weight": 0.05555555555555555
               },
               {
-                "value": "Classical 101 - Next Steps",
+                "value": "Classical",
+                "weight": 0.05555555555555555
+              },
+              {
+                "value": "Music Videos",
                 "weight": 0.05555555555555555
               }
             ]
@@ -2531,8 +2531,8 @@
     {
       "entity": "album",
       "fields": [
-        "AlbumId",
-        "ArtistId"
+        "ArtistId",
+        "AlbumId"
       ],
       "matrix": [
         [
@@ -2549,8 +2549,8 @@
     {
       "entity": "album",
       "fields": [
-        "AlbumId",
-        "ArtistId"
+        "ArtistId",
+        "AlbumId"
       ],
       "matrix": [
         [
@@ -2567,12 +2567,120 @@
     {
       "entity": "customer",
       "fields": [
-        "Phone",
+        "FirstName",
+        "Country"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9876960454820386
+        ],
+        [
+          0.9876960454820386,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "FirstName",
+        "LastName"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "FirstName",
         "PostalCode"
       ],
       "matrix": [
         [
           1.0,
+          0.9999999999999921
+        ],
+        [
+          0.9999999999999921,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "FirstName",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9830290707024827
+        ],
+        [
+          0.9830290707024827,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "FirstName",
+        "Company"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999997
+        ],
+        [
+          0.9999999999999997,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "FirstName",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999637
+        ],
+        [
+          0.9999999999999637,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "FirstName",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
           1.0
         ],
         [
@@ -2585,16 +2693,16 @@
     {
       "entity": "customer",
       "fields": [
-        "Phone",
+        "FirstName",
         "Fax"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999989
+          0.9999999999999991
         ],
         [
-          0.9999999999999989,
+          0.9999999999999991,
           1.0
         ]
       ],
@@ -2603,34 +2711,16 @@
     {
       "entity": "customer",
       "fields": [
-        "Phone",
-        "City"
+        "FirstName",
+        "Email"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999639
-        ],
-        [
-          0.9999999999999639,
           1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Phone",
-        "Address"
-      ],
-      "matrix": [
+        ],
         [
           1.0,
-          0.9999999999999611
-        ],
-        [
-          0.9999999999999611,
           1.0
         ]
       ],
@@ -2639,736 +2729,16 @@
     {
       "entity": "customer",
       "fields": [
-        "Phone",
+        "FirstName",
         "State"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9646530752325218
         ],
         [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Phone",
-        "Country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999947
-        ],
-        [
-          0.9999999999999947,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Phone",
-        "LastName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999999961
-        ],
-        [
-          0.999999999999961,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Phone",
-        "Company"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999994
-        ],
-        [
-          0.9999999999999994,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Phone",
-        "FirstName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999629
-        ],
-        [
-          0.9999999999999629,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Phone",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999611
-        ],
-        [
-          0.9999999999999611,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999994
-        ],
-        [
-          0.9999999999999994,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "City"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999923
-        ],
-        [
-          0.9999999999999923,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999926
-        ],
-        [
-          0.9999999999999926,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "State"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "Country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999961
-        ],
-        [
-          0.9999999999999961,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "LastName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999926
-        ],
-        [
-          0.9999999999999926,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "Company"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "FirstName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999922
-        ],
-        [
-          0.9999999999999922,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "PostalCode",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999923
-        ],
-        [
-          0.9999999999999923,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "City"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999992
-        ],
-        [
-          0.9999999999999992,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "State"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "Country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "LastName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999987
-        ],
-        [
-          0.9999999999999987,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "Company"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "FirstName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999989
-        ],
-        [
-          0.9999999999999989,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Fax",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999989
-        ],
-        [
-          0.9999999999999989,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "State"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "Country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999943
-        ],
-        [
-          0.9999999999999943,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "LastName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "Company"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "FirstName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9830290707024835
-        ],
-        [
-          0.9830290707024835,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "City",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Address",
-        "State"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Address",
-        "Country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999953
-        ],
-        [
-          0.9999999999999953,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Address",
-        "LastName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Address",
-        "Company"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Address",
-        "FirstName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "Address",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "State",
-        "Country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "State",
-        "LastName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "State",
-        "Company"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "State",
-        "FirstName"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9646530752325208
-        ],
-        [
-          0.9646530752325208,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "customer",
-      "fields": [
-        "State",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
+          0.9646530752325218,
           1.0
         ]
       ],
@@ -3396,15 +2766,15 @@
       "entity": "customer",
       "fields": [
         "Country",
-        "Company"
+        "PostalCode"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999996
+          0.9999999999999958
         ],
         [
-          0.9999999999999996,
+          0.9999999999999958,
           1.0
         ]
       ],
@@ -3414,15 +2784,87 @@
       "entity": "customer",
       "fields": [
         "Country",
-        "FirstName"
+        "City"
       ],
       "matrix": [
         [
           1.0,
-          0.9876960454820406
+          0.9999999999999942
         ],
         [
-          0.9876960454820406,
+          0.9999999999999942,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Country",
+        "Company"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Country",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999933
+        ],
+        [
+          0.9999999999999933,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Country",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999922
+        ],
+        [
+          0.9999999999999922,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Country",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
           1.0
         ]
       ],
@@ -3437,10 +2879,64 @@
       "matrix": [
         [
           1.0,
-          0.999999999999993
+          0.9999999999999959
         ],
         [
-          0.999999999999993,
+          0.9999999999999959,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Country",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "LastName",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999923
+        ],
+        [
+          0.9999999999999923,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "LastName",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
           1.0
         ]
       ],
@@ -3468,7 +2964,25 @@
       "entity": "customer",
       "fields": [
         "LastName",
-        "FirstName"
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999611
+        ],
+        [
+          0.9999999999999611,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "LastName",
+        "Address"
       ],
       "matrix": [
         [
@@ -3477,6 +2991,24 @@
         ],
         [
           1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "LastName",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999989
+        ],
+        [
+          0.9999999999999989,
           1.0
         ]
       ],
@@ -3503,16 +3035,304 @@
     {
       "entity": "customer",
       "fields": [
-        "Company",
-        "FirstName"
+        "LastName",
+        "State"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999996
+          1.0
         ],
         [
-          0.9999999999999996,
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999999999999992
+        ],
+        [
+          0.999999999999992,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "Company"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999994
+        ],
+        [
+          0.9999999999999994,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999923
+        ],
+        [
+          0.9999999999999923,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999997
+        ],
+        [
+          0.9999999999999997,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "Email"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999923
+        ],
+        [
+          0.9999999999999923,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "PostalCode",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "City",
+        "Company"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "City",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999664
+        ],
+        [
+          0.9999999999999664,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "City",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "City",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999997
+        ],
+        [
+          0.9999999999999997,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "City",
+        "Email"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "City",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Company",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999998
+        ],
+        [
+          0.9999999999999998,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Company",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999997
+        ],
+        [
+          0.9999999999999997,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Company",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999998
+        ],
+        [
+          0.9999999999999998,
           1.0
         ]
       ],
@@ -3539,8 +3359,188 @@
     {
       "entity": "customer",
       "fields": [
-        "FirstName",
+        "Company",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Phone",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999619
+        ],
+        [
+          0.9999999999999619,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Phone",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999996
+        ],
+        [
+          0.9999999999999996,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Phone",
         "Email"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999619
+        ],
+        [
+          0.9999999999999619,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Phone",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Address",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999991
+        ],
+        [
+          0.9999999999999991,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Address",
+        "Email"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Address",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Fax",
+        "Email"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999993
+        ],
+        [
+          0.9999999999999993,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Fax",
+        "State"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "customer",
+      "fields": [
+        "Email",
+        "State"
       ],
       "matrix": [
         [
@@ -3564,24 +3564,6 @@
       "given": "Country",
       "distributions": [
         {
-          "when": "Canada",
-          "distribution": "uniform",
-          "params": {
-            "max": 33.0,
-            "min": 3.0
-          },
-          "round": true
-        },
-        {
-          "when": "Brazil",
-          "distribution": "uniform",
-          "params": {
-            "max": 13.0,
-            "min": 1.0
-          },
-          "round": true
-        },
-        {
           "when": "USA",
           "distribution": "uniform",
           "params": {
@@ -3591,11 +3573,29 @@
           "round": true
         },
         {
+          "when": "Canada",
+          "distribution": "uniform",
+          "params": {
+            "max": 33.0,
+            "min": 3.0
+          },
+          "round": true
+        },
+        {
           "when": "France",
           "distribution": "uniform",
           "params": {
             "max": 43.0,
             "min": 39.0
+          },
+          "round": true
+        },
+        {
+          "when": "Brazil",
+          "distribution": "uniform",
+          "params": {
+            "max": 13.0,
+            "min": 1.0
           },
           "round": true
         }
@@ -3629,6 +3629,204 @@
     {
       "entity": "employee",
       "fields": [
+        "Email",
+        "FirstName"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "Title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "LastName"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Email",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "FirstName",
+        "Address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "FirstName",
+        "Title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "FirstName",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
         "FirstName",
         "LastName"
       ],
@@ -3648,6 +3846,60 @@
       "entity": "employee",
       "fields": [
         "FirstName",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "FirstName",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "FirstName",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Address",
         "Title"
       ],
       "matrix": [
@@ -3665,7 +3917,43 @@
     {
       "entity": "employee",
       "fields": [
-        "FirstName",
+        "Address",
+        "Fax"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Address",
+        "LastName"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Address",
         "City"
       ],
       "matrix": [
@@ -3683,43 +3971,7 @@
     {
       "entity": "employee",
       "fields": [
-        "FirstName",
-        "PostalCode"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "FirstName",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "FirstName",
+        "Address",
         "Phone"
       ],
       "matrix": [
@@ -3737,79 +3989,7 @@
     {
       "entity": "employee",
       "fields": [
-        "FirstName",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "FirstName",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "LastName",
-        "Title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "LastName",
-        "City"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "LastName",
+        "Address",
         "PostalCode"
       ],
       "matrix": [
@@ -3827,43 +4007,7 @@
     {
       "entity": "employee",
       "fields": [
-        "LastName",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "LastName",
-        "Phone"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "LastName",
+        "Title",
         "Fax"
       ],
       "matrix": [
@@ -3881,8 +4025,8 @@
     {
       "entity": "employee",
       "fields": [
-        "LastName",
-        "Email"
+        "Title",
+        "LastName"
       ],
       "matrix": [
         [
@@ -3918,331 +4062,25 @@
       "entity": "employee",
       "fields": [
         "Title",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9128709291752769
+        ],
+        [
+          0.9128709291752769,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Title",
         "PostalCode"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Title",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Title",
-        "Phone"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9128709291752768
-        ],
-        [
-          0.9128709291752768,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Title",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Title",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "City",
-        "PostalCode"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "City",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "City",
-        "Phone"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "City",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "City",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "PostalCode",
-        "Address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "PostalCode",
-        "Phone"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "PostalCode",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "PostalCode",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Address",
-        "Phone"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Address",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Address",
-        "Email"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Phone",
-        "Fax"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "employee",
-      "fields": [
-        "Phone",
-        "Email"
       ],
       "matrix": [
         [
@@ -4260,7 +4098,7 @@
       "entity": "employee",
       "fields": [
         "Fax",
-        "Email"
+        "LastName"
       ],
       "matrix": [
         [
@@ -4269,6 +4107,204 @@
         ],
         [
           1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Fax",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Fax",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Fax",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "LastName",
+        "City"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "LastName",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "LastName",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "City",
+        "Phone"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "City",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "employee",
+      "fields": [
+        "Phone",
+        "PostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
+      "fields": [
+        "BillingCountry",
+        "BillingAddress"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999949
+        ],
+        [
+          0.9999999999999949,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
+      "fields": [
+        "BillingCountry",
+        "BillingCity"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999944
+        ],
+        [
+          0.9999999999999944,
           1.0
         ]
       ],
@@ -4313,132 +4349,6 @@
     {
       "entity": "invoice",
       "fields": [
-        "BillingCountry",
-        "BillingAddress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999946
-        ],
-        [
-          0.9999999999999946,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
-        "BillingCountry",
-        "BillingCity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999978
-        ],
-        [
-          0.9999999999999978,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
-        "BillingState",
-        "BillingPostalCode"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999984
-        ],
-        [
-          0.9999999999999984,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
-        "BillingState",
-        "BillingAddress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999959
-        ],
-        [
-          0.9999999999999959,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
-        "BillingState",
-        "BillingCity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999972
-        ],
-        [
-          0.9999999999999972,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
-        "BillingPostalCode",
-        "BillingAddress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
-        "BillingPostalCode",
-        "BillingCity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999954
-        ],
-        [
-          0.9999999999999954,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "invoice",
-      "fields": [
         "BillingAddress",
         "BillingCity"
       ],
@@ -4456,6 +4366,96 @@
     },
     {
       "entity": "invoice",
+      "fields": [
+        "BillingAddress",
+        "BillingState"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999983
+        ],
+        [
+          0.9999999999999983,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
+      "fields": [
+        "BillingAddress",
+        "BillingPostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
+      "fields": [
+        "BillingCity",
+        "BillingState"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999952
+        ],
+        [
+          0.9999999999999952,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
+      "fields": [
+        "BillingCity",
+        "BillingPostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999885
+        ],
+        [
+          0.9999999999999885,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
+      "fields": [
+        "BillingState",
+        "BillingPostalCode"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999977
+        ],
+        [
+          0.9999999999999977,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "invoice",
       "type": "conditional_distribution",
       "fields": [],
       "matrix": [],
@@ -4464,18 +4464,35 @@
       "given": "BillingState",
       "distributions": [
         {
-          "when": "IL",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 24.0
-          },
-          "round": true
-        },
-        {
           "when": "FL",
           "distribution": "poisson",
           "params": {
             "lambda": 22.0
+          },
+          "round": true
+        },
+        {
+          "when": "NT",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 33.0
+          },
+          "round": true
+        },
+        {
+          "when": "UT",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.3322045101752034,
+            "sigma": 4.440892098500626e-16
+          },
+          "round": true
+        },
+        {
+          "when": "AZ",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 27.0
           },
           "round": true
         },
@@ -4489,86 +4506,10 @@
           "round": true
         },
         {
-          "when": "NV",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 21.0
-          },
-          "round": true
-        },
-        {
-          "when": "Dublin",
+          "when": "TX",
           "distribution": "log_normal",
           "params": {
-            "mu": 3.828641396489096,
-            "sigma": 8.881784197001252e-16
-          },
-          "round": true
-        },
-        {
-          "when": "NS",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.433987204485146,
-            "sigma": 4.440892098500626e-16
-          },
-          "round": true
-        },
-        {
-          "when": "SP",
-          "distribution": "uniform",
-          "params": {
-            "max": 11.0,
-            "min": 1.0
-          },
-          "round": true
-        },
-        {
-          "when": "NT",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 33.0
-          },
-          "round": true
-        },
-        {
-          "when": "DF",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 13.0
-          },
-          "round": true
-        },
-        {
-          "when": "WI",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.2188758248682,
-            "sigma": 4.440892098500626e-16
-          },
-          "round": true
-        },
-        {
-          "when": "NSW",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 55.0
-          },
-          "round": true
-        },
-        {
-          "when": "AZ",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 27.0
-          },
-          "round": true
-        },
-        {
-          "when": "MB",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.465735902799726,
+            "mu": 3.2580965380214826,
             "sigma": 4.440892098500626e-16
           },
           "round": true
@@ -4583,10 +4524,77 @@
           "round": true
         },
         {
-          "when": "AB",
+          "when": "IL",
           "distribution": "poisson",
           "params": {
-            "lambda": 14.0
+            "lambda": 24.0
+          },
+          "round": true
+        },
+        {
+          "when": "NSW",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 55.0
+          },
+          "round": true
+        },
+        {
+          "when": "DF",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 13.0
+          },
+          "round": true
+        },
+        {
+          "when": "WA",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.8332133440562157,
+            "sigma": 4.440892098500626e-16
+          },
+          "round": true
+        },
+        {
+          "when": "QC",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 3.0
+          },
+          "round": true
+        },
+        {
+          "when": "Dublin",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.828641396489096,
+            "sigma": 8.881784197001252e-16
+          },
+          "round": true
+        },
+        {
+          "when": "RM",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.850147601710059,
+            "sigma": 4.440892098500626e-16
+          },
+          "round": true
+        },
+        {
+          "when": "BC",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 15.0
+          },
+          "round": true
+        },
+        {
+          "when": "NV",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 21.0
           },
           "round": true
         },
@@ -4608,20 +4616,28 @@
           "round": true
         },
         {
-          "when": "TX",
+          "when": "MB",
           "distribution": "log_normal",
           "params": {
-            "mu": 3.2580965380214826,
+            "mu": 3.465735902799726,
             "sigma": 4.440892098500626e-16
           },
           "round": true
         },
         {
-          "when": "RM",
-          "distribution": "log_normal",
+          "when": "AB",
+          "distribution": "poisson",
           "params": {
-            "mu": 3.850147601710059,
-            "sigma": 4.440892098500626e-16
+            "lambda": 14.0
+          },
+          "round": true
+        },
+        {
+          "when": "SP",
+          "distribution": "uniform",
+          "params": {
+            "max": 11.0,
+            "min": 1.0
           },
           "round": true
         },
@@ -4634,27 +4650,20 @@
           "round": true
         },
         {
-          "when": "QC",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 3.0
-          },
-          "round": true
-        },
-        {
-          "when": "WA",
+          "when": "WI",
           "distribution": "log_normal",
           "params": {
-            "mu": 2.8332133440562157,
+            "mu": 3.2188758248682,
             "sigma": 4.440892098500626e-16
           },
           "round": true
         },
         {
-          "when": "BC",
-          "distribution": "poisson",
+          "when": "NS",
+          "distribution": "log_normal",
           "params": {
-            "lambda": 15.0
+            "mu": 3.433987204485146,
+            "sigma": 4.440892098500626e-16
           },
           "round": true
         },
@@ -4664,15 +4673,6 @@
           "params": {
             "max": 30.0,
             "min": 29.0
-          },
-          "round": true
-        },
-        {
-          "when": "UT",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.3322045101752034,
-            "sigma": 4.440892098500626e-16
           },
           "round": true
         }
@@ -4695,31 +4695,6 @@
       "given": "BillingCountry",
       "distributions": [
         {
-          "when": "United Kingdom",
-          "distribution": "uniform",
-          "params": {
-            "max": 54.0,
-            "min": 52.0
-          },
-          "round": true
-        },
-        {
-          "when": "Argentina",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 56.0
-          },
-          "round": true
-        },
-        {
-          "when": "Poland",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 49.0
-          },
-          "round": true
-        },
-        {
           "when": "Hungary",
           "distribution": "log_normal",
           "params": {
@@ -4729,20 +4704,38 @@
           "round": true
         },
         {
-          "when": "Ireland",
-          "distribution": "log_normal",
+          "when": "Czech Republic",
+          "distribution": "uniform",
           "params": {
-            "mu": 3.828641396489096,
-            "sigma": 8.881784197001252e-16
+            "max": 6.0,
+            "min": 5.0
           },
           "round": true
         },
         {
-          "when": "Portugal",
+          "when": "Canada",
           "distribution": "uniform",
           "params": {
-            "max": 35.0,
-            "min": 34.0
+            "max": 33.0,
+            "min": 3.0
+          },
+          "round": true
+        },
+        {
+          "when": "India",
+          "distribution": "uniform",
+          "params": {
+            "max": 59.0,
+            "min": 58.0
+          },
+          "round": true
+        },
+        {
+          "when": "France",
+          "distribution": "uniform",
+          "params": {
+            "max": 43.0,
+            "min": 39.0
           },
           "round": true
         },
@@ -4755,53 +4748,18 @@
           "round": true
         },
         {
-          "when": "Norway",
+          "when": "Australia",
           "distribution": "poisson",
           "params": {
-            "lambda": 4.0
+            "lambda": 55.0
           },
           "round": true
         },
         {
-          "when": "Italy",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.850147601710059,
-            "sigma": 4.440892098500626e-16
-          },
-          "round": true
-        },
-        {
-          "when": "Finland",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.7841896339182606,
-            "sigma": 4.440892098500626e-16
-          },
-          "round": true
-        },
-        {
-          "when": "Austria",
+          "when": "Argentina",
           "distribution": "poisson",
           "params": {
-            "lambda": 7.0
-          },
-          "round": true
-        },
-        {
-          "when": "Brazil",
-          "distribution": "uniform",
-          "params": {
-            "max": 13.0,
-            "min": 1.0
-          },
-          "round": true
-        },
-        {
-          "when": "Belgium",
-          "distribution": "poisson",
-          "params": {
-            "lambda": 8.0
+            "lambda": 56.0
           },
           "round": true
         },
@@ -4822,10 +4780,27 @@
           "round": true
         },
         {
-          "when": "Denmark",
+          "when": "Poland",
           "distribution": "poisson",
           "params": {
-            "lambda": 9.0
+            "lambda": 49.0
+          },
+          "round": true
+        },
+        {
+          "when": "United Kingdom",
+          "distribution": "uniform",
+          "params": {
+            "max": 54.0,
+            "min": 52.0
+          },
+          "round": true
+        },
+        {
+          "when": "Norway",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 4.0
           },
           "round": true
         },
@@ -4839,11 +4814,45 @@
           "round": true
         },
         {
-          "when": "France",
+          "when": "Denmark",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 9.0
+          },
+          "round": true
+        },
+        {
+          "when": "Austria",
+          "distribution": "poisson",
+          "params": {
+            "lambda": 7.0
+          },
+          "round": true
+        },
+        {
+          "when": "Ireland",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.828641396489096,
+            "sigma": 8.881784197001252e-16
+          },
+          "round": true
+        },
+        {
+          "when": "Italy",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.850147601710059,
+            "sigma": 4.440892098500626e-16
+          },
+          "round": true
+        },
+        {
+          "when": "Portugal",
           "distribution": "uniform",
           "params": {
-            "max": 43.0,
-            "min": 39.0
+            "max": 35.0,
+            "min": 34.0
           },
           "round": true
         },
@@ -4857,11 +4866,10 @@
           "round": true
         },
         {
-          "when": "Canada",
-          "distribution": "uniform",
+          "when": "Belgium",
+          "distribution": "poisson",
           "params": {
-            "max": 33.0,
-            "min": 3.0
+            "lambda": 8.0
           },
           "round": true
         },
@@ -4875,28 +4883,20 @@
           "round": true
         },
         {
-          "when": "Australia",
-          "distribution": "poisson",
+          "when": "Finland",
+          "distribution": "log_normal",
           "params": {
-            "lambda": 55.0
+            "mu": 3.7841896339182606,
+            "sigma": 4.440892098500626e-16
           },
           "round": true
         },
         {
-          "when": "India",
+          "when": "Brazil",
           "distribution": "uniform",
           "params": {
-            "max": 59.0,
-            "min": 58.0
-          },
-          "round": true
-        },
-        {
-          "when": "Czech Republic",
-          "distribution": "uniform",
-          "params": {
-            "max": 6.0,
-            "min": 5.0
+            "max": 13.0,
+            "min": 1.0
           },
           "round": true
         }
@@ -4912,8 +4912,8 @@
     {
       "entity": "invoiceline",
       "fields": [
-        "UnitPrice",
-        "TrackId"
+        "TrackId",
+        "UnitPrice"
       ],
       "matrix": [
         [
@@ -4930,8 +4930,8 @@
     {
       "entity": "invoiceline",
       "fields": [
-        "UnitPrice",
-        "TrackId"
+        "TrackId",
+        "UnitPrice"
       ],
       "matrix": [
         [
@@ -4984,188 +4984,8 @@
     {
       "entity": "track",
       "fields": [
-        "GenreId",
+        "MediaTypeId",
         "TrackId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3669960390885843
-        ],
-        [
-          0.3669960390885843,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "UnitPrice"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5827785245641104
-        ],
-        [
-          0.5827785245641104,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "UnitPrice"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.39653681828034615
-        ],
-        [
-          0.39653681828034615,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "MediaTypeId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6615704605586313
-        ],
-        [
-          0.6615704605586313,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "MediaTypeId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4253135986602291
-        ],
-        [
-          0.4253135986602291,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "AlbumId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3821069166585382
-        ],
-        [
-          0.3821069166585382,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "Milliseconds"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5244838067527501
-        ],
-        [
-          0.5244838067527501,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "GenreId",
-        "Bytes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5441088607790883
-        ],
-        [
-          0.5441088607790883,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "TrackId",
-        "UnitPrice"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3272550969565075
-        ],
-        [
-          0.3272550969565075,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "TrackId",
-        "UnitPrice"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.32725509695650773
-        ],
-        [
-          0.32725509695650773,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "TrackId",
-        "MediaTypeId"
       ],
       "matrix": [
         [
@@ -5182,8 +5002,8 @@
     {
       "entity": "track",
       "fields": [
-        "TrackId",
-        "MediaTypeId"
+        "MediaTypeId",
+        "TrackId"
       ],
       "matrix": [
         [
@@ -5192,204 +5012,6 @@
         ],
         [
           0.4742768671546741,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "TrackId",
-        "AlbumId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9906994238843688
-        ],
-        [
-          0.9906994238843688,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "TrackId",
-        "AlbumId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9940119765815377
-        ],
-        [
-          0.9940119765815377,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "TrackId",
-        "Bytes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.30128502327017603
-        ],
-        [
-          0.30128502327017603,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "MediaTypeId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7854834541371717
-        ],
-        [
-          0.7854834541371717,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "MediaTypeId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6920260029647961
-        ],
-        [
-          0.6920260029647961,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "AlbumId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.30746870361465284
-        ],
-        [
-          0.30746870361465284,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "AlbumId"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3256616865413704
-        ],
-        [
-          0.3256616865413704,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "Milliseconds"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9317964749112742
-        ],
-        [
-          0.9317964749112742,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "Milliseconds"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.40992060808464453
-        ],
-        [
-          0.40992060808464453,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "Bytes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9384817268476453
-        ],
-        [
-          0.9384817268476453,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "track",
-      "fields": [
-        "UnitPrice",
-        "Bytes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.41386143347943216
-        ],
-        [
-          0.41386143347943216,
           1.0
         ]
       ],
@@ -5471,6 +5093,78 @@
       "entity": "track",
       "fields": [
         "MediaTypeId",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7854834541371717
+        ],
+        [
+          0.7854834541371717,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "MediaTypeId",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6920260029647961
+        ],
+        [
+          0.6920260029647961,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "MediaTypeId",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6615704605586313
+        ],
+        [
+          0.6615704605586313,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "MediaTypeId",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4253135986602291
+        ],
+        [
+          0.4253135986602291,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "MediaTypeId",
         "Bytes"
       ],
       "matrix": [
@@ -5480,6 +5174,222 @@
         ],
         [
           0.732825398990322,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "TrackId",
+        "AlbumId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9906994238843688
+        ],
+        [
+          0.9906994238843688,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "TrackId",
+        "AlbumId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9940119765815377
+        ],
+        [
+          0.9940119765815377,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "TrackId",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3272550969565075
+        ],
+        [
+          0.3272550969565075,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "TrackId",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.32725509695650773
+        ],
+        [
+          0.32725509695650773,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "TrackId",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3669960390885843
+        ],
+        [
+          0.3669960390885843,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "TrackId",
+        "Bytes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.30128502327017603
+        ],
+        [
+          0.30128502327017603,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "AlbumId",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.30746870361465284
+        ],
+        [
+          0.30746870361465284,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "AlbumId",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3256616865413704
+        ],
+        [
+          0.3256616865413704,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "AlbumId",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3821069166585382
+        ],
+        [
+          0.3821069166585382,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "Milliseconds",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9317964749112742
+        ],
+        [
+          0.9317964749112742,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "Milliseconds",
+        "UnitPrice"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.40992060808464453
+        ],
+        [
+          0.40992060808464453,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "Milliseconds",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5244838067527501
+        ],
+        [
+          0.5244838067527501,
           1.0
         ]
       ],
@@ -5524,16 +5434,106 @@
     {
       "entity": "track",
       "fields": [
+        "UnitPrice",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5827785245641104
+        ],
+        [
+          0.5827785245641104,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "UnitPrice",
+        "GenreId"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.39653681828034615
+        ],
+        [
+          0.39653681828034615,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "UnitPrice",
+        "Bytes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9384817268476453
+        ],
+        [
+          0.9384817268476453,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "UnitPrice",
+        "Bytes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.41386143347943216
+        ],
+        [
+          0.41386143347943216,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
+        "GenreId",
+        "Bytes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5441088607790883
+        ],
+        [
+          0.5441088607790883,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "track",
+      "fields": [
         "Name",
         "Composer"
       ],
       "matrix": [
         [
           1.0,
-          0.9730305318821953
+          0.9730305318823557
         ],
         [
-          0.9730305318821953,
+          0.9730305318823557,
           1.0
         ]
       ],

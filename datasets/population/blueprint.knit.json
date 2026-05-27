@@ -218,8 +218,8 @@
     {
       "entity": "original",
       "fields": [
-        "year",
-        "people"
+        "people",
+        "year"
       ],
       "matrix": [
         [
@@ -236,8 +236,8 @@
     {
       "entity": "original",
       "fields": [
-        "year",
-        "people"
+        "people",
+        "year"
       ],
       "matrix": [
         [
@@ -254,8 +254,8 @@
     {
       "entity": "original",
       "fields": [
-        "age",
-        "people"
+        "people",
+        "age"
       ],
       "matrix": [
         [
@@ -272,8 +272,8 @@
     {
       "entity": "original",
       "fields": [
-        "age",
-        "people"
+        "people",
+        "age"
       ],
       "matrix": [
         [

@@ -234,60 +234,6 @@
     {
       "entity": "original",
       "fields": [
-        "sepal_width",
-        "petal_length"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.42844010433054003
-        ],
-        [
-          -0.42844010433054003,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "sepal_width",
-        "petal_length"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.30963508601557777
-        ],
-        [
-          -0.30963508601557777,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "sepal_width",
-        "petal_width"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3661259325364395
-        ],
-        [
-          -0.3661259325364395,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "sepal_length",
         "petal_length"
       ],
@@ -361,6 +307,42 @@
       "entity": "original",
       "fields": [
         "petal_length",
+        "sepal_width"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.42844010433054003
+        ],
+        [
+          -0.42844010433054003,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "petal_length",
+        "sepal_width"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.30963508601557777
+        ],
+        [
+          -0.30963508601557777,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "petal_length",
         "petal_width"
       ],
       "matrix": [
@@ -388,6 +370,24 @@
         ],
         [
           0.9376668235763413,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "sepal_width",
+        "petal_width"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3661259325364395
+        ],
+        [
+          -0.3661259325364395,
           1.0
         ]
       ],

@@ -109,219 +109,9 @@
           }
         ]
       }
-    },
-    {
-      "name": "original__id_question_answerKey",
-      "count": 1118,
-      "fields": [
-        {
-          "name": "Mercury_SC_415702",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__id_question_answerKey_Mercury_SC_415702.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1118,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 22,
-            "avg_length": 15.50268336314848
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "George wants to warm his hands quickly by rubbing them. Which skin surface will produce the most heat?",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mercury_SC_415702",
-            "file": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1117,
-            "null_rate": 0.0,
-            "min_length": 22,
-            "max_length": 683,
-            "avg_length": 126.41592128801432
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "A",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mercury_SC_415702",
-            "file": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 1118
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "A",
-            "field": "A",
-            "cardinality": 8
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A",
-      "count": 1117,
-      "fields": [
-        {
-          "name": "MCAS_2009_5_6516",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A_MCAS_2009_5_6516.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1117,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 22,
-            "avg_length": 15.502238137869293
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Which of the following statements best explains why magnets usually stick to a refrigerator door?",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "MCAS_2009_5_6516",
-            "file": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A__MCAS_2009_5_6516_Which_of__96c944f82c059a1a",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1116,
-            "null_rate": 0.0,
-            "min_length": 22,
-            "max_length": 683,
-            "avg_length": 126.44225604297225
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "B",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "MCAS_2009_5_6516",
-            "file": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A__MCAS_2009_5_6516_Which_of__96c944f82c059a1a",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 1117
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "B",
-            "field": "B",
-            "cardinality": 8
-          }
-        ]
-      }
     }
   ],
   "correlations": [
-    {
-      "entity": "original",
-      "fields": [
-        "answerKey",
-        "id"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "answerKey",
-        "question"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -331,38 +121,20 @@
       "matrix": [
         [
           1.0,
-          0.9999999999871483
+          0.9999999999871452
         ],
         [
-          0.9999999999871483,
+          0.9999999999871452,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__id_question_answerKey",
+      "entity": "original",
       "fields": [
-        "George wants to warm his hands quickly by rubbing them. Which skin surface will produce the most heat?",
-        "A"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999974
-        ],
-        [
-          0.9999999999999974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey",
-      "fields": [
-        "George wants to warm his hands quickly by rubbing them. Which skin surface will produce the most heat?",
-        "Mercury_SC_415702"
+        "id",
+        "answerKey"
       ],
       "matrix": [
         [
@@ -377,64 +149,10 @@
       "conditional": []
     },
     {
-      "entity": "original__id_question_answerKey",
+      "entity": "original",
       "fields": [
-        "A",
-        "Mercury_SC_415702"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999999993
-        ],
-        [
-          0.999999999999993,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A",
-      "fields": [
-        "MCAS_2009_5_6516",
-        "B"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999807
-        ],
-        [
-          0.9999999999999807,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A",
-      "fields": [
-        "MCAS_2009_5_6516",
-        "Which of the following statements best explains why magnets usually stick to a refrigerator door?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey__Mercury_SC_415702_George_wants_to_warm_his_hands_quickly_by_rubbing_them__Which_skin_surface_will_produce_the_most_heat__A",
-      "fields": [
-        "B",
-        "Which of the following statements best explains why magnets usually stick to a refrigerator door?"
+        "question",
+        "answerKey"
       ],
       "matrix": [
         [

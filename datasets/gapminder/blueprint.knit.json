@@ -291,42 +291,6 @@
       "entity": "original",
       "fields": [
         "fertility",
-        "year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.47248741611565825
-        ],
-        [
-          -0.47248741611565825,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fertility",
-        "year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.4966885068972552
-        ],
-        [
-          -0.4966885068972552,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fertility",
         "life_expect"
       ],
       "matrix": [
@@ -362,8 +326,44 @@
     {
       "entity": "original",
       "fields": [
-        "year",
-        "life_expect"
+        "fertility",
+        "year"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.47248741611565825
+        ],
+        [
+          -0.47248741611565825,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fertility",
+        "year"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.4966885068972552
+        ],
+        [
+          -0.4966885068972552,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "life_expect",
+        "year"
       ],
       "matrix": [
         [
@@ -380,8 +380,8 @@
     {
       "entity": "original",
       "fields": [
-        "year",
-        "life_expect"
+        "life_expect",
+        "year"
       ],
       "matrix": [
         [

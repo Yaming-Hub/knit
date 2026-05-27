@@ -204,8 +204,8 @@
     {
       "entity": "original",
       "fields": [
-        "health",
-        "income"
+        "income",
+        "health"
       ],
       "matrix": [
         [
@@ -222,8 +222,8 @@
     {
       "entity": "original",
       "fields": [
-        "health",
-        "income"
+        "income",
+        "health"
       ],
       "matrix": [
         [
@@ -240,16 +240,16 @@
     {
       "entity": "original",
       "fields": [
-        "country",
-        "region"
+        "region",
+        "country"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999958
+          0.9999999999999951
         ],
         [
-          0.9999999999999958,
+          0.9999999999999951,
           1.0
         ]
       ],

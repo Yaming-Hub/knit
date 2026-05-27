@@ -477,24 +477,6 @@
       "entity": "original",
       "fields": [
         "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Do you ever gamble?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7122981646388399
-        ],
-        [
-          0.7122981646388399,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
         "Do you ever drink alcohol?"
       ],
       "matrix": [
@@ -513,6 +495,114 @@
       "entity": "original",
       "fields": [
         "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "Do you ever drive above the speed limit?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7071201927987852
+        ],
+        [
+          0.7071201927987852,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "How do you like your steak prepared?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7112673078243545
+        ],
+        [
+          0.7112673078243545,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "Age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7089749367353138
+        ],
+        [
+          0.7089749367353138,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "Education"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7072085827640477
+        ],
+        [
+          0.7072085827640477,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "Household Income"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7135486828931492
+        ],
+        [
+          0.7135486828931492,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "Location (Census Region)"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7090017089256899
+        ],
+        [
+          0.7090017089256899,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
         "Do you ever smoke cigarettes?"
       ],
       "matrix": [
@@ -522,6 +612,24 @@
         ],
         [
           0.7083282651095393,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7122981646388399
+        ],
+        [
+          0.7122981646388399,
           1.0
         ]
       ],
@@ -567,42 +675,6 @@
       "entity": "original",
       "fields": [
         "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Have you ever cheated on your significant other?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7071746191183381
-        ],
-        [
-          0.7071746191183381,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7112673078243545
-        ],
-        [
-          0.7112673078243545,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
         "Gender"
       ],
       "matrix": [
@@ -621,447 +693,15 @@
       "entity": "original",
       "fields": [
         "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7089749367353138
-        ],
-        [
-          0.7089749367353138,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7135486828931492
-        ],
-        [
-          0.7135486828931492,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7071201927987852
-        ],
-        [
-          0.7071201927987852,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7072085827640477
-        ],
-        [
-          0.7072085827640477,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7090017089256899
-        ],
-        [
-          0.7090017089256899,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Do you ever drink alcohol?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7249183896566952
-        ],
-        [
-          0.7249183896566952,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Do you ever smoke cigarettes?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7215484549447542
-        ],
-        [
-          0.7215484549447542,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Have you ever been skydiving?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7079111792301969
-        ],
-        [
-          0.7079111792301969,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Do you eat steak?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.710531394397595
-        ],
-        [
-          0.710531394397595,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
         "Have you ever cheated on your significant other?"
       ],
       "matrix": [
         [
           1.0,
-          0.7071096482328447
+          0.707174619118338
         ],
         [
-          0.7071096482328447,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7091581601469106
-        ],
-        [
-          0.7091581601469106,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.711860755328122
-        ],
-        [
-          0.711860755328122,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.716865069290256
-        ],
-        [
-          0.716865069290256,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7104727989958021
-        ],
-        [
-          0.7104727989958021,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7110198075952164
-        ],
-        [
-          0.7110198075952164,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7090378182591947
-        ],
-        [
-          0.7090378182591947,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever gamble?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7114777264439309
-        ],
-        [
-          0.7114777264439309,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Do you ever smoke cigarettes?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.710556558420145
-        ],
-        [
-          0.710556558420145,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Have you ever been skydiving?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7071511040005105
-        ],
-        [
-          0.7071511040005105,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Do you eat steak?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7091454558718808
-        ],
-        [
-          0.7091454558718808,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Have you ever cheated on your significant other?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7075928510383169
-        ],
-        [
-          0.7075928510383169,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7115988212107694
-        ],
-        [
-          0.7115988212107694,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7083150807071825
-        ],
-        [
-          0.7083150807071825,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.70809788965633
-        ],
-        [
-          0.70809788965633,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever drink alcohol?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7166845614716079
-        ],
-        [
-          0.7166845614716079,
+          0.707174619118338,
           1.0
         ]
       ],
@@ -1089,15 +729,69 @@
       "entity": "original",
       "fields": [
         "Do you ever drink alcohol?",
+        "How do you like your steak prepared?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7115988212107694
+        ],
+        [
+          0.7115988212107694,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drink alcohol?",
+        "Age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.70809788965633
+        ],
+        [
+          0.70809788965633,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drink alcohol?",
         "Education"
       ],
       "matrix": [
         [
           1.0,
-          0.7156332193095282
+          0.7156332193095283
         ],
         [
-          0.7156332193095282,
+          0.7156332193095283,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drink alcohol?",
+        "Household Income"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7166845614716079
+        ],
+        [
+          0.7166845614716079,
           1.0
         ]
       ],
@@ -1112,10 +806,10 @@
       "matrix": [
         [
           1.0,
-          0.7131353403588974
+          0.7131353403588975
         ],
         [
-          0.7131353403588974,
+          0.7131353403588975,
           1.0
         ]
       ],
@@ -1124,16 +818,52 @@
     {
       "entity": "original",
       "fields": [
-        "Do you ever smoke cigarettes?",
+        "Do you ever drink alcohol?",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.710556558420145
+        ],
+        [
+          0.710556558420145,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drink alcohol?",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7249183896566952
+        ],
+        [
+          0.7249183896566952,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drink alcohol?",
         "Have you ever been skydiving?"
       ],
       "matrix": [
         [
           1.0,
-          0.7071236844742135
+          0.7071511040005104
         ],
         [
-          0.7071236844742135,
+          0.7071511040005104,
           1.0
         ]
       ],
@@ -1142,16 +872,16 @@
     {
       "entity": "original",
       "fields": [
-        "Do you ever smoke cigarettes?",
+        "Do you ever drink alcohol?",
         "Do you eat steak?"
       ],
       "matrix": [
         [
           1.0,
-          0.7085897838760797
+          0.7091454558718808
         ],
         [
-          0.7085897838760797,
+          0.7091454558718808,
           1.0
         ]
       ],
@@ -1160,16 +890,34 @@
     {
       "entity": "original",
       "fields": [
-        "Do you ever smoke cigarettes?",
+        "Do you ever drink alcohol?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7083150807071825
+        ],
+        [
+          0.7083150807071825,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drink alcohol?",
         "Have you ever cheated on your significant other?"
       ],
       "matrix": [
         [
           1.0,
-          0.7084654126192806
+          0.7075928510383169
         ],
         [
-          0.7084654126192806,
+          0.7075928510383169,
           1.0
         ]
       ],
@@ -1178,620 +926,8 @@
     {
       "entity": "original",
       "fields": [
-        "Do you ever smoke cigarettes?",
+        "Do you ever drive above the speed limit?",
         "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7091627100391876
-        ],
-        [
-          0.7091627100391876,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever smoke cigarettes?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7082284615770016
-        ],
-        [
-          0.7082284615770016,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever smoke cigarettes?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.717822169175332
-        ],
-        [
-          0.717822169175332,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever smoke cigarettes?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7138319588272676
-        ],
-        [
-          0.7138319588272676,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever smoke cigarettes?",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7080928161794268
-        ],
-        [
-          0.7080928161794268,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever smoke cigarettes?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7137507994568654
-        ],
-        [
-          0.7137507994568654,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you ever smoke cigarettes?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7170255471678872
-        ],
-        [
-          0.7170255471678872,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Do you eat steak?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7071747663400266
-        ],
-        [
-          0.7071747663400266,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Have you ever cheated on your significant other?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7082681402468293
-        ],
-        [
-          0.7082681402468293,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.708245868239234
-        ],
-        [
-          0.708245868239234,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7071499398945827
-        ],
-        [
-          0.7071499398945827,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7112252629647355
-        ],
-        [
-          0.7112252629647355,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7103700422101833
-        ],
-        [
-          0.7103700422101833,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7072925849296336
-        ],
-        [
-          0.7072925849296336,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.708971863307954
-        ],
-        [
-          0.708971863307954,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever been skydiving?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7131231460325913
-        ],
-        [
-          0.7131231460325913,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Have you ever cheated on your significant other?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.707200616881166
-        ],
-        [
-          0.707200616881166,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7146943925119384
-        ],
-        [
-          0.7146943925119384,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7080278890426362
-        ],
-        [
-          0.7080278890426362,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7111012329366945
-        ],
-        [
-          0.7111012329366945,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7112036515175446
-        ],
-        [
-          0.7112036515175446,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7091720860927616
-        ],
-        [
-          0.7091720860927616,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Do you eat steak?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7121019894815594
-        ],
-        [
-          0.7121019894815594,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "How do you like your steak prepared?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7105567232200493
-        ],
-        [
-          0.7105567232200493,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7074239972410022
-        ],
-        [
-          0.7074239972410022,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7126297598172293
-        ],
-        [
-          0.7126297598172293,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7110871370613285
-        ],
-        [
-          0.7110871370613285,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7071094351203635
-        ],
-        [
-          0.7071094351203635,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7075606775632369
-        ],
-        [
-          0.7075606775632369,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Have you ever cheated on your significant other?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7113628215932468
-        ],
-        [
-          0.7113628215932468,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "How do you like your steak prepared?",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.711417681157117
-        ],
-        [
-          0.711417681157117,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "How do you like your steak prepared?",
-        "Age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5047655055127502
-        ],
-        [
-          0.5047655055127502,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "How do you like your steak prepared?",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.45313753787216915
-        ],
-        [
-          0.45313753787216915,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "How do you like your steak prepared?",
-        "Do you ever drive above the speed limit?"
       ],
       "matrix": [
         [
@@ -1808,250 +944,16 @@
     {
       "entity": "original",
       "fields": [
-        "How do you like your steak prepared?",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.45729069453376847
-        ],
-        [
-          0.45729069453376847,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "How do you like your steak prepared?",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4655353361062871
-        ],
-        [
-          0.4655353361062871,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
+        "Do you ever drive above the speed limit?",
         "Age"
       ],
       "matrix": [
         [
           1.0,
-          0.7077903673778442
+          0.7079100357055557
         ],
         [
-          0.7077903673778442,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.713127130108612
-        ],
-        [
-          0.713127130108612,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.707692619356341
-        ],
-        [
-          0.707692619356341,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7105442890925726
-        ],
-        [
-          0.7105442890925726,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7121737955203495
-        ],
-        [
-          0.7121737955203495,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Age",
-        "Household Income"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5260190798936109
-        ],
-        [
-          0.5260190798936109,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Age",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7079100357055556
-        ],
-        [
-          0.7079100357055556,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Age",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5143961642932737
-        ],
-        [
-          0.5143961642932737,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Age",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5108287198963426
-        ],
-        [
-          0.5108287198963426,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Household Income",
-        "Do you ever drive above the speed limit?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7225193033764552
-        ],
-        [
-          0.7225193033764552,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Household Income",
-        "Education"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.47838747306819324
-        ],
-        [
-          0.47838747306819324,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Household Income",
-        "Location (Census Region)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.46030659882203445
-        ],
-        [
-          0.46030659882203445,
+          0.7079100357055557,
           1.0
         ]
       ],
@@ -2079,15 +981,501 @@
       "entity": "original",
       "fields": [
         "Do you ever drive above the speed limit?",
+        "Household Income"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7225193033764552
+        ],
+        [
+          0.7225193033764552,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
         "Location (Census Region)"
       ],
       "matrix": [
         [
           1.0,
-          0.7156663536229153
+          0.7156663536229152
         ],
         [
-          0.7156663536229153,
+          0.7156663536229152,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7080928161794268
+        ],
+        [
+          0.7080928161794268,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7110198075952163
+        ],
+        [
+          0.7110198075952163,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7072925849296336
+        ],
+        [
+          0.7072925849296336,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7112036515175446
+        ],
+        [
+          0.7112036515175446,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.707692619356341
+        ],
+        [
+          0.707692619356341,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever drive above the speed limit?",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7071094351203635
+        ],
+        [
+          0.7071094351203635,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5047655055127502
+        ],
+        [
+          0.5047655055127502,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Education"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.45729069453376847
+        ],
+        [
+          0.45729069453376847,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Household Income"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.45313753787216915
+        ],
+        [
+          0.45313753787216915,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Location (Census Region)"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4655353361062871
+        ],
+        [
+          0.4655353361062871,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7091627100391875
+        ],
+        [
+          0.7091627100391875,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7091581601469106
+        ],
+        [
+          0.7091581601469106,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7082458682392341
+        ],
+        [
+          0.7082458682392341,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7114176811571169
+        ],
+        [
+          0.7114176811571169,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "How do you like your steak prepared?",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7105567232200493
+        ],
+        [
+          0.7105567232200493,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Education"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5143961642932737
+        ],
+        [
+          0.5143961642932737,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Household Income"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5260190798936109
+        ],
+        [
+          0.5260190798936109,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Location (Census Region)"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5108287198963426
+        ],
+        [
+          0.5108287198963426,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7178221691753319
+        ],
+        [
+          0.7178221691753319,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.716865069290256
+        ],
+        [
+          0.716865069290256,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7112252629647355
+        ],
+        [
+          0.7112252629647355,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7080278890426362
+        ],
+        [
+          0.7080278890426362,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7077903673778442
+        ],
+        [
+          0.7077903673778442,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Age",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7126297598172294
+        ],
+        [
+          0.7126297598172294,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Household Income"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4783874730681933
+        ],
+        [
+          0.4783874730681933,
           1.0
         ]
       ],
@@ -2102,10 +1490,622 @@
       "matrix": [
         [
           1.0,
-          0.4603521170405995
+          0.46035211704059964
         ],
         [
-          0.4603521170405995,
+          0.46035211704059964,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7137507994568655
+        ],
+        [
+          0.7137507994568655,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7090378182591947
+        ],
+        [
+          0.7090378182591947,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.708971863307954
+        ],
+        [
+          0.708971863307954,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7091720860927615
+        ],
+        [
+          0.7091720860927615,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7105442890925726
+        ],
+        [
+          0.7105442890925726,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Education",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7075606775632369
+        ],
+        [
+          0.7075606775632369,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Location (Census Region)"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4603065988220345
+        ],
+        [
+          0.4603065988220345,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7138319588272676
+        ],
+        [
+          0.7138319588272676,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7104727989958021
+        ],
+        [
+          0.7104727989958021,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7103700422101833
+        ],
+        [
+          0.7103700422101833,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7111012329366945
+        ],
+        [
+          0.7111012329366945,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7131271301086118
+        ],
+        [
+          0.7131271301086118,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Household Income",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7110871370613286
+        ],
+        [
+          0.7110871370613286,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Location (Census Region)",
+        "Do you ever smoke cigarettes?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7170255471678872
+        ],
+        [
+          0.7170255471678872,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Location (Census Region)",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7114777264439308
+        ],
+        [
+          0.7114777264439308,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Location (Census Region)",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7131231460325912
+        ],
+        [
+          0.7131231460325912,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Location (Census Region)",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7121019894815594
+        ],
+        [
+          0.7121019894815594,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Location (Census Region)",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7121737955203495
+        ],
+        [
+          0.7121737955203495,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Location (Census Region)",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7113628215932468
+        ],
+        [
+          0.7113628215932468,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever smoke cigarettes?",
+        "Do you ever gamble?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7215484549447542
+        ],
+        [
+          0.7215484549447542,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever smoke cigarettes?",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7071236844742134
+        ],
+        [
+          0.7071236844742134,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever smoke cigarettes?",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7085897838760797
+        ],
+        [
+          0.7085897838760797,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever smoke cigarettes?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7082284615770016
+        ],
+        [
+          0.7082284615770016,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever smoke cigarettes?",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7084654126192805
+        ],
+        [
+          0.7084654126192805,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever gamble?",
+        "Have you ever been skydiving?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7079111792301968
+        ],
+        [
+          0.7079111792301968,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever gamble?",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.710531394397595
+        ],
+        [
+          0.710531394397595,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever gamble?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7118607553281219
+        ],
+        [
+          0.7118607553281219,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you ever gamble?",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7071096482328447
+        ],
+        [
+          0.7071096482328447,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Have you ever been skydiving?",
+        "Do you eat steak?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7071747663400265
+        ],
+        [
+          0.7071747663400265,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Have you ever been skydiving?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7071499398945829
+        ],
+        [
+          0.7071499398945829,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Have you ever been skydiving?",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7082681402468292
+        ],
+        [
+          0.7082681402468292,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you eat steak?",
+        "Gender"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7146943925119384
+        ],
+        [
+          0.7146943925119384,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Do you eat steak?",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7072006168811661
+        ],
+        [
+          0.7072006168811661,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "Have you ever cheated on your significant other?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7074239972410022
+        ],
+        [
+          0.7074239972410022,
           1.0
         ]
       ],

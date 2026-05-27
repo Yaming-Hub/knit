@@ -9,532 +9,6 @@
   },
   "entities": [
     {
-      "name": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "count": 60,
-      "fields": [
-        {
-          "name": "Natalia Romanova (Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 16,
-            "max_length": 43,
-            "avg_length": 25.166666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "\\\\/Natalia_Romanova_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE____Natalia_Romanova__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 19,
-            "max_length": 48,
-            "avg_length": 28.266666666666666
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Apr-64",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 52,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "high"
-          }
-        },
-        {
-          "name": "Red Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.95
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Green Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 4
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 13,
-            "avg_length": 9.716666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Bisexual Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 5
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 13,
-            "max_length": 22,
-            "avg_length": 20.3
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Female Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 6
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 22,
-            "avg_length": 16.133333333333333
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Public Identity",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 7
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 16,
-            "avg_length": 15.216666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 8
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 15.466666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Living Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_6b5ec645f37779d5",
-            "column": 9
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 17,
-            "max_length": 19,
-            "avg_length": 17.333333333333332
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 60
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Red Hair",
-            "field": "Red Hair",
-            "cardinality": 13
-          },
-          {
-            "name": "Green Eyes",
-            "field": "Green Eyes",
-            "cardinality": 10
-          },
-          {
-            "name": "Bisexual Characters",
-            "field": "Bisexual Characters",
-            "cardinality": 5
-          },
-          {
-            "name": "Female Characters",
-            "field": "Female Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "count": 60,
-      "fields": [
-        {
-          "name": "\\\\/Natalia_Romanova_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 19,
-            "max_length": 48,
-            "avg_length": 28.266666666666666
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Natalia Romanova (Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_Natalia_Romanova__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 16,
-            "max_length": 43,
-            "avg_length": 25.166666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Apr-64",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 52,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "high"
-          }
-        },
-        {
-          "name": "Red Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.95
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Green Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 4
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 13,
-            "avg_length": 9.716666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Bisexual Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 5
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 13,
-            "max_length": 22,
-            "avg_length": 20.3
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Public Identity",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 6
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 16,
-            "avg_length": 15.216666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Female Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 8
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 22,
-            "avg_length": 16.133333333333333
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 7
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 15.466666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Living Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Natalia Romanova (Earth-616)",
-            "file": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE__Natalia_Romanova__Earth-616_____Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bise_8436d0ca705c9ad7",
-            "column": 9
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 17,
-            "max_length": 19,
-            "avg_length": 17.333333333333332
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 60
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Red Hair",
-            "field": "Red Hair",
-            "cardinality": 13
-          },
-          {
-            "name": "Green Eyes",
-            "field": "Green Eyes",
-            "cardinality": 10
-          },
-          {
-            "name": "Bisexual Characters",
-            "field": "Bisexual Characters",
-            "cardinality": 5
-          },
-          {
-            "name": "Female Characters",
-            "field": "Female Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
       "name": "original",
       "count": 16376,
       "fields": [
@@ -921,2587 +395,9 @@
         "column": "APPEARANCES",
         "direction": "desc"
       }
-    },
-    {
-      "name": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "count": 60,
-      "fields": [
-        {
-          "name": "Natalia Romanova (Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 16,
-            "max_length": 43,
-            "avg_length": 25.166666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "\\\\/Natalia_Romanova_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE____Natalia_Romanova__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 19,
-            "max_length": 48,
-            "avg_length": 28.266666666666666
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Apr-64",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 52,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "high"
-          }
-        },
-        {
-          "name": "Red Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.95
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Green Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 4
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 13,
-            "avg_length": 9.716666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Bisexual Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 5
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 13,
-            "max_length": 22,
-            "avg_length": 20.3
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Public Identity",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 6
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 16,
-            "avg_length": 15.216666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Female Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 8
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 22,
-            "avg_length": 16.133333333333333
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 7
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 15.466666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Living Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Pu_0d7063ac9d64613c",
-            "column": 9
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 17,
-            "max_length": 19,
-            "avg_length": 17.333333333333332
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 60
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Red Hair",
-            "field": "Red Hair",
-            "cardinality": 13
-          },
-          {
-            "name": "Green Eyes",
-            "field": "Green Eyes",
-            "cardinality": 10
-          },
-          {
-            "name": "Bisexual Characters",
-            "field": "Bisexual Characters",
-            "cardinality": 5
-          },
-          {
-            "name": "Female Characters",
-            "field": "Female Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_ALIGN",
-      "count": 13563,
-      "fields": [
-        {
-          "name": "\\\\/Spider-Man_(Peter_Parker)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_ALIGN____Spider-Man__Peter_Parker_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13563,
-            "null_rate": 0.0,
-            "min_length": 9,
-            "max_length": 72,
-            "avg_length": 27.500110595001107
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Spider-Man_(Peter_Parker)",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 14.99292191992922
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 13563
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Good Characters",
-            "field": "Good Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters",
-      "count": 13562,
-      "fields": [
-        {
-          "name": "\\\\\\\\/Captain_America_(Steven_Rogers)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters______Captain_America__Steven_Rogers_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13562,
-            "null_rate": 0.0,
-            "min_length": 11,
-            "max_length": 74,
-            "avg_length": 29.49992626456275
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\/Captain_America_(Steven_Rogers)",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 14.99292139802389
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 13562
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Good Characters",
-            "field": "Good Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters",
-      "count": 13561,
-      "fields": [
-        {
-          "name": "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters__________Wolverine__James__22Logan_22_Howlett_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13561,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 78,
-            "avg_length": 33.49959442518988
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Neutral Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters___________Wolverine__James__22Logan_22_Howlett__Neutral_Characters.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 14.992699653417889
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 13561
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Neutral Characters",
-            "field": "Neutral Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters___________Wolverine__James__22Logan_22_Howlett__Neutral_Characters",
-      "count": 13560,
-      "fields": [
-        {
-          "name": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters___________Wolverine__James__22Logan_22_Howlett__Neutral_Cha_b2cfc7c42f670e1f",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13560,
-            "null_rate": 0.0,
-            "min_length": 23,
-            "max_length": 86,
-            "avg_length": 41.5
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-            "file": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters___________Wolverine__James__22Logan_22_Howlett__Neutral_Cha_bad10d932f049006",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 14.992699115044248
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 13560
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Good Characters",
-            "field": "Good Characters",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_EYE",
-      "count": 6608,
-      "fields": [
-        {
-          "name": "\\\\/Spider-Man_(Peter_Parker)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_EYE____Spider-Man__Peter_Parker_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 6608,
-            "null_rate": 0.0,
-            "min_length": 9,
-            "max_length": 72,
-            "avg_length": 27.511198547215496
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Hazel Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Spider-Man_(Peter_Parker)",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 24,
-            "null_rate": 0.0,
-            "min_length": 7,
-            "max_length": 15,
-            "avg_length": 9.60048426150121
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 6608
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Hazel Eyes",
-            "field": "Hazel Eyes",
-            "cardinality": 24
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes",
-      "count": 6607,
-      "fields": [
-        {
-          "name": "\\\\\\\\/Captain_America_(Steven_Rogers)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes______Captain_America__Steven_Rogers_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 6607,
-            "null_rate": 0.0,
-            "min_length": 11,
-            "max_length": 74,
-            "avg_length": 29.510519146359922
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Blue Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\/Captain_America_(Steven_Rogers)",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 24,
-            "null_rate": 0.0,
-            "min_length": 7,
-            "max_length": 15,
-            "avg_length": 9.600575147570758
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 6607
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Blue Eyes",
-            "field": "Blue Eyes",
-            "cardinality": 24
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes",
-      "count": 6606,
-      "fields": [
-        {
-          "name": "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes__________Wolverine__James__22Logan_22_Howlett_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 6606,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 78,
-            "avg_length": 33.50923402967
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Blue Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes___________Wolverine__James__22Logan_22_Howlett__Blue_Eyes.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 24,
-            "null_rate": 0.0,
-            "min_length": 7,
-            "max_length": 15,
-            "avg_length": 9.600666061156524
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 6606
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Blue Eyes",
-            "field": "Blue Eyes",
-            "cardinality": 24
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes___________Wolverine__James__22Logan_22_Howlett__Blue_Eyes",
-      "count": 6605,
-      "fields": [
-        {
-          "name": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes___________Wolverine__James__22Logan_22_Howlett__Blue_Eyes________________022cc46dcc7eb4ae",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 6605,
-            "null_rate": 0.0,
-            "min_length": 23,
-            "max_length": 86,
-            "avg_length": 41.50885692657078
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Blue Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-            "file": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes___________Wolverine__James__22Logan_22_Howlett__Blue_Eyes________________fcd08c2931afdcee",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 24,
-            "null_rate": 0.0,
-            "min_length": 7,
-            "max_length": 15,
-            "avg_length": 9.600757002271006
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 6605
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Blue Eyes",
-            "field": "Blue Eyes",
-            "cardinality": 24
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_HAIR",
-      "count": 12111,
-      "fields": [
-        {
-          "name": "\\\\/Spider-Man_(Peter_Parker)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_HAIR____Spider-Man__Peter_Parker_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 12111,
-            "null_rate": 0.0,
-            "min_length": 10,
-            "max_length": 72,
-            "avg_length": 27.379489720089175
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Brown Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Spider-Man_(Peter_Parker)",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 25,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.216414829493848
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 12111
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Brown Hair",
-            "field": "Brown Hair",
-            "cardinality": 25
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair",
-      "count": 12110,
-      "fields": [
-        {
-          "name": "\\\\\\\\/Captain_America_(Steven_Rogers)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair______Captain_America__Steven_Rogers_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 12110,
-            "null_rate": 0.0,
-            "min_length": 12,
-            "max_length": 74,
-            "avg_length": 29.379108175061933
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "White Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\/Captain_America_(Steven_Rogers)",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 25,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.216350123864574
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 12110
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "White Hair",
-            "field": "White Hair",
-            "cardinality": 25
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair",
-      "count": 12109,
-      "fields": [
-        {
-          "name": "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair__________Wolverine__James__22Logan_22_Howlett_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 12109,
-            "null_rate": 0.0,
-            "min_length": 16,
-            "max_length": 78,
-            "avg_length": 33.378396234205965
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Black Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair___________Wolverine__James__22Logan_22_Howlett__Black_Hair.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 25,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.216285407548105
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 12109
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Black Hair",
-            "field": "Black Hair",
-            "cardinality": 25
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair___________Wolverine__James__22Logan_22_Howlett__Black_Hair",
-      "count": 12108,
-      "fields": [
-        {
-          "name": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair___________Wolverine__James__22Logan_22_Howlett__Black_Hair_____________1000ecfd916a248d",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 12108,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 86,
-            "avg_length": 41.37817971589032
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Black Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-            "file": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair___________Wolverine__James__22Logan_22_Howlett__Black_Hair_____________ae1359af75b9eeb0",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 25,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.21622068054179
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 12108
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Black Hair",
-            "field": "Black Hair",
-            "cardinality": 25
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "count": 60,
-      "fields": [
-        {
-          "name": "\\\\/Natalia_Romanova_(Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE____Natalia_Romanova__Earth-616_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 19,
-            "max_length": 48,
-            "avg_length": 28.266666666666666
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Natalia Romanova (Earth-616)",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 60,
-            "null_rate": 0.0,
-            "min_length": 16,
-            "max_length": 43,
-            "avg_length": 25.166666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Apr-64",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 52,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "high"
-          }
-        },
-        {
-          "name": "Red Hair",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 13,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 21,
-            "avg_length": 9.95
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Green Eyes",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 4
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 10,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 13,
-            "avg_length": 9.716666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Bisexual Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 5
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 5,
-            "null_rate": 0.0,
-            "min_length": 13,
-            "max_length": 22,
-            "avg_length": 20.3
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Female Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 8
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 22,
-            "avg_length": 16.133333333333333
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Public Identity",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 7
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 15,
-            "max_length": 16,
-            "avg_length": 15.216666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Good Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 6
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 15.466666666666667
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        },
-        {
-          "name": "Living Characters",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "\\\\/Natalia_Romanova_(Earth-616)",
-            "file": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE_____Natalia_Romanova__Earth-616__Natalia_Romanova__Earth-616__Apr-64_Red_Hair_Green_Eyes_Bisexual_Characters_Go_7b244b88c40e5638",
-            "column": 9
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 17,
-            "max_length": 19,
-            "avg_length": 17.333333333333332
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 60
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Red Hair",
-            "field": "Red Hair",
-            "cardinality": 13
-          },
-          {
-            "name": "Green Eyes",
-            "field": "Green Eyes",
-            "cardinality": 10
-          },
-          {
-            "name": "Bisexual Characters",
-            "field": "Bisexual Characters",
-            "cardinality": 5
-          },
-          {
-            "name": "Female Characters",
-            "field": "Female Characters",
-            "cardinality": 3
-          }
-        ]
-      }
     }
   ],
   "correlations": [
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.317976522132454
-        ],
-        [
-          0.317976522132454,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5577308246644974
-        ],
-        [
-          0.5577308246644974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6584797900510965
-        ],
-        [
-          0.6584797900510965,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9877000914185609
-        ],
-        [
-          0.9877000914185609,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999997
-        ],
-        [
-          0.9999999999999997,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999987
-        ],
-        [
-          0.9999999999999987,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4063402931810157
-        ],
-        [
-          0.4063402931810157,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3781059549669966
-        ],
-        [
-          0.3781059549669966,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9678871605489751
-        ],
-        [
-          0.9678871605489751,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4423960733486292
-        ],
-        [
-          0.4423960733486292,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.625702090127612
-        ],
-        [
-          0.625702090127612,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9695359714832654
-        ],
-        [
-          0.9695359714832654,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999981
-        ],
-        [
-          0.9999999999999981,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3300493922371527
-        ],
-        [
-          0.3300493922371527,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5378255477493383
-        ],
-        [
-          0.5378255477493383,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.41104809077664034
-        ],
-        [
-          0.41104809077664034,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9136353598896442
-        ],
-        [
-          0.9136353598896442,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Female Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9795804496963582
-        ],
-        [
-          0.9795804496963582,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.46273521259521544
-        ],
-        [
-          0.46273521259521544,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9110610331471547
-        ],
-        [
-          0.9110610331471547,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9406401658278413
-        ],
-        [
-          0.9406401658278413,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5378255477493379
-        ],
-        [
-          0.5378255477493379,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6584797900510965
-        ],
-        [
-          0.6584797900510965,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4627352125952155
-        ],
-        [
-          0.4627352125952155,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6257020901276119
-        ],
-        [
-          0.6257020901276119,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9110610331471558
-        ],
-        [
-          0.9110610331471558,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.37810595496699667
-        ],
-        [
-          0.37810595496699667,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999983
-        ],
-        [
-          0.9999999999999983,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3300493922371527
-        ],
-        [
-          0.3300493922371527,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.41104809077664034
-        ],
-        [
-          0.41104809077664034,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4423960733486292
-        ],
-        [
-          0.4423960733486292,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9136353598896438
-        ],
-        [
-          0.9136353598896438,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4063402931810157
-        ],
-        [
-          0.4063402931810157,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999989
-        ],
-        [
-          0.9999999999999989,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5577308246644974
-        ],
-        [
-          0.5577308246644974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9877000914185637
-        ],
-        [
-          0.9877000914185637,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.317976522132454
-        ],
-        [
-          0.317976522132454,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Female Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9795804496963578
-        ],
-        [
-          0.9795804496963578,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Female Characters",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999993
-        ],
-        [
-          0.9999999999999993,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Female Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999993
-        ],
-        [
-          0.9999999999999993,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9406401658278403
-        ],
-        [
-          0.9406401658278403,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999994
-        ],
-        [
-          0.9999999999999994,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9695359714832655
-        ],
-        [
-          0.9695359714832655,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999992
-        ],
-        [
-          0.9999999999999992,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999999999
-        ],
-        [
-          0.999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9678871605489753
-        ],
-        [
-          0.9678871605489753,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "marvel-characters_original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -3523,48 +419,12 @@
     {
       "entity": "original",
       "fields": [
-        "name",
-        "HAIR"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999997117
-        ],
-        [
-          0.9999999999997117,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
+        "ID",
         "urlslug"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999927308
-        ],
-        [
-          0.9999999999927308,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "ALIVE"
-      ],
-      "matrix": [
-        [
-          1.0,
           1.0
         ],
         [
@@ -3577,70 +437,16 @@
     {
       "entity": "original",
       "fields": [
-        "name",
-        "EYE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "ALIGN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "SEX"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998456
-        ],
-        [
-          0.9999999999998456,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
+        "ID",
         "FIRST APPEARANCE"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999938464
+          0.33531171595293563
         ],
         [
-          0.9999999999938464,
+          0.33531171595293563,
           1.0
         ]
       ],
@@ -3649,16 +455,16 @@
     {
       "entity": "original",
       "fields": [
-        "name",
-        "ID"
+        "ID",
+        "name"
       ],
       "matrix": [
         [
           1.0,
-          0.999999999999804
+          0.9999999999996859
         ],
         [
-          0.999999999999804,
+          0.9999999999996859,
           1.0
         ]
       ],
@@ -3667,232 +473,16 @@
     {
       "entity": "original",
       "fields": [
-        "name",
-        "GSM"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "HAIR",
+        "ALIGN",
         "urlslug"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999757
-        ],
-        [
-          0.9999999999999757,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "HAIR",
-        "EYE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3223697624055619
-        ],
-        [
-          0.3223697624055619,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "HAIR",
-        "GSM"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5572001325385227
-        ],
-        [
-          0.5572001325385227,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "ALIVE"
-      ],
-      "matrix": [
-        [
-          1.0,
           1.0
         ],
         [
           1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "EYE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "ALIGN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "SEX"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998759
-        ],
-        [
-          0.9999999999998759,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "FIRST APPEARANCE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999938266
-        ],
-        [
-          0.9999999999938266,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "ID"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998175
-        ],
-        [
-          0.9999999999998175,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "GSM"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ALIVE",
-        "FIRST APPEARANCE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3283489388420096
-        ],
-        [
-          0.3283489388420096,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "EYE",
-        "FIRST APPEARANCE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3477385537145388
-        ],
-        [
-          0.3477385537145388,
           1.0
         ]
       ],
@@ -3907,10 +497,10 @@
       "matrix": [
         [
           1.0,
-          0.3662974730680421
+          0.36629747306804206
         ],
         [
-          0.3662974730680421,
+          0.36629747306804206,
           1.0
         ]
       ],
@@ -3919,8 +509,116 @@
     {
       "entity": "original",
       "fields": [
-        "SEX",
-        "GSM"
+        "ALIGN",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "EYE",
+        "urlslug"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999998725
+        ],
+        [
+          0.9999999999998725,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "EYE",
+        "FIRST APPEARANCE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.34773855371453916
+        ],
+        [
+          0.34773855371453916,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "EYE",
+        "HAIR"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.32236976240556187
+        ],
+        [
+          0.32236976240556187,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "EYE",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GSM",
+        "urlslug"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GSM",
+        "SEX"
       ],
       "matrix": [
         [
@@ -3937,16 +635,160 @@
     {
       "entity": "original",
       "fields": [
-        "FIRST APPEARANCE",
-        "ID"
+        "GSM",
+        "FIRST APPEARANCE"
       ],
       "matrix": [
         [
           1.0,
-          0.3353117159529364
+          0.986681513153074
         ],
         [
-          0.3353117159529364,
+          0.986681513153074,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GSM",
+        "HAIR"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5572001325385229
+        ],
+        [
+          0.5572001325385229,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GSM",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "SEX"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "FIRST APPEARANCE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.99999999999403
+        ],
+        [
+          0.99999999999403,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "HAIR"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999997143
+        ],
+        [
+          0.9999999999997143,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999927305
+        ],
+        [
+          0.9999999999927305,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "ALIVE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "SEX",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999998114
+        ],
+        [
+          0.9999999999998114,
           1.0
         ]
       ],
@@ -3956,15 +798,69 @@
       "entity": "original",
       "fields": [
         "FIRST APPEARANCE",
-        "GSM"
+        "name"
       ],
       "matrix": [
         [
           1.0,
-          0.9866815131530736
+          0.9999999999952369
         ],
         [
-          0.9866815131530736,
+          0.9999999999952369,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FIRST APPEARANCE",
+        "ALIVE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.32834893884200983
+        ],
+        [
+          0.32834893884200983,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "HAIR",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999989383
+        ],
+        [
+          0.9999999999989383,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "name",
+        "ALIVE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
           1.0
         ]
       ],
@@ -3977,23 +873,248 @@
       "matrix": [],
       "conditional": [],
       "dependent": "APPEARANCES",
-      "given": "ALIVE",
+      "given": "ALIGN",
       "distributions": [
         {
-          "when": "Living Characters",
+          "when": "Neutral Characters",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.7450969918511781
+            "shape": 0.7338722889700184
           },
           "round": true
         },
         {
-          "when": "Deceased Characters",
+          "when": "Good Characters",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.7468711389144267
+            "shape": 0.5540382549857528
+          },
+          "round": true
+        },
+        {
+          "when": "Bad Characters",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.8817036212275507
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "pareto",
+        "params": {
+          "scale": 1.0,
+          "shape": 0.7455135294288417
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "APPEARANCES",
+      "given": "HAIR",
+      "distributions": [
+        {
+          "when": "Yellow Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5178971076854334
+          },
+          "round": true
+        },
+        {
+          "when": "Black Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.7104120928414681
+          },
+          "round": true
+        },
+        {
+          "when": "Green Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6496322245703139
+          },
+          "round": true
+        },
+        {
+          "when": "Gold Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.45225425846679607
+          },
+          "round": true
+        },
+        {
+          "when": "No Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6870429339512418
+          },
+          "round": true
+        },
+        {
+          "when": "Light Brown Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 2.0,
+            "shape": 0.9758527996287751
+          },
+          "round": true
+        },
+        {
+          "when": "Reddish Blond Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 4.0,
+            "shape": 0.640630011009287
+          },
+          "round": true
+        },
+        {
+          "when": "Blond Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6166774496312688
+          },
+          "round": true
+        },
+        {
+          "when": "Auburn Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.44531199567550833
+          },
+          "round": true
+        },
+        {
+          "when": "Grey Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.690365189624893
+          },
+          "round": true
+        },
+        {
+          "when": "Brown Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6593612335014928
+          },
+          "round": true
+        },
+        {
+          "when": "Silver Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.423568859928728,
+            "sigma": 1.657462412973867
+          },
+          "round": true
+        },
+        {
+          "when": "Pink Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5871837443309924
+          },
+          "round": true
+        },
+        {
+          "when": "Strawberry Blond Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 3.077237984204077,
+            "sigma": 1.6447885257456847
+          },
+          "round": true
+        },
+        {
+          "when": "Variable Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.2175691711723773,
+            "sigma": 1.2887002612891512
+          },
+          "round": true
+        },
+        {
+          "when": "Bald",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.7658109870975929
+          },
+          "round": true
+        },
+        {
+          "when": "White Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.7959465495235118
+          },
+          "round": true
+        },
+        {
+          "when": "Orange Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5480352361644854
+          },
+          "round": true
+        },
+        {
+          "when": "Magenta Hair",
+          "distribution": "uniform",
+          "params": {
+            "max": 29.0,
+            "min": 2.0
+          },
+          "round": true
+        },
+        {
+          "when": "Blue Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5704628135889095
+          },
+          "round": true
+        },
+        {
+          "when": "Purple Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6545117932912883
+          },
+          "round": true
+        },
+        {
+          "when": "Red Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6015633244879425
           },
           "round": true
         }
@@ -4013,41 +1134,201 @@
       "matrix": [],
       "conditional": [],
       "dependent": "page_id",
-      "given": "ID",
+      "given": "HAIR",
       "distributions": [
         {
-          "when": "Known to Authorities Identity",
-          "distribution": "log_normal",
+          "when": "White Hair",
+          "distribution": "uniform",
           "params": {
-            "mu": 9.875461782014872,
-            "sigma": 1.6144562962794076
+            "max": 754881.0,
+            "min": 1036.0
           },
           "round": true
         },
         {
-          "when": "Secret Identity",
-          "distribution": "log_normal",
+          "when": "Red Hair",
+          "distribution": "uniform",
           "params": {
-            "mu": 11.212761948340583,
-            "sigma": 2.002008958248624
+            "max": 754898.0,
+            "min": 1060.0
           },
           "round": true
         },
         {
-          "when": "No Dual Identity",
+          "when": "Black Hair",
           "distribution": "uniform",
           "params": {
             "max": 755112.0,
-            "min": 1029.0
+            "min": 1033.0
           },
           "round": true
         },
         {
-          "when": "Public Identity",
+          "when": "Blond Hair",
           "distribution": "uniform",
           "params": {
-            "max": 754703.0,
+            "max": 755266.0,
+            "min": 1025.0
+          },
+          "round": true
+        },
+        {
+          "when": "Silver Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1394.0,
+            "shape": 0.4650458131488696
+          },
+          "round": true
+        },
+        {
+          "when": "Pink Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.110610123710487,
+            "sigma": 2.116808877280869
+          },
+          "round": true
+        },
+        {
+          "when": "Blue Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.794698805951437,
+            "sigma": 2.0153396156360373
+          },
+          "round": true
+        },
+        {
+          "when": "Reddish Blond Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.54313135600437,
+            "sigma": 1.7695846488501097
+          },
+          "round": true
+        },
+        {
+          "when": "Variable Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1167.0,
+            "shape": 0.3208212230709356
+          },
+          "round": true
+        },
+        {
+          "when": "Light Brown Hair",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 3.475251000003475e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Auburn Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.978218507867016,
+            "sigma": 2.109798540877876
+          },
+          "round": true
+        },
+        {
+          "when": "Bald",
+          "distribution": "uniform",
+          "params": {
+            "max": 754756.0,
             "min": 1027.0
+          },
+          "round": true
+        },
+        {
+          "when": "Brown Hair",
+          "distribution": "uniform",
+          "params": {
+            "max": 755108.0,
+            "min": 1032.0
+          },
+          "round": true
+        },
+        {
+          "when": "Green Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.254813665091083,
+            "sigma": 1.9097882067488647
+          },
+          "round": true
+        },
+        {
+          "when": "Yellow Hair",
+          "distribution": "gamma",
+          "params": {
+            "scale": 216014.6394440498,
+            "shape": 0.8524366703752686
+          },
+          "round": true
+        },
+        {
+          "when": "Orange Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.144082015039626,
+            "sigma": 2.078999204912909
+          },
+          "round": true
+        },
+        {
+          "when": "Grey Hair",
+          "distribution": "uniform",
+          "params": {
+            "max": 755046.0,
+            "min": 1112.0
+          },
+          "round": true
+        },
+        {
+          "when": "Purple Hair",
+          "distribution": "uniform",
+          "params": {
+            "max": 743134.0,
+            "min": 1143.0
+          },
+          "round": true
+        },
+        {
+          "when": "Gold Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1029.0,
+            "shape": 0.30755715079894697
+          },
+          "round": true
+        },
+        {
+          "when": "Magenta Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 15950.0,
+            "shape": 1.113568524927787
+          },
+          "round": true
+        },
+        {
+          "when": "No Hair",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 3.6552754255938816e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Strawberry Blond Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1080.0,
+            "shape": 0.40301623612153836
           },
           "round": true
         }
@@ -4079,11 +1360,11 @@
           "round": true
         },
         {
-          "when": "Public Identity",
-          "distribution": "pareto",
+          "when": "Known to Authorities Identity",
+          "distribution": "log_normal",
           "params": {
-            "scale": 1.0,
-            "shape": 0.7552353287359297
+            "mu": 3.2565926183083627,
+            "sigma": 1.5005868184836761
           },
           "round": true
         },
@@ -4097,56 +1378,11 @@
           "round": true
         },
         {
-          "when": "Known to Authorities Identity",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.2565926183083627,
-            "sigma": 1.5005868184836761
-          },
-          "round": true
-        }
-      ],
-      "default": {
-        "kind": "pareto",
-        "params": {
-          "scale": 1.0,
-          "shape": 0.7455135294288417
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "APPEARANCES",
-      "given": "ALIGN",
-      "distributions": [
-        {
-          "when": "Good Characters",
+          "when": "Public Identity",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.5540382549857528
-          },
-          "round": true
-        },
-        {
-          "when": "Neutral Characters",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.7338722889700184
-          },
-          "round": true
-        },
-        {
-          "when": "Bad Characters",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.8817036212275507
+            "shape": 0.7552353287359297
           },
           "round": true
         }
@@ -4166,23 +1402,41 @@
       "matrix": [],
       "conditional": [],
       "dependent": "page_id",
-      "given": "GSM",
+      "given": "ID",
       "distributions": [
         {
-          "when": "Bisexual Characters",
-          "distribution": "pareto",
+          "when": "Known to Authorities Identity",
+          "distribution": "log_normal",
           "params": {
-            "scale": 1424.0,
-            "shape": 0.5933681153099404
+            "mu": 9.875461782014872,
+            "sigma": 1.6144562962794076
           },
           "round": true
         },
         {
-          "when": "Homosexual Characters",
+          "when": "No Dual Identity",
+          "distribution": "uniform",
+          "params": {
+            "max": 755112.0,
+            "min": 1029.0
+          },
+          "round": true
+        },
+        {
+          "when": "Secret Identity",
           "distribution": "log_normal",
           "params": {
-            "mu": 10.934343875282748,
-            "sigma": 2.082766890539367
+            "mu": 11.212761948340583,
+            "sigma": 2.002008958248624
+          },
+          "round": true
+        },
+        {
+          "when": "Public Identity",
+          "distribution": "uniform",
+          "params": {
+            "max": 754703.0,
+            "min": 1027.0
           },
           "round": true
         }
@@ -4238,201 +1492,23 @@
       "matrix": [],
       "conditional": [],
       "dependent": "page_id",
-      "given": "HAIR",
+      "given": "GSM",
       "distributions": [
         {
-          "when": "Magenta Hair",
+          "when": "Homosexual Characters",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.934343875282748,
+            "sigma": 2.082766890539367
+          },
+          "round": true
+        },
+        {
+          "when": "Bisexual Characters",
           "distribution": "pareto",
           "params": {
-            "scale": 15950.0,
-            "shape": 1.113568524927787
-          },
-          "round": true
-        },
-        {
-          "when": "Light Brown Hair",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 3.475251000003475e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Blond Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 755266.0,
-            "min": 1025.0
-          },
-          "round": true
-        },
-        {
-          "when": "Silver Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1394.0,
-            "shape": 0.4650458131488696
-          },
-          "round": true
-        },
-        {
-          "when": "Green Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.254813665091083,
-            "sigma": 1.9097882067488647
-          },
-          "round": true
-        },
-        {
-          "when": "Reddish Blond Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.54313135600437,
-            "sigma": 1.7695846488501097
-          },
-          "round": true
-        },
-        {
-          "when": "Strawberry Blond Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1080.0,
-            "shape": 0.40301623612153836
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Hair",
-          "distribution": "gamma",
-          "params": {
-            "scale": 216014.6394440498,
-            "shape": 0.8524366703752686
-          },
-          "round": true
-        },
-        {
-          "when": "Brown Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 755108.0,
-            "min": 1032.0
-          },
-          "round": true
-        },
-        {
-          "when": "Black Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 755112.0,
-            "min": 1033.0
-          },
-          "round": true
-        },
-        {
-          "when": "Variable Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1167.0,
-            "shape": 0.3208212230709356
-          },
-          "round": true
-        },
-        {
-          "when": "Purple Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 743134.0,
-            "min": 1143.0
-          },
-          "round": true
-        },
-        {
-          "when": "White Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 754881.0,
-            "min": 1036.0
-          },
-          "round": true
-        },
-        {
-          "when": "Orange Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.144082015039626,
-            "sigma": 2.078999204912909
-          },
-          "round": true
-        },
-        {
-          "when": "No Hair",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 3.6552754255938816e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Auburn Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.978218507867016,
-            "sigma": 2.109798540877876
-          },
-          "round": true
-        },
-        {
-          "when": "Bald",
-          "distribution": "uniform",
-          "params": {
-            "max": 754756.0,
-            "min": 1027.0
-          },
-          "round": true
-        },
-        {
-          "when": "Red Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 754898.0,
-            "min": 1060.0
-          },
-          "round": true
-        },
-        {
-          "when": "Grey Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 755046.0,
-            "min": 1112.0
-          },
-          "round": true
-        },
-        {
-          "when": "Blue Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.794698805951437,
-            "sigma": 2.0153396156360373
-          },
-          "round": true
-        },
-        {
-          "when": "Gold Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1029.0,
-            "shape": 0.30755715079894697
-          },
-          "round": true
-        },
-        {
-          "when": "Pink Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.110610123710487,
-            "sigma": 2.116808877280869
+            "scale": 1424.0,
+            "shape": 0.5933681153099404
           },
           "round": true
         }
@@ -4452,203 +1528,23 @@
       "matrix": [],
       "conditional": [],
       "dependent": "APPEARANCES",
-      "given": "HAIR",
+      "given": "ALIVE",
       "distributions": [
         {
-          "when": "Bald",
+          "when": "Living Characters",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.7658109870975929
+            "shape": 0.7450969918511781
           },
           "round": true
         },
         {
-          "when": "Brown Hair",
+          "when": "Deceased Characters",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.6593612335014928
-          },
-          "round": true
-        },
-        {
-          "when": "Grey Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.690365189624893
-          },
-          "round": true
-        },
-        {
-          "when": "Magenta Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 29.0,
-            "min": 2.0
-          },
-          "round": true
-        },
-        {
-          "when": "Light Brown Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 2.0,
-            "shape": 0.9758527996287751
-          },
-          "round": true
-        },
-        {
-          "when": "Strawberry Blond Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.077237984204077,
-            "sigma": 1.6447885257456847
-          },
-          "round": true
-        },
-        {
-          "when": "Blond Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6166774496312688
-          },
-          "round": true
-        },
-        {
-          "when": "No Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6870429339512418
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5178971076854334
-          },
-          "round": true
-        },
-        {
-          "when": "Blue Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5704628135889095
-          },
-          "round": true
-        },
-        {
-          "when": "Pink Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5871837443309924
-          },
-          "round": true
-        },
-        {
-          "when": "Gold Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.45225425846679607
-          },
-          "round": true
-        },
-        {
-          "when": "Reddish Blond Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 4.0,
-            "shape": 0.640630011009287
-          },
-          "round": true
-        },
-        {
-          "when": "Purple Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6545117932912883
-          },
-          "round": true
-        },
-        {
-          "when": "Auburn Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.44531199567550833
-          },
-          "round": true
-        },
-        {
-          "when": "Green Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6496322245703139
-          },
-          "round": true
-        },
-        {
-          "when": "Black Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.7104120928414681
-          },
-          "round": true
-        },
-        {
-          "when": "Red Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6015633244879425
-          },
-          "round": true
-        },
-        {
-          "when": "Variable Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.2175691711723773,
-            "sigma": 1.2887002612891512
-          },
-          "round": true
-        },
-        {
-          "when": "White Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.7959465495235118
-          },
-          "round": true
-        },
-        {
-          "when": "Silver Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 3.423568859928728,
-            "sigma": 1.657462412973867
-          },
-          "round": true
-        },
-        {
-          "when": "Orange Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5480352361644854
+            "shape": 0.7468711389144267
           },
           "round": true
         }
@@ -4680,15 +1576,6 @@
           "round": true
         },
         {
-          "when": "Agender Characters",
-          "distribution": "uniform",
-          "params": {
-            "max": 755268.0,
-            "min": 1292.0
-          },
-          "round": true
-        },
-        {
           "when": "Female Characters",
           "distribution": "uniform",
           "params": {
@@ -4696,210 +1583,13 @@
             "min": 1036.0
           },
           "round": true
-        }
-      ],
-      "default": {
-        "kind": "uniform",
-        "params": {
-          "max": 755278.0,
-          "min": 1025.0
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "page_id",
-      "given": "EYE",
-      "distributions": [
-        {
-          "when": "No Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 9045.0,
-            "shape": 0.5644186938383827
-          },
-          "round": true
         },
         {
-          "when": "Green Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.252297565066977,
-            "sigma": 1.9647024717257922
-          },
-          "round": true
-        },
-        {
-          "when": "White Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 3.641157286133691e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Violet Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1094.0,
-            "shape": 0.3315265415810568
-          },
-          "round": true
-        },
-        {
-          "when": "Red Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.158403136201525,
-            "sigma": 2.110327192306848
-          },
-          "round": true
-        },
-        {
-          "when": "Amber Eyes",
+          "when": "Agender Characters",
           "distribution": "uniform",
           "params": {
-            "max": 729159.0,
-            "min": 2374.0
-          },
-          "round": true
-        },
-        {
-          "when": "Purple Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1303.0,
-            "shape": 0.28020390953012725
-          },
-          "round": true
-        },
-        {
-          "when": "Silver Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1317.0,
-            "shape": 0.34604466836335435
-          },
-          "round": true
-        },
-        {
-          "when": "Brown Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.104156092510323,
-            "sigma": 2.0834337904091598
-          },
-          "round": true
-        },
-        {
-          "when": "Pink Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1673.0,
-            "shape": 0.36523776571936645
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.269277739895589,
-            "sigma": 2.043005111028977
-          },
-          "round": true
-        },
-        {
-          "when": "Blue Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.888853263002483,
-            "sigma": 2.1908093967830116
-          },
-          "round": true
-        },
-        {
-          "when": "Gold Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.76517288968781,
-            "sigma": 1.9899519902347231
-          },
-          "round": true
-        },
-        {
-          "when": "Variable Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.482828719449337,
-            "sigma": 1.9604934960589018
-          },
-          "round": true
-        },
-        {
-          "when": "Black Eyes",
-          "distribution": "uniform",
-          "params": {
-            "max": 753403.0,
-            "min": 1047.0
-          },
-          "round": true
-        },
-        {
-          "when": "Hazel Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.988872926098464,
-            "sigma": 2.3616142081696516
-          },
-          "round": true
-        },
-        {
-          "when": "One Eye",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.909570630341854,
-            "sigma": 2.013964342028236
-          },
-          "round": true
-        },
-        {
-          "when": "Multiple Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 8000.0,
-            "shape": 0.4567961590747474
-          },
-          "round": true
-        },
-        {
-          "when": "Grey Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.00578565656441,
-            "sigma": 2.2208967614578223
-          },
-          "round": true
-        },
-        {
-          "when": "Orange Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 11.101737664377117,
-            "sigma": 1.8958263979774324
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Eyeballs",
-          "distribution": "pareto",
-          "params": {
-            "scale": 2051.0,
-            "shape": 0.3967348458891275
+            "max": 755268.0,
+            "min": 1292.0
           },
           "round": true
         }
@@ -4922,38 +1612,19 @@
       "given": "EYE",
       "distributions": [
         {
-          "when": "Amber Eyes",
-          "distribution": "pareto",
+          "when": "Silver Eyes",
+          "distribution": "exponential",
           "params": {
-            "scale": 1.0,
-            "shape": 0.6217794563454034
+            "lambda": 0.0363036303630363
           },
           "round": true
         },
         {
-          "when": "Red Eyes",
+          "when": "No Eyes",
           "distribution": "pareto",
           "params": {
-            "scale": 1.0,
-            "shape": 0.5973673429720914
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5902681213663914
-          },
-          "round": true
-        },
-        {
-          "when": "Gold Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.41267604631583843
+            "scale": 2.0,
+            "shape": 1.0496541330798719
           },
           "round": true
         },
@@ -4967,29 +1638,29 @@
           "round": true
         },
         {
-          "when": "Variable Eyes",
-          "distribution": "log_normal",
+          "when": "Gold Eyes",
+          "distribution": "pareto",
           "params": {
-            "mu": 2.3580630526236397,
-            "sigma": 1.3786385372022767
+            "scale": 1.0,
+            "shape": 0.41267604631583843
           },
           "round": true
         },
         {
-          "when": "Hazel Eyes",
+          "when": "Multiple Eyes",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.3803106542883918
+            "shape": 0.5787854513077613
           },
           "round": true
         },
         {
-          "when": "Green Eyes",
+          "when": "Brown Eyes",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.515912237612457
+            "shape": 0.48884591429168756
           },
           "round": true
         },
@@ -5012,63 +1683,20 @@
           "round": true
         },
         {
-          "when": "Multiple Eyes",
+          "when": "Pink Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 1.9965190289372472,
+            "sigma": 1.3067899890309196
+          },
+          "round": true
+        },
+        {
+          "when": "Hazel Eyes",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.5787854513077613
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Eyeballs",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 0.1111111111111111
-          },
-          "round": true
-        },
-        {
-          "when": "Black Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6880769303097664
-          },
-          "round": true
-        },
-        {
-          "when": "Silver Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 0.0363036303630363
-          },
-          "round": true
-        },
-        {
-          "when": "Brown Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.48884591429168756
-          },
-          "round": true
-        },
-        {
-          "when": "Orange Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6500034590804995
-          },
-          "round": true
-        },
-        {
-          "when": "No Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 2.0,
-            "shape": 1.0496541330798719
+            "shape": 0.3803106542883918
           },
           "round": true
         },
@@ -5082,11 +1710,56 @@
           "round": true
         },
         {
-          "when": "Pink Eyes",
+          "when": "Green Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.515912237612457
+          },
+          "round": true
+        },
+        {
+          "when": "Yellow Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5902681213663914
+          },
+          "round": true
+        },
+        {
+          "when": "Amber Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6217794563454034
+          },
+          "round": true
+        },
+        {
+          "when": "Variable Eyes",
           "distribution": "log_normal",
           "params": {
-            "mu": 1.9965190289372472,
-            "sigma": 1.3067899890309196
+            "mu": 2.3580630526236397,
+            "sigma": 1.3786385372022767
+          },
+          "round": true
+        },
+        {
+          "when": "Orange Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6500034590804995
+          },
+          "round": true
+        },
+        {
+          "when": "Red Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5973673429720914
           },
           "round": true
         },
@@ -5100,11 +1773,28 @@
           "round": true
         },
         {
+          "when": "Black Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6880769303097664
+          },
+          "round": true
+        },
+        {
           "when": "Purple Eyes",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
             "shape": 0.4896842059603231
+          },
+          "round": true
+        },
+        {
+          "when": "Yellow Eyeballs",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 0.1111111111111111
           },
           "round": true
         }
@@ -5118,1480 +1808,210 @@
       }
     },
     {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999974
-        ],
-        [
-          0.9999999999999974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9678871605489751
-        ],
-        [
-          0.9678871605489751,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9406401658278407
-        ],
-        [
-          0.9406401658278407,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9136353598896455
-        ],
-        [
-          0.9136353598896455,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9695359714832653
-        ],
-        [
-          0.9695359714832653,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9795804496963582
-        ],
-        [
-          0.9795804496963582,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9110610331471554
-        ],
-        [
-          0.9110610331471554,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9877000914185632
-        ],
-        [
-          0.9877000914185632,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4063402931810159
-        ],
-        [
-          0.4063402931810159,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3781059549669967
-        ],
-        [
-          0.3781059549669967,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.317976522132454
-        ],
-        [
-          0.317976522132454,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.41104809077664034
-        ],
-        [
-          0.41104809077664034,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999994
-        ],
-        [
-          0.9999999999999994,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4627352125952155
-        ],
-        [
-          0.4627352125952155,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4423960733486292
-        ],
-        [
-          0.4423960733486292,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3300493922371527
-        ],
-        [
-          0.3300493922371527,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Green Eyes",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5378255477493377
-        ],
-        [
-          0.5378255477493377,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999997
-        ],
-        [
-          0.9999999999999997,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999983
-        ],
-        [
-          0.9999999999999983,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6257020901276119
-        ],
-        [
-          0.6257020901276119,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Female Characters",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5577308246644973
-        ],
-        [
-          0.5577308246644973,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__name_urlslug_FIRST_APPEARANCE_HAIR_EYE_GSM_ID_SEX_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6584797900510965
-        ],
-        [
-          0.6584797900510965,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_ALIGN",
-      "fields": [
-        "\\\\/Spider-Man_(Peter_Parker)",
-        "Good Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters",
-      "fields": [
-        "Good Characters",
-        "\\\\\\\\/Captain_America_(Steven_Rogers)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters",
-      "fields": [
-        "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-        "Neutral Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_ALIGN_____Spider-Man__Peter_Parker__Good_Characters_______Captain_America__Steven_Rogers__Good_Characters___________Wolverine__James__22Logan_22_Howlett__Neutral_Characters",
-      "fields": [
-        "Good Characters",
-        "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998628
-        ],
-        [
-          0.9999999999998628,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_EYE",
-      "fields": [
-        "\\\\/Spider-Man_(Peter_Parker)",
-        "Hazel Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes",
-      "fields": [
-        "Blue Eyes",
-        "\\\\\\\\/Captain_America_(Steven_Rogers)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999845
-        ],
-        [
-          0.9999999999999845,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes",
-      "fields": [
-        "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)",
-        "Blue Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999797
-        ],
-        [
-          0.9999999999999797,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_EYE_____Spider-Man__Peter_Parker__Hazel_Eyes_______Captain_America__Steven_Rogers__Blue_Eyes___________Wolverine__James__22Logan_22_Howlett__Blue_Eyes",
-      "fields": [
-        "Blue Eyes",
-        "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_HAIR",
-      "fields": [
-        "Brown Hair",
-        "\\\\/Spider-Man_(Peter_Parker)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair",
-      "fields": [
-        "White Hair",
-        "\\\\\\\\/Captain_America_(Steven_Rogers)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair",
-      "fields": [
-        "Black Hair",
-        "\\\\\\\\\\\\\\\\/Wolverine_(James_%22Logan%22_Howlett)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999998755
-        ],
-        [
-          0.999999999998755,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_HAIR_____Spider-Man__Peter_Parker__Brown_Hair_______Captain_America__Steven_Rogers__White_Hair___________Wolverine__James__22Logan_22_Howlett__Black_Hair",
-      "fields": [
-        "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/Iron_Man_(Anthony_%22Tony%22_Stark)",
-        "Black Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Apr-64"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9678871605489756
-        ],
-        [
-          0.9678871605489756,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.37810595496699667
-        ],
-        [
-          0.37810595496699667,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.317976522132454
-        ],
-        [
-          0.317976522132454,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Good Characters",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4063402931810158
-        ],
-        [
-          0.4063402931810158,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Natalia Romanova (Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9406401658278406
-        ],
-        [
-          0.9406401658278406,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9110610331471546
-        ],
-        [
-          0.9110610331471546,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9877000914185635
-        ],
-        [
-          0.9877000914185635,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9695359714832658
-        ],
-        [
-          0.9695359714832658,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9795804496963583
-        ],
-        [
-          0.9795804496963583,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Apr-64",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9136353598896456
-        ],
-        [
-          0.9136353598896456,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Public Identity"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999974
-        ],
-        [
-          0.9999999999999974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999991
-        ],
-        [
-          0.9999999999999991,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Natalia Romanova (Earth-616)",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Red Hair"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.46273521259521555
-        ],
-        [
-          0.46273521259521555,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Public Identity",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.41104809077664034
-        ],
-        [
-          0.41104809077664034,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Bisexual Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6584797900510965
-        ],
-        [
-          0.6584797900510965,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Living Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6257020901276119
-        ],
-        [
-          0.6257020901276119,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Red Hair",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5378255477493379
-        ],
-        [
-          0.5378255477493379,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Bisexual Characters",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5577308246644974
-        ],
-        [
-          0.5577308246644974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "\\\\/Natalia_Romanova_(Earth-616)"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999993
-        ],
-        [
-          0.9999999999999993,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Living Characters",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.44239607334862924
-        ],
-        [
-          0.44239607334862924,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Female Characters"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999998
-        ],
-        [
-          0.9999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "\\\\/Natalia_Romanova_(Earth-616)",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__urlslug_name_FIRST_APPEARANCE_HAIR_EYE_GSM_SEX_ID_ALIGN_ALIVE",
-      "fields": [
-        "Female Characters",
-        "Green Eyes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3300493922371527
-        ],
-        [
-          0.3300493922371527,
-          1.0
-        ]
-      ],
-      "conditional": []
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "page_id",
+      "given": "EYE",
+      "distributions": [
+        {
+          "when": "Multiple Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 8000.0,
+            "shape": 0.4567961590747474
+          },
+          "round": true
+        },
+        {
+          "when": "No Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 9045.0,
+            "shape": 0.5644186938383827
+          },
+          "round": true
+        },
+        {
+          "when": "Orange Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.101737664377117,
+            "sigma": 1.8958263979774324
+          },
+          "round": true
+        },
+        {
+          "when": "Grey Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.00578565656441,
+            "sigma": 2.2208967614578223
+          },
+          "round": true
+        },
+        {
+          "when": "Blue Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.888853263002483,
+            "sigma": 2.1908093967830116
+          },
+          "round": true
+        },
+        {
+          "when": "Green Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.252297565066977,
+            "sigma": 1.9647024717257922
+          },
+          "round": true
+        },
+        {
+          "when": "Hazel Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.988872926098464,
+            "sigma": 2.3616142081696516
+          },
+          "round": true
+        },
+        {
+          "when": "Pink Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1673.0,
+            "shape": 0.36523776571936645
+          },
+          "round": true
+        },
+        {
+          "when": "Variable Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.482828719449337,
+            "sigma": 1.9604934960589018
+          },
+          "round": true
+        },
+        {
+          "when": "Red Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.158403136201525,
+            "sigma": 2.110327192306848
+          },
+          "round": true
+        },
+        {
+          "when": "Yellow Eyeballs",
+          "distribution": "pareto",
+          "params": {
+            "scale": 2051.0,
+            "shape": 0.3967348458891275
+          },
+          "round": true
+        },
+        {
+          "when": "Black Eyes",
+          "distribution": "uniform",
+          "params": {
+            "max": 753403.0,
+            "min": 1047.0
+          },
+          "round": true
+        },
+        {
+          "when": "Purple Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1303.0,
+            "shape": 0.28020390953012725
+          },
+          "round": true
+        },
+        {
+          "when": "Brown Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.104156092510323,
+            "sigma": 2.0834337904091598
+          },
+          "round": true
+        },
+        {
+          "when": "Yellow Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 11.269277739895589,
+            "sigma": 2.043005111028977
+          },
+          "round": true
+        },
+        {
+          "when": "White Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 3.641157286133691e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Silver Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1317.0,
+            "shape": 0.34604466836335435
+          },
+          "round": true
+        },
+        {
+          "when": "Gold Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.76517288968781,
+            "sigma": 1.9899519902347231
+          },
+          "round": true
+        },
+        {
+          "when": "One Eye",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.909570630341854,
+            "sigma": 2.013964342028236
+          },
+          "round": true
+        },
+        {
+          "when": "Violet Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1094.0,
+            "shape": 0.3315265415810568
+          },
+          "round": true
+        },
+        {
+          "when": "Amber Eyes",
+          "distribution": "uniform",
+          "params": {
+            "max": 729159.0,
+            "min": 2374.0
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "uniform",
+        "params": {
+          "max": 755278.0,
+          "min": 1025.0
+        }
+      }
     }
   ]
 }

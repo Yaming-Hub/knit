@@ -27,87 +27,15 @@
                 "weight": 0.004
               },
               {
-                "value": "[\"2017\"]",
-                "weight": 0.003
-              },
-              {
                 "value": "[\"1981\"]",
                 "weight": 0.003
               },
               {
-                "value": "[\"China\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"December 15, 2017\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"18\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"Thurl Ravenscroft\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"1982\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"eastward, in prograde motion\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"July 16, 2017\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"1998\"]",
-                "weight": 0.002
+                "value": "[\"2017\"]",
+                "weight": 0.003
               },
               {
                 "value": "[\"13\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"35\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"in 2018\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"10\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"2000\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"six\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"March 9, 2018\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"Marvin Gaye\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"1980\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"2015\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"1984\"]",
                 "weight": 0.002
               },
               {
@@ -115,19 +43,31 @@
                 "weight": 0.002
               },
               {
-                "value": "[\"Australia\"]",
+                "value": "[\"six\"]",
                 "weight": 0.002
               },
               {
-                "value": "[\"Spanish\"]",
+                "value": "[\"2015\"]",
                 "weight": 0.002
               },
               {
-                "value": "[\"9\"]",
+                "value": "[\"December 15, 2017\"]",
                 "weight": 0.002
               },
               {
-                "value": "[\"Jason Michael Lee\"]",
+                "value": "[\"1984\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"July 16, 2017\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"1962\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"Marvin Gaye\"]",
                 "weight": 0.002
               },
               {
@@ -139,7 +79,71 @@
                 "weight": 0.002
               },
               {
+                "value": "[\"Spanish\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"1982\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"1980\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"Jason Michael Lee\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"China\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"10\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"18\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"1998\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"35\"]",
+                "weight": 0.002
+              },
+              {
                 "value": "[\"1988\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"Australia\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"March 9, 2018\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"in 2018\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"eastward, in prograde motion\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"Thurl Ravenscroft\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"2000\"]",
+                "weight": 0.002
+              },
+              {
+                "value": "[\"9\"]",
                 "weight": 0.002
               },
               {
@@ -147,83 +151,11 @@
                 "weight": 0.002
               },
               {
-                "value": "[\"1962\"]",
-                "weight": 0.002
-              },
-              {
-                "value": "[\"1950\"]",
+                "value": "[\"1970\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"January 19, 2018\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"June 27\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Bernie Sanders\",\"Hillary Clinton\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"2010\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Post Alley\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Alex Rodriguez\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Sadie Sandler\",\"Selena Gomez\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Italy\",\"Adriatic Sea\",\"Germany\",\"Bohemia\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Purandara Dāsa\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"April 12, 1995\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Rosie Huntington-Whiteley\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Kristen Bell\",\"Livvy Stubenrauch\",\"Agatha Lee Monn\",\"Katie Lopez\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Adam Woodyatt\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Patrick Henry\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"San Antonio\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the rear of the system\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Triple Falls\",\"DuPont State Recreational Forest\",\"Bridal Veil Falls\",\"Blue Ridge Mountains\",\"Lake James\",\"Hooker Falls\",\"High Falls\",\"Chimney Rock Park\",\"The Biltmore Estate\",\"Linville Falls\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Daniel Boone\"]",
+                "value": "[\"A mood swing\"]",
                 "weight": 0.001
               },
               {
@@ -231,243 +163,7 @@
                 "weight": 0.001
               },
               {
-                "value": "[\"1927\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"September 2007\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Sir Edmund Percival Hillary\",\"Tenzing Norgay\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"March 2018\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"around 30 minutes\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the first Gulf War\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"1990\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Tom Johnston\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"The Winds of Winter\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"The Nguyễn dynasty\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"light-middleweight\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Abdul Hafeez Kardar\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"February 9, 2016\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Jamey Johnson\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"James Taylor\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Eagles\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Lou Ferrigno\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"September 28, 2017\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Permian–Triassic extinction event\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Paul Walker\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"modernism\",\"nostalgia\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Joe Malone\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Maria Maria\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"as early as the 1850s\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Menarche\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\", r\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Blackie, Alberta\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Gene Wilder\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Laaa\",\"Larry Daley\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Ray Allen\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"August 31, 2010\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Evangeline Lilly\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Patrick Wilson\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"in some cities in Mexico\",\"southern France\",\"Pamplona\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"1971\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"December 20, 2017\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"LeBron James\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Muhammad\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"French\",\"British\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"2002\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"centroid\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the Yellow River\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Lacey Turner\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Joël Robuchon\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Dash\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Roger Keyes\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Karyn Parsons–Rockwell\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"August 21, 2017\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Ripley Entertainment\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"John Barry\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"The Republicans\",\"the Socialist Party\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"other endeavours\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Orrin Hatch\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Suleiman I\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Saleisha Stowers\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Central America\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Transamerica Tower\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"March 28, 2018\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Jimmy Cliff\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"R&R Partners\",\"ad agency\"]",
+                "value": "[\"1942\"]",
                 "weight": 0.001
               },
               {
@@ -475,335 +171,47 @@
                 "weight": 0.001
               },
               {
-                "value": "[\"Despacito\"]",
+                "value": "[\"Tuticorin (Thoothukudi)\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Salt Lake City International Airport\"]",
+                "value": "[\"enzymes\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Ontario\",\"Wisconsin\",\"Michigan\",\"Minnesota\"]",
+                "value": "[\"TBA\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Deep Roy\"]",
+                "value": "[\"2–4 years\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"1 October 2016\"]",
+                "value": "[\"The Fellowship\",\"The Fellowship of the Ring\",\"The Return of the King\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Abigail Rokison-Woodall\"]",
+                "value": "[\"Meshach\",\"Abednego\",\"Shadrach\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Roger Bannister\"]",
+                "value": "[\"Atlanta, Georgia\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"North\"]",
+                "value": "[\"acronym\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Potassium chlorate\"]",
+                "value": "[\"herd\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Jonathan Richman\"]",
+                "value": "[\"Machilipatnam\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Yahoo! Inc\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"May 5, 1992\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Joe Buck\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Hack Wilson\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"20\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"August 16, 1896\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Bonnie Francesca Wright\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"June 16, 2017\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"122\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"6\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the Cambrian explosion\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"1929\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the affirmative team\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the axon terminal\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Joseph Smith\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"early September\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"January 8, 2018\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"St. Louis Cardinals\",\"San Francisco Giants\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"West Bengal\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"October 14, 2018\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Cameron Kennedy\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"1985\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"aide-de-camp\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Piazza San Marco\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"1795\",\"1806\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Mara Wilson\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Dumbledore\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"October 4, 2018\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Edwin Hubble\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Prince Phillip\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"$1 million\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"May 8, 1945\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Oklahoma City, Oklahoma\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"December 2, 2016\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"abstracted from underground sources\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Chicago\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"for identifying with causes\",\"too similar to play easily\",\"to generate revenue\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Quileute tribe\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Richie Havens\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Alexander Van der Bellen\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Al Pacino\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Merritt College\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"2019\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Zheng He\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Khubz Burr\",\"Khubz al-nokhalah\",\"Khubz Asmr\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Little Miss Sunshine\",\"Babel\",\"Letters from Iwo Jima\",\"The Queen\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Mexico\",\"Soviet Union\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Charli XCX\",\"Camila Cabello\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"epidermis\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Houston Astros\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Sugarloaf.\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Cards Against Humanity For Her\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Clayton Moore\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Lebanese\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"the Canadian province of Manitoba\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Vivien Leigh\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Jan Hammer\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Parafollicular cells\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"John Flynn\",\"Mary Reibey\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Obadiah\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Jayaprakash Narayan\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"13 July 2017\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"James Arthur\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Wimpy\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"18 years\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Half-Blood Prince\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"30 ml\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"179\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Louis Armstrong\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Ryan ten Doeschate\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"John Ross\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Arunachal Pradesh\"]",
-                "weight": 0.001
-              },
-              {
-                "value": "[\"Eddie Cantor's radio show\"]",
+                "value": "[\"parish of Portland\"]",
                 "weight": 0.001
               },
               {
@@ -811,11 +219,603 @@
                 "weight": 0.001
               },
               {
-                "value": "[\"16 December 1944\"]",
+                "value": "[\"effect reproduction\"]",
                 "weight": 0.001
               },
               {
-                "value": "[\"Messi\"]",
+                "value": "[\"Hack Wilson\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"unknown\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"18 characters\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Congo, Republic of the\",\"India\",\"Korea, North\",\"Korea, South\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"zircon\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Jason Marsden\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Daniel Boone\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Jerusalem\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"26\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Gabrielle Haugh\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Oklahoma!\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"English-Jamaican singer Rikrok\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"William Strickland\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"The Republicans\",\"the Socialist Party\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Los Angeles, California\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"symbolize historical events\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Leann Hunley\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the precentral gyrus\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"cut the South in two\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the people of France\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"September 1745\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Iron\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Àstrid Bergès-Frisbey\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Despacito\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"32\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Rachel Weisz\",\"Holliday Grainger\",\"Pierfrancesco Favino\",\"Iain Glen\",\"Sam Claflin\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Nick Van Eede\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"January–July 1975\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Answering the Call\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"in its citizens\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"October 17, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Jack Charles Scanlon\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Gulf of Mexico\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Marley\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"October 2, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"James Arthur\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Lieutenant General Jagjit Singh Aurora\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Paul Walker\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Lake Baikal\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"February 28, 1994\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"346\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"0.31\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"\\\"Buzz\\\" Brainard\",\"Cameron\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the Supreme Court\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Mariska Magdolna Hargitay\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the new Wembley Stadium\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the vice president\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Jan Hammer\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Samuel Pepys\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"music by Ray Henderson\",\"lyrics by Lew Brown\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the dollar\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Chicago\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"1864\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"\\\"No Other Love\\\"\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"September 26, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"January 11, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"a giant sequoia\",\"General Sherman\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Patrick Wilson\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"The Allies\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"LeBron James\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Elvy Yost\",\"Max Carver\",\"Keli'i\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"7\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"June 17, 1885\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Robin Sharma\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Wimpy\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the United Kingdom\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Quileute tribe\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"8 seats\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Cornwall College\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Michel Duval\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Aurora\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Springer Mountain\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"heavily export-dependent\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"30 ml\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Titus Welliver\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"June 16, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"106, Manchester City\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Carey Mulligan\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Hayley Mills\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"oxidative phosphorylation\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Mexico\",\"Soviet Union\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"The Marshall Tucker Band\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"January 1, 2009\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"The Tehri Dam\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Kristen Joy Schaal\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"$1.15 billion\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"September 22, 1987\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Spencer Tracy\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Katharine Hepburn\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Rock Garden of Chandigarh\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"May 18, 2018\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Clemson\\n1\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Max von Sydow\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Squaw Valley\",\"Lake Placid\",\"St. Louis\",\"Atlanta\",\"Los Angeles\",\"Salt Lake City\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Kurt Russell\",\"Dylan O'Brien\",\"John Malkovich\",\"Kate Hudson\",\"Gina Rodriguez\",\"Mark Wahlberg\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Matthew Prokop\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"24 miles\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"memoir\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Britney Spears\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"2009\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Lou Albano\",\"Lou Albano and Danny Wells\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Jolene Blalock\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"25\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"5 films\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"February 27, 2018\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Gopi Chand Bhargava\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"April 1, 1999\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Alexander Van der Bellen\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"September 12, 2006\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Steven Spielberg\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"December 20, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"November 6, 1986\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Malcolm-Jamal Warner\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"democracy\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the Mexican–American War\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Pert Kelton\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"the 1820 Settlers National Monument\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"1980–81\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Prince Phillip\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"2005\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"312\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"2002\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"1.000\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"42\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"death\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"October 2, 1970\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Chemical reactions\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"August 2, 1776\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Lionel Messi\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Orrin Hatch\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"November 12, 2017\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"October 24, 2006\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Jess Walton\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"AD 80\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"ancient Greek philosophy\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Surrey, England\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"A concerto\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Roger Keyes\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Laaa\",\"Larry Daley\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Javier Colon\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Merritt College\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Austria-Hungary\",\"Ottoman\",\"Ottoman Empire\",\"Germany\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Ringo Starr\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Greek\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"May 5, 1992\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Sean Connery\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Dylan\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"Anthony Okpotu\"]",
+                "weight": 0.001
+              },
+              {
+                "value": "[\"September 21, 2018\"]",
                 "weight": 0.001
               }
             ]

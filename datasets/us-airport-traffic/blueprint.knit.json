@@ -257,286 +257,6 @@
         "column": "country",
         "direction": "asc"
       }
-    },
-    {
-      "name": "original__city_state",
-      "count": 209,
-      "fields": [
-        {
-          "name": "Chicago",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__city_state_Chicago.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 209,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 30,
-            "avg_length": 9.129186602870814
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "IL",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Chicago",
-            "file": "original__city_state__Chicago_IL.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 46,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 2,
-            "avg_length": 2.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 209
-      }
-    },
-    {
-      "name": "original__city_state__Chicago_IL",
-      "count": 208,
-      "fields": [
-        {
-          "name": "Atlanta",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__city_state__Chicago_IL_Atlanta.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 208,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 30,
-            "avg_length": 9.139423076923077
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "GA",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Atlanta",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 46,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 2,
-            "avg_length": 2.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 208
-      }
-    },
-    {
-      "name": "original__city_state__Chicago_IL__Atlanta_GA",
-      "count": 207,
-      "fields": [
-        {
-          "name": "Dallas-Fort Worth",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA_Dallas-Fort_Worth.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 207,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 30,
-            "avg_length": 9.101449275362318
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "TX",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Dallas-Fort Worth",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 46,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 2,
-            "avg_length": 2.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 207
-      }
-    },
-    {
-      "name": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX",
-      "count": 206,
-      "fields": [
-        {
-          "name": "Phoenix",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX_Phoenix.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 206,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 30,
-            "avg_length": 9.111650485436893
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "AZ",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Phoenix",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX__Phoenix_AZ.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 46,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 2,
-            "avg_length": 2.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 206
-      }
-    },
-    {
-      "name": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX__Phoenix_AZ",
-      "count": 205,
-      "fields": [
-        {
-          "name": "Denver",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX__Phoenix_AZ_Denver.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 205,
-            "null_rate": 0.0,
-            "min_length": 4,
-            "max_length": 30,
-            "avg_length": 9.126829268292683
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "CO",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Denver",
-            "file": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX__Phoenix_AZ__Denver_CO.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 46,
-            "null_rate": 0.0,
-            "min_length": 2,
-            "max_length": 2,
-            "avg_length": 2.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 205
-      }
     }
   ],
   "correlations": [
@@ -544,79 +264,43 @@
       "entity": "original",
       "fields": [
         "state",
+        "iata"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "state",
+        "city"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9795242398072594
+        ],
+        [
+          0.9795242398072594,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "state",
         "airport"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "state",
-        "iata"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "state",
-        "city"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9795242398072244
-        ],
-        [
-          0.9795242398072244,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "airport",
-        "iata"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998099
-        ],
-        [
-          0.9999999999998099,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "airport",
-        "city"
       ],
       "matrix": [
         [
@@ -649,82 +333,28 @@
       "conditional": []
     },
     {
-      "entity": "original__city_state",
+      "entity": "original",
       "fields": [
-        "IL",
-        "Chicago"
+        "iata",
+        "airport"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9999999999998112
         ],
         [
-          1.0,
+          0.9999999999998112,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__city_state__Chicago_IL",
+      "entity": "original",
       "fields": [
-        "Atlanta",
-        "GA"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999787
-        ],
-        [
-          0.9999999999999787,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__city_state__Chicago_IL__Atlanta_GA",
-      "fields": [
-        "TX",
-        "Dallas-Fort Worth"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999695
-        ],
-        [
-          0.9999999999999695,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX",
-      "fields": [
-        "AZ",
-        "Phoenix"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999533
-        ],
-        [
-          0.9999999999999533,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__city_state__Chicago_IL__Atlanta_GA__Dallas-Fort_Worth_TX__Phoenix_AZ",
-      "fields": [
-        "CO",
-        "Denver"
+        "city",
+        "airport"
       ],
       "matrix": [
         [

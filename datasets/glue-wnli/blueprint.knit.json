@@ -154,197 +154,22 @@
         "column": "idx",
         "direction": "asc"
       }
-    },
-    {
-      "name": "original__sentence2_sentence1_label_idx",
-      "count": 70,
-      "fields": [
-        {
-          "name": "The hair has to be cleaned.",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__sentence2_sentence1_label_idx__fullrow.tsv",
-            "column": 0,
-            "row_count": 70
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 68,
-            "null_rate": 0.0,
-            "min_length": 16,
-            "max_length": 109,
-            "avg_length": 39.642857142857146
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "high"
-          }
-        },
-        {
-          "name": "The drain is clogged with hair. It has to be cleaned.",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__sentence2_sentence1_label_idx__fullrow.tsv",
-            "column": 1,
-            "row_count": 70
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 64,
-            "null_rate": 0.0,
-            "min_length": 44,
-            "max_length": 323,
-            "avg_length": 112.67142857142858
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "high"
-          }
-        },
-        {
-          "name": "0",
-          "data_type": "int",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__sentence2_sentence1_label_idx__fullrow.tsv",
-            "column": 3,
-            "row_count": 70
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min": 0.0,
-            "max": 1.0,
-            "mean": 0.44285714285714284,
-            "std": 0.5003104626191733,
-            "percentiles": {
-              "p25": 0.0,
-              "p50": 0.0,
-              "p75": 1.0,
-              "p95": 1.0,
-              "p99": 1.0
-            }
-          },
-          "traits": {
-            "semantic": "integer",
-            "cardinality": "medium",
-            "distribution_shape": "normal"
-          }
-        },
-        {
-          "name": "0",
-          "data_type": "int",
-          "generator": {
-            "type": "one_of",
-            "choices": [
-              {
-                "value": 0,
-                "weight": 0.5571428571428572
-              },
-              {
-                "value": 1,
-                "weight": 0.44285714285714284
-              }
-            ]
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 70,
-            "null_rate": 0.0,
-            "min": 1.0,
-            "max": 70.0,
-            "mean": 35.5,
-            "std": 20.351085147152883,
-            "percentiles": {
-              "p25": 18.0,
-              "p50": 36.0,
-              "p75": 53.0,
-              "p95": 67.0,
-              "p99": 69.0
-            }
-          },
-          "traits": {
-            "semantic": "integer",
-            "cardinality": "unique",
-            "distribution_shape": "normal"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "0",
-          "min": 0.0,
-          "max": 1.0
-        },
-        {
-          "type": "range",
-          "field": "0",
-          "min": 0.0,
-          "max": 1.0
-        },
-        {
-          "type": "check",
-          "expr": "0 <= 0"
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 70
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "0",
-            "field": "0",
-            "cardinality": 2
-          },
-          {
-            "name": "0",
-            "field": "0",
-            "cardinality": 2
-          }
-        ]
-      }
     }
   ],
   "correlations": [
     {
       "entity": "original",
       "fields": [
-        "sentence1",
-        "sentence2"
+        "sentence2",
+        "sentence1"
       ],
       "matrix": [
         [
           1.0,
-          0.9839989676081945
+          0.9839989676081929
         ],
         [
-          0.9839989676081945,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__sentence2_sentence1_label_idx",
-      "fields": [
-        "The drain is clogged with hair. It has to be cleaned.",
-        "The hair has to be cleaned."
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9839989676081352
-        ],
-        [
-          0.9839989676081352,
+          0.9839989676081929,
           1.0
         ]
       ],
