@@ -416,160 +416,16 @@
     {
       "entity": "original",
       "fields": [
-        "subject",
-        "director"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9607888009901911
-        ],
-        [
-          0.9607888009901911,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "subject_sex"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999952
-        ],
-        [
-          0.9999999999999952,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "type_of_subject"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9994815160121763
-        ],
-        [
-          0.9994815160121763,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "race_known"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9959966246226568
-        ],
-        [
-          0.9959966246226568,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9681738261760169
-        ],
-        [
-          0.9681738261760169,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "subject_race"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9590568830645653
-        ],
-        [
-          0.9590568830645653,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
-        "lead_actor_actress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9578895684121299
-        ],
-        [
-          0.9578895684121299,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject",
+        "type_of_subject",
         "site"
       ],
       "matrix": [
         [
           1.0,
-          0.9561940203102284
+          0.9797132500155069
         ],
         [
-          0.9561940203102284,
+          0.9797132500155069,
           1.0
         ]
       ],
@@ -578,70 +434,16 @@
     {
       "entity": "original",
       "fields": [
-        "subject",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9675508328029887
-        ],
-        [
-          0.9675508328029887,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "subject_sex"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8109581753298047
-        ],
-        [
-          0.8109581753298047,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "type_of_subject"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.815026764069586
-        ],
-        [
-          0.815026764069586,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
+        "type_of_subject",
         "race_known"
       ],
       "matrix": [
         [
           1.0,
-          0.8473813750792328
+          0.32313045410056557
         ],
         [
-          0.8473813750792328,
+          0.32313045410056557,
           1.0
         ]
       ],
@@ -650,116 +452,8 @@
     {
       "entity": "original",
       "fields": [
-        "director",
-        "country"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9248311647990224
-        ],
-        [
-          0.9248311647990224,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "subject_race"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8255168352364629
-        ],
-        [
-          0.8255168352364629,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9965288832724745
-        ],
-        [
-          0.9965288832724745,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "lead_actor_actress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8854684767543148
-        ],
-        [
-          0.8854684767543148,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "director",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8609369525549484
-        ],
-        [
-          0.8609369525549484,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_sex",
-        "type_of_subject"
+        "type_of_subject",
+        "subject_sex"
       ],
       "matrix": [
         [
@@ -776,70 +470,16 @@
     {
       "entity": "original",
       "fields": [
-        "subject_sex",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9333617680611078
-        ],
-        [
-          0.9333617680611078,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_sex",
+        "type_of_subject",
         "lead_actor_actress"
       ],
       "matrix": [
         [
           1.0,
-          0.9953567689602307
+          0.8950917248535376
         ],
         [
-          0.9953567689602307,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_sex",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.933361768061111
-        ],
-        [
-          0.933361768061111,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_sex",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6732046216336454
-        ],
-        [
-          0.6732046216336454,
+          0.8950917248535376,
           1.0
         ]
       ],
@@ -849,15 +489,87 @@
       "entity": "original",
       "fields": [
         "type_of_subject",
+        "box_office"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7387715665377731
+        ],
+        [
+          0.7387715665377731,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "type_of_subject",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9797132500154756
+        ],
+        [
+          0.9797132500154756,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "type_of_subject",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8150267640695971
+        ],
+        [
+          0.8150267640695971,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "type_of_subject",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999481516012186
+        ],
+        [
+          0.999481516012186,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "site",
         "race_known"
       ],
       "matrix": [
         [
           1.0,
-          0.3231304541005656
+          0.9733907384533838
         ],
         [
-          0.3231304541005656,
+          0.9733907384533838,
           1.0
         ]
       ],
@@ -866,16 +578,16 @@
     {
       "entity": "original",
       "fields": [
-        "type_of_subject",
-        "title"
+        "site",
+        "subject_sex"
       ],
       "matrix": [
         [
           1.0,
-          0.9797132500154156
+          0.9333617680611105
         ],
         [
-          0.9797132500154156,
+          0.9333617680611105,
           1.0
         ]
       ],
@@ -884,358 +596,16 @@
     {
       "entity": "original",
       "fields": [
-        "type_of_subject",
+        "site",
         "lead_actor_actress"
       ],
       "matrix": [
         [
           1.0,
-          0.8950917248535428
+          0.9411990033274881
         ],
         [
-          0.8950917248535428,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "type_of_subject",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9797132500154299
-        ],
-        [
-          0.9797132500154299,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "type_of_subject",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7387715665377705
-        ],
-        [
-          0.7387715665377705,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race_known",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9716300395820114
-        ],
-        [
-          0.9716300395820114,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race_known",
-        "lead_actor_actress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8861968078495922
-        ],
-        [
-          0.8861968078495922,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race_known",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.973390738453385
-        ],
-        [
-          0.973390738453385,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "race_known",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6920986809975751
-        ],
-        [
-          0.6920986809975751,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "country",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.998812619086073
-        ],
-        [
-          0.998812619086073,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "country",
-        "lead_actor_actress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.891417793734834
-        ],
-        [
-          0.891417793734834,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "country",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9994064858818942
-        ],
-        [
-          0.9994064858818942,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "country",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8106632631893943
-        ],
-        [
-          0.8106632631893943,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_race",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9947375622393964
-        ],
-        [
-          0.9947375622393964,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_race",
-        "lead_actor_actress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9379698191411285
-        ],
-        [
-          0.9379698191411285,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_race",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9947375622394063
-        ],
-        [
-          0.9947375622394063,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "subject_race",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7984619127335053
-        ],
-        [
-          0.7984619127335053,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "title",
-        "lead_actor_actress"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9379484854837549
-        ],
-        [
-          0.9379484854837549,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "title",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "title",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.998258365391534
-        ],
-        [
-          0.998258365391534,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "lead_actor_actress",
-        "site"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9411990033274849
-        ],
-        [
-          0.9411990033274849,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "lead_actor_actress",
-        "box_office"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8615006803674974
-        ],
-        [
-          0.8615006803674974,
+          0.9411990033274881,
           1.0
         ]
       ],
@@ -1250,10 +620,640 @@
       "matrix": [
         [
           1.0,
-          0.99999999999876
+          0.9999999999987474
         ],
         [
-          0.99999999999876,
+          0.9999999999987474,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "site",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "site",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "site",
+        "country"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999406485881894
+        ],
+        [
+          0.999406485881894,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "site",
+        "subject_race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9947375622394213
+        ],
+        [
+          0.9947375622394213,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "site",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9561940203102262
+        ],
+        [
+          0.9561940203102262,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race_known",
+        "lead_actor_actress"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8861968078495928
+        ],
+        [
+          0.8861968078495928,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race_known",
+        "box_office"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6920986809975745
+        ],
+        [
+          0.6920986809975745,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race_known",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.971630039582011
+        ],
+        [
+          0.971630039582011,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race_known",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8473813750792323
+        ],
+        [
+          0.8473813750792323,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race_known",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9959966246226579
+        ],
+        [
+          0.9959966246226579,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject_sex",
+        "lead_actor_actress"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9953567689602321
+        ],
+        [
+          0.9953567689602321,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject_sex",
+        "box_office"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.673204621633645
+        ],
+        [
+          0.673204621633645,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject_sex",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9333617680611103
+        ],
+        [
+          0.9333617680611103,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject_sex",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8109581753298051
+        ],
+        [
+          0.8109581753298051,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject_sex",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999942
+        ],
+        [
+          0.9999999999999942,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "lead_actor_actress",
+        "box_office"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8615006803674399
+        ],
+        [
+          0.8615006803674399,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "lead_actor_actress",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9379484854839083
+        ],
+        [
+          0.9379484854839083,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "lead_actor_actress",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8854684767544085
+        ],
+        [
+          0.8854684767544085,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "lead_actor_actress",
+        "country"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8914177937348292
+        ],
+        [
+          0.8914177937348292,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "lead_actor_actress",
+        "subject_race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9379698191411441
+        ],
+        [
+          0.9379698191411441,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "lead_actor_actress",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9578895684120634
+        ],
+        [
+          0.9578895684120634,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "box_office",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9982583653915841
+        ],
+        [
+          0.9982583653915841,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "box_office",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8609369525549434
+        ],
+        [
+          0.8609369525549434,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "box_office",
+        "country"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8106632631893931
+        ],
+        [
+          0.8106632631893931,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "box_office",
+        "subject_race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7984619127335087
+        ],
+        [
+          0.7984619127335087,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "box_office",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9675508328028902
+        ],
+        [
+          0.9675508328028902,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "title",
+        "director"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9965288832725108
+        ],
+        [
+          0.9965288832725108,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "title",
+        "country"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9988126190860847
+        ],
+        [
+          0.9988126190860847,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "title",
+        "subject_race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9947375622394203
+        ],
+        [
+          0.9947375622394203,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "title",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9590568830646791
+        ],
+        [
+          0.9590568830646791,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "director",
+        "country"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9248311647990239
+        ],
+        [
+          0.9248311647990239,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "director",
+        "subject_race"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8255168352364607
+        ],
+        [
+          0.8255168352364607,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "director",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9607888009899491
+        ],
+        [
+          0.9607888009899491,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "country",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9681738261760099
+        ],
+        [
+          0.9681738261760099,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject_race",
+        "subject"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999833
+        ],
+        [
+          0.9999999999999833,
           1.0
         ]
       ],

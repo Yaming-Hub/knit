@@ -424,55 +424,7 @@
             "type": "one_of",
             "choices": [
               {
-                "value": "Sports",
-                "weight": 0.0625
-              },
-              {
-                "value": "Animation",
-                "weight": 0.0625
-              },
-              {
-                "value": "Documentary",
-                "weight": 0.0625
-              },
-              {
-                "value": "Drama",
-                "weight": 0.0625
-              },
-              {
-                "value": "Children",
-                "weight": 0.0625
-              },
-              {
-                "value": "Sci-Fi",
-                "weight": 0.0625
-              },
-              {
-                "value": "Games",
-                "weight": 0.0625
-              },
-              {
-                "value": "Classics",
-                "weight": 0.0625
-              },
-              {
-                "value": "Music",
-                "weight": 0.0625
-              },
-              {
-                "value": "Foreign",
-                "weight": 0.0625
-              },
-              {
                 "value": "Horror",
-                "weight": 0.0625
-              },
-              {
-                "value": "Action",
-                "weight": 0.0625
-              },
-              {
-                "value": "Travel",
                 "weight": 0.0625
               },
               {
@@ -480,11 +432,59 @@
                 "weight": 0.0625
               },
               {
-                "value": "Comedy",
+                "value": "Drama",
+                "weight": 0.0625
+              },
+              {
+                "value": "Animation",
                 "weight": 0.0625
               },
               {
                 "value": "Family",
+                "weight": 0.0625
+              },
+              {
+                "value": "Comedy",
+                "weight": 0.0625
+              },
+              {
+                "value": "Action",
+                "weight": 0.0625
+              },
+              {
+                "value": "Documentary",
+                "weight": 0.0625
+              },
+              {
+                "value": "Games",
+                "weight": 0.0625
+              },
+              {
+                "value": "Foreign",
+                "weight": 0.0625
+              },
+              {
+                "value": "Sports",
+                "weight": 0.0625
+              },
+              {
+                "value": "Children",
+                "weight": 0.0625
+              },
+              {
+                "value": "Classics",
+                "weight": 0.0625
+              },
+              {
+                "value": "Sci-Fi",
+                "weight": 0.0625
+              },
+              {
+                "value": "Travel",
+                "weight": 0.0625
+              },
+              {
+                "value": "Music",
                 "weight": 0.0625
               }
             ]
@@ -852,8 +852,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "email",
-            "file": "customer__email_last_name_first_name.tsv",
+            "source_field": "last_name",
+            "file": "customer__last_name_email_first_name.tsv",
             "column": 2
           },
           "nullable": false,
@@ -873,10 +873,9 @@
           "name": "last_name",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "email",
-            "file": "customer__email_last_name_first_name.tsv",
-            "column": 1
+            "type": "dictionary",
+            "file": "customer_last_name.dict.txt",
+            "expansion": "shuffle"
           },
           "nullable": false,
           "stats": {
@@ -895,9 +894,10 @@
           "name": "email",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "customer_email.dict.txt",
-            "expansion": "shuffle"
+            "type": "tuple_lookup",
+            "source_field": "last_name",
+            "file": "customer__last_name_email_first_name.tsv",
+            "column": 1
           },
           "nullable": false,
           "stats": {
@@ -2023,6 +2023,10 @@
                 "weight": 0.16666666666666666
               },
               {
+                "value": "Italian             ",
+                "weight": 0.16666666666666666
+              },
+              {
                 "value": "English             ",
                 "weight": 0.16666666666666666
               },
@@ -2036,10 +2040,6 @@
               },
               {
                 "value": "French              ",
-                "weight": 0.16666666666666666
-              },
-              {
-                "value": "Italian             ",
                 "weight": 0.16666666666666666
               }
             ]
@@ -4413,16 +4413,16 @@
     {
       "entity": "actor",
       "fields": [
-        "last_name",
-        "first_name"
+        "first_name",
+        "last_name"
       ],
       "matrix": [
         [
           1.0,
-          0.8092838267339151
+          0.8092838267339192
         ],
         [
-          0.8092838267339151,
+          0.8092838267339192,
           1.0
         ]
       ],
@@ -4431,8 +4431,8 @@
     {
       "entity": "address",
       "fields": [
-        "district",
-        "address"
+        "address",
+        "district"
       ],
       "matrix": [
         [
@@ -4449,8 +4449,8 @@
     {
       "entity": "customer",
       "fields": [
-        "address_id",
-        "customer_id"
+        "customer_id",
+        "address_id"
       ],
       "matrix": [
         [
@@ -4467,8 +4467,8 @@
     {
       "entity": "customer",
       "fields": [
-        "address_id",
-        "customer_id"
+        "customer_id",
+        "address_id"
       ],
       "matrix": [
         [
@@ -4539,7 +4539,133 @@
     {
       "entity": "film",
       "fields": [
-        "rating",
+        "special_features",
+        "title"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "special_features",
+        "description"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999951
+        ],
+        [
+          0.9999999999999951,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "special_features",
+        "fulltext"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "title",
+        "description"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "title",
+        "rating"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "title",
+        "fulltext"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999991995
+        ],
+        [
+          0.9999999999991995,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "description",
+        "rating"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999968
+        ],
+        [
+          0.9999999999999968,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "film",
+      "fields": [
+        "description",
         "fulltext"
       ],
       "matrix": [
@@ -4558,133 +4684,7 @@
       "entity": "film",
       "fields": [
         "rating",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "rating",
-        "description"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999923
-        ],
-        [
-          0.9999999999999923,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "fulltext",
-        "title"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999991995
-        ],
-        [
-          0.9999999999991995,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "fulltext",
-        "description"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "fulltext",
-        "special_features"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999966
-        ],
-        [
-          0.9999999999999966,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "title",
-        "description"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "title",
-        "special_features"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999974
-        ],
-        [
-          0.9999999999999974,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "film",
-      "fields": [
-        "description",
-        "special_features"
+        "fulltext"
       ],
       "matrix": [
         [
@@ -4737,8 +4737,8 @@
     {
       "entity": "payment_p2007_01",
       "fields": [
-        "payment_id",
-        "customer_id"
+        "customer_id",
+        "payment_id"
       ],
       "matrix": [
         [
@@ -4755,8 +4755,8 @@
     {
       "entity": "payment_p2007_01",
       "fields": [
-        "payment_id",
-        "customer_id"
+        "customer_id",
+        "payment_id"
       ],
       "matrix": [
         [
@@ -4773,8 +4773,8 @@
     {
       "entity": "payment_p2007_02",
       "fields": [
-        "payment_id",
-        "customer_id"
+        "customer_id",
+        "payment_id"
       ],
       "matrix": [
         [
@@ -4791,8 +4791,8 @@
     {
       "entity": "payment_p2007_02",
       "fields": [
-        "payment_id",
-        "customer_id"
+        "customer_id",
+        "payment_id"
       ],
       "matrix": [
         [
@@ -4881,8 +4881,8 @@
     {
       "entity": "payment_p2007_05",
       "fields": [
-        "payment_id",
-        "customer_id"
+        "customer_id",
+        "payment_id"
       ],
       "matrix": [
         [
@@ -4899,8 +4899,8 @@
     {
       "entity": "payment_p2007_05",
       "fields": [
-        "payment_id",
-        "customer_id"
+        "customer_id",
+        "payment_id"
       ],
       "matrix": [
         [

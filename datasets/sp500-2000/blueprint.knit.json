@@ -376,150 +376,6 @@
     {
       "entity": "original",
       "fields": [
-        "open",
-        "high"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9998503868226887
-        ],
-        [
-          0.9998503868226887,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "high"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9996658184023339
-        ],
-        [
-          0.9996658184023339,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "low"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9997784774597166
-        ],
-        [
-          0.9997784774597166,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "low"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999516179267337
-        ],
-        [
-          0.999516179267337,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "close"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9996281931676778
-        ],
-        [
-          0.9996281931676778,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "close"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9990984806261017
-        ],
-        [
-          0.9990984806261017,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "adjclose"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9996281931676778
-        ],
-        [
-          0.9996281931676778,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "open",
-        "adjclose"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9990984806261017
-        ],
-        [
-          0.9990984806261017,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "high",
         "low"
       ],
@@ -557,6 +413,78 @@
       "entity": "original",
       "fields": [
         "high",
+        "adjclose"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9998030293822232
+        ],
+        [
+          0.9998030293822232,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "high",
+        "adjclose"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9995909746731312
+        ],
+        [
+          0.9995909746731312,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "high",
+        "open"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9998503868226887
+        ],
+        [
+          0.9998503868226887,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "high",
+        "open"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9996658184023339
+        ],
+        [
+          0.9996658184023339,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "high",
         "close"
       ],
       "matrix": [
@@ -592,16 +520,16 @@
     {
       "entity": "original",
       "fields": [
-        "high",
+        "low",
         "adjclose"
       ],
       "matrix": [
         [
           1.0,
-          0.9998030293822232
+          0.9998164477100954
         ],
         [
-          0.9998030293822232,
+          0.9998164477100954,
           1.0
         ]
       ],
@@ -610,16 +538,52 @@
     {
       "entity": "original",
       "fields": [
-        "high",
+        "low",
         "adjclose"
       ],
       "matrix": [
         [
           1.0,
-          0.9995909746731312
+          0.9996310772946901
         ],
         [
-          0.9995909746731312,
+          0.9996310772946901,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "low",
+        "open"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9997784774597166
+        ],
+        [
+          0.9997784774597166,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "low",
+        "open"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999516179267337
+        ],
+        [
+          0.999516179267337,
           1.0
         ]
       ],
@@ -664,16 +628,16 @@
     {
       "entity": "original",
       "fields": [
-        "low",
-        "adjclose"
+        "adjclose",
+        "open"
       ],
       "matrix": [
         [
           1.0,
-          0.9998164477100954
+          0.9996281931676778
         ],
         [
-          0.9998164477100954,
+          0.9996281931676778,
           1.0
         ]
       ],
@@ -682,16 +646,16 @@
     {
       "entity": "original",
       "fields": [
-        "low",
-        "adjclose"
+        "adjclose",
+        "open"
       ],
       "matrix": [
         [
           1.0,
-          0.9996310772946901
+          0.9990984806261017
         ],
         [
-          0.9996310772946901,
+          0.9990984806261017,
           1.0
         ]
       ],
@@ -700,8 +664,8 @@
     {
       "entity": "original",
       "fields": [
-        "close",
-        "adjclose"
+        "adjclose",
+        "close"
       ],
       "matrix": [
         [
@@ -718,8 +682,8 @@
     {
       "entity": "original",
       "fields": [
-        "close",
-        "adjclose"
+        "adjclose",
+        "close"
       ],
       "matrix": [
         [
@@ -728,6 +692,42 @@
         ],
         [
           1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "open",
+        "close"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9996281931676778
+        ],
+        [
+          0.9996281931676778,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "open",
+        "close"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9990984806261017
+        ],
+        [
+          0.9990984806261017,
           1.0
         ]
       ],

@@ -198,8 +198,8 @@
     {
       "entity": "original",
       "fields": [
-        "spirit_servings",
-        "total_litres_of_pure_alcohol"
+        "total_litres_of_pure_alcohol",
+        "spirit_servings"
       ],
       "matrix": [
         [
@@ -216,8 +216,8 @@
     {
       "entity": "original",
       "fields": [
-        "spirit_servings",
-        "total_litres_of_pure_alcohol"
+        "total_litres_of_pure_alcohol",
+        "spirit_servings"
       ],
       "matrix": [
         [
@@ -226,60 +226,6 @@
         ],
         [
           0.7243814697578975,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "spirit_servings",
-        "wine_servings"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.554263740251065
-        ],
-        [
-          0.554263740251065,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "spirit_servings",
-        "beer_servings"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.45881887413938227
-        ],
-        [
-          0.45881887413938227,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "spirit_servings",
-        "beer_servings"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6203809806528146
-        ],
-        [
-          0.6203809806528146,
           1.0
         ]
       ],
@@ -352,6 +298,60 @@
         ],
         [
           0.8763145215917296,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "spirit_servings",
+        "wine_servings"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.554263740251065
+        ],
+        [
+          0.554263740251065,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "spirit_servings",
+        "beer_servings"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.45881887413938227
+        ],
+        [
+          0.45881887413938227,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "spirit_servings",
+        "beer_servings"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6203809806528146
+        ],
+        [
+          0.6203809806528146,
           1.0
         ]
       ],

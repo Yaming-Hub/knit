@@ -9,163 +9,6 @@
   },
   "entities": [
     {
-      "name": "bob-ross_original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS",
-      "count": 402,
-      "fields": [
-        {
-          "name": "S01E01",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "bob-ross_original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS__fullrow.tsv",
-            "column": 0,
-            "row_count": 402
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 402,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "A WALK IN THE WOODS",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "bob-ross_original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS__fullrow.tsv",
-            "column": 1,
-            "row_count": 402
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 400,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 27,
-            "avg_length": 15.034825870646767
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "0",
-          "data_type": "int",
-          "generator": {
-            "type": "row_lookup",
-            "file": "bob-ross_original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS__fullrow.tsv",
-            "column": 3,
-            "row_count": 402
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min": 0.0,
-            "max": 1.0,
-            "mean": 0.0024875621890547263,
-            "std": 0.049875466805381644,
-            "percentiles": {
-              "p25": 0.0,
-              "p50": 0.0,
-              "p75": 0.0,
-              "p95": 0.0,
-              "p99": 0.0
-            }
-          },
-          "traits": {
-            "semantic": "integer",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "0",
-          "data_type": "int",
-          "generator": {
-            "type": "one_of",
-            "choices": [
-              {
-                "value": 0,
-                "weight": 0.9975124378109452
-              },
-              {
-                "value": 1,
-                "weight": 0.0024875621890547263
-              }
-            ]
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min": 0.0,
-            "max": 1.0,
-            "mean": 0.004975124378109453,
-            "std": 0.07044655835560087,
-            "percentiles": {
-              "p25": 0.0,
-              "p50": 0.0,
-              "p75": 0.0,
-              "p95": 0.0,
-              "p99": 0.0
-            }
-          },
-          "traits": {
-            "semantic": "integer",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "0",
-          "min": 0.0,
-          "max": 1.0
-        },
-        {
-          "type": "range",
-          "field": "0",
-          "min": 0.0,
-          "max": 1.0
-        },
-        {
-          "type": "check",
-          "expr": "0 <= 0"
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 402
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "0",
-            "field": "0",
-            "cardinality": 2
-          },
-          {
-            "name": "0",
-            "field": "0",
-            "cardinality": 2
-          }
-        ]
-      }
-    },
-    {
       "name": "original",
       "count": 403,
       "fields": [
@@ -4131,179 +3974,22 @@
         "column": "LAKES",
         "direction": "asc"
       }
-    },
-    {
-      "name": "original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS",
-      "count": 402,
-      "fields": [
-        {
-          "name": "S01E01",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS__fullrow.tsv",
-            "column": 0,
-            "row_count": 402
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 402,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "A WALK IN THE WOODS",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS__fullrow.tsv",
-            "column": 1,
-            "row_count": 402
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 400,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 27,
-            "avg_length": 15.034825870646767
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "0",
-          "data_type": "int",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS__fullrow.tsv",
-            "column": 3,
-            "row_count": 402
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min": 0.0,
-            "max": 1.0,
-            "mean": 0.0024875621890547263,
-            "std": 0.049875466805381644,
-            "percentiles": {
-              "p25": 0.0,
-              "p50": 0.0,
-              "p75": 0.0,
-              "p95": 0.0,
-              "p99": 0.0
-            }
-          },
-          "traits": {
-            "semantic": "integer",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        },
-        {
-          "name": "0",
-          "data_type": "int",
-          "generator": {
-            "type": "one_of",
-            "choices": [
-              {
-                "value": 0,
-                "weight": 0.9975124378109452
-              },
-              {
-                "value": 1,
-                "weight": 0.0024875621890547263
-              }
-            ]
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min": 0.0,
-            "max": 1.0,
-            "mean": 0.004975124378109453,
-            "std": 0.07044655835560087,
-            "percentiles": {
-              "p25": 0.0,
-              "p50": 0.0,
-              "p75": 0.0,
-              "p95": 0.0,
-              "p99": 0.0
-            }
-          },
-          "traits": {
-            "semantic": "integer",
-            "cardinality": "low",
-            "distribution_shape": "long_tail"
-          }
-        }
-      ],
-      "constraints": [
-        {
-          "type": "range",
-          "field": "0",
-          "min": 0.0,
-          "max": 1.0
-        },
-        {
-          "type": "range",
-          "field": "0",
-          "min": 0.0,
-          "max": 1.0
-        },
-        {
-          "type": "check",
-          "expr": "0 <= 0"
-        }
-      ],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 402
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "0",
-            "field": "0",
-            "cardinality": 2
-          },
-          {
-            "name": "0",
-            "field": "0",
-            "cardinality": 2
-          }
-        ]
-      }
     }
   ],
   "correlations": [
     {
-      "entity": "bob-ross_original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS",
+      "entity": "original",
       "fields": [
-        "S01E01",
-        "A WALK IN THE WOODS"
+        "WAVES",
+        "TREE"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          -0.6853915883639728
         ],
         [
-          1.0,
+          -0.6853915883639728,
           1.0
         ]
       ],
@@ -4312,8 +3998,314 @@
     {
       "entity": "original",
       "fields": [
-        "FENCE",
-        "BARN"
+        "WAVES",
+        "TREE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.6853915883639716
+        ],
+        [
+          -0.6853915883639716,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "OCEAN"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9691880644983998
+        ],
+        [
+          0.9691880644983998,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "OCEAN"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9691880644984
+        ],
+        [
+          0.9691880644984,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "PALM_TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.49790543663230524
+        ],
+        [
+          0.49790543663230524,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "PALM_TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.497905436632307
+        ],
+        [
+          0.497905436632307,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.565288863725827
+        ],
+        [
+          -0.565288863725827,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.5652888637258223
+        ],
+        [
+          -0.5652888637258223,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "BEACH"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8470897879022495
+        ],
+        [
+          0.8470897879022495,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "BEACH"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8470897879022476
+        ],
+        [
+          0.8470897879022476,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "ROCKS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.30665618835597336
+        ],
+        [
+          0.30665618835597336,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "ROCKS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3066561883559734
+        ],
+        [
+          0.3066561883559734,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "CLIFF"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3408266412405266
+        ],
+        [
+          0.3408266412405266,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WAVES",
+        "CLIFF"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.340826641240524
+        ],
+        [
+          0.340826641240524,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FRAMED",
+        "OVAL_FRAME"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8291659387872709
+        ],
+        [
+          0.8291659387872709,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FRAMED",
+        "OVAL_FRAME"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8291659387872689
+        ],
+        [
+          0.8291659387872689,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "PORTRAIT",
+        "GUEST"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.36039750781097946
+        ],
+        [
+          0.36039750781097946,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "PORTRAIT",
+        "GUEST"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.36039750781097757
+        ],
+        [
+          0.36039750781097757,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "BARN",
+        "FENCE"
       ],
       "matrix": [
         [
@@ -4330,8 +4322,8 @@
     {
       "entity": "original",
       "fields": [
-        "FENCE",
-        "BARN"
+        "BARN",
+        "FENCE"
       ],
       "matrix": [
         [
@@ -4340,6 +4332,114 @@
         ],
         [
           0.31233020269495476,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "BARN",
+        "STRUCTURE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.34539551651292555
+        ],
+        [
+          0.34539551651292555,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "BARN",
+        "STRUCTURE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.34539551651292616
+        ],
+        [
+          0.34539551651292616,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "DOCK",
+        "BOAT"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7062267475149115
+        ],
+        [
+          0.7062267475149115,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "DOCK",
+        "BOAT"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7062267475148988
+        ],
+        [
+          0.7062267475148988,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FLORIDA_FRAME",
+        "PALM_TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3299999162436877
+        ],
+        [
+          0.3299999162436877,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FLORIDA_FRAME",
+        "PALM_TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3299999162436867
+        ],
+        [
+          0.3299999162436867,
           1.0
         ]
       ],
@@ -4376,438 +4476,6 @@
         ],
         [
           -0.46661857964517767,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "AURORA_BOREALIS",
-        "NIGHT"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.421589224833344
-        ],
-        [
-          0.421589224833344,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "AURORA_BOREALIS",
-        "NIGHT"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.42158922483334327
-        ],
-        [
-          0.42158922483334327,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "CLOUDS",
-        "CUMULUS"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5460948883216566
-        ],
-        [
-          0.5460948883216566,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "CLOUDS",
-        "CUMULUS"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5460948883216592
-        ],
-        [
-          0.5460948883216592,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "TREE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7707508758454209
-        ],
-        [
-          0.7707508758454209,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "TREE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7707508758454118
-        ],
-        [
-          0.7707508758454118,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "OCEAN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5901746474615173
-        ],
-        [
-          -0.5901746474615173,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "OCEAN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5901746474615106
-        ],
-        [
-          -0.5901746474615106,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "BEACH"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5787044318849554
-        ],
-        [
-          -0.5787044318849554,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "BEACH"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5787044318849511
-        ],
-        [
-          -0.5787044318849511,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "CONIFER"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.41252389759983604
-        ],
-        [
-          0.41252389759983604,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "CONIFER"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4125238975998354
-        ],
-        [
-          0.4125238975998354,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "WAVES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.565288863725827
-        ],
-        [
-          -0.565288863725827,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREES",
-        "WAVES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5652888637258223
-        ],
-        [
-          -0.5652888637258223,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "SNOW",
-        "WINTER"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9166611354391966
-        ],
-        [
-          0.9166611354391966,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "SNOW",
-        "WINTER"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.916661135439191
-        ],
-        [
-          0.916661135439191,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "DECIDUOUS"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.38737147648056275
-        ],
-        [
-          0.38737147648056275,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "DECIDUOUS"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.38737147648056486
-        ],
-        [
-          0.38737147648056486,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "PALM_TREES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3881390012094648
-        ],
-        [
-          -0.3881390012094648,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "PALM_TREES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.38813900120946665
-        ],
-        [
-          -0.38813900120946665,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "OCEAN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.7189056374487314
-        ],
-        [
-          -0.7189056374487314,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "OCEAN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.7189056374487325
-        ],
-        [
-          -0.7189056374487325,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "BEACH"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.688180083733004
-        ],
-        [
-          -0.688180083733004,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "TREE",
-        "BEACH"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.6881800837329992
-        ],
-        [
-          -0.6881800837329992,
           1.0
         ]
       ],
@@ -4853,15 +4521,15 @@
       "entity": "original",
       "fields": [
         "TREE",
-        "WAVES"
+        "OCEAN"
       ],
       "matrix": [
         [
           1.0,
-          -0.6853915883639728
+          -0.7189056374487314
         ],
         [
-          -0.6853915883639728,
+          -0.7189056374487314,
           1.0
         ]
       ],
@@ -4871,15 +4539,15 @@
       "entity": "original",
       "fields": [
         "TREE",
-        "WAVES"
+        "OCEAN"
       ],
       "matrix": [
         [
           1.0,
-          -0.6853915883639716
+          -0.7189056374487325
         ],
         [
-          -0.6853915883639716,
+          -0.7189056374487325,
           1.0
         ]
       ],
@@ -4888,124 +4556,16 @@
     {
       "entity": "original",
       "fields": [
-        "STRUCTURE",
-        "BARN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.34539551651292555
-        ],
-        [
-          0.34539551651292555,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "STRUCTURE",
-        "BARN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.34539551651292616
-        ],
-        [
-          0.34539551651292616,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "STRUCTURE",
-        "CABIN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7338142166700484
-        ],
-        [
-          0.7338142166700484,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "STRUCTURE",
-        "CABIN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7338142166700514
-        ],
-        [
-          0.7338142166700514,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRE",
-        "PERSON"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRE",
-        "PERSON"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "SEASHELL_FRAME",
+        "TREE",
         "PALM_TREES"
       ],
       "matrix": [
         [
           1.0,
-          0.32999991624368624
+          -0.3881390012094648
         ],
         [
-          0.32999991624368624,
+          -0.3881390012094648,
           1.0
         ]
       ],
@@ -5014,16 +4574,16 @@
     {
       "entity": "original",
       "fields": [
-        "SEASHELL_FRAME",
+        "TREE",
         "PALM_TREES"
       ],
       "matrix": [
         [
           1.0,
-          0.3299999162436867
+          -0.38813900120946665
         ],
         [
-          0.3299999162436867,
+          -0.38813900120946665,
           1.0
         ]
       ],
@@ -5032,16 +4592,16 @@
     {
       "entity": "original",
       "fields": [
-        "DECIDUOUS",
-        "CONIFER"
+        "TREE",
+        "TREES"
       ],
       "matrix": [
         [
           1.0,
-          -0.37487792068706266
+          0.7707508758454209
         ],
         [
-          -0.37487792068706266,
+          0.7707508758454209,
           1.0
         ]
       ],
@@ -5050,16 +4610,16 @@
     {
       "entity": "original",
       "fields": [
-        "DECIDUOUS",
-        "CONIFER"
+        "TREE",
+        "TREES"
       ],
       "matrix": [
         [
           1.0,
-          -0.3748779206870617
+          0.7707508758454118
         ],
         [
-          -0.3748779206870617,
+          0.7707508758454118,
           1.0
         ]
       ],
@@ -5068,16 +4628,16 @@
     {
       "entity": "original",
       "fields": [
-        "ROCKS",
-        "WAVES"
+        "TREE",
+        "BEACH"
       ],
       "matrix": [
         [
           1.0,
-          0.30665618835597336
+          -0.688180083733004
         ],
         [
-          0.30665618835597336,
+          -0.688180083733004,
           1.0
         ]
       ],
@@ -5086,16 +4646,16 @@
     {
       "entity": "original",
       "fields": [
-        "ROCKS",
-        "WAVES"
+        "TREE",
+        "BEACH"
       ],
       "matrix": [
         [
           1.0,
-          0.3066561883559734
+          -0.6881800837329992
         ],
         [
-          0.3066561883559734,
+          -0.6881800837329992,
           1.0
         ]
       ],
@@ -5104,16 +4664,16 @@
     {
       "entity": "original",
       "fields": [
-        "DOCK",
-        "BOAT"
+        "TREE",
+        "DECIDUOUS"
       ],
       "matrix": [
         [
           1.0,
-          0.7062267475149115
+          0.38737147648056275
         ],
         [
-          0.7062267475149115,
+          0.38737147648056275,
           1.0
         ]
       ],
@@ -5122,16 +4682,16 @@
     {
       "entity": "original",
       "fields": [
-        "DOCK",
-        "BOAT"
+        "TREE",
+        "DECIDUOUS"
       ],
       "matrix": [
         [
           1.0,
-          0.7062267475148988
+          0.38737147648056486
         ],
         [
-          0.7062267475148988,
+          0.38737147648056486,
           1.0
         ]
       ],
@@ -5140,80 +4700,8 @@
     {
       "entity": "original",
       "fields": [
-        "OVAL_FRAME",
-        "FRAMED"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8291659387872709
-        ],
-        [
-          0.8291659387872709,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "OVAL_FRAME",
-        "FRAMED"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8291659387872689
-        ],
-        [
-          0.8291659387872689,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "APPLE_FRAME",
+        "BRIDGE",
         "BUILDING"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "APPLE_FRAME",
-        "BUILDING"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "APPLE_FRAME",
-        "BRIDGE"
       ],
       "matrix": [
         [
@@ -5230,8 +4718,8 @@
     {
       "entity": "original",
       "fields": [
-        "APPLE_FRAME",
-        "BRIDGE"
+        "BRIDGE",
+        "BUILDING"
       ],
       "matrix": [
         [
@@ -5248,16 +4736,16 @@
     {
       "entity": "original",
       "fields": [
-        "NIGHT",
-        "MOON"
+        "BRIDGE",
+        "APPLE_FRAME"
       ],
       "matrix": [
         [
           1.0,
-          0.5169842621132014
+          0.3751332385900968
         ],
         [
-          0.5169842621132014,
+          0.3751332385900968,
           1.0
         ]
       ],
@@ -5266,16 +4754,88 @@
     {
       "entity": "original",
       "fields": [
-        "NIGHT",
-        "MOON"
+        "BRIDGE",
+        "APPLE_FRAME"
       ],
       "matrix": [
         [
           1.0,
-          0.5169842621131975
+          0.3751332385900987
         ],
         [
-          0.5169842621131975,
+          0.3751332385900987,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CUMULUS",
+        "CLOUDS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5460948883216566
+        ],
+        [
+          0.5460948883216566,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CUMULUS",
+        "CLOUDS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5460948883216592
+        ],
+        [
+          0.5460948883216592,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "BUILDING",
+        "APPLE_FRAME"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "BUILDING",
+        "APPLE_FRAME"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
           1.0
         ]
       ],
@@ -5285,15 +4845,15 @@
       "entity": "original",
       "fields": [
         "MOUNTAIN",
-        "MOUNTAINS"
+        "SNOWY_MOUNTAIN"
       ],
       "matrix": [
         [
           1.0,
-          0.6914918649865467
+          0.7503825554954253
         ],
         [
-          0.6914918649865467,
+          0.7503825554954253,
           1.0
         ]
       ],
@@ -5303,15 +4863,15 @@
       "entity": "original",
       "fields": [
         "MOUNTAIN",
-        "MOUNTAINS"
+        "SNOWY_MOUNTAIN"
       ],
       "matrix": [
         [
           1.0,
-          0.691491864986545
+          0.7503825554954198
         ],
         [
-          0.691491864986545,
+          0.7503825554954198,
           1.0
         ]
       ],
@@ -5357,15 +4917,15 @@
       "entity": "original",
       "fields": [
         "MOUNTAIN",
-        "SNOWY_MOUNTAIN"
+        "MOUNTAINS"
       ],
       "matrix": [
         [
           1.0,
-          0.7503825554954253
+          0.6914918649865467
         ],
         [
-          0.7503825554954253,
+          0.6914918649865467,
           1.0
         ]
       ],
@@ -5375,15 +4935,15 @@
       "entity": "original",
       "fields": [
         "MOUNTAIN",
-        "SNOWY_MOUNTAIN"
+        "MOUNTAINS"
       ],
       "matrix": [
         [
           1.0,
-          0.7503825554954198
+          0.691491864986545
         ],
         [
-          0.7503825554954198,
+          0.691491864986545,
           1.0
         ]
       ],
@@ -5392,196 +4952,16 @@
     {
       "entity": "original",
       "fields": [
-        "PALM_TREES",
-        "OCEAN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4825640064328963
-        ],
-        [
-          0.4825640064328963,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "OCEAN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4825640064328965
-        ],
-        [
-          0.4825640064328965,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "BEACH"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4296726821263267
-        ],
-        [
-          0.4296726821263267,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "BEACH"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.429672682126325
-        ],
-        [
-          0.429672682126325,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "WAVES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.49790543663230524
-        ],
-        [
-          0.49790543663230524,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "WAVES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.497905436632307
-        ],
-        [
-          0.497905436632307,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "FLORIDA_FRAME"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3299999162436877
-        ],
-        [
-          0.3299999162436877,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "PALM_TREES",
-        "FLORIDA_FRAME"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3299999162436867
-        ],
-        [
-          0.3299999162436867,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "WINTER",
-        "CABIN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3005293760305463
-        ],
-        [
-          0.3005293760305463,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "WINTER",
-        "CABIN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3005293760305476
-        ],
-        [
-          0.3005293760305476,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "MOUNTAINS",
+        "SNOWY_MOUNTAIN",
         "CONIFER"
       ],
       "matrix": [
         [
           1.0,
-          0.36849960631020184
+          0.4101347486420602
         ],
         [
-          0.36849960631020184,
+          0.4101347486420602,
           1.0
         ]
       ],
@@ -5590,16 +4970,16 @@
     {
       "entity": "original",
       "fields": [
-        "MOUNTAINS",
+        "SNOWY_MOUNTAIN",
         "CONIFER"
       ],
       "matrix": [
         [
           1.0,
-          0.3684996063102012
+          0.4101347486420577
         ],
         [
-          0.3684996063102012,
+          0.4101347486420577,
           1.0
         ]
       ],
@@ -5608,8 +4988,8 @@
     {
       "entity": "original",
       "fields": [
-        "MOUNTAINS",
-        "SNOWY_MOUNTAIN"
+        "SNOWY_MOUNTAIN",
+        "MOUNTAINS"
       ],
       "matrix": [
         [
@@ -5626,8 +5006,8 @@
     {
       "entity": "original",
       "fields": [
-        "MOUNTAINS",
-        "SNOWY_MOUNTAIN"
+        "SNOWY_MOUNTAIN",
+        "MOUNTAINS"
       ],
       "matrix": [
         [
@@ -5644,16 +5024,16 @@
     {
       "entity": "original",
       "fields": [
-        "BUILDING",
-        "BRIDGE"
+        "SEASHELL_FRAME",
+        "PALM_TREES"
       ],
       "matrix": [
         [
           1.0,
-          0.3751332385900968
+          0.32999991624368624
         ],
         [
-          0.3751332385900968,
+          0.32999991624368624,
           1.0
         ]
       ],
@@ -5662,16 +5042,16 @@
     {
       "entity": "original",
       "fields": [
-        "BUILDING",
-        "BRIDGE"
+        "SEASHELL_FRAME",
+        "PALM_TREES"
       ],
       "matrix": [
         [
           1.0,
-          0.3751332385900987
+          0.3299999162436867
         ],
         [
-          0.3751332385900987,
+          0.3299999162436867,
           1.0
         ]
       ],
@@ -5680,8 +5060,44 @@
     {
       "entity": "original",
       "fields": [
-        "STEVE_ROSS",
-        "GUEST"
+        "FIRE",
+        "PERSON"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FIRE",
+        "PERSON"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GUEST",
+        "STEVE_ROSS"
       ],
       "matrix": [
         [
@@ -5698,8 +5114,8 @@
     {
       "entity": "original",
       "fields": [
-        "STEVE_ROSS",
-        "GUEST"
+        "GUEST",
+        "STEVE_ROSS"
       ],
       "matrix": [
         [
@@ -5708,6 +5124,222 @@
         ],
         [
           0.6971150462836834,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "STRUCTURE",
+        "CABIN"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7338142166700484
+        ],
+        [
+          0.7338142166700484,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "STRUCTURE",
+        "CABIN"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7338142166700514
+        ],
+        [
+          0.7338142166700514,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CONIFER",
+        "TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.41252389759983604
+        ],
+        [
+          0.41252389759983604,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CONIFER",
+        "TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4125238975998354
+        ],
+        [
+          0.4125238975998354,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CONIFER",
+        "DECIDUOUS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.37487792068706266
+        ],
+        [
+          -0.37487792068706266,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CONIFER",
+        "DECIDUOUS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3748779206870617
+        ],
+        [
+          -0.3748779206870617,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CONIFER",
+        "MOUNTAINS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.36849960631020184
+        ],
+        [
+          0.36849960631020184,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "CONIFER",
+        "MOUNTAINS"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3684996063102012
+        ],
+        [
+          0.3684996063102012,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "OCEAN",
+        "PALM_TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4825640064328963
+        ],
+        [
+          0.4825640064328963,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "OCEAN",
+        "PALM_TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4825640064328965
+        ],
+        [
+          0.4825640064328965,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "OCEAN",
+        "TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.5901746474615173
+        ],
+        [
+          -0.5901746474615173,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "OCEAN",
+        "TREES"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.5901746474615106
+        ],
+        [
+          -0.5901746474615106,
           1.0
         ]
       ],
@@ -5788,16 +5420,16 @@
     {
       "entity": "original",
       "fields": [
-        "OCEAN",
-        "WAVES"
+        "SNOW",
+        "WINTER"
       ],
       "matrix": [
         [
           1.0,
-          0.9691880644983998
+          0.9166611354391966
         ],
         [
-          0.9691880644983998,
+          0.9166611354391966,
           1.0
         ]
       ],
@@ -5806,16 +5438,16 @@
     {
       "entity": "original",
       "fields": [
-        "OCEAN",
-        "WAVES"
+        "SNOW",
+        "WINTER"
       ],
       "matrix": [
         [
           1.0,
-          0.9691880644984
+          0.916661135439191
         ],
         [
-          0.9691880644984,
+          0.916661135439191,
           1.0
         ]
       ],
@@ -5824,16 +5456,16 @@
     {
       "entity": "original",
       "fields": [
-        "BEACH",
-        "CLIFF"
+        "PALM_TREES",
+        "BEACH"
       ],
       "matrix": [
         [
           1.0,
-          0.3176229079078132
+          0.4296726821263267
         ],
         [
-          0.3176229079078132,
+          0.4296726821263267,
           1.0
         ]
       ],
@@ -5842,16 +5474,16 @@
     {
       "entity": "original",
       "fields": [
-        "BEACH",
-        "CLIFF"
+        "PALM_TREES",
+        "BEACH"
       ],
       "matrix": [
         [
           1.0,
-          0.3176229079078116
+          0.429672682126325
         ],
         [
-          0.3176229079078116,
+          0.429672682126325,
           1.0
         ]
       ],
@@ -5860,16 +5492,16 @@
     {
       "entity": "original",
       "fields": [
-        "BEACH",
-        "WAVES"
+        "TREES",
+        "BEACH"
       ],
       "matrix": [
         [
           1.0,
-          0.8470897879022495
+          -0.5787044318849554
         ],
         [
-          0.8470897879022495,
+          -0.5787044318849554,
           1.0
         ]
       ],
@@ -5878,16 +5510,16 @@
     {
       "entity": "original",
       "fields": [
-        "BEACH",
-        "WAVES"
+        "TREES",
+        "BEACH"
       ],
       "matrix": [
         [
           1.0,
-          0.8470897879022476
+          -0.5787044318849511
         ],
         [
-          0.8470897879022476,
+          -0.5787044318849511,
           1.0
         ]
       ],
@@ -5932,16 +5564,16 @@
     {
       "entity": "original",
       "fields": [
-        "PORTRAIT",
-        "GUEST"
+        "BEACH",
+        "CLIFF"
       ],
       "matrix": [
         [
           1.0,
-          0.36039750781097946
+          0.3176229079078132
         ],
         [
-          0.36039750781097946,
+          0.3176229079078132,
           1.0
         ]
       ],
@@ -5950,16 +5582,124 @@
     {
       "entity": "original",
       "fields": [
-        "PORTRAIT",
-        "GUEST"
+        "BEACH",
+        "CLIFF"
       ],
       "matrix": [
         [
           1.0,
-          0.36039750781097757
+          0.3176229079078116
         ],
         [
-          0.36039750781097757,
+          0.3176229079078116,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "MOON",
+        "NIGHT"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5169842621132014
+        ],
+        [
+          0.5169842621132014,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "MOON",
+        "NIGHT"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5169842621131975
+        ],
+        [
+          0.5169842621131975,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WINTER",
+        "CABIN"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3005293760305463
+        ],
+        [
+          0.3005293760305463,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "WINTER",
+        "CABIN"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3005293760305476
+        ],
+        [
+          0.3005293760305476,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "AURORA_BOREALIS",
+        "NIGHT"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.421589224833344
+        ],
+        [
+          0.421589224833344,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "AURORA_BOREALIS",
+        "NIGHT"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.42158922483334327
+        ],
+        [
+          0.42158922483334327,
           1.0
         ]
       ],
@@ -6004,106 +5744,16 @@
     {
       "entity": "original",
       "fields": [
-        "CLIFF",
-        "WAVES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3408266412405266
-        ],
-        [
-          0.3408266412405266,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "CLIFF",
-        "WAVES"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.340826641240524
-        ],
-        [
-          0.340826641240524,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "CONIFER",
-        "SNOWY_MOUNTAIN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4101347486420602
-        ],
-        [
-          0.4101347486420602,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "CONIFER",
-        "SNOWY_MOUNTAIN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4101347486420577
-        ],
-        [
-          0.4101347486420577,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "TITLE",
         "EPISODE"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999143
+          0.9999999999999292
         ],
         [
-          0.9999999999999143,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__EPISODE_TITLE_APPLE_FRAME_AURORA_BOREALIS",
-      "fields": [
-        "A WALK IN THE WOODS",
-        "S01E01"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
+          0.9999999999999292,
           1.0
         ]
       ],

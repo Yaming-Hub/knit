@@ -16,9 +16,10 @@
           "name": "id",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "original_id.dict.txt",
-            "expansion": "shuffle"
+            "type": "tuple_lookup",
+            "source_field": "question",
+            "file": "original__question_id_answerKey.tsv",
+            "column": 1
           },
           "nullable": false,
           "primary_key": true,
@@ -38,10 +39,9 @@
           "name": "question",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "id",
-            "file": "original__id_question_answerKey.tsv",
-            "column": 1
+            "type": "dictionary",
+            "file": "original_question.dict.txt",
+            "expansion": "shuffle"
           },
           "nullable": false,
           "stats": {
@@ -75,8 +75,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "id",
-            "file": "original__id_question_answerKey.tsv",
+            "source_field": "question",
+            "file": "original__question_id_answerKey.tsv",
             "column": 2
           },
           "nullable": false,
@@ -105,180 +105,6 @@
           {
             "name": "answerKey",
             "field": "answerKey",
-            "cardinality": 8
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__id_question_answerKey",
-      "count": 298,
-      "fields": [
-        {
-          "name": "Mercury_SC_407695",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__id_question_answerKey_Mercury_SC_407695.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 298,
-            "null_rate": 0.0,
-            "min_length": 12,
-            "max_length": 22,
-            "avg_length": 15.533557046979865
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mercury_SC_407695",
-            "file": "original__id_question_answerKey__Mercury_SC_407695_Juan_and_LaKeisha_roll_a_few_objects_down_a_ramp__They_want_to_see_which_object_rolls_the_farthest__What_should_they_do_so_they_can__08f67ab479736dc7",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 298,
-            "null_rate": 0.0,
-            "min_length": 30,
-            "max_length": 568,
-            "avg_length": 133.78187919463087
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "D",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mercury_SC_407695",
-            "file": "original__id_question_answerKey__Mercury_SC_407695_Juan_and_LaKeisha_roll_a_few_objects_down_a_ramp__They_want_to_see_which_object_rolls_the_farthest__What_should_they_do_so_they_can__08f67ab479736dc7",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 298
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "D",
-            "field": "D",
-            "cardinality": 8
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__question_id_answerKey",
-      "count": 298,
-      "fields": [
-        {
-          "name": "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__question_id_answerKey_Juan_and_LaKeisha_roll_a_few_objects_down_a_ramp__They_want_to_see_which_object_rolls_the_farthest__What_should_they_do_so_they_can_repeat_their_investigation_.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 298,
-            "null_rate": 0.0,
-            "min_length": 30,
-            "max_length": 568,
-            "avg_length": 133.78187919463087
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Mercury_SC_407695",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-            "file": "original__question_id_answerKey__Juan_and_LaKeisha_roll_a_few_objects_down_a_ramp__They_want_to_see_which_object_rolls_the_farthest__What_should_they_do_so_they_can_repeat_their_inves_c2a09a88c9564ed9",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 298,
-            "null_rate": 0.0,
-            "min_length": 12,
-            "max_length": 22,
-            "avg_length": 15.533557046979865
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "D",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-            "file": "original__question_id_answerKey__Juan_and_LaKeisha_roll_a_few_objects_down_a_ramp__They_want_to_see_which_object_rolls_the_farthest__What_should_they_do_so_they_can_repeat_their_inves_c2a09a88c9564ed9",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 8,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "medium"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 298
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "D",
-            "field": "D",
             "cardinality": 8
           }
         ]
@@ -327,114 +153,6 @@
       "fields": [
         "question",
         "answerKey"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey",
-      "fields": [
-        "D",
-        "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999952
-        ],
-        [
-          0.9999999999999952,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey",
-      "fields": [
-        "D",
-        "Mercury_SC_407695"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey",
-      "fields": [
-        "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-        "Mercury_SC_407695"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__question_id_answerKey",
-      "fields": [
-        "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-        "Mercury_SC_407695"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__question_id_answerKey",
-      "fields": [
-        "Juan and LaKeisha roll a few objects down a ramp. They want to see which object rolls the farthest. What should they do so they can repeat their investigation?",
-        "D"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999937
-        ],
-        [
-          0.9999999999999937,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__question_id_answerKey",
-      "fields": [
-        "Mercury_SC_407695",
-        "D"
       ],
       "matrix": [
         [

@@ -238,24 +238,6 @@
       "entity": "original",
       "fields": [
         "temp_max",
-        "precipitation"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.4027342345710667
-        ],
-        [
-          -0.4027342345710667,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "temp_max",
         "temp_min"
       ],
       "matrix": [
@@ -291,8 +273,26 @@
     {
       "entity": "original",
       "fields": [
-        "precipitation",
-        "wind"
+        "temp_max",
+        "precipitation"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.4027342345710667
+        ],
+        [
+          -0.4027342345710667,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "wind",
+        "precipitation"
       ],
       "matrix": [
         [
@@ -309,8 +309,8 @@
     {
       "entity": "original",
       "fields": [
-        "precipitation",
-        "wind"
+        "wind",
+        "precipitation"
       ],
       "matrix": [
         [

@@ -16,9 +16,10 @@
           "name": "item_id",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "original_item_id.dict.txt",
-            "expansion": "sample"
+            "type": "tuple_lookup",
+            "source_field": "scientific_name",
+            "file": "original__scientific_name_common_name_gap_species_code_item_id.tsv",
+            "column": 3
           },
           "nullable": false,
           "stats": {
@@ -38,9 +39,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "item_id",
-            "file": "original__item_id_gap_species_code_scientific_name_common_name.tsv",
-            "column": 3
+            "source_field": "scientific_name",
+            "file": "original__scientific_name_common_name_gap_species_code_item_id.tsv",
+            "column": 1
           },
           "nullable": false,
           "stats": {
@@ -60,10 +61,9 @@
           "name": "scientific_name",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "item_id",
-            "file": "original__item_id_gap_species_code_scientific_name_common_name.tsv",
-            "column": 2
+            "type": "dictionary",
+            "file": "original_scientific_name.dict.txt",
+            "expansion": "sample"
           },
           "nullable": false,
           "stats": {
@@ -83,9 +83,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "item_id",
-            "file": "original__item_id_gap_species_code_scientific_name_common_name.tsv",
-            "column": 1
+            "source_field": "scientific_name",
+            "file": "original__scientific_name_common_name_gap_species_code_item_id.tsv",
+            "column": 2
           },
           "nullable": false,
           "stats": {
@@ -221,1352 +221,12 @@
         "column": "item_id",
         "direction": "asc"
       }
-    },
-    {
-      "name": "original__common_name_item_id",
-      "count": 3,
-      "fields": [
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_item_id__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_item_id__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          },
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__common_name_item_id_gap_species_code_scientific_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_item_id_gap_species_code_scientific_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_item_id_gap_species_code_scientific_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_item_id_gap_species_code_scientific_name__fullrow.tsv",
-            "column": 2,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_item_id_gap_species_code_scientific_name__fullrow.tsv",
-            "column": 3,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          },
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__common_name_scientific_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_scientific_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__common_name_scientific_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__gap_species_code_common_name",
-      "count": 1,
-      "fields": [
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__gap_species_code_common_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__gap_species_code_common_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 1,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 14,
-            "avg_length": 14.0
-          },
-          "traits": {
-            "semantic": "name",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 1
-      }
-    },
-    {
-      "name": "original__gap_species_code_common_name_item_id_scientific_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__gap_species_code_common_name_item_id_scientific_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__gap_species_code_common_name_item_id_scientific_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__gap_species_code_common_name_item_id_scientific_name__fullrow.tsv",
-            "column": 2,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__gap_species_code_common_name_item_id_scientific_name__fullrow.tsv",
-            "column": 3,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          },
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          },
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "aAMBUx",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__item_id_gap_species_code",
-      "count": 3,
-      "fields": [
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__item_id_gap_species_code__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__item_id_gap_species_code__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__item_id_scientific_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__item_id_scientific_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__item_id_scientific_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__scientific_name_gap_species_code",
-      "count": 3,
-      "fields": [
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__scientific_name_gap_species_code__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__scientific_name_gap_species_code__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "aAMBUx",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "original__scientific_name_item_id",
-      "count": 3,
-      "fields": [
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__scientific_name_item_id__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__scientific_name_item_id__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          },
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "species_original__common_name_scientific_name_gap_species_code_item_id",
-      "count": 3,
-      "fields": [
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__common_name_scientific_name_gap_species_code_item_id__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__common_name_scientific_name_gap_species_code_item_id__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__common_name_scientific_name_gap_species_code_item_id__fullrow.tsv",
-            "column": 2,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__common_name_scientific_name_gap_species_code_item_id__fullrow.tsv",
-            "column": 3,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          },
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "aAMBUx",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "species_original__item_id_gap_species_code_common_name_scientific_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_gap_species_code_common_name_scientific_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_gap_species_code_common_name_scientific_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_gap_species_code_common_name_scientific_name__fullrow.tsv",
-            "column": 2,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_gap_species_code_common_name_scientific_name__fullrow.tsv",
-            "column": 3,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          },
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "species_original__item_id_scientific_name_gap_species_code_common_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_scientific_name_gap_species_code_common_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_scientific_name_gap_species_code_common_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_scientific_name_gap_species_code_common_name__fullrow.tsv",
-            "column": 2,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__item_id_scientific_name_gap_species_code_common_name__fullrow.tsv",
-            "column": 3,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          },
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
-    },
-    {
-      "name": "species_original__scientific_name_item_id_gap_species_code_common_name",
-      "count": 3,
-      "fields": [
-        {
-          "name": "Lithobates catesbeianus",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__scientific_name_item_id_gap_species_code_common_name__fullrow.tsv",
-            "column": 0,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 18,
-            "max_length": 22,
-            "avg_length": 19.666666666666668
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "58fa3f0be4b0b7ea54524859",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__scientific_name_item_id_gap_species_code_common_name__fullrow.tsv",
-            "column": 1,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 24,
-            "max_length": 24,
-            "avg_length": 24.0
-          },
-          "traits": {
-            "semantic": "hex_string",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "aAMBUx",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__scientific_name_item_id_gap_species_code_common_name__fullrow.tsv",
-            "column": 2,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 6,
-            "max_length": 6,
-            "avg_length": 6.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "American Bullfrog",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "species_original__scientific_name_item_id_gap_species_code_common_name__fullrow.tsv",
-            "column": 3,
-            "row_count": 3
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 3,
-            "null_rate": 0.0,
-            "min_length": 14,
-            "max_length": 18,
-            "avg_length": 16.333333333333332
-          },
-          "traits": {
-            "semantic": "text",
-            "pii": true,
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 3
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Lithobates catesbeianus",
-            "field": "Lithobates catesbeianus",
-            "cardinality": 3
-          },
-          {
-            "name": "58fa3f0be4b0b7ea54524859",
-            "field": "58fa3f0be4b0b7ea54524859",
-            "cardinality": 3
-          },
-          {
-            "name": "aAMBUx",
-            "field": "aAMBUx",
-            "cardinality": 3
-          },
-          {
-            "name": "American Bullfrog",
-            "field": "American Bullfrog",
-            "cardinality": 3
-          }
-        ]
-      },
-      "sort_by": {
-        "column": "58fa3f0be4b0b7ea54524859",
-        "direction": "asc"
-      }
     }
   ],
   "correlations": [
     {
       "entity": "original",
       "fields": [
-        "scientific_name",
-        "common_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "scientific_name",
-        "item_id"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "scientific_name",
-        "gap_species_code"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "common_name",
         "item_id"
       ],
@@ -1587,6 +247,24 @@
       "fields": [
         "common_name",
         "gap_species_code"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "common_name",
+        "scientific_name"
       ],
       "matrix": [
         [
@@ -1620,6 +298,189 @@
     },
     {
       "entity": "original",
+      "fields": [
+        "item_id",
+        "scientific_name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "gap_species_code",
+        "scientific_name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "habitat_yearround_pct",
+      "given": "scientific_name",
+      "distributions": [
+        {
+          "when": "Turdus migratorius",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9996,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "Odocoileus virginianus",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9825,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "Thamnophis sirtalis",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9993,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "Lithobates catesbeianus",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 5.665569673030627
+          }
+        }
+      ],
+      "default": {
+        "kind": "uniform",
+        "params": {
+          "max": 0.9996,
+          "min": 0.0
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "habitat_yearround_pct",
+      "given": "common_name",
+      "distributions": [
+        {
+          "when": "Common Gartersnake",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9993,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "American Robin",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9996,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "American Bullfrog",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 5.665569673030627
+          }
+        },
+        {
+          "when": "White-tailed Deer",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9825,
+            "min": 0.0
+          }
+        }
+      ],
+      "default": {
+        "kind": "uniform",
+        "params": {
+          "max": 0.9996,
+          "min": 0.0
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "habitat_yearround_pct",
+      "given": "gap_species_code",
+      "distributions": [
+        {
+          "when": "rCOGAx",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9993,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "mWTDEx",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9825,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "bAMROx",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9996,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "aAMBUx",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 5.665569673030627
+          }
+        }
+      ],
+      "default": {
+        "kind": "uniform",
+        "params": {
+          "max": 0.9996,
+          "min": 0.0
+        }
+      }
+    },
+    {
+      "entity": "original",
       "type": "conditional_distribution",
       "fields": [],
       "matrix": [],
@@ -1643,162 +504,15 @@
           }
         },
         {
-          "when": "58fa449fe4b0b7ea54524c5e",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9996,
-            "min": 0.0
-          }
-        },
-        {
           "when": "58fe0f4fe4b0074928294636",
           "distribution": "uniform",
           "params": {
             "max": 0.9993,
             "min": 0.0
           }
-        }
-      ],
-      "default": {
-        "kind": "uniform",
-        "params": {
-          "max": 0.9996,
-          "min": 0.0
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "habitat_yearround_pct",
-      "given": "gap_species_code",
-      "distributions": [
-        {
-          "when": "bAMROx",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9996,
-            "min": 0.0
-          }
         },
         {
-          "when": "aAMBUx",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 5.665569673030627
-          }
-        },
-        {
-          "when": "mWTDEx",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9825,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "rCOGAx",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9993,
-            "min": 0.0
-          }
-        }
-      ],
-      "default": {
-        "kind": "uniform",
-        "params": {
-          "max": 0.9996,
-          "min": 0.0
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "habitat_yearround_pct",
-      "given": "scientific_name",
-      "distributions": [
-        {
-          "when": "Odocoileus virginianus",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9825,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "Turdus migratorius",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9996,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "Lithobates catesbeianus",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 5.665569673030627
-          }
-        },
-        {
-          "when": "Thamnophis sirtalis",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9993,
-            "min": 0.0
-          }
-        }
-      ],
-      "default": {
-        "kind": "uniform",
-        "params": {
-          "max": 0.9996,
-          "min": 0.0
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "habitat_yearround_pct",
-      "given": "common_name",
-      "distributions": [
-        {
-          "when": "White-tailed Deer",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9825,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "Common Gartersnake",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9993,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "American Bullfrog",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 5.665569673030627
-          }
-        },
-        {
-          "when": "American Robin",
+          "when": "58fa449fe4b0b7ea54524c5e",
           "distribution": "uniform",
           "params": {
             "max": 0.9996,

@@ -109,223 +109,9 @@
           }
         ]
       }
-    },
-    {
-      "name": "original__id_question_answerKey",
-      "count": 2250,
-      "fields": [
-        {
-          "name": "Mercury_7220990",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__id_question_answerKey_Mercury_7220990.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2250,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 22,
-            "avg_length": 15.864888888888888
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Which factor will most likely cause a person to develop a fever?",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mercury_7220990",
-            "file": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B.tsv",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2244,
-            "null_rate": 0.0,
-            "min_length": 17,
-            "max_length": 587,
-            "avg_length": 111.16444444444444
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "B",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "Mercury_7220990",
-            "file": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B.tsv",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 9,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 2250
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "B",
-            "field": "B",
-            "cardinality": 9
-          }
-        ]
-      }
-    },
-    {
-      "name": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B",
-      "count": 2249,
-      "fields": [
-        {
-          "name": "MCAS_2007_8_5189",
-          "data_type": "string",
-          "generator": {
-            "type": "dictionary",
-            "file": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B_MCAS_2007_8_5189.dict.txt",
-            "expansion": "shuffle"
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2249,
-            "null_rate": 0.0,
-            "min_length": 8,
-            "max_length": 22,
-            "avg_length": 15.864828812805692
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "Lichens are symbiotic organisms made of green algae and fungi. What do the green algae supply to the fungi in this symbiotic relationship?",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "MCAS_2007_8_5189",
-            "file": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B__MCAS_2007_8_5189_Lichens_are_symbiotic_organisms_made_of_green_alg_4d661988d4c2f96e",
-            "column": 1
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2243,
-            "null_rate": 0.0,
-            "min_length": 17,
-            "max_length": 587,
-            "avg_length": 111.15518008003558
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "B",
-          "data_type": "string",
-          "generator": {
-            "type": "tuple_lookup",
-            "source_field": "MCAS_2007_8_5189",
-            "file": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B__MCAS_2007_8_5189_Lichens_are_symbiotic_organisms_made_of_green_alg_4d661988d4c2f96e",
-            "column": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 9,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "categorical",
-            "cardinality": "low"
-          }
-        }
-      ],
-      "constraints": [],
-      "actor": true,
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 2249
-      },
-      "scaling": {
-        "actor": {
-          "is_root": true
-        },
-        "custom": [
-          {
-            "name": "B",
-            "field": "B",
-            "cardinality": 9
-          }
-        ]
-      }
     }
   ],
   "correlations": [
-    {
-      "entity": "original",
-      "fields": [
-        "question",
-        "answerKey"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9994817416860033
-        ],
-        [
-          0.9994817416860033,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "question",
-        "id"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -345,100 +131,28 @@
       "conditional": []
     },
     {
-      "entity": "original__id_question_answerKey",
+      "entity": "original",
       "fields": [
-        "Mercury_7220990",
-        "B"
+        "answerKey",
+        "question"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999442
+          0.999481741686117
         ],
         [
-          0.9999999999999442,
+          0.999481741686117,
           1.0
         ]
       ],
       "conditional": []
     },
     {
-      "entity": "original__id_question_answerKey",
+      "entity": "original",
       "fields": [
-        "Mercury_7220990",
-        "Which factor will most likely cause a person to develop a fever?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey",
-      "fields": [
-        "B",
-        "Which factor will most likely cause a person to develop a fever?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9994817416858708
-        ],
-        [
-          0.9994817416858708,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B",
-      "fields": [
-        "B",
-        "Lichens are symbiotic organisms made of green algae and fungi. What do the green algae supply to the fungi in this symbiotic relationship?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9994817416859577
-        ],
-        [
-          0.9994817416859577,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B",
-      "fields": [
-        "B",
-        "MCAS_2007_8_5189"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999625
-        ],
-        [
-          0.9999999999999625,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original__id_question_answerKey__Mercury_7220990_Which_factor_will_most_likely_cause_a_person_to_develop_a_fever__B",
-      "fields": [
-        "Lichens are symbiotic organisms made of green algae and fungi. What do the green algae supply to the fungi in this symbiotic relationship?",
-        "MCAS_2007_8_5189"
+        "id",
+        "question"
       ],
       "matrix": [
         [

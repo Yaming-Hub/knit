@@ -75,11 +75,11 @@
                 "weight": 0.13
               },
               {
-                "value": "W.",
+                "value": "H.",
                 "weight": 0.11
               },
               {
-                "value": "H.",
+                "value": "W.",
                 "weight": 0.11
               },
               {
@@ -111,12 +111,16 @@
                 "weight": 0.04
               },
               {
+                "value": "G.",
+                "weight": 0.04
+              },
+              {
                 "value": "K.",
                 "weight": 0.04
               },
               {
-                "value": "G.",
-                "weight": 0.04
+                "value": "D.",
+                "weight": 0.03
               },
               {
                 "value": "S.",
@@ -127,15 +131,11 @@
                 "weight": 0.03
               },
               {
-                "value": "D.",
-                "weight": 0.03
-              },
-              {
-                "value": "T.",
+                "value": "N.",
                 "weight": 0.02
               },
               {
-                "value": "N.",
+                "value": "T.",
                 "weight": 0.02
               },
               {
@@ -556,10 +556,10 @@
       "matrix": [
         [
           1.0,
-          0.893600410896848
+          0.8936004108968488
         ],
         [
-          0.893600410896848,
+          0.8936004108968488,
           1.0
         ]
       ],
@@ -575,20 +575,20 @@
       "given": "status",
       "distributions": [
         {
-          "when": "shipped",
-          "distribution": "uniform",
-          "params": {
-            "max": 90.0,
-            "min": 71.0
-          },
-          "round": true
-        },
-        {
           "when": "completed",
           "distribution": "uniform",
           "params": {
             "max": 76.0,
             "min": 2.0
+          },
+          "round": true
+        },
+        {
+          "when": "shipped",
+          "distribution": "uniform",
+          "params": {
+            "max": 90.0,
+            "min": 71.0
           },
           "round": true
         },

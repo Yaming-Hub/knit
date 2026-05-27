@@ -245,78 +245,6 @@
     {
       "entity": "original",
       "fields": [
-        "total_bill",
-        "tip"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6757341092113642
-        ],
-        [
-          0.6757341092113642,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total_bill",
-        "tip"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6789681219001009
-        ],
-        [
-          0.6789681219001009,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total_bill",
-        "size"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5983151309049025
-        ],
-        [
-          0.5983151309049025,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total_bill",
-        "size"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6047911390994543
-        ],
-        [
-          0.6047911390994543,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "tip",
         "size"
       ],
@@ -345,6 +273,78 @@
         ],
         [
           0.46826792926211475,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "tip",
+        "total_bill"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6757341092113642
+        ],
+        [
+          0.6757341092113642,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "tip",
+        "total_bill"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6789681219001009
+        ],
+        [
+          0.6789681219001009,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "size",
+        "total_bill"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5983151309049025
+        ],
+        [
+          0.5983151309049025,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "size",
+        "total_bill"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6047911390994543
+        ],
+        [
+          0.6047911390994543,
           1.0
         ]
       ],

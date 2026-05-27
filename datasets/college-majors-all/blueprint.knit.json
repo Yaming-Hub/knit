@@ -494,15 +494,15 @@
       "entity": "original",
       "fields": [
         "Employed_full_time_year_round",
-        "Employed"
+        "Unemployed"
       ],
       "matrix": [
         [
           1.0,
-          0.9958098304717039
+          0.9691764697984575
         ],
         [
-          0.9958098304717039,
+          0.9691764697984575,
           1.0
         ]
       ],
@@ -512,15 +512,15 @@
       "entity": "original",
       "fields": [
         "Employed_full_time_year_round",
-        "Employed"
+        "Unemployed"
       ],
       "matrix": [
         [
           1.0,
-          0.9960645433433304
+          0.968599747602696
         ],
         [
-          0.9960645433433304,
+          0.968599747602696,
           1.0
         ]
       ],
@@ -566,15 +566,15 @@
       "entity": "original",
       "fields": [
         "Employed_full_time_year_round",
-        "Unemployed"
+        "Employed"
       ],
       "matrix": [
         [
           1.0,
-          0.9691764697984575
+          0.9958098304717039
         ],
         [
-          0.9691764697984575,
+          0.9958098304717039,
           1.0
         ]
       ],
@@ -584,15 +584,15 @@
       "entity": "original",
       "fields": [
         "Employed_full_time_year_round",
-        "Unemployed"
+        "Employed"
       ],
       "matrix": [
         [
           1.0,
-          0.968599747602696
+          0.9960645433433304
         ],
         [
-          0.968599747602696,
+          0.9960645433433304,
           1.0
         ]
       ],
@@ -601,16 +601,16 @@
     {
       "entity": "original",
       "fields": [
-        "Unemployment_rate",
-        "Median"
+        "Unemployed",
+        "Total"
       ],
       "matrix": [
         [
           1.0,
-          -0.3019456595817109
+          0.9622314512620106
         ],
         [
-          -0.3019456595817109,
+          0.9622314512620106,
           1.0
         ]
       ],
@@ -619,16 +619,16 @@
     {
       "entity": "original",
       "fields": [
-        "Unemployment_rate",
-        "P25th"
+        "Unemployed",
+        "Total"
       ],
       "matrix": [
         [
           1.0,
-          -0.3413964209005848
+          0.9738076282594904
         ],
         [
-          -0.3413964209005848,
+          0.9738076282594904,
           1.0
         ]
       ],
@@ -637,16 +637,16 @@
     {
       "entity": "original",
       "fields": [
-        "Unemployment_rate",
-        "P25th"
+        "Unemployed",
+        "Employed"
       ],
       "matrix": [
         [
           1.0,
-          -0.3333367574307155
+          0.9697855987417962
         ],
         [
-          -0.3333367574307155,
+          0.9697855987417962,
           1.0
         ]
       ],
@@ -655,16 +655,16 @@
     {
       "entity": "original",
       "fields": [
-        "P75th",
-        "Median"
+        "Unemployed",
+        "Employed"
       ],
       "matrix": [
         [
           1.0,
-          0.9500985538977625
+          0.9750221051015733
         ],
         [
-          0.9500985538977625,
+          0.9750221051015733,
           1.0
         ]
       ],
@@ -673,16 +673,34 @@
     {
       "entity": "original",
       "fields": [
-        "P75th",
-        "Median"
+        "Total",
+        "Employed"
       ],
       "matrix": [
         [
           1.0,
-          0.9644800671038546
+          0.994976334635262
         ],
         [
-          0.9644800671038546,
+          0.994976334635262,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Total",
+        "Employed"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.997035660150836
+        ],
+        [
+          0.997035660150836,
           1.0
         ]
       ],
@@ -727,16 +745,16 @@
     {
       "entity": "original",
       "fields": [
-        "Employed",
-        "Total"
+        "P75th",
+        "Median"
       ],
       "matrix": [
         [
           1.0,
-          0.994976334635262
+          0.9500985538977625
         ],
         [
-          0.994976334635262,
+          0.9500985538977625,
           1.0
         ]
       ],
@@ -745,16 +763,16 @@
     {
       "entity": "original",
       "fields": [
-        "Employed",
-        "Total"
+        "P75th",
+        "Median"
       ],
       "matrix": [
         [
           1.0,
-          0.997035660150836
+          0.9644800671038546
         ],
         [
-          0.997035660150836,
+          0.9644800671038546,
           1.0
         ]
       ],
@@ -763,80 +781,62 @@
     {
       "entity": "original",
       "fields": [
-        "Employed",
-        "Unemployed"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9697855987417962
-        ],
-        [
-          0.9697855987417962,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Employed",
-        "Unemployed"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9750221051015733
-        ],
-        [
-          0.9750221051015733,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Total",
-        "Unemployed"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9622314512620106
-        ],
-        [
-          0.9622314512620106,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Total",
-        "Unemployed"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9738076282594904
-        ],
-        [
-          0.9738076282594904,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Median",
+        "Unemployment_rate",
         "P25th"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3413964209005848
+        ],
+        [
+          -0.3413964209005848,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Unemployment_rate",
+        "P25th"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3333367574307155
+        ],
+        [
+          -0.3333367574307155,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Unemployment_rate",
+        "Median"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3019456595817109
+        ],
+        [
+          -0.3019456595817109,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "P25th",
+        "Median"
       ],
       "matrix": [
         [
@@ -853,8 +853,8 @@
     {
       "entity": "original",
       "fields": [
-        "Median",
-        "P25th"
+        "P25th",
+        "Median"
       ],
       "matrix": [
         [
@@ -877,10 +877,10 @@
       "matrix": [
         [
           1.0,
-          0.9999999999999947
+          0.9999999999999927
         ],
         [
-          0.9999999999999947,
+          0.9999999999999927,
           1.0
         ]
       ],

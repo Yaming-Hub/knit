@@ -483,80 +483,45 @@
           }
         ]
       }
-    },
-    {
-      "name": "original__embark_town_embarked",
-      "count": 2,
-      "fields": [
-        {
-          "name": "Southampton",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__embark_town_embarked__fullrow.tsv",
-            "column": 0,
-            "row_count": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 9,
-            "max_length": 10,
-            "avg_length": 9.5
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        },
-        {
-          "name": "S",
-          "data_type": "string",
-          "generator": {
-            "type": "row_lookup",
-            "file": "original__embark_town_embarked__fullrow.tsv",
-            "column": 1,
-            "row_count": 2
-          },
-          "nullable": false,
-          "stats": {
-            "distinct_count": 2,
-            "null_rate": 0.0,
-            "min_length": 1,
-            "max_length": 1,
-            "avg_length": 1.0
-          },
-          "traits": {
-            "semantic": "text",
-            "cardinality": "unique"
-          }
-        }
-      ],
-      "constraints": [],
-      "output": {
-        "source_format": "tsv"
-      },
-      "stats": {
-        "source_rows": 2
-      },
-      "scaling": {
-        "custom": [
-          {
-            "name": "Southampton",
-            "field": "Southampton",
-            "cardinality": 2
-          },
-          {
-            "name": "S",
-            "field": "S",
-            "cardinality": 2
-          }
-        ]
-      }
     }
   ],
   "correlations": [
+    {
+      "entity": "original",
+      "fields": [
+        "pclass",
+        "age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.36922601531551574
+        ],
+        [
+          -0.36922601531551574,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pclass",
+        "age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.36166557503434504
+        ],
+        [
+          -0.36166557503434504,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
     {
       "entity": "original",
       "fields": [
@@ -632,34 +597,16 @@
     {
       "entity": "original",
       "fields": [
-        "pclass",
-        "age"
+        "age",
+        "sibsp"
       ],
       "matrix": [
         [
           1.0,
-          -0.36922601531551574
+          -0.3082467589236574
         ],
         [
-          -0.36922601531551574,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pclass",
-        "age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.36166557503434504
-        ],
-        [
-          -0.36166557503434504,
+          -0.3082467589236574,
           1.0
         ]
       ],
@@ -678,60 +625,6 @@
         ],
         [
           0.3237361394448083,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fare",
-        "sibsp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4471129882944581
-        ],
-        [
-          0.4471129882944581,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fare",
-        "parch"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4100738082761382
-        ],
-        [
-          0.4100738082761382,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "age",
-        "sibsp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3082467589236574
-        ],
-        [
-          -0.3082467589236574,
           1.0
         ]
       ],
@@ -776,16 +669,16 @@
     {
       "entity": "original",
       "fields": [
-        "deck",
-        "who"
+        "sibsp",
+        "fare"
       ],
       "matrix": [
         [
           1.0,
-          0.32135468589345884
+          0.4471129882944581
         ],
         [
-          0.32135468589345884,
+          0.4471129882944581,
           1.0
         ]
       ],
@@ -794,16 +687,16 @@
     {
       "entity": "original",
       "fields": [
-        "deck",
-        "class"
+        "parch",
+        "fare"
       ],
       "matrix": [
         [
           1.0,
-          0.6461176369278667
+          0.4100738082761382
         ],
         [
-          0.6461176369278667,
+          0.4100738082761382,
           1.0
         ]
       ],
@@ -867,6 +760,24 @@
       "entity": "original",
       "fields": [
         "who",
+        "deck"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.32135468589345884
+        ],
+        [
+          0.32135468589345884,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "who",
         "alive"
       ],
       "matrix": [
@@ -884,8 +795,26 @@
     {
       "entity": "original",
       "fields": [
-        "alive",
+        "deck",
         "class"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6461176369278667
+        ],
+        [
+          0.6461176369278667,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "class",
+        "alive"
       ],
       "matrix": [
         [

@@ -181,8 +181,8 @@
     {
       "entity": "original",
       "fields": [
-        "Year",
-        "Score"
+        "Score",
+        "Year"
       ],
       "matrix": [
         [
@@ -199,8 +199,8 @@
     {
       "entity": "original",
       "fields": [
-        "Year",
-        "Score"
+        "Score",
+        "Year"
       ],
       "matrix": [
         [
@@ -217,8 +217,8 @@
     {
       "entity": "original",
       "fields": [
-        "Encoder",
-        "Model"
+        "Model",
+        "Encoder"
       ],
       "matrix": [
         [
