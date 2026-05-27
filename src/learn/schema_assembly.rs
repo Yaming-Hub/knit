@@ -427,28 +427,41 @@ fn build_entity(
         upgrade_sort_date_to_sequence(&mut fields, &table.columns, sort_order, table.row_count);
     }
 
-    // Build top-level Relationship entries from detected FKs
+    // Build top-level Relationship entries from detected FKs.
+    // Deduplicate names by appending _2, _3 etc. when collisions occur.
+    let mut rel_name_counts: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::new();
     let rels: Vec<Relationship> = table
         .relationships
         .iter()
-        .map(|r| Relationship {
-            name: format!("{}_{}_fk", r.from_table, r.from_column),
-            from: r.from_table.clone(),
-            to: r.to_table.clone(),
-            kind: match r.kind {
-                RelationshipKind::OneToOne => CoreRelKind::OneToOne,
-                RelationshipKind::OneToMany => CoreRelKind::OneToMany,
-                RelationshipKind::ManyToMany => CoreRelKind::ManyToMany,
-            },
-            foreign_key: Some(r.from_column.clone()),
-            cardinality: None,
-            degree: None,
-            selection: None,
-            nullable: None,
-            acyclic: None,
-            root_probability: None,
-            max_depth: None,
-            properties: vec![],
+        .map(|r| {
+            let base_name = format!("{}_{}_fk", r.from_table, r.from_column);
+            let count = rel_name_counts.entry(base_name.clone()).or_insert(0);
+            *count += 1;
+            let name = if *count == 1 {
+                base_name
+            } else {
+                format!("{}_{}", base_name, count)
+            };
+            Relationship {
+                name,
+                from: r.from_table.clone(),
+                to: r.to_table.clone(),
+                kind: match r.kind {
+                    RelationshipKind::OneToOne => CoreRelKind::OneToOne,
+                    RelationshipKind::OneToMany => CoreRelKind::OneToMany,
+                    RelationshipKind::ManyToMany => CoreRelKind::ManyToMany,
+                },
+                foreign_key: Some(r.from_column.clone()),
+                cardinality: None,
+                degree: None,
+                selection: None,
+                nullable: None,
+                acyclic: None,
+                root_probability: None,
+                max_depth: None,
+                properties: vec![],
+            }
         })
         .collect();
 

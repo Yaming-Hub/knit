@@ -526,9 +526,10 @@ fn is_output_directory(path: &Path) -> bool {
         Some(n) => n,
         None => return false,
     };
-    matches!(name, "out" | "output" | "gen" | "test_output")
+    matches!(name, "out" | "output" | "gen")
         || name.starts_with("out_seed_")
         || name.starts_with("test_learn")
+        || name.starts_with("test_output")
         || matches!(name, "generated.csv" | "generated.tsv" | "generated.json" | "generated.parquet")
 }
 
