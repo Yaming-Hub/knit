@@ -443,11 +443,215 @@ def compute_final_score(component_scores: Dict[str, float]) -> int:
     return min(100, max(0, round(total * 100)))
 
 
+def find_multi_table_sources(ds_path: str) -> Optional[Dict[str, str]]:
+    """Find all source table files in a multi-table dataset.
+
+    Returns dict of {table_name: file_path} or None if not multi-table.
+    Only returns datasets with 2+ source tables.
+    """
+    tables = {}
+    for f in sorted(os.listdir(ds_path)):
+        full = os.path.join(ds_path, f)
+        if not os.path.isfile(full):
+            continue
+        base, ext = os.path.splitext(f)
+        if ext in ('.csv', '.tsv', '.json', '.parquet'):
+            # Skip learner artifacts and non-source files
+            if '__' in base or base == 'blueprint.knit':
+                continue
+            if base == 'original':
+                # Single-table dataset, not multi-table
+                return None
+            tables[base] = full
+    return tables if len(tables) >= 2 else None
+
+
+def find_multi_table_generated(ds_path: str, seed: int) -> Optional[Dict[str, str]]:
+    """Find generated output files for a multi-table dataset.
+
+    Returns dict of {table_name: file_path} matching source table names.
+    """
+    seed_dir = os.path.join(ds_path, f'out_seed_{seed}')
+    if not os.path.isdir(seed_dir):
+        return None
+    tables = {}
+    for f in sorted(os.listdir(seed_dir)):
+        full = os.path.join(seed_dir, f)
+        if not os.path.isfile(full):
+            continue
+        base, ext = os.path.splitext(f)
+        if ext in ('.csv', '.tsv', '.json', '.parquet'):
+            tables[base] = full
+    return tables if tables else None
+
+
+def load_blueprint_relationships(ds_path: str) -> List[Dict]:
+    """Load FK relationships from blueprint.knit.json."""
+    bp_path = os.path.join(ds_path, 'blueprint.knit.json')
+    if not os.path.isfile(bp_path):
+        return []
+    try:
+        with open(bp_path, 'r', encoding='utf-8') as f:
+            bp = json.load(f)
+        return bp.get('relationships', [])
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def score_fk_integrity(gen_tables: Dict[str, Tuple[List[str], List[List[str]]]],
+                       relationships: List[Dict]) -> float:
+    """Score FK referential integrity across generated tables.
+
+    Checks that FK values in child tables exist in parent table PKs.
+    Returns a score 0.0-1.0 representing the fraction of valid FK references.
+    """
+    if not relationships:
+        return 1.0
+
+    integrity_scores = []
+    for rel in relationships:
+        from_entity = rel.get('from', '')
+        to_entity = rel.get('to', '')
+        fk_col = rel.get('foreign_key', f'{to_entity}_id')
+
+        if from_entity not in gen_tables or to_entity not in gen_tables:
+            continue
+
+        from_headers, from_rows = gen_tables[from_entity]
+        to_headers, to_rows = gen_tables[to_entity]
+
+        # Find FK column in child table
+        if fk_col not in from_headers:
+            continue
+
+        # Find PK column in parent table (first column by convention, or *_id)
+        pk_col = None
+        for candidate in [f'{to_entity}_id', f'{to_entity}Id', 'id', 'ID']:
+            if candidate in to_headers:
+                pk_col = candidate
+                break
+        if pk_col is None and to_headers:
+            pk_col = to_headers[0]
+        if pk_col is None:
+            continue
+
+        # Get parent PK values
+        pk_idx = to_headers.index(pk_col)
+        pk_values = set(row[pk_idx] for row in to_rows if pk_idx < len(row) and row[pk_idx].strip())
+
+        # Get child FK values and check integrity
+        fk_idx = from_headers.index(fk_col)
+        fk_values = [row[fk_idx] for row in from_rows if fk_idx < len(row) and row[fk_idx].strip()]
+
+        if not fk_values:
+            continue
+
+        valid = sum(1 for v in fk_values if v in pk_values)
+        integrity_scores.append(valid / len(fk_values))
+
+    if not integrity_scores:
+        return 1.0
+    return sum(integrity_scores) / len(integrity_scores)
+
+
+def score_multi_table(ds_path: str, seed: int,
+                      source_tables: Dict[str, str]) -> Optional[Dict[str, float]]:
+    """Score a multi-table dataset for a single seed.
+
+    Scores each table pair, adds FK integrity score, returns components.
+    """
+    gen_tables_files = find_multi_table_generated(ds_path, seed)
+    if not gen_tables_files:
+        return None
+
+    # Load all generated tables
+    gen_loaded = {}
+    for name, path in gen_tables_files.items():
+        headers, rows = load_data(path)
+        if headers:
+            gen_loaded[name] = (headers, rows)
+
+    if not gen_loaded:
+        return None
+
+    # Score each source table against its generated counterpart
+    table_scores = []
+    matched_tables = 0
+    for src_name, src_path in source_tables.items():
+        src_headers, src_rows = load_data(src_path)
+        if not src_headers:
+            continue
+
+        # Match by name (source: orders.csv -> generated: orders.parquet)
+        if src_name in gen_loaded:
+            gen_headers, gen_rows = gen_loaded[src_name]
+            components = score_single(src_headers, src_rows, gen_headers, gen_rows)
+            table_scores.append(components)
+            matched_tables += 1
+
+    if not table_scores:
+        return None
+
+    # Aggregate per-table scores (average across tables)
+    agg = {}
+    for key in ['schema', 'row_count', 'distribution', 'correlation', 'null_rate']:
+        values = [t.get(key, 0.0) for t in table_scores]
+        agg[key] = sum(values) / len(values)
+
+    # Add table coverage score (what fraction of source tables were generated)
+    agg['table_coverage'] = matched_tables / len(source_tables)
+
+    # FK referential integrity
+    relationships = load_blueprint_relationships(ds_path)
+    if relationships:
+        agg['fk_integrity'] = score_fk_integrity(gen_loaded, relationships)
+
+    return agg
+
+
+def compute_multi_table_score(component_scores: Dict[str, float]) -> int:
+    """Compute weighted final score for multi-table datasets.
+
+    Adds table_coverage and fk_integrity components.
+    """
+    has_fk = 'fk_integrity' in component_scores
+    if has_fk:
+        weights = {
+            'schema': 0.15,
+            'row_count': 0.05,
+            'distribution': 0.30,
+            'correlation': 0.15,
+            'null_rate': 0.05,
+            'table_coverage': 0.15,
+            'fk_integrity': 0.15,
+        }
+    else:
+        weights = {
+            'schema': 0.18,
+            'row_count': 0.07,
+            'distribution': 0.35,
+            'correlation': 0.18,
+            'null_rate': 0.07,
+            'table_coverage': 0.15,
+        }
+    total = sum(component_scores.get(k, 0.0) * w for k, w in weights.items())
+    return min(100, max(0, round(total * 100)))
+
+
 def score_dataset(ds_path: str, seeds: List[int] = None) -> Optional[Dict]:
-    """Score a dataset across multiple seeds. Returns aggregate result."""
+    """Score a dataset across multiple seeds. Returns aggregate result.
+
+    Handles both single-table and multi-table datasets.
+    """
     if seeds is None:
         seeds = list(range(1, 11))
 
+    # Check if multi-table dataset
+    multi_sources = find_multi_table_sources(ds_path)
+    if multi_sources:
+        return _score_dataset_multi(ds_path, seeds, multi_sources)
+
+    # Single-table path
     orig_file = find_original(ds_path)
     if not orig_file:
         return None
@@ -481,6 +685,35 @@ def score_dataset(ds_path: str, seeds: List[int] = None) -> Optional[Dict]:
         'std_dev': round((sum((s - sum(scores_list)/len(scores_list))**2 for s in scores_list) / len(scores_list))**0.5, 1),
         'seed_count': len(seed_scores),
         'per_seed': seed_scores,
+        'multi_table': False,
+    }
+
+
+def _score_dataset_multi(ds_path: str, seeds: List[int],
+                         source_tables: Dict[str, str]) -> Optional[Dict]:
+    """Score a multi-table dataset across seeds."""
+    seed_scores = []
+    for seed in seeds:
+        components = score_multi_table(ds_path, seed, source_tables)
+        if components is None:
+            continue
+        final = compute_multi_table_score(components)
+        seed_scores.append({'seed': seed, 'score': final, 'components': components})
+
+    if not seed_scores:
+        return None
+
+    scores_list = [s['score'] for s in seed_scores]
+    return {
+        'name': os.path.basename(ds_path),
+        'mean_score': round(sum(scores_list) / len(scores_list), 1),
+        'min_score': min(scores_list),
+        'max_score': max(scores_list),
+        'std_dev': round((sum((s - sum(scores_list)/len(scores_list))**2 for s in scores_list) / len(scores_list))**0.5, 1),
+        'seed_count': len(seed_scores),
+        'per_seed': seed_scores,
+        'multi_table': True,
+        'table_count': len(source_tables),
     }
 
 
@@ -498,14 +731,15 @@ def main():
     path = Path(args.path)
 
     # Determine if scoring one dataset or all
-    if find_original(str(path)):
+    if find_original(str(path)) or find_multi_table_sources(str(path)):
         # Single dataset
         datasets = [str(path)]
     else:
         # Directory of datasets
         datasets = sorted([
             str(path / d) for d in os.listdir(path)
-            if os.path.isdir(path / d) and d != 'gen' and find_original(str(path / d))
+            if os.path.isdir(path / d) and d != 'gen'
+            and (find_original(str(path / d)) or find_multi_table_sources(str(path / d)))
         ])
 
     if not datasets:
