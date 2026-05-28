@@ -125,6 +125,15 @@ fn coerce_to_logical_type(
                     .collect();
                 return Arc::new(i32s);
             }
+            if let Some(f64_arr) = arr.as_any().downcast_ref::<arrow::array::Float64Array>() {
+                let i32s: arrow::array::Int32Array = f64_arr
+                    .iter()
+                    .map(|v| {
+                        v.map(|x| x.clamp(i32::MIN as f64, i32::MAX as f64) as i32)
+                    })
+                    .collect();
+                return Arc::new(i32s);
+            }
             if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
                 let i32s: arrow::array::Int32Array = str_arr
                     .iter()
@@ -143,6 +152,13 @@ fn coerce_to_logical_type(
         crate::core::DataType::Int => {
             if arr.as_any().is::<Int64Array>() {
                 return arr;
+            }
+            if let Some(f64_arr) = arr.as_any().downcast_ref::<arrow::array::Float64Array>() {
+                let i64s: Int64Array = f64_arr
+                    .iter()
+                    .map(|v| v.map(|x| x.clamp(i64::MIN as f64, i64::MAX as f64) as i64))
+                    .collect();
+                return Arc::new(i64s);
             }
             if let Some(str_arr) = arr.as_any().downcast_ref::<StringArray>() {
                 let i64s: Int64Array = str_arr
@@ -750,8 +766,12 @@ impl GenerationEngine {
             owned_generators = self.build_field_generators(ep, plan, shared_seen);
             &owned_generators
         };
-        // Identify the primary-key field index.
-        let pk_field_idx = self.find_pk_field_index(ep);
+        // Identify the primary-key column index in the schema-ordered batch.
+        // find_pk_field_index returns position in field_plans (dependency order),
+        // but the batch is reordered to schema order, so we need schema_position.
+        let pk_field_idx = self
+            .find_pk_field_index(ep)
+            .map(|dep_idx| ep.field_plans[dep_idx].schema_position);
         let key_store = self.key_stores.get(&ep.entity_name).cloned();
         let string_key_store = self.string_key_stores.get(&ep.entity_name).cloned();
 
