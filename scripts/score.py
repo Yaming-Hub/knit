@@ -649,6 +649,21 @@ def load_blueprint_relationships(ds_path: str) -> List[Dict]:
         return []
 
 
+def _normalize_key(v: str) -> str:
+    """Normalize a key value for FK comparison.
+
+    Handles float-formatted integers from parquet (e.g., '10248.0', '1.0e3')
+    by converting to integer string representation.
+    """
+    try:
+        f = float(v)
+        if f.is_integer() and not (math.isinf(f) or math.isnan(f)):
+            return str(int(f))
+    except (ValueError, OverflowError):
+        pass
+    return v
+
+
 def score_fk_integrity(gen_tables: Dict[str, Tuple[List[str], List[List[str]]]],
                        relationships: List[Dict]) -> float:
     """Score FK referential integrity across generated tables.
@@ -686,13 +701,19 @@ def score_fk_integrity(gen_tables: Dict[str, Tuple[List[str], List[List[str]]]],
         if pk_col is None:
             continue
 
-        # Get parent PK values
+        # Get parent PK values (normalized for float/int comparison)
         pk_idx = to_headers.index(pk_col)
-        pk_values = set(row[pk_idx] for row in to_rows if pk_idx < len(row) and row[pk_idx].strip())
+        pk_values = set(
+            _normalize_key(row[pk_idx])
+            for row in to_rows if pk_idx < len(row) and row[pk_idx].strip()
+        )
 
         # Get child FK values and check integrity
         fk_idx = from_headers.index(fk_col)
-        fk_values = [row[fk_idx] for row in from_rows if fk_idx < len(row) and row[fk_idx].strip()]
+        fk_values = [
+            _normalize_key(row[fk_idx])
+            for row in from_rows if fk_idx < len(row) and row[fk_idx].strip()
+        ]
 
         if not fk_values:
             continue

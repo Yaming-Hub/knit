@@ -635,18 +635,26 @@ impl GenerationEngine {
         if let Some(pk_idx) = ep.primary_key_field_index
             && let Some(fp) = ep.field_plans.get(pk_idx)
         {
-            // Check data type first — String/Uuid PKs always need a string key store.
+            // Check generator plan first — generators like Sequence always produce
+            // Int64 regardless of declared data_type.
+            if matches!(
+                &fp.generator_plan,
+                GeneratorPlan::Uuid | GeneratorPlan::Faker { .. } | GeneratorPlan::Pattern { .. }
+            ) {
+                return true;
+            }
+            // Generators that always produce Int64 (Sequence) use integer key stores.
+            if matches!(&fp.generator_plan, GeneratorPlan::Sequence { .. }) {
+                return false;
+            }
+            // For ambiguous generators (TupleLookup, Distribution, etc.), fall back
+            // to the declared data_type.
             if matches!(
                 fp.data_type,
                 crate::core::DataType::String | crate::core::DataType::Uuid
             ) {
                 return true;
             }
-            // Also detect string-producing generators regardless of declared type.
-            return matches!(
-                &fp.generator_plan,
-                GeneratorPlan::Uuid | GeneratorPlan::Faker { .. } | GeneratorPlan::Pattern { .. }
-            );
         }
         // No explicit PK index — conservatively return false to avoid
         // misidentifying an Int64 PK entity as string-keyed.
