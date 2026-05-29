@@ -933,7 +933,7 @@ pub struct Column {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     /// Output data type (defaults to `String`).
-    #[serde(default = "default_data_type")]
+    #[serde(default = "default_data_type", alias = "type")]
     pub data_type: DataType,
     /// How to generate values for this column. If `None`, the planner infers a
     /// default (e.g. UUID for primary keys, sequence for int PKs).

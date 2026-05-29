@@ -635,6 +635,14 @@ impl GenerationEngine {
         if let Some(pk_idx) = ep.primary_key_field_index
             && let Some(fp) = ep.field_plans.get(pk_idx)
         {
+            // Check data type first — String/Uuid PKs always need a string key store.
+            if matches!(
+                fp.data_type,
+                crate::core::DataType::String | crate::core::DataType::Uuid
+            ) {
+                return true;
+            }
+            // Also detect string-producing generators regardless of declared type.
             return matches!(
                 &fp.generator_plan,
                 GeneratorPlan::Uuid | GeneratorPlan::Faker { .. } | GeneratorPlan::Pattern { .. }
