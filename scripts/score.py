@@ -330,12 +330,38 @@ def uniqueness_score(orig_vals: List[str], gen_vals: List[str]) -> float:
     """Compare uniqueness ratios between original and generated."""
     if not orig_vals or not gen_vals:
         return 0.0
-    orig_unique_ratio = len(set(orig_vals)) / len(orig_vals)
-    gen_unique_ratio = len(set(gen_vals)) / len(gen_vals)
+    # Filter null-like values for consistent comparison
+    null_set = ('', 'null', 'none', 'na', 'nan')
+    orig_clean = [v.strip() for v in orig_vals if v.strip().lower() not in null_set]
+    gen_clean = [v.strip() for v in gen_vals if v.strip().lower() not in null_set]
+    if not orig_clean or not gen_clean:
+        return 0.0
+    orig_unique_ratio = len(set(orig_clean)) / len(orig_clean)
+    gen_unique_ratio = len(set(gen_clean)) / len(gen_clean)
 
     # Score based on how close the ratios are
     diff = abs(orig_unique_ratio - gen_unique_ratio)
     return max(0.0, 1.0 - diff * 2)  # 0.5 difference = 0 score
+
+
+def is_high_cardinality(values: List[str]) -> bool:
+    """Check if a column has high cardinality (>80% unique non-null values)."""
+    non_null = [v.strip() for v in values if v.strip() and v.lower() not in ('null', 'none', 'na', 'nan')]
+    if len(non_null) < 10:
+        return False
+    return len(set(non_null)) / len(non_null) > 0.8
+
+
+def string_length_similarity(orig_vals: List[str], gen_vals: List[str]) -> float:
+    """Score similarity of string length distributions using KS statistic."""
+    orig_lens = [float(len(v)) for v in orig_vals if v.strip() and v.lower() not in ('null', 'none', 'na', 'nan')]
+    gen_lens = [float(len(v)) for v in gen_vals if v.strip() and v.lower() not in ('null', 'none', 'na', 'nan')]
+    if not orig_lens or not gen_lens:
+        return 0.0
+    ks = ks_statistic_fast(orig_lens, gen_lens)
+    ks_score = max(0.0, 1.0 - ks * 2)
+    range_sc = range_overlap_score(orig_lens, gen_lens)
+    return 0.6 * ks_score + 0.4 * range_sc
 
 
 def correlation_preservation(orig_headers: List[str], orig_rows: List[List[str]],
@@ -473,9 +499,15 @@ def score_single(orig_headers: List[str], orig_rows: List[List[str]],
                 col_scores.append(0.0)
         else:
             # Categorical
-            cat_score = categorical_similarity(orig_vals, gen_vals)
-            uniq_score = uniqueness_score(orig_vals, gen_vals)
-            col_scores.append(0.7 * cat_score + 0.3 * uniq_score)
+            if is_high_cardinality(orig_vals):
+                # High-cardinality: score string length distribution + uniqueness
+                len_score = string_length_similarity(orig_vals, gen_vals)
+                uniq_score = uniqueness_score(orig_vals, gen_vals)
+                col_scores.append(0.6 * len_score + 0.4 * uniq_score)
+            else:
+                cat_score = categorical_similarity(orig_vals, gen_vals)
+                uniq_score = uniqueness_score(orig_vals, gen_vals)
+                col_scores.append(0.7 * cat_score + 0.3 * uniq_score)
 
     scores['distribution'] = sum(col_scores) / max(len(col_scores), 1)
 
