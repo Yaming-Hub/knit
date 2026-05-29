@@ -335,7 +335,10 @@ def uniqueness_score(orig_vals: List[str], gen_vals: List[str]) -> float:
     orig_clean = [v.strip() for v in orig_vals if v.strip().lower() not in null_set]
     gen_clean = [v.strip() for v in gen_vals if v.strip().lower() not in null_set]
     if not orig_clean or not gen_clean:
-        return 0.0
+        # Both mostly null — score based on null rate similarity instead
+        orig_null_rate = 1.0 - len(orig_clean) / max(len(orig_vals), 1)
+        gen_null_rate = 1.0 - len(gen_clean) / max(len(gen_vals), 1)
+        return max(0.0, 1.0 - abs(orig_null_rate - gen_null_rate) * 2)
     orig_unique_ratio = len(set(orig_clean)) / len(orig_clean)
     gen_unique_ratio = len(set(gen_clean)) / len(gen_clean)
 
@@ -361,6 +364,44 @@ def string_length_similarity(orig_vals: List[str], gen_vals: List[str]) -> float
     ks = ks_statistic_fast(orig_lens, gen_lens)
     ks_score = max(0.0, 1.0 - ks * 2)
     range_sc = range_overlap_score(orig_lens, gen_lens)
+    return 0.6 * ks_score + 0.4 * range_sc
+
+
+def is_trending(values: List[float]) -> bool:
+    """Detect if a numeric column has a significant trend (linear R² > 0.3).
+
+    This also catches random walks, which is intentional — random walk columns
+    are better evaluated by step-distribution (first-differences) than raw-value
+    KS, since their raw distribution depends on the specific walk path.
+    """
+    if len(values) < 20:
+        return False
+    n = len(values)
+    # Linear regression: y = a + b*x where x is position index
+    xs = np.arange(n, dtype=np.float64)
+    ys = np.array(values[:n], dtype=np.float64)
+    mean_x = xs.mean()
+    mean_y = ys.mean()
+    ss_xx = ((xs - mean_x) ** 2).sum()
+    ss_yy = ((ys - mean_y) ** 2).sum()
+    ss_xy = ((xs - mean_x) * (ys - mean_y)).sum()
+    if ss_xx < 1e-10 or ss_yy < 1e-10:
+        return False
+    r_squared = (ss_xy ** 2) / (ss_xx * ss_yy)
+    return r_squared > 0.3
+
+
+def first_differences_score(orig_nums: List[float], gen_nums: List[float]) -> float:
+    """Score time-series by comparing first-differences (step-to-step changes)."""
+    if len(orig_nums) < 3 or len(gen_nums) < 3:
+        return 0.0
+    orig_diffs = [orig_nums[i+1] - orig_nums[i] for i in range(len(orig_nums)-1)]
+    gen_diffs = [gen_nums[i+1] - gen_nums[i] for i in range(len(gen_nums)-1)]
+    # KS on first differences (captures volatility/step-size distribution)
+    ks = ks_statistic_fast(orig_diffs, gen_diffs)
+    ks_score = max(0.0, 1.0 - ks * 2)
+    # Range overlap on diffs
+    range_sc = range_overlap_score(orig_diffs, gen_diffs)
     return 0.6 * ks_score + 0.4 * range_sc
 
 
@@ -472,17 +513,28 @@ def score_single(orig_headers: List[str], orig_rows: List[List[str]],
             orig_nums = parse_numeric(orig_vals)
             gen_nums = parse_numeric(gen_vals)
             if orig_nums and gen_nums:
-                # KS test (distribution shape)
-                ks = ks_statistic_fast(orig_nums, gen_nums)
-                ks_score = max(0.0, 1.0 - ks * 2)  # KS=0.5 -> score 0
+                # Check if this is a trending time-series column
+                if is_trending(orig_nums):
+                    # For trending data, blend raw KS with first-differences score
+                    ks = ks_statistic_fast(orig_nums, gen_nums)
+                    ks_score = max(0.0, 1.0 - ks * 2)
+                    range_score = range_overlap_score(orig_nums, gen_nums)
+                    diff_score = first_differences_score(orig_nums, gen_nums)
+                    uniq_score = uniqueness_score(orig_vals, gen_vals)
+                    # Weight first-differences heavily for trending columns
+                    col_scores.append(0.3 * ks_score + 0.2 * range_score + 0.3 * diff_score + 0.2 * uniq_score)
+                else:
+                    # Standard KS test (distribution shape)
+                    ks = ks_statistic_fast(orig_nums, gen_nums)
+                    ks_score = max(0.0, 1.0 - ks * 2)  # KS=0.5 -> score 0
 
-                # Range overlap
-                range_score = range_overlap_score(orig_nums, gen_nums)
+                    # Range overlap
+                    range_score = range_overlap_score(orig_nums, gen_nums)
 
-                # Uniqueness
-                uniq_score = uniqueness_score(orig_vals, gen_vals)
+                    # Uniqueness
+                    uniq_score = uniqueness_score(orig_vals, gen_vals)
 
-                col_scores.append(0.5 * ks_score + 0.3 * range_score + 0.2 * uniq_score)
+                    col_scores.append(0.5 * ks_score + 0.3 * range_score + 0.2 * uniq_score)
             else:
                 col_scores.append(0.0)
         elif is_date(orig_vals):
