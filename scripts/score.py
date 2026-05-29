@@ -168,6 +168,61 @@ def parse_numeric(values: List[str]) -> List[float]:
     return result
 
 
+def is_date(values: List[str]) -> bool:
+    """Check if a column's values are mostly date/datetime strings."""
+    from datetime import datetime
+    date_count = 0
+    non_empty = 0
+    for v in values[:100]:
+        v = v.strip()
+        if v == '' or v.lower() in ('null', 'none', 'na', 'nan', 'nat'):
+            continue
+        non_empty += 1
+        if _try_parse_date(v) is not None:
+            date_count += 1
+    return non_empty > 0 and date_count / max(non_empty, 1) > 0.8
+
+
+def _try_parse_date(s: str) -> Optional[float]:
+    """Try to parse a date string to epoch days. Returns None on failure.
+
+    Treats all dates as timezone-naive for scoring purposes.
+    """
+    from datetime import datetime
+    import re
+    s = s.strip()
+    if not s or s.lower() in ('null', 'none', 'na', 'nan', 'nat'):
+        return None
+    # Strip timezone suffix (Z, +HH:MM, -HH:MM) before parsing
+    s_clean = re.sub(r'[+-]\d{2}:\d{2}$|Z$', '', s)
+    # Common date/datetime formats (ISO and US only to avoid DD/MM ambiguity)
+    for fmt in (
+        '%Y-%m-%d',
+        '%Y-%m-%dT%H:%M:%S',
+        '%Y-%m-%d %H:%M:%S',
+        '%Y-%m-%dT%H:%M:%S.%f',
+        '%Y-%m-%d %H:%M:%S.%f',
+        '%m/%d/%Y',
+        '%Y/%m/%d',
+    ):
+        try:
+            dt = datetime.strptime(s_clean[:len(fmt)+5], fmt)
+            return (dt - datetime(1970, 1, 1)).total_seconds() / 86400.0
+        except (ValueError, OverflowError):
+            continue
+    return None
+
+
+def parse_dates(values: List[str]) -> List[float]:
+    """Parse date values to epoch days, skipping unparseable values."""
+    result = []
+    for v in values:
+        d = _try_parse_date(v)
+        if d is not None:
+            result.append(d)
+    return result
+
+
 def ks_statistic(a: List[float], b: List[float]) -> float:
     """Compute two-sample Kolmogorov-Smirnov statistic."""
     if not a or not b:
@@ -401,6 +456,18 @@ def score_single(orig_headers: List[str], orig_rows: List[List[str]],
                 # Uniqueness
                 uniq_score = uniqueness_score(orig_vals, gen_vals)
 
+                col_scores.append(0.5 * ks_score + 0.3 * range_score + 0.2 * uniq_score)
+            else:
+                col_scores.append(0.0)
+        elif is_date(orig_vals):
+            # Score date columns numerically using epoch-day conversion
+            orig_days = parse_dates(orig_vals)
+            gen_days = parse_dates(gen_vals)
+            if orig_days and gen_days:
+                ks = ks_statistic_fast(orig_days, gen_days)
+                ks_score = max(0.0, 1.0 - ks * 2)
+                range_score = range_overlap_score(orig_days, gen_days)
+                uniq_score = uniqueness_score(orig_vals, gen_vals)
                 col_scores.append(0.5 * ks_score + 0.3 * range_score + 0.2 * uniq_score)
             else:
                 col_scores.append(0.0)
