@@ -2712,6 +2712,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     let mut confidence = 1.0;
     let mut is_integer_valued = false;
     let mut has_time_component = false;
+    let mut zero_rate_detected: Option<f64> = None;
 
     // Complex types (List, Map, Struct) → serialize to display strings, treat as categorical
     if is_complex_type(&profile.data_type) {
@@ -2787,7 +2788,24 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
             }
 
             if categorical_weights.is_none() {
-                distribution = fit_distribution(&values);
+                // Detect zero-inflated columns: if >50% of values are exactly 0,
+                // fit the distribution on non-zero values only for better parameters.
+                let zero_count = values.iter().filter(|&&v| v == 0.0).count();
+                let zero_rate = zero_count as f64 / values.len() as f64;
+                let fit_values = if zero_rate > 0.5 {
+                    zero_rate_detected = Some(zero_rate);
+                    let non_zero: Vec<f64> =
+                        values.iter().copied().filter(|&v| v != 0.0).collect();
+                    if non_zero.len() >= 2 {
+                        non_zero
+                    } else {
+                        zero_rate_detected = None;
+                        values.clone()
+                    }
+                } else {
+                    values.clone()
+                };
+                distribution = fit_distribution(&fit_values);
                 if let Some(ref fit) = distribution {
                     confidence = (1.0 - fit.best.ks_stat).max(0.0);
                     debug!(
@@ -2925,6 +2943,7 @@ fn analyse_column(profile: &ColumnProfile, batch: &RecordBatch) -> ColumnAnalysi
     ca.temporal_range = temporal_range;
     ca.source_arrow_type = Some(profile.data_type.clone());
     ca.max_decimal_places = profile.numeric.as_ref().and_then(|n| n.max_decimal_places);
+    ca.zero_rate = zero_rate_detected;
 
     // Build column stats from the profile
     ca.stats = Some(build_column_stats(profile));

@@ -634,7 +634,22 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
                     .filter_map(|s| s.parse::<f64>().ok())
                     .collect();
                 if !samples.is_empty() {
-                    ca.distribution = fit_distribution(&samples);
+                    // Detect zero-inflated columns: if >50% of values are exactly 0,
+                    // fit the distribution on non-zero values only for better parameters.
+                    let zero_count = samples.iter().filter(|&&v| v == 0.0).count();
+                    let zero_rate = zero_count as f64 / samples.len() as f64;
+                    if zero_rate > 0.5 {
+                        let non_zero: Vec<f64> =
+                            samples.iter().copied().filter(|&v| v != 0.0).collect();
+                        if non_zero.len() >= 2 {
+                            ca.zero_rate = Some(zero_rate);
+                            ca.distribution = fit_distribution(&non_zero);
+                        } else {
+                            ca.distribution = fit_distribution(&samples);
+                        }
+                    } else {
+                        ca.distribution = fit_distribution(&samples);
+                    }
                     if let Some(ref fit) = ca.distribution {
                         ca.confidence = (1.0 - fit.best.ks_stat).max(0.0);
                     }

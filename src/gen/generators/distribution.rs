@@ -58,6 +58,8 @@ pub struct DistributionGenerator {
     clamp_min: Option<f64>,
     clamp_max: Option<f64>,
     round: bool,
+    /// Probability of emitting 0.0 instead of sampling (zero-inflated distributions).
+    zero_probability: f64,
 }
 
 impl DistributionGenerator {
@@ -70,6 +72,7 @@ impl DistributionGenerator {
         clamp_max: Option<f64>,
         round: bool,
     ) -> Self {
+        let zero_probability = params.get("zero_probability").copied().unwrap_or(0.0);
         Self {
             kind,
             params,
@@ -77,6 +80,7 @@ impl DistributionGenerator {
             clamp_min,
             clamp_max,
             round,
+            zero_probability,
         }
     }
 
@@ -98,13 +102,33 @@ impl DistributionGenerator {
     }
 
     /// Convert sampled f64 values to an Arrow array, rounding to Int64 when configured.
-    fn to_array(&self, values: Vec<f64>) -> ArrayRef {
+    /// Applies zero-inflation before conversion if configured.
+    fn to_array(&self, rng: &mut dyn Rng, values: Vec<f64>) -> ArrayRef {
+        let values = self.apply_zero_inflation(rng, values);
         if self.round {
             let ints: Vec<i64> = values.iter().map(|v| v.round() as i64).collect();
             Arc::new(Int64Array::from(ints))
         } else {
             Arc::new(Float64Array::from(values))
         }
+    }
+
+    /// Apply zero-inflation: replace each value with 0.0 with the configured probability.
+    fn apply_zero_inflation(&self, rng: &mut dyn Rng, values: Vec<f64>) -> Vec<f64> {
+        if self.zero_probability <= 0.0 {
+            return values;
+        }
+        let uniform = Uniform::new(0.0, 1.0).expect("valid uniform [0,1)");
+        values
+            .into_iter()
+            .map(|v| {
+                if uniform.sample(rng) < self.zero_probability {
+                    0.0
+                } else {
+                    v
+                }
+            })
+            .collect()
     }
 }
 
@@ -123,7 +147,7 @@ impl FieldGenerator for DistributionGenerator {
                 let dist = Uniform::new(lo, hi)
                     .expect("uniform distribution requires lo < hi after fallback");
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Normal => {
                 let mean = self.param("mean", 0.0);
@@ -138,7 +162,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Normal fallback N(0,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::LogNormal => {
                 let mu = self.param("mu", 0.0);
@@ -153,7 +177,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("LogNormal fallback LN(0,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Exponential => {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
@@ -163,7 +187,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Exponential fallback Exp(1) uses a valid rate")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Poisson => {
                 let lambda = self.param("lambda", 1.0).abs().max(f64::EPSILON);
@@ -236,7 +260,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Pareto fallback (1,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Weibull => {
                 let scale = self.param("scale", 1.0).abs().max(f64::EPSILON);
@@ -251,7 +275,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Weibull fallback (1,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Gamma => {
                 let shape = self.param("shape", 1.0).abs().max(f64::EPSILON);
@@ -266,7 +290,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Gamma fallback (1,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Beta => {
                 let alpha = self.param("alpha", 2.0).abs().max(f64::EPSILON);
@@ -281,7 +305,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Beta fallback (2,2) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Cauchy => {
                 let median = self.param("median", 0.0);
@@ -296,7 +320,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Cauchy fallback (0,1) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::ChiSquared => {
                 let k = self.param("k", 1.0).abs().max(f64::EPSILON);
@@ -309,7 +333,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("ChiSquared fallback k=1 uses a valid parameter")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::StudentT => {
                 let n = self.param("n", 1.0).abs().max(f64::EPSILON);
@@ -319,7 +343,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("StudentT fallback ν=1 uses a valid parameter")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Triangular => {
                 let min = self.param("min", 0.0);
@@ -338,7 +362,7 @@ impl FieldGenerator for DistributionGenerator {
                         .expect("Triangular fallback (0,1,0.5) uses valid parameters")
                 });
                 let values: Vec<f64> = (0..count).map(|_| self.clamp(dist.sample(rng))).collect();
-                self.to_array(values)
+                self.to_array(rng, values)
             }
             DistributionKind::Zipf => {
                 let n = self.param("n", 100.0).max(1.0);
