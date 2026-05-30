@@ -25,6 +25,10 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+# Canonical set of values treated as null/missing across all scoring functions.
+# Null rates are scored separately in the null_rate component.
+NULL_LIKE_VALUES = ('', 'null', 'none', 'na', 'nan')
+
 
 def load_csv(path: str) -> Tuple[List[str], List[List[str]]]:
     """Load CSV file, return (headers, rows)."""
@@ -268,23 +272,33 @@ def ks_statistic_fast(a: List[float], b: List[float]) -> float:
 
 
 def categorical_similarity(orig_vals: List[str], gen_vals: List[str]) -> float:
-    """Compare categorical distributions using frequency overlap."""
+    """Compare categorical distributions using frequency overlap.
+
+    Excludes null-like values (empty, 'nan', 'null', 'none', 'na') since null rates
+    are scored separately in the null_rate component.
+    """
     if not orig_vals or not gen_vals:
         return 0.0
 
-    # Compute frequency distributions
+    # Compute frequency distributions, excluding null-like values
     orig_freq = {}
     for v in orig_vals:
         v = v.strip()
+        if v.lower() in NULL_LIKE_VALUES:
+            continue
         orig_freq[v] = orig_freq.get(v, 0) + 1
     gen_freq = {}
     for v in gen_vals:
         v = v.strip()
+        if v.lower() in NULL_LIKE_VALUES:
+            continue
         gen_freq[v] = gen_freq.get(v, 0) + 1
 
-    # Normalize
+    # If both are all-null, they match perfectly
     orig_total = sum(orig_freq.values())
     gen_total = sum(gen_freq.values())
+    if orig_total == 0 and gen_total == 0:
+        return 1.0
     if orig_total == 0 or gen_total == 0:
         return 0.0
 
@@ -331,9 +345,8 @@ def uniqueness_score(orig_vals: List[str], gen_vals: List[str]) -> float:
     if not orig_vals or not gen_vals:
         return 0.0
     # Filter null-like values for consistent comparison
-    null_set = ('', 'null', 'none', 'na', 'nan')
-    orig_clean = [v.strip() for v in orig_vals if v.strip().lower() not in null_set]
-    gen_clean = [v.strip() for v in gen_vals if v.strip().lower() not in null_set]
+    orig_clean = [v.strip() for v in orig_vals if v.strip().lower() not in NULL_LIKE_VALUES]
+    gen_clean = [v.strip() for v in gen_vals if v.strip().lower() not in NULL_LIKE_VALUES]
     if not orig_clean or not gen_clean:
         # Both mostly null — score based on null rate similarity instead
         orig_null_rate = 1.0 - len(orig_clean) / max(len(orig_vals), 1)
@@ -349,7 +362,7 @@ def uniqueness_score(orig_vals: List[str], gen_vals: List[str]) -> float:
 
 def is_high_cardinality(values: List[str]) -> bool:
     """Check if a column has high cardinality (>80% unique non-null values)."""
-    non_null = [v.strip() for v in values if v.strip() and v.lower() not in ('null', 'none', 'na', 'nan')]
+    non_null = [v.strip() for v in values if v.strip().lower() not in NULL_LIKE_VALUES]
     if len(non_null) < 10:
         return False
     return len(set(non_null)) / len(non_null) > 0.8
@@ -357,8 +370,8 @@ def is_high_cardinality(values: List[str]) -> bool:
 
 def string_length_similarity(orig_vals: List[str], gen_vals: List[str]) -> float:
     """Score similarity of string length distributions using KS statistic."""
-    orig_lens = [float(len(v)) for v in orig_vals if v.strip() and v.lower() not in ('null', 'none', 'na', 'nan')]
-    gen_lens = [float(len(v)) for v in gen_vals if v.strip() and v.lower() not in ('null', 'none', 'na', 'nan')]
+    orig_lens = [float(len(v)) for v in orig_vals if v.strip().lower() not in NULL_LIKE_VALUES]
+    gen_lens = [float(len(v)) for v in gen_vals if v.strip().lower() not in NULL_LIKE_VALUES]
     if not orig_lens or not gen_lens:
         return 0.0
     ks = ks_statistic_fast(orig_lens, gen_lens)
@@ -559,7 +572,15 @@ def score_single(orig_headers: List[str], orig_rows: List[List[str]],
             else:
                 cat_score = categorical_similarity(orig_vals, gen_vals)
                 uniq_score = uniqueness_score(orig_vals, gen_vals)
-                col_scores.append(0.7 * cat_score + 0.3 * uniq_score)
+                # Medium-cardinality (>50 unique): blend with string length
+                # since exact category matching is unrealistic for many categories
+                non_null = [v.strip() for v in orig_vals if v.strip().lower() not in NULL_LIKE_VALUES]
+                n_unique = len(set(non_null))
+                if n_unique > 50:
+                    len_score = string_length_similarity(orig_vals, gen_vals)
+                    col_scores.append(0.4 * cat_score + 0.3 * len_score + 0.3 * uniq_score)
+                else:
+                    col_scores.append(0.7 * cat_score + 0.3 * uniq_score)
 
     scores['distribution'] = sum(col_scores) / max(len(col_scores), 1)
 
