@@ -268,23 +268,35 @@ def ks_statistic_fast(a: List[float], b: List[float]) -> float:
 
 
 def categorical_similarity(orig_vals: List[str], gen_vals: List[str]) -> float:
-    """Compare categorical distributions using frequency overlap."""
+    """Compare categorical distributions using frequency overlap.
+
+    Excludes null-like values (empty, 'nan', 'null', 'none', 'na') since null rates
+    are scored separately in the null_rate component.
+    """
     if not orig_vals or not gen_vals:
         return 0.0
 
-    # Compute frequency distributions
+    null_set = ('', 'null', 'none', 'na', 'nan')
+
+    # Compute frequency distributions, excluding null-like values
     orig_freq = {}
     for v in orig_vals:
         v = v.strip()
+        if v.lower() in null_set:
+            continue
         orig_freq[v] = orig_freq.get(v, 0) + 1
     gen_freq = {}
     for v in gen_vals:
         v = v.strip()
+        if v.lower() in null_set:
+            continue
         gen_freq[v] = gen_freq.get(v, 0) + 1
 
-    # Normalize
+    # If both are all-null, they match perfectly
     orig_total = sum(orig_freq.values())
     gen_total = sum(gen_freq.values())
+    if orig_total == 0 and gen_total == 0:
+        return 1.0
     if orig_total == 0 or gen_total == 0:
         return 0.0
 
@@ -559,7 +571,16 @@ def score_single(orig_headers: List[str], orig_rows: List[List[str]],
             else:
                 cat_score = categorical_similarity(orig_vals, gen_vals)
                 uniq_score = uniqueness_score(orig_vals, gen_vals)
-                col_scores.append(0.7 * cat_score + 0.3 * uniq_score)
+                # Medium-cardinality (>50 unique): blend with string length
+                # since exact category matching is unrealistic for many categories
+                null_set = ('', 'null', 'none', 'na', 'nan')
+                non_null = [v.strip() for v in orig_vals if v.strip().lower() not in null_set]
+                n_unique = len(set(non_null))
+                if n_unique > 50:
+                    len_score = string_length_similarity(orig_vals, gen_vals)
+                    col_scores.append(0.4 * cat_score + 0.3 * len_score + 0.3 * uniq_score)
+                else:
+                    col_scores.append(0.7 * cat_score + 0.3 * uniq_score)
 
     scores['distribution'] = sum(col_scores) / max(len(col_scores), 1)
 
