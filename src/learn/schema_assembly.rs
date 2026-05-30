@@ -145,6 +145,9 @@ pub struct ColumnAnalysis {
     /// Set by `detect_arithmetic_relations()` when this column can be expressed
     /// as a simple arithmetic function of other columns (e.g., `total = men + women`).
     pub derived_spec: Option<crate::core::GeneratorSpec>,
+    /// Fraction of values that are exactly zero (for zero-inflated distribution detection).
+    /// Set during profiling when >50% of numeric values are zero.
+    pub zero_rate: Option<f64>,
 }
 
 impl ColumnAnalysis {
@@ -171,6 +174,7 @@ impl ColumnAnalysis {
             traits: None,
             time_series_spec: None,
             derived_spec: None,
+            zero_rate: None,
         }
     }
 
@@ -1200,7 +1204,31 @@ fn build_generator_inner(
             }
             // Low-cardinality: fall through to categorical handling below
         } else {
-            return build_distribution_generator(&fit.best.distribution, col.is_integer_valued);
+            // Use the actual zero rate from profiling if available,
+            // otherwise fall back to percentile-based heuristic.
+            let zero_prob = if let Some(rate) = col.zero_rate {
+                Some(rate)
+            } else {
+                col.stats.as_ref().and_then(|s| {
+                    let min = s.min.unwrap_or(f64::NAN);
+                    let p75 = s.percentiles.as_ref().map(|p| p.p75).unwrap_or(f64::NAN);
+                    if min == 0.0 && p75 == 0.0 {
+                        let p95 = s.percentiles.as_ref().map(|p| p.p95).unwrap_or(0.0);
+                        if p95 == 0.0 {
+                            Some(0.95)
+                        } else {
+                            Some(0.85)
+                        }
+                    } else {
+                        None
+                    }
+                })
+            };
+            return build_distribution_generator(
+                &fit.best.distribution,
+                col.is_integer_valued,
+                zero_prob,
+            );
         }
     }
 
@@ -1366,8 +1394,15 @@ fn build_generator_inner(
 }
 
 /// Map a fitted distribution to a [`GeneratorSpec::Distribution`].
-fn build_distribution_generator(dist: &Distribution, round: bool) -> GeneratorSpec {
-    let (kind, params) = match dist {
+///
+/// If `zero_probability` is provided (>0), the generated distribution will emit 0.0
+/// with that probability instead of sampling, modeling zero-inflated columns.
+fn build_distribution_generator(
+    dist: &Distribution,
+    round: bool,
+    zero_probability: Option<f64>,
+) -> GeneratorSpec {
+    let (kind, mut params) = match dist {
         Distribution::Normal(mean, std_dev) => {
             let mut p = BTreeMap::new();
             p.insert("mean".into(), *mean);
@@ -1422,6 +1457,13 @@ fn build_distribution_generator(dist: &Distribution, round: bool) -> GeneratorSp
             (DistributionKind::Zipf, p)
         }
     };
+
+    // Insert zero_probability if significant
+    if let Some(zp) = zero_probability {
+        if zp > 0.0 {
+            params.insert("zero_probability".into(), zp);
+        }
+    }
 
     GeneratorSpec::Distribution {
         spec: DistributionSpec {
@@ -2046,6 +2088,7 @@ mod tests {
                     traits: None,
                     time_series_spec: None,
                     derived_spec: None,
+                    zero_rate: None,
                 },
                 ColumnAnalysis {
                     name: "age".into(),
@@ -2068,6 +2111,7 @@ mod tests {
                     traits: None,
                     time_series_spec: None,
                     derived_spec: None,
+                    zero_rate: None,
                 },
             ],
             relationships: vec![],
@@ -2122,7 +2166,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![RelationshipCandidate {
                 from_table: "orders".into(),
                 from_column: "user_id".into(),
@@ -2179,7 +2224,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![],
             correlations: vec![],
             row_count: 500,
@@ -2235,7 +2281,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![],
             correlations: vec![],
             row_count: 2000,
@@ -2306,7 +2353,7 @@ mod tests {
         use crate::learn::fitting::Distribution;
 
         // Gamma: shape/scale (rate converted to scale)
-        let spec = build_distribution_generator(&Distribution::Gamma(2.0, 0.5), false);
+        let spec = build_distribution_generator(&Distribution::Gamma(2.0, 0.5), false, None);
         if let GeneratorSpec::Distribution { spec: ds } = &spec {
             assert_eq!(ds.kind, DistributionKind::Gamma);
             assert!(ds.params.contains_key("shape"), "Gamma missing shape param");
@@ -2318,7 +2365,7 @@ mod tests {
         }
 
         // Pareto: scale/shape
-        let spec = build_distribution_generator(&Distribution::Pareto(1.0, 3.0), false);
+        let spec = build_distribution_generator(&Distribution::Pareto(1.0, 3.0), false, None);
         if let GeneratorSpec::Distribution { spec: ds } = &spec {
             assert_eq!(ds.kind, DistributionKind::Pareto);
             assert!(
@@ -2336,7 +2383,7 @@ mod tests {
         }
 
         // Beta: alpha/beta (unchanged)
-        let spec = build_distribution_generator(&Distribution::Beta(2.0, 5.0), false);
+        let spec = build_distribution_generator(&Distribution::Beta(2.0, 5.0), false, None);
         if let GeneratorSpec::Distribution { spec: ds } = &spec {
             assert_eq!(ds.kind, DistributionKind::Beta);
             assert!(ds.params.contains_key("alpha"), "Beta missing alpha param");
@@ -2371,7 +2418,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![],
             correlations: vec![],
             row_count: 50_000,
@@ -2420,7 +2468,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
@@ -2473,7 +2522,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::UuidGen { version: 4 }));
     }
@@ -2501,7 +2551,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         let r#gen = build_generator(&col, None);
         assert!(matches!(r#gen, GeneratorSpec::OneOf { .. }));
     }
@@ -2529,7 +2580,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         let r#gen = build_generator(&col, None);
         assert!(
             matches!(r#gen, GeneratorSpec::Faker { ref method, .. } if method == "email"),
@@ -2561,7 +2613,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         let r#gen = build_generator(&col, None);
         assert!(
             matches!(r#gen, GeneratorSpec::Faker { ref method, .. } if method == "phone"),
@@ -2595,7 +2648,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
@@ -2643,7 +2697,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            }],
+                    zero_rate: None,
+                }],
             relationships: vec![],
             correlations: vec![],
             row_count: 100,
@@ -2720,7 +2775,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
 
@@ -2747,7 +2803,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int);
     }
 
@@ -2774,7 +2831,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Int32);
     }
 
@@ -2810,7 +2868,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         assert_eq!(
             infer_data_type(&col, None),
             crate::core::DataType::DatetimeUs
@@ -2849,7 +2908,8 @@ mod tests {
             traits: None,
             time_series_spec: None,
                     derived_spec: None,
-        };
+                    zero_rate: None,
+                };
         assert_eq!(infer_data_type(&col, None), crate::core::DataType::Datetime);
     }
 
@@ -2953,7 +3013,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            },
+                    zero_rate: None,
+                },
             ColumnAnalysis {
                 name: "EndDate".into(),
                 is_primary_key: false,
@@ -2975,7 +3036,8 @@ mod tests {
                 traits: None,
                 time_series_spec: None,
                     derived_spec: None,
-            },
+                    zero_rate: None,
+                },
         ];
         let mut fields = vec![
             Field {
