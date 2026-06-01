@@ -431,6 +431,48 @@ fn build_entity(
         upgrade_sort_date_to_sequence(&mut fields, &table.columns, sort_order, table.row_count);
     }
 
+    // Emit Range constraints for numeric distribution fields so the generator
+    // clamps output to the observed [min, max]. This prevents unbounded
+    // distributions (Normal, LogNormal) from producing out-of-range values.
+    let mut constraints: Vec<crate::core::Constraint> = table.constraints.clone();
+    for col in &table.columns {
+        // Only emit Range for fields that ended up with a Distribution generator
+        let has_dist = fields.iter().any(|f| {
+            f.name == col.name
+                && f.generator.as_ref().is_some_and(|g| {
+                    matches!(g, crate::core::GeneratorSpec::Distribution { .. })
+                })
+        });
+        if !has_dist {
+            continue;
+        }
+        // Get observed min/max from column stats
+        let (min_val, max_val) = match &col.stats {
+            Some(stats) => (stats.min, stats.max),
+            None => continue,
+        };
+        if min_val.is_none() && max_val.is_none() {
+            continue;
+        }
+        constraints.push(crate::core::Constraint::Range {
+            field: col.name.clone(),
+            min: min_val.map(|v| {
+                if col.is_integer_valued {
+                    crate::core::Value::Int(v as i64)
+                } else {
+                    crate::core::Value::Float(v)
+                }
+            }),
+            max: max_val.map(|v| {
+                if col.is_integer_valued {
+                    crate::core::Value::Int(v as i64)
+                } else {
+                    crate::core::Value::Float(v)
+                }
+            }),
+        });
+    }
+
     // Build top-level Relationship entries from detected FKs.
     // Deduplicate names by appending _2, _3 etc. when collisions occur.
     let mut rel_name_counts: std::collections::HashMap<String, usize> =
@@ -655,7 +697,7 @@ fn build_entity(
         tags: Vec::new(),
         count: CountSpec::Fixed(table.row_count),
         fields,
-        constraints: table.constraints.clone(),
+        constraints,
         topology: None,
         actor: is_actor,
         persona_distribution: None,
