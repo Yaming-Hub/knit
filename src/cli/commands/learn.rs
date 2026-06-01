@@ -1369,6 +1369,8 @@ fn detect_time_series_trends(
         // Skip columns with low distinct-value ratio — these are likely foreign keys
         // or categorical integers, not continuous time-series values. Real time-series
         // columns (prices, temperatures, measurements) have nearly 100% unique values.
+        // However, allow columns with high autocorrelation (e.g., temperature readings
+        // with limited precision) through to the AR/seasonality detector.
         let distinct_count = {
             let mut sorted: Vec<i64> = values.iter().map(|(_, v)| (*v * 1e6) as i64).collect();
             sorted.sort_unstable();
@@ -1376,7 +1378,12 @@ fn detect_time_series_trends(
             sorted.len()
         };
         let distinct_ratio = distinct_count as f64 / values.len() as f64;
-        if distinct_ratio < 0.5 {
+
+        // Compute lag-1 autocorrelation for all candidate columns
+        let autocorr = compute_lag1_autocorrelation(&values);
+
+        // Skip low-distinct columns unless they show strong autocorrelation
+        if distinct_ratio < 0.5 && autocorr < 0.7 {
             continue;
         }
 
@@ -1405,15 +1412,39 @@ fn detect_time_series_trends(
         let slope = ss_xy / ss_xx;
         let r_squared = (ss_xy * ss_xy) / (ss_xx * ss_yy);
 
-        // If linear R² is below threshold, try log-linear fit for exponential growth
-        let (final_slope, final_r2) = if r_squared >= R2_THRESHOLD {
-            (slope, r_squared)
+        // If linear R² is below threshold, try seasonality/autocorrelation detection
+        let (final_slope, final_r2, extra_components) = if r_squared >= R2_THRESHOLD {
+            (slope, r_squared, vec![])
         } else {
-            // Linear R² too low — skip this column.
-            // Note: exponential growth patterns (e.g., stock prices) would need a dedicated
-            // exponential generator component, which doesn't exist yet. Emitting a linear
-            // approximation for exponential data produces poor results.
-            continue;
+            // Linear R² too low for a pure trend. Check for seasonality or
+            // strong autocorrelation that warrants an AR model.
+            if autocorr >= 0.7 {
+                // Detect dominant seasonal period via autocorrelation peaks
+                let seasonal = detect_seasonal_period(&values);
+                if let Some((period_rows, amplitude)) = seasonal {
+                    // Seasonal pattern found — use trend (even if weak) + seasonality
+                    let weak_slope = if r_squared >= 0.01 { slope } else { 0.0 };
+                    (weak_slope, r_squared.max(0.5), vec![
+                        TimeSeriesComponent::Seasonality {
+                            period: format!("{}", period_rows),
+                            amplitude,
+                            phase: 0.0,
+                        },
+                    ])
+                } else {
+                    // No clear seasonality but high autocorrelation — use AR(1)
+                    let weak_slope = if r_squared >= 0.05 { slope } else { 0.0 };
+                    // Clamp AR coefficient to valid stable range
+                    let ar_coeff = autocorr.clamp(0.7, 0.98);
+                    (weak_slope, r_squared.max(0.5), vec![
+                        TimeSeriesComponent::Autoregressive {
+                            coefficients: vec![ar_coeff],
+                        },
+                    ])
+                }
+            } else {
+                continue;
+            }
         };
 
         // Compute noise as standard deviation of first-differences minus the trend.
@@ -1453,11 +1484,28 @@ fn detect_time_series_trends(
         // negative baselines. The first value ensures generation starts correctly.
         let baseline = values[0].1;
 
-        let mut components = vec![
-            TimeSeriesComponent::Trend { slope: final_slope, degree: 1 },
-        ];
-        if noise_std > f64::EPSILON {
+        // Build component list. For AR models, noise (innovation) must precede
+        // the AR component so that random perturbations feed back into future AR terms.
+        let has_ar = extra_components.iter().any(|c| matches!(c, TimeSeriesComponent::Autoregressive { .. }));
+        let mut components = vec![];
+        if final_slope.abs() > f64::EPSILON {
+            components.push(TimeSeriesComponent::Trend { slope: final_slope, degree: 1 });
+        }
+        if has_ar && noise_std > f64::EPSILON {
+            // Insert noise before AR for proper feedback
             components.push(TimeSeriesComponent::Noise { std_dev: noise_std });
+            components.extend(extra_components);
+        } else {
+            components.extend(extra_components);
+            if noise_std > f64::EPSILON {
+                components.push(TimeSeriesComponent::Noise { std_dev: noise_std });
+            }
+        }
+
+        // If we end up with no components at all, at least add noise
+        if components.is_empty() {
+            let std = ss_yy.sqrt() / n_f.sqrt();
+            components.push(TimeSeriesComponent::Noise { std_dev: std });
         }
 
         tracing::debug!(
@@ -1481,6 +1529,109 @@ fn detect_time_series_trends(
             timestamp_field: None,
         });
     }
+}
+
+/// Compute lag-1 autocorrelation for a sequence of (index, value) pairs.
+///
+/// Returns a value in [-1, 1] indicating how strongly each value
+/// predicts the next. High values (>0.7) indicate time-series structure.
+fn compute_lag1_autocorrelation(values: &[(usize, f64)]) -> f64 {
+    if values.len() < 3 {
+        return 0.0;
+    }
+    let n = values.len();
+    let mean: f64 = values.iter().map(|(_, y)| *y).sum::<f64>() / n as f64;
+    let mut num = 0.0;
+    let mut den = 0.0;
+    for i in 0..n {
+        let d = values[i].1 - mean;
+        den += d * d;
+        if i > 0 {
+            let d_prev = values[i - 1].1 - mean;
+            num += d * d_prev;
+        }
+    }
+    if den < f64::EPSILON {
+        return 0.0;
+    }
+    (num / den).clamp(-1.0, 1.0)
+}
+
+/// Detect the dominant seasonal period in a time series using autocorrelation peaks.
+///
+/// Scans lags looking for the first strong autocorrelation peak AFTER the ACF
+/// has dropped below a low threshold (indicating we've moved past the short-term
+/// correlation region). Returns `(period_in_rows, amplitude)` if found.
+fn detect_seasonal_period(values: &[(usize, f64)]) -> Option<(usize, f64)> {
+    let n = values.len();
+    if n < 20 {
+        return None;
+    }
+
+    let mean: f64 = values.iter().map(|(_, y)| *y).sum::<f64>() / n as f64;
+    let var: f64 = values.iter().map(|(_, y)| (*y - mean).powi(2)).sum::<f64>();
+    if var < f64::EPSILON {
+        return None;
+    }
+
+    let max_lag = (n / 3).min(2000);
+    let min_lag = 4;
+    if max_lag <= min_lag {
+        return None;
+    }
+
+    // Single-pass ACF scan: find first peak after initial decay
+    let peak_threshold = 0.3;
+    let decay_threshold = 0.3;
+    let mut past_initial_decay = false;
+    let mut best_lag = 0;
+    let mut best_acf = 0.0;
+    let mut prev_acf = 1.0;
+
+    for lag in min_lag..=max_lag {
+        let mut num = 0.0;
+        for i in lag..n {
+            num += (values[i].1 - mean) * (values[i - lag].1 - mean);
+        }
+        let acf = num / var;
+
+        if !past_initial_decay {
+            if acf < decay_threshold {
+                past_initial_decay = true;
+            }
+            prev_acf = acf;
+            continue;
+        }
+
+        // We're past the initial decay — look for a rising peak
+        if acf >= peak_threshold && acf > best_acf && acf > prev_acf {
+            best_lag = lag;
+            best_acf = acf;
+        } else if best_lag > 0 && acf < best_acf - 0.05 {
+            // Clearly past the peak — stop
+            break;
+        }
+        prev_acf = acf;
+    }
+
+    if best_lag == 0 || best_acf < peak_threshold {
+        return None;
+    }
+
+    // Estimate amplitude as half the IQR of values
+    let mut sorted_vals: Vec<f64> = values.iter().map(|(_, y)| *y).collect();
+    sorted_vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let q25_idx = (n as f64 * 0.25) as usize;
+    let q75_idx = (n as f64 * 0.75) as usize;
+    let q25 = sorted_vals[q25_idx.min(n - 1)];
+    let q75 = sorted_vals[q75_idx.min(n - 1)];
+    let amplitude = (q75 - q25) / 2.0;
+
+    if amplitude < f64::EPSILON {
+        return None;
+    }
+
+    Some((best_lag, amplitude))
 }
 
 /// Detect temporal ordering between datetime column pairs.
