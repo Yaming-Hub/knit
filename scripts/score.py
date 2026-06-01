@@ -313,29 +313,52 @@ def categorical_similarity(orig_vals: List[str], gen_vals: List[str]) -> float:
 
 
 def range_overlap_score(orig_vals: List[float], gen_vals: List[float]) -> float:
-    """Score how well generated range covers original range."""
+    """Score how well generated range covers original range.
+
+    Uses trimmed percentiles (p2-p98) to be robust against outliers.
+    For small arrays (< 20 elements), falls back to full min/max.
+    """
     if not orig_vals or not gen_vals:
         return 0.0
-    orig_min, orig_max = min(orig_vals), max(orig_vals)
-    gen_min, gen_max = min(gen_vals), max(gen_vals)
 
-    if orig_max == orig_min:
-        # Single value - check if generated matches
-        return 1.0 if abs(gen_min - orig_min) < 0.01 * (abs(orig_min) + 1) else 0.5
+    orig_sorted = sorted(orig_vals)
+    gen_sorted = sorted(gen_vals)
 
-    # Overlap of ranges
-    overlap_min = max(orig_min, gen_min)
-    overlap_max = min(orig_max, gen_max)
+    n_orig = len(orig_sorted)
+    n_gen = len(gen_sorted)
+
+    # For small arrays, trimming is meaningless — use full range
+    if n_orig < 20:
+        orig_lo, orig_hi = orig_sorted[0], orig_sorted[-1]
+        gen_lo, gen_hi = gen_sorted[0], gen_sorted[-1]
+    else:
+        # Symmetric trim: skip bottom 2% and top 2%
+        trim = max(1, int(n_orig * 0.02))
+        orig_lo = orig_sorted[trim]
+        orig_hi = orig_sorted[n_orig - 1 - trim]
+        trim_gen = max(1, int(n_gen * 0.02))
+        gen_lo = gen_sorted[trim_gen]
+        gen_hi = gen_sorted[n_gen - 1 - trim_gen]
+
+    orig_range = orig_hi - orig_lo
+    if orig_range == 0:
+        # Mostly constant column — score based on whether generated
+        # also concentrates around the same value
+        gen_median = gen_sorted[n_gen // 2]
+        if abs(gen_median - orig_lo) < 0.01 * (abs(orig_lo) + 1):
+            return 1.0
+        return 0.5
+
+    # Coverage: what fraction of original trimmed range is covered by generated
+    overlap_min = max(orig_lo, gen_lo)
+    overlap_max = min(orig_hi, gen_hi)
     overlap = max(0, overlap_max - overlap_min)
-    orig_range = orig_max - orig_min
-
-    # Coverage: what fraction of original range is covered
     coverage = overlap / orig_range
 
-    # Penalty for exceeding original range significantly
-    gen_range = gen_max - gen_min
+    # Penalty for generated range exceeding original trimmed range significantly
+    gen_range = gen_hi - gen_lo
     excess_ratio = gen_range / orig_range if orig_range > 0 else 1.0
-    excess_penalty = min(1.0, 1.0 / max(excess_ratio, 0.01)) if excess_ratio > 2.0 else 1.0
+    excess_penalty = min(1.0, 1.5 / max(excess_ratio, 0.01)) if excess_ratio > 1.5 else 1.0
 
     return min(1.0, coverage * excess_penalty)
 
