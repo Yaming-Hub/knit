@@ -68,13 +68,19 @@
           "name": "parent",
           "data_type": "int",
           "generator": {
-            "type": "distribution",
-            "kind": "uniform",
-            "params": {
-              "max": 231.0,
-              "min": 1.0
-            },
-            "round": true
+            "type": "time_series",
+            "baseline": 1.0,
+            "components": [
+              {
+                "type": "trend",
+                "slope": 0.983854297097325,
+                "degree": 1
+              },
+              {
+                "type": "noise",
+                "std_dev": 23.91006442322751
+              }
+            ]
           },
           "nullable": false,
           "stats": {
@@ -144,8 +150,7 @@
         {
           "type": "range",
           "field": "parent",
-          "min": 1.0,
-          "max": 231.0
+          "min": 0.0
         },
         {
           "type": "range",
@@ -164,6 +169,12 @@
         {
           "type": "check",
           "expr": "parent <= size"
+        },
+        {
+          "type": "range",
+          "field": "size",
+          "min": 264,
+          "max": 24593
         }
       ],
       "output": {
@@ -182,8 +193,8 @@
     {
       "entity": "original",
       "fields": [
-        "parent",
-        "id"
+        "id",
+        "parent"
       ],
       "matrix": [
         [
@@ -200,8 +211,8 @@
     {
       "entity": "original",
       "fields": [
-        "parent",
-        "id"
+        "id",
+        "parent"
       ],
       "matrix": [
         [

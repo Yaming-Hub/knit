@@ -73,6 +73,12 @@
           "field": "price",
           "min": 735.09,
           "max": 1549.38
+        },
+        {
+          "type": "range",
+          "field": "price",
+          "min": 735.09,
+          "max": 1549.38
         }
       ],
       "output": {

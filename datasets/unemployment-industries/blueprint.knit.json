@@ -218,6 +218,18 @@
         {
           "type": "check",
           "expr": "rate <= count"
+        },
+        {
+          "type": "range",
+          "field": "count",
+          "min": 2,
+          "max": 2440
+        },
+        {
+          "type": "range",
+          "field": "rate",
+          "min": 0.3,
+          "max": 27.1
         }
       ],
       "output": {
@@ -246,8 +258,8 @@
     {
       "entity": "original",
       "fields": [
-        "rate",
-        "count"
+        "count",
+        "rate"
       ],
       "matrix": [
         [
@@ -264,8 +276,8 @@
     {
       "entity": "original",
       "fields": [
-        "rate",
-        "count"
+        "count",
+        "rate"
       ],
       "matrix": [
         [

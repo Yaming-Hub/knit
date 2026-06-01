@@ -553,8 +553,9 @@
             "type": "distribution",
             "kind": "normal",
             "params": {
-              "mean": 0.17907383805911792,
-              "std_dev": 0.6188854726745265
+              "mean": 0.43446966924234465,
+              "std_dev": 0.9046109973480179,
+              "zero_probability": 0.5878335112059765
             }
           },
           "nullable": false,
@@ -919,6 +920,84 @@
         {
           "type": "check",
           "expr": "war_playoffs <= mp"
+        },
+        {
+          "type": "range",
+          "field": "poss",
+          "min": 2,
+          "max": 8026
+        },
+        {
+          "type": "range",
+          "field": "mp",
+          "min": 1,
+          "max": 3948
+        },
+        {
+          "type": "range",
+          "field": "raptor_box_offense",
+          "min": -44.18627461043486,
+          "max": 47.55763731
+        },
+        {
+          "type": "range",
+          "field": "raptor_box_defense",
+          "min": -48.18857740421232,
+          "max": 57.30570498
+        },
+        {
+          "type": "range",
+          "field": "raptor_onoff_offense",
+          "min": -67.77747807767906,
+          "max": 85.40682246
+        },
+        {
+          "type": "range",
+          "field": "raptor_onoff_defense",
+          "min": -89.09612279876131,
+          "max": 66.5234614064033
+        },
+        {
+          "type": "range",
+          "field": "raptor_offense",
+          "min": -45.32330849,
+          "max": 53.2288638
+        },
+        {
+          "type": "range",
+          "field": "raptor_defense",
+          "min": -56.98251960751814,
+          "max": 62.46920451
+        },
+        {
+          "type": "range",
+          "field": "war_reg_season",
+          "min": -7.382977773,
+          "max": 23.659318
+        },
+        {
+          "type": "range",
+          "field": "war_playoffs",
+          "min": -1.376520078,
+          "max": 6.18923597809314
+        },
+        {
+          "type": "range",
+          "field": "predator_offense",
+          "min": -36.43326464779712,
+          "max": 42.89028068
+        },
+        {
+          "type": "range",
+          "field": "predator_defense",
+          "min": -37.87174503918634,
+          "max": 42.98906324
+        },
+        {
+          "type": "range",
+          "field": "pace_impact",
+          "min": -7.191955211393465,
+          "max": 15.81770491704016
         }
       ],
       "output": {
@@ -942,16 +1021,16 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "raptor_onoff_offense"
+        "raptor_box_offense",
+        "war_reg_season"
       ],
       "matrix": [
         [
           1.0,
-          0.33325851539037454
+          0.4697839435921347
         ],
         [
-          0.33325851539037454,
+          0.4697839435921347,
           1.0
         ]
       ],
@@ -960,16 +1039,16 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "raptor_onoff_offense"
+        "raptor_box_offense",
+        "war_reg_season"
       ],
       "matrix": [
         [
           1.0,
-          0.5912076545198541
+          0.6672537738729779
         ],
         [
-          0.5912076545198541,
+          0.6672537738729779,
           1.0
         ]
       ],
@@ -978,16 +1057,16 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "raptor_box_total"
+        "raptor_box_offense",
+        "poss"
       ],
       "matrix": [
         [
           1.0,
-          0.49967150052253173
+          0.41644496272449183
         ],
         [
-          0.49967150052253173,
+          0.41644496272449183,
           1.0
         ]
       ],
@@ -996,16 +1075,16 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "raptor_box_total"
+        "raptor_box_offense",
+        "poss"
       ],
       "matrix": [
         [
           1.0,
-          0.8454029534860031
+          0.5099776714410887
         ],
         [
-          0.8454029534860031,
+          0.5099776714410887,
           1.0
         ]
       ],
@@ -1014,80 +1093,8 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "predator_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5382778316775005
-        ],
-        [
-          0.5382778316775005,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "predator_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7099728357584086
-        ],
-        [
-          0.7099728357584086,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7022142807377691
-        ],
-        [
-          0.7022142807377691,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.686463169024966
-        ],
-        [
-          0.686463169024966,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_box_offense"
+        "raptor_box_offense",
+        "war_total"
       ],
       "matrix": [
         [
@@ -1104,8 +1111,8 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "raptor_box_offense"
+        "raptor_box_offense",
+        "war_total"
       ],
       "matrix": [
         [
@@ -1122,1196 +1129,8 @@
     {
       "entity": "original",
       "fields": [
-        "war_total",
-        "raptor_box_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.55354838768213
-        ],
-        [
-          0.55354838768213,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3491254486971774
-        ],
-        [
-          0.3491254486971774,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6270091897956698
-        ],
-        [
-          0.6270091897956698,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.31323610367273685
-        ],
-        [
-          0.31323610367273685,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6296126355005178
-        ],
-        [
-          0.6296126355005178,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "war_playoffs"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6886082013433182
-        ],
-        [
-          0.6886082013433182,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "war_playoffs"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.39974469631299453
-        ],
-        [
-          0.39974469631299453,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5411158287566571
-        ],
-        [
-          0.5411158287566571,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.583920873655745
-        ],
-        [
-          0.583920873655745,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8694166576158949
-        ],
-        [
-          0.8694166576158949,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9865844747496587
-        ],
-        [
-          0.9865844747496587,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.992685754116173
-        ],
-        [
-          0.992685754116173,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4637160763053129
-        ],
-        [
-          0.4637160763053129,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7075000722896737
-        ],
-        [
-          0.7075000722896737,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.49264033218256176
-        ],
-        [
-          0.49264033218256176,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8632018404697115
-        ],
-        [
-          0.8632018404697115,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7011574414923522
-        ],
-        [
-          0.7011574414923522,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_total",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.686151732603068
-        ],
-        [
-          0.686151732603068,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_box_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4362114379796246
-        ],
-        [
-          0.4362114379796246,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_box_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4946988411840853
-        ],
-        [
-          0.4946988411840853,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
+        "raptor_box_offense",
         "predator_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.746212760921459
-        ],
-        [
-          0.746212760921459,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "predator_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7119405474306963
-        ],
-        [
-          0.7119405474306963,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.34080704724767835
-        ],
-        [
-          0.34080704724767835,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.46694850393614634
-        ],
-        [
-          0.46694850393614634,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_box_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5934250639169759
-        ],
-        [
-          0.5934250639169759,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_box_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5737768570261274
-        ],
-        [
-          0.5737768570261274,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7084887024655452
-        ],
-        [
-          0.7084887024655452,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7136406716839432
-        ],
-        [
-          0.7136406716839432,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5778454238131014
-        ],
-        [
-          0.5778454238131014,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6022203859242474
-        ],
-        [
-          0.6022203859242474,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.33638569488602094
-        ],
-        [
-          0.33638569488602094,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5872432220080394
-        ],
-        [
-          0.5872432220080394,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7837527630361562
-        ],
-        [
-          0.7837527630361562,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7462240525278554
-        ],
-        [
-          0.7462240525278554,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5705642265537929
-        ],
-        [
-          0.5705642265537929,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5985377937255864
-        ],
-        [
-          0.5985377937255864,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3415849537542882
-        ],
-        [
-          0.3415849537542882,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.46727837656590776
-        ],
-        [
-          0.46727837656590776,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "predator_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6844305572038121
-        ],
-        [
-          0.6844305572038121,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "predator_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7016322227160657
-        ],
-        [
-          0.7016322227160657,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.395360198317709
-        ],
-        [
-          0.395360198317709,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4877196879219326
-        ],
-        [
-          0.4877196879219326,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_box_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7193895402213683
-        ],
-        [
-          0.7193895402213683,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_box_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7029017952155174
-        ],
-        [
-          0.7029017952155174,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_box_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7296953057023243
-        ],
-        [
-          0.7296953057023243,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_box_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.698260198534253
-        ],
-        [
-          0.698260198534253,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7317178118850824
-        ],
-        [
-          0.7317178118850824,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7184991264335998
-        ],
-        [
-          0.7184991264335998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5334830184062471
-        ],
-        [
-          0.5334830184062471,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5627316503587035
-        ],
-        [
-          0.5627316503587035,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "war_playoffs"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3327121050737498
-        ],
-        [
-          0.3327121050737498,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6865602251480627
-        ],
-        [
-          0.6865602251480627,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6567961729219657
-        ],
-        [
-          0.6567961729219657,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3052592877258697
-        ],
-        [
-          0.3052592877258697,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9291611079315105
-        ],
-        [
-          0.9291611079315105,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9360868870256737
-        ],
-        [
-          0.9360868870256737,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5075604419890967
-        ],
-        [
-          0.5075604419890967,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8409515722946944
-        ],
-        [
-          0.8409515722946944,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.696950586821615
-        ],
-        [
-          0.696950586821615,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.706816003502422
-        ],
-        [
-          0.706816003502422,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9636149617984477
-        ],
-        [
-          0.9636149617984477,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9671220581202308
-        ],
-        [
-          0.9671220581202308,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.39630128770369266
-        ],
-        [
-          0.39630128770369266,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_total",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4877709716552012
-        ],
-        [
-          0.4877709716552012,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4763833504873336
-        ],
-        [
-          0.4763833504873336,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "mp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5580886531275809
-        ],
-        [
-          0.5580886531275809,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_box_offense"
       ],
       "matrix": [
         [
@@ -2328,8 +1147,8 @@
     {
       "entity": "original",
       "fields": [
-        "predator_offense",
-        "raptor_box_offense"
+        "raptor_box_offense",
+        "predator_offense"
       ],
       "matrix": [
         [
@@ -2338,564 +1157,6 @@
         ],
         [
           0.9283086303288094,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5262397424105734
-        ],
-        [
-          0.5262397424105734,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5209361244517249
-        ],
-        [
-          0.5209361244517249,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "war_playoffs"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3201156960989115
-        ],
-        [
-          0.3201156960989115,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7681419979919502
-        ],
-        [
-          0.7681419979919502,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.760294938811335
-        ],
-        [
-          0.760294938811335,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5424363164881637
-        ],
-        [
-          0.5424363164881637,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7076431408085178
-        ],
-        [
-          0.7076431408085178,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.95763528355731
-        ],
-        [
-          0.95763528355731,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9576671300818193
-        ],
-        [
-          0.9576671300818193,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7095415487895557
-        ],
-        [
-          0.7095415487895557,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.718453805314946
-        ],
-        [
-          0.718453805314946,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4781759337953632
-        ],
-        [
-          0.4781759337953632,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5589094587292259
-        ],
-        [
-          0.5589094587292259,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_box_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4147234735245751
-        ],
-        [
-          0.4147234735245751,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_box_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5093693167810801
-        ],
-        [
-          0.5093693167810801,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.32055846991408277
-        ],
-        [
-          0.32055846991408277,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.31994893802523333
-        ],
-        [
-          0.31994893802523333,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "war_playoffs"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.44238911281390775
-        ],
-        [
-          0.44238911281390775,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "war_playoffs"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3116351800845322
-        ],
-        [
-          0.3116351800845322,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.48321531429163844
-        ],
-        [
-          0.48321531429163844,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5624542963260335
-        ],
-        [
-          0.5624542963260335,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7020605003772927
-        ],
-        [
-          0.7020605003772927,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6836131963203081
-        ],
-        [
-          0.6836131963203081,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.42969880688281326
-        ],
-        [
-          0.42969880688281326,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5469377274712709
-        ],
-        [
-          0.5469377274712709,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.38734980328833335
-        ],
-        [
-          0.38734980328833335,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.48649080929895444
-        ],
-        [
-          0.48649080929895444,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9986311963722239
-        ],
-        [
-          0.9986311963722239,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "mp",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9991816550074226
-        ],
-        [
-          0.9991816550074226,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_offense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4083540142257651
-        ],
-        [
-          0.4083540142257651,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_offense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4114184034523744
-        ],
-        [
-          0.4114184034523744,
           1.0
         ]
       ],
@@ -2941,15 +1202,15 @@
       "entity": "original",
       "fields": [
         "raptor_box_offense",
-        "war_reg_season"
+        "raptor_box_total"
       ],
       "matrix": [
         [
           1.0,
-          0.4697839435921347
+          0.7193895402213683
         ],
         [
-          0.4697839435921347,
+          0.7193895402213683,
           1.0
         ]
       ],
@@ -2959,15 +1220,15 @@
       "entity": "original",
       "fields": [
         "raptor_box_offense",
-        "war_reg_season"
+        "raptor_box_total"
       ],
       "matrix": [
         [
           1.0,
-          0.6672537738729779
+          0.7029017952155174
         ],
         [
-          0.6672537738729779,
+          0.7029017952155174,
           1.0
         ]
       ],
@@ -2977,15 +1238,15 @@
       "entity": "original",
       "fields": [
         "raptor_box_offense",
-        "raptor_offense"
+        "mp"
       ],
       "matrix": [
         [
           1.0,
-          0.9648970702176617
+          0.4147234735245751
         ],
         [
-          0.9648970702176617,
+          0.4147234735245751,
           1.0
         ]
       ],
@@ -2995,15 +1256,15 @@
       "entity": "original",
       "fields": [
         "raptor_box_offense",
-        "raptor_offense"
+        "mp"
       ],
       "matrix": [
         [
           1.0,
-          0.9603372466972966
+          0.5093693167810801
         ],
         [
-          0.9603372466972966,
+          0.5093693167810801,
           1.0
         ]
       ],
@@ -3049,15 +1310,15 @@
       "entity": "original",
       "fields": [
         "raptor_box_offense",
-        "poss"
+        "raptor_onoff_total"
       ],
       "matrix": [
         [
           1.0,
-          0.41644496272449183
+          0.4083540142257651
         ],
         [
-          0.41644496272449183,
+          0.4083540142257651,
           1.0
         ]
       ],
@@ -3067,69 +1328,15 @@
       "entity": "original",
       "fields": [
         "raptor_box_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5099776714410887
-        ],
-        [
-          0.5099776714410887,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9327910459049454
-        ],
-        [
-          0.9327910459049454,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "predator_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9309589626151074
-        ],
-        [
-          0.9309589626151074,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
         "raptor_onoff_total"
       ],
       "matrix": [
         [
           1.0,
-          0.3650914136203995
+          0.4114184034523744
         ],
         [
-          0.3650914136203995,
+          0.4114184034523744,
           1.0
         ]
       ],
@@ -3138,16 +1345,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_box_defense",
-        "raptor_onoff_total"
+        "raptor_box_offense",
+        "raptor_offense"
       ],
       "matrix": [
         [
           1.0,
-          0.41376159888671016
+          0.9648970702176617
         ],
         [
-          0.41376159888671016,
+          0.9648970702176617,
           1.0
         ]
       ],
@@ -3156,16 +1363,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_box_defense",
-        "raptor_defense"
+        "raptor_box_offense",
+        "raptor_offense"
       ],
       "matrix": [
         [
           1.0,
-          0.9585349808876691
+          0.9603372466972966
         ],
         [
-          0.9585349808876691,
+          0.9603372466972966,
           1.0
         ]
       ],
@@ -3174,16 +1381,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_box_defense",
-        "raptor_defense"
+        "raptor_box_offense",
+        "raptor_onoff_offense"
       ],
       "matrix": [
         [
           1.0,
-          0.9597364799914533
+          0.5934250639169759
         ],
         [
-          0.9597364799914533,
+          0.5934250639169759,
           1.0
         ]
       ],
@@ -3192,268 +1399,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_box_defense",
-        "raptor_onoff_defense"
+        "raptor_box_offense",
+        "raptor_onoff_offense"
       ],
       "matrix": [
         [
           1.0,
-          0.4726732796772558
+          0.5737768570261274
         ],
         [
-          0.4726732796772558,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4433073211998893
-        ],
-        [
-          0.4433073211998893,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6527252995642435
-        ],
-        [
-          0.6527252995642435,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6498625705933181
-        ],
-        [
-          0.6498625705933181,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5476060398782501
-        ],
-        [
-          0.5476060398782501,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6958367012316641
-        ],
-        [
-          0.6958367012316641,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_box_defense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6782298885573311
-        ],
-        [
-          0.6782298885573311,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4945987799341034
-        ],
-        [
-          0.4945987799341034,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "raptor_onoff_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5175643942376359
-        ],
-        [
-          0.5175643942376359,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9351178337613838
-        ],
-        [
-          0.9351178337613838,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9245880957497503
-        ],
-        [
-          0.9245880957497503,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.569535731130611
-        ],
-        [
-          0.569535731130611,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5113053243275069
-        ],
-        [
-          0.5113053243275069,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7552330855737251
-        ],
-        [
-          0.7552330855737251,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.746942646490232
-        ],
-        [
-          0.746942646490232,
+          0.5737768570261274,
           1.0
         ]
       ],
@@ -3499,6 +1454,258 @@
       "entity": "original",
       "fields": [
         "predator_defense",
+        "poss"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.31959497355690775
+        ],
+        [
+          0.31959497355690775,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9351178337613838
+        ],
+        [
+          0.9351178337613838,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9245880957497503
+        ],
+        [
+          0.9245880957497503,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3491254486971774
+        ],
+        [
+          0.3491254486971774,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6270091897956698
+        ],
+        [
+          0.6270091897956698,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_box_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9327910459049454
+        ],
+        [
+          0.9327910459049454,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_box_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9309589626151074
+        ],
+        [
+          0.9309589626151074,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7552330855737251
+        ],
+        [
+          0.7552330855737251,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.746942646490232
+        ],
+        [
+          0.746942646490232,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7317178118850824
+        ],
+        [
+          0.7317178118850824,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7184991264335998
+        ],
+        [
+          0.7184991264335998,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.569535731130611
+        ],
+        [
+          0.569535731130611,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5113053243275069
+        ],
+        [
+          0.5113053243275069,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.32055846991408277
+        ],
+        [
+          0.32055846991408277,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
         "raptor_total"
       ],
       "matrix": [
@@ -3535,15 +1742,51 @@
       "entity": "original",
       "fields": [
         "predator_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4945987799341034
+        ],
+        [
+          0.4945987799341034,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5175643942376359
+        ],
+        [
+          0.5175643942376359,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
         "poss"
       ],
       "matrix": [
         [
           1.0,
-          0.31959497355690775
+          0.7011627574874778
         ],
         [
-          0.31959497355690775,
+          0.7011627574874778,
           1.0
         ]
       ],
@@ -3552,232 +1795,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_onoff_total",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5158053202145448
-        ],
-        [
-          0.5158053202145448,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5201836592132268
-        ],
-        [
-          0.5201836592132268,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6849208360205097
-        ],
-        [
-          0.6849208360205097,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6231763320635191
-        ],
-        [
-          0.6231763320635191,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6702961429562605
-        ],
-        [
-          0.6702961429562605,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6742615863021786
-        ],
-        [
-          0.6742615863021786,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.31560822313499154
-        ],
-        [
-          0.31560822313499154,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "war_reg_season"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6225304636742677
-        ],
-        [
-          0.6225304636742677,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5461142315905034
-        ],
-        [
-          0.5461142315905034,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5377170736734993
-        ],
-        [
-          0.5377170736734993,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7398269059627023
-        ],
-        [
-          0.7398269059627023,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7222274828306864
-        ],
-        [
-          0.7222274828306864,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_total",
+        "war_reg_season",
         "poss"
       ],
       "matrix": [
         [
           1.0,
-          0.32004983840373447
+          0.6834087340906678
         ],
         [
-          0.32004983840373447,
+          0.6834087340906678,
           1.0
         ]
       ],
@@ -3786,44 +1813,8 @@
     {
       "entity": "original",
       "fields": [
-        "war_playoffs",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.33803605937616077
-        ],
-        [
-          0.33803605937616077,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_playoffs",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.35098441779705813
-        ],
-        [
-          0.35098441779705813,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_playoffs",
-        "war_reg_season"
+        "war_reg_season",
+        "war_playoffs"
       ],
       "matrix": [
         [
@@ -3840,8 +1831,8 @@
     {
       "entity": "original",
       "fields": [
-        "war_playoffs",
-        "war_reg_season"
+        "war_reg_season",
+        "war_playoffs"
       ],
       "matrix": [
         [
@@ -3858,134 +1849,8 @@
     {
       "entity": "original",
       "fields": [
-        "war_playoffs",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.34389234792041223
-        ],
-        [
-          0.34389234792041223,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_playoffs",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4410176640460828
-        ],
-        [
-          0.4410176640460828,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "war_playoffs",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3109904814934186
-        ],
-        [
-          0.3109904814934186,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_defense",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7039893804193351
-        ],
-        [
-          0.7039893804193351,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_defense",
-        "raptor_onoff_defense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6369629022615501
-        ],
-        [
-          0.6369629022615501,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6394658082432146
-        ],
-        [
-          0.6394658082432146,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6289748661906441
-        ],
-        [
-          0.6289748661906441,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_defense",
-        "war_reg_season"
+        "war_reg_season",
+        "raptor_defense"
       ],
       "matrix": [
         [
@@ -4002,16 +1867,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_defense",
-        "raptor_total"
+        "war_reg_season",
+        "war_total"
       ],
       "matrix": [
         [
           1.0,
-          0.70914369876067
+          0.9865844747496587
         ],
         [
-          0.70914369876067,
+          0.9865844747496587,
           1.0
         ]
       ],
@@ -4020,16 +1885,16 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_defense",
-        "raptor_total"
+        "war_reg_season",
+        "war_total"
       ],
       "matrix": [
         [
           1.0,
-          0.6762160271689538
+          0.992685754116173
         ],
         [
-          0.6762160271689538,
+          0.992685754116173,
           1.0
         ]
       ],
@@ -4038,80 +1903,62 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_onoff_defense",
+        "war_reg_season",
+        "raptor_box_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5476060398782501
+        ],
+        [
+          0.5476060398782501,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5424363164881637
+        ],
+        [
+          0.5424363164881637,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7076431408085178
+        ],
+        [
+          0.7076431408085178,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
         "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.35281172691938
-        ],
-        [
-          0.35281172691938,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_defense",
-        "predator_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.318731834406271
-        ],
-        [
-          0.318731834406271,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_defense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4588121431578344
-        ],
-        [
-          0.4588121431578344,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_onoff_defense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.39575173939394653
-        ],
-        [
-          0.39575173939394653,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_total",
-        "war_reg_season"
       ],
       "matrix": [
         [
@@ -4128,8 +1975,8 @@
     {
       "entity": "original",
       "fields": [
-        "predator_total",
-        "war_reg_season"
+        "war_reg_season",
+        "predator_total"
       ],
       "matrix": [
         [
@@ -4146,106 +1993,16 @@
     {
       "entity": "original",
       "fields": [
-        "predator_total",
-        "raptor_offense"
+        "war_reg_season",
+        "raptor_box_total"
       ],
       "matrix": [
         [
           1.0,
-          0.7231167074541194
+          0.5075604419890967
         ],
         [
-          0.7231167074541194,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_total",
-        "raptor_offense"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7237996126533796
-        ],
-        [
-          0.7237996126533796,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9496943088025968
-        ],
-        [
-          0.9496943088025968,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_total",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9552444907598848
-        ],
-        [
-          0.9552444907598848,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_total",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.48423775238922656
-        ],
-        [
-          0.48423775238922656,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "predator_total",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5626334316385788
-        ],
-        [
-          0.5626334316385788,
+          0.5075604419890967,
           1.0
         ]
       ],
@@ -4255,15 +2012,15 @@
       "entity": "original",
       "fields": [
         "war_reg_season",
-        "raptor_offense"
+        "raptor_box_total"
       ],
       "matrix": [
         [
           1.0,
-          0.46959012154277757
+          0.8409515722946944
         ],
         [
-          0.46959012154277757,
+          0.8409515722946944,
           1.0
         ]
       ],
@@ -4273,15 +2030,33 @@
       "entity": "original",
       "fields": [
         "war_reg_season",
-        "raptor_offense"
+        "mp"
       ],
       "matrix": [
         [
           1.0,
-          0.7059885737980046
+          0.7020605003772927
         ],
         [
-          0.7059885737980046,
+          0.7020605003772927,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6836131963203081
+        ],
+        [
+          0.6836131963203081,
           1.0
         ]
       ],
@@ -4327,15 +2102,15 @@
       "entity": "original",
       "fields": [
         "war_reg_season",
-        "poss"
+        "raptor_onoff_total"
       ],
       "matrix": [
         [
           1.0,
-          0.7011627574874778
+          0.31560822313499154
         ],
         [
-          0.7011627574874778,
+          0.31560822313499154,
           1.0
         ]
       ],
@@ -4345,15 +2120,15 @@
       "entity": "original",
       "fields": [
         "war_reg_season",
-        "poss"
+        "raptor_onoff_total"
       ],
       "matrix": [
         [
           1.0,
-          0.6834087340906678
+          0.6225304636742677
         ],
         [
-          0.6834087340906678,
+          0.6225304636742677,
           1.0
         ]
       ],
@@ -4362,80 +2137,296 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_offense",
+        "war_reg_season",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.46959012154277757
+        ],
+        [
+          0.46959012154277757,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7059885737980046
+        ],
+        [
+          0.7059885737980046,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.33638569488602094
+        ],
+        [
+          0.33638569488602094,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_reg_season",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5872432220080394
+        ],
+        [
+          0.5872432220080394,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "war_playoffs"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4410176640460828
+        ],
+        [
+          0.4410176640460828,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "war_playoffs"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3109904814934186
+        ],
+        [
+          0.3109904814934186,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7011574414923522
+        ],
+        [
+          0.7011574414923522,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.686151732603068
+        ],
+        [
+          0.686151732603068,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4781759337953632
+        ],
+        [
+          0.4781759337953632,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5589094587292259
+        ],
+        [
+          0.5589094587292259,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.48423775238922656
+        ],
+        [
+          0.48423775238922656,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5626334316385788
+        ],
+        [
+          0.5626334316385788,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.39630128770369266
+        ],
+        [
+          0.39630128770369266,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4877709716552012
+        ],
+        [
+          0.4877709716552012,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9986311963722239
+        ],
+        [
+          0.9986311963722239,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9991816550074226
+        ],
+        [
+          0.9991816550074226,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
         "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7265256251387091
-        ],
-        [
-          0.7265256251387091,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_offense",
-        "raptor_total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.729464793255495
-        ],
-        [
-          0.729464793255495,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.43127252249456566
-        ],
-        [
-          0.43127252249456566,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_offense",
-        "poss"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5474877221002374
-        ],
-        [
-          0.5474877221002374,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "raptor_total",
-        "poss"
       ],
       "matrix": [
         [
@@ -4452,8 +2443,8 @@
     {
       "entity": "original",
       "fields": [
-        "raptor_total",
-        "poss"
+        "poss",
+        "raptor_total"
       ],
       "matrix": [
         [
@@ -4470,16 +2461,2104 @@
     {
       "entity": "original",
       "fields": [
-        "player_name",
-        "player_id"
+        "poss",
+        "raptor_onoff_total"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999969224
+          0.32004983840373447
         ],
         [
-          0.9999999999969224,
+          0.32004983840373447,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.43127252249456566
+        ],
+        [
+          0.43127252249456566,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5474877221002374
+        ],
+        [
+          0.5474877221002374,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3415849537542882
+        ],
+        [
+          0.3415849537542882,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "poss",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.46727837656590776
+        ],
+        [
+          0.46727837656590776,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6886082013433182
+        ],
+        [
+          0.6886082013433182,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.39974469631299453
+        ],
+        [
+          0.39974469631299453,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3201156960989115
+        ],
+        [
+          0.3201156960989115,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.33803605937616077
+        ],
+        [
+          0.33803605937616077,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.35098441779705813
+        ],
+        [
+          0.35098441779705813,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3327121050737498
+        ],
+        [
+          0.3327121050737498,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.44238911281390775
+        ],
+        [
+          0.44238911281390775,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3116351800845322
+        ],
+        [
+          0.3116351800845322,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_playoffs",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.34389234792041223
+        ],
+        [
+          0.34389234792041223,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "war_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5411158287566571
+        ],
+        [
+          0.5411158287566571,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_box_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9585349808876691
+        ],
+        [
+          0.9585349808876691,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_box_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9597364799914533
+        ],
+        [
+          0.9597364799914533,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6394658082432146
+        ],
+        [
+          0.6394658082432146,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6289748661906441
+        ],
+        [
+          0.6289748661906441,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6865602251480627
+        ],
+        [
+          0.6865602251480627,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6567961729219657
+        ],
+        [
+          0.6567961729219657,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7039893804193351
+        ],
+        [
+          0.7039893804193351,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6369629022615501
+        ],
+        [
+          0.6369629022615501,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.70914369876067
+        ],
+        [
+          0.70914369876067,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6762160271689538
+        ],
+        [
+          0.6762160271689538,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5158053202145448
+        ],
+        [
+          0.5158053202145448,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5201836592132268
+        ],
+        [
+          0.5201836592132268,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_box_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.55354838768213
+        ],
+        [
+          0.55354838768213,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5382778316775005
+        ],
+        [
+          0.5382778316775005,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "predator_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7099728357584086
+        ],
+        [
+          0.7099728357584086,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.583920873655745
+        ],
+        [
+          0.583920873655745,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8694166576158949
+        ],
+        [
+          0.8694166576158949,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.49967150052253173
+        ],
+        [
+          0.49967150052253173,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8454029534860031
+        ],
+        [
+          0.8454029534860031,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7022142807377691
+        ],
+        [
+          0.7022142807377691,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.686463169024966
+        ],
+        [
+          0.686463169024966,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.49264033218256176
+        ],
+        [
+          0.49264033218256176,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8632018404697115
+        ],
+        [
+          0.8632018404697115,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.31323610367273685
+        ],
+        [
+          0.31323610367273685,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6296126355005178
+        ],
+        [
+          0.6296126355005178,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4637160763053129
+        ],
+        [
+          0.4637160763053129,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7075000722896737
+        ],
+        [
+          0.7075000722896737,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.33325851539037454
+        ],
+        [
+          0.33325851539037454,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "war_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5912076545198541
+        ],
+        [
+          0.5912076545198541,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6527252995642435
+        ],
+        [
+          0.6527252995642435,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6498625705933181
+        ],
+        [
+          0.6498625705933181,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7296953057023243
+        ],
+        [
+          0.7296953057023243,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.698260198534253
+        ],
+        [
+          0.698260198534253,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4726732796772558
+        ],
+        [
+          0.4726732796772558,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4433073211998893
+        ],
+        [
+          0.4433073211998893,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6958367012316641
+        ],
+        [
+          0.6958367012316641,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6782298885573311
+        ],
+        [
+          0.6782298885573311,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3650914136203995
+        ],
+        [
+          0.3650914136203995,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.41376159888671016
+        ],
+        [
+          0.41376159888671016,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7681419979919502
+        ],
+        [
+          0.7681419979919502,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "predator_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.760294938811335
+        ],
+        [
+          0.760294938811335,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6844305572038121
+        ],
+        [
+          0.6844305572038121,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7016322227160657
+        ],
+        [
+          0.7016322227160657,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4763833504873336
+        ],
+        [
+          0.4763833504873336,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5580886531275809
+        ],
+        [
+          0.5580886531275809,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7095415487895557
+        ],
+        [
+          0.7095415487895557,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.718453805314946
+        ],
+        [
+          0.718453805314946,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5262397424105734
+        ],
+        [
+          0.5262397424105734,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5209361244517249
+        ],
+        [
+          0.5209361244517249,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.95763528355731
+        ],
+        [
+          0.95763528355731,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9576671300818193
+        ],
+        [
+          0.9576671300818193,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.746212760921459
+        ],
+        [
+          0.746212760921459,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_offense",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7119405474306963
+        ],
+        [
+          0.7119405474306963,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9291611079315105
+        ],
+        [
+          0.9291611079315105,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_box_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9360868870256737
+        ],
+        [
+          0.9360868870256737,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.35281172691938
+        ],
+        [
+          0.35281172691938,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.318731834406271
+        ],
+        [
+          0.318731834406271,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.48321531429163844
+        ],
+        [
+          0.48321531429163844,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5624542963260335
+        ],
+        [
+          0.5624542963260335,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9496943088025968
+        ],
+        [
+          0.9496943088025968,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9552444907598848
+        ],
+        [
+          0.9552444907598848,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6702961429562605
+        ],
+        [
+          0.6702961429562605,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6742615863021786
+        ],
+        [
+          0.6742615863021786,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7231167074541194
+        ],
+        [
+          0.7231167074541194,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7237996126533796
+        ],
+        [
+          0.7237996126533796,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5778454238131014
+        ],
+        [
+          0.5778454238131014,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "predator_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6022203859242474
+        ],
+        [
+          0.6022203859242474,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_onoff_defense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3052592877258697
+        ],
+        [
+          0.3052592877258697,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.395360198317709
+        ],
+        [
+          0.395360198317709,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "mp"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4877196879219326
+        ],
+        [
+          0.4877196879219326,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9636149617984477
+        ],
+        [
+          0.9636149617984477,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9671220581202308
+        ],
+        [
+          0.9671220581202308,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5334830184062471
+        ],
+        [
+          0.5334830184062471,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5627316503587035
+        ],
+        [
+          0.5627316503587035,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.696950586821615
+        ],
+        [
+          0.696950586821615,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.706816003502422
+        ],
+        [
+          0.706816003502422,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4362114379796246
+        ],
+        [
+          0.4362114379796246,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_box_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4946988411840853
+        ],
+        [
+          0.4946988411840853,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_defense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4588121431578344
+        ],
+        [
+          0.4588121431578344,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_defense",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.39575173939394653
+        ],
+        [
+          0.39575173939394653,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6849208360205097
+        ],
+        [
+          0.6849208360205097,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_defense",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6231763320635191
+        ],
+        [
+          0.6231763320635191,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.38734980328833335
+        ],
+        [
+          0.38734980328833335,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.48649080929895444
+        ],
+        [
+          0.48649080929895444,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.31994893802523333
+        ],
+        [
+          0.31994893802523333,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.42969880688281326
+        ],
+        [
+          0.42969880688281326,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5469377274712709
+        ],
+        [
+          0.5469377274712709,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.34080704724767835
+        ],
+        [
+          0.34080704724767835,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "mp",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.46694850393614634
+        ],
+        [
+          0.46694850393614634,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7398269059627023
+        ],
+        [
+          0.7398269059627023,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_total",
+        "raptor_onoff_total"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7222274828306864
+        ],
+        [
+          0.7222274828306864,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7265256251387091
+        ],
+        [
+          0.7265256251387091,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.729464793255495
+        ],
+        [
+          0.729464793255495,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5705642265537929
+        ],
+        [
+          0.5705642265537929,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5985377937255864
+        ],
+        [
+          0.5985377937255864,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5461142315905034
+        ],
+        [
+          0.5461142315905034,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_total",
+        "raptor_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5377170736734993
+        ],
+        [
+          0.5377170736734993,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7084887024655452
+        ],
+        [
+          0.7084887024655452,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_onoff_total",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7136406716839432
+        ],
+        [
+          0.7136406716839432,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_offense",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7837527630361562
+        ],
+        [
+          0.7837527630361562,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "raptor_offense",
+        "raptor_onoff_offense"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7462240525278554
+        ],
+        [
+          0.7462240525278554,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "player_id",
+        "player_name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999970708
+        ],
+        [
+          0.9999999999970708,
           1.0
         ]
       ],

@@ -47,9 +47,10 @@
           "name": "name",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "original_name.dict.txt",
-            "expansion": "sample"
+            "type": "tuple_lookup",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "column": 1
           },
           "nullable": false,
           "stats": {
@@ -68,10 +69,9 @@
           "name": "urlslug",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
-            "column": 1
+            "type": "dictionary",
+            "file": "original_urlslug.dict.txt",
+            "expansion": "sample"
           },
           "nullable": false,
           "stats": {
@@ -91,8 +91,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 7
           },
           "nullable": {
@@ -116,8 +116,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 5
           },
           "nullable": {
@@ -141,8 +141,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 3
           },
           "nullable": {
@@ -166,8 +166,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 4
           },
           "nullable": {
@@ -191,8 +191,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 6
           },
           "nullable": {
@@ -216,8 +216,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 9
           },
           "nullable": {
@@ -241,8 +241,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 8
           },
           "nullable": false,
@@ -300,8 +300,8 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "name",
-            "file": "original__name_urlslug_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
+            "source_field": "urlslug",
+            "file": "original__urlslug_name_FIRST_APPEARANCE_EYE_HAIR_ALIGN_SEX_ID_ALIVE_GSM.tsv",
             "column": 2
           },
           "nullable": {
@@ -323,13 +323,25 @@
           "name": "YEAR",
           "data_type": "int",
           "generator": {
-            "type": "distribution",
-            "kind": "normal",
-            "params": {
-              "mean": 1989.7666617840925,
-              "std_dev": 16.822962103510303
-            },
-            "round": true
+            "type": "time_series",
+            "baseline": 1939.0,
+            "components": [
+              {
+                "type": "trend",
+                "slope": 0.0023989725115272035,
+                "degree": 1
+              },
+              {
+                "type": "noise",
+                "std_dev": 9.607033664868206
+              },
+              {
+                "type": "ar",
+                "coefficients": [
+                  0.8355686952209624
+                ]
+              }
+            ]
           },
           "nullable": {
             "probability": 0.010005800464037123
@@ -372,8 +384,13 @@
         {
           "type": "range",
           "field": "YEAR",
-          "min": 1935.0,
-          "max": 2013.0
+          "min": 0.0
+        },
+        {
+          "type": "range",
+          "field": "APPEARANCES",
+          "min": 1,
+          "max": 3093
         }
       ],
       "output": {
@@ -401,8 +418,8 @@
     {
       "entity": "original",
       "fields": [
-        "APPEARANCES",
-        "YEAR"
+        "YEAR",
+        "APPEARANCES"
       ],
       "matrix": [
         [
@@ -419,8 +436,8 @@
     {
       "entity": "original",
       "fields": [
-        "APPEARANCES",
-        "page_id"
+        "page_id",
+        "APPEARANCES"
       ],
       "matrix": [
         [
@@ -437,440 +454,8 @@
     {
       "entity": "original",
       "fields": [
-        "ID",
-        "FIRST APPEARANCE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.45703854548269957
-        ],
-        [
-          0.45703854548269957,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ID",
-        "name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999977
-        ],
-        [
-          0.9999999999999977,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ID",
-        "urlslug"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.99999999999994
-        ],
-        [
-          0.99999999999994,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999980552
-        ],
-        [
-          0.9999999999980552,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "urlslug"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999994837
-        ],
-        [
-          0.999999999994837,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
+        "GSM",
         "EYE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.48671945727576543
-        ],
-        [
-          0.48671945727576543,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "SEX"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.30352956577020723
-        ],
-        [
-          0.30352956577020723,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "GSM"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9280736795734383
-        ],
-        [
-          0.9280736795734383,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "ALIGN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.403324509575693
-        ],
-        [
-          0.403324509575693,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "HAIR"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4370305411057949
-        ],
-        [
-          0.4370305411057949,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "FIRST APPEARANCE",
-        "ALIVE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.40347810313563753
-        ],
-        [
-          0.40347810313563753,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "urlslug"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999771106
-        ],
-        [
-          0.999999999771106,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "EYE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "SEX"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "GSM"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "ALIGN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998794
-        ],
-        [
-          0.9999999999998794,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "HAIR"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998749
-        ],
-        [
-          0.9999999999998749,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "name",
-        "ALIVE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999426
-        ],
-        [
-          0.9999999999999426,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "EYE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "SEX"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "GSM"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999996
-        ],
-        [
-          0.9999999999999996,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "ALIGN"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999998789
-        ],
-        [
-          0.9999999999998789,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "HAIR"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999096
-        ],
-        [
-          0.9999999999999096,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "urlslug",
-        "ALIVE"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999426
-        ],
-        [
-          0.9999999999999426,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "EYE",
-        "GSM"
       ],
       "matrix": [
         [
@@ -887,8 +472,26 @@
     {
       "entity": "original",
       "fields": [
-        "SEX",
-        "GSM"
+        "GSM",
+        "urlslug"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GSM",
+        "SEX"
       ],
       "matrix": [
         [
@@ -897,6 +500,24 @@
         ],
         [
           0.3021223104415353,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "GSM",
+        "FIRST APPEARANCE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9280736795734388
+        ],
+        [
+          0.9280736795734388,
           1.0
         ]
       ],
@@ -922,416 +543,399 @@
     },
     {
       "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "APPEARANCES",
-      "given": "ALIGN",
-      "distributions": [
-        {
-          "when": "Neutral Characters",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.05880574289144,
-            "sigma": 1.3227371036753555
-          },
-          "round": true
-        },
-        {
-          "when": "Good Characters",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.297426535824036,
-            "sigma": 1.4816275780454622
-          },
-          "round": true
-        },
-        {
-          "when": "Bad Characters",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.6531870778617406
-          },
-          "round": true
-        }
+      "fields": [
+        "GSM",
+        "name"
       ],
-      "default": {
-        "kind": "pareto",
-        "params": {
-          "scale": 1.0,
-          "shape": 0.5229189016414668
-        }
-      }
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999991
+        ],
+        [
+          0.9999999999999991,
+          1.0
+        ]
+      ],
+      "conditional": []
     },
     {
       "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "APPEARANCES",
-      "given": "EYE",
-      "distributions": [
-        {
-          "when": "Pink Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 4.0,
-            "shape": 0.7205397032049005
-          },
-          "round": true
-        },
-        {
-          "when": "Green Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.426719150666194,
-            "sigma": 1.5276390493244427
-          },
-          "round": true
-        },
-        {
-          "when": "Orange Eyes",
-          "distribution": "uniform",
-          "params": {
-            "max": 32.0,
-            "min": 2.0
-          },
-          "round": true
-        },
-        {
-          "when": "Red Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.44619840370421515
-          },
-          "round": true
-        },
-        {
-          "when": "Photocellular Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.4242502695479309
-          },
-          "round": true
-        },
-        {
-          "when": "Purple Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 3.0,
-            "shape": 0.5007557315791493
-          },
-          "round": true
-        },
-        {
-          "when": "Grey Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.7330087603428668,
-            "sigma": 1.4463688655751694
-          },
-          "round": true
-        },
-        {
-          "when": "Hazel Eyes",
-          "distribution": "gamma",
-          "params": {
-            "scale": 99.54095913416681,
-            "shape": 0.5088576034793041
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.1998215241074464,
-            "sigma": 1.3894076152260892
-          },
-          "round": true
-        },
-        {
-          "when": "Blue Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.749027369758606,
-            "sigma": 1.599706493009572
-          },
-          "round": true
-        },
-        {
-          "when": "Brown Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.3157162764831827,
-            "sigma": 1.3719074404031513
-          },
-          "round": true
-        },
-        {
-          "when": "Violet Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 0.050761421319796954
-          },
-          "round": true
-        },
-        {
-          "when": "Gold Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 2.0,
-            "shape": 0.8744482884294515
-          },
-          "round": true
-        },
-        {
-          "when": "Black Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.13549381540983,
-            "sigma": 1.32925978841595
-          },
-          "round": true
-        },
-        {
-          "when": "White Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.1480579122627854,
-            "sigma": 1.3625446805967407
-          },
-          "round": true
-        },
-        {
-          "when": "Amber Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 11.0,
-            "shape": 0.9622125609805009
-          },
-          "round": true
-        },
-        {
-          "when": "Auburn Hair",
-          "distribution": "pareto",
-          "params": {
-            "scale": 2.0,
-            "shape": 0.8577886584793518
-          },
-          "round": true
-        }
+      "fields": [
+        "EYE",
+        "urlslug"
       ],
-      "default": {
-        "kind": "pareto",
-        "params": {
-          "scale": 1.0,
-          "shape": 0.5229189016414668
-        }
-      }
+      "matrix": [
+        [
+          1.0,
+          0.999999999999758
+        ],
+        [
+          0.999999999999758,
+          1.0
+        ]
+      ],
+      "conditional": []
     },
     {
       "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "page_id",
-      "given": "EYE",
-      "distributions": [
-        {
-          "when": "Orange Eyes",
-          "distribution": "uniform",
-          "params": {
-            "max": 309545.0,
-            "min": 7575.0
-          },
-          "round": true
-        },
-        {
-          "when": "Photocellular Eyes",
-          "distribution": "uniform",
-          "params": {
-            "max": 333530.0,
-            "min": 1843.0
-          },
-          "round": true
-        },
-        {
-          "when": "Red Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 8.056346708598917e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Yellow Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 6.892777002874689e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Black Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 7.942388075992538e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Pink Eyes",
-          "distribution": "uniform",
-          "params": {
-            "max": 160584.0,
-            "min": 2780.0
-          },
-          "round": true
-        },
-        {
-          "when": "Hazel Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.3720608043873,
-            "sigma": 1.6569802236643114
-          },
-          "round": true
-        },
-        {
-          "when": "Green Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 8.459209372641196e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Purple Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 0.00001655603686319865
-          },
-          "round": true
-        },
-        {
-          "when": "Gold Eyes",
-          "distribution": "uniform",
-          "params": {
-            "max": 374789.0,
-            "min": 8324.0
-          },
-          "round": true
-        },
-        {
-          "when": "Violet Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 7.998848165864115e-6
-          },
-          "round": true
-        },
-        {
-          "when": "White Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 8.709580974551054e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Grey Eyes",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 10.308094793784637,
-            "sigma": 1.7817429646615293
-          },
-          "round": true
-        },
-        {
-          "when": "Auburn Hair",
-          "distribution": "uniform",
-          "params": {
-            "max": 192614.0,
-            "min": 4935.0
-          },
-          "round": true
-        },
-        {
-          "when": "Amber Eyes",
-          "distribution": "pareto",
-          "params": {
-            "scale": 2657.0,
-            "shape": 0.6407345887491485
-          },
-          "round": true
-        },
-        {
-          "when": "Brown Eyes",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 7.3417385520872135e-6
-          },
-          "round": true
-        },
-        {
-          "when": "Blue Eyes",
-          "distribution": "gamma",
-          "params": {
-            "scale": 107965.44498643481,
-            "shape": 0.9117459412473226
-          },
-          "round": true
-        }
+      "fields": [
+        "EYE",
+        "FIRST APPEARANCE"
       ],
-      "default": {
-        "kind": "exponential",
-        "params": {
-          "lambda": 6.782364340844538e-6
-        }
-      }
+      "matrix": [
+        [
+          1.0,
+          0.4867194572757699
+        ],
+        [
+          0.4867194572757699,
+          1.0
+        ]
+      ],
+      "conditional": []
     },
     {
       "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "APPEARANCES",
-      "given": "GSM",
-      "distributions": [
-        {
-          "when": "Homosexual Characters",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.7960011133444613,
-            "sigma": 1.3984601539619639
-          },
-          "round": true
-        },
-        {
-          "when": "Bisexual Characters",
-          "distribution": "pareto",
-          "params": {
-            "scale": 16.0,
-            "shape": 0.945921225231463
-          },
-          "round": true
-        }
+      "fields": [
+        "EYE",
+        "name"
       ],
-      "default": {
-        "kind": "pareto",
-        "params": {
-          "scale": 1.0,
-          "shape": 0.5229189016414668
-        }
-      }
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999057
+        ],
+        [
+          0.9999999999999057,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "ALIGN",
+        "urlslug"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "ALIGN",
+        "FIRST APPEARANCE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.40332450957569344
+        ],
+        [
+          0.40332450957569344,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "ALIGN",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999996858
+        ],
+        [
+          0.9999999999996858,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "SEX"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999876
+        ],
+        [
+          0.9999999999999876,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "FIRST APPEARANCE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999953045
+        ],
+        [
+          0.9999999999953045,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "HAIR"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999998697
+        ],
+        [
+          0.9999999999998697,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999997711858
+        ],
+        [
+          0.9999999997711858,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "ID"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "urlslug",
+        "ALIVE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999384
+        ],
+        [
+          0.9999999999999384,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "SEX",
+        "FIRST APPEARANCE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3035295657702074
+        ],
+        [
+          0.3035295657702074,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "SEX",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999999999999881
+        ],
+        [
+          0.999999999999881,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FIRST APPEARANCE",
+        "HAIR"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.43703054110579515
+        ],
+        [
+          0.43703054110579515,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FIRST APPEARANCE",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999929843
+        ],
+        [
+          0.9999999999929843,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FIRST APPEARANCE",
+        "ID"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.45703854548270123
+        ],
+        [
+          0.45703854548270123,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "FIRST APPEARANCE",
+        "ALIVE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.40347810313563764
+        ],
+        [
+          0.40347810313563764,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "HAIR",
+        "name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999997711
+        ],
+        [
+          0.9999999999997711,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "name",
+        "ID"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "name",
+        "ALIVE"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999434
+        ],
+        [
+          0.9999999999999434,
+          1.0
+        ]
+      ],
+      "conditional": []
     },
     {
       "entity": "original",
@@ -1340,22 +944,31 @@
       "matrix": [],
       "conditional": [],
       "dependent": "page_id",
-      "given": "GSM",
+      "given": "ID",
       "distributions": [
         {
-          "when": "Homosexual Characters",
-          "distribution": "exponential",
+          "when": "Public Identity",
+          "distribution": "uniform",
           "params": {
-            "lambda": 9.237330103689031e-6
+            "max": 404010.0,
+            "min": 1386.0
           },
           "round": true
         },
         {
-          "when": "Bisexual Characters",
-          "distribution": "pareto",
+          "when": "Secret Identity",
+          "distribution": "exponential",
           "params": {
-            "scale": 1614.0,
-            "shape": 0.5576968781117092
+            "lambda": 8.226485588509114e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Identity Unknown",
+          "distribution": "uniform",
+          "params": {
+            "max": 252709.0,
+            "min": 127141.0
           },
           "round": true
         }
@@ -1364,50 +977,6 @@
         "kind": "exponential",
         "params": {
           "lambda": 6.782364340844538e-6
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "APPEARANCES",
-      "given": "SEX",
-      "distributions": [
-        {
-          "when": "Genderless Characters",
-          "distribution": "exponential",
-          "params": {
-            "lambda": 0.07786885245901638
-          },
-          "round": true
-        },
-        {
-          "when": "Male Characters",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5273649499227903
-          },
-          "round": true
-        },
-        {
-          "when": "Female Characters",
-          "distribution": "pareto",
-          "params": {
-            "scale": 1.0,
-            "shape": 0.5052769343810378
-          },
-          "round": true
-        }
-      ],
-      "default": {
-        "kind": "pareto",
-        "params": {
-          "scale": 1.0,
-          "shape": 0.5229189016414668
         }
       }
     },
@@ -1463,31 +1032,150 @@
       "matrix": [],
       "conditional": [],
       "dependent": "page_id",
-      "given": "ID",
+      "given": "EYE",
       "distributions": [
         {
-          "when": "Identity Unknown",
-          "distribution": "uniform",
-          "params": {
-            "max": 252709.0,
-            "min": 127141.0
-          },
-          "round": true
-        },
-        {
-          "when": "Secret Identity",
+          "when": "Black Eyes",
           "distribution": "exponential",
           "params": {
-            "lambda": 8.226485588509114e-6
+            "lambda": 7.942388075992538e-6
           },
           "round": true
         },
         {
-          "when": "Public Identity",
+          "when": "Yellow Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 6.892777002874689e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Amber Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 2657.0,
+            "shape": 0.6407345887491485
+          },
+          "round": true
+        },
+        {
+          "when": "Hazel Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.3720608043873,
+            "sigma": 1.6569802236643114
+          },
+          "round": true
+        },
+        {
+          "when": "Blue Eyes",
+          "distribution": "gamma",
+          "params": {
+            "scale": 107965.44498643481,
+            "shape": 0.9117459412473226
+          },
+          "round": true
+        },
+        {
+          "when": "Orange Eyes",
           "distribution": "uniform",
           "params": {
-            "max": 404010.0,
-            "min": 1386.0
+            "max": 309545.0,
+            "min": 7575.0
+          },
+          "round": true
+        },
+        {
+          "when": "Photocellular Eyes",
+          "distribution": "uniform",
+          "params": {
+            "max": 333530.0,
+            "min": 1843.0
+          },
+          "round": true
+        },
+        {
+          "when": "Auburn Hair",
+          "distribution": "uniform",
+          "params": {
+            "max": 192614.0,
+            "min": 4935.0
+          },
+          "round": true
+        },
+        {
+          "when": "Grey Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 10.308094793784637,
+            "sigma": 1.7817429646615293
+          },
+          "round": true
+        },
+        {
+          "when": "Gold Eyes",
+          "distribution": "uniform",
+          "params": {
+            "max": 374789.0,
+            "min": 8324.0
+          },
+          "round": true
+        },
+        {
+          "when": "Brown Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 7.3417385520872135e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Purple Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 0.00001655603686319865
+          },
+          "round": true
+        },
+        {
+          "when": "Red Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 8.056346708598917e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Pink Eyes",
+          "distribution": "uniform",
+          "params": {
+            "max": 160584.0,
+            "min": 2780.0
+          },
+          "round": true
+        },
+        {
+          "when": "White Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 8.709580974551054e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Violet Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 7.998848165864115e-6
+          },
+          "round": true
+        },
+        {
+          "when": "Green Eyes",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 8.459209372641196e-6
           },
           "round": true
         }
@@ -1506,62 +1194,267 @@
       "matrix": [],
       "conditional": [],
       "dependent": "APPEARANCES",
-      "given": "HAIR",
+      "given": "EYE",
       "distributions": [
         {
-          "when": "Black Hair",
-          "distribution": "pareto",
+          "when": "Violet Eyes",
+          "distribution": "exponential",
           "params": {
-            "scale": 1.0,
-            "shape": 0.47155271449327696
+            "lambda": 0.050761421319796954
           },
           "round": true
         },
         {
-          "when": "Brown Hair",
-          "distribution": "pareto",
+          "when": "Grey Eyes",
+          "distribution": "log_normal",
           "params": {
-            "scale": 1.0,
-            "shape": 0.5009099296917575
+            "mu": 2.7330087603428668,
+            "sigma": 1.4463688655751694
           },
           "round": true
         },
         {
-          "when": "Pink Hair",
+          "when": "Red Eyes",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.6177377510065771
+            "shape": 0.44619840370421515
           },
           "round": true
         },
         {
-          "when": "Gold Hair",
+          "when": "Pink Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 4.0,
+            "shape": 0.7205397032049005
+          },
+          "round": true
+        },
+        {
+          "when": "Purple Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 3.0,
+            "shape": 0.5007557315791493
+          },
+          "round": true
+        },
+        {
+          "when": "Auburn Hair",
           "distribution": "pareto",
           "params": {
             "scale": 2.0,
-            "shape": 0.7096888626410413
+            "shape": 0.8577886584793518
           },
           "round": true
         },
         {
-          "when": "Strawberry Blond Hair",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 2.8657841596198863,
-            "sigma": 1.731648437860057
-          },
-          "round": true
-        },
-        {
-          "when": "White Hair",
+          "when": "Photocellular Eyes",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.4790042350729091
+            "shape": 0.4242502695479309
           },
           "round": true
         },
+        {
+          "when": "Blue Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.749027369758606,
+            "sigma": 1.599706493009572
+          },
+          "round": true
+        },
+        {
+          "when": "Hazel Eyes",
+          "distribution": "gamma",
+          "params": {
+            "scale": 99.54095913416681,
+            "shape": 0.5088576034793041
+          },
+          "round": true
+        },
+        {
+          "when": "Yellow Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.1998215241074464,
+            "sigma": 1.3894076152260892
+          },
+          "round": true
+        },
+        {
+          "when": "Black Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.13549381540983,
+            "sigma": 1.32925978841595
+          },
+          "round": true
+        },
+        {
+          "when": "Green Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.426719150666194,
+            "sigma": 1.5276390493244427
+          },
+          "round": true
+        },
+        {
+          "when": "Amber Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 11.0,
+            "shape": 0.9622125609805009
+          },
+          "round": true
+        },
+        {
+          "when": "Brown Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.3157162764831827,
+            "sigma": 1.3719074404031513
+          },
+          "round": true
+        },
+        {
+          "when": "Orange Eyes",
+          "distribution": "uniform",
+          "params": {
+            "max": 32.0,
+            "min": 2.0
+          },
+          "round": true
+        },
+        {
+          "when": "Gold Eyes",
+          "distribution": "pareto",
+          "params": {
+            "scale": 2.0,
+            "shape": 0.8744482884294515
+          },
+          "round": true
+        },
+        {
+          "when": "White Eyes",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.1480579122627854,
+            "sigma": 1.3625446805967407
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "pareto",
+        "params": {
+          "scale": 1.0,
+          "shape": 0.5229189016414668
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "APPEARANCES",
+      "given": "SEX",
+      "distributions": [
+        {
+          "when": "Male Characters",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5273649499227903
+          },
+          "round": true
+        },
+        {
+          "when": "Female Characters",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5052769343810378
+          },
+          "round": true
+        },
+        {
+          "when": "Genderless Characters",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 0.07786885245901638
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "pareto",
+        "params": {
+          "scale": 1.0,
+          "shape": 0.5229189016414668
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "APPEARANCES",
+      "given": "ALIGN",
+      "distributions": [
+        {
+          "when": "Bad Characters",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6531870778617406
+          },
+          "round": true
+        },
+        {
+          "when": "Good Characters",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.297426535824036,
+            "sigma": 1.4816275780454622
+          },
+          "round": true
+        },
+        {
+          "when": "Neutral Characters",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.05880574289144,
+            "sigma": 1.3227371036753555
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "pareto",
+        "params": {
+          "scale": 1.0,
+          "shape": 0.5229189016414668
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "APPEARANCES",
+      "given": "HAIR",
+      "distributions": [
         {
           "when": "Purple Hair",
           "distribution": "log_normal",
@@ -1581,11 +1474,47 @@
           "round": true
         },
         {
-          "when": "Red Hair",
-          "distribution": "log_normal",
+          "when": "Green Hair",
+          "distribution": "pareto",
           "params": {
-            "mu": 2.2469175568740156,
-            "sigma": 1.4218449176322456
+            "scale": 1.0,
+            "shape": 0.45853045847821744
+          },
+          "round": true
+        },
+        {
+          "when": "Gold Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 2.0,
+            "shape": 0.7096888626410413
+          },
+          "round": true
+        },
+        {
+          "when": "Blue Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5810096786699461
+          },
+          "round": true
+        },
+        {
+          "when": "Pink Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.6177377510065771
+          },
+          "round": true
+        },
+        {
+          "when": "White Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.4790042350729091
           },
           "round": true
         },
@@ -1599,11 +1528,38 @@
           "round": true
         },
         {
-          "when": "Green Hair",
+          "when": "Red Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.2469175568740156,
+            "sigma": 1.4218449176322456
+          },
+          "round": true
+        },
+        {
+          "when": "Black Hair",
           "distribution": "pareto",
           "params": {
             "scale": 1.0,
-            "shape": 0.45853045847821744
+            "shape": 0.47155271449327696
+          },
+          "round": true
+        },
+        {
+          "when": "Strawberry Blond Hair",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.8657841596198863,
+            "sigma": 1.731648437860057
+          },
+          "round": true
+        },
+        {
+          "when": "Brown Hair",
+          "distribution": "pareto",
+          "params": {
+            "scale": 1.0,
+            "shape": 0.5009099296917575
           },
           "round": true
         },
@@ -1615,13 +1571,74 @@
             "shape": 0.5469312399350763
           },
           "round": true
+        }
+      ],
+      "default": {
+        "kind": "pareto",
+        "params": {
+          "scale": 1.0,
+          "shape": 0.5229189016414668
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "page_id",
+      "given": "GSM",
+      "distributions": [
+        {
+          "when": "Homosexual Characters",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 9.237330103689031e-6
+          },
+          "round": true
         },
         {
-          "when": "Blue Hair",
+          "when": "Bisexual Characters",
           "distribution": "pareto",
           "params": {
-            "scale": 1.0,
-            "shape": 0.5810096786699461
+            "scale": 1614.0,
+            "shape": 0.5576968781117092
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "exponential",
+        "params": {
+          "lambda": 6.782364340844538e-6
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "APPEARANCES",
+      "given": "GSM",
+      "distributions": [
+        {
+          "when": "Homosexual Characters",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 2.7960011133444613,
+            "sigma": 1.3984601539619639
+          },
+          "round": true
+        },
+        {
+          "when": "Bisexual Characters",
+          "distribution": "pareto",
+          "params": {
+            "scale": 16.0,
+            "shape": 0.945921225231463
           },
           "round": true
         }

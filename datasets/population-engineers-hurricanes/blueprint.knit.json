@@ -201,6 +201,18 @@
         {
           "type": "check",
           "expr": "hurricanes <= population"
+        },
+        {
+          "type": "range",
+          "field": "population",
+          "min": 585501,
+          "max": 39250017
+        },
+        {
+          "type": "range",
+          "field": "engineers",
+          "min": 0.000773897,
+          "max": 0.011759179
         }
       ],
       "output": {
@@ -228,8 +240,8 @@
     {
       "entity": "original",
       "fields": [
-        "population",
-        "hurricanes"
+        "hurricanes",
+        "population"
       ],
       "matrix": [
         [
@@ -246,8 +258,8 @@
     {
       "entity": "original",
       "fields": [
-        "population",
-        "hurricanes"
+        "hurricanes",
+        "population"
       ],
       "matrix": [
         [
@@ -264,8 +276,8 @@
     {
       "entity": "original",
       "fields": [
-        "population",
-        "engineers"
+        "engineers",
+        "population"
       ],
       "matrix": [
         [

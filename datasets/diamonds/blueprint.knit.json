@@ -406,6 +406,48 @@
         {
           "type": "check",
           "expr": "z <= price"
+        },
+        {
+          "type": "range",
+          "field": "carat",
+          "min": 0.2,
+          "max": 5.01
+        },
+        {
+          "type": "range",
+          "field": "depth",
+          "min": 43.0,
+          "max": 79.0
+        },
+        {
+          "type": "range",
+          "field": "table",
+          "min": 43.0,
+          "max": 95.0
+        },
+        {
+          "type": "range",
+          "field": "price",
+          "min": 326,
+          "max": 18823
+        },
+        {
+          "type": "range",
+          "field": "x",
+          "min": 0.0,
+          "max": 10.74
+        },
+        {
+          "type": "range",
+          "field": "y",
+          "min": 0.0,
+          "max": 58.9
+        },
+        {
+          "type": "range",
+          "field": "z",
+          "min": 0.0,
+          "max": 31.8
         }
       ],
       "output": {
@@ -420,16 +462,52 @@
     {
       "entity": "original",
       "fields": [
-        "z",
+        "carat",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9215913011935697
+        ],
+        [
+          0.9215913011935697,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "carat",
+        "price"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9628827988813001
+        ],
+        [
+          0.9628827988813001,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "carat",
         "x"
       ],
       "matrix": [
         [
           1.0,
-          0.9707717985774705
+          0.9750942267265641
         ],
         [
-          0.9707717985774705,
+          0.9750942267265641,
           1.0
         ]
       ],
@@ -438,16 +516,16 @@
     {
       "entity": "original",
       "fields": [
-        "z",
+        "carat",
         "x"
       ],
       "matrix": [
         [
           1.0,
-          0.9873553172140505
+          0.9961166041570526
         ],
         [
-          0.9873553172140505,
+          0.9961166041570526,
           1.0
         ]
       ],
@@ -456,16 +534,16 @@
     {
       "entity": "original",
       "fields": [
-        "z",
+        "carat",
         "y"
       ],
       "matrix": [
         [
           1.0,
-          0.9520057161562895
+          0.9517221990130819
         ],
         [
-          0.9520057161562895,
+          0.9517221990130819,
           1.0
         ]
       ],
@@ -474,16 +552,16 @@
     {
       "entity": "original",
       "fields": [
-        "z",
+        "carat",
         "y"
       ],
       "matrix": [
         [
           1.0,
-          0.9870675117824327
+          0.9955717485692812
         ],
         [
-          0.9870675117824327,
+          0.9955717485692812,
           1.0
         ]
       ],
@@ -492,8 +570,8 @@
     {
       "entity": "original",
       "fields": [
-        "z",
-        "carat"
+        "carat",
+        "z"
       ],
       "matrix": [
         [
@@ -510,8 +588,8 @@
     {
       "entity": "original",
       "fields": [
-        "z",
-        "carat"
+        "carat",
+        "z"
       ],
       "matrix": [
         [
@@ -528,8 +606,80 @@
     {
       "entity": "original",
       "fields": [
-        "z",
-        "price"
+        "price",
+        "x"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8844351610161778
+        ],
+        [
+          0.8844351610161778,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "price",
+        "x"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9631961087113345
+        ],
+        [
+          0.9631961087113345,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "price",
+        "y"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8654208978642225
+        ],
+        [
+          0.8654208978642225,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "price",
+        "y"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9627188193892315
+        ],
+        [
+          0.9627188193892315,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "price",
+        "z"
       ],
       "matrix": [
         [
@@ -546,8 +696,8 @@
     {
       "entity": "original",
       "fields": [
-        "z",
-        "price"
+        "price",
+        "z"
       ],
       "matrix": [
         [
@@ -601,15 +751,15 @@
       "entity": "original",
       "fields": [
         "x",
-        "carat"
+        "z"
       ],
       "matrix": [
         [
           1.0,
-          0.9750942267265641
+          0.9707717985774705
         ],
         [
-          0.9750942267265641,
+          0.9707717985774705,
           1.0
         ]
       ],
@@ -619,51 +769,15 @@
       "entity": "original",
       "fields": [
         "x",
-        "carat"
+        "z"
       ],
       "matrix": [
         [
           1.0,
-          0.9961166041570526
+          0.9873553172140505
         ],
         [
-          0.9961166041570526,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "x",
-        "price"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8844351610161778
-        ],
-        [
-          0.8844351610161778,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "x",
-        "price"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9631961087113345
-        ],
-        [
-          0.9631961087113345,
+          0.9873553172140505,
           1.0
         ]
       ],
@@ -673,15 +787,15 @@
       "entity": "original",
       "fields": [
         "y",
-        "carat"
+        "z"
       ],
       "matrix": [
         [
           1.0,
-          0.9517221990130819
+          0.9520057161562895
         ],
         [
-          0.9517221990130819,
+          0.9520057161562895,
           1.0
         ]
       ],
@@ -691,87 +805,15 @@
       "entity": "original",
       "fields": [
         "y",
-        "carat"
+        "z"
       ],
       "matrix": [
         [
           1.0,
-          0.9955717485692812
+          0.9870675117824327
         ],
         [
-          0.9955717485692812,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "y",
-        "price"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8654208978642225
-        ],
-        [
-          0.8654208978642225,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "y",
-        "price"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9627188193892315
-        ],
-        [
-          0.9627188193892315,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "carat",
-        "price"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9215913011935697
-        ],
-        [
-          0.9215913011935697,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "carat",
-        "price"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9628827988813001
-        ],
-        [
-          0.9628827988813001,
+          0.9870675117824327,
           1.0
         ]
       ],
@@ -784,8 +826,171 @@
       "matrix": [],
       "conditional": [],
       "dependent": "carat",
+      "given": "color",
+      "distributions": [
+        {
+          "when": "J",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.30534504531857015,
+            "shape": 3.805978744224533
+          }
+        },
+        {
+          "when": "H",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.29793157055115305,
+            "shape": 3.060431397925473
+          }
+        },
+        {
+          "when": "I",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.32658505915395325,
+            "shape": 3.1444406420421585
+          }
+        },
+        {
+          "when": "E",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.5595004855016285,
+            "sigma": 0.5238619858939542
+          }
+        },
+        {
+          "when": "F",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.44841242369698314,
+            "sigma": 0.5389596917099945
+          }
+        },
+        {
+          "when": "G",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.42059409775193307,
+            "sigma": 0.5708125363029423
+          }
+        },
+        {
+          "when": "D",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.5525351167344574,
+            "sigma": 0.509568951829507
+          }
+        }
+      ],
+      "default": {
+        "kind": "log_normal",
+        "params": {
+          "mu": -0.3949669655482774,
+          "sigma": 0.5848220841250429
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "price",
+      "given": "color",
+      "distributions": [
+        {
+          "when": "F",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.762439593363952,
+            "sigma": 0.9674636914148415
+          },
+          "round": true
+        },
+        {
+          "when": "G",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.789583395130484,
+            "sigma": 1.0276692184519838
+          },
+          "round": true
+        },
+        {
+          "when": "I",
+          "distribution": "gamma",
+          "params": {
+            "scale": 4378.904006564539,
+            "shape": 1.1628194969010919
+          },
+          "round": true
+        },
+        {
+          "when": "D",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.616904920536967,
+            "sigma": 0.9262901822353674
+          },
+          "round": true
+        },
+        {
+          "when": "E",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.579404675448197,
+            "sigma": 0.9253725869219571
+          },
+          "round": true
+        },
+        {
+          "when": "J",
+          "distribution": "gamma",
+          "params": {
+            "scale": 3698.56580687781,
+            "shape": 1.4394276857377826
+          },
+          "round": true
+        },
+        {
+          "when": "H",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.918445902669146,
+            "sigma": 1.0631537395843467
+          },
+          "round": true
+        }
+      ],
+      "default": {
+        "kind": "log_normal",
+        "params": {
+          "mu": 7.786768479077399,
+          "sigma": 1.014639937514435
+        }
+      }
+    },
+    {
+      "entity": "original",
+      "type": "conditional_distribution",
+      "fields": [],
+      "matrix": [],
+      "conditional": [],
+      "dependent": "carat",
       "given": "clarity",
       "distributions": [
+        {
+          "when": "SI1",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.30153069245816827,
+            "sigma": 0.5369799534270397
+          }
+        },
         {
           "when": "VVS2",
           "distribution": "pareto",
@@ -795,19 +1000,27 @@
           }
         },
         {
-          "when": "VVS1",
-          "distribution": "pareto",
-          "params": {
-            "scale": 0.23,
-            "shape": 1.5290342087877415
-          }
-        },
-        {
           "when": "VS1",
           "distribution": "log_normal",
           "params": {
             "mu": -0.47818393699364115,
             "sigma": 0.5617908825710916
+          }
+        },
+        {
+          "when": "VS2",
+          "distribution": "log_normal",
+          "params": {
+            "mu": -0.4319771182220129,
+            "sigma": 0.5701007090493591
+          }
+        },
+        {
+          "when": "SI2",
+          "distribution": "gamma",
+          "params": {
+            "scale": 0.2476702994421846,
+            "shape": 4.351141290733264
           }
         },
         {
@@ -827,27 +1040,11 @@
           }
         },
         {
-          "when": "SI1",
-          "distribution": "log_normal",
+          "when": "VVS1",
+          "distribution": "pareto",
           "params": {
-            "mu": -0.30153069245816827,
-            "sigma": 0.5369799534270397
-          }
-        },
-        {
-          "when": "VS2",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.4319771182220129,
-            "sigma": 0.5701007090493591
-          }
-        },
-        {
-          "when": "SI2",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.2476702994421846,
-            "shape": 4.351141290733264
+            "scale": 0.23,
+            "shape": 1.5290342087877415
           }
         }
       ],
@@ -869,15 +1066,6 @@
       "given": "clarity",
       "distributions": [
         {
-          "when": "IF",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.405190436660518,
-            "sigma": 0.9189940513068667
-          },
-          "round": true
-        },
-        {
           "when": "VVS1",
           "distribution": "log_normal",
           "params": {
@@ -887,11 +1075,29 @@
           "round": true
         },
         {
-          "when": "VVS2",
+          "when": "IF",
           "distribution": "log_normal",
           "params": {
-            "mu": 7.530843457557153,
-            "sigma": 1.024375882932501
+            "mu": 7.405190436660518,
+            "sigma": 0.9189940513068667
+          },
+          "round": true
+        },
+        {
+          "when": "VS2",
+          "distribution": "log_normal",
+          "params": {
+            "mu": 7.763029387204058,
+            "sigma": 1.0331880059650556
+          },
+          "round": true
+        },
+        {
+          "when": "SI2",
+          "distribution": "gamma",
+          "params": {
+            "scale": 3584.718640119787,
+            "shape": 1.4123921885939617
           },
           "round": true
         },
@@ -923,175 +1129,11 @@
           "round": true
         },
         {
-          "when": "VS2",
+          "when": "VVS2",
           "distribution": "log_normal",
           "params": {
-            "mu": 7.763029387204058,
-            "sigma": 1.0331880059650556
-          },
-          "round": true
-        },
-        {
-          "when": "SI2",
-          "distribution": "gamma",
-          "params": {
-            "scale": 3584.718640119787,
-            "shape": 1.4123921885939617
-          },
-          "round": true
-        }
-      ],
-      "default": {
-        "kind": "log_normal",
-        "params": {
-          "mu": 7.786768479077399,
-          "sigma": 1.014639937514435
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "carat",
-      "given": "color",
-      "distributions": [
-        {
-          "when": "D",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.5525351167344574,
-            "sigma": 0.509568951829507
-          }
-        },
-        {
-          "when": "H",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.29793157055115305,
-            "shape": 3.060431397925473
-          }
-        },
-        {
-          "when": "F",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.44841242369698314,
-            "sigma": 0.5389596917099945
-          }
-        },
-        {
-          "when": "I",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.32658505915395325,
-            "shape": 3.1444406420421585
-          }
-        },
-        {
-          "when": "E",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.5595004855016285,
-            "sigma": 0.5238619858939542
-          }
-        },
-        {
-          "when": "J",
-          "distribution": "gamma",
-          "params": {
-            "scale": 0.30534504531857015,
-            "shape": 3.805978744224533
-          }
-        },
-        {
-          "when": "G",
-          "distribution": "log_normal",
-          "params": {
-            "mu": -0.42059409775193307,
-            "sigma": 0.5708125363029423
-          }
-        }
-      ],
-      "default": {
-        "kind": "log_normal",
-        "params": {
-          "mu": -0.3949669655482774,
-          "sigma": 0.5848220841250429
-        }
-      }
-    },
-    {
-      "entity": "original",
-      "type": "conditional_distribution",
-      "fields": [],
-      "matrix": [],
-      "conditional": [],
-      "dependent": "price",
-      "given": "color",
-      "distributions": [
-        {
-          "when": "D",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.616904920536967,
-            "sigma": 0.9262901822353674
-          },
-          "round": true
-        },
-        {
-          "when": "J",
-          "distribution": "gamma",
-          "params": {
-            "scale": 3698.56580687781,
-            "shape": 1.4394276857377826
-          },
-          "round": true
-        },
-        {
-          "when": "H",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.918445902669146,
-            "sigma": 1.0631537395843467
-          },
-          "round": true
-        },
-        {
-          "when": "E",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.579404675448197,
-            "sigma": 0.9253725869219571
-          },
-          "round": true
-        },
-        {
-          "when": "F",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.762439593363952,
-            "sigma": 0.9674636914148415
-          },
-          "round": true
-        },
-        {
-          "when": "I",
-          "distribution": "gamma",
-          "params": {
-            "scale": 4378.904006564539,
-            "shape": 1.1628194969010919
-          },
-          "round": true
-        },
-        {
-          "when": "G",
-          "distribution": "log_normal",
-          "params": {
-            "mu": 7.789583395130484,
-            "sigma": 1.0276692184519838
+            "mu": 7.530843457557153,
+            "sigma": 1.024375882932501
           },
           "round": true
         }

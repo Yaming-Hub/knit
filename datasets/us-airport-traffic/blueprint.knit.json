@@ -245,6 +245,24 @@
         {
           "type": "check",
           "expr": "long <= cnt"
+        },
+        {
+          "type": "range",
+          "field": "lat",
+          "min": 25.79325,
+          "max": 48.79275
+        },
+        {
+          "type": "range",
+          "field": "long",
+          "min": -124.2460278,
+          "max": -70.30875
+        },
+        {
+          "type": "range",
+          "field": "cnt",
+          "min": 23,
+          "max": 25129
         }
       ],
       "output": {
@@ -263,60 +281,6 @@
     {
       "entity": "original",
       "fields": [
-        "state",
-        "iata"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "state",
-        "city"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9795242398072594
-        ],
-        [
-          0.9795242398072594,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "state",
-        "airport"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "iata",
         "city"
       ],
@@ -341,10 +305,28 @@
       "matrix": [
         [
           1.0,
-          0.9999999999998112
+          0.9999999999998107
         ],
         [
-          0.9999999999998112,
+          0.9999999999998107,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "iata",
+        "state"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
           1.0
         ]
       ],
@@ -355,6 +337,42 @@
       "fields": [
         "city",
         "airport"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "city",
+        "state"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.97952423980725
+        ],
+        [
+          0.97952423980725,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "airport",
+        "state"
       ],
       "matrix": [
         [

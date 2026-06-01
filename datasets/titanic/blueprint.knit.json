@@ -441,6 +441,18 @@
         {
           "type": "check",
           "expr": "parch <= fare"
+        },
+        {
+          "type": "range",
+          "field": "age",
+          "min": 0.42,
+          "max": 80.0
+        },
+        {
+          "type": "range",
+          "field": "fare",
+          "min": 0.0,
+          "max": 512.3292
         }
       ],
       "output": {
@@ -489,142 +501,16 @@
     {
       "entity": "original",
       "fields": [
-        "pclass",
-        "age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.36922601531551574
-        ],
-        [
-          -0.36922601531551574,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pclass",
-        "age"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.36166557503434504
-        ],
-        [
-          -0.36166557503434504,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pclass",
-        "survived"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.33848103596101586
-        ],
-        [
-          -0.33848103596101586,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pclass",
-        "survived"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3396679366500525
-        ],
-        [
-          -0.3396679366500525,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pclass",
+        "sibsp",
         "fare"
       ],
       "matrix": [
         [
           1.0,
-          -0.5494996199439061
+          0.4471129882944581
         ],
         [
-          -0.5494996199439061,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pclass",
-        "fare"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.6880316726256096
-        ],
-        [
-          -0.6880316726256096,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "age",
-        "sibsp"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3082467589236574
-        ],
-        [
-          -0.3082467589236574,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "survived",
-        "fare"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3237361394448083
-        ],
-        [
-          0.3237361394448083,
+          0.4471129882944581,
           1.0
         ]
       ],
@@ -670,15 +556,15 @@
       "entity": "original",
       "fields": [
         "sibsp",
-        "fare"
+        "age"
       ],
       "matrix": [
         [
           1.0,
-          0.4471129882944581
+          -0.3082467589236574
         ],
         [
-          0.4471129882944581,
+          -0.3082467589236574,
           1.0
         ]
       ],
@@ -687,8 +573,134 @@
     {
       "entity": "original",
       "fields": [
-        "parch",
+        "survived",
+        "pclass"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.33848103596101586
+        ],
+        [
+          -0.33848103596101586,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "survived",
+        "pclass"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3396679366500525
+        ],
+        [
+          -0.3396679366500525,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "survived",
         "fare"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3237361394448083
+        ],
+        [
+          0.3237361394448083,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pclass",
+        "fare"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.5494996199439061
+        ],
+        [
+          -0.5494996199439061,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pclass",
+        "fare"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.6880316726256096
+        ],
+        [
+          -0.6880316726256096,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pclass",
+        "age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.36922601531551574
+        ],
+        [
+          -0.36922601531551574,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pclass",
+        "age"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.36166557503434504
+        ],
+        [
+          -0.36166557503434504,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fare",
+        "parch"
       ],
       "matrix": [
         [
@@ -705,16 +717,52 @@
     {
       "entity": "original",
       "fields": [
-        "sex",
-        "who"
+        "embark_town",
+        "embarked"
       ],
       "matrix": [
         [
           1.0,
-          0.9476753874512575
+          1.0
         ],
         [
-          0.9476753874512575,
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "class",
+        "alive"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.33981738800531175
+        ],
+        [
+          0.33981738800531175,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "class",
+        "deck"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6461176369278668
+        ],
+        [
+          0.6461176369278668,
           1.0
         ]
       ],
@@ -741,16 +789,16 @@
     {
       "entity": "original",
       "fields": [
-        "embarked",
-        "embark_town"
+        "sex",
+        "who"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9476753874512575
         ],
         [
-          1.0,
+          0.9476753874512575,
           1.0
         ]
       ],
@@ -759,26 +807,8 @@
     {
       "entity": "original",
       "fields": [
-        "who",
-        "deck"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.32135468589345884
-        ],
-        [
-          0.32135468589345884,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "who",
-        "alive"
+        "alive",
+        "who"
       ],
       "matrix": [
         [
@@ -796,33 +826,15 @@
       "entity": "original",
       "fields": [
         "deck",
-        "class"
+        "who"
       ],
       "matrix": [
         [
           1.0,
-          0.6461176369278667
+          0.32135468589345884
         ],
         [
-          0.6461176369278667,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "class",
-        "alive"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.33981738800531175
-        ],
-        [
-          0.33981738800531175,
+          0.32135468589345884,
           1.0
         ]
       ],

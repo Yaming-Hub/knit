@@ -113,6 +113,12 @@
         {
           "type": "check",
           "expr": "rate <= id"
+        },
+        {
+          "type": "range",
+          "field": "rate",
+          "min": 0.1,
+          "max": 0.201
         }
       ],
       "output": {

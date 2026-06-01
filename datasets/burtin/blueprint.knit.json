@@ -193,6 +193,24 @@
           "field": "Neomycin",
           "min": 0.001,
           "max": 40.0
+        },
+        {
+          "type": "range",
+          "field": "Penicillin",
+          "min": 0.001,
+          "max": 870.0
+        },
+        {
+          "type": "range",
+          "field": "Streptomycin",
+          "min": 0.01,
+          "max": 14.0
+        },
+        {
+          "type": "range",
+          "field": "Neomycin",
+          "min": 0.001,
+          "max": 40.0
         }
       ],
       "output": {
@@ -230,8 +248,8 @@
     {
       "entity": "original",
       "fields": [
-        "Neomycin",
-        "Streptomycin"
+        "Streptomycin",
+        "Neomycin"
       ],
       "matrix": [
         [
@@ -248,8 +266,8 @@
     {
       "entity": "original",
       "fields": [
-        "Neomycin",
-        "Streptomycin"
+        "Streptomycin",
+        "Neomycin"
       ],
       "matrix": [
         [
@@ -266,16 +284,16 @@
     {
       "entity": "original",
       "fields": [
-        "Bacteria",
+        "Genus",
         "Gram_Staining"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.7777777777777778
         ],
         [
-          1.0,
+          0.7777777777777778,
           1.0
         ]
       ],
@@ -284,8 +302,8 @@
     {
       "entity": "original",
       "fields": [
-        "Bacteria",
-        "Genus"
+        "Genus",
+        "Bacteria"
       ],
       "matrix": [
         [
@@ -303,15 +321,15 @@
       "entity": "original",
       "fields": [
         "Gram_Staining",
-        "Genus"
+        "Bacteria"
       ],
       "matrix": [
         [
           1.0,
-          0.7777777777777778
+          1.0
         ],
         [
-          0.7777777777777778,
+          1.0,
           1.0
         ]
       ],

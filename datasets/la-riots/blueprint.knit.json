@@ -309,6 +309,24 @@
         {
           "type": "check",
           "expr": "longitude <= latitude"
+        },
+        {
+          "type": "range",
+          "field": "age",
+          "min": 15,
+          "max": 87
+        },
+        {
+          "type": "range",
+          "field": "longitude",
+          "min": -118.4717452,
+          "max": -117.7306469
+        },
+        {
+          "type": "range",
+          "field": "latitude",
+          "min": 33.7898575,
+          "max": 34.287098
         }
       ],
       "output": {
@@ -360,30 +378,12 @@
     {
       "entity": "original",
       "fields": [
-        "type",
+        "first_name",
         "last_name"
       ],
       "matrix": [
         [
           1.0,
-          0.9358266959957213
-        ],
-        [
-          0.9358266959957213,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "type",
-        "first_name"
-      ],
-      "matrix": [
-        [
-          1.0,
           1.0
         ],
         [
@@ -396,34 +396,16 @@
     {
       "entity": "original",
       "fields": [
-        "type",
+        "first_name",
         "gender"
       ],
       "matrix": [
         [
           1.0,
-          0.48181205582971576
-        ],
-        [
-          0.48181205582971576,
           1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "type",
-        "neighborhood"
-      ],
-      "matrix": [
+        ],
         [
           1.0,
-          0.815030484925579
-        ],
-        [
-          0.815030484925579,
           1.0
         ]
       ],
@@ -432,34 +414,16 @@
     {
       "entity": "original",
       "fields": [
-        "type",
-        "address"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999983
-        ],
-        [
-          0.9999999999999983,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "type",
+        "first_name",
         "race"
       ],
       "matrix": [
         [
           1.0,
-          0.3150311720706672
+          1.0
         ],
         [
-          0.3150311720706672,
+          1.0,
           1.0
         ]
       ],
@@ -468,8 +432,44 @@
     {
       "entity": "original",
       "fields": [
-        "last_name",
-        "first_name"
+        "first_name",
+        "address"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "first_name",
+        "neighborhood"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "first_name",
+        "type"
       ],
       "matrix": [
         [
@@ -505,15 +505,15 @@
       "entity": "original",
       "fields": [
         "last_name",
-        "neighborhood"
+        "race"
       ],
       "matrix": [
         [
           1.0,
-          0.9578190943061317
+          1.0
         ],
         [
-          0.9578190943061317,
+          1.0,
           1.0
         ]
       ],
@@ -528,10 +528,10 @@
       "matrix": [
         [
           1.0,
-          0.963515735781977
+          0.9635157357819806
         ],
         [
-          0.963515735781977,
+          0.9635157357819806,
           1.0
         ]
       ],
@@ -541,51 +541,15 @@
       "entity": "original",
       "fields": [
         "last_name",
-        "race"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "first_name",
-        "gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "first_name",
         "neighborhood"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9578190943061302
         ],
         [
-          1.0,
+          0.9578190943061302,
           1.0
         ]
       ],
@@ -594,52 +558,16 @@
     {
       "entity": "original",
       "fields": [
-        "first_name",
-        "address"
+        "last_name",
+        "type"
       ],
       "matrix": [
         [
           1.0,
-          1.0
+          0.9358266959957232
         ],
         [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "first_name",
-        "race"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "gender",
-        "neighborhood"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7379992257061365
-        ],
-        [
-          0.7379992257061365,
+          0.9358266959957232,
           1.0
         ]
       ],
@@ -654,10 +582,10 @@
       "matrix": [
         [
           1.0,
-          0.9449111825230685
+          0.9449111825230689
         ],
         [
-          0.9449111825230685,
+          0.9449111825230689,
           1.0
         ]
       ],
@@ -666,7 +594,43 @@
     {
       "entity": "original",
       "fields": [
-        "neighborhood",
+        "gender",
+        "neighborhood"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7379992257061361
+        ],
+        [
+          0.7379992257061361,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "gender",
+        "type"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.48181205582971576
+        ],
+        [
+          0.48181205582971576,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race",
         "address"
       ],
       "matrix": [
@@ -684,16 +648,34 @@
     {
       "entity": "original",
       "fields": [
-        "neighborhood",
-        "race"
+        "race",
+        "neighborhood"
       ],
       "matrix": [
         [
           1.0,
-          0.7418451110273772
+          0.7418451110273777
         ],
         [
-          0.7418451110273772,
+          0.7418451110273777,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "race",
+        "type"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.31503117207066716
+        ],
+        [
+          0.31503117207066716,
           1.0
         ]
       ],
@@ -703,7 +685,7 @@
       "entity": "original",
       "fields": [
         "address",
-        "race"
+        "neighborhood"
       ],
       "matrix": [
         [
@@ -712,6 +694,42 @@
         ],
         [
           1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "address",
+        "type"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "neighborhood",
+        "type"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8150304849255791
+        ],
+        [
+          0.8150304849255791,
           1.0
         ]
       ],

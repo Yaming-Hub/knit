@@ -370,6 +370,24 @@
         {
           "type": "check",
           "expr": "ShareWomen <= Median"
+        },
+        {
+          "type": "range",
+          "field": "Major_code",
+          "min": 1301,
+          "max": 6199
+        },
+        {
+          "type": "range",
+          "field": "Men",
+          "min": 488,
+          "max": 111762
+        },
+        {
+          "type": "range",
+          "field": "Women",
+          "min": 77,
+          "max": 187621
         }
       ],
       "output": {
@@ -394,42 +412,6 @@
     }
   ],
   "correlations": [
-    {
-      "entity": "original",
-      "fields": [
-        "Men",
-        "Women"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5148989840649927
-        ],
-        [
-          0.5148989840649927,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Men",
-        "Women"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7119343814080656
-        ],
-        [
-          0.7119343814080656,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -469,16 +451,16 @@
     {
       "entity": "original",
       "fields": [
-        "Women",
-        "ShareWomen"
+        "Men",
+        "Women"
       ],
       "matrix": [
         [
           1.0,
-          0.35435313226133974
+          0.5148989840649927
         ],
         [
-          0.35435313226133974,
+          0.5148989840649927,
           1.0
         ]
       ],
@@ -487,124 +469,16 @@
     {
       "entity": "original",
       "fields": [
-        "Women",
-        "ShareWomen"
+        "Men",
+        "Women"
       ],
       "matrix": [
         [
           1.0,
-          0.5383185235816815
+          0.7119343814080656
         ],
         [
-          0.5383185235816815,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Women",
-        "Median"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.4182912814524178
-        ],
-        [
-          -0.4182912814524178,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Women",
-        "Rank"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.42660287081339715
-        ],
-        [
-          0.42660287081339715,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Women",
-        "Total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9097514637152169
-        ],
-        [
-          0.9097514637152169,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Women",
-        "Total"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9360765550239234
-        ],
-        [
-          0.9360765550239234,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ShareWomen",
-        "Major_code"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.748909006056308
-        ],
-        [
-          0.748909006056308,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ShareWomen",
-        "Major_code"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6556390977443609
-        ],
-        [
-          0.6556390977443609,
+          0.7119343814080656,
           1.0
         ]
       ],
@@ -685,16 +559,16 @@
     {
       "entity": "original",
       "fields": [
-        "Major_code",
-        "Median"
+        "ShareWomen",
+        "Major_code"
       ],
       "matrix": [
         [
           1.0,
-          -0.42216371681168535
+          0.748909006056308
         ],
         [
-          -0.42216371681168535,
+          0.748909006056308,
           1.0
         ]
       ],
@@ -703,16 +577,16 @@
     {
       "entity": "original",
       "fields": [
-        "Major_code",
-        "Median"
+        "ShareWomen",
+        "Major_code"
       ],
       "matrix": [
         [
           1.0,
-          -0.4496795612156754
+          0.6556390977443609
         ],
         [
-          -0.4496795612156754,
+          0.6556390977443609,
           1.0
         ]
       ],
@@ -721,16 +595,16 @@
     {
       "entity": "original",
       "fields": [
-        "Major_code",
-        "Rank"
+        "ShareWomen",
+        "Women"
       ],
       "matrix": [
         [
           1.0,
-          0.49336601552053094
+          0.35435313226133974
         ],
         [
-          0.49336601552053094,
+          0.35435313226133974,
           1.0
         ]
       ],
@@ -739,16 +613,16 @@
     {
       "entity": "original",
       "fields": [
-        "Major_code",
-        "Rank"
+        "ShareWomen",
+        "Women"
       ],
       "matrix": [
         [
           1.0,
-          0.46518113465481886
+          0.5383185235816815
         ],
         [
-          0.46518113465481886,
+          0.5383185235816815,
           1.0
         ]
       ],
@@ -793,16 +667,160 @@
     {
       "entity": "original",
       "fields": [
+        "Median",
+        "Major_code"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.42216371681168535
+        ],
+        [
+          -0.42216371681168535,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Median",
+        "Major_code"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.4496795612156754
+        ],
+        [
+          -0.4496795612156754,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Median",
+        "Women"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.4182912814524178
+        ],
+        [
+          -0.4182912814524178,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Rank",
+        "Major_code"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.49336601552053094
+        ],
+        [
+          0.49336601552053094,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Rank",
+        "Major_code"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.46518113465481886
+        ],
+        [
+          0.46518113465481886,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Rank",
+        "Women"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.42660287081339715
+        ],
+        [
+          0.42660287081339715,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Total",
+        "Women"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9097514637152169
+        ],
+        [
+          0.9097514637152169,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Total",
+        "Women"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9360765550239234
+        ],
+        [
+          0.9360765550239234,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
         "Major",
         "Major_category"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999987
+          0.9999999999999991
         ],
         [
-          0.9999999999999987,
+          0.9999999999999991,
           1.0
         ]
       ],
