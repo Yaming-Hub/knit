@@ -3194,10 +3194,10 @@ fn validate_copula(
             if !corr.matrix.is_empty() && corr.matrix.len() == n {
                 let all_correct_size = corr.matrix.iter().all(|r| r.len() == n);
                 if all_correct_size && !is_positive_semidefinite(&corr.matrix) {
-                    tracing::debug!(
+                    tracing::warn!(
                         path = %path,
                         "correlation matrix is not positive semi-definite; \
-                         Iman-Conover reordering will be skipped"
+                         Iman-Conover reordering will be skipped for this entity"
                     );
                 }
             }
