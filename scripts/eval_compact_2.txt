@@ -1,0 +1,468 @@
+=== DATASET: geyser ===
+--- ORIGINAL (10 rows) ---
+duration|waiting|kind
+3.6|79|long
+1.8|54|short
+3.333|74|long
+2.283|62|short
+4.533|85|long
+2.883|55|short
+4.7|88|long
+3.6|85|long
+1.95|51|short
+4.35|85|long
+--- GENERATED (10 rows) ---
+duration|waiting|kind
+4.693344893751997|86|long
+2.505792265729603|67|long
+4.378244576333994|76|short
+2.141354894893711|52|long
+4.172672755653698|73|long
+3.846190482889884|75|short
+2.073732782023257|67|short
+1.6|48|long
+4.433888433335794|84|long
+4.658243597508298|81|short
+
+=== DATASET: github-events ===
+--- ORIGINAL (10 rows) ---
+time|count
+2015/01/01 01:00:00|2
+2015/01/01 04:00:00|3
+2015/01/01 05:00:00|1
+2015/01/01 08:00:00|1
+2015/01/01 09:00:00|3
+2015/01/01 11:00:00|1
+2015/01/01 14:00:00|3
+2015/01/01 19:00:00|1
+2015/01/01 22:00:00|1
+2015/01/02 01:00:00|2
+--- GENERATED (10 rows) ---
+time|count
+2015/01/01 01:00:00|2
+2015/01/01 04:00:00|3
+2015/01/01 05:00:00|1
+2015/01/01 08:00:00|1
+2015/01/01 09:00:00|3
+2015/01/01 11:00:00|1
+2015/01/01 14:00:00|3
+2015/01/01 19:00:00|1
+2015/01/01 22:00:00|1
+2015/01/02 01:00:00|2
+
+=== DATASET: global-temp ===
+--- ORIGINAL (10 rows) ---
+year|temp
+1880|-0.17
+1881|-0.09
+1882|-0.11
+1883|-0.17
+1884|-0.28
+1885|-0.33
+1886|-0.31
+1887|-0.36
+1888|-0.17
+1889|-0.1
+--- GENERATED (10 rows) ---
+year|temp
+1880|-0.28
+1881|-0.23
+1882|-0.1
+1883|-0.01
+1884|-0.21
+1885|-0.2
+1886|-0.07
+1887|-0.12
+1888|-0.12
+1889|-0.32
+
+=== DATASET: glue-cola ===
+--- ORIGINAL (10 rows) ---
+sentence|label|idx
+The sailors rode the breeze clear of the rocks.|1|0
+The weights made the rope stretch over the pulley.|1|1
+The mechanical doll wriggled itself loose.|1|2
+If you had eaten more, you would want less.|1|3
+As you eat the most, you want the least.|0|4
+The more you would want, the less you would eat.|0|5
+I demand that the more John eat, the more he pays.|0|6
+Mary listens to the Grateful Dead, she gets depressed.|1|7
+The angrier Mary got, the more she looked at pictures.|1|8
+The higher the stakes, the lower his expectations are.|1|9
+--- GENERATED (10 rows) ---
+sentence|label|idx
+The sailors rode the breeze clear of the rocks.|1|0
+The weights made the rope stretch over the pulley.|1|1
+The mechanical doll wriggled itself loose.|1|2
+If you had eaten more, you would want less.|1|3
+As you eat the most, you want the least.|0|4
+The more you would want, the less you would eat.|0|5
+I demand that the more John eat, the more he pays.|0|6
+Mary listens to the Grateful Dead, she gets depressed.|1|7
+The angrier Mary got, the more she looked at pictures.|1|8
+The higher the stakes, the lower his expectations are.|1|9
+
+=== DATASET: glue-mrpc ===
+--- ORIGINAL (10 rows) ---
+sentence1|sentence2|label|idx
+He said the foodservice pie business doesn 't fit the company 's long-term growth strategy .|" The foodservice pie business does not fit our long-term growth strategy .|1|9
+Magnarelli said Racicot hated the Iraqi regime and looked forward to using his long years of training in the war .|His wife said he was " 100 percent behind George Bush " and looked forward to using his years of training in the war .|0|18
+The dollar was at 116.92 yen against the yen , flat on the session , and at 1.2891 against the Swiss franc , also flat .|The dollar was at 116.78 yen JPY = , virtually flat on the session , and at 1.2871 against the Swiss franc CHF = , down 0.1 percent .|0|25
+The AFL-CIO is waiting until October to decide if it will endorse a candidate .|The AFL-CIO announced Wednesday that it will decide in October whether to endorse a candidate before the primaries .|1|32
+No dates have been set for the civil or the criminal trial .|No dates have been set for the criminal or civil cases , but Shanley has pleaded not guilty .|0|33
+Wal-Mart said it would check all of its million-plus domestic workers to ensure they were legally employed .|It has also said it would review all of its domestic employees more than 1 million to ensure they have legal status .|1|50
+While dioxin levels in the environment were up last year , they have dropped by 75 percent since the 1970s , said Caswell .|The Institute said dioxin levels in the environment have fallen by as much as 76 percent since the 1970s .|0|54
+This integrates with Rational PurifyPlus and allows developers to work in supported versions of Java , Visual C # and Visual Basic .NET.|IBM said the Rational products were also integrated with Rational PurifyPlus , which allows developers to work in Java , Visual C # and VisualBasic .Net.|1|55
+The top rate will go to 4.45 percent for all residents with taxable incomes above $ 500,000 .|For residents with incomes above $ 500,000 , the income-tax rate will increase to 4.45 percent .|1|73
+The results appear in the January issue of Cancer , an American Cancer Society journal , being published online today .|The results appear in the January issue of Cancer , an American Cancer Society ( news - web sites ) journal , being published online Monday .|1|77
+--- GENERATED (10 rows) ---
+sentence1|sentence2|label|idx
+He said the foodservice pie business doesn 't fit the company 's long-term growth strategy .|" The foodservice pie business does not fit our long-term growth strategy .|1|9
+Magnarelli said Racicot hated the Iraqi regime and looked forward to using his long years of training in the war .|His wife said he was " 100 percent behind George Bush " and looked forward to using his years of training in the war .|0|18
+The dollar was at 116.92 yen against the yen , flat on the session , and at 1.2891 against the Swiss franc , also flat .|The dollar was at 116.78 yen JPY = , virtually flat on the session , and at 1.2871 against the Swiss franc CHF = , down 0.1 percent .|0|25
+The AFL-CIO is waiting until October to decide if it will endorse a candidate .|The AFL-CIO announced Wednesday that it will decide in October whether to endorse a candidate before the primaries .|1|32
+No dates have been set for the civil or the criminal trial .|No dates have been set for the criminal or civil cases , but Shanley has pleaded not guilty .|0|33
+Wal-Mart said it would check all of its million-plus domestic workers to ensure they were legally employed .|It has also said it would review all of its domestic employees more than 1 million to ensure they have legal status .|1|50
+While dioxin levels in the environment were up last year , they have dropped by 75 percent since the 1970s , said Caswell .|The Institute said dioxin levels in the environment have fallen by as much as 76 percent since the 1970s .|0|54
+This integrates with Rational PurifyPlus and allows developers to work in supported versions of Java , Visual C # and Visual Basic .NET.|IBM said the Rational products were also integrated with Rational PurifyPlus , which allows developers to work in Java , Visual C # and VisualBasic .Net.|1|55
+The top rate will go to 4.45 percent for all residents with taxable incomes above $ 500,000 .|For residents with incomes above $ 500,000 , the income-tax rate will increase to 4.45 percent .|1|73
+The results appear in the January issue of Cancer , an American Cancer Society journal , being published online today .|The results appear in the January issue of Cancer , an American Cancer Society ( news - web sites ) journal , being published online Monday .|1|77
+
+=== DATASET: glue-rte ===
+--- ORIGINAL (10 rows) ---
+sentence1|sentence2|label|idx
+Dana Reeve, the widow of the actor Christopher Reeve, has died of lung cancer at age 44, according to the Christopher Reeve Foundation.|Christopher Reeve had an accident.|1|0
+Yet, we now are discovering that antibiotics are losing their effectiveness against illness. Disease-causing bacteria are mutating faster than we can come up with new antibiotics to fight the new variations.|Bacteria is winning the war against antibiotics.|0|1
+Cairo is now home to some 15 million people - a burgeoning population that produces approximately 10,000 tonnes of rubbish per day, putting an enormous strain on public services. In the past 10 years, the government has tried hard to encourage private investment in the refuse sector, but some estimate 4,000 tonnes of waste is left behind every day, festering in the heat as it waits for someone to clear it up. It is often the people in the poorest neighbourhoods that are worst affected. But in some areas they are fighting back. In Shubra, one of the northern districts of the city, the residents have taken to the streets armed with dustpans and brushes to clean up public areas which have been used as public dumps.|15 million tonnes of rubbish are produced daily in Cairo.|1|2
+The Amish community in Pennsylvania, which numbers about 55,000, lives an agrarian lifestyle, shunning technological advances like electricity and automobiles. And many say their insular lifestyle gives them a sense that they are protected from the violence of American society. But as residents gathered near the school, some wearing traditional garb and arriving in horse-drawn buggies, they said that sense of safety had been shattered. "If someone snaps and wants to do something stupid, there's no distance that's going to stop them," said Jake King, 56, an Amish lantern maker who knew several families whose children had been shot.|Pennsylvania has the biggest Amish community in the U.S.|1|3
+Security forces were on high alert after an election campaign in which more than 1,000 people, including seven election candidates, have been killed.|Security forces were on high alert after a campaign marred by violence.|0|4
+In 1979, the leaders signed the Egypt-Israel peace treaty on the White House lawn. Both President Begin and Sadat received the Nobel Peace Prize for their work. The two nations have enjoyed peaceful relations to this day.|The Israel-Egypt Peace Agreement was signed in 1979.|0|5
+singer and actress Britney Spears, 24, has filled papers in Los Angeles County Superior Court to divorce her husband Kevin Federline, 28. A spokeswoman for the court, Kathy Roberts stated that the papers cited irreconcilable differences" as the reason for the divorce and have, according to the courts, been legally separated as of Monday, November 6, the same day that Spears appeared on Late Night with David Letterman.|Spears is to divorce from Kevin Federline.|0|6
+Following the successful bid to bring the 2010 Ryder Cup to Wales, the Wales Tourist Board has wasted little time in commissioning work to ensure that the benefits accruing from the event are felt throughout the country.|Wales to host 2010 Ryder Cup.|0|7
+Steve Jobs was attacked by Sculley and other Apple executives for not delivering enough hot new products and resigned from the company a few weeks later.|Steve Jobs worked for Apple.|0|8
+Traditionally, the Brahui of the Raisani tribe are in charge of the law and order situation through the Pass area. This tribe is still living in present day Balochistan in Pakistan.|The Raisani tribe resides in Pakistan.|0|9
+--- GENERATED (10 rows) ---
+sentence1|sentence2|label|idx
+Dana Reeve, the widow of the actor Christopher Reeve, has died of lung cancer at age 44, according to the Christopher Reeve Foundation.|Christopher Reeve had an accident.|1|0
+Yet, we now are discovering that antibiotics are losing their effectiveness against illness. Disease-causing bacteria are mutating faster than we can come up with new antibiotics to fight the new variations.|Bacteria is winning the war against antibiotics.|0|1
+Cairo is now home to some 15 million people - a burgeoning population that produces approximately 10,000 tonnes of rubbish per day, putting an enormous strain on public services. In the past 10 years, the government has tried hard to encourage private investment in the refuse sector, but some estimate 4,000 tonnes of waste is left behind every day, festering in the heat as it waits for someone to clear it up. It is often the people in the poorest neighbourhoods that are worst affected. But in some areas they are fighting back. In Shubra, one of the northern districts of the city, the residents have taken to the streets armed with dustpans and brushes to clean up public areas which have been used as public dumps.|15 million tonnes of rubbish are produced daily in Cairo.|1|2
+The Amish community in Pennsylvania, which numbers about 55,000, lives an agrarian lifestyle, shunning technological advances like electricity and automobiles. And many say their insular lifestyle gives them a sense that they are protected from the violence of American society. But as residents gathered near the school, some wearing traditional garb and arriving in horse-drawn buggies, they said that sense of safety had been shattered. "If someone snaps and wants to do something stupid, there's no distance that's going to stop them," said Jake King, 56, an Amish lantern maker who knew several families whose children had been shot.|Pennsylvania has the biggest Amish community in the U.S.|1|3
+Security forces were on high alert after an election campaign in which more than 1,000 people, including seven election candidates, have been killed.|Security forces were on high alert after a campaign marred by violence.|0|4
+In 1979, the leaders signed the Egypt-Israel peace treaty on the White House lawn. Both President Begin and Sadat received the Nobel Peace Prize for their work. The two nations have enjoyed peaceful relations to this day.|The Israel-Egypt Peace Agreement was signed in 1979.|0|5
+singer and actress Britney Spears, 24, has filled papers in Los Angeles County Superior Court to divorce her husband Kevin Federline, 28. A spokeswoman for the court, Kathy Roberts stated that the papers cited irreconcilable differences" as the reason for the divorce and have, according to the courts, been legally separated as of Monday, November 6, the same day that Spears appeared on Late Night with David Letterman.|Spears is to divorce from Kevin Federline.|0|6
+Following the successful bid to bring the 2010 Ryder Cup to Wales, the Wales Tourist Board has wasted little time in commissioning work to ensure that the benefits accruing from the event are felt throughout the country.|Wales to host 2010 Ryder Cup.|0|7
+Steve Jobs was attacked by Sculley and other Apple executives for not delivering enough hot new products and resigned from the company a few weeks later.|Steve Jobs worked for Apple.|0|8
+Traditionally, the Brahui of the Raisani tribe are in charge of the law and order situation through the Pass area. This tribe is still living in present day Balochistan in Pakistan.|The Raisani tribe resides in Pakistan.|0|9
+
+=== DATASET: glue-scores ===
+--- ORIGINAL (10 rows) ---
+Model|Year|Encoder|Task|Score
+ERNIE|2019|Transformer|CoLA|75.5
+T5|2019|Transformer|CoLA|71.6
+RoBERTa|2019|Transformer|CoLA|67.8
+BERT|2018|Transformer|CoLA|60.5
+BiLSTM+ELMo|2018|LSTM|CoLA|32.1
+BiLSTM+CoVe|2017|LSTM|CoLA|18.5
+BiLSTM+Attn|2017|LSTM|CoLA|18.6
+BiLSTM|2017|LSTM|CoLA|11.6
+ERNIE|2019|Transformer|SST-2|97.8
+T5|2019|Transformer|SST-2|97.5
+--- GENERATED (10 rows) ---
+Model|Year|Encoder|Task|Score
+ERNIE|2019|Transformer|CoLA|75.5
+T5|2019|Transformer|CoLA|71.6
+RoBERTa|2019|Transformer|CoLA|67.8
+BERT|2018|Transformer|CoLA|60.5
+BiLSTM+ELMo|2018|LSTM|CoLA|32.1
+BiLSTM+CoVe|2017|LSTM|CoLA|18.5
+BiLSTM+Attn|2017|LSTM|CoLA|18.6
+BiLSTM|2017|LSTM|CoLA|11.6
+ERNIE|2019|Transformer|SST-2|97.8
+T5|2019|Transformer|SST-2|97.5
+
+=== DATASET: glue-sst2 ===
+--- ORIGINAL (10 rows) ---
+sentence|label|idx
+it 's a charming and often affecting journey . |1|0
+unflinchingly bleak and desperate |0|1
+allows us to hope that nolan is poised to embark a major career as a commercial yet inventive filmmaker . |1|2
+the acting , costumes , music , cinematography and sound are all astounding given the production 's austere locales . |1|3
+it 's slow -- very , very slow . |0|4
+although laced with humor and a few fanciful touches , the film is a refreshingly serious look at young women . |1|5
+a sometimes tedious film . |0|6
+or doing last year 's taxes with your ex-wife . |0|7
+you do n't have to know about music to appreciate the film 's easygoing blend of comedy and romance . |1|8
+in exactly 89 minutes , most of which passed as slowly as if i 'd been sitting naked on an igloo , formula 51 sank from quirky to jerky to utter turkey . |0|9
+--- GENERATED (10 rows) ---
+sentence|label|idx
+it 's a charming and often affecting journey . |1|0
+unflinchingly bleak and desperate |0|1
+allows us to hope that nolan is poised to embark a major career as a commercial yet inventive filmmaker . |1|2
+the acting , costumes , music , cinematography and sound are all astounding given the production 's austere locales . |1|3
+it 's slow -- very , very slow . |0|4
+although laced with humor and a few fanciful touches , the film is a refreshingly serious look at young women . |1|5
+a sometimes tedious film . |0|6
+or doing last year 's taxes with your ex-wife . |0|7
+you do n't have to know about music to appreciate the film 's easygoing blend of comedy and romance . |1|8
+in exactly 89 minutes , most of which passed as slowly as if i 'd been sitting naked on an igloo , formula 51 sank from quirky to jerky to utter turkey . |0|9
+
+=== DATASET: glue-stsb ===
+--- ORIGINAL (10 rows) ---
+sentence1|sentence2|label|idx
+A man with a hard hat is dancing.|A man wearing a hard hat is dancing.|5.0|0
+A young child is riding a horse.|A child is riding a horse.|4.75|1
+A man is feeding a mouse to a snake.|The man is feeding a mouse to the snake.|5.0|2
+A woman is playing the guitar.|A man is playing guitar.|2.4000000953674316|3
+A woman is playing the flute.|A man is playing a flute.|2.75|4
+A woman is cutting an onion.|A man is cutting onions.|2.615000009536743|5
+A man is erasing a chalk board.|The man is erasing the chalk board.|5.0|6
+A woman is carrying a boy.|A woman is carrying her baby.|2.3329999446868896|7
+Three men are playing guitars.|Three men are on stage playing guitars.|3.75|8
+A woman peels a potato.|A woman is peeling a potato.|5.0|9
+--- GENERATED (10 rows) ---
+sentence1|sentence2|label|idx
+A man with a hard hat is dancing.|A man wearing a hard hat is dancing.|5.0|0
+A young child is riding a horse.|A child is riding a horse.|4.75|1
+A man is feeding a mouse to a snake.|The man is feeding a mouse to the snake.|5.0|2
+A woman is playing the guitar.|A man is playing guitar.|2.4|3
+A woman is playing the flute.|A man is playing a flute.|2.75|4
+A woman is cutting an onion.|A man is cutting onions.|2.615|5
+A man is erasing a chalk board.|The man is erasing the chalk board.|5.0|6
+A woman is carrying a boy.|A woman is carrying her baby.|2.333|7
+Three men are playing guitars.|Three men are on stage playing guitars.|3.75|8
+A woman peels a potato.|A woman is peeling a potato.|5.0|9
+
+=== DATASET: glue-wnli ===
+--- ORIGINAL (10 rows) ---
+sentence1|sentence2|label|idx
+The drain is clogged with hair. It has to be cleaned.|The hair has to be cleaned.|0|0
+Jane knocked on Susan's door but she did not answer.|Susan did not answer.|1|1
+Beth didn't get angry with Sally, who had cut her off, because she stopped and counted to ten.|Sally stopped and counted to ten.|0|2
+No one joins Facebook to be sad and lonely. But a new study from the University of Wisconsin psychologist George Lincoln argues that that's exactly how it makes us feel.|That's exactly how Facebook makes us feel.|1|3
+The man couldn't lift his son because he was so heavy.|The son was so heavy.|1|4
+Susan knew that Ann's son had been in a car accident, so she told her about it.|Ann told her about it.|0|5
+When Tommy dropped his ice cream, Timmy giggled, so father gave him a stern look.|Father gave Timmy a stern look.|1|6
+There is a pillar between me and the stage, and I can't see around it.|I can't see around the pillar.|1|7
+Look! There is a minnow swimming right below that duck! It had better get away to safety fast!|The duck had better get away to safety fast!|0|8
+Bernard, who had not told the government official that he was less than 21 when he filed for a homestead claim, did not consider that he had done anything dishonest. Still, anyone who knew that he was 19 years old could take his claim away from him.|Anyone who knew that he was 19 years old could take his claim away from anyone.|0|9
+--- GENERATED (10 rows) ---
+sentence1|sentence2|label|idx
+The drain is clogged with hair. It has to be cleaned.|The hair has to be cleaned.|0|0
+Jane knocked on Susan's door but she did not answer.|Susan did not answer.|1|1
+Beth didn't get angry with Sally, who had cut her off, because she stopped and counted to ten.|Sally stopped and counted to ten.|0|2
+No one joins Facebook to be sad and lonely. But a new study from the University of Wisconsin psychologist George Lincoln argues that that's exactly how it makes us feel.|That's exactly how Facebook makes us feel.|1|3
+The man couldn't lift his son because he was so heavy.|The son was so heavy.|1|4
+Susan knew that Ann's son had been in a car accident, so she told her about it.|Ann told her about it.|0|5
+When Tommy dropped his ice cream, Timmy giggled, so father gave him a stern look.|Father gave Timmy a stern look.|1|6
+There is a pillar between me and the stage, and I can't see around it.|I can't see around the pillar.|1|7
+Look! There is a minnow swimming right below that duck! It had better get away to safety fast!|The duck had better get away to safety fast!|0|8
+Bernard, who had not told the government official that he was less than 21 when he filed for a homestead claim, did not consider that he had done anything dishonest. Still, anyone who knew that he was 19 years old could take his claim away from him.|Anyone who knew that he was 19 years old could take his claim away from anyone.|0|9
+
+=== DATASET: grad-students ===
+--- ORIGINAL (10 rows) ---
+Major_code|Major|Major_category|Grad_total|Grad_sample_size|Grad_employed|Grad_full_time_year_round|Grad_unemployed|Grad_unemployment_rate|Grad_median|Grad_P25|Grad_P75|Nongrad_total|Nongrad_employed|Nongrad_full_time_year_round|Nongrad_unemployed|Nongrad_unemployment_rate|Nongrad_median|Nongrad_P25|Nongrad_P75|Grad_share|Grad_premium
+5601|CONSTRUCTION SERVICES|Industrial Arts & Consumer Services|9173|200|7098|6511|681|0.087543386|75000|53000|110000|86062|73607|62435|3928|0.050660992|65000|47000|98000|0.09631963|0.153846154
+6004|COMMERCIAL ART AND GRAPHIC DESIGN|Arts|53864|882|40492|29553|2482|0.057755852|60000|40000|89000|461977|347166|250596|25484|0.068385885|48000|34000|71000|0.104419773|0.25
+6211|HOSPITALITY MANAGEMENT|Business|24417|437|18368|14784|1465|0.073866788|65000|45000|1.00E+05|179335|145597|113579|7409|0.048422938|50000|35000|75000|0.11983686|0.3
+2201|COSMETOLOGY SERVICES AND CULINARY ARTS|Industrial Arts & Consumer Services|5411|72|3590|2701|316|0.080901178|47000|24500|85000|37575|29738|23249|1661|0.052899774|41600|29000|60000|0.125878193|0.129807692
+2001|COMMUNICATION TECHNOLOGIES|Computers & Mathematics|9109|171|7512|5622|466|0.058410629|57000|40600|83700|53819|43163|34231|3389|0.072800309|52000|36000|78000|0.144752733|0.096153846
+3201|COURT REPORTING|Law & Public Policy|1542|22|1008|860|0|0|75000|55000|120000|8921|6967|6063|518|0.069205077|50000|34000|75000|0.147376469|0.5
+6206|MARKETING AND MARKETING RESEARCH|Business|190996|3738|151570|123045|8324|0.052059489|80000|50000|120000|1029181|817906|662346|45519|0.052719113|60000|40000|91500|0.156531388|0.333333333
+1101|AGRICULTURE PRODUCTION AND MANAGEMENT|Agriculture & Natural Resources|17488|386|13104|11207|473|0.03483833|67000|41600|1.00E+05|89169|71781|61335|1869|0.025376782|55000|38000|80000|0.163964859|0.218181818
+2101|COMPUTER PROGRAMMING AND DATA PROCESSING|Computers & Mathematics|5611|98|4716|3981|119|0.024612203|85000|56000|114000|28314|22024|18381|2222|0.091643983|60000|40000|85000|0.165394252|0.416666667
+1904|ADVERTISING AND PUBLIC RELATIONS|Communications & Journalism|33928|688|28517|22523|899|0.030561599|60000|43000|90000|163435|127832|100330|8706|0.063762469|51000|37800|78000|0.171906588|0.176470588
+--- GENERATED (10 rows) ---
+Major_code|Major|Major_category|Grad_total|Grad_sample_size|Grad_employed|Grad_full_time_year_round|Grad_unemployed|Grad_unemployment_rate|Grad_median|Grad_P25|Grad_P75|Nongrad_total|Nongrad_employed|Nongrad_full_time_year_round|Nongrad_unemployed|Nongrad_unemployment_rate|Nongrad_median|Nongrad_P25|Nongrad_P75|Grad_share|Grad_premium
+5601|CONSTRUCTION SERVICES|Industrial Arts & Consumer Services|9173|200|7098|6511|681|0.087543386|75000|53000|110000|86062|73607|62435|3928|0.050660992|65000|47000|98000|0.09631963|0.153846154
+6004|COMMERCIAL ART AND GRAPHIC DESIGN|Arts|53864|882|40492|29553|2482|0.057755852|60000|40000|89000|461977|347166|250596|25484|0.068385885|48000|34000|71000|0.104419773|0.25
+6211|HOSPITALITY MANAGEMENT|Business|24417|437|18368|14784|1465|0.073866788|65000|45000|100000|179335|145597|113579|7409|0.048422938|50000|35000|75000|0.11983686|0.3
+2201|COSMETOLOGY SERVICES AND CULINARY ARTS|Industrial Arts & Consumer Services|5411|72|3590|2701|316|0.080901178|47000|24500|85000|37575|29738|23249|1661|0.052899774|41600|29000|60000|0.125878193|0.129807692
+2001|COMMUNICATION TECHNOLOGIES|Computers & Mathematics|9109|171|7512|5622|466|0.058410629|57000|40600|83700|53819|43163|34231|3389|0.072800309|52000|36000|78000|0.144752733|0.096153846
+3201|COURT REPORTING|Law & Public Policy|1542|22|1008|860|0|0.0|75000|55000|120000|8921|6967|6063|518|0.069205077|50000|34000|75000|0.147376469|0.5
+6206|MARKETING AND MARKETING RESEARCH|Business|190996|3738|151570|123045|8324|0.052059489|80000|50000|120000|1029181|817906|662346|45519|0.052719113|60000|40000|91500|0.156531388|0.333333333
+1101|AGRICULTURE PRODUCTION AND MANAGEMENT|Agriculture & Natural Resources|17488|386|13104|11207|473|0.03483833|67000|41600|100000|89169|71781|61335|1869|0.025376782|55000|38000|80000|0.163964859|0.218181818
+2101|COMPUTER PROGRAMMING AND DATA PROCESSING|Computers & Mathematics|5611|98|4716|3981|119|0.024612203|85000|56000|114000|28314|22024|18381|2222|0.091643983|60000|40000|85000|0.165394252|0.416666667
+1904|ADVERTISING AND PUBLIC RELATIONS|Communications & Journalism|33928|688|28517|22523|899|0.030561599|60000|43000|90000|163435|127832|100330|8706|0.063762469|51000|37800|78000|0.171906588|0.176470588
+
+=== DATASET: healthexp ===
+--- ORIGINAL (10 rows) ---
+Year|Country|Spending_USD|Life_Expectancy
+1970|Germany|252.311|70.6
+1970|France|192.143|72.2
+1970|Great Britain|123.993|71.9
+1970|Japan|150.437|72.0
+1970|USA|326.961|70.9
+1971|Canada|313.391|72.8
+1971|Germany|298.251|70.8
+1971|Great Britain|134.172|71.9
+1971|Japan|163.854|72.9
+1971|USA|357.988|71.2
+--- GENERATED (10 rows) ---
+Year|Country|Spending_USD|Life_Expectancy
+1970|Germany|252.311|70.6
+1970|France|192.143|72.2
+1970|Great Britain|123.993|71.9
+1970|Japan|150.437|72.0
+1970|USA|326.961|70.9
+1971|Canada|313.391|72.8
+1971|Germany|298.251|70.8
+1971|Great Britain|134.172|71.9
+1971|Japan|163.854|72.9
+1971|USA|357.988|71.2
+
+=== DATASET: income ===
+--- ORIGINAL (10 rows) ---
+name|region|id|pct|total|group
+Alabama|south|1|0.102|1837292|<10000
+Alabama|south|1|0.072|1837292|10000 to 14999
+Alabama|south|1|0.13|1837292|15000 to 24999
+Alabama|south|1|0.115|1837292|25000 to 34999
+Alabama|south|1|0.143|1837292|35000 to 49999
+Alabama|south|1|0.108|1837292|75000 to 99999
+Alabama|south|1|0.174|1837292|50000 to 74999
+Alabama|south|1|0.1|1837292|100000 to 149999
+Alabama|south|1|0.031|1837292|150000 to 199999
+Alabama|south|1|0.025|1837292|200000+
+--- GENERATED (10 rows) ---
+name|region|id|pct|total|group
+Alabama|south|1|0.102|1837292|<10000
+Alabama|south|1|0.072|1837292|10000 to 14999
+Alabama|south|1|0.13|1837292|15000 to 24999
+Alabama|south|1|0.115|1837292|25000 to 34999
+Alabama|south|1|0.143|1837292|35000 to 49999
+Alabama|south|1|0.108|1837292|75000 to 99999
+Alabama|south|1|0.174|1837292|50000 to 74999
+Alabama|south|1|0.1|1837292|100000 to 149999
+Alabama|south|1|0.031|1837292|150000 to 199999
+Alabama|south|1|0.025|1837292|200000+
+
+=== DATASET: iowa-electricity ===
+--- ORIGINAL (10 rows) ---
+year|source|net_generation
+2001-01-01|Fossil Fuels|35361
+2002-01-01|Fossil Fuels|35991
+2003-01-01|Fossil Fuels|36234
+2004-01-01|Fossil Fuels|36205
+2005-01-01|Fossil Fuels|36883
+2006-01-01|Fossil Fuels|37014
+2007-01-01|Fossil Fuels|41389
+2008-01-01|Fossil Fuels|42734
+2009-01-01|Fossil Fuels|38620
+2010-01-01|Fossil Fuels|42750
+--- GENERATED (10 rows) ---
+year|source|net_generation
+2001-01-01|Fossil Fuels|35361
+2002-01-01|Fossil Fuels|35991
+2003-01-01|Fossil Fuels|36234
+2004-01-01|Fossil Fuels|36205
+2005-01-01|Fossil Fuels|36883
+2006-01-01|Fossil Fuels|37014
+2007-01-01|Fossil Fuels|41389
+2008-01-01|Fossil Fuels|42734
+2009-01-01|Fossil Fuels|38620
+2010-01-01|Fossil Fuels|42750
+
+=== DATASET: iris ===
+--- ORIGINAL (10 rows) ---
+sepal_length|sepal_width|petal_length|petal_width|species
+5.1|3.5|1.4|0.2|setosa
+4.9|3.0|1.4|0.2|setosa
+4.7|3.2|1.3|0.2|setosa
+4.6|3.1|1.5|0.2|setosa
+5.0|3.6|1.4|0.2|setosa
+5.4|3.9|1.7|0.4|setosa
+4.6|3.4|1.4|0.3|setosa
+5.0|3.4|1.5|0.2|setosa
+4.4|2.9|1.4|0.2|setosa
+4.9|3.1|1.5|0.1|setosa
+--- GENERATED (10 rows) ---
+sepal_length|sepal_width|petal_length|petal_width|species
+5.2|3.5|1.5|0.2|setosa
+5.0|3.4|1.5|0.2|setosa
+5.1|3.4|1.5|0.2|setosa
+5.1|3.5|1.4|0.3|setosa
+5.0|3.4|1.5|0.2|setosa
+5.4|3.9|1.7|0.4|setosa
+5.5|4.2|1.4|0.2|setosa
+5.0|3.5|1.6|0.6|setosa
+5.4|3.7|1.5|0.2|setosa
+4.4|3.0|1.3|0.2|setosa
+
+=== DATASET: jaffle-shop ===
+--- ORIGINAL (10 rows) ---
+id|first_name|last_name
+1|Michael|P.
+2|Shawn|M.
+3|Kathleen|P.
+4|Jimmy|C.
+5|Katherine|R.
+6|Sarah|R.
+7|Martin|M.
+8|Frank|R.
+9|Jennifer|F.
+10|Henry|W.
+--- GENERATED (10 rows) ---
+id|first_name|last_name
+1|David|K.
+2|Henry|J.
+3|Todd|F.
+4|Paul|O.
+5|Kimberly|O.
+6|Edward|P.
+7|Edward|H.
+8|Shirley|W.
+9|Helen|W.
+10|Victor|W.
+
+=== DATASET: la-riots ===
+--- ORIGINAL (10 rows) ---
+first_name|last_name|age|gender|race|death_date|address|neighborhood|type|longitude|latitude
+Cesar A.|Aguilar|18|Male|Latino|1992-04-30|2009 W. 6th St.|Westlake|Officer-involved shooting|-118.2739756|34.0592814
+George|Alvarez|42|Male|Latino|1992-05-01|Main & College streets|Chinatown|Not riot-related|-118.2340982|34.0626901
+Wilson|Alvarez|40|Male|Latino|1992-05-23|3100 Rosecrans Ave.|Hawthorne|Homicide|-118.326816|33.901662
+Brian E.|Andrew|30|Male|Black|1992-04-30|Rosecrans & Chester avenues|Compton|Officer-involved shooting|-118.2153903|33.9034569
+Vivian|Austin|87|Female|Black|1992-05-03|1600 W. 60th St.|Harvard Park|Death|-118.304741|33.985667
+Franklin|Benavidez|27|Male|Latino|1992-04-30|4404 S. Western Ave.|Vermont Square|Officer-involved shooting|-118.3088215|34.0034731
+Carol|Benson|42|Female|Black|1992-05-02|Harbor Freeway near Slauson Avenue|South Park|Death|-118.2805037|33.98916756
+Patrick|Bettan|30|Male|White|1992-04-30|2740 W. Olympic Blvd.|Koreatown|Homicide|-118.293181|34.052068
+Hector|Castro|49|Male|Latino|1992-04-30|Vermont & Leeward avenues|Koreatown|Homicide|-118.291654|34.0587022
+Jerel L.|Channell|26|Male|Black|1992-04-30|Santa Monica Boulevard & Seward Street|Hollywood|Death|-118.3323783|34.09129756
+--- GENERATED (10 rows) ---
+first_name|last_name|age|gender|race|death_date|address|neighborhood|type|longitude|latitude
+Cesar A.|Aguilar|18|Male|Latino|1992-04-30|2009 W. 6th St.|Westlake|Officer-involved shooting|-118.2739756|34.0592814
+George|Alvarez|42|Male|Latino|1992-05-01|Main & College streets|Chinatown|Not riot-related|-118.2340982|34.0626901
+Wilson|Alvarez|40|Male|Latino|1992-05-23|3100 Rosecrans Ave.|Hawthorne|Homicide|-118.326816|33.901662
+Brian E.|Andrew|30|Male|Black|1992-04-30|Rosecrans & Chester avenues|Compton|Officer-involved shooting|-118.2153903|33.9034569
+Vivian|Austin|87|Female|Black|1992-05-03|1600 W. 60th St.|Harvard Park|Death|-118.304741|33.985667
+Franklin|Benavidez|27|Male|Latino|1992-04-30|4404 S. Western Ave.|Vermont Square|Officer-involved shooting|-118.3088215|34.0034731
+Carol|Benson|42|Female|Black|1992-05-02|Harbor Freeway near Slauson Avenue|South Park|Death|-118.2805037|33.98916756
+Patrick|Bettan|30|Male|White|1992-04-30|2740 W. Olympic Blvd.|Koreatown|Homicide|-118.293181|34.052068
+Hector|Castro|49|Male|Latino|1992-04-30|Vermont & Leeward avenues|Koreatown|Homicide|-118.291654|34.0587022
+Jerel L.|Channell|26|Male|Black|1992-04-30|Santa Monica Boulevard & Seward Street|Hollywood|Death|-118.3323783|34.09129756
+
+=== DATASET: london-centroids ===
+--- ORIGINAL (10 rows) ---
+name|cx|cy
+Kingston upon Thames|-0.28691465719243003|51.387893353778395
+Croydon|-0.08716546101532906|51.355317416374
+Bromley|0.051536586180461884|51.37198402033694
+Hounslow|-0.3671516396902454|51.46838045919461
+Ealing|-0.331019323573572|51.52247610268018
+Havering|0.22111695897456907|51.564368109593914
+Hillingdon|-0.4456619192134244|51.54147118065276
+Harrow|-0.34127462993183943|51.59771852185307
+Brent|-0.2678117446868589|51.558554439571225
+Barnet|-0.2100178905687616|51.61601840050092
+--- GENERATED (10 rows) ---
+name|cx|cy
+Hackney|-0.06564515736890775|51.54976532427057
+Kensington and Chelsea|-0.1926146417708775|51.50326858912867
+Enfield|-0.08726531756552813|51.650991897325454
+Bromley|0.05153658618046189|51.37198402033694
+Waltham Forest|-0.012645389036967393|51.59402179942259
+Ealing|-0.331019323573572|51.52247610268018
+Barking and Dagenham|0.13352186486629006|51.54527226704611
+Hammersmith and Fulham|-0.22312501860130696|51.49760349773975
+Bexley|0.14034521936844538|51.45881060129503
+Croydon|-0.08716546101532906|51.355317416374
+
