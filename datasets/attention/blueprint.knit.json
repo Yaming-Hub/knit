@@ -187,6 +187,12 @@
         {
           "type": "check",
           "expr": "solutions <= score"
+        },
+        {
+          "type": "range",
+          "field": "score",
+          "min": 2.0,
+          "max": 9.0
         }
       ],
       "output": {
@@ -224,132 +230,6 @@
     {
       "entity": "original",
       "fields": [
-        "solutions",
-        ""
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9429400145689537
-        ],
-        [
-          0.9429400145689537,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "solutions",
-        ""
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9429400145689538
-        ],
-        [
-          0.9429400145689538,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "solutions",
-        "score"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3046570186615426
-        ],
-        [
-          0.3046570186615426,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "",
-        "score"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.43794215125616337
-        ],
-        [
-          0.43794215125616337,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "",
-        "score"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4150852522999622
-        ],
-        [
-          0.4150852522999622,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "",
-        "subject"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.33296265394890956
-        ],
-        [
-          0.33296265394890956,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "",
-        "subject"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.33296265394890956
-        ],
-        [
-          0.33296265394890956,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
         "score",
         "subject"
       ],
@@ -378,6 +258,132 @@
         ],
         [
           0.4572296914804239,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "score",
+        "solutions"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3046570186615426
+        ],
+        [
+          0.3046570186615426,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "score",
+        ""
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.43794215125616337
+        ],
+        [
+          0.43794215125616337,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "score",
+        ""
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4150852522999622
+        ],
+        [
+          0.4150852522999622,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject",
+        ""
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.33296265394890956
+        ],
+        [
+          0.33296265394890956,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "subject",
+        ""
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.33296265394890956
+        ],
+        [
+          0.33296265394890956,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "solutions",
+        ""
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9429400145689537
+        ],
+        [
+          0.9429400145689537,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "solutions",
+        ""
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9429400145689538
+        ],
+        [
+          0.9429400145689538,
           1.0
         ]
       ],

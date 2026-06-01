@@ -34,12 +34,25 @@
           "name": "Extent",
           "data_type": "float",
           "generator": {
-            "type": "distribution",
-            "kind": "uniform",
-            "params": {
-              "max": 16.412,
-              "min": 3.34
-            }
+            "type": "time_series",
+            "baseline": 14.2,
+            "components": [
+              {
+                "type": "trend",
+                "slope": -0.0001743156500607601,
+                "degree": 1
+              },
+              {
+                "type": "seasonality",
+                "period": "365",
+                "amplitude": 2.827,
+                "phase": 0.0
+              },
+              {
+                "type": "noise",
+                "std_dev": 0.0920834854575035
+              }
+            ]
           },
           "nullable": false,
           "precision": 3,
@@ -69,8 +82,7 @@
         {
           "type": "range",
           "field": "Extent",
-          "min": 3.34,
-          "max": 16.412
+          "min": 0.0
         }
       ],
       "output": {

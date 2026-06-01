@@ -181,8 +181,7 @@
         {
           "type": "range",
           "field": "id",
-          "min": 1.0,
-          "max": 30.0
+          "min": 0.0
         },
         {
           "type": "range",
@@ -197,6 +196,12 @@
         {
           "type": "check",
           "expr": "id <= pulse"
+        },
+        {
+          "type": "range",
+          "field": "pulse",
+          "min": 80,
+          "max": 150
         }
       ],
       "output": {
@@ -215,8 +220,8 @@
     {
       "entity": "original",
       "fields": [
-        "pulse",
-        ""
+        "",
+        "pulse"
       ],
       "matrix": [
         [
@@ -233,8 +238,8 @@
     {
       "entity": "original",
       "fields": [
-        "pulse",
-        ""
+        "",
+        "pulse"
       ],
       "matrix": [
         [
@@ -243,6 +248,42 @@
         ],
         [
           0.7088119056603758,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "",
+        "id"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9995059898426446
+        ],
+        [
+          0.9995059898426446,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "",
+        "id"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9995059898426446
+        ],
+        [
+          0.9995059898426446,
           1.0
         ]
       ],
@@ -279,42 +320,6 @@
         ],
         [
           0.7011850497173389,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "",
-        "id"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9995059898426446
-        ],
-        [
-          0.9995059898426446,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "",
-        "id"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9995059898426446
-        ],
-        [
-          0.9995059898426446,
           1.0
         ]
       ],

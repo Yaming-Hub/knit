@@ -3187,16 +3187,18 @@ fn validate_copula(
                     message: "Gaussian copula requires a correlation matrix".to_string(),
                 });
             }
-            // Check positive semi-definiteness via Cholesky attempt
+            // Check positive semi-definiteness via Cholesky attempt.
+            // For Gaussian copula using Iman-Conover, a non-PSD matrix is
+            // handled gracefully (the generator falls back to independent).
+            // Emit a warning-level validation note instead of a hard error.
             if !corr.matrix.is_empty() && corr.matrix.len() == n {
                 let all_correct_size = corr.matrix.iter().all(|r| r.len() == n);
                 if all_correct_size && !is_positive_semidefinite(&corr.matrix) {
-                    errors.push(BlueprintError::Validation {
-                        path: path.to_string(),
-                        message: "correlation matrix is not positive semi-definite \
-                                  (Cholesky decomposition failed)"
-                            .to_string(),
-                    });
+                    tracing::debug!(
+                        path = %path,
+                        "correlation matrix is not positive semi-definite; \
+                         Iman-Conover reordering will be skipped"
+                    );
                 }
             }
         }
@@ -3262,40 +3264,43 @@ fn validate_copula(
         }
     }
 
-    // All copula fields must have distribution generators (for marginal CDFs)
-    // and the distribution kind must support inverse CDF
-    let supported_marginals = [
-        DistributionKind::Normal,
-        DistributionKind::LogNormal,
-        DistributionKind::Uniform,
-        DistributionKind::Exponential,
-    ];
-    if let Some(entity) = model.entities.iter().find(|e| e.name == corr.entity) {
-        for field_name in &corr.fields {
-            if let Some(field) = entity.fields.iter().find(|f| &f.name == field_name) {
-                match &field.generator {
-                    Some(GeneratorSpec::Distribution { spec, .. }) => {
-                        if !supported_marginals.contains(&spec.kind) {
+    // For non-Gaussian copulas: all fields must have distribution generators
+    // with inverse-CDF support.  Gaussian copula uses Iman-Conover rank
+    // reordering which works on any numeric column values.
+    if copula.family != CopulaFamily::Gaussian {
+        let supported_marginals = [
+            DistributionKind::Normal,
+            DistributionKind::LogNormal,
+            DistributionKind::Uniform,
+            DistributionKind::Exponential,
+        ];
+        if let Some(entity) = model.entities.iter().find(|e| e.name == corr.entity) {
+            for field_name in &corr.fields {
+                if let Some(field) = entity.fields.iter().find(|f| &f.name == field_name) {
+                    match &field.generator {
+                        Some(GeneratorSpec::Distribution { spec, .. }) => {
+                            if !supported_marginals.contains(&spec.kind) {
+                                errors.push(BlueprintError::Validation {
+                                    path: path.to_string(),
+                                    message: format!(
+                                        "copula field '{}' uses {:?} distribution which does not \
+                                         support inverse CDF transform; supported: Normal, \
+                                         LogNormal, Uniform, Exponential",
+                                        field_name, spec.kind
+                                    ),
+                                });
+                            }
+                        }
+                        _ => {
                             errors.push(BlueprintError::Validation {
                                 path: path.to_string(),
                                 message: format!(
-                                    "copula field '{}' uses {:?} distribution which does not \
-                                     support inverse CDF transform; supported: Normal, \
-                                     LogNormal, Uniform, Exponential",
-                                    field_name, spec.kind
+                                    "copula field '{}' must have a distribution generator \
+                                     (for marginal CDF transform)",
+                                    field_name
                                 ),
                             });
                         }
-                    }
-                    _ => {
-                        errors.push(BlueprintError::Validation {
-                            path: path.to_string(),
-                            message: format!(
-                                "copula field '{}' must have a distribution generator \
-                                 (for marginal CDF transform)",
-                                field_name
-                            ),
-                        });
                     }
                 }
             }

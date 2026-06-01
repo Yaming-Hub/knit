@@ -136,6 +136,12 @@
         {
           "type": "check",
           "expr": "yield <= year"
+        },
+        {
+          "type": "range",
+          "field": "yield",
+          "min": 14.43333,
+          "max": 65.7667
         }
       ],
       "output": {

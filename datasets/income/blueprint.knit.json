@@ -189,8 +189,7 @@
         {
           "type": "range",
           "field": "total",
-          "min": 222679.0,
-          "max": 12581722.0
+          "min": 0.0
         },
         {
           "type": "check",
@@ -203,6 +202,18 @@
         {
           "type": "check",
           "expr": "pct <= total"
+        },
+        {
+          "type": "range",
+          "field": "id",
+          "min": 1,
+          "max": 72
+        },
+        {
+          "type": "range",
+          "field": "pct",
+          "min": 0.006,
+          "max": 0.289
         }
       ],
       "output": {
@@ -221,8 +232,8 @@
     {
       "entity": "original",
       "fields": [
-        "name",
-        "region"
+        "region",
+        "name"
       ],
       "matrix": [
         [

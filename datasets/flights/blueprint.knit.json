@@ -113,6 +113,12 @@
         {
           "type": "check",
           "expr": "passengers <= year"
+        },
+        {
+          "type": "range",
+          "field": "passengers",
+          "min": 104,
+          "max": 622
         }
       ],
       "output": {

@@ -226,6 +226,18 @@
         {
           "type": "check",
           "expr": "day_of_week <= births"
+        },
+        {
+          "type": "range",
+          "field": "date_of_month",
+          "min": 1,
+          "max": 31
+        },
+        {
+          "type": "range",
+          "field": "births",
+          "min": 6443,
+          "max": 14540
         }
       ],
       "output": {

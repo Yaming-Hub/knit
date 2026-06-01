@@ -30,7 +30,7 @@
             "avg_length": 10.0
           },
           "traits": {
-            "semantic": "phone",
+            "semantic": "date",
             "pii": true,
             "cardinality": "unique"
           }
@@ -284,6 +284,36 @@
         {
           "type": "check",
           "expr": "ret <= close"
+        },
+        {
+          "type": "range",
+          "field": "open",
+          "min": 23.71,
+          "max": 31.54
+        },
+        {
+          "type": "range",
+          "field": "high",
+          "min": 23.87,
+          "max": 33.05
+        },
+        {
+          "type": "range",
+          "field": "low",
+          "min": 23.0,
+          "max": 30.64
+        },
+        {
+          "type": "range",
+          "field": "close",
+          "min": 23.09,
+          "max": 32.68
+        },
+        {
+          "type": "range",
+          "field": "ret",
+          "min": -10.8433734939759,
+          "max": 15.4907975460123
         }
       ],
       "output": {
@@ -311,16 +341,16 @@
     {
       "entity": "original",
       "fields": [
-        "close",
+        "open",
         "high"
       ],
       "matrix": [
         [
           1.0,
-          0.9647505372481843
+          0.9583367234604852
         ],
         [
-          0.9647505372481843,
+          0.9583367234604852,
           1.0
         ]
       ],
@@ -329,16 +359,16 @@
     {
       "entity": "original",
       "fields": [
-        "close",
+        "open",
         "high"
       ],
       "matrix": [
         [
           1.0,
-          0.9706110391291098
+          0.9426980546941077
         ],
         [
-          0.9706110391291098,
+          0.9426980546941077,
           1.0
         ]
       ],
@@ -347,80 +377,8 @@
     {
       "entity": "original",
       "fields": [
-        "close",
-        "ret"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.30431945228839796
-        ],
-        [
-          0.30431945228839796,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "close",
-        "ret"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.321962224794555
-        ],
-        [
-          0.321962224794555,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "close",
-        "low"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9556351279567491
-        ],
-        [
-          0.9556351279567491,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "close",
-        "low"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9551797040169133
-        ],
-        [
-          0.9551797040169133,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "close",
-        "open"
+        "open",
+        "close"
       ],
       "matrix": [
         [
@@ -437,8 +395,8 @@
     {
       "entity": "original",
       "fields": [
-        "close",
-        "open"
+        "open",
+        "close"
       ],
       "matrix": [
         [
@@ -447,6 +405,114 @@
         ],
         [
           0.8932271500088832,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "open",
+        "ret"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3091005232166081
+        ],
+        [
+          0.3091005232166081,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "open",
+        "ret"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.32332417081800846
+        ],
+        [
+          0.32332417081800846,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "open",
+        "low"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9204107757536202
+        ],
+        [
+          0.9204107757536202,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "open",
+        "low"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9064768505139857
+        ],
+        [
+          0.9064768505139857,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "high",
+        "close"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9647505372481843
+        ],
+        [
+          0.9647505372481843,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "high",
+        "close"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9706110391291098
+        ],
+        [
+          0.9706110391291098,
           1.0
         ]
       ],
@@ -527,16 +593,16 @@
     {
       "entity": "original",
       "fields": [
-        "high",
-        "open"
+        "close",
+        "ret"
       ],
       "matrix": [
         [
           1.0,
-          0.9583367234604852
+          0.30431945228839796
         ],
         [
-          0.9583367234604852,
+          0.30431945228839796,
           1.0
         ]
       ],
@@ -545,16 +611,52 @@
     {
       "entity": "original",
       "fields": [
-        "high",
-        "open"
+        "close",
+        "ret"
       ],
       "matrix": [
         [
           1.0,
-          0.9426980546941077
+          0.321962224794555
         ],
         [
-          0.9426980546941077,
+          0.321962224794555,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "close",
+        "low"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9556351279567491
+        ],
+        [
+          0.9556351279567491,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "close",
+        "low"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9551797040169133
+        ],
+        [
+          0.9551797040169133,
           1.0
         ]
       ],
@@ -599,88 +701,16 @@
     {
       "entity": "original",
       "fields": [
-        "ret",
-        "open"
+        "signal",
+        "date"
       ],
       "matrix": [
         [
           1.0,
-          0.3091005232166081
+          0.9999999999999996
         ],
         [
-          0.3091005232166081,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "ret",
-        "open"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.32332417081800846
-        ],
-        [
-          0.32332417081800846,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "low",
-        "open"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9204107757536202
-        ],
-        [
-          0.9204107757536202,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "low",
-        "open"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9064768505139857
-        ],
-        [
-          0.9064768505139857,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "date",
-        "signal"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999993
-        ],
-        [
-          0.9999999999999993,
+          0.9999999999999996,
           1.0
         ]
       ],

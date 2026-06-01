@@ -159,6 +159,18 @@
         {
           "type": "check",
           "expr": "lon <= lat"
+        },
+        {
+          "type": "range",
+          "field": "lat",
+          "min": 24.833333,
+          "max": 49.1
+        },
+        {
+          "type": "range",
+          "field": "lon",
+          "min": -124.2639442,
+          "max": -68.0119714
         }
       ],
       "output": {

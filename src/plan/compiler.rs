@@ -1710,6 +1710,10 @@ fn select_key_store_kind(row_count: u64) -> KeyStoreKind {
 }
 
 /// Compile copula plans for an entity from the model's correlations.
+///
+/// For Gaussian copula, the generator uses Iman-Conover rank reordering
+/// which doesn't require marginal info (it operates on existing values).
+/// For non-Gaussian families, marginals are needed for inverse-CDF.
 fn compile_copula_plans(
     entity_name: &str,
     entity: &Entity,
@@ -1721,6 +1725,9 @@ fn compile_copula_plans(
         .filter_map(|c| {
             let copula = c.copula.as_ref()?;
             let n = c.fields.len();
+            if n < 2 {
+                return None;
+            }
 
             // Build marginal info from field distribution generators
             let marginals: Vec<MarginalInfo> = c
@@ -1739,8 +1746,10 @@ fn compile_copula_plans(
                 })
                 .collect();
 
-            // Skip if not all fields have distribution generators
-            if marginals.len() != n {
+            // For non-Gaussian families: skip if not all fields have
+            // distribution generators (inverse-CDF requires marginals).
+            // For Gaussian: Iman-Conover works on any numeric column values.
+            if copula.family != crate::core::CopulaFamily::Gaussian && marginals.len() != n {
                 return None;
             }
 

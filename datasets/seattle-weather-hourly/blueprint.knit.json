@@ -34,12 +34,25 @@
           "name": "pressure",
           "data_type": "float",
           "generator": {
-            "type": "distribution",
-            "kind": "log_normal",
-            "params": {
-              "mu": 6.924829210173329,
-              "sigma": 0.0007234163832151686
-            }
+            "type": "time_series",
+            "baseline": 1016.6,
+            "components": [
+              {
+                "type": "trend",
+                "slope": 0.0000447564552376644,
+                "degree": 1
+              },
+              {
+                "type": "seasonality",
+                "period": "192",
+                "amplitude": 0.5499999999999545,
+                "phase": 0.0
+              },
+              {
+                "type": "noise",
+                "std_dev": 0.20066977005216605
+              }
+            ]
           },
           "nullable": false,
           "precision": 1,
@@ -68,12 +81,25 @@
           "name": "temperature",
           "data_type": "float",
           "generator": {
-            "type": "distribution",
-            "kind": "gamma",
-            "params": {
-              "scale": 2.5782053927410633,
-              "shape": 4.316032128100303
-            }
+            "type": "time_series",
+            "baseline": 4.0,
+            "components": [
+              {
+                "type": "trend",
+                "slope": 0.0003493360846618232,
+                "degree": 1
+              },
+              {
+                "type": "seasonality",
+                "period": "1056",
+                "amplitude": 4.3,
+                "phase": 0.0
+              },
+              {
+                "type": "noise",
+                "std_dev": 0.6411714532364304
+              }
+            ]
           },
           "nullable": false,
           "precision": 1,
@@ -102,12 +128,25 @@
           "name": "wind",
           "data_type": "float",
           "generator": {
-            "type": "distribution",
-            "kind": "normal",
-            "params": {
-              "mean": 3.597636716520169,
-              "std_dev": 0.4686204232026356
-            }
+            "type": "time_series",
+            "baseline": 3.8,
+            "components": [
+              {
+                "type": "trend",
+                "slope": -0.000029478058296502802,
+                "degree": 1
+              },
+              {
+                "type": "seasonality",
+                "period": "24",
+                "amplitude": 0.30000000000000004,
+                "phase": 0.0
+              },
+              {
+                "type": "noise",
+                "std_dev": 0.14344176186449295
+              }
+            ]
           },
           "nullable": false,
           "precision": 1,
@@ -137,20 +176,17 @@
         {
           "type": "range",
           "field": "pressure",
-          "min": 1015.4,
-          "max": 1019.5
+          "min": 0.0
         },
         {
           "type": "range",
           "field": "temperature",
-          "min": 3.1,
-          "max": 24.4
+          "min": 0.0
         },
         {
           "type": "range",
           "field": "wind",
-          "min": 2.3,
-          "max": 4.7
+          "min": 0.0
         },
         {
           "type": "check",

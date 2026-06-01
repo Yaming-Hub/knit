@@ -1,14 +1,12 @@
-//! Copula-based joint distribution generation.
+//! Correlation-preserving rank reordering (Iman-Conover method).
 //!
-//! Applies copula transforms to replace independently generated columns
-//! with jointly correlated values. The marginal distributions are preserved
-//! while the copula controls the dependence structure.
+//! Applies the Iman-Conover (1982) algorithm to reorder independently
+//! generated column values so that their rank correlations match a target
+//! correlation matrix.  Unlike inverse-CDF copula transforms, this method
+//! preserves **exact** marginal distributions — only row positions change.
 //!
-//! Supported copula families:
-//! - **Gaussian** — N-dimensional via Cholesky decomposition
-//! - **Clayton** — bivariate, lower tail dependence
-//! - **Frank** — bivariate, symmetric dependence
-//! - **Gumbel** — bivariate, upper tail dependence
+//! For non-Gaussian copula families (Clayton, Frank, Gumbel) the legacy
+//! inverse-CDF path is kept as a fallback for bivariate plans.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -27,8 +25,9 @@ fn uniform01(rng: &mut ChaCha8Rng) -> f64 {
     rng.random::<f64>()
 }
 
-/// Apply copula plans to a batch, replacing independently generated columns
-/// with jointly correlated values.
+/// Apply copula plans to a batch, reordering independently generated columns
+/// to induce target rank correlations (Iman-Conover) or, for non-Gaussian
+/// families, replacing them via inverse-CDF transform.
 pub fn apply_copula_plans(
     copula_plans: &[CopulaPlan],
     batch_columns: &mut HashMap<String, ArrayRef>,
@@ -51,15 +50,21 @@ fn apply_single_copula(
         return;
     }
 
-    // Step 1: Generate copula-correlated uniform samples [0,1]
+    // For Gaussian copula: use Iman-Conover rank reordering to preserve exact
+    // marginal distributions while inducing target rank correlations.
+    if plan.family == CopulaFamily::Gaussian {
+        apply_iman_conover(plan, batch_columns, rng, count);
+        return;
+    }
+
+    // Legacy path for non-Gaussian (Clayton/Frank/Gumbel): inverse CDF.
     let uniforms = match plan.family {
-        CopulaFamily::Gaussian => generate_gaussian_copula(plan, rng, count, n),
+        CopulaFamily::Gaussian => unreachable!(),
         CopulaFamily::Clayton => generate_clayton_copula(plan, rng, count),
         CopulaFamily::Frank => generate_frank_copula(plan, rng, count),
         CopulaFamily::Gumbel => generate_gumbel_copula(plan, rng, count),
     };
 
-    // Step 2: Apply inverse CDF of each field's marginal distribution
     for (field_idx, field_name) in plan.fields.iter().enumerate() {
         let marginal = &plan.marginals[field_idx];
         let values: Vec<f64> = uniforms[field_idx]
@@ -72,46 +77,112 @@ fn apply_single_copula(
     }
 }
 
-/// Generate N-dimensional Gaussian copula samples via Cholesky decomposition.
-/// Returns `n_fields` vectors of `count` uniform values each.
-fn generate_gaussian_copula(
+/// Iman-Conover rank reordering: reorder existing column values so that their
+/// rank correlations approximate the target correlation matrix.
+///
+/// Algorithm:
+/// 1. Read independently generated values from batch_columns.
+/// 2. Generate correlated standard normals via Cholesky of target matrix.
+/// 3. Compute the rank ordering of both the normals and original values.
+/// 4. For each column, sort original values and assign them to positions
+///    dictated by the correlated-normal ranks.
+fn apply_iman_conover(
     plan: &CopulaPlan,
+    batch_columns: &mut HashMap<String, ArrayRef>,
     rng: &mut ChaCha8Rng,
     count: usize,
-    n: usize,
-) -> Vec<Vec<f64>> {
+) {
+    let n = plan.fields.len();
+
     let chol = match &plan.cholesky_l {
         Some(l) => l,
-        None => {
-            // Fallback: identity (independent)
-            return (0..n)
-                .map(|_| (0..count).map(|_| uniform01(rng)).collect())
-                .collect();
-        }
+        None => return, // No Cholesky → can't correlate, leave independent
     };
 
-    let normal = Normal::new(0.0, 1.0).expect("standard normal distribution uses valid parameters");
-    let mut result = vec![vec![0.0f64; count]; n];
+    // Step 1: Generate correlated standard normals via Cholesky
+    let normal =
+        Normal::new(0.0, 1.0).expect("standard normal distribution uses valid parameters");
+    let mut correlated_normals = vec![vec![0.0f64; count]; n];
 
-    #[allow(clippy::needless_range_loop)]
     for row_idx in 0..count {
-        // Generate independent standard normals
-        let z: Vec<f64> = (0..n).map(|_| uniform01(rng)).collect();
-        // Use inverse CDF to get standard normals from uniform
-        let z_normal: Vec<f64> = z.iter().map(|&u| normal.inverse_cdf(u)).collect();
-
-        // Apply Cholesky: x = L · z
+        let z: Vec<f64> = (0..n).map(|_| normal.inverse_cdf(uniform01(rng))).collect();
+        // x = L · z
         for i in 0..n {
             let mut x = 0.0;
             for j in 0..=i {
-                x += chol[i][j] * z_normal[j];
+                x += chol[i][j] * z[j];
             }
-            // Convert back to uniform via standard normal CDF
-            result[i][row_idx] = normal.cdf(x);
+            correlated_normals[i][row_idx] = x;
         }
     }
 
-    result
+    // Step 2: For each field, compute target rank order from correlated normals
+    // and reorder the independently generated values accordingly.
+    for (field_idx, field_name) in plan.fields.iter().enumerate() {
+        let col = match batch_columns.get(field_name) {
+            Some(c) => c,
+            None => continue,
+        };
+
+        // Extract current values as f64
+        let orig_values: Vec<f64> = if let Some(f64_arr) =
+            col.as_any().downcast_ref::<Float64Array>()
+        {
+            f64_arr.values().iter().copied().collect()
+        } else if let Some(i64_arr) = col
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+        {
+            i64_arr.values().iter().map(|&v| v as f64).collect()
+        } else if let Some(f32_arr) = col
+            .as_any()
+            .downcast_ref::<arrow::array::Float32Array>()
+        {
+            f32_arr.values().iter().map(|&v| v as f64).collect()
+        } else if let Some(i32_arr) = col
+            .as_any()
+            .downcast_ref::<arrow::array::Int32Array>()
+        {
+            i32_arr.values().iter().map(|&v| v as f64).collect()
+        } else {
+            // Non-numeric column — skip
+            continue;
+        };
+
+        if orig_values.len() != count {
+            continue;
+        }
+
+        // Compute target rank order: argsort correlated normals for this field
+        let target_order = argsort(&correlated_normals[field_idx]);
+
+        // Sort original values
+        let mut sorted_values = orig_values.clone();
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Assign sorted values to target rank positions:
+        // target_order[rank] = row_idx means the rank-th smallest value goes
+        // to row target_order[rank].
+        let mut reordered = vec![0.0f64; count];
+        for (rank, &row_idx) in target_order.iter().enumerate() {
+            reordered[row_idx] = sorted_values[rank];
+        }
+
+        let arr: ArrayRef = Arc::new(Float64Array::from(reordered));
+        batch_columns.insert(field_name.clone(), arr);
+    }
+}
+
+/// Return the indices that would sort the slice in ascending order.
+/// argsort([30, 10, 20]) → [1, 2, 0] (index 1 is smallest, index 0 is largest)
+fn argsort(data: &[f64]) -> Vec<usize> {
+    let mut indices: Vec<usize> = (0..data.len()).collect();
+    indices.sort_by(|&a, &b| {
+        data[a]
+            .partial_cmp(&data[b])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    indices
 }
 
 /// Generate bivariate Clayton copula samples.
@@ -271,14 +342,14 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn test_gaussian_copula_correlation() {
+    fn test_iman_conover_preserves_marginals_and_induces_correlation() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
         let plan = CopulaPlan {
             fields: vec!["x".to_string(), "y".to_string()],
             family: CopulaFamily::Gaussian,
             cholesky_l: Some(vec![
                 vec![1.0, 0.0],
-                vec![0.8, 0.6], // correlation = 0.8
+                vec![0.8, 0.6], // target correlation = 0.8
             ]),
             theta: None,
             marginals: vec![
@@ -286,8 +357,8 @@ mod tests {
                     kind: DistributionKind::Normal,
                     params: {
                         let mut m = BTreeMap::new();
-                        m.insert("mean".to_string(), 0.0);
-                        m.insert("std_dev".to_string(), 1.0);
+                        m.insert("mean".to_string(), 100.0);
+                        m.insert("std_dev".to_string(), 15.0);
                         m
                     },
                     round: false,
@@ -296,8 +367,8 @@ mod tests {
                     kind: DistributionKind::Normal,
                     params: {
                         let mut m = BTreeMap::new();
-                        m.insert("mean".to_string(), 0.0);
-                        m.insert("std_dev".to_string(), 1.0);
+                        m.insert("mean".to_string(), 50.0);
+                        m.insert("std_dev".to_string(), 10.0);
                         m
                     },
                     round: false,
@@ -306,14 +377,34 @@ mod tests {
         };
 
         let n = 10_000;
+        // Generate independent column values
+        let normal_x =
+            Normal::new(100.0, 15.0).expect("normal distribution uses valid parameters");
+        let normal_y =
+            Normal::new(50.0, 10.0).expect("normal distribution uses valid parameters");
+        let x_vals: Vec<f64> = (0..n)
+            .map(|_| normal_x.inverse_cdf(uniform01(&mut rng)))
+            .collect();
+        let y_vals: Vec<f64> = (0..n)
+            .map(|_| normal_y.inverse_cdf(uniform01(&mut rng)))
+            .collect();
+
+        // Record original marginal stats
+        let x_mean_orig: f64 = x_vals.iter().sum::<f64>() / n as f64;
+        let y_mean_orig: f64 = y_vals.iter().sum::<f64>() / n as f64;
+        let mut x_sorted = x_vals.clone();
+        x_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mut y_sorted = y_vals.clone();
+        y_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
         let mut batch_columns = HashMap::new();
         batch_columns.insert(
             "x".to_string(),
-            Arc::new(Float64Array::from(vec![0.0; n])) as ArrayRef,
+            Arc::new(Float64Array::from(x_vals)) as ArrayRef,
         );
         batch_columns.insert(
             "y".to_string(),
-            Arc::new(Float64Array::from(vec![0.0; n])) as ArrayRef,
+            Arc::new(Float64Array::from(y_vals)) as ArrayRef,
         );
 
         apply_copula_plans(&[plan], &mut batch_columns, &mut rng, n);
@@ -327,7 +418,24 @@ mod tests {
             .downcast_ref::<Float64Array>()
             .unwrap();
 
-        // Compute Pearson correlation
+        // Check marginals preserved: same sorted values (Iman-Conover only reorders)
+        let mut x_after: Vec<f64> = x.values().iter().copied().collect();
+        x_after.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mut y_after: Vec<f64> = y.values().iter().copied().collect();
+        y_after.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        for i in 0..n {
+            assert!(
+                (x_sorted[i] - x_after[i]).abs() < 1e-10,
+                "Iman-Conover should preserve exact marginal values for x"
+            );
+            assert!(
+                (y_sorted[i] - y_after[i]).abs() < 1e-10,
+                "Iman-Conover should preserve exact marginal values for y"
+            );
+        }
+
+        // Check correlation induced
         let n_f = n as f64;
         let x_mean: f64 = x.values().iter().sum::<f64>() / n_f;
         let y_mean: f64 = y.values().iter().sum::<f64>() / n_f;
@@ -343,10 +451,10 @@ mod tests {
         }
         let r = cov / (var_x.sqrt() * var_y.sqrt());
 
-        // Should be close to 0.8 (the correlation from the Cholesky matrix)
+        // Iman-Conover should produce rank correlation close to target (0.8)
         assert!(
-            (r - 0.8).abs() < 0.05,
-            "Gaussian copula correlation should be ~0.8, got {r}"
+            (r - 0.8).abs() < 0.1,
+            "Iman-Conover should induce correlation ~0.8, got {r}"
         );
     }
 

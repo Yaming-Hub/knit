@@ -113,6 +113,18 @@
         {
           "type": "check",
           "expr": "duration <= waiting"
+        },
+        {
+          "type": "range",
+          "field": "duration",
+          "min": 1.6,
+          "max": 5.1
+        },
+        {
+          "type": "range",
+          "field": "waiting",
+          "min": 43,
+          "max": 96
         }
       ],
       "output": {
@@ -215,19 +227,19 @@
       "given": "kind",
       "distributions": [
         {
-          "when": "long",
-          "distribution": "normal",
-          "params": {
-            "mean": 4.297930232558141,
-            "std_dev": 0.4214465203926929
-          }
-        },
-        {
           "when": "short",
           "distribution": "log_normal",
           "params": {
             "mu": 0.724722780624187,
             "sigma": 0.16303426469903104
+          }
+        },
+        {
+          "when": "long",
+          "distribution": "normal",
+          "params": {
+            "mean": 4.297930232558141,
+            "std_dev": 0.4214465203926929
           }
         }
       ],

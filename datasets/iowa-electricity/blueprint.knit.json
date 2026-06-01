@@ -92,6 +92,12 @@
           "field": "net_generation",
           "min": 1437.0,
           "max": 42750.0
+        },
+        {
+          "type": "range",
+          "field": "net_generation",
+          "min": 1437,
+          "max": 42750
         }
       ],
       "output": {

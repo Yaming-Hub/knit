@@ -181,6 +181,24 @@
         {
           "type": "check",
           "expr": "health <= population"
+        },
+        {
+          "type": "range",
+          "field": "income",
+          "min": 599,
+          "max": 132877
+        },
+        {
+          "type": "range",
+          "field": "health",
+          "min": 48.5,
+          "max": 84.1
+        },
+        {
+          "type": "range",
+          "field": "population",
+          "min": 52993,
+          "max": 1376048943
         }
       ],
       "output": {
@@ -204,8 +222,8 @@
     {
       "entity": "original",
       "fields": [
-        "income",
-        "health"
+        "health",
+        "income"
       ],
       "matrix": [
         [
@@ -222,8 +240,8 @@
     {
       "entity": "original",
       "fields": [
-        "income",
-        "health"
+        "health",
+        "income"
       ],
       "matrix": [
         [
@@ -240,8 +258,8 @@
     {
       "entity": "original",
       "fields": [
-        "region",
-        "country"
+        "country",
+        "region"
       ],
       "matrix": [
         [

@@ -238,6 +238,30 @@
         {
           "type": "check",
           "expr": "mass <= year"
+        },
+        {
+          "type": "range",
+          "field": "orbital_period",
+          "min": 0.09070629,
+          "max": 730000.0
+        },
+        {
+          "type": "range",
+          "field": "mass",
+          "min": 0.0036,
+          "max": 25.0
+        },
+        {
+          "type": "range",
+          "field": "distance",
+          "min": 1.35,
+          "max": 8500.0
+        },
+        {
+          "type": "range",
+          "field": "year",
+          "min": 1989,
+          "max": 2014
         }
       ],
       "output": {
@@ -263,24 +287,6 @@
     }
   ],
   "correlations": [
-    {
-      "entity": "original",
-      "fields": [
-        "year",
-        "distance"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.37023462668780865
-        ],
-        [
-          0.37023462668780865,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -348,6 +354,24 @@
         ],
         [
           0.4676207440417269,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "distance",
+        "year"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.37023462668780865
+        ],
+        [
+          0.37023462668780865,
           1.0
         ]
       ],

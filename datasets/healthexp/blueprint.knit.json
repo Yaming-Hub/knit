@@ -145,8 +145,7 @@
         {
           "type": "range",
           "field": "Life_Expectancy",
-          "min": 70.6,
-          "max": 84.7
+          "min": 0.0
         },
         {
           "type": "check",
@@ -155,6 +154,12 @@
         {
           "type": "check",
           "expr": "Life_Expectancy <= Spending_USD"
+        },
+        {
+          "type": "range",
+          "field": "Year",
+          "min": 1970,
+          "max": 2020
         }
       ],
       "output": {
@@ -179,42 +184,6 @@
     }
   ],
   "correlations": [
-    {
-      "entity": "original",
-      "fields": [
-        "Life_Expectancy",
-        "Year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9021745379694497
-        ],
-        [
-          0.9021745379694497,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Life_Expectancy",
-        "Year"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.896117410433818
-        ],
-        [
-          0.896117410433818,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
     {
       "entity": "original",
       "fields": [
@@ -254,8 +223,44 @@
     {
       "entity": "original",
       "fields": [
-        "Year",
-        "Spending_USD"
+        "Life_Expectancy",
+        "Year"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9021745379694497
+        ],
+        [
+          0.9021745379694497,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Life_Expectancy",
+        "Year"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.896117410433818
+        ],
+        [
+          0.896117410433818,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Spending_USD",
+        "Year"
       ],
       "matrix": [
         [
@@ -272,8 +277,8 @@
     {
       "entity": "original",
       "fields": [
-        "Year",
-        "Spending_USD"
+        "Spending_USD",
+        "Year"
       ],
       "matrix": [
         [

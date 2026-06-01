@@ -158,6 +158,12 @@
         {
           "type": "check",
           "expr": "Score <= Year"
+        },
+        {
+          "type": "range",
+          "field": "Score",
+          "min": 11.6,
+          "max": 97.8
         }
       ],
       "output": {
@@ -181,8 +187,8 @@
     {
       "entity": "original",
       "fields": [
-        "Score",
-        "Year"
+        "Year",
+        "Score"
       ],
       "matrix": [
         [
@@ -199,8 +205,8 @@
     {
       "entity": "original",
       "fields": [
-        "Score",
-        "Year"
+        "Year",
+        "Score"
       ],
       "matrix": [
         [

@@ -687,6 +687,90 @@
         {
           "type": "check",
           "expr": "veggies proc <= total veggies"
+        },
+        {
+          "type": "range",
+          "field": "total exports",
+          "min": 13.31,
+          "max": 16472.88
+        },
+        {
+          "type": "range",
+          "field": "beef",
+          "min": 0.1,
+          "max": 961.0
+        },
+        {
+          "type": "range",
+          "field": "pork",
+          "min": 0.0,
+          "max": 1895.6
+        },
+        {
+          "type": "range",
+          "field": "poultry",
+          "min": 0.0,
+          "max": 630.4
+        },
+        {
+          "type": "range",
+          "field": "dairy",
+          "min": 0.19,
+          "max": 929.95
+        },
+        {
+          "type": "range",
+          "field": "fruits fresh",
+          "min": 0.0,
+          "max": 2791.8
+        },
+        {
+          "type": "range",
+          "field": "fruits proc",
+          "min": 0.0,
+          "max": 5944.6
+        },
+        {
+          "type": "range",
+          "field": "total fruits",
+          "min": 0.0,
+          "max": 8736.4
+        },
+        {
+          "type": "range",
+          "field": "veggies fresh",
+          "min": 0.0,
+          "max": 803.2
+        },
+        {
+          "type": "range",
+          "field": "veggies proc",
+          "min": 0.0,
+          "max": 1303.5
+        },
+        {
+          "type": "range",
+          "field": "total veggies",
+          "min": 0.0,
+          "max": 2106.79
+        },
+        {
+          "type": "range",
+          "field": "corn",
+          "min": 0.0,
+          "max": 2529.8
+        },
+        {
+          "type": "range",
+          "field": "wheat",
+          "min": 0.0,
+          "max": 1664.5
+        },
+        {
+          "type": "range",
+          "field": "cotton",
+          "min": 0.0,
+          "max": 2308.76
         }
       ],
       "output": {
@@ -705,214 +789,16 @@
     {
       "entity": "original",
       "fields": [
-        "total exports",
-        "beef"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.45879392491165616
-        ],
-        [
-          0.45879392491165616,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "beef"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.705755240425284
-        ],
-        [
-          0.705755240425284,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "total fruits"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6311009098293999
-        ],
-        [
-          0.6311009098293999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "veggies fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6350838991315333
-        ],
-        [
-          0.6350838991315333,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "veggies fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4471978121765497
-        ],
-        [
-          0.4471978121765497,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "corn"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6311397400430809
-        ],
-        [
-          0.6311397400430809,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "corn"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8322894052742847
-        ],
-        [
-          0.8322894052742847,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "wheat"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.72564263076741
-        ],
-        [
-          0.72564263076741,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "cotton"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.36812480397181074
-        ],
-        [
-          0.36812480397181074,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "pork"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5400139909378697
-        ],
-        [
-          0.5400139909378697,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "pork"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7018302867299411
-        ],
-        [
-          0.7018302867299411,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
+        "veggies proc",
         "fruits proc"
       ],
       "matrix": [
         [
           1.0,
-          0.6311029710581648
+          0.9696124505538459
         ],
         [
-          0.6311029710581648,
+          0.9696124505538459,
           1.0
         ]
       ],
@@ -921,16 +807,16 @@
     {
       "entity": "original",
       "fields": [
-        "total exports",
-        "poultry"
+        "veggies proc",
+        "fruits proc"
       ],
       "matrix": [
         [
           1.0,
-          0.5424420737859836
+          0.6779856409132246
         ],
         [
-          0.5424420737859836,
+          0.6779856409132246,
           1.0
         ]
       ],
@@ -939,98 +825,8 @@
     {
       "entity": "original",
       "fields": [
-        "total exports",
-        "fruits fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6310865772212243
-        ],
-        [
-          0.6310865772212243,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "total veggies"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6351198098775958
-        ],
-        [
-          0.6351198098775958,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "total veggies"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.44726163906382904
-        ],
-        [
-          0.44726163906382904,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5824716638405036
-        ],
-        [
-          0.5824716638405036,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5851140456182473
-        ],
-        [
-          0.5851140456182473,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total exports",
-        "veggies proc"
+        "veggies proc",
+        "total exports"
       ],
       "matrix": [
         [
@@ -1047,8 +843,8 @@
     {
       "entity": "original",
       "fields": [
-        "total exports",
-        "veggies proc"
+        "veggies proc",
+        "total exports"
       ],
       "matrix": [
         [
@@ -1057,6 +853,492 @@
         ],
         [
           0.4459384841209234,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "dairy"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7662192184292701
+        ],
+        [
+          0.7662192184292701,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "dairy"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5496194217923722
+        ],
+        [
+          0.5496194217923722,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "total veggies"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999915512386
+        ],
+        [
+          0.9999999915512386,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "total veggies"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999519773332737
+        ],
+        [
+          0.9999519773332737,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "wheat"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3714608983671168
+        ],
+        [
+          0.3714608983671168,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "cotton"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3369411290861354
+        ],
+        [
+          0.3369411290861354,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "fruits fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9696117605945931
+        ],
+        [
+          0.9696117605945931,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "fruits fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6735429041758716
+        ],
+        [
+          0.6735429041758716,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999722011638
+        ],
+        [
+          0.9999999722011638,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999759866485732
+        ],
+        [
+          0.9999759866485732,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9696131677531277
+        ],
+        [
+          0.9696131677531277,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "veggies proc",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6761591488716995
+        ],
+        [
+          0.6761591488716995,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "total exports"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6311029710581648
+        ],
+        [
+          0.6311029710581648,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "dairy"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7209934206614487
+        ],
+        [
+          0.7209934206614487,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "dairy"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.48074152837847905
+        ],
+        [
+          0.48074152837847905,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "total veggies"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9696135288674006
+        ],
+        [
+          0.9696135288674006,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "total veggies"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.678529409592837
+        ],
+        [
+          0.678529409592837,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "cotton"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3075241819818176
+        ],
+        [
+          0.3075241819818176,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "fruits fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999964749064
+        ],
+        [
+          0.9999999964749064,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "fruits fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9997838512896873
+        ],
+        [
+          0.9997838512896873,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9696120655736186
+        ],
+        [
+          0.9696120655736186,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6790105675459506
+        ],
+        [
+          0.6790105675459506,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999995066028
+        ],
+        [
+          0.9999999995066028,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruits proc",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9998559319991563
+        ],
+        [
+          0.9998559319991563,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "beef",
+        "total exports"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.45879392491165616
+        ],
+        [
+          0.45879392491165616,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "beef",
+        "total exports"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.705755240425284
+        ],
+        [
+          0.705755240425284,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "beef",
+        "dairy"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5817186488747289
+        ],
+        [
+          0.5817186488747289,
           1.0
         ]
       ],
@@ -1173,16 +1455,16 @@
     {
       "entity": "original",
       "fields": [
-        "beef",
+        "total exports",
         "dairy"
       ],
       "matrix": [
         [
           1.0,
-          0.5817186488747289
+          0.5824716638405036
         ],
         [
-          0.5817186488747289,
+          0.5824716638405036,
           1.0
         ]
       ],
@@ -1191,16 +1473,16 @@
     {
       "entity": "original",
       "fields": [
-        "total fruits",
-        "veggies fresh"
+        "total exports",
+        "dairy"
       ],
       "matrix": [
         [
           1.0,
-          0.9696127813073622
+          0.5851140456182473
         ],
         [
-          0.9696127813073622,
+          0.5851140456182473,
           1.0
         ]
       ],
@@ -1209,124 +1491,16 @@
     {
       "entity": "original",
       "fields": [
-        "total fruits",
-        "veggies fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6771838863296313
-        ],
-        [
-          0.6771838863296313,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
-        "cotton"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.307516809724531
-        ],
-        [
-          0.307516809724531,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
-        "fruits proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999995066028
-        ],
-        [
-          0.9999999995066028,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
-        "fruits proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9998559319991563
-        ],
-        [
-          0.9998559319991563,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
-        "fruits fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999972971941
-        ],
-        [
-          0.9999999972971941,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
-        "fruits fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9998559319991563
-        ],
-        [
-          0.9998559319991563,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
+        "total exports",
         "total veggies"
       ],
       "matrix": [
         [
           1.0,
-          0.9696142466046793
+          0.6351198098775958
         ],
         [
-          0.9696142466046793,
+          0.6351198098775958,
           1.0
         ]
       ],
@@ -1335,16 +1509,16 @@
     {
       "entity": "original",
       "fields": [
-        "total fruits",
+        "total exports",
         "total veggies"
       ],
       "matrix": [
         [
           1.0,
-          0.6766549018733535
+          0.44726163906382904
         ],
         [
-          0.6766549018733535,
+          0.44726163906382904,
           1.0
         ]
       ],
@@ -1353,16 +1527,16 @@
     {
       "entity": "original",
       "fields": [
-        "total fruits",
-        "dairy"
+        "total exports",
+        "corn"
       ],
       "matrix": [
         [
           1.0,
-          0.7209989561296964
+          0.6311397400430809
         ],
         [
-          0.7209989561296964,
+          0.6311397400430809,
           1.0
         ]
       ],
@@ -1371,16 +1545,16 @@
     {
       "entity": "original",
       "fields": [
-        "total fruits",
-        "dairy"
+        "total exports",
+        "corn"
       ],
       "matrix": [
         [
           1.0,
-          0.4791836734693877
+          0.8322894052742847
         ],
         [
-          0.4791836734693877,
+          0.8322894052742847,
           1.0
         ]
       ],
@@ -1389,52 +1563,16 @@
     {
       "entity": "original",
       "fields": [
-        "total fruits",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9696131677531277
-        ],
-        [
-          0.9696131677531277,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total fruits",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6761591488716995
-        ],
-        [
-          0.6761591488716995,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "veggies fresh",
+        "total exports",
         "wheat"
       ],
       "matrix": [
         [
           1.0,
-          0.372287875071907
+          0.72564263076741
         ],
         [
-          0.372287875071907,
+          0.72564263076741,
           1.0
         ]
       ],
@@ -1443,16 +1581,16 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
+        "total exports",
         "cotton"
       ],
       "matrix": [
         [
           1.0,
-          0.33690136447542496
+          0.36812480397181074
         ],
         [
-          0.33690136447542496,
+          0.36812480397181074,
           1.0
         ]
       ],
@@ -1461,16 +1599,16 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "fruits proc"
+        "total exports",
+        "poultry"
       ],
       "matrix": [
         [
           1.0,
-          0.9696120655736186
+          0.5424420737859836
         ],
         [
-          0.9696120655736186,
+          0.5424420737859836,
           1.0
         ]
       ],
@@ -1479,34 +1617,16 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "fruits proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6790105675459506
-        ],
-        [
-          0.6790105675459506,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "veggies fresh",
+        "total exports",
         "fruits fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.9696113733480621
+          0.6310865772212243
         ],
         [
-          0.9696113733480621,
+          0.6310865772212243,
           1.0
         ]
       ],
@@ -1515,16 +1635,178 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
+        "total exports",
+        "pork"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5400139909378697
+        ],
+        [
+          0.5400139909378697,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total exports",
+        "pork"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7018302867299411
+        ],
+        [
+          0.7018302867299411,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total exports",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6350838991315333
+        ],
+        [
+          0.6350838991315333,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total exports",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4471978121765497
+        ],
+        [
+          0.4471978121765497,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total exports",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6311009098293999
+        ],
+        [
+          0.6311009098293999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "dairy",
+        "total veggies"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7662280651861221
+        ],
+        [
+          0.7662280651861221,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "dairy",
+        "total veggies"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5500732312085207
+        ],
+        [
+          0.5500732312085207,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "dairy",
+        "corn"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4685902044508038
+        ],
+        [
+          0.4685902044508038,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "dairy",
+        "wheat"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.40316687243552335
+        ],
+        [
+          0.40316687243552335,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "dairy",
         "fruits fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.6745677241210372
+          0.720998288443549
         ],
         [
-          0.6745677241210372,
+          0.720998288443549,
           1.0
         ]
       ],
@@ -1533,16 +1815,16 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "total veggies"
+        "dairy",
+        "fruits fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999706649411
+          0.47517049767998715
         ],
         [
-          0.9999999706649411,
+          0.47517049767998715,
           1.0
         ]
       ],
@@ -1551,16 +1833,16 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "total veggies"
+        "dairy",
+        "pork"
       ],
       "matrix": [
         [
           1.0,
-          0.999927965135032
+          0.3368401074983126
         ],
         [
-          0.999927965135032,
+          0.3368401074983126,
           1.0
         ]
       ],
@@ -1569,8 +1851,8 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "dairy"
+        "dairy",
+        "veggies fresh"
       ],
       "matrix": [
         [
@@ -1587,8 +1869,8 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "dairy"
+        "dairy",
+        "veggies fresh"
       ],
       "matrix": [
         [
@@ -1605,16 +1887,16 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "veggies proc"
+        "dairy",
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999722011638
+          0.7209989561296964
         ],
         [
-          0.9999999722011638,
+          0.7209989561296964,
           1.0
         ]
       ],
@@ -1623,16 +1905,160 @@
     {
       "entity": "original",
       "fields": [
-        "veggies fresh",
-        "veggies proc"
+        "dairy",
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.9999759866485732
+          0.4791836734693877
         ],
         [
-          0.9999759866485732,
+          0.4791836734693877,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "wheat"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.37324746616442284
+        ],
+        [
+          0.37324746616442284,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "cotton"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3369293888761688
+        ],
+        [
+          0.3369293888761688,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "fruits fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9696128396757226
+        ],
+        [
+          0.9696128396757226,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "fruits fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6740628725676293
+        ],
+        [
+          0.6740628725676293,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999706649411
+        ],
+        [
+          0.9999999706649411,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "veggies fresh"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.999927965135032
+        ],
+        [
+          0.999927965135032,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9696142466046793
+        ],
+        [
+          0.9696142466046793,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "total veggies",
+        "total fruits"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6766549018733535
+        ],
+        [
+          0.6766549018733535,
           1.0
         ]
       ],
@@ -1651,6 +2077,24 @@
         ],
         [
           0.6520451385955178,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "corn",
+        "poultry"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5271670700161198
+        ],
+        [
+          0.5271670700161198,
           1.0
         ]
       ],
@@ -1695,34 +2139,16 @@
     {
       "entity": "original",
       "fields": [
-        "corn",
+        "wheat",
         "poultry"
       ],
       "matrix": [
         [
           1.0,
-          0.5271670700161198
+          0.3151036707192813
         ],
         [
-          0.5271670700161198,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "corn",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4685902044508038
-        ],
-        [
-          0.4685902044508038,
+          0.3151036707192813,
           1.0
         ]
       ],
@@ -1750,87 +2176,15 @@
       "entity": "original",
       "fields": [
         "wheat",
-        "poultry"
+        "veggies fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.3151036707192813
+          0.372287875071907
         ],
         [
-          0.3151036707192813,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "wheat",
-        "total veggies"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.37324746616442284
-        ],
-        [
-          0.37324746616442284,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "wheat",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.40316687243552335
-        ],
-        [
-          0.40316687243552335,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "wheat",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3714608983671168
-        ],
-        [
-          0.3714608983671168,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "cotton",
-        "fruits proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3075241819818176
-        ],
-        [
-          0.3075241819818176,
+          0.372287875071907,
           1.0
         ]
       ],
@@ -1894,15 +2248,15 @@
       "entity": "original",
       "fields": [
         "cotton",
-        "total veggies"
+        "veggies fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.3369293888761688
+          0.33690136447542496
         ],
         [
-          0.3369293888761688,
+          0.33690136447542496,
           1.0
         ]
       ],
@@ -1912,15 +2266,15 @@
       "entity": "original",
       "fields": [
         "cotton",
-        "veggies proc"
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.3369411290861354
+          0.307516809724531
         ],
         [
-          0.3369411290861354,
+          0.307516809724531,
           1.0
         ]
       ],
@@ -1929,8 +2283,8 @@
     {
       "entity": "original",
       "fields": [
-        "pork",
-        "poultry"
+        "poultry",
+        "pork"
       ],
       "matrix": [
         [
@@ -1947,160 +2301,16 @@
     {
       "entity": "original",
       "fields": [
-        "pork",
-        "dairy"
+        "fruits fresh",
+        "veggies fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.3368401074983126
+          0.9696113733480621
         ],
         [
-          0.3368401074983126,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "fruits fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999964749064
-        ],
-        [
-          0.9999999964749064,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "fruits fresh"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9997838512896873
-        ],
-        [
-          0.9997838512896873,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "total veggies"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9696135288674006
-        ],
-        [
-          0.9696135288674006,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "total veggies"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.678529409592837
-        ],
-        [
-          0.678529409592837,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7209934206614487
-        ],
-        [
-          0.7209934206614487,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.48074152837847905
-        ],
-        [
-          0.48074152837847905,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9696124505538459
-        ],
-        [
-          0.9696124505538459,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruits proc",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6779856409132246
-        ],
-        [
-          0.6779856409132246,
+          0.9696113733480621,
           1.0
         ]
       ],
@@ -2110,15 +2320,15 @@
       "entity": "original",
       "fields": [
         "fruits fresh",
-        "total veggies"
+        "veggies fresh"
       ],
       "matrix": [
         [
           1.0,
-          0.9696128396757226
+          0.6745677241210372
         ],
         [
-          0.9696128396757226,
+          0.6745677241210372,
           1.0
         ]
       ],
@@ -2128,15 +2338,15 @@
       "entity": "original",
       "fields": [
         "fruits fresh",
-        "total veggies"
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.6740628725676293
+          0.9999999972971941
         ],
         [
-          0.6740628725676293,
+          0.9999999972971941,
           1.0
         ]
       ],
@@ -2146,15 +2356,15 @@
       "entity": "original",
       "fields": [
         "fruits fresh",
-        "dairy"
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.720998288443549
+          0.9998559319991563
         ],
         [
-          0.720998288443549,
+          0.9998559319991563,
           1.0
         ]
       ],
@@ -2163,16 +2373,16 @@
     {
       "entity": "original",
       "fields": [
-        "fruits fresh",
-        "dairy"
+        "veggies fresh",
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.47517049767998715
+          0.9696127813073622
         ],
         [
-          0.47517049767998715,
+          0.9696127813073622,
           1.0
         ]
       ],
@@ -2181,16 +2391,16 @@
     {
       "entity": "original",
       "fields": [
-        "fruits fresh",
-        "veggies proc"
+        "veggies fresh",
+        "total fruits"
       ],
       "matrix": [
         [
           1.0,
-          0.9696117605945931
+          0.6771838863296313
         ],
         [
-          0.9696117605945931,
+          0.6771838863296313,
           1.0
         ]
       ],
@@ -2199,134 +2409,8 @@
     {
       "entity": "original",
       "fields": [
-        "fruits fresh",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6735429041758716
-        ],
-        [
-          0.6735429041758716,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total veggies",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7662280651861221
-        ],
-        [
-          0.7662280651861221,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total veggies",
-        "dairy"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5500732312085207
-        ],
-        [
-          0.5500732312085207,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total veggies",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999915512386
-        ],
-        [
-          0.9999999915512386,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "total veggies",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999519773332737
-        ],
-        [
-          0.9999519773332737,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "dairy",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7662192184292701
-        ],
-        [
-          0.7662192184292701,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "dairy",
-        "veggies proc"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5496194217923722
-        ],
-        [
-          0.5496194217923722,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "state",
-        "code"
+        "code",
+        "state"
       ],
       "matrix": [
         [

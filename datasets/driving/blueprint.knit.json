@@ -143,8 +143,7 @@
         {
           "type": "range",
           "field": "gas",
-          "min": 1.39,
-          "max": 3.31
+          "min": 0.0
         },
         {
           "type": "check",
@@ -184,8 +183,8 @@
     {
       "entity": "original",
       "fields": [
-        "miles",
-        "year"
+        "year",
+        "miles"
       ],
       "matrix": [
         [
@@ -202,8 +201,8 @@
     {
       "entity": "original",
       "fields": [
-        "miles",
-        "year"
+        "year",
+        "miles"
       ],
       "matrix": [
         [

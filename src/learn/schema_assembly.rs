@@ -511,30 +511,79 @@ fn build_entity(
         })
         .collect();
 
-    // Build top-level Correlation entries
-    let corrs: Vec<crate::core::Correlation> = table
-        .correlations
-        .iter()
-        .filter_map(|c| {
-            let fields = vec![c.column_a.clone(), c.column_b.clone()];
-            // Only emit if coefficient is meaningful
+    // Build correlation entries with Gaussian copula spec for Iman-Conover
+    // rank reordering.  Group all significantly correlated fields into a single
+    // multi-field entry per connected component.  Each pair with |r| >= 0.3 is
+    // de-duplicated (taking max |coefficient| when Pearson+Spearman both fire).
+    let corrs: Vec<crate::core::Correlation> = {
+        // De-duplicate pairwise correlations: for each unique (a, b) pair,
+        // keep the strongest coefficient.
+        let mut pair_map: std::collections::HashMap<(String, String), f64> =
+            std::collections::HashMap::new();
+        for c in &table.correlations {
             if c.coefficient.abs() < 0.3 {
-                return None;
+                continue;
             }
-            Some(crate::core::Correlation {
+            // Canonical ordering so (a,b) == (b,a)
+            let key = if c.column_a <= c.column_b {
+                (c.column_a.clone(), c.column_b.clone())
+            } else {
+                (c.column_b.clone(), c.column_a.clone())
+            };
+            let entry = pair_map.entry(key).or_insert(0.0);
+            if c.coefficient.abs() > entry.abs() {
+                *entry = c.coefficient;
+            }
+        }
+
+        if pair_map.is_empty() {
+            Vec::new()
+        } else {
+            // Collect unique field names
+            let mut field_names: Vec<String> = Vec::new();
+            for (a, b) in pair_map.keys() {
+                if !field_names.contains(a) {
+                    field_names.push(a.clone());
+                }
+                if !field_names.contains(b) {
+                    field_names.push(b.clone());
+                }
+            }
+            field_names.sort();
+            let n = field_names.len();
+
+            // Build N×N correlation matrix (identity + observed pairs)
+            let mut matrix = vec![vec![0.0f64; n]; n];
+            for i in 0..n {
+                matrix[i][i] = 1.0;
+            }
+            for ((a, b), coeff) in &pair_map {
+                if let (Some(i), Some(j)) = (
+                    field_names.iter().position(|f| f == a),
+                    field_names.iter().position(|f| f == b),
+                ) {
+                    matrix[i][j] = *coeff;
+                    matrix[j][i] = *coeff;
+                }
+            }
+
+            vec![crate::core::Correlation {
                 entity: table.name.clone(),
                 correlation_type: None,
-                fields,
-                matrix: vec![vec![1.0, c.coefficient], vec![c.coefficient, 1.0]],
+                fields: field_names,
+                matrix,
                 conditional: Vec::new(),
-                copula: None,
+                copula: Some(crate::core::CopulaSpec {
+                    family: crate::core::CopulaFamily::Gaussian,
+                    params: std::collections::BTreeMap::new(),
+                }),
                 dependent: None,
                 given: None,
                 distributions: Vec::new(),
                 default: None,
-            })
-        })
-        .collect();
+            }]
+        }
+    };
 
     // Build conditional distribution correlations
     let cond_corrs: Vec<crate::core::Correlation> = table

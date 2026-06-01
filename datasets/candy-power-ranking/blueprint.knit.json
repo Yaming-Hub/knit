@@ -534,6 +534,24 @@
         {
           "type": "check",
           "expr": "pricepercent <= winpercent"
+        },
+        {
+          "type": "range",
+          "field": "sugarpercent",
+          "min": 0.011,
+          "max": 0.98799998
+        },
+        {
+          "type": "range",
+          "field": "pricepercent",
+          "min": 0.011,
+          "max": 0.97600001
+        },
+        {
+          "type": "range",
+          "field": "winpercent",
+          "min": 22.445341,
+          "max": 84.18029
         }
       ],
       "output": {
@@ -597,6 +615,42 @@
     {
       "entity": "original",
       "fields": [
+        "sugarpercent",
+        "pricepercent"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3297063875889551
+        ],
+        [
+          0.3297063875889551,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "sugarpercent",
+        "pricepercent"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3402744931884018
+        ],
+        [
+          0.3402744931884018,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
         "fruity",
         "caramel"
       ],
@@ -625,42 +679,6 @@
         ],
         [
           -0.33548538363601477,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruity",
-        "chocolate"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.7417210588438842
-        ],
-        [
-          -0.7417210588438842,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruity",
-        "chocolate"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.7417210588438836
-        ],
-        [
-          -0.7417210588438836,
           1.0
         ]
       ],
@@ -706,42 +724,6 @@
       "entity": "original",
       "fields": [
         "fruity",
-        "bar"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5150655814471488
-        ],
-        [
-          -0.5150655814471488,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruity",
-        "bar"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5150655814471488
-        ],
-        [
-          -0.5150655814471488,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "fruity",
         "pricepercent"
       ],
       "matrix": [
@@ -769,6 +751,78 @@
         ],
         [
           -0.43416509298720896,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruity",
+        "chocolate"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.7417210588438842
+        ],
+        [
+          -0.7417210588438842,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruity",
+        "chocolate"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.7417210588438836
+        ],
+        [
+          -0.7417210588438836,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruity",
+        "bar"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.5150655814471488
+        ],
+        [
+          -0.5150655814471488,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "fruity",
+        "bar"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.5150655814471488
+        ],
+        [
+          -0.5150655814471488,
           1.0
         ]
       ],
@@ -849,88 +903,16 @@
     {
       "entity": "original",
       "fields": [
-        "pluribus",
-        "chocolate"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.3396751938697572
-        ],
-        [
-          -0.3396751938697572,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pluribus",
-        "chocolate"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.33967519386975675
-        ],
-        [
-          -0.33967519386975675,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pluribus",
-        "bar"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5934089200049686
-        ],
-        [
-          -0.5934089200049686,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pluribus",
-        "bar"
-      ],
-      "matrix": [
-        [
-          1.0,
-          -0.5934089200049687
-        ],
-        [
-          -0.5934089200049687,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pluribus",
+        "caramel",
         "nougat"
       ],
       "matrix": [
         [
           1.0,
-          -0.31033883719439576
+          0.32849279804935544
         ],
         [
-          -0.31033883719439576,
+          0.32849279804935544,
           1.0
         ]
       ],
@@ -939,16 +921,16 @@
     {
       "entity": "original",
       "fields": [
-        "pluribus",
+        "caramel",
         "nougat"
       ],
       "matrix": [
         [
           1.0,
-          -0.3103388371943954
+          0.3284927980493561
         ],
         [
-          -0.3103388371943954,
+          0.3284927980493561,
           1.0
         ]
       ],
@@ -993,16 +975,16 @@
     {
       "entity": "original",
       "fields": [
-        "caramel",
-        "nougat"
+        "peanutyalmondy",
+        "pricepercent"
       ],
       "matrix": [
         [
           1.0,
-          0.32849279804935544
+          0.30915323317923704
         ],
         [
-          0.32849279804935544,
+          0.30915323317923704,
           1.0
         ]
       ],
@@ -1011,16 +993,16 @@
     {
       "entity": "original",
       "fields": [
-        "caramel",
-        "nougat"
+        "peanutyalmondy",
+        "pricepercent"
       ],
       "matrix": [
         [
           1.0,
-          0.3284927980493561
+          0.3205065756100568
         ],
         [
-          0.3284927980493561,
+          0.3205065756100568,
           1.0
         ]
       ],
@@ -1029,8 +1011,8 @@
     {
       "entity": "original",
       "fields": [
-        "chocolate",
-        "peanutyalmondy"
+        "peanutyalmondy",
+        "chocolate"
       ],
       "matrix": [
         [
@@ -1047,8 +1029,8 @@
     {
       "entity": "original",
       "fields": [
-        "chocolate",
-        "peanutyalmondy"
+        "peanutyalmondy",
+        "chocolate"
       ],
       "matrix": [
         [
@@ -1057,6 +1039,258 @@
         ],
         [
           0.3778235673331379,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "peanutyalmondy",
+        "winpercent"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.4061922021809831
+        ],
+        [
+          0.4061922021809831,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "peanutyalmondy",
+        "winpercent"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.382648727334072
+        ],
+        [
+          0.382648727334072,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "nougat",
+        "bar"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5229763603684909
+        ],
+        [
+          0.5229763603684909,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "nougat",
+        "bar"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5229763603684907
+        ],
+        [
+          0.5229763603684907,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "nougat",
+        "pluribus"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.31033883719439576
+        ],
+        [
+          -0.31033883719439576,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "nougat",
+        "pluribus"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.3103388371943954
+        ],
+        [
+          -0.3103388371943954,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "chocolate"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5046753529576843
+        ],
+        [
+          0.5046753529576843,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "chocolate"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5081926602337756
+        ],
+        [
+          0.5081926602337756,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "crispedricewafer"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3282653911819203
+        ],
+        [
+          0.3282653911819203,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "crispedricewafer"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.3221474401181618
+        ],
+        [
+          0.3221474401181618,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "bar"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5184065372702471
+        ],
+        [
+          0.5184065372702471,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "bar"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.5189033823292519
+        ],
+        [
+          0.5189033823292519,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "winpercent"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.34532540996768485
+        ],
+        [
+          0.34532540996768485,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "pricepercent",
+        "winpercent"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.352749235040752
+        ],
+        [
+          0.352749235040752,
           1.0
         ]
       ],
@@ -1138,42 +1372,6 @@
       "entity": "original",
       "fields": [
         "chocolate",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5046753529576843
-        ],
-        [
-          0.5046753529576843,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "chocolate",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5081926602337756
-        ],
-        [
-          0.5081926602337756,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "chocolate",
         "winpercent"
       ],
       "matrix": [
@@ -1245,16 +1443,16 @@
     {
       "entity": "original",
       "fields": [
-        "peanutyalmondy",
-        "pricepercent"
+        "chocolate",
+        "pluribus"
       ],
       "matrix": [
         [
           1.0,
-          0.30915323317923704
+          -0.3396751938697572
         ],
         [
-          0.30915323317923704,
+          -0.3396751938697572,
           1.0
         ]
       ],
@@ -1263,52 +1461,16 @@
     {
       "entity": "original",
       "fields": [
-        "peanutyalmondy",
-        "pricepercent"
+        "chocolate",
+        "pluribus"
       ],
       "matrix": [
         [
           1.0,
-          0.3205065756100568
+          -0.33967519386975675
         ],
         [
-          0.3205065756100568,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "peanutyalmondy",
-        "winpercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.4061922021809831
-        ],
-        [
-          0.4061922021809831,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "peanutyalmondy",
-        "winpercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.382648727334072
-        ],
-        [
-          0.382648727334072,
+          -0.33967519386975675,
           1.0
         ]
       ],
@@ -1354,42 +1516,6 @@
       "entity": "original",
       "fields": [
         "crispedricewafer",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3282653911819203
-        ],
-        [
-          0.3282653911819203,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "crispedricewafer",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3221474401181618
-        ],
-        [
-          0.3221474401181618,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "crispedricewafer",
         "winpercent"
       ],
       "matrix": [
@@ -1417,42 +1543,6 @@
         ],
         [
           0.31396261532496705,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "bar",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5184065372702471
-        ],
-        [
-          0.5184065372702471,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "bar",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5189033823292519
-        ],
-        [
-          0.5189033823292519,
           1.0
         ]
       ],
@@ -1498,15 +1588,15 @@
       "entity": "original",
       "fields": [
         "bar",
-        "nougat"
+        "pluribus"
       ],
       "matrix": [
         [
           1.0,
-          0.5229763603684909
+          -0.5934089200049686
         ],
         [
-          0.5229763603684909,
+          -0.5934089200049686,
           1.0
         ]
       ],
@@ -1516,87 +1606,15 @@
       "entity": "original",
       "fields": [
         "bar",
-        "nougat"
+        "pluribus"
       ],
       "matrix": [
         [
           1.0,
-          0.5229763603684907
+          -0.5934089200049687
         ],
         [
-          0.5229763603684907,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "sugarpercent",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3297063875889551
-        ],
-        [
-          0.3297063875889551,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "sugarpercent",
-        "pricepercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.3402744931884018
-        ],
-        [
-          0.3402744931884018,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pricepercent",
-        "winpercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.34532540996768485
-        ],
-        [
-          0.34532540996768485,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "pricepercent",
-        "winpercent"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.352749235040752
-        ],
-        [
-          0.352749235040752,
+          -0.5934089200049687,
           1.0
         ]
       ],

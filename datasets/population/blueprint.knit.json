@@ -181,6 +181,12 @@
         {
           "type": "check",
           "expr": "sex <= people"
+        },
+        {
+          "type": "range",
+          "field": "people",
+          "min": 5259,
+          "max": 11635647
         }
       ],
       "output": {

@@ -16,10 +16,9 @@
           "name": "item_id",
           "data_type": "string",
           "generator": {
-            "type": "tuple_lookup",
-            "source_field": "scientific_name",
-            "file": "original__scientific_name_common_name_gap_species_code_item_id.tsv",
-            "column": 3
+            "type": "dictionary",
+            "file": "original_item_id.dict.txt",
+            "expansion": "sample"
           },
           "nullable": false,
           "stats": {
@@ -39,9 +38,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "scientific_name",
-            "file": "original__scientific_name_common_name_gap_species_code_item_id.tsv",
-            "column": 1
+            "source_field": "item_id",
+            "file": "original__item_id_gap_species_code_common_name_scientific_name.tsv",
+            "column": 2
           },
           "nullable": false,
           "stats": {
@@ -61,9 +60,10 @@
           "name": "scientific_name",
           "data_type": "string",
           "generator": {
-            "type": "dictionary",
-            "file": "original_scientific_name.dict.txt",
-            "expansion": "sample"
+            "type": "tuple_lookup",
+            "source_field": "item_id",
+            "file": "original__item_id_gap_species_code_common_name_scientific_name.tsv",
+            "column": 3
           },
           "nullable": false,
           "stats": {
@@ -83,9 +83,9 @@
           "data_type": "string",
           "generator": {
             "type": "tuple_lookup",
-            "source_field": "scientific_name",
-            "file": "original__scientific_name_common_name_gap_species_code_item_id.tsv",
-            "column": 2
+            "source_field": "item_id",
+            "file": "original__item_id_gap_species_code_common_name_scientific_name.tsv",
+            "column": 1
           },
           "nullable": false,
           "stats": {
@@ -185,6 +185,18 @@
         {
           "type": "check",
           "expr": "habitat_yearround_pct <= county_id"
+        },
+        {
+          "type": "range",
+          "field": "county_id",
+          "min": 1001,
+          "max": 56045
+        },
+        {
+          "type": "range",
+          "field": "habitat_yearround_pct",
+          "min": 0.0,
+          "max": 0.9996
         }
       ],
       "output": {
@@ -227,7 +239,7 @@
     {
       "entity": "original",
       "fields": [
-        "common_name",
+        "scientific_name",
         "item_id"
       ],
       "matrix": [
@@ -245,7 +257,25 @@
     {
       "entity": "original",
       "fields": [
-        "common_name",
+        "scientific_name",
+        "common_name"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "scientific_name",
         "gap_species_code"
       ],
       "matrix": [
@@ -263,8 +293,8 @@
     {
       "entity": "original",
       "fields": [
-        "common_name",
-        "scientific_name"
+        "item_id",
+        "common_name"
       ],
       "matrix": [
         [
@@ -299,26 +329,8 @@
     {
       "entity": "original",
       "fields": [
-        "item_id",
-        "scientific_name"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "gap_species_code",
-        "scientific_name"
+        "common_name",
+        "gap_species_code"
       ],
       "matrix": [
         [
@@ -342,14 +354,6 @@
       "given": "scientific_name",
       "distributions": [
         {
-          "when": "Turdus migratorius",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9996,
-            "min": 0.0
-          }
-        },
-        {
           "when": "Odocoileus virginianus",
           "distribution": "uniform",
           "params": {
@@ -362,6 +366,14 @@
           "distribution": "uniform",
           "params": {
             "max": 0.9993,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "Turdus migratorius",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9996,
             "min": 0.0
           }
         },
@@ -388,10 +400,10 @@
       "matrix": [],
       "conditional": [],
       "dependent": "habitat_yearround_pct",
-      "given": "common_name",
+      "given": "item_id",
       "distributions": [
         {
-          "when": "Common Gartersnake",
+          "when": "58fe0f4fe4b0074928294636",
           "distribution": "uniform",
           "params": {
             "max": 0.9993,
@@ -399,25 +411,25 @@
           }
         },
         {
-          "when": "American Robin",
+          "when": "58fa817ae4b0b7ea54525c2f",
           "distribution": "uniform",
           "params": {
-            "max": 0.9996,
+            "max": 0.9825,
             "min": 0.0
           }
         },
         {
-          "when": "American Bullfrog",
+          "when": "58fa3f0be4b0b7ea54524859",
           "distribution": "exponential",
           "params": {
             "lambda": 5.665569673030627
           }
         },
         {
-          "when": "White-tailed Deer",
+          "when": "58fa449fe4b0b7ea54524c5e",
           "distribution": "uniform",
           "params": {
-            "max": 0.9825,
+            "max": 0.9996,
             "min": 0.0
           }
         }
@@ -440,18 +452,17 @@
       "given": "gap_species_code",
       "distributions": [
         {
+          "when": "aAMBUx",
+          "distribution": "exponential",
+          "params": {
+            "lambda": 5.665569673030627
+          }
+        },
+        {
           "when": "rCOGAx",
           "distribution": "uniform",
           "params": {
             "max": 0.9993,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "mWTDEx",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9825,
             "min": 0.0
           }
         },
@@ -464,10 +475,11 @@
           }
         },
         {
-          "when": "aAMBUx",
-          "distribution": "exponential",
+          "when": "mWTDEx",
+          "distribution": "uniform",
           "params": {
-            "lambda": 5.665569673030627
+            "max": 0.9825,
+            "min": 0.0
           }
         }
       ],
@@ -486,25 +498,25 @@
       "matrix": [],
       "conditional": [],
       "dependent": "habitat_yearround_pct",
-      "given": "item_id",
+      "given": "common_name",
       "distributions": [
         {
-          "when": "58fa3f0be4b0b7ea54524859",
+          "when": "American Robin",
+          "distribution": "uniform",
+          "params": {
+            "max": 0.9996,
+            "min": 0.0
+          }
+        },
+        {
+          "when": "American Bullfrog",
           "distribution": "exponential",
           "params": {
             "lambda": 5.665569673030627
           }
         },
         {
-          "when": "58fa817ae4b0b7ea54525c2f",
-          "distribution": "uniform",
-          "params": {
-            "max": 0.9825,
-            "min": 0.0
-          }
-        },
-        {
-          "when": "58fe0f4fe4b0074928294636",
+          "when": "Common Gartersnake",
           "distribution": "uniform",
           "params": {
             "max": 0.9993,
@@ -512,10 +524,10 @@
           }
         },
         {
-          "when": "58fa449fe4b0b7ea54524c5e",
+          "when": "White-tailed Deer",
           "distribution": "uniform",
           "params": {
-            "max": 0.9996,
+            "max": 0.9825,
             "min": 0.0
           }
         }

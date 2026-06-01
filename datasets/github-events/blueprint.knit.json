@@ -72,6 +72,12 @@
           "field": "count",
           "min": 1.0,
           "max": 54.0
+        },
+        {
+          "type": "range",
+          "field": "count",
+          "min": 1,
+          "max": 54
         }
       ],
       "output": {

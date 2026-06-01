@@ -549,6 +549,24 @@
         {
           "type": "check",
           "expr": "Years since joining <= Year"
+        },
+        {
+          "type": "range",
+          "field": "Appearances",
+          "min": 2,
+          "max": 4333
+        },
+        {
+          "type": "range",
+          "field": "Year",
+          "min": 1900,
+          "max": 2015
+        },
+        {
+          "type": "range",
+          "field": "Years since joining",
+          "min": 0,
+          "max": 115
         }
       ],
       "output": {
@@ -563,6 +581,11 @@
             "name": "Probationary Introl",
             "field": "Probationary Introl",
             "cardinality": 12
+          },
+          {
+            "name": "Honorary",
+            "field": "Honorary",
+            "cardinality": 4
           }
         ]
       }
@@ -572,8 +595,8 @@
     {
       "entity": "original",
       "fields": [
-        "Year",
-        "Years since joining"
+        "Years since joining",
+        "Year"
       ],
       "matrix": [
         [
@@ -590,8 +613,8 @@
     {
       "entity": "original",
       "fields": [
-        "Year",
-        "Years since joining"
+        "Years since joining",
+        "Year"
       ],
       "matrix": [
         [
@@ -608,7 +631,349 @@
     {
       "entity": "original",
       "fields": [
-        "Death2",
+        "Gender",
+        "URL"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.927960727138337
+        ],
+        [
+          0.927960727138337,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "Notes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6243541472221553
+        ],
+        [
+          0.6243541472221553,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.7394501283891485
+        ],
+        [
+          0.7394501283891485,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Gender",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999998
+        ],
+        [
+          0.9999999999999998,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Current?"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Honorary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Death1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Death2"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999994
+        ],
+        [
+          0.9999999999999994,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Notes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999745
+        ],
+        [
+          0.9999999999999745,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999258
+        ],
+        [
+          0.9999999999999258,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Return1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Return2"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "URL",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999486
+        ],
+        [
+          0.9999999999999486,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Current?",
+        "Honorary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.357580429813995
+        ],
+        [
+          0.357580429813995,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Current?",
+        "Probationary Introl"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8897565210026094
+        ],
+        [
+          0.8897565210026094,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Current?",
+        "Notes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6572585054332523
+        ],
+        [
+          0.6572585054332523,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Current?",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.892091164211846
+        ],
+        [
+          0.892091164211846,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Current?",
         "Name/Alias"
       ],
       "matrix": [
@@ -626,566 +991,8 @@
     {
       "entity": "original",
       "fields": [
-        "Death2",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Death2",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Death2",
-        "URL"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Gender"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Full/Reserve Avengers Intro"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9981255841065793
-        ],
-        [
-          0.9981255841065793,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.993384712391522
-        ],
-        [
-          0.993384712391522,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Death1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999993
-        ],
-        [
-          0.9999999999999993,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Return1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Current?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "URL"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999455
-        ],
-        [
-          0.9999999999999455,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Name/Alias",
-        "Return2"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Notes"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6243541472221555
-        ],
-        [
-          0.6243541472221555,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Full/Reserve Avengers Intro"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.7394501283891484
-        ],
-        [
-          0.7394501283891484,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9279607271383371
-        ],
-        [
-          0.9279607271383371,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Gender",
-        "URL"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999997
-        ],
-        [
-          0.9999999999999997,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Full/Reserve Avengers Intro"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8128002569531227
-        ],
-        [
-          0.8128002569531227,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.5790001396218005
-        ],
-        [
-          0.5790001396218005,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Death1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999999
-        ],
-        [
-          0.9999999999999999,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8713548411865627
-        ],
-        [
-          0.8713548411865627,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Return1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Current?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6572585054332524
-        ],
-        [
-          0.6572585054332524,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "URL"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999724
-        ],
-        [
-          0.9999999999999724,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Notes",
-        "Return2"
-      ],
-      "matrix": [
-        [
-          1.0,
-          1.0
-        ],
-        [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Honorary"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9312087620153202
-        ],
-        [
-          0.9312087620153202,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Death1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8451972761917566
-        ],
-        [
-          0.8451972761917566,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Probationary Introl"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9428090415820642
-        ],
-        [
-          0.9428090415820642,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Return1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8972672772522673
-        ],
-        [
-          0.8972672772522673,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Current?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.892091164211846
-        ],
-        [
-          0.892091164211846,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "URL"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.9999999999999111
-        ],
-        [
-          0.9999999999999111,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Full/Reserve Avengers Intro",
-        "Return2"
+        "Honorary",
+        "Death2"
       ],
       "matrix": [
         [
@@ -1208,28 +1015,10 @@
       "matrix": [
         [
           1.0,
-          1.0
+          0.9999999999999999
         ],
         [
-          1.0,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Honorary",
-        "Current?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.357580429813995
-        ],
-        [
-          0.357580429813995,
+          0.9999999999999999,
           1.0
         ]
       ],
@@ -1239,15 +1028,51 @@
       "entity": "original",
       "fields": [
         "Honorary",
-        "URL"
+        "Notes"
       ],
       "matrix": [
         [
           1.0,
-          0.999999999999999
+          0.5790001396218001
         ],
         [
-          0.999999999999999,
+          0.5790001396218001,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Honorary",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9312087620153213
+        ],
+        [
+          0.9312087620153213,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Honorary",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9933847123915248
+        ],
+        [
+          0.9933847123915248,
           1.0
         ]
       ],
@@ -1275,61 +1100,7 @@
       "entity": "original",
       "fields": [
         "Death1",
-        "URL"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.999999999999998
-        ],
-        [
-          0.999999999999998,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Probationary Introl",
-        "Return1"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.6546536707079772
-        ],
-        [
-          0.6546536707079772,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Probationary Introl",
-        "Current?"
-      ],
-      "matrix": [
-        [
-          1.0,
-          0.8897565210026093
-        ],
-        [
-          0.8897565210026093,
-          1.0
-        ]
-      ],
-      "conditional": []
-    },
-    {
-      "entity": "original",
-      "fields": [
-        "Probationary Introl",
-        "URL"
+        "Notes"
       ],
       "matrix": [
         [
@@ -1346,8 +1117,26 @@
     {
       "entity": "original",
       "fields": [
-        "Return1",
-        "URL"
+        "Death1",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8451972761917563
+        ],
+        [
+          0.8451972761917563,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Death1",
+        "Name/Alias"
       ],
       "matrix": [
         [
@@ -1364,16 +1153,16 @@
     {
       "entity": "original",
       "fields": [
-        "Current?",
-        "URL"
+        "Death2",
+        "Notes"
       ],
       "matrix": [
         [
           1.0,
-          0.9999999999999998
+          1.0
         ],
         [
-          0.9999999999999998,
+          1.0,
           1.0
         ]
       ],
@@ -1382,7 +1171,133 @@
     {
       "entity": "original",
       "fields": [
-        "URL",
+        "Death2",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Probationary Introl",
+        "Notes"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.871354841186562
+        ],
+        [
+          0.871354841186562,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Probationary Introl",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9428090415820642
+        ],
+        [
+          0.9428090415820642,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Probationary Introl",
+        "Return1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.6546536707079771
+        ],
+        [
+          0.6546536707079771,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Probationary Introl",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999997
+        ],
+        [
+          0.9999999999999997,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Full/Reserve Avengers Intro"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.8128002569531283
+        ],
+        [
+          0.8128002569531283,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Return1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
         "Return2"
       ],
       "matrix": [
@@ -1392,6 +1307,114 @@
         ],
         [
           1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Notes",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Return1"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.897267277252267
+        ],
+        [
+          0.897267277252267,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Return2"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Full/Reserve Avengers Intro",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9981255841065827
+        ],
+        [
+          0.9981255841065827,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Return1",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "conditional": []
+    },
+    {
+      "entity": "original",
+      "fields": [
+        "Return2",
+        "Name/Alias"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9999999999999999
+        ],
+        [
+          0.9999999999999999,
           1.0
         ]
       ],
