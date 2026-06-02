@@ -1,0 +1,390 @@
+=== DATASET: sp500 ===
+--- ORIGINAL (10 rows) ---
+date|price
+Jan 1 2000|1394.46
+Feb 1 2000|1366.42
+Mar 1 2000|1498.58
+Apr 1 2000|1452.43
+May 1 2000|1420.6
+Jun 1 2000|1454.6
+Jul 1 2000|1430.83
+Aug 1 2000|1517.68
+Sep 1 2000|1436.51
+Oct 1 2000|1429.4
+--- GENERATED (10 rows) ---
+date|price
+Jan 1 2000|1394.46
+Feb 1 2000|1366.42
+Mar 1 2000|1498.58
+Apr 1 2000|1452.43
+May 1 2000|1420.6
+Jun 1 2000|1454.6
+Jul 1 2000|1430.83
+Aug 1 2000|1517.68
+Sep 1 2000|1436.51
+Oct 1 2000|1429.4
+
+=== DATASET: sp500-2000 ===
+--- ORIGINAL (10 rows) ---
+date|open|high|low|close|adjclose|volume
+2000-01-03|1469.250000|1478.000000|1438.359985|1455.219971|1455.219971|931800000
+2000-01-04|1455.219971|1455.219971|1397.430054|1399.420044|1399.420044|1009000000
+2000-01-05|1399.420044|1413.270020|1377.680054|1402.109985|1402.109985|1085500000
+2000-01-06|1402.109985|1411.900024|1392.099976|1403.449951|1403.449951|1092300000
+2000-01-07|1403.449951|1441.469971|1400.729980|1441.469971|1441.469971|1225200000
+2000-01-10|1441.469971|1464.359985|1441.469971|1457.599976|1457.599976|1064800000
+2000-01-11|1457.599976|1458.660034|1434.420044|1438.560059|1438.560059|1014000000
+2000-01-12|1438.560059|1442.599976|1427.079956|1432.250000|1432.250000|974600000
+2000-01-13|1432.250000|1454.199951|1432.250000|1449.680054|1449.680054|1030400000
+2000-01-14|1449.680054|1473.000000|1449.680054|1465.150024|1465.150024|1085900000
+--- GENERATED (10 rows) ---
+date|open|high|low|close|adjclose|volume
+2000-01-03|1480.044385|1499.715911|1431.357914|1474.221271|1481.119361|1432668490
+2000-01-04|1476.976987|1477.802917|1418.447777|1456.146833|1476.282713|974220912
+2000-01-05|1458.24767|1473.227857|1435.719027|1451.217719|1466.194426|986722125
+2000-01-06|1473.667713|1479.046494|1403.570377|1425.048538|1454.663301|819769798
+2000-01-07|1483.769832|1496.04706|1407.316767|1416.775393|1447.528066|733723876
+2000-01-08|1480.216164|1502.232656|1442.49513|1452.057694|1470.441739|237652078
+2000-01-09|1455.648115|1488.60148|1419.461918|1439.952857|1462.984188|1033197199
+2000-01-10|1456.404599|1464.050736|1434.221753|1436.501209|1455.06648|2068982528
+2000-01-11|1451.350551|1496.964618|1440.099447|1441.035475|1477.952997|1299149994
+2000-01-12|1458.710377|1485.849518|1451.061602|1452.81052|1456.558279|1696853345
+
+=== DATASET: species ===
+--- ORIGINAL (10 rows) ---
+item_id|common_name|scientific_name|gap_species_code|county_id|habitat_yearround_pct
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|53000|0.0481
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|53073|0.1605
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|30105|0.0027
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|30029|0.1209
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|16021|0.1085
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|30071|0.0049
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|38079|0.0
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|30053|0.1302
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|38009|0.0
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|30035|0.0
+--- GENERATED (10 rows) ---
+item_id|common_name|scientific_name|gap_species_code|county_id|habitat_yearround_pct
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|22404|0.0267
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|45597|0.0038
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|17809|0.2949
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|26424|0.0527
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|35615|0.0146
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|16886|0.1448
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|22278|0.2191
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|28569|0.0718
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|21651|0.0199
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|11410|0.3459
+
+=== DATASET: steak-survey ===
+--- ORIGINAL (10 rows) ---
+RespondentID|Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?|Do you ever smoke cigarettes?|Do you ever drink alcohol?|Do you ever gamble?|Have you ever been skydiving?|Do you ever drive above the speed limit?|Have you ever cheated on your significant other?|Do you eat steak?|How do you like your steak prepared?|Gender|Age|Household Income|Education|Location (Census Region)
+|Response|Response|Response|Response|Response|Response|Response|Response|Response|Response|Response|Response|Response|Response
+3237565956|Lottery B|||||||||||||
+3234982343|Lottery A|No|Yes|No|No|No|No|Yes|Medium rare|Male|> 60|$50,000 - $99,999|Some college or Associate degree|East North Central
+3234973379|Lottery A|No|Yes|Yes|No|Yes|Yes|Yes|Rare|Male|> 60|$150,000+|Graduate degree|South Atlantic
+3234972383|Lottery B|Yes|Yes|Yes|No|Yes|Yes|Yes|Medium|Male|> 60|$50,000 - $99,999|Bachelor degree|New England
+3234958833|Lottery B|No|Yes|No|No|Yes|Yes|Yes|Medium|Male|> 60|$50,000 - $99,999|Graduate degree|Middle Atlantic
+3234955240|Lottery A|No|No|No|No|Yes|No|Yes|Medium rare|Male|18-29|$0 - $24,999|Some college or Associate degree|West South Central
+3234955097|Lottery A|No|Yes|No|No|Yes|Yes|No||Male|> 60|$150,000+|Graduate degree|New England
+3234955010|Lottery A|No|Yes|Yes|Yes|Yes|No|Yes|Medium rare|Male|18-29|$25,000 - $49,999|Some college or Associate degree|West North Central
+3234953052|Lottery A|Yes|Yes|Yes|No|Yes|No|Yes|Medium|Male|18-29|$50,000 - $99,999|Bachelor degree|East North Central
+--- GENERATED (10 rows) ---
+RespondentID|Consider the following hypothetical situations: <br>In Lottery A, you have a 50% chance of success, with a payout of $100. <br>In Lottery B, you have a 90% chance of success, with a payout of $20. <br><br>Assuming you have $10 to bet, would you play Lottery A or Lottery B?|Do you ever smoke cigarettes?|Do you ever drink alcohol?|Do you ever gamble?|Have you ever been skydiving?|Do you ever drive above the speed limit?|Have you ever cheated on your significant other?|Do you eat steak?|How do you like your steak prepared?|Gender|Age|Household Income|Education|Location (Census Region)
+3237565956|Lottery B|||||||||||||
+3234982343|Lottery A||Yes|No|No|No|No||Medium rare|Male|> 60|$50,000 - $99,999|Some college or Associate degree|East North Central
+3234973379|Lottery A|No|Yes|Yes|No|Yes|Yes|Yes|Rare|Male|> 60|$150,000+|Graduate degree|South Atlantic
+3234972383|Lottery B|Yes|Yes|Yes|No|Yes|Yes|Yes|Medium|Male|> 60|$50,000 - $99,999|Bachelor degree|New England
+3234958833|Lottery B|No|Yes|No|No|Yes|Yes|Yes|Medium|Male|> 60|$50,000 - $99,999|Graduate degree|Middle Atlantic
+3234955240|Lottery A|No|No|No|No|Yes|No|Yes||Male||$0 - $24,999||
+3234955097|Lottery A|No|Yes|No|No|Yes|Yes|No||Male|> 60|$150,000+|Graduate degree|New England
+3234955010|Lottery A|No|Yes|Yes|Yes|Yes||Yes|Medium rare|Male|18-29|||West North Central
+3234953052|Lottery A|Yes|Yes|Yes|No|Yes|No|Yes|Medium|Male|18-29|$50,000 - $99,999||East North Central
+3234951249|Lottery B|No|Yes|Yes|No|No|No|Yes||Male|> 60|$25,000 - $49,999|Some college or Associate degree|Pacific
+
+=== DATASET: stocks ===
+--- ORIGINAL (10 rows) ---
+symbol|date|price
+MSFT|Jan 1 2000|39.81
+MSFT|Feb 1 2000|36.35
+MSFT|Mar 1 2000|43.22
+MSFT|Apr 1 2000|28.37
+MSFT|May 1 2000|25.45
+MSFT|Jun 1 2000|32.54
+MSFT|Jul 1 2000|28.4
+MSFT|Aug 1 2000|28.4
+MSFT|Sep 1 2000|24.53
+MSFT|Oct 1 2000|28.02
+--- GENERATED (10 rows) ---
+symbol|date|price
+MSFT|Jan 1 2000|39.81
+MSFT|Feb 1 2000|36.35
+MSFT|Mar 1 2000|43.22
+MSFT|Apr 1 2000|28.37
+MSFT|May 1 2000|25.45
+MSFT|Jun 1 2000|32.54
+MSFT|Jul 1 2000|28.4
+MSFT|Aug 1 2000|28.4
+MSFT|Sep 1 2000|24.53
+MSFT|Oct 1 2000|28.02
+
+=== DATASET: taxis ===
+--- ORIGINAL (10 rows) ---
+pickup|dropoff|passengers|distance|fare|tip|tolls|total|color|payment|pickup_zone|dropoff_zone|pickup_borough|dropoff_borough
+2019-03-23 20:21:09|2019-03-23 20:27:24|1|1.6|7.0|2.15|0.0|12.95|yellow|credit card|Lenox Hill West|UN/Turtle Bay South|Manhattan|Manhattan
+2019-03-04 16:11:55|2019-03-04 16:19:00|1|0.79|5.0|0.0|0.0|9.3|yellow|cash|Upper West Side South|Upper West Side South|Manhattan|Manhattan
+2019-03-27 17:53:01|2019-03-27 18:00:25|1|1.37|7.5|2.36|0.0|14.16|yellow|credit card|Alphabet City|West Village|Manhattan|Manhattan
+2019-03-10 01:23:59|2019-03-10 01:49:51|1|7.7|27.0|6.15|0.0|36.95|yellow|credit card|Hudson Sq|Yorkville West|Manhattan|Manhattan
+2019-03-30 13:27:42|2019-03-30 13:37:14|3|2.16|9.0|1.1|0.0|13.4|yellow|credit card|Midtown East|Yorkville West|Manhattan|Manhattan
+2019-03-11 10:37:23|2019-03-11 10:47:31|1|0.49|7.5|2.16|0.0|12.96|yellow|credit card|Times Sq/Theatre District|Midtown East|Manhattan|Manhattan
+2019-03-26 21:07:31|2019-03-26 21:17:29|1|3.65|13.0|2.0|0.0|18.8|yellow|credit card|Battery Park City|Two Bridges/Seward Park|Manhattan|Manhattan
+2019-03-22 12:47:13|2019-03-22 12:58:17|0|1.4|8.5|0.0|0.0|11.8|yellow||Murray Hill|Flatiron|Manhattan|Manhattan
+2019-03-23 11:48:50|2019-03-23 12:06:14|1|3.63|15.0|1.0|0.0|19.3|yellow|credit card|East Harlem South|Midtown Center|Manhattan|Manhattan
+2019-03-08 16:18:37|2019-03-08 16:26:57|1|1.52|8.0|1.0|0.0|13.3|yellow|credit card|Lincoln Square East|Central Park|Manhattan|Manhattan
+--- GENERATED (10 rows) ---
+pickup|dropoff|passengers|distance|fare|tip|tolls|total|color|payment|pickup_zone|dropoff_zone|pickup_borough|dropoff_borough
+2019-03-23 17:12:34|2019-03-23 17:26:09|1|2.19|9.5|1.13|0.44|28.82|yellow|credit card|Financial District North|Alphabet City|Manhattan|Manhattan
+2019-03-31 12:12:25|2019-03-31 12:27:03|1|2.33|9.8|1.89|0.21|11.52|yellow|credit card|Midtown East|Lincoln Square West|Manhattan|Manhattan
+2019-03-04 07:40:46|2019-03-04 07:53:48|2|0.9|8.0|0.16|0.14|13.6|yellow|credit card|East Chelsea|Gowanus|Manhattan|Brooklyn
+2019-03-26 18:25:31|2019-03-26 18:41:47|1|1.62|7.5|6.19|0.03|16.82|yellow|cash|Kips Bay|Prospect-Lefferts Gardens|Manhattan|Brooklyn
+2019-03-17 10:23:26|2019-03-17 10:37:28|3|1.61|4.8|0.14|0.09|17.45|yellow|credit card|Little Italy/NoLiTa|Bushwick South|Manhattan|Brooklyn
+2019-03-25 04:49:42|2019-03-25 05:04:45|1|2.48|9.03|2.4|0.51|21.53|yellow|cash|Meatpacking/West Village West|Crotona Park East|Manhattan|Bronx
+2019-03-15 21:06:55|2019-03-15 21:20:46|1|0.43|8.3|2.28|0.08|32.68|yellow|credit card|TriBeCa/Civic Center|Rosedale|Manhattan|Queens
+2019-03-05 03:58:09|2019-03-05 04:12:39|5|4.57|7.6|5.16|0.08|11.94|yellow|cash|Clinton West|Financial District South|Manhattan|Manhattan
+2019-03-30 06:25:49|2019-03-30 06:39:53|6|3.84|9.2|0.93|0.02|16.2|yellow|credit card|Union Sq|Oakland Gardens|Manhattan|Queens
+2019-03-16 05:44:06|2019-03-16 05:57:47|4|6.41|5.9|0.32|0.15|17.07|yellow|cash|Times Sq/Theatre District|Jamaica|Manhattan|Queens
+
+=== DATASET: tips ===
+--- ORIGINAL (10 rows) ---
+total_bill|tip|sex|smoker|day|time|size
+16.99|1.01|Female|No|Sun|Dinner|2
+10.34|1.66|Male|No|Sun|Dinner|3
+21.01|3.5|Male|No|Sun|Dinner|3
+23.68|3.31|Male|No|Sun|Dinner|2
+24.59|3.61|Female|No|Sun|Dinner|4
+25.29|4.71|Male|No|Sun|Dinner|4
+8.77|2|Male|No|Sun|Dinner|2
+26.88|3.12|Male|No|Sun|Dinner|4
+15.04|1.96|Male|No|Sun|Dinner|2
+14.78|3.23|Male|No|Sun|Dinner|2
+--- GENERATED (10 rows) ---
+total_bill|tip|sex|smoker|day|time|size
+16.32|4.3|Female|Yes|Fri|Dinner|2
+13.94|3.06|Male|No|Sun|Dinner|2
+40.55|3.0|Male|Yes|Sun|Dinner|2
+18.64|1.36|Female|No|Thur|Lunch|3
+45.35|3.5|Male|Yes|Sun|Dinner|3
+28.17|6.5|Female|Yes|Sat|Dinner|3
+19.82|3.18|Male|No|Sat|Dinner|2
+35.26|5.0|Female|No|Sun|Dinner|4
+48.17|5.0|Male|No|Sun|Dinner|6
+15.04|1.96|Male|No|Sun|Dinner|2
+
+=== DATASET: titanic ===
+--- ORIGINAL (10 rows) ---
+survived|pclass|sex|age|sibsp|parch|fare|embarked|class|who|adult_male|deck|embark_town|alive|alone
+0|3|male|22.0|1|0|7.25|S|Third|man|True||Southampton|no|False
+1|1|female|38.0|1|0|71.2833|C|First|woman|False|C|Cherbourg|yes|False
+1|3|female|26.0|0|0|7.925|S|Third|woman|False||Southampton|yes|True
+1|1|female|35.0|1|0|53.1|S|First|woman|False|C|Southampton|yes|False
+0|3|male|35.0|0|0|8.05|S|Third|man|True||Southampton|no|True
+0|3|male||0|0|8.4583|Q|Third|man|True||Queenstown|no|True
+0|1|male|54.0|0|0|51.8625|S|First|man|True|E|Southampton|no|True
+0|3|male|2.0|3|1|21.075|S|Third|child|False||Southampton|no|False
+1|3|female|27.0|0|2|11.1333|S|Third|woman|False||Southampton|yes|False
+1|2|female|14.0|1|0|30.0708|C|Second|child|False||Cherbourg|yes|False
+--- GENERATED (10 rows) ---
+survived|pclass|sex|age|sibsp|parch|fare|embarked|class|who|adult_male|deck|embark_town|alive|alone
+1|3|female|15.0|0|0|7.225|C|Third|child|false||Cherbourg|yes|true
+0|3|male||1|0|6.4958|S|Third|man|true||Southampton|no|false
+1|2|female|27.0|0|0|10.5|S|Second|woman|false||Southampton|yes|true
+0|2|male|32.5|1|0|30.0708|C|Second|man|true||Cherbourg|no|false
+0|2|male|36.0|1|2|27.75|S|Second|man|true||Southampton|no|false
+1|1|male|38.0|1|0|90.0|S|First|man|true||Southampton|yes|false
+1|2|female|24.0|2|1|27.0|S|Second|woman|false||Southampton|yes|false
+0|1|male||0|0|221.7792|S|First|man|true||Southampton|no|true
+1|1|female|16.0|0|0|86.5|S|First|woman|false||Southampton|yes|true
+1|2|female|30.0|3|0|21.0|S|Second|woman|false||Southampton|yes|false
+
+=== DATASET: unemployment-industries ===
+--- ORIGINAL (10 rows) ---
+series|year|month|count|rate|date
+Government|2000|1|430|2.1|2000-01-01T08:00:00.000Z
+Government|2000|2|409|2|2000-02-01T08:00:00.000Z
+Government|2000|3|311|1.5|2000-03-01T08:00:00.000Z
+Government|2000|4|269|1.3|2000-04-01T08:00:00.000Z
+Government|2000|5|370|1.9|2000-05-01T07:00:00.000Z
+Government|2000|6|603|3.1|2000-06-01T07:00:00.000Z
+Government|2000|7|545|2.9|2000-07-01T07:00:00.000Z
+Government|2000|8|583|3.1|2000-08-01T07:00:00.000Z
+Government|2000|9|408|2.1|2000-09-01T07:00:00.000Z
+Government|2000|10|391|2|2000-10-01T07:00:00.000Z
+--- GENERATED (10 rows) ---
+series|year|month|count|rate|date
+Government|2000|1|430|2.1|2000-01-01 08:00:00
+Government|2000|2|409|2.0|2000-02-01 08:00:00
+Government|2000|3|311|1.5|2000-03-01 08:00:00
+Government|2000|4|269|1.3|2000-04-01 08:00:00
+Government|2000|5|370|1.9|2000-05-01 07:00:00
+Government|2000|6|603|3.1|2000-06-01 07:00:00
+Government|2000|7|545|2.9|2000-07-01 07:00:00
+Government|2000|8|583|3.1|2000-08-01 07:00:00
+Government|2000|9|408|2.1|2000-09-01 07:00:00
+Government|2000|10|391|2.0|2000-10-01 07:00:00
+
+=== DATASET: us-ag-exports ===
+--- ORIGINAL (10 rows) ---
+code|state|category|total exports|beef|pork|poultry|dairy|fruits fresh|fruits proc|total fruits|veggies fresh|veggies proc|total veggies|corn|wheat|cotton
+AL|Alabama|state|1390.63|34.40|10.60|481.00|4.06|8.00|17.10|25.11|5.50|8.90|14.33|34.90|70.00|317.61
+AK|Alaska|state|13.31|0.20|0.10|0.00|0.19|0.00|0.00|0.00|0.60|1.00|1.56|0.00|0.00|0.00
+AZ|Arizona|state|1463.17|71.30|17.90|0.00|105.48|19.30|41.00|60.27|147.50|239.40|386.91|7.30|48.70|423.95
+AR|Arkansas|state|3586.02|53.20|29.40|562.90|3.53|2.20|4.70|6.88|4.40|7.10|11.45|69.50|114.50|665.44
+CA|California|state|16472.88|228.70|11.10|225.40|929.95|2791.80|5944.60|8736.40|803.20|1303.50|2106.79|34.60|249.30|1064.95
+CO|Colorado|state|1851.33|261.40|66.00|14.00|71.94|5.70|12.20|17.99|45.10|73.20|118.27|183.20|400.50|0.00
+CT|Connecticut|state|259.62|1.10|0.10|6.90|9.49|4.20|8.90|13.10|4.30|6.90|11.16|0.00|0.00|0.00
+DE|Delaware|state|282.19|0.40|0.60|114.70|2.30|0.50|1.00|1.53|7.60|12.40|20.03|26.90|22.90|0.00
+FL|Florida|state|3764.09|42.60|0.90|56.90|66.31|438.20|933.10|1371.36|171.90|279.00|450.86|3.50|1.80|78.24
+GA|Georgia|state|2860.84|31.00|18.90|630.40|38.38|74.60|158.90|233.51|59.00|95.80|154.77|57.80|65.40|1154.07
+--- GENERATED (10 rows) ---
+code|state|category|total exports|beef|pork|poultry|dairy|fruits fresh|fruits proc|total fruits|veggies fresh|veggies proc|total veggies|corn|wheat|cotton
+AL|Alabama|state|1390.63|34.4|10.6|481.0|4.06|8.0|17.1|25.11|5.5|8.9|14.33|34.9|70.0|317.61
+AK|Alaska|state|13.31|0.2|0.1|0.0|0.19|0.0|0.0|0.0|0.6|1.0|1.56|0.0|0.0|0.0
+AZ|Arizona|state|1463.17|71.3|17.9|0.0|105.48|19.3|41.0|60.27|147.5|239.4|386.91|7.3|48.7|423.95
+AR|Arkansas|state|3586.02|53.2|29.4|562.9|3.53|2.2|4.7|6.88|4.4|7.1|11.45|69.5|114.5|665.44
+CA|California|state|16472.88|228.7|11.1|225.4|929.95|2791.8|5944.6|8736.4|803.2|1303.5|2106.79|34.6|249.3|1064.95
+CO|Colorado|state|1851.33|261.4|66.0|14.0|71.94|5.7|12.2|17.99|45.1|73.2|118.27|183.2|400.5|0.0
+CT|Connecticut|state|259.62|1.1|0.1|6.9|9.49|4.2|8.9|13.1|4.3|6.9|11.16|0.0|0.0|0.0
+DE|Delaware|state|282.19|0.4|0.6|114.7|2.3|0.5|1.0|1.53|7.6|12.4|20.03|26.9|22.9|0.0
+FL|Florida|state|3764.09|42.6|0.9|56.9|66.31|438.2|933.1|1371.36|171.9|279.0|450.86|3.5|1.8|78.24
+GA|Georgia|state|2860.84|31.0|18.9|630.4|38.38|74.6|158.9|233.51|59.0|95.8|154.77|57.8|65.4|1154.07
+
+=== DATASET: us-airport-traffic ===
+--- ORIGINAL (10 rows) ---
+iata|airport|city|state|country|lat|long|cnt
+ORD|Chicago O'Hare International|Chicago|IL|USA|41.979595|-87.90446417|25129
+ATL|William B Hartsfield-Atlanta Intl|Atlanta|GA|USA|33.64044444|-84.42694444|21925
+DFW|Dallas-Fort Worth International|Dallas-Fort Worth|TX|USA|32.89595056|-97.0372|20662
+PHX|Phoenix Sky Harbor International|Phoenix|AZ|USA|33.43416667|-112.0080556|17290
+DEN|Denver Intl|Denver|CO|USA|39.85840806|-104.6670019|13781
+IAH|George Bush Intercontinental|Houston|TX|USA|29.98047222|-95.33972222|13223
+SFO|San Francisco International|San Francisco|CA|USA|37.61900194|-122.3748433|12016
+LAX|Los Angeles International|Los Angeles|CA|USA|33.94253611|-118.4080744|11797
+MCO|Orlando International|Orlando|FL|USA|28.42888889|-81.31602778|10536
+CLT|Charlotte/Douglas International|Charlotte|NC|USA|35.21401111|-80.94312583|10490
+--- GENERATED (10 rows) ---
+iata|airport|city|state|country|lat|long|cnt
+ORD|Chicago O'Hare International|Chicago|IL|USA|41.979595|-87.90446417|25129
+ATL|William B Hartsfield-Atlanta Intl|Atlanta|GA|USA|33.64044444|-84.42694444|21925
+DFW|Dallas-Fort Worth International|Dallas-Fort Worth|TX|USA|32.89595056|-97.0372|20662
+PHX|Phoenix Sky Harbor International|Phoenix|AZ|USA|33.43416667|-112.0080556|17290
+DEN|Denver Intl|Denver|CO|USA|39.85840806|-104.6670019|13781
+IAH|George Bush Intercontinental|Houston|TX|USA|29.98047222|-95.33972222|13223
+SFO|San Francisco International|San Francisco|CA|USA|37.61900194|-122.3748433|12016
+LAX|Los Angeles International|Los Angeles|CA|USA|33.94253611|-118.4080744|11797
+MCO|Orlando International|Orlando|FL|USA|28.42888889|-81.31602778|10536
+CLT|Charlotte/Douglas International|Charlotte|NC|USA|35.21401111|-80.94312583|10490
+
+=== DATASET: us-births-cdc ===
+--- ORIGINAL (10 rows) ---
+year|month|date_of_month|day_of_week|births
+1994|1|1|6|8096
+1994|1|2|7|7772
+1994|1|3|1|10142
+1994|1|4|2|11248
+1994|1|5|3|11053
+1994|1|6|4|11406
+1994|1|7|5|11251
+1994|1|8|6|8653
+1994|1|9|7|7910
+1994|1|10|1|10498
+--- GENERATED (10 rows) ---
+year|month|date_of_month|day_of_week|births
+1994|1|1|6|8096
+1994|1|2|7|7772
+1994|1|3|1|10142
+1994|1|4|2|11248
+1994|1|5|3|11053
+1994|1|6|4|11406
+1994|1|7|5|11251
+1994|1|8|6|8653
+1994|1|9|7|7910
+1994|1|10|1|10498
+
+=== DATASET: us-births-ssa ===
+--- ORIGINAL (10 rows) ---
+year|month|date_of_month|day_of_week|births
+2000|1|1|6|9083
+2000|1|2|7|8006
+2000|1|3|1|11363
+2000|1|4|2|13032
+2000|1|5|3|12558
+2000|1|6|4|12466
+2000|1|7|5|12516
+2000|1|8|6|8934
+2000|1|9|7|7949
+2000|1|10|1|11668
+--- GENERATED (10 rows) ---
+year|month|date_of_month|day_of_week|births
+2000|1|1|6|9083
+2000|1|2|7|8006
+2000|1|3|1|11363
+2000|1|4|2|13032
+2000|1|5|3|12558
+2000|1|6|4|12466
+2000|1|7|5|12516
+2000|1|8|6|8934
+2000|1|9|7|7949
+2000|1|10|1|11668
+
+=== DATASET: us-cities ===
+--- ORIGINAL (10 rows) ---
+name|pop|lat|lon
+New York |8287238|40.7305991|-73.9865812
+Los Angeles |3826423|34.053717|-118.2427266
+Chicago |2705627|41.8755546|-87.6244212
+Houston |2129784|29.7589382|-95.3676974
+Philadelphia |1539313|39.952335|-75.163789
+Phoenix |1465114|33.4467681|-112.0756724
+San Antonio |1359174|29.4246002|-98.4951405
+San Diego |1321016|32.7174209|-117.1627714
+Dallas |1219399|32.7761963|-96.7968994
+San Jose |971495|37.3438502|-121.8831349
+--- GENERATED (10 rows) ---
+name|pop|lat|lon
+New York |8287238|40.7305991|-73.9865812
+Los Angeles |3826423|34.053717|-118.2427266
+Chicago |2705627|41.8755546|-87.6244212
+Houston |2129784|29.7589382|-95.3676974
+Philadelphia |1539313|39.952335|-75.163789
+Phoenix |1465114|33.4467681|-112.0756724
+San Antonio |1359174|29.4246002|-98.4951405
+San Diego |1321016|32.7174209|-117.1627714
+Dallas |1219399|32.7761963|-96.7968994
+San Jose |971495|37.3438502|-121.8831349
+
+=== DATASET: women-stem ===
+--- ORIGINAL (10 rows) ---
+Rank|Major_code|Major|Major_category|Total|Men|Women|ShareWomen|Median
+1|2419|PETROLEUM ENGINEERING|Engineering|2339|2057|282|0.120564344|110000
+2|2416|MINING AND MINERAL ENGINEERING|Engineering|756|679|77|0.101851852|75000
+3|2415|METALLURGICAL ENGINEERING|Engineering|856|725|131|0.153037383|73000
+4|2417|NAVAL ARCHITECTURE AND MARINE ENGINEERING|Engineering|1258|1123|135|0.107313196|70000
+5|2418|NUCLEAR ENGINEERING|Engineering|2573|2200|373|0.144966965|65000
+6|2405|CHEMICAL ENGINEERING|Engineering|32260|21239|11021|0.341630502|65000
+7|5001|ASTRONOMY AND ASTROPHYSICS|Physical Sciences|1792|832|960|0.535714286|62000
+8|2414|MECHANICAL ENGINEERING|Engineering|91227|80320|10907|0.119558903|60000
+9|2401|AEROSPACE ENGINEERING|Engineering|15058|12953|2105|0.139792801|60000
+10|2408|ELECTRICAL ENGINEERING|Engineering|81527|65511|16016|0.196450256|60000
+--- GENERATED (10 rows) ---
+Rank|Major_code|Major|Major_category|Total|Men|Women|ShareWomen|Median
+1|2419|PETROLEUM ENGINEERING|Engineering|2339|2057|282|0.120564344|110000
+2|2416|MINING AND MINERAL ENGINEERING|Engineering|756|679|77|0.101851852|75000
+3|2415|METALLURGICAL ENGINEERING|Engineering|856|725|131|0.153037383|73000
+4|2417|NAVAL ARCHITECTURE AND MARINE ENGINEERING|Engineering|1258|1123|135|0.107313196|70000
+5|2418|NUCLEAR ENGINEERING|Engineering|2573|2200|373|0.144966965|65000
+6|2405|CHEMICAL ENGINEERING|Engineering|32260|21239|11021|0.341630502|65000
+7|5001|ASTRONOMY AND ASTROPHYSICS|Physical Sciences|1792|832|960|0.535714286|62000
+8|2414|MECHANICAL ENGINEERING|Engineering|91227|80320|10907|0.119558903|60000
+9|2401|AEROSPACE ENGINEERING|Engineering|15058|12953|2105|0.139792801|60000
+10|2408|ELECTRICAL ENGINEERING|Engineering|81527|65511|16016|0.196450256|60000
+

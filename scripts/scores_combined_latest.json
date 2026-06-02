@@ -1,0 +1,437 @@
+{
+  "aa-flight-paths": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "airline-safety": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "airports": {
+    "ai": 76.7,
+    "combined": 88.1,
+    "stat": 99.5
+  },
+  "alcohol-by-country": {
+    "ai": 99.3,
+    "combined": 99.7,
+    "stat": 100.0
+  },
+  "apple-stock-2014": {
+    "ai": 62.3,
+    "combined": 75.2,
+    "stat": 88.0
+  },
+  "arc-challenge-train": {
+    "ai": 26.7,
+    "combined": 60.3,
+    "stat": 94.0
+  },
+  "arc-challenge-valid": {
+    "ai": 28.3,
+    "combined": 61.2,
+    "stat": 94.0
+  },
+  "arc-easy-train": {
+    "ai": 28.3,
+    "combined": 61.2,
+    "stat": 94.0
+  },
+  "arc-easy-valid": {
+    "ai": 28.3,
+    "combined": 61.2,
+    "stat": 94.0
+  },
+  "attention": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "avengers": {
+    "ai": 70.0,
+    "combined": 78.7,
+    "stat": 87.3
+  },
+  "bad-drivers": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "barley": {
+    "ai": 99.0,
+    "combined": 99.5,
+    "stat": 100.0
+  },
+  "biopics": {
+    "ai": 100.0,
+    "combined": 99.5,
+    "stat": 99.0
+  },
+  "bob-ross": {
+    "ai": 71.7,
+    "combined": 85.0,
+    "stat": 98.3
+  },
+  "burtin": {
+    "ai": 98.7,
+    "combined": 99.3,
+    "stat": 100.0
+  },
+  "candy-power-ranking": {
+    "ai": 99.3,
+    "combined": 99.7,
+    "stat": 100.0
+  },
+  "car-crashes": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "chinook": {
+    "ai": 72.3,
+    "combined": 80.5,
+    "stat": 88.7
+  },
+  "co2-concentration": {
+    "ai": 39.0,
+    "combined": 63.5,
+    "stat": 88.0
+  },
+  "college-majors-all": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "countries": {
+    "ai": 29.3,
+    "combined": 61.2,
+    "stat": 93.0
+  },
+  "dc-characters": {
+    "ai": 36.0,
+    "combined": 60.5,
+    "stat": 85.0
+  },
+  "diamonds": {
+    "ai": 78.0,
+    "combined": 86.2,
+    "stat": 94.4
+  },
+  "disasters": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "dowjones": {
+    "ai": 52.7,
+    "combined": 73.3,
+    "stat": 94.0
+  },
+  "drinks": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "driving": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "ebola-2014": {
+    "ai": 84.7,
+    "combined": 90.7,
+    "stat": 96.7
+  },
+  "exercise": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "flare": {
+    "ai": 29.7,
+    "combined": 58.9,
+    "stat": 88.1
+  },
+  "flights": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "flights-airport": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "fmri": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "gapminder": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "gapminder-health-income": {
+    "ai": 99.0,
+    "combined": 99.5,
+    "stat": 100.0
+  },
+  "geyser": {
+    "ai": 67.0,
+    "combined": 80.8,
+    "stat": 94.6
+  },
+  "github-events": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "global-temp": {
+    "ai": 75.7,
+    "combined": 84.3,
+    "stat": 92.9
+  },
+  "glue-cola": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "glue-mrpc": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "glue-rte": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "glue-scores": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "glue-sst2": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "glue-stsb": {
+    "ai": 98.7,
+    "combined": 99.3,
+    "stat": 100.0
+  },
+  "glue-wnli": {
+    "ai": 100.0,
+    "combined": 99.8,
+    "stat": 99.7
+  },
+  "grad-students": {
+    "ai": 99.0,
+    "combined": 99.5,
+    "stat": 100.0
+  },
+  "healthexp": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "income": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "iowa-electricity": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "iris": {
+    "ai": 86.3,
+    "combined": 91.4,
+    "stat": 96.5
+  },
+  "jaffle-shop": {
+    "ai": 79.3,
+    "combined": 85.5,
+    "stat": 91.6
+  },
+  "la-riots": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 99.9
+  },
+  "london-centroids": {
+    "ai": 74.0,
+    "combined": 86.5,
+    "stat": 99.0
+  },
+  "marvel-characters": {
+    "ai": 57.3,
+    "combined": 72.6,
+    "stat": 87.9
+  },
+  "miserables": {
+    "ai": 76.7,
+    "combined": 38.3,
+    "stat": 0
+  },
+  "monarchs": {
+    "ai": 96.7,
+    "combined": 94.9,
+    "stat": 93.2
+  },
+  "mpg": {
+    "ai": 74.3,
+    "combined": 84.1,
+    "stat": 93.8
+  },
+  "nba-raptor": {
+    "ai": 72.7,
+    "combined": 80.9,
+    "stat": 89.1
+  },
+  "northwind": {
+    "ai": 76.0,
+    "combined": 81.7,
+    "stat": 87.3
+  },
+  "obesity": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "ohlc": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "penguins": {
+    "ai": 74.7,
+    "combined": 81.5,
+    "stat": 88.3
+  },
+  "penguins-json": {
+    "ai": 72.7,
+    "combined": 80.2,
+    "stat": 87.8
+  },
+  "planets": {
+    "ai": 70.7,
+    "combined": 81.9,
+    "stat": 93.1
+  },
+  "population": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "population-engineers-hurricanes": {
+    "ai": 53.3,
+    "combined": 73.1,
+    "stat": 92.8
+  },
+  "recent-grads": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "sakila": {
+    "ai": 79.0,
+    "combined": 83.2,
+    "stat": 87.3
+  },
+  "seaice": {
+    "ai": 85.7,
+    "combined": 86.3,
+    "stat": 87.0
+  },
+  "seattle-weather": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "seattle-weather-hourly": {
+    "ai": 88.0,
+    "combined": 86.0,
+    "stat": 84.1
+  },
+  "sp500": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "sp500-2000": {
+    "ai": 70.7,
+    "combined": 79.2,
+    "stat": 87.8
+  },
+  "species": {
+    "ai": 76.0,
+    "combined": 85.8,
+    "stat": 95.7
+  },
+  "steak-survey": {
+    "ai": 77.3,
+    "combined": 87.3,
+    "stat": 97.2
+  },
+  "stocks": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "taxis": {
+    "ai": 61.7,
+    "combined": 73.7,
+    "stat": 85.8
+  },
+  "tips": {
+    "ai": 73.3,
+    "combined": 85.1,
+    "stat": 96.9
+  },
+  "titanic": {
+    "ai": 81.0,
+    "combined": 87.1,
+    "stat": 93.2
+  },
+  "unemployment-industries": {
+    "ai": 97.7,
+    "combined": 98.8,
+    "stat": 100.0
+  },
+  "us-ag-exports": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "us-airport-traffic": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "us-births-cdc": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "us-births-ssa": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "us-cities": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  },
+  "women-stem": {
+    "ai": 100.0,
+    "combined": 100.0,
+    "stat": 100.0
+  }
+}

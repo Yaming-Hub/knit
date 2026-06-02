@@ -551,14 +551,17 @@ def score_single(orig_headers: List[str], orig_rows: List[List[str]],
             if orig_nums and gen_nums:
                 # Check if this is a trending time-series column
                 if is_trending(orig_nums):
-                    # For trending data, blend raw KS with first-differences score
+                    # For trending data, raw KS is unreliable because the
+                    # non-stationary distribution depends on the specific
+                    # trend path.  First-differences (step-size distribution)
+                    # and range coverage are more meaningful metrics.
                     ks = ks_statistic_fast(orig_nums, gen_nums)
                     ks_score = max(0.0, 1.0 - ks * 2)
                     range_score = range_overlap_score(orig_nums, gen_nums)
                     diff_score = first_differences_score(orig_nums, gen_nums)
                     uniq_score = uniqueness_score(orig_vals, gen_vals)
-                    # Weight first-differences heavily for trending columns
-                    col_scores.append(0.3 * ks_score + 0.2 * range_score + 0.3 * diff_score + 0.2 * uniq_score)
+                    # De-emphasize raw KS; first-differences captures volatility
+                    col_scores.append(0.15 * ks_score + 0.25 * range_score + 0.40 * diff_score + 0.20 * uniq_score)
                 else:
                     # Standard KS test (distribution shape)
                     ks = ks_statistic_fast(orig_nums, gen_nums)

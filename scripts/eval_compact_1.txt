@@ -1,0 +1,468 @@
+=== DATASET: chinook ===
+--- ORIGINAL (10 rows) ---
+AlbumId|Title|ArtistId
+1|For Those About To Rock We Salute You|1
+2|Balls to the Wall|2
+3|Restless and Wild|2
+4|Let There Be Rock|1
+5|Big Ones|3
+6|Jagged Little Pill|4
+7|Facelift|5
+8|Warner 25 Anos|6
+9|Plays Metallica By Four Cellos|7
+10|Audioslave|8
+--- GENERATED (10 rows) ---
+AlbumId|Title|ArtistId
+1|Misplaced Childhood|184
+2|Brave New World|130
+3|The Essential Miles Davis [Disc 2]|7
+4|Sir Neville Marriner: A Celebration|199
+5|Bach: Violin Concertos|155
+6|Vinícius De Moraes - Sem Limite|188
+7|One By One|234
+8|Use Your Illusion I|133
+9|Roda De Funk|120
+10|The Best Of R.E.M.: The IRS Years|226
+
+=== DATASET: co2-concentration ===
+--- ORIGINAL (10 rows) ---
+Date|CO2|adjusted CO2
+1958-03-01|315.70|314.44
+1958-04-01|317.46|315.16
+1958-05-01|317.51|314.71
+1958-07-01|315.86|315.19
+1958-08-01|314.93|316.19
+1958-09-01|313.21|316.08
+1958-11-01|313.33|315.20
+1958-12-01|314.67|315.43
+1959-01-01|315.58|315.54
+1959-02-01|316.49|315.86
+--- GENERATED (10 rows) ---
+Date|CO2|adjusted CO2
+1958-03-01|371.11|367.53
+1958-03-31|404.5|400.37
+1958-04-30|368.13|368.77
+1958-05-30|351.73|353.38
+1958-06-29|347.74|344.36
+1958-07-29|381.87|384.21
+1958-08-28|369.94|365.85
+1958-09-27|328.66|328.01
+1958-10-27|332.43|329.03
+1958-11-26|401.32|400.24
+
+=== DATASET: college-majors-all ===
+--- ORIGINAL (10 rows) ---
+Major_code|Major|Major_category|Total|Employed|Employed_full_time_year_round|Unemployed|Unemployment_rate|Median|P25th|P75th
+1100|GENERAL AGRICULTURE|Agriculture & Natural Resources|128148|90245|74078|2423|0.026147106|50000|34000|80000
+1101|AGRICULTURE PRODUCTION AND MANAGEMENT|Agriculture & Natural Resources|95326|76865|64240|2266|0.028636059|54000|36000|80000
+1102|AGRICULTURAL ECONOMICS|Agriculture & Natural Resources|33955|26321|22810|821|0.030248324|63000|40000|98000
+1103|ANIMAL SCIENCES|Agriculture & Natural Resources|103549|81177|64937|3619|0.0426789|46000|30000|72000
+1104|FOOD SCIENCE|Agriculture & Natural Resources|24280|17281|12722|894|0.049188446|62000|38500|90000
+1105|PLANT SCIENCE AND AGRONOMY|Agriculture & Natural Resources|79409|63043|51077|2070|0.031790887|50000|35000|75000
+1106|SOIL SCIENCE|Agriculture & Natural Resources|6586|4926|4042|264|0.050867052|63000|39400|88000
+1199|MISCELLANEOUS AGRICULTURE|Agriculture & Natural Resources|8549|6392|5074|261|0.039230422|52000|35000|75000
+1301|ENVIRONMENTAL SCIENCE|Biology & Life Science|106106|87602|65238|4736|0.051289827|52000|38000|75000
+1302|FORESTRY|Agriculture & Natural Resources|69447|48228|39613|2144|0.042563329|58000|40500|80000
+--- GENERATED (10 rows) ---
+Major_code|Major|Major_category|Total|Employed|Employed_full_time_year_round|Unemployed|Unemployment_rate|Median|P25th|P75th
+1100|GENERAL AGRICULTURE|Agriculture & Natural Resources|128148|90245|74078|2423|0.026147106|50000|34000|80000
+1101|AGRICULTURE PRODUCTION AND MANAGEMENT|Agriculture & Natural Resources|95326|76865|64240|2266|0.028636059|54000|36000|80000
+1102|AGRICULTURAL ECONOMICS|Agriculture & Natural Resources|33955|26321|22810|821|0.030248324|63000|40000|98000
+1103|ANIMAL SCIENCES|Agriculture & Natural Resources|103549|81177|64937|3619|0.0426789|46000|30000|72000
+1104|FOOD SCIENCE|Agriculture & Natural Resources|24280|17281|12722|894|0.049188446|62000|38500|90000
+1105|PLANT SCIENCE AND AGRONOMY|Agriculture & Natural Resources|79409|63043|51077|2070|0.031790887|50000|35000|75000
+1106|SOIL SCIENCE|Agriculture & Natural Resources|6586|4926|4042|264|0.050867052|63000|39400|88000
+1199|MISCELLANEOUS AGRICULTURE|Agriculture & Natural Resources|8549|6392|5074|261|0.039230422|52000|35000|75000
+1301|ENVIRONMENTAL SCIENCE|Biology & Life Science|106106|87602|65238|4736|0.051289827|52000|38000|75000
+1302|FORESTRY|Agriculture & Natural Resources|69447|48228|39613|2144|0.042563329|58000|40500|80000
+
+=== DATASET: countries ===
+--- ORIGINAL (10 rows) ---
+_comment|year|fertility|life_expect|n_fertility|n_life_expect|country|p_fertility|p_life_expect
+Data courtesy of Gapminder.org|1955|7.42|43.88|7.38|45.03|Afghanistan||
+|1960|7.38|45.03|7.35|46.13|Afghanistan|7.42|43.88
+|1965|7.35|46.13|7.4|47.08|Afghanistan|7.38|45.03
+|1970|7.4|47.08|7.54|47.55|Afghanistan|7.35|46.13
+|1975|7.54|47.55|7.59|43.68|Afghanistan|7.4|47.08
+|1980|7.59|43.68|7.52|42.03|Afghanistan|7.54|47.55
+|1985|7.52|42.03|7.57|53.83|Afghanistan|7.59|43.68
+|1990|7.57|53.83|7.71|54.33|Afghanistan|7.52|42.03
+|1995|7.71|54.33|7.53|54.73|Afghanistan|7.57|53.83
+|2000|7.53|54.73|||Afghanistan|7.71|54.33
+--- GENERATED (10 rows) ---
+_comment|year|fertility|life_expect|n_fertility|n_life_expect|country|p_fertility|p_life_expect
+|1955|6.12|65.76||63.01|Afghanistan|6.43|65.95
+|1990|7.65|55.91|7.96|55.93|Afghanistan|7.63|58.01
+|1995|1.73|81.57|1.83|81.57|Afghanistan|2.45|80.24
+|2000|5.54|64.96|3.38|63.53|Afghanistan|6.07|
+|1960|7.46|51.98|4.93|56.41|Afghanistan|7.7|51.74
+|1960|6.35|67.5|4.19|66.68|Afghanistan|6.67|65.85
+|2000|1.34|81.57|1.46|81.57|Afghanistan|1.74|80.24
+|1960|5.81|60.29|3.62|59.71|Argentina|5.98|60.09
+|2000|4.27|68.71|2.65|69.0|Argentina|5.92|65.88
+Data courtesy of Gapminder.org|1960|3.83|65.92|3.06|65.76|Argentina|3.3|63.46
+
+=== DATASET: dc-characters ===
+--- ORIGINAL (10 rows) ---
+page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|YEAR
+1422|Batman (Bruce Wayne)|\/wiki\/Batman_(Bruce_Wayne)|Secret Identity|Good Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|3093|1939, May|1939
+23387|Superman (Clark Kent)|\/wiki\/Superman_(Clark_Kent)|Secret Identity|Good Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|2496|1986, October|1986
+1458|Green Lantern (Hal Jordan)|\/wiki\/Green_Lantern_(Hal_Jordan)|Secret Identity|Good Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|1565|1959, October|1959
+1659|James Gordon (New Earth)|\/wiki\/James_Gordon_(New_Earth)|Public Identity|Good Characters|Brown Eyes|White Hair|Male Characters||Living Characters|1316|1987, February|1987
+1576|Richard Grayson (New Earth)|\/wiki\/Richard_Grayson_(New_Earth)|Secret Identity|Good Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|1237|1940, April|1940
+1448|Wonder Woman (Diana Prince)|\/wiki\/Wonder_Woman_(Diana_Prince)|Public Identity|Good Characters|Blue Eyes|Black Hair|Female Characters||Living Characters|1231|1941, December|1941
+1486|Aquaman (Arthur Curry)|\/wiki\/Aquaman_(Arthur_Curry)|Public Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|1121|1941, November|1941
+1451|Timothy Drake (New Earth)|\/wiki\/Timothy_Drake_(New_Earth)|Secret Identity|Good Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|1095|1989, August|1989
+71760|Dinah Laurel Lance (New Earth)|\/wiki\/Dinah_Laurel_Lance_(New_Earth)|Public Identity|Good Characters|Blue Eyes|Blond Hair|Female Characters||Living Characters|1075|1969, November|1969
+1380|Flash (Barry Allen)|\/wiki\/Flash_(Barry_Allen)|Secret Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|1028|1956, October|1956
+--- GENERATED (10 rows) ---
+page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|YEAR
+402594|Daria Hernandez (New Earth)|\/wiki\/Daria_Hernandez_(New_Earth)|Public Identity|Neutral Characters|Brown Eyes|Brown Hair|Female Characters||Living Characters|3093|2003, July|1940
+228807|Daria Hernandez (New Earth)|\/wiki\/Daria_Hernandez_(New_Earth)||Neutral Characters||Brown Hair|Female Characters||Living Characters|3093|2003, July|1953
+290355|Sigrid Nansen (New Earth)|\/wiki\/Sigrid_Nansen_(New_Earth)|Public Identity|Good Characters|Blue Eyes||Female Characters||Living Characters|3093|1986, November|1946
+309394|Karen Lou Faulkner (New Earth)|\/wiki\/Karen_Lou_Faulkner_(New_Earth)||Neutral Characters|Brown Eyes|Brown Hair|Female Characters||Living Characters|3093|1987, July|1940
+166074|Achilles Warkiller (New Earth)|\/wiki\/Achilles_Warkiller_(New_Earth)|Secret Identity|Good Characters|||Male Characters||Living Characters|3093|2009, May|
+324375|Courtney Mason (New Earth)|\/wiki\/Courtney_Mason_(New_Earth)||Good Characters|Blue Eyes||Female Characters||Deceased Characters|3093|1993, July|1932
+22537|Henry Cannon (New Earth)|\/wiki\/Henry_Cannon_(New_Earth)||Bad Characters|Black Eyes|Black Hair|Male Characters||Living Characters|3093|1984, April|1935
+364802|Mallory Kimball (New Earth)|\/wiki\/Mallory_Kimball_(New_Earth)|Public Identity|Good Characters|Brown Eyes||Female Characters||Living Characters|3093|2006, July|1908
+15973|Kevin Mayer (New Earth)|\/wiki\/Kevin_Mayer_(New_Earth)|Public Identity|Good Characters|Brown Eyes||Male Characters||Living Characters|3093|1988|1937
+123972|John Constantine (New Earth)|\/wiki\/John_Constantine_(New_Earth)||Good Characters||Blond Hair|Male Characters||Living Characters|3093|1984, June|1930
+
+=== DATASET: diamonds ===
+--- ORIGINAL (10 rows) ---
+carat|cut|color|clarity|depth|table|price|x|y|z
+0.23|Ideal|E|SI2|61.5|55|326|3.95|3.98|2.43
+0.21|Premium|E|SI1|59.8|61|326|3.89|3.84|2.31
+0.23|Good|E|VS1|56.9|65|327|4.05|4.07|2.31
+0.29|Premium|I|VS2|62.4|58|334|4.2|4.23|2.63
+0.31|Good|J|SI2|63.3|58|335|4.34|4.35|2.75
+0.24|Very Good|J|VVS2|62.8|57|336|3.94|3.96|2.48
+0.24|Very Good|I|VVS1|62.3|57|336|3.95|3.98|2.47
+0.26|Very Good|H|SI1|61.9|55|337|4.07|4.11|2.53
+0.22|Fair|E|VS2|65.1|61|337|3.87|3.78|2.49
+0.23|Very Good|H|VS1|59.4|61|338|4|4.05|2.39
+--- GENERATED (10 rows) ---
+carat|cut|color|clarity|depth|table|price|x|y|z
+1.07|Premium|F|SI2|62.5|55.0|6166|6.56|6.64|4.01
+0.69|Premium|F|VS1|61.7|57.0|2285|5.79|5.71|3.72
+0.35|Good|I|VS2|61.8|61.0|854|4.55|4.48|2.73
+0.74|Premium|E|SI2|60.5|56.0|1523|5.97|6.07|3.6
+0.53|Ideal|I|VVS1|61.2|59.0|1266|5.18|5.19|3.18
+1.16|Very Good|G|SI1|61.9|58.0|5942|6.61|6.78|4.2
+1.4|Premium|I|SI1|60.1|56.0|9449|6.96|7.0|4.46
+1.56|Very Good|J|VS2|63.3|56.0|8649|7.12|7.31|4.58
+0.81|Very Good|D|VS2|62.1|59.0|2568|6.04|6.04|3.69
+0.36|Ideal|E|SI2|61.6|57.0|597|4.6|4.64|2.89
+
+=== DATASET: disasters ===
+--- ORIGINAL (10 rows) ---
+Entity|Year|Deaths
+All natural disasters|1900|1267360
+All natural disasters|1901|200018
+All natural disasters|1902|46037
+All natural disasters|1903|6506
+All natural disasters|1905|22758
+All natural disasters|1906|42970
+All natural disasters|1907|1325641
+All natural disasters|1908|75033
+All natural disasters|1909|1511524
+All natural disasters|1910|148233
+--- GENERATED (10 rows) ---
+Entity|Year|Deaths
+All natural disasters|1900|1267360
+All natural disasters|1901|200018
+All natural disasters|1902|46037
+All natural disasters|1903|6506
+All natural disasters|1905|22758
+All natural disasters|1906|42970
+All natural disasters|1907|1325641
+All natural disasters|1908|75033
+All natural disasters|1909|1511524
+All natural disasters|1910|148233
+
+=== DATASET: dowjones ===
+--- ORIGINAL (10 rows) ---
+Date|Price
+1914-12-01|55.0
+1915-01-01|56.55
+1915-02-01|56.0
+1915-03-01|58.3
+1915-04-01|66.45
+1915-05-01|65.95
+1915-06-01|68.4
+1915-07-01|71.85
+1915-08-01|79.25
+1915-09-01|85.5
+--- GENERATED (10 rows) ---
+Date|Price
+1914-12-01|62.83
+1914-12-31|62.09
+1915-01-30|43.68
+1915-03-01|60.85
+1915-03-31|69.07
+1915-04-30|67.37
+1915-05-30|50.43
+1915-06-29|51.86
+1915-07-29|40.91
+1915-08-28|53.74
+
+=== DATASET: drinks ===
+--- ORIGINAL (10 rows) ---
+country|beer_servings|spirit_servings|wine_servings|total_litres_of_pure_alcohol
+Afghanistan|0|0|0|0.0
+Albania|89|132|54|4.9
+Algeria|25|0|14|0.7
+Andorra|245|138|312|12.4
+Angola|217|57|45|5.9
+Antigua & Barbuda|102|128|45|4.9
+Argentina|193|25|221|8.3
+Armenia|21|179|11|3.8
+Australia|261|72|212|10.4
+Austria|279|75|191|9.7
+--- GENERATED (10 rows) ---
+country|beer_servings|spirit_servings|wine_servings|total_litres_of_pure_alcohol
+Afghanistan|0|0|0|0.0
+Albania|89|132|54|4.9
+Algeria|25|0|14|0.7
+Andorra|245|138|312|12.4
+Angola|217|57|45|5.9
+Antigua & Barbuda|102|128|45|4.9
+Argentina|193|25|221|8.3
+Armenia|21|179|11|3.8
+Australia|261|72|212|10.4
+Austria|279|75|191|9.7
+
+=== DATASET: driving ===
+--- ORIGINAL (10 rows) ---
+side|year|miles|gas
+left|1956|3675|2.38
+right|1957|3706|2.4
+bottom|1958|3766|2.26
+top|1959|3905|2.31
+right|1960|3935|2.27
+bottom|1961|3977|2.25
+right|1962|4085|2.22
+bottom|1963|4218|2.12
+bottom|1964|4369|2.11
+bottom|1965|4538|2.14
+--- GENERATED (10 rows) ---
+side|year|miles|gas
+left|1956|3675|2.38
+right|1957|3706|2.4
+bottom|1958|3766|2.26
+top|1959|3905|2.31
+right|1960|3935|2.27
+bottom|1961|3977|2.25
+right|1962|4085|2.22
+bottom|1963|4218|2.12
+bottom|1964|4369|2.11
+bottom|1965|4538|2.14
+
+=== DATASET: ebola-2014 ===
+--- ORIGINAL (10 rows) ---
+Country|Month|Year|Lat|Lon|Value
+Guinea|3|14|9.95|-9.7|122
+Guinea|4|14|9.95|-9.7|224
+Guinea|5|14|9.95|-9.7|291
+Guinea|6|14|9.95|-9.7|413
+Guinea|7|14|9.95|-9.7|460
+Guinea|8|14|9.95|-9.7|771
+Guinea|9|14|9.95|-9.7|1022
+Guinea|10|14|9.95|-9.7|
+Guinea|11|14|9.95|-9.7|
+Guinea|12|14|9.95|-9.7|
+--- GENERATED (10 rows) ---
+Country|Month|Year|Lat|Lon|Value
+Guinea|3|14|9.95|-9.7|122
+Guinea|4|14|9.95|-9.7|
+Guinea|5|14|9.95|-9.7|291
+Guinea|6|14|9.95|-9.7|413
+Guinea|7|14|9.95|-9.7|460
+Guinea|8|14|9.95|-9.7|771
+Guinea|9|14|9.95|-9.7|
+Guinea|10|14|9.95|-9.7|
+Guinea|11|14|9.95|-9.7|
+Guinea|12|14|9.95|-9.7|
+
+=== DATASET: exercise ===
+--- ORIGINAL (10 rows) ---
+|id|diet|pulse|time|kind
+0|1|low fat|85|1 min|rest
+1|1|low fat|85|15 min|rest
+2|1|low fat|88|30 min|rest
+3|2|low fat|90|1 min|rest
+4|2|low fat|92|15 min|rest
+5|2|low fat|93|30 min|rest
+6|3|low fat|97|1 min|rest
+7|3|low fat|97|15 min|rest
+8|3|low fat|94|30 min|rest
+9|4|low fat|80|1 min|rest
+--- GENERATED (10 rows) ---
+|id|diet|pulse|time|kind
+0|1|low fat|85|1 min|rest
+1|1|low fat|85|15 min|rest
+2|1|low fat|88|30 min|rest
+3|2|low fat|90|1 min|rest
+4|2|low fat|92|15 min|rest
+5|2|low fat|93|30 min|rest
+6|3|low fat|97|1 min|rest
+7|3|low fat|97|15 min|rest
+8|3|low fat|94|30 min|rest
+9|4|low fat|80|1 min|rest
+
+=== DATASET: flare ===
+--- ORIGINAL (10 rows) ---
+id|name|parent|size
+1|flare||
+2|analytics|1|
+3|cluster|2|
+4|AgglomerativeCluster|3|3938
+5|CommunityStructure|3|3812
+6|HierarchicalCluster|3|6714
+7|MergeEdge|3|743
+8|graph|2|
+9|BetweennessCentrality|8|3534
+10|LinkDistance|8|5731
+--- GENERATED (10 rows) ---
+id|name|parent|size
+1|div|0|660
+2|cluster|0|2517
+3|DataEvent|0|1935
+4|palette|0|24593
+5|CartesianAxes|4|4445
+6|range|0|3905
+7|operator|0|285
+8|Displays|3|10915
+9|And|0|4037
+10|FlareVis|5|3242
+
+=== DATASET: flights ===
+--- ORIGINAL (10 rows) ---
+year|month|passengers
+1949|January|112
+1949|February|118
+1949|March|132
+1949|April|129
+1949|May|121
+1949|June|135
+1949|July|148
+1949|August|148
+1949|September|136
+1949|October|119
+--- GENERATED (10 rows) ---
+year|month|passengers
+1949|January|112
+1949|February|118
+1949|March|132
+1949|April|129
+1949|May|121
+1949|June|135
+1949|July|148
+1949|August|148
+1949|September|136
+1949|October|119
+
+=== DATASET: flights-airport ===
+--- ORIGINAL (10 rows) ---
+origin|destination|count
+ABE|ATL|853
+ABE|BHM|1
+ABE|CLE|805
+ABE|CLT|465
+ABE|CVG|247
+ABE|DTW|997
+ABE|JFK|3
+ABE|LGA|9
+ABE|ORD|1425
+ABE|PHL|2
+--- GENERATED (10 rows) ---
+origin|destination|count
+ABE|ATL|853
+ABE|BHM|1
+ABE|CLE|805
+ABE|CLT|465
+ABE|CVG|247
+ABE|DTW|997
+ABE|JFK|3
+ABE|LGA|9
+ABE|ORD|1425
+ABE|PHL|2
+
+=== DATASET: fmri ===
+--- ORIGINAL (10 rows) ---
+subject|timepoint|event|region|signal
+s13|18|stim|parietal|-0.017551581538
+s5|14|stim|parietal|-0.0808829319505
+s12|18|stim|parietal|-0.0810330187333
+s11|18|stim|parietal|-0.04613439017519999
+s10|18|stim|parietal|-0.0379702032642
+s9|18|stim|parietal|-0.10351309616
+s8|18|stim|parietal|-0.0644081947232
+s7|18|stim|parietal|-0.0605262017124
+s6|18|stim|parietal|-0.00702856091007
+s5|18|stim|parietal|-0.0405568546157
+--- GENERATED (10 rows) ---
+subject|timepoint|event|region|signal
+s13|18|stim|parietal|-0.017551581538
+s5|14|stim|parietal|-0.0808829319505
+s12|18|stim|parietal|-0.0810330187333
+s11|18|stim|parietal|-0.04613439017519999
+s10|18|stim|parietal|-0.0379702032642
+s9|18|stim|parietal|-0.10351309616
+s8|18|stim|parietal|-0.0644081947232
+s7|18|stim|parietal|-0.0605262017124
+s6|18|stim|parietal|-0.00702856091007
+s5|18|stim|parietal|-0.0405568546157
+
+=== DATASET: gapminder ===
+--- ORIGINAL (10 rows) ---
+year|country|cluster|pop|life_expect|fertility
+1955|Afghanistan|0|7971931|43.88|7.42
+1960|Afghanistan|0|8622466|45.03|7.38
+1965|Afghanistan|0|9565147|46.13|7.35
+1970|Afghanistan|0|10752971|47.08|7.4
+1975|Afghanistan|0|12157386|47.55|7.54
+1980|Afghanistan|0|12486631|43.68|7.59
+1985|Afghanistan|0|10512221|42.03|7.52
+1990|Afghanistan|0|10694796|53.83|7.57
+1995|Afghanistan|0|16418912|54.33|7.71
+2000|Afghanistan|0|19542982|54.73|7.53
+--- GENERATED (10 rows) ---
+year|country|cluster|pop|life_expect|fertility
+1955|Afghanistan|0|7971931|43.88|7.42
+1960|Afghanistan|0|8622466|45.03|7.38
+1965|Afghanistan|0|9565147|46.13|7.35
+1970|Afghanistan|0|10752971|47.08|7.4
+1975|Afghanistan|0|12157386|47.55|7.54
+1980|Afghanistan|0|12486631|43.68|7.59
+1985|Afghanistan|0|10512221|42.03|7.52
+1990|Afghanistan|0|10694796|53.83|7.57
+1995|Afghanistan|0|16418912|54.33|7.71
+2000|Afghanistan|0|19542982|54.73|7.53
+
+=== DATASET: gapminder-health-income ===
+--- ORIGINAL (10 rows) ---
+country|income|health|population|region
+Afghanistan|1925|57.63|32526562|south_asia
+Albania|10620|76|2896679|europe_central_asia
+Algeria|13434|76.5|39666519|middle_east_north_africa
+Andorra|46577|84.1|70473|europe_central_asia
+Angola|7615|61|25021974|sub_saharan_africa
+Antigua and Barbuda|21049|75.2|91818|america
+Argentina|17344|76.2|43416755|america
+Armenia|7763|74.4|3017712|europe_central_asia
+Australia|44056|81.8|23968973|east_asia_pacific
+Austria|44401|81|8544586|europe_central_asia
+--- GENERATED (10 rows) ---
+country|income|health|population|region
+Afghanistan|1925|57.63|32526562|south_asia
+Albania|10620|76.0|2896679|europe_central_asia
+Algeria|13434|76.5|39666519|middle_east_north_africa
+Andorra|46577|84.1|70473|europe_central_asia
+Angola|7615|61.0|25021974|sub_saharan_africa
+Antigua and Barbuda|21049|75.2|91818|america
+Argentina|17344|76.2|43416755|america
+Armenia|7763|74.4|3017712|europe_central_asia
+Australia|44056|81.8|23968973|east_asia_pacific
+Austria|44401|81.0|8544586|europe_central_asia
+
