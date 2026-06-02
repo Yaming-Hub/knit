@@ -65,16 +65,16 @@ item_id|common_name|scientific_name|gap_species_code|county_id|habitat_yearround
 58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|30035|0.0
 --- GENERATED (10 rows) ---
 item_id|common_name|scientific_name|gap_species_code|county_id|habitat_yearround_pct
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|22404|0.0267
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|45597|0.0038
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|17809|0.2949
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|26424|0.0527
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|35615|0.0146
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|16886|0.1448
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|22278|0.2191
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|28569|0.0718
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|21651|0.0199
-58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|11410|0.3459
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|27365|0.0324
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|9403|0.022
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|45597|0.0347
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|17809|0.0101
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|26424|0.0438
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|35615|0.0321
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|16886|0.11
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|22278|0.2916
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|28569|0.1089
+58fa3f0be4b0b7ea54524859|American Bullfrog|Lithobates catesbeianus|aAMBUx|21651|0.0794
 
 === DATASET: steak-survey ===
 --- ORIGINAL (10 rows) ---
@@ -143,16 +143,16 @@ pickup|dropoff|passengers|distance|fare|tip|tolls|total|color|payment|pickup_zon
 2019-03-08 16:18:37|2019-03-08 16:26:57|1|1.52|8.0|1.0|0.0|13.3|yellow|credit card|Lincoln Square East|Central Park|Manhattan|Manhattan
 --- GENERATED (10 rows) ---
 pickup|dropoff|passengers|distance|fare|tip|tolls|total|color|payment|pickup_zone|dropoff_zone|pickup_borough|dropoff_borough
-2019-03-23 17:12:34|2019-03-23 17:26:09|1|2.19|9.5|1.13|0.44|28.82|yellow|credit card|Financial District North|Alphabet City|Manhattan|Manhattan
-2019-03-31 12:12:25|2019-03-31 12:27:03|1|2.33|9.8|1.89|0.21|11.52|yellow|credit card|Midtown East|Lincoln Square West|Manhattan|Manhattan
-2019-03-04 07:40:46|2019-03-04 07:53:48|2|0.9|8.0|0.16|0.14|13.6|yellow|credit card|East Chelsea|Gowanus|Manhattan|Brooklyn
-2019-03-26 18:25:31|2019-03-26 18:41:47|1|1.62|7.5|6.19|0.03|16.82|yellow|cash|Kips Bay|Prospect-Lefferts Gardens|Manhattan|Brooklyn
-2019-03-17 10:23:26|2019-03-17 10:37:28|3|1.61|4.8|0.14|0.09|17.45|yellow|credit card|Little Italy/NoLiTa|Bushwick South|Manhattan|Brooklyn
-2019-03-25 04:49:42|2019-03-25 05:04:45|1|2.48|9.03|2.4|0.51|21.53|yellow|cash|Meatpacking/West Village West|Crotona Park East|Manhattan|Bronx
-2019-03-15 21:06:55|2019-03-15 21:20:46|1|0.43|8.3|2.28|0.08|32.68|yellow|credit card|TriBeCa/Civic Center|Rosedale|Manhattan|Queens
-2019-03-05 03:58:09|2019-03-05 04:12:39|5|4.57|7.6|5.16|0.08|11.94|yellow|cash|Clinton West|Financial District South|Manhattan|Manhattan
-2019-03-30 06:25:49|2019-03-30 06:39:53|6|3.84|9.2|0.93|0.02|16.2|yellow|credit card|Union Sq|Oakland Gardens|Manhattan|Queens
-2019-03-16 05:44:06|2019-03-16 05:57:47|4|6.41|5.9|0.32|0.15|17.07|yellow|cash|Times Sq/Theatre District|Jamaica|Manhattan|Queens
+2019-03-21 17:06:36|2019-03-21 17:20:01|1|1.09|8.3|0.26|0.09|9.95|yellow|credit card|Lincoln Square West|Parkchester|Manhattan|Bronx
+2019-03-23 07:11:39|2019-03-23 07:27:22|1|0.02|8.6|2.11|0.05|15.22|yellow|credit card|Central Harlem North|Howard Beach|Manhattan|Queens
+2019-03-04 07:40:46|2019-03-04 07:53:48|2|0.56|5.5|0.18|0.21|14.13|yellow|credit card|East Chelsea|Gowanus|Manhattan|Brooklyn
+2019-03-21 00:42:09|2019-03-21 00:56:59|1|3.01|3.3|2.62|0.09|6.82|yellow|credit card|Flatiron|Manhattan Valley|Manhattan|Manhattan
+2019-03-21 01:14:58|2019-03-21 01:30:06|1|6.15|10.6|0.12|0.18|12.74|yellow|credit card|Midtown North|JFK Airport|Manhattan|Queens
+2019-03-15 21:06:55|2019-03-15 21:20:46|1|0.45|5.3|2.93|0.24|10.68|yellow|credit card|TriBeCa/Civic Center|Rosedale|Manhattan|Queens
+2019-03-05 03:58:09|2019-03-05 04:12:39|5|1.06|3.6|2.15|0.26|9.56|yellow|credit card|Clinton West|Financial District South|Manhattan|Manhattan
+2019-03-10 13:37:41|2019-03-10 13:51:19|1|2.68|11.82|0.87|0.19|25.0|yellow|credit card|Brownsville|Briarwood/Jamaica Hills|Brooklyn|Queens
+2019-03-24 00:33:50|2019-03-24 00:49:44|2|1.18|12.66|1.85|0.12|26.2|yellow|credit card|UN/Turtle Bay South|Financial District South|Manhattan|Manhattan
+2019-03-19 08:40:05|2019-03-19 08:55:10|1|2.33|12.54|0.6|0.49|14.2|yellow|credit card|Upper West Side South|Long Island City/Hunters Point|Manhattan|Queens
 
 === DATASET: tips ===
 --- ORIGINAL (10 rows) ---
@@ -387,4 +387,3 @@ Rank|Major_code|Major|Major_category|Total|Men|Women|ShareWomen|Median
 8|2414|MECHANICAL ENGINEERING|Engineering|91227|80320|10907|0.119558903|60000
 9|2401|AEROSPACE ENGINEERING|Engineering|15058|12953|2105|0.139792801|60000
 10|2408|ELECTRICAL ENGINEERING|Engineering|81527|65511|16016|0.196450256|60000
-

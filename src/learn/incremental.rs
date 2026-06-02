@@ -558,6 +558,13 @@ pub fn finalize_state(
         corrs.truncate(500);
         analysis.correlations = corrs;
 
+        // Auto-detect sort order: if the table has a temporal column
+        // (date/timestamp), use it as the sort key.  This ensures generated
+        // time-series data is output in chronological order.
+        if analysis.sort_order.is_none() {
+            analysis.sort_order = detect_sort_column(&analysis.columns, table_state);
+        }
+
         analyses.push(analysis);
     }
 
@@ -566,6 +573,78 @@ pub fn finalize_state(
     );
 
     (analyses, relationships)
+}
+
+/// Detect if a table should be sorted by a temporal column.
+///
+/// Returns a `SortOrder` if:
+/// 1. There is exactly one date/timestamp column (unambiguous sort key), OR
+/// 2. A column name strongly suggests a date ordering (e.g., "date", "Date",
+///    "timestamp", "time")
+///
+/// This heuristic ensures time-series datasets are output in chronological
+/// order, which dramatically improves AI-perceived quality.
+fn detect_sort_column(
+    columns: &[ColumnAnalysis],
+    table_state: &TableState,
+) -> Option<crate::core::SortOrder> {
+    // Find temporal columns that show sequential behavior.
+    // We require temporal_pattern (confirms the learner detected a regular
+    // time increment) rather than just type detection, to avoid marking
+    // non-time-series tables (e.g., a "people" table with birth_date) as sorted.
+    let temporal_cols: Vec<&ColumnAnalysis> = columns
+        .iter()
+        .filter(|c| c.temporal_pattern.is_some())
+        .collect();
+
+    // If exactly one temporal column, use it
+    if temporal_cols.len() == 1 {
+        return Some(crate::core::SortOrder {
+            column: temporal_cols[0].name.clone(),
+            direction: crate::core::SortDirection::Asc,
+        });
+    }
+
+    // If multiple temporal columns, pick the best candidate by name heuristic
+    if temporal_cols.len() > 1 {
+        let preferred_names = ["date", "Date", "DATE", "timestamp", "time", "datetime"];
+        for pref in &preferred_names {
+            if let Some(col) = temporal_cols.iter().find(|c| c.name == *pref) {
+                return Some(crate::core::SortOrder {
+                    column: col.name.clone(),
+                    direction: crate::core::SortDirection::Asc,
+                });
+            }
+        }
+        // Fall back to first temporal column
+        return Some(crate::core::SortOrder {
+            column: temporal_cols[0].name.clone(),
+            direction: crate::core::SortDirection::Asc,
+        });
+    }
+
+    // No temporal columns found — check for monotonic integer columns
+    // (e.g., "year", "id" that serve as sequential ordering)
+    let mono_candidates: Vec<&str> = ["year", "Year", "YEAR", "index", "idx"]
+        .iter()
+        .copied()
+        .filter(|name| {
+            columns.iter().any(|c| c.name == *name)
+                && table_state
+                    .columns
+                    .iter()
+                    .any(|cs| cs.name == *name && matches!(cs.data_type, ColumnDataType::Integer))
+        })
+        .collect();
+
+    if mono_candidates.len() == 1 {
+        return Some(crate::core::SortOrder {
+            column: mono_candidates[0].to_string(),
+            direction: crate::core::SortDirection::Asc,
+        });
+    }
+
+    None
 }
 
 /// Finalize all columns of a single table.

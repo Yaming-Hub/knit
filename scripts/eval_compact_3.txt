@@ -1,62 +1,3 @@
-=== DATASET: marvel-characters ===
---- ORIGINAL (10 rows) ---
-page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|Year
-1678|Spider-Man (Peter Parker)|\/Spider-Man_(Peter_Parker)|Secret Identity|Good Characters|Hazel Eyes|Brown Hair|Male Characters||Living Characters|4043|Aug-62|1962
-7139|Captain America (Steven Rogers)|\/Captain_America_(Steven_Rogers)|Public Identity|Good Characters|Blue Eyes|White Hair|Male Characters||Living Characters|3360|Mar-41|1941
-64786|Wolverine (James \"Logan\" Howlett)|\/Wolverine_(James_%22Logan%22_Howlett)|Public Identity|Neutral Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|3061|Oct-74|1974
-1868|Iron Man (Anthony \"Tony\" Stark)|\/Iron_Man_(Anthony_%22Tony%22_Stark)|Public Identity|Good Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|2961|Mar-63|1963
-2460|Thor (Thor Odinson)|\/Thor_(Thor_Odinson)|No Dual Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|2258|Nov-50|1950
-2458|Benjamin Grimm (Earth-616)|\/Benjamin_Grimm_(Earth-616)|Public Identity|Good Characters|Blue Eyes|No Hair|Male Characters||Living Characters|2255|Nov-61|1961
-2166|Reed Richards (Earth-616)|\/Reed_Richards_(Earth-616)|Public Identity|Good Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|2072|Nov-61|1961
-1833|Hulk (Robert Bruce Banner)|\/Hulk_(Robert_Bruce_Banner)|Public Identity|Good Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|2017|May-62|1962
-29481|Scott Summers (Earth-616)|\/Scott_Summers_(Earth-616)|Public Identity|Neutral Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|1955|Sep-63|1963
-1837|Jonathan Storm (Earth-616)|\/Jonathan_Storm_(Earth-616)|Public Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|1934|Nov-61|1961
---- GENERATED (10 rows) ---
-page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|Year
-372550|Myles Alfred (Earth-616)|\/Myles_Alfred_(Earth-616)|Secret Identity|Good Characters||Brown Hair|Male Characters||Deceased Characters|4043|Aug-01|1976
-71229|Wally Layton (Earth-616)|\/Wally_Layton_(Earth-616)|No Dual Identity||Grey Eyes|Brown Hair|Male Characters||Living Characters|4043|Mar-12|1918
-544505|Miranda Leevald (Earth-616)|\/Miranda_Leevald_(Earth-616)|Public Identity|Neutral Characters|||Female Characters||Living Characters|4043|Dec-01|1951
-663763|Miguel Santos (Earth-616)|\/Miguel_Santos_(Earth-616)||Good Characters|||Male Characters||Living Characters|4043|Oct-90|1972
-686896|Sybil Dvorak (Earth-616)|\/Sybil_Dvorak_(Earth-616)||Bad Characters||Brown Hair|Female Characters||Living Characters|4043|Jan-79|1983
-17266|Aimee (Clint Barton's neighbor) (Earth-616)|\/Aimee_(Clint_Barton%27s_neighbor)_(Earth-616)|No Dual Identity||Black Eyes|Pink Hair|Female Characters||Living Characters|4043|Oct-12|2004
-621359|Victoria Hand (Earth-616)|\/Victoria_Hand_(Earth-616)|No Dual Identity|Neutral Characters||Black Hair|Female Characters||Deceased Characters|4043|Feb-09|1978
-736180|Raven Darkholme (Earth-616)|\/Raven_Darkholme_(Earth-616)|Secret Identity|Bad Characters|||Female Characters||Living Characters|4043|Apr-78|1979
-426716|Christian Frost (Earth-616)|\/Christian_Frost_(Earth-616)|Secret Identity|||Blond Hair|Male Characters||Living Characters|4043|Jun-03|1949
-515510|Deidre Wentworth (Earth-616)|\/Deidre_Wentworth_(Earth-616)|Secret Identity|||Black Hair|Female Characters||Living Characters|4043|Jul-91|1923
-
-=== DATASET: miserables ===
---- ORIGINAL (10 rows) ---
-
---- GENERATED (10 rows) ---
-nodes|links
-["[{name: Myriel, group: 1, index: 0}, {name: Napoleon, group: 1, index: 1}, {name: Mlle.Baptistine, group: 1, index: 2}, {name: Mme.Magloire, group: 1, index: 3}, {name: CountessdeLo, group: 1, index: 4}, {name: Geborand, group: 1, index: 5}, {name: Champtercier, group: 1, index: 6}, {name: Cravatte, group: 1, index: 7}, {name: Count, group: 1, index: 8}, {name: OldMan, group: 1, index: 9}, {name: Labarre, group: 2, index: 10}, {name: Valjean, group: 2, index: 11}, {name: Marguerite, group: 3, index: 12}, {name: Mme.deR, group: 2, index: 13}, {name: Isabeau, group: 2, index: 14}, {name: Gervais, group: 2, index: 15}, {name: Tholomyes, group: 3, index: 16}, {name: Listolier, group: 3, index: 17}, {name: Fameuil, group: 3, index: 18}, {name: Blacheville, group: 3, index: 19}, {name: Favourite, group: 3, index: 20}, {name: Dahlia, group: 3, index: 21}, {name: Zephine, group: 3, index: 22}, {name: Fantine, group: 3, index: 23}, {name: Mme.Thenardier, group: 4, index: 24}, {name: Thenardier, group: 4, index: 25}, {name: Cosette, group: 5, index: 26}, {name: Javert, group: 4, index: 27}, {name: Fauchelevent, group: 0, index: 28}, {name: Bamatabois, group: 2, index: 29}, {name: Perpetue, group: 3, index: 30}, {name: Simplice, group: 2, index: 31}, {name: Scaufflaire, group: 2, index: 32}, {name: Woman1, group: 2, index: 33}, {name: Judge, group: 2, index: 34}, {name: Champmathieu, group: 2, index: 35}, {name: Brevet, group: 2, index: 36}, {name: Chenildieu, group: 2, index: 37}, {name: Cochepaille, group: 2, index: 38}, {name: Pontmercy, group: 4, index: 39}, {name: Boulatruelle, group: 6, index: 40}, {name: Eponine, group: 4, index: 41}, {name: Anzelma, group: 4, index: 42}, {name: Woman2, group: 5, index: 43}, {name: MotherInnocent, group: 0, index: 44}, {name: Gribier, group: 0, index: 45}, {name: Jondrette, group: 7, index: 46}, {name: Mme.Burgon, group: 7, index: 47}, {name: Gavroche, group: 8, index: 48}, {name: Gillenormand, group: 5, index: 49}, {name: Magnon, group: 5, index: 50}, {name: Mlle.Gillenormand, group: 5, index: 51}, {name: Mme.Pontmercy, group: 5, index: 52}, {name: Mlle.Vaubois, group: 5, index: 53}, {name: Lt.Gillenormand, group: 5, index: 54}, {name: Marius, group: 8, index: 55}, {name: BaronessT, group: 5, index: 56}, {name: Mabeuf, group: 8, index: 57}, {name: Enjolras, group: 8, index: 58}, {name: Combeferre, group: 8, index: 59}, {name: Prouvaire, group: 8, index: 60}, {name: Feuilly, group: 8, index: 61}, {name: Courfeyrac, group: 8, index: 62}, {name: Bahorel, group: 8, index: 63}, {name: Bossuet, group: 8, index: 64}, {name: Joly, group: 8, index: 65}, {name: Grantaire, group: 8, index: 66}, {name: MotherPlutarch, group: 9, index: 67}, {name: Gueulemer, group: 4, index: 68}, {name: Babet, group: 4, index: 69}, {name: Claquesous, group: 4, index: 70}, {name: Montparnasse, group: 4, index: 71}, {name: Toussaint, group: 5, index: 72}, {name: Child1, group: 10, index: 73}, {name: Child2, group: 10, index: 74}, {name: Brujon, group: 4, index: 75}, {name: Mme.Hucheloup, group: 8, index: 76}]"]|["[{source: 1, target: 0, value: 1}, {source: 2, target: 0, value: 8}, {source: 3, target: 0, value: 10}, {source: 3, target: 2, value: 6}, {source: 4, target: 0, value: 1}, {source: 5, target: 0, value: 1}, {source: 6, target: 0, value: 1}, {source: 7, target: 0, value: 1}, {source: 8, target: 0, value: 2}, {source: 9, target: 0, value: 1}, {source: 11, target: 10, value: 1}, {source: 11, target: 3, value: 3}, {source: 11, target: 2, value: 3}, {source: 11, target: 0, value: 5}, {source: 12, target: 11, value: 1}, {source: 13, target: 11, value: 1}, {source: 14, target: 11, value: 1}, {source: 15, target: 11, value: 1}, {source: 17, target: 16, value: 4}, {source: 18, target: 16, value: 4}, {source: 18, target: 17, value: 4}, {source: 19, target: 16, value: 4}, {source: 19, target: 17, value: 4}, {source: 19, target: 18, value: 4}, {source: 20, target: 16, value: 3}, {source: 20, target: 17, value: 3}, {source: 20, target: 18, value: 3}, {source: 20, target: 19, value: 4}, {source: 21, target: 16, value: 3}, {source: 21, target: 17, value: 3}, {source: 21, target: 18, value: 3}, {source: 21, target: 19, value: 3}, {source: 21, target: 20, value: 5}, {source: 22, target: 16, value: 3}, {source: 22, target: 17, value: 3}, {source: 22, target: 18, value: 3}, {source: 22, target: 19, value: 3}, {source: 22, target: 20, value: 4}, {source: 22, target: 21, value: 4}, {source: 23, target: 16, value: 3}, {source: 23, target: 17, value: 3}, {source: 23, target: 18, value: 3}, {source: 23, target: 19, value: 3}, {source: 23, target: 20, value: 4}, {source: 23, target: 21, value: 4}, {source: 23, target: 22, value: 4}, {source: 23, target: 12, value: 2}, {source: 23, target: 11, value: 9}, {source: 24, target: 23, value: 2}, {source: 24, target: 11, value: 7}, {source: 25, target: 24, value: 13}, {source: 25, target: 23, value: 1}, {source: 25, target: 11, value: 12}, {source: 26, target: 24, value: 4}, {source: 26, target: 11, value: 31}, {source: 26, target: 16, value: 1}, {source: 26, target: 25, value: 1}, {source: 27, target: 11, value: 17}, {source: 27, target: 23, value: 5}, {source: 27, target: 25, value: 5}, {source: 27, target: 24, value: 1}, {source: 27, target: 26, value: 1}, {source: 28, target: 11, value: 8}, {source: 28, target: 27, value: 1}, {source: 29, target: 23, value: 1}, {source: 29, target: 27, value: 1}, {source: 29, target: 11, value: 2}, {source: 30, target: 23, value: 1}, {source: 31, target: 30, value: 2}, {source: 31, target: 11, value: 3}, {source: 31, target: 23, value: 2}, {source: 31, target: 27, value: 1}, {source: 32, target: 11, value: 1}, {source: 33, target: 11, value: 2}, {source: 33, target: 27, value: 1}, {source: 34, target: 11, value: 3}, {source: 34, target: 29, value: 2}, {source: 35, target: 11, value: 3}, {source: 35, target: 34, value: 3}, {source: 35, target: 29, value: 2}, {source: 36, target: 34, value: 2}, {source: 36, target: 35, value: 2}, {source: 36, target: 11, value: 2}, {source: 36, target: 29, value: 1}, {source: 37, target: 34, value: 2}, {source: 37, target: 35, value: 2}, {source: 37, target: 36, value: 2}, {source: 37, target: 11, value: 2}, {source: 37, target: 29, value: 1}, {source: 38, target: 34, value: 2}, {source: 38, target: 35, value: 2}, {source: 38, target: 36, value: 2}, {source: 38, target: 37, value: 2}, {source: 38, target: 11, value: 2}, {source: 38, target: 29, value: 1}, {source: 39, target: 25, value: 1}, {source: 40, target: 25, value: 1}, {source: 41, target: 24, value: 2}, {source: 41, target: 25, value: 3}, {source: 42, target: 41, value: 2}, {source: 42, target: 25, value: 2}, {source: 42, target: 24, value: 1}, {source: 43, target: 11, value: 3}, {source: 43, target: 26, value: 1}, {source: 43, target: 27, value: 1}, {source: 44, target: 28, value: 3}, {source: 44, target: 11, value: 1}, {source: 45, target: 28, value: 2}, {source: 47, target: 46, value: 1}, {source: 48, target: 47, value: 2}, {source: 48, target: 25, value: 1}, {source: 48, target: 27, value: 1}, {source: 48, target: 11, value: 1}, {source: 49, target: 26, value: 3}, {source: 49, target: 11, value: 2}, {source: 50, target: 49, value: 1}, {source: 50, target: 24, value: 1}, {source: 51, target: 49, value: 9}, {source: 51, target: 26, value: 2}, {source: 51, target: 11, value: 2}, {source: 52, target: 51, value: 1}, {source: 52, target: 39, value: 1}, {source: 53, target: 51, value: 1}, {source: 54, target: 51, value: 2}, {source: 54, target: 49, value: 1}, {source: 54, target: 26, value: 1}, {source: 55, target: 51, value: 6}, {source: 55, target: 49, value: 12}, {source: 55, target: 39, value: 1}, {source: 55, target: 54, value: 1}, {source: 55, target: 26, value: 21}, {source: 55, target: 11, value: 19}, {source: 55, target: 16, value: 1}, {source: 55, target: 25, value: 2}, {source: 55, target: 41, value: 5}, {source: 55, target: 48, value: 4}, {source: 56, target: 49, value: 1}, {source: 56, target: 55, value: 1}, {source: 57, target: 55, value: 1}, {source: 57, target: 41, value: 1}, {source: 57, target: 48, value: 1}, {source: 58, target: 55, value: 7}, {source: 58, target: 48, value: 7}, {source: 58, target: 27, value: 6}, {source: 58, target: 57, value: 1}, {source: 58, target: 11, value: 4}, {source: 59, target: 58, value: 15}, {source: 59, target: 55, value: 5}, {source: 59, target: 48, value: 6}, {source: 59, target: 57, value: 2}, {source: 60, target: 48, value: 1}, {source: 60, target: 58, value: 4}, {source: 60, target: 59, value: 2}, {source: 61, target: 48, value: 2}, {source: 61, target: 58, value: 6}, {source: 61, target: 60, value: 2}, {source: 61, target: 59, value: 5}, {source: 61, target: 57, value: 1}, {source: 61, target: 55, value: 1}, {source: 62, target: 55, value: 9}, {source: 62, target: 58, value: 17}, {source: 62, target: 59, value: 13}, {source: 62, target: 48, value: 7}, {source: 62, target: 57, value: 2}, {source: 62, target: 41, value: 1}, {source: 62, target: 61, value: 6}, {source: 62, target: 60, value: 3}, {source: 63, target: 59, value: 5}, {source: 63, target: 48, value: 5}, {source: 63, target: 62, value: 6}, {source: 63, target: 57, value: 2}, {source: 63, target: 58, value: 4}, {source: 63, target: 61, value: 3}, {source: 63, target: 60, value: 2}, {source: 63, target: 55, value: 1}, {source: 64, target: 55, value: 5}, {source: 64, target: 62, value: 12}, {source: 64, target: 48, value: 5}, {source: 64, target: 63, value: 4}, {source: 64, target: 58, value: 10}, {source: 64, target: 61, value: 6}, {source: 64, target: 60, value: 2}, {source: 64, target: 59, value: 9}, {source: 64, target: 57, value: 1}, {source: 64, target: 11, value: 1}, {source: 65, target: 63, value: 5}, {source: 65, target: 64, value: 7}, {source: 65, target: 48, value: 3}, {source: 65, target: 62, value: 5}, {source: 65, target: 58, value: 5}, {source: 65, target: 61, value: 5}, {source: 65, target: 60, value: 2}, {source: 65, target: 59, value: 5}, {source: 65, target: 57, value: 1}, {source: 65, target: 55, value: 2}, {source: 66, target: 64, value: 3}, {source: 66, target: 58, value: 3}, {source: 66, target: 59, value: 1}, {source: 66, target: 62, value: 2}, {source: 66, target: 65, value: 2}, {source: 66, target: 48, value: 1}, {source: 66, target: 63, value: 1}, {source: 66, target: 61, value: 1}, {source: 66, target: 60, value: 1}, {source: 67, target: 57, value: 3}, {source: 68, target: 25, value: 5}, {source: 68, target: 11, value: 1}, {source: 68, target: 24, value: 1}, {source: 68, target: 27, value: 1}, {source: 68, target: 48, value: 1}, {source: 68, target: 41, value: 1}, {source: 69, target: 25, value: 6}, {source: 69, target: 68, value: 6}, {source: 69, target: 11, value: 1}, {source: 69, target: 24, value: 1}, {source: 69, target: 27, value: 2}, {source: 69, target: 48, value: 1}, {source: 69, target: 41, value: 1}, {source: 70, target: 25, value: 4}, {source: 70, target: 69, value: 4}, {source: 70, target: 68, value: 4}, {source: 70, target: 11, value: 1}, {source: 70, target: 24, value: 1}, {source: 70, target: 27, value: 1}, {source: 70, target: 41, value: 1}, {source: 70, target: 58, value: 1}, {source: 71, target: 27, value: 1}, {source: 71, target: 69, value: 2}, {source: 71, target: 68, value: 2}, {source: 71, target: 70, value: 2}, {source: 71, target: 11, value: 1}, {source: 71, target: 48, value: 1}, {source: 71, target: 41, value: 1}, {source: 71, target: 25, value: 1}, {source: 72, target: 26, value: 2}, {source: 72, target: 27, value: 1}, {source: 72, target: 11, value: 1}, {source: 73, target: 48, value: 2}, {source: 74, target: 48, value: 2}, {source: 74, target: 73, value: 3}, {source: 75, target: 69, value: 3}, {source: 75, target: 68, value: 3}, {source: 75, target: 25, value: 3}, {source: 75, target: 48, value: 1}, {source: 75, target: 41, value: 1}, {source: 75, target: 70, value: 1}, {source: 75, target: 71, value: 1}, {source: 76, target: 64, value: 1}, {source: 76, target: 65, value: 1}, {source: 76, target: 66, value: 1}, {source: 76, target: 63, value: 1}, {source: 76, target: 62, value: 1}, {source: 76, target: 48, value: 1}, {source: 76, target: 58, value: 1}]"]
-
-=== DATASET: monarchs ===
---- ORIGINAL (10 rows) ---
-name|start|end|index|commonwealth
-Elizabeth|1565|1603|0|
-James I|1603|1625|1|
-Charles I|1625|1649|2|
-Cromwell|1649|1660|3|True
-Charles II|1660|1685|4|
-James II|1685|1688|5|
-W&M|1689|1702|6|
-Anne|1702|1714|7|
-George I|1714|1727|8|
-George II|1727|1760|9|
---- GENERATED (10 rows) ---
-name|start|end|index|commonwealth
-Elizabeth|1565|1603|0|
-James I|1603|1625|1|
-Charles I|1625|1649|2|
-Cromwell|1649|1660|3|
-Charles II|1660|1685|4|
-James II|1685|1688|5|
-W&M|1689|1702|6|
-Anne|1702|1714|7|
-George I|1714|1727|8|
-George II|1727|1760|9|
-
 === DATASET: mpg ===
 --- ORIGINAL (10 rows) ---
 mpg|cylinders|displacement|horsepower|weight|acceleration|model_year|origin|name
@@ -72,16 +13,16 @@ mpg|cylinders|displacement|horsepower|weight|acceleration|model_year|origin|name
 15.0|8|390.0|190.0|3850|8.5|70|usa|amc ambassador dpl
 --- GENERATED (10 rows) ---
 mpg|cylinders|displacement|horsepower|weight|acceleration|model_year|origin|name
-21.1|4|101.0|83|2271|14.8|70|japan|datsun 200sx
-17.9|5|144.0|112|2846|16.6|70|usa|mercury cougar brougham
-10.4|7|381.0|176|4039|12.6|70|usa|mercury capri v6
-15.9|4|122.0|90|2316|15.2|70|europe|volvo 244dl
-10.9|8|417.0|194|4269|13.9|70|usa|plymouth satellite sebring
-14.3|5|320.0|166|3737|12.3|70|usa|plymouth satellite sebring
-14.5|6|256.0|151|2556|10.2|70|usa|amc spirit dl
-13.8|7|395.0|202|3858|12.6|70|europe|vw dasher (diesel)
-26.7|4|92.0|76|2107|20.2|70|usa|ford escort 4w
-14.0|6|287.0|161|4015|14.0|70|usa|chevrolet chevelle malibu
+26.8|5|118.0|70|2347|12.1|70|japan|honda prelude
+9.5|7|139.0|111|2912|13.7|70|usa|mercury capri v6
+22.8|4|139.0|68|2295|12.3|70|europe|renault 12 (sw)
+22.8|4|89.0|88|1998|18.5|70|europe|vw dasher (diesel)
+24.3|6|262.0|126|3029|20.3|70|usa|ford mustang
+22.4|4|104.0|75|2153|13.8|70|europe|renault 12 (sw)
+14.3|7|368.0|191|4024|17.1|70|usa|chevrolet caprice classic
+20.6|8|195.0|180|4216|18.5|70|usa|pontiac grand prix lj
+17.8|6|273.0|79|3266|16.0|70|usa|buick estate wagon (sw)
+17.2|6|216.0|94|2115|22.6|70|usa|ford mustang ii
 
 === DATASET: nba-raptor ===
 --- ORIGINAL (10 rows) ---
@@ -99,37 +40,119 @@ Quincy Acy|acyqu01|2018|2856|1359|-2.620031644|-0.806269104|-3.426300749|0.05516
 --- GENERATED (10 rows) ---
 player_name|player_id|season|poss|mp|raptor_box_offense|raptor_box_defense|raptor_box_total|raptor_onoff_offense|raptor_onoff_defense|raptor_onoff_total|raptor_offense|raptor_defense|raptor_total|war_total|war_reg_season|war_playoffs|predator_offense|predator_defense|predator_total|pace_impact
 Rodney Hood|hoodro01|2018|1982|373|-3.648369375861347|-1.164939783892906|-4.813309159754253|-5.605792133154162|8.121337129555432|2.51554499640127|3.138991664087296|2.834999325675551|5.973990989762846|-2.011474875158346|-1.339339642242078|-0.672135232916268|-1.675011198928328|2.531579796016525|0.856568597088197|0.40394039560059
-John Collins|collijo01|2020|410|8|0.007952590855537|1.56279299608362|1.570745586939157|-0.92293770260241|0.303385664199282|-0.619552038403129|-3.508064680777188|-2.682718308441582|-6.19078298921877|-2.856384987704571|-2.01257326123843|-0.843811726466141|2.473289234352837|5.034399241087296|7.507688475440133|-0.072033046818557
+John Collins|collijo01|2019|410|8|0.007952590855537|1.56279299608362|1.570745586939157|-0.92293770260241|0.303385664199282|-0.619552038403129|-3.508064680777188|-2.682718308441582|-6.19078298921877|-2.856384987704571|-2.01257326123843|-0.843811726466141|2.473289234352837|5.034399241087296|7.507688475440133|-0.072033046818557
 Maalik Wayns|waynsma01|2021|111|1709|-0.328036447544266|-3.473982657566173|-3.802019105110439|-15.326595256758704|-11.312718112058182|-26.639313368816882|-3.884396935637571|-3.968362036166649|-7.85275897180422|1.930057167038829|1.930057167038829|0.0|0.490846599724995|-0.100439665907995|0.390406933817|2.413724170565126
 Ben Moore|moorebe01|2018|1924|481|-0.247865335103897|10.24512815901388|9.997262823909981|4.510586635394761|-2.358728443996023|2.151858191398738|-2.729924993609888|-0.979888412214314|-3.709813405824202|2.863738653147198|2.863738653147198|0.0|-2.971327025209371|-4.383250869539002|-7.354577894748373|2.135936462390137
 Furkan Aldemir|aldemfu01|2016|8026|3498|0.713785570683178|-2.375232588863273|-1.661447018180095|-5.907117861479169|-1.213433866497165|-7.120551727976334|6.719016374810066|-0.846178438338976|5.872837936471091|-3.372704622814361|-3.372704622814361|0.0|4.211517242092869|-3.626663986535636|0.584853255557234|0.919328856639628
-Steve Blake|blakest01|2020|4435|1850|-1.62452817521918|-0.576522287027665|-2.201050462246845|-4.68536827146565|-13.014546260484185|-17.699914531949837|3.160722669582627|3.315161349482577|6.475884019065203|-3.263592993391369|-3.263592993391369|0.0|-5.887511767479078|-0.994883428000836|-6.882395195479915|1.467646336933676
+Steve Blake|blakest01|2019|4435|1850|-1.62452817521918|-0.576522287027665|-2.201050462246845|-4.68536827146565|-13.014546260484185|-17.699914531949837|3.160722669582627|3.315161349482577|6.475884019065203|-3.263592993391369|-3.263592993391369|0.0|-5.887511767479078|-0.994883428000836|-6.882395195479915|1.467646336933676
 Milos Teodosic|teodomi01|2014|318|2232|-8.93406341571407|-2.097898208120297|-11.031961623834366|-2.338917682278204|-6.276797239620636|-8.61571492189884|-7.086029472236869|-3.575006553168404|-10.661036025405274|5.483706363317266|5.483706363317266|0.0|2.94592003311579|0.62408041440353|3.57000044751932|-0.38502105974749
 Jeff Withey|witheje01|2015|2161|1738|-1.783463156270343|-0.941095973979279|-2.724559130249622|-6.316382535140524|10.77987103966315|4.463488504522626|-6.789966820809915|-8.823077853701841|-15.613044674511755|-0.112238542745984|-0.112238542745984|0.0|-0.44504342860779|0.770060981462243|0.325017552854453|0.466859119613087
 Jake Layman|laymaja01|2018|3066|648|0.184408611679048|-4.238915129514498|-4.054506517835451|-7.423240899081005|-6.465163614090309|-13.888404513171311|-0.581341977986786|3.059148316915022|2.477806338928236|4.791034190743521|4.791034190743521|0.0|1.437759426823504|-0.216673062335202|1.221086364488301|-0.606591749927063
 Thaddeus Young|youngth01|2022|686|369|-3.981055431122584|-0.322273190418834|-4.303328621541418|-9.838009251135453|-9.40393764616429|-19.241946897299744|0.93768699706587|-14.902084718518227|-13.964397721452357|-0.904376733230042|-1.953390089232826|1.049013356002784|2.153692287530783|-0.704025687718253|1.44966659981253|-0.198510380618077
 
-=== DATASET: northwind ===
+=== DATASET: nq-efficientqa-dev ===
 --- ORIGINAL (10 rows) ---
-categoryID|categoryName|description|picture
-1|Beverages|Soft drinks coffees teas beers and ales|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-2|Condiments|Sweet and savory sauces relishes spreads and seasonings|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-3|Confections|Desserts candies and sweet breads|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-4|Dairy Products|Cheeses|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-5|Grains/Cereals|Breads crackers pasta and cereal|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-6|Meat/Poultry|Prepared meats|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-7|Produce|Dried fruit and bean curd|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-8|Seafood|Seaweed and fish|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
+the last time la dodgers won the world series|[1988]
+who sings ain't nothing but a good time|[Poison]
+where does the movie the sound of music take place|[Salzburg, Austria, Austria]
+statue coming out of the ground in washington dc|[The Awakening]
+field hockey is the national sport of which country|[Pakistan]
+who governs in america’s representative democracy (republic) system|[Senators]
+who is the song you're my best friend about|[Veronica Tetzlaff]
+where was the church of latter day saints founded|[April 6, 1830, western New York]
+who os the father of bridget jones baby|[Mark]
+who is the nationalist leader associated with the american revolution|[George Washington, Thomas Paine]
+what color is the president of south koreas house|[Blue]
 --- GENERATED (10 rows) ---
-categoryID|categoryName|description|picture
-1|Confections|Desserts candies and sweet breads|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-2|Beverages|Soft drinks coffees teas beers and ales|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-3|Meat/Poultry|Prepared meats|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-4|Dairy Products|Cheeses|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-5|Seafood|Seaweed and fish|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-6|Produce|Dried fruit and bean curd|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-7|Grains/Cereals|Breads crackers pasta and cereal|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
-8|Condiments|Sweet and savory sauces relishes spreads and seasonings|0x151C2F00020000000D000E0014002100FFFFFFFF4269746D617020496D616765005061696E742E5069637475726500010500000200000007000000504272757368000000000000000000A0290000424D98290000000000005600000028000000AC00000078000000010004000000000000000000880B0000880B0000080000
+question|answer
+the last time la dodgers won the world series|["[1988]"]
+who sings ain't nothing but a good time|["[Poison]"]
+where does the movie the sound of music take place|["[Salzburg, Austria, Austria]"]
+statue coming out of the ground in washington dc|["[The Awakening]"]
+field hockey is the national sport of which country|["[Pakistan]"]
+who governs in america’s representative democracy (republic) system|["[Senators]"]
+who is the song you're my best friend about|["[Veronica Tetzlaff]"]
+where was the church of latter day saints founded|["[April 6, 1830, western New York]"]
+who os the father of bridget jones baby|["[Mark]"]
+who is the nationalist leader associated with the american revolution|["[George Washington, Thomas Paine]"]
+
+=== DATASET: nq-efficientqa-sample ===
+--- ORIGINAL (10 rows) ---
+the last time la dodgers won the world series|[1988]
+who sings ain't nothing but a good time|[Poison]
+where does the movie the sound of music take place|[Salzburg, Austria, Austria]
+statue coming out of the ground in washington dc|[The Awakening]
+field hockey is the national sport of which country|[Pakistan]
+who governs in america’s representative democracy (republic) system|[Senators]
+who is the song you're my best friend about|[Veronica Tetzlaff]
+where was the church of latter day saints founded|[April 6, 1830, western New York]
+who os the father of bridget jones baby|[Mark]
+who is the nationalist leader associated with the american revolution|[George Washington, Thomas Paine]
+what color is the president of south koreas house|[Blue]
+--- GENERATED (10 rows) ---
+question|answer
+the last time la dodgers won the world series|["[1988]"]
+who sings ain't nothing but a good time|["[Poison]"]
+where does the movie the sound of music take place|["[Salzburg, Austria, Austria]"]
+statue coming out of the ground in washington dc|["[The Awakening]"]
+field hockey is the national sport of which country|["[Pakistan]"]
+who governs in america’s representative democracy (republic) system|["[Senators]"]
+who is the song you're my best friend about|["[Veronica Tetzlaff]"]
+where was the church of latter day saints founded|["[April 6, 1830, western New York]"]
+who os the father of bridget jones baby|["[Mark]"]
+who is the nationalist leader associated with the american revolution|["[George Washington, Thomas Paine]"]
+
+=== DATASET: nq-efficientqa-test ===
+--- ORIGINAL (10 rows) ---
+on the 6th day of christmas my true love sent to me|[6 geese a-laying, maids a-milking]|[six geese a-laying]|[five gold rings, gifts, a gift]|[A hammered aluminum nutcracker, \\"Sesenne\\", epiphany]|[6 geese a-laying, maids a-milking, six geese a-laying]
+how many 5 star generals are there in the us|[Nine]|[]|[]|[none]|[Nine]
+who killed natalie and ann in sharp objects|[Amma]|[]|[]|[chucky, Camille Preaker, Luke]|[Amma]
+how many costco locations are there in the us|[759, 527]|[]|[]|[766, 519, 122]|[759, 527]
+who played grand moff tarkin in rogue one|[actor Guy Henry's, Guy Henry]|[]|[]|[peter cushing]|[actor Guy Henry's, Guy Henry]
+youngest current member of the house of representatives|[Alexandria Ocasio-Cortez]|[]|[elise stefanik, elise marie stefanik]|[Kevin McCarthy, 29]|[Alexandria Ocasio-Cortez]
+who wrote the miraculous journey of edward tulane|[Kate DiCamillo]|[]|[]|[]|[Kate DiCamillo]
+when did the night mare before christmas come out|[October 29, 1993, 1993]|[]|[]|[December 8, 1974, October 15, 1993, 1960, 1823, November 20, 2010]|[October 29, 1993, 1993]
+when does the green book come out in theaters|[November 16, 2018, November 16, 2018]|[]|[]|[February 24, 2017]|[November 16, 2018, November 16, 2018]
+who signed the sugauli treaty on behalf of nepal|[Raj Guru Gajaraj Mishra]|[raj guru gajraj mishra, Chandra Sekher Upadhyaya]|[]|[Singha Durbar, Nepal]|[Raj Guru Gajaraj Mishra, raj guru gajraj mishra, Chandra Sekher Upadhyaya]
+how many players on an nfl active roster|[53]|[]|[]|[eleven, 46]|[53]
+--- GENERATED (10 rows) ---
+question|answer|def_correct_predictions|poss_correct_predictions|def_incorrect_predictions|answer_and_def_correct_predictions
+on the 6th day of christmas my true love sent to me|["[6 geese a-laying, maids a-milking]"]|["[six geese a-laying]"]|["[five gold rings, gifts, a gift]"]|["[A hammered aluminum nutcracker, \\\"Sesenne\\\", epiphany]"]|["[6 geese a-laying, maids a-milking, six geese a-laying]"]
+how many 5 star generals are there in the us|["[Nine]"]|[]|[]|["[none]"]|["[Nine]"]
+who killed natalie and ann in sharp objects|["[Amma]"]|[]|[]|["[chucky, Camille Preaker, Luke]"]|["[Amma]"]
+how many costco locations are there in the us|["[759, 527]"]|[]|[]|["[766, 519, 122]"]|["[759, 527]"]
+who played grand moff tarkin in rogue one|["[actor Guy Henry's, Guy Henry]"]|[]|[]|["[peter cushing]"]|["[actor Guy Henry's, Guy Henry]"]
+youngest current member of the house of representatives|["[Alexandria Ocasio-Cortez]"]|[]|["[elise stefanik, elise marie stefanik]"]|["[Kevin McCarthy, 29]"]|["[Alexandria Ocasio-Cortez]"]
+who wrote the miraculous journey of edward tulane|["[Kate DiCamillo]"]|[]|[]|[]|["[Kate DiCamillo]"]
+when did the night mare before christmas come out|["[October 29, 1993, 1993]"]|[]|[]|["[December 8, 1974, October 15, 1993, 1960, 1823, November 20, 2010]"]|["[October 29, 1993, 1993]"]
+when does the green book come out in theaters|["[November 16, 2018, November 16, 2018]"]|[]|[]|["[February 24, 2017]"]|["[November 16, 2018, November 16, 2018]"]
+who signed the sugauli treaty on behalf of nepal|["[Raj Guru Gajaraj Mishra]"]|["[raj guru gajraj mishra, Chandra Sekher Upadhyaya]"]|[]|["[Singha Durbar, Nepal]"]|["[Raj Guru Gajaraj Mishra, raj guru gajraj mishra, Chandra Sekher Upadhyaya]"]
+
+=== DATASET: nq-open-dev ===
+--- ORIGINAL (10 rows) ---
+when was the last time anyone was on the moon|[14 December 1972 UTC, December 1972]
+who wrote he ain't heavy he's my brother lyrics|[Bobby Scott, Bob Russell]
+how many seasons of the bastard executioner are there|[one, one season]
+when did the eagles win last super bowl|[2017]
+who won last year's ncaa women's basketball|[South Carolina]
+when did the isle of wight become an island|[During the last Ice Age]
+love yourself by justin bieber is about who|[Rihanna]
+who was the ruler of england in 1616|[James I]
+what is the hot coffee mod in san andreas|[a normally inaccessible mini-game]
+what is the maximum data rate for the 802.11a standard select one|[54 Mbit/s]
+which state is located in the centre of india|[Chhattisgarh, Madhya Pradesh]
+--- GENERATED (10 rows) ---
+question|answer
+when was the last time anyone was on the moon|["[14 December 1972 UTC, December 1972]"]
+who wrote he ain't heavy he's my brother lyrics|["[Bobby Scott, Bob Russell]"]
+how many seasons of the bastard executioner are there|["[one, one season]"]
+when did the eagles win last super bowl|["[2017]"]
+who won last year's ncaa women's basketball|["[South Carolina]"]
+when did the isle of wight become an island|["[During the last Ice Age]"]
+love yourself by justin bieber is about who|["[Rihanna]"]
+who was the ruler of england in 1616|["[James I]"]
+what is the hot coffee mod in san andreas|["[a normally inaccessible mini-game]"]
+what is the maximum data rate for the 802.11a standard select one|["[54 Mbit/s]"]
 
 === DATASET: obesity ===
 --- ORIGINAL (10 rows) ---
@@ -198,16 +221,16 @@ Adelie|Torgersen|34.1|18.1|193|3475|
 Adelie|Torgersen|42|20.2|190|4250|
 --- GENERATED (10 rows) ---
 species|island|bill_length_mm|bill_depth_mm|flipper_length_mm|body_mass_g|sex
-Adelie|Biscoe|36.7|18.4|188|3554|MALE
-Adelie|Dream|35.9|17.0|181|3204|FEMALE
-Adelie|Dream|42.7|19.0|195|3758|FEMALE
-Adelie|Torgersen|33.1|18.9|214|5237|FEMALE
-Adelie|Biscoe|39.0|20.3|191|3786|
-Adelie|Torgersen|37.5|18.4|208|5147|MALE
-Adelie|Biscoe|37.7|18.5|199|4226|FEMALE
-Adelie|Biscoe|40.6|21.1|231|5934|MALE
-Adelie|Biscoe|41.5|18.5|213|4926|FEMALE
-Adelie|Dream|40.2|20.1|176|3584|FEMALE
+Adelie|Dream|39.0|18.0|205|3215|MALE
+Adelie|Biscoe|36.0|18.9|212|4018|
+Adelie|Biscoe|36.9|17.0|213|4085|FEMALE
+Adelie|Biscoe|44.1|17.1|172|3149|MALE
+Adelie|Biscoe|37.7|18.5|203|3322|FEMALE
+Adelie|Biscoe|42.8|18.4|217|4546|MALE
+Adelie|Biscoe|45.6|18.0|196|3679|MALE
+Adelie|Dream|38.8|19.1|224|3534|FEMALE
+Adelie|Dream|34.6|18.7|228|3618|FEMALE
+Adelie|Biscoe|43.2|18.1|192|3334|FEMALE
 
 === DATASET: penguins-json ===
 --- ORIGINAL (10 rows) ---
@@ -224,16 +247,68 @@ Adelie|Torgersen|34.1|18.1|193|3475|None
 Adelie|Torgersen|42|20.2|190|4250|None
 --- GENERATED (10 rows) ---
 Species|Island|Beak Length (mm)|Beak Depth (mm)|Flipper Length (mm)|Body Mass (g)|Sex
-Adelie|Torgersen|36.3|17.9|224|5353|MALE
-Adelie|Dream|36.4|18.6|191|3697|MALE
-Adelie|Biscoe|38.1|19.5|197|5049|MALE
-Adelie|Dream|42.7|17.1|213|4941|
-Adelie|Torgersen|38.6|17.7|173|3197|MALE
-Adelie|Torgersen|37.6|19.0|213|5192|MALE
-Adelie|Biscoe|39.2|17.3|211|5671|FEMALE
-Adelie|Torgersen|36.4|18.1|205|4518|MALE
-Adelie|Torgersen|37.9|18.6|208|5064|MALE
-Adelie|Torgersen|37.6|16.6|219|5859|MALE
+Adelie|Biscoe|33.1|16.1|205|3215|MALE
+Adelie|Torgersen|40.6|18.6|220|3846|MALE
+Adelie|Dream|38.9|16.0|193|3836|FEMALE
+Adelie|Biscoe|37.6|18.5|224|3415|MALE
+Adelie|Biscoe|40.2|18.9|183|3735|MALE
+Adelie|Biscoe|36.3|19.1|191|4575|FEMALE
+Adelie|Dream|35.7|18.9|182|4530|MALE
+Adelie|Dream|42.0|20.0|222|3562|FEMALE
+Adelie|Biscoe|35.0|18.4|203|3322|FEMALE
+Adelie|Dream|37.3|18.6|195|4260|MALE
+
+=== DATASET: piqa-test ===
+--- ORIGINAL (10 rows) ---
+hit it at the wrong angle and make it bleed.|pop it.|how do you puncture a vein?
+is used to put on shoe |is used to put on milk jug |hands
+To make pie crust, you will need flour, sugar, butter, and ice cubes|To make pie crust, you will need flour, sugar, butter, and ice water.|What ingredients do I need to make a shortcrust for mini pies?
+Preheat oven to 450 degrees F.    Toss the broccoli florets with the olive pits, garlic, salt, and pepper on a baking sheet. Spread them out and then roast, without stirring, until the edges are crispy and the stems are crisp tender, about 20 minutes.    Serve warm.|Preheat oven to 450 degrees F.    Toss the broccoli florets with the olive oil, garlic, salt, and pepper on a baking sheet. Spread them out and then roast, without stirring, until the edges are crispy and the stems are crisp tender, about 20 minutes.    Serve warm.|roast broccoli
+Use a knife to crimp the edges.|Use a fork to crimp the edges|To crimp the edges of the patsy crust.
+catches fire in nail clipper |catches fire in microwave |magazine
+can become warmer in a microwave |have access to the controls in a microwave |sticks
+Put the jar of honey in hot boiling water until it becomes runny.|Microwave the honey in a microwave on medium heat until it becomes runny again.|To decrystallize  raw honey.
+place it over your shoulders.|place it under your shoulders.|how do you wear a shawl?
+Clean and gut fish. Add salt and pepper on the fish. Add about an inch of oil in pan. Keep heat on low. Once oil is hot, gently put fish in. Fry each side for 5 minutes until crispy yellow brown.|Clean and gut fish. Add salt and pepper on the fish. Add about an inch of oil in pan. Keep heat between high and medium. Once oil is hot, gently put fish in. Fry each side for 5 minutes until crispy yellow brown.|How to fry a whole fish.
+insert a toothpick into the middle of the bread and if it comes out clean it is done|insert a toothpick into the middle of the bread and if it comes out covered in  batter it is done|To ensure the jalapeno bread if cooked throughy
+--- GENERATED (10 rows) ---
+goal|sol1|sol2
+How to bake cake.|Pour batter into cake pan and put onto stovetop on 350 for 30 minutes.|Pour batter into cake pan and put into oven on 350 for 30 minutes.
+To get around easily with multiple children,|get a leash for each child.|get a double stroller.
+how do you fasten a seat belt?|place the metal end into the seat.|place the metal end into the buckle.
+|can hold up baking sheet|
+To make your own glue,|mix a bit of water and sugar.|mix a bit of water a flour.
+how do you look at your friends on facebook|click on the menu option from the home page, and click on 'friends'|click on the menu option from the home page, and click on 'groups'
+To get  get super-creative with this tasty cake|build the layers in a large flower pot, adding edible flowers on top, or plastic flowers,|build the layers in a large   pot, adding real flowers on top, or plastic flowers,
+To slice a mango in half,|cut in half over a cutting board with a chef's knife, cutting through the pit, then remove it with your hands.|cut in half over a cutting board with a chef's knife, avoiding the pit, then remove it with your hands.
+Learn how to color the cream centers of Oreos for a food craft.|Put 3 to 4 drops of liquid food coloring on a plate and use a paint brush to brush the food coloring onto the cream.|Put 3 to 4 drops of frozen food coloring on a plate and use a paint brush to brush the food coloring onto the cream.
+Avoid losing class schedules.|Take a photo and make it your phone background.|Take a photo and make it your phone lock screen.
+
+=== DATASET: piqa-valid ===
+--- ORIGINAL (10 rows) ---
+Provide the guinea pig with a cage full of a few inches of bedding made of ripped jeans material, you will also need to supply it with a water bottle and a food dish.|Provide the guinea pig with a cage full of a few inches of bedding made of ripped paper strips, you will also need to supply it with a water bottle and a food dish.|How do I ready a guinea pig cage for it's new occupants?
+finish, woodgrain with  bobby pin |replace drawer with bobby pin |dresser
+You have to defeat Apollo Creed and Clubber Lang first.|Drago isn't in this game because it was released before Rocky IV.|To fight Ivan Drago in Rocky for sega master system.
+Blow into trash bag and tie with rubber band.|Blow into tin can and tie with rubber band.|Make outdoor pillow.
+will turn into a cooler if you add soda to it|will turn into a cooler if you add water to it|ice box
+Rub hard with dryer sheets, then rinse.|Rub hard with bed sheets, then rinse.|Remove soap scum from shower door.
+Open the top of the empty spray bottle and check for damage. Rinse the bottle then fill halfway with warm water. Replace the spray nozzle and pump a few times to clear the hose. Empty spray bottle and allow to dry before using with a new cleaner.|Open the top of the empty spray bottle and check for damage. Rinse the bottle then fill halfway with warm water. Replace the spray nozzle and pump a few times to clear the hose. Empty sparrow bottle and allow to dry before using with a new cleaner.|Recycle a spray bottle for a new cleaner.
+Spread mayonnaise all over the jar with your palms and then roll the jar in toilet paper.|Press a piece of double-sided tape to the glass jar and then press the toilet paper onto the tape.|How do you attach toilet paper to a glass jar?
+Find tissue paper and fold it in half. Take scissors and tear out pieces of the paper in the middle. When you are done tape it to your window.|Find tissue paper and fold it in half. Take scissors and cut out pieces of the paper in the middle. When you are done tape it to your window.|How to make tissue paper window decorations?
+Wrap the cord around your hand and knee.|Wrap the cord around your hand and elbow.|Neatly wrap up an extension cord.
+Add small amount of 7UP in vase.|Add small amount of coffee in vase.|Extend life of flowers in vase.
+--- GENERATED (10 rows) ---
+goal|sol1|sol2
+After baking the rollo cookies|Remove them from the oven and eat.|After you remove the cookies from the oven you will want to allow them to sit on the pan for a few minutes. If you try to take them off right away the caramel tends to spill from the cookie and they are hard to remove.
+To attach wefts of synthetic hair to one another.|Align the wefts along the edge side by side. Sew them to one another until desired width is reached.|Align the wefts along the edge on top of each other. Sew them to one another until desired width is reached.
+Avoid being under powered during trips.|Half charge everything before you leave.|Fully charge everything before you leave.
+How do we patch the concrete cracks?|Fill the cracks with dirt in order to smooth down all the cracks.|Use a Quikcrete's Vinyl Concrete Patcher in order to smooth down all the cracks.
+How to make Chocolate Macadamia Ice cream at home without an Ice cream Freezer.|In a medium mixing bowl combine 4 cups chilled whipping cream, 14 oz. can sweetened condensed milk, and 1 16 ounce can chocolate flavored syrup (Like Hershey's).  Beat with an electric mixer until soft Peaks form.  Fold in 3/4 cup Macadamia nuts (either Halved or coarsely chopped)  Transfer mixture to 8x8x2 inch baking pan.  Freeze about 8 hours until firm inside the oven. Serve any time after 8 hours freeze.|In a medium mixing bowl combine 4 cups chilled whipping cream, 14 oz. can sweetened condensed milk, and 1 16 ounce can chocolate flavored syrup (Like Hershey's).  Beat with an electric mixer until soft Peaks form.  Fold in 3/4 cup Macadamia nuts (either Halved or coarsely chopped)  Transfer mixture to 8x8x2 inch baking pan.  Freeze about 8 hours until firm. Serve any time after 8 hours freeze.
+how do you chew your food?|chomp it up with your teeth until you can swallow it.|mash it up before placing it in your mouth to swallow.
+How do you build a moss wall in your planted aquarium?|You can build a moss wall in your aquarium by sandwiching a few pieces of aquatic moss between two pieces of plastic craft mesh, just so that the moss fibers are beginning to poke through. Glue it together. Secure to the wall of your aquarium with suction cups. In a few weeks time, the moss will begin to grow through, covering the entire mesh and making a lush moss wall.|You can build a moss wall in your aquarium by sandwiching a few pieces of aquatic moss between two pieces of plastic craft mesh, just so that the moss fibers are beginning to poke through. Glue it together. Secure to the wall of your aquarium with suction cups. In a few minutes time, the moss will begin to grow through, covering the entire mesh and making a lush moss wall.
+What do you need to make a knife rust-proof?|To make a knife rust-proof, you need white vinegar, rubbing alcohol, a cup, a pot/stove, paper towels, and a carbon steel knife.|To make a knife rust-proof, you need tomato sauce, rubbing alcohol, a cup, a pot/stove, paper towels, and a carbon steel knife.
+How to get water out of coconut.|Use a hammer and a nail to pierce a few holes in the top of the coconut. Pour into cup.|Use a hammer and a nail to pierce a few holes in the top of the coconut. Pour into colander.
+Hardened ceilings|can keep out swift and quick aerial drones from distant lands|can keep out rushing water from distant lands
 
 === DATASET: planets ===
 --- ORIGINAL (10 rows) ---
@@ -302,16 +377,16 @@ District of Columbia|11|681170|0.011759179|0
 Florida|12|20612439|0.003299949|110
 --- GENERATED (10 rows) ---
 state|id|population|engineers|hurricanes
-Alaska|1|1381864|0.001590524|0
-Puerto Rico|2|23710592|0.000773897|0
-Alabama|3|9984376|0.003421545|22
-Maryland|4|2524724|0.006291088|2
-Massachusetts|5|1224424|0.010230808|10
-South Dakota|6|585501|0.003085086|0
-Kentucky|7|1377632|0.002089262|0
-New Jersey|8|2070646|0.007724327|2
-Vermont|9|2494026|0.004643016|0
-North Carolina|10|856622|0.004226953|46
+Alaska|1|710999|0.001590524|0
+Puerto Rico|2|11703035|0.000773897|0
+Alabama|3|1377632|0.003421545|22
+Maryland|4|1708438|0.006291088|2
+Massachusetts|5|1205728|0.010230808|10
+South Dakota|6|957964|0.003085086|0
+Kentucky|7|2939457|0.002089262|0
+New Jersey|8|9984376|0.007724327|2
+Vermont|9|6722396|0.004643016|0
+North Carolina|10|1224424|0.004226953|46
 
 === DATASET: recent-grads ===
 --- ORIGINAL (10 rows) ---
@@ -338,32 +413,6 @@ Rank|Major_code|Major|Total|Men|Women|Major_category|ShareWomen|Sample_size|Empl
 8|5001|ASTRONOMY AND ASTROPHYSICS|1792|832|960|Physical Sciences|0.535714286|10|1526|1085|553|827|33|0.021167415|62000|31500|109000|972|500|220
 9|2414|MECHANICAL ENGINEERING|91227|80320|10907|Engineering|0.119558903|1029|76442|71298|13101|54639|4650|0.057342278|60000|48000|70000|52844|16384|3253
 10|2408|ELECTRICAL ENGINEERING|81527|65511|16016|Engineering|0.196450256|631|61928|55450|12695|41413|3895|0.059173845|60000|45000|72000|45829|10874|3170
-
-=== DATASET: sakila ===
---- ORIGINAL (10 rows) ---
-actor_id|first_name|last_name|last_update
-1|PENELOPE|GUINESS|2006-02-15 09:34:33
-2|NICK|WAHLBERG|2006-02-15 09:34:33
-3|ED|CHASE|2006-02-15 09:34:33
-4|JENNIFER|DAVIS|2006-02-15 09:34:33
-5|JOHNNY|LOLLOBRIGIDA|2006-02-15 09:34:33
-6|BETTE|NICHOLSON|2006-02-15 09:34:33
-7|GRACE|MOSTEL|2006-02-15 09:34:33
-8|MATTHEW|JOHANSSON|2006-02-15 09:34:33
-9|JOE|SWANK|2006-02-15 09:34:33
-10|CHRISTIAN|GABLE|2006-02-15 09:34:33
---- GENERATED (10 rows) ---
-actor_id|first_name|last_name|last_update
-71|ED|TRACY|2006-02-28 10:06:59
-165|NATALIE|KEITEL|2006-04-01 03:19:37
-195|JAYNE|MANSFIELD|2006-04-07 02:49:27
-107|GRACE|CRUISE|2006-04-07 03:39:03
-205|CHRIS|BOLGER|2006-05-19 16:16:46
-191|KENNETH|HOFFMAN|2006-05-24 23:39:27
-207|EWAN|DREYFUSS|2006-07-13 05:16:59
-73|JOHNNY|GUINESS|2006-07-27 04:16:37
-113|EWAN|HACKMAN|2006-08-14 13:21:36
-208|ELLEN|BRODY|2006-08-15 22:27:12
 
 === DATASET: seaice ===
 --- ORIGINAL (10 rows) ---
@@ -442,4 +491,3 @@ date|pressure|temperature|wind
 2010-01-01 08:00:00|1016.5|3.3|3.9
 2010-01-01 09:00:00|1016.4|3.7|4.2
 2010-01-01 10:00:00|1016.6|3.6|4.2
-

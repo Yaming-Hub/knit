@@ -1,29 +1,3 @@
-=== DATASET: chinook ===
---- ORIGINAL (10 rows) ---
-AlbumId|Title|ArtistId
-1|For Those About To Rock We Salute You|1
-2|Balls to the Wall|2
-3|Restless and Wild|2
-4|Let There Be Rock|1
-5|Big Ones|3
-6|Jagged Little Pill|4
-7|Facelift|5
-8|Warner 25 Anos|6
-9|Plays Metallica By Four Cellos|7
-10|Audioslave|8
---- GENERATED (10 rows) ---
-AlbumId|Title|ArtistId
-1|Misplaced Childhood|184
-2|Brave New World|130
-3|The Essential Miles Davis [Disc 2]|7
-4|Sir Neville Marriner: A Celebration|199
-5|Bach: Violin Concertos|155
-6|Vinícius De Moraes - Sem Limite|188
-7|One By One|234
-8|Use Your Illusion I|133
-9|Roda De Funk|120
-10|The Best Of R.E.M.: The IRS Years|226
-
 === DATASET: co2-concentration ===
 --- ORIGINAL (10 rows) ---
 Date|CO2|adjusted CO2
@@ -39,16 +13,16 @@ Date|CO2|adjusted CO2
 1959-02-01|316.49|315.86
 --- GENERATED (10 rows) ---
 Date|CO2|adjusted CO2
-1958-03-01|371.11|367.53
-1958-03-31|404.5|400.37
-1958-04-30|368.13|368.77
-1958-05-30|351.73|353.38
-1958-06-29|347.74|344.36
-1958-07-29|381.87|384.21
-1958-08-28|369.94|365.85
-1958-09-27|328.66|328.01
-1958-10-27|332.43|329.03
-1958-11-26|401.32|400.24
+1958-03-01|316.49|314.5
+1958-03-31|316.43|314.31
+1958-04-30|314.6|314.66
+1958-05-30|316.34|314.41
+1958-06-29|317.19|315.36
+1958-07-29|317.04|315.02
+1958-08-28|315.35|314.98
+1958-09-27|315.51|314.98
+1958-10-27|314.43|315.22
+1958-11-26|315.74|315.53
 
 === DATASET: college-majors-all ===
 --- ORIGINAL (10 rows) ---
@@ -78,29 +52,55 @@ Major_code|Major|Major_category|Total|Employed|Employed_full_time_year_round|Une
 
 === DATASET: countries ===
 --- ORIGINAL (10 rows) ---
-_comment|year|fertility|life_expect|n_fertility|n_life_expect|country|p_fertility|p_life_expect
-Data courtesy of Gapminder.org|1955|7.42|43.88|7.38|45.03|Afghanistan||
-|1960|7.38|45.03|7.35|46.13|Afghanistan|7.42|43.88
-|1965|7.35|46.13|7.4|47.08|Afghanistan|7.38|45.03
-|1970|7.4|47.08|7.54|47.55|Afghanistan|7.35|46.13
-|1975|7.54|47.55|7.59|43.68|Afghanistan|7.4|47.08
-|1980|7.59|43.68|7.52|42.03|Afghanistan|7.54|47.55
-|1985|7.52|42.03|7.57|53.83|Afghanistan|7.59|43.68
-|1990|7.57|53.83|7.71|54.33|Afghanistan|7.52|42.03
-|1995|7.71|54.33|7.53|54.73|Afghanistan|7.57|53.83
-|2000|7.53|54.73|||Afghanistan|7.71|54.33
+_comment|year|fertility|life_expect|n_fertility|n_life_expect|country
+Data courtesy of Gapminder.org|1955|7.42|43.88|7.38|45.03|Afghanistan
+|1960|7.38|45.03|7.35|46.13|Afghanistan
+|1965|7.35|46.13|7.4|47.08|Afghanistan
+|1970|7.4|47.08|7.54|47.55|Afghanistan
+|1975|7.54|47.55|7.59|43.68|Afghanistan
+|1980|7.59|43.68|7.52|42.03|Afghanistan
+|1985|7.52|42.03|7.57|53.83|Afghanistan
+|1990|7.57|53.83|7.71|54.33|Afghanistan
+|1995|7.71|54.33|7.53|54.73|Afghanistan
+|2000|7.53|54.73|||Afghanistan
 --- GENERATED (10 rows) ---
 _comment|year|fertility|life_expect|n_fertility|n_life_expect|country|p_fertility|p_life_expect
-|1955|6.12|65.76||63.01|Afghanistan|6.43|65.95
-|1990|7.65|55.91|7.96|55.93|Afghanistan|7.63|58.01
-|1995|1.73|81.57|1.83|81.57|Afghanistan|2.45|80.24
-|2000|5.54|64.96|3.38|63.53|Afghanistan|6.07|
-|1960|7.46|51.98|4.93|56.41|Afghanistan|7.7|51.74
-|1960|6.35|67.5|4.19|66.68|Afghanistan|6.67|65.85
-|2000|1.34|81.57|1.46|81.57|Afghanistan|1.74|80.24
-|1960|5.81|60.29|3.62|59.71|Argentina|5.98|60.09
-|2000|4.27|68.71|2.65|69.0|Argentina|5.92|65.88
-Data courtesy of Gapminder.org|1960|3.83|65.92|3.06|65.76|Argentina|3.3|63.46
+|1975|2.55|68.93|1.63||Afghanistan|4.49|69.38
+|1970|7.77|65.74|2.63|58.56|Afghanistan|6.57|71.55
+|1965|6.57|69.06||70.25|Afghanistan|8.22|77.14
+|1975|7.94|52.99|3.99|66.08|Afghanistan|6.52|80.24
+|2000|6.75|64.66|8.23|57.96|Afghanistan|7.79|80.24
+|1960|7.98|81.08|8.23|78.61|Afghanistan|7.49|56.59
+|1995|4.72|53.76|5.13|61.81|Afghanistan|7.48|76.53
+|1995|1.42|64.27|2.95|79.86|Afghanistan|1.87|69.46
+|1990|7.89|77.44|5.09|64.01|Afghanistan|7.66|50.55
+|1970|2.08|62.58|5.03|58.63|Afghanistan||76.41
+
+=== DATASET: covid-icu-beds ===
+--- ORIGINAL (10 rows) ---
+MMSA|total_percent_at_risk|high_risk_per_ICU_bed|high_risk_per_hospital|icu_beds|hospitals|total_at_risk
+San Juan-Carolina-Caguas, PR|52.88%|NA|NA|NA|NA|923725.203
+Manhattan, KS|47.29%|4489.84875|8979.6975|8|4|35918.79
+Hilton Head Island-Bluffton-Beaufort, SC|62.72%|3904.163571|36438.86|28|3|109316.58
+Kahului-Wailuku-Lahaina, HI|59.13%|3860.557|19302.785|20|4|77211.14
+Spartanburg, SC|66.12%|3786.115556|85187.6|45|2|170375.2
+Baton Rouge, LA|66.60%|3459.7325|39000.62091|124|11|429006.83
+Rockingham County-Strafford County, NH, Metropolitan Division|57.72%|3365.052|40380.624|60|5|201903.12
+Salisbury, MD-DE|68.32%|3292.271176|37312.40667|68|6|223874.44
+Wichita Falls, TX|67.11%|3279.425|19676.55|24|4|78706.2
+Colorado Springs, CO|55.96%|3251.603053|77225.5725|95|4|308902.29
+--- GENERATED (10 rows) ---
+MMSA|total_percent_at_risk|high_risk_per_ICU_bed|high_risk_per_hospital|icu_beds|hospitals|total_at_risk
+San Juan-Carolina-Caguas, PR|52.88%|NA|NA|NA|NA|923725.203
+Manhattan, KS|47.29%|4489.84875|8979.6975|8|4|35918.79
+Hilton Head Island-Bluffton-Beaufort, SC|62.72%|3904.163571|36438.86|28|3|109316.58
+Kahului-Wailuku-Lahaina, HI|59.13%|3860.557|19302.785|20|4|77211.14
+Spartanburg, SC|66.12%|3786.115556|85187.6|45|2|170375.2
+Baton Rouge, LA|66.60%|3459.7325|39000.62091|124|11|429006.83
+Rockingham County-Strafford County, NH, Metropolitan Division|57.72%|3365.052|40380.624|60|5|201903.12
+Salisbury, MD-DE|68.32%|3292.271176|37312.40667|68|6|223874.44
+Wichita Falls, TX|67.11%|3279.425|19676.55|24|4|78706.2
+Colorado Springs, CO|55.96%|3251.603053|77225.5725|95|4|308902.29
 
 === DATASET: dc-characters ===
 --- ORIGINAL (10 rows) ---
@@ -117,16 +117,16 @@ page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANC
 1380|Flash (Barry Allen)|\/wiki\/Flash_(Barry_Allen)|Secret Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|1028|1956, October|1956
 --- GENERATED (10 rows) ---
 page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|YEAR
-402594|Daria Hernandez (New Earth)|\/wiki\/Daria_Hernandez_(New_Earth)|Public Identity|Neutral Characters|Brown Eyes|Brown Hair|Female Characters||Living Characters|3093|2003, July|1940
-228807|Daria Hernandez (New Earth)|\/wiki\/Daria_Hernandez_(New_Earth)||Neutral Characters||Brown Hair|Female Characters||Living Characters|3093|2003, July|1953
-290355|Sigrid Nansen (New Earth)|\/wiki\/Sigrid_Nansen_(New_Earth)|Public Identity|Good Characters|Blue Eyes||Female Characters||Living Characters|3093|1986, November|1946
-309394|Karen Lou Faulkner (New Earth)|\/wiki\/Karen_Lou_Faulkner_(New_Earth)||Neutral Characters|Brown Eyes|Brown Hair|Female Characters||Living Characters|3093|1987, July|1940
-166074|Achilles Warkiller (New Earth)|\/wiki\/Achilles_Warkiller_(New_Earth)|Secret Identity|Good Characters|||Male Characters||Living Characters|3093|2009, May|
-324375|Courtney Mason (New Earth)|\/wiki\/Courtney_Mason_(New_Earth)||Good Characters|Blue Eyes||Female Characters||Deceased Characters|3093|1993, July|1932
-22537|Henry Cannon (New Earth)|\/wiki\/Henry_Cannon_(New_Earth)||Bad Characters|Black Eyes|Black Hair|Male Characters||Living Characters|3093|1984, April|1935
-364802|Mallory Kimball (New Earth)|\/wiki\/Mallory_Kimball_(New_Earth)|Public Identity|Good Characters|Brown Eyes||Female Characters||Living Characters|3093|2006, July|1908
-15973|Kevin Mayer (New Earth)|\/wiki\/Kevin_Mayer_(New_Earth)|Public Identity|Good Characters|Brown Eyes||Male Characters||Living Characters|3093|1988|1937
-123972|John Constantine (New Earth)|\/wiki\/John_Constantine_(New_Earth)||Good Characters||Blond Hair|Male Characters||Living Characters|3093|1984, June|1930
+101621|John Constantine (New Earth)|\/wiki\/John_Constantine_(New_Earth)|Public Identity|||Blond Hair|Male Characters||Living Characters|3093|1984, June|1915
+47210|Syonide II (New Earth)|\/wiki\/Syonide_II_(New_Earth)||Bad Characters|Blue Eyes|Red Hair|Female Characters||Deceased Characters|3093|1985, March|1923
+15641|John Constantine (New Earth)|\/wiki\/John_Constantine_(New_Earth)|Public Identity|Good Characters|Blue Eyes||Male Characters||Living Characters|3093|1984, June|1964
+2503|Mortimer Drake (New Earth)|\/wiki\/Mortimer_Drake_(New_Earth)||Bad Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|3093|1943, November|1961
+2316|Grace Choi (New Earth)|\/wiki\/Grace_Choi_(New_Earth)|Secret Identity||||Female Characters||Living Characters|3093|2003, August|1977
+131616|Todd Rice (Some Years Later)|\/wiki\/Todd_Rice_(Some_Years_Later)|Public Identity||||Male Characters||Living Characters|3093|2009, February|2012
+8253|Courtney Mason (New Earth)|\/wiki\/Courtney_Mason_(New_Earth)|||Blue Eyes|Blond Hair|Female Characters||Deceased Characters|3093|1993, July|2015
+5134|Frostbite (New Earth)|\/wiki\/Frostbite_(New_Earth)|Secret Identity|||Blue Hair|Male Characters||Living Characters|3093|1997, June|1983
+2530|Frostbite (New Earth)|\/wiki\/Frostbite_(New_Earth)||Good Characters|Blue Eyes||Male Characters||Living Characters|2400|1997, June|1967
+3898|Mortimer Drake (New Earth)|\/wiki\/Mortimer_Drake_(New_Earth)|Secret Identity|Bad Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|2054|1943, November|1990
 
 === DATASET: diamonds ===
 --- ORIGINAL (10 rows) ---
@@ -143,16 +143,16 @@ carat|cut|color|clarity|depth|table|price|x|y|z
 0.23|Very Good|H|VS1|59.4|61|338|4|4.05|2.39
 --- GENERATED (10 rows) ---
 carat|cut|color|clarity|depth|table|price|x|y|z
-1.07|Premium|F|SI2|62.5|55.0|6166|6.56|6.64|4.01
-0.69|Premium|F|VS1|61.7|57.0|2285|5.79|5.71|3.72
-0.35|Good|I|VS2|61.8|61.0|854|4.55|4.48|2.73
-0.74|Premium|E|SI2|60.5|56.0|1523|5.97|6.07|3.6
-0.53|Ideal|I|VVS1|61.2|59.0|1266|5.18|5.19|3.18
-1.16|Very Good|G|SI1|61.9|58.0|5942|6.61|6.78|4.2
-1.4|Premium|I|SI1|60.1|56.0|9449|6.96|7.0|4.46
-1.56|Very Good|J|VS2|63.3|56.0|8649|7.12|7.31|4.58
-0.81|Very Good|D|VS2|62.1|59.0|2568|6.04|6.04|3.69
-0.36|Ideal|E|SI2|61.6|57.0|597|4.6|4.64|2.89
+1.4|Premium|F|SI2|62.5|55.0|1355|5.8|5.5|3.8
+0.24|Premium|F|VS1|61.7|57.0|531|5.19|5.86|3.83
+0.3|Good|I|VS2|61.8|61.0|2002|6.92|4.11|3.48
+0.34|Premium|E|SI2|60.5|56.0|1310|4.53|5.03|4.19
+0.79|Ideal|I|VVS1|61.2|59.0|4283|5.98|4.69|3.59
+0.75|Very Good|G|SI1|61.9|58.0|1340|3.78|8.16|4.92
+1.02|Premium|I|SI1|60.1|56.0|1183|6.64|4.04|3.27
+0.27|Very Good|J|VS2|63.3|56.0|813|7.37|5.98|1.81
+0.49|Very Good|D|VS2|62.1|59.0|407|4.04|5.77|4.14
+1.02|Ideal|E|SI2|61.6|57.0|11115|6.4|5.6|5.02
 
 === DATASET: disasters ===
 --- ORIGINAL (10 rows) ---
@@ -274,12 +274,12 @@ Guinea|12|14|9.95|-9.7|
 --- GENERATED (10 rows) ---
 Country|Month|Year|Lat|Lon|Value
 Guinea|3|14|9.95|-9.7|122
-Guinea|4|14|9.95|-9.7|
-Guinea|5|14|9.95|-9.7|291
+Guinea|4|14|9.95|-9.7|224
+Guinea|5|14|9.95|-9.7|
 Guinea|6|14|9.95|-9.7|413
-Guinea|7|14|9.95|-9.7|460
+Guinea|7|14|9.95|-9.7|
 Guinea|8|14|9.95|-9.7|771
-Guinea|9|14|9.95|-9.7|
+Guinea|9|14|9.95|-9.7|1022
 Guinea|10|14|9.95|-9.7|
 Guinea|11|14|9.95|-9.7|
 Guinea|12|14|9.95|-9.7|
@@ -312,29 +312,29 @@ Guinea|12|14|9.95|-9.7|
 
 === DATASET: flare ===
 --- ORIGINAL (10 rows) ---
-id|name|parent|size
-1|flare||
-2|analytics|1|
-3|cluster|2|
-4|AgglomerativeCluster|3|3938
-5|CommunityStructure|3|3812
-6|HierarchicalCluster|3|6714
-7|MergeEdge|3|743
-8|graph|2|
-9|BetweennessCentrality|8|3534
-10|LinkDistance|8|5731
+id|name
+1|flare
+2|analytics
+3|cluster
+4|AgglomerativeCluster
+5|CommunityStructure
+6|HierarchicalCluster
+7|MergeEdge
+8|graph
+9|BetweennessCentrality
+10|LinkDistance
 --- GENERATED (10 rows) ---
 id|name|parent|size
-1|div|0|660
-2|cluster|0|2517
-3|DataEvent|0|1935
-4|palette|0|24593
-5|CartesianAxes|4|4445
-6|range|0|3905
-7|operator|0|285
-8|Displays|3|10915
-9|And|0|4037
-10|FlareVis|5|3242
+1|SpringForce|33|1204
+2|axis|52|12791
+3|Transition|9|727
+4|BetweennessCentrality|0|3319
+5|Orientation|54|879
+6|AxisLayout|0|2615
+7|LegendItem|32|10984
+8|PointInterpolator|3|24593
+9|_|0|
+10|fn|0|6500
 
 === DATASET: flights ===
 --- ORIGINAL (10 rows) ---
@@ -466,3 +466,28 @@ Armenia|7763|74.4|3017712|europe_central_asia
 Australia|44056|81.8|23968973|east_asia_pacific
 Austria|44401|81.0|8544586|europe_central_asia
 
+=== DATASET: geyser ===
+--- ORIGINAL (10 rows) ---
+duration|waiting|kind
+3.6|79|long
+1.8|54|short
+3.333|74|long
+2.283|62|short
+4.533|85|long
+2.883|55|short
+4.7|88|long
+3.6|85|long
+1.95|51|short
+4.35|85|long
+--- GENERATED (10 rows) ---
+duration|waiting|kind
+4.023011500054255|79|long
+4.795020793398445|80|long
+2.169995180507601|48|short
+4.241724483908289|70|long
+5.036962735738354|80|long
+1.989418383099493|45|short
+2.070042655876569|55|short
+3.945496507219126|81|long
+4.48978396197936|81|long
+2.108959145661232|64|short

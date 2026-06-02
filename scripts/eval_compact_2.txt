@@ -1,29 +1,3 @@
-=== DATASET: geyser ===
---- ORIGINAL (10 rows) ---
-duration|waiting|kind
-3.6|79|long
-1.8|54|short
-3.333|74|long
-2.283|62|short
-4.533|85|long
-2.883|55|short
-4.7|88|long
-3.6|85|long
-1.95|51|short
-4.35|85|long
---- GENERATED (10 rows) ---
-duration|waiting|kind
-4.693344893751997|86|long
-2.505792265729603|67|long
-4.378244576333994|76|short
-2.141354894893711|52|long
-4.172672755653698|73|long
-3.846190482889884|75|short
-2.073732782023257|67|short
-1.6|48|long
-4.433888433335794|84|long
-4.658243597508298|81|short
-
 === DATASET: github-events ===
 --- ORIGINAL (10 rows) ---
 time|count
@@ -65,20 +39,19 @@ year|temp
 1889|-0.1
 --- GENERATED (10 rows) ---
 year|temp
-1880|-0.28
-1881|-0.23
-1882|-0.1
-1883|-0.01
-1884|-0.21
-1885|-0.2
-1886|-0.07
-1887|-0.12
-1888|-0.12
-1889|-0.32
+1880|-0.1
+1881|-0.11
+1882|-0.28
+1883|-0.12
+1884|-0.05
+1885|-0.07
+1886|-0.23
+1887|-0.21
+1888|-0.32
+1889|-0.2
 
 === DATASET: glue-cola ===
 --- ORIGINAL (10 rows) ---
-sentence|label|idx
 The sailors rode the breeze clear of the rocks.|1|0
 The weights made the rope stretch over the pulley.|1|1
 The mechanical doll wriggled itself loose.|1|2
@@ -89,6 +62,7 @@ I demand that the more John eat, the more he pays.|0|6
 Mary listens to the Grateful Dead, she gets depressed.|1|7
 The angrier Mary got, the more she looked at pictures.|1|8
 The higher the stakes, the lower his expectations are.|1|9
+The more Fred is obnoxious, the less attention you should pay to him.|1|10
 --- GENERATED (10 rows) ---
 sentence|label|idx
 The sailors rode the breeze clear of the rocks.|1|0
@@ -104,9 +78,8 @@ The higher the stakes, the lower his expectations are.|1|9
 
 === DATASET: glue-mrpc ===
 --- ORIGINAL (10 rows) ---
-sentence1|sentence2|label|idx
-He said the foodservice pie business doesn 't fit the company 's long-term growth strategy .|" The foodservice pie business does not fit our long-term growth strategy .|1|9
-Magnarelli said Racicot hated the Iraqi regime and looked forward to using his long years of training in the war .|His wife said he was " 100 percent behind George Bush " and looked forward to using his years of training in the war .|0|18
+He said the foodservice pie business doesn 't fit the company 's long-term growth strategy .| The foodservice pie business does not fit our long-term growth strategy .	1	9
+Magnarelli said Racicot hated the Iraqi regime and looked forward to using his long years of training in the war .	His wife said he was  100 percent behind George Bush " and looked forward to using his years of training in the war .|0|18
 The dollar was at 116.92 yen against the yen , flat on the session , and at 1.2891 against the Swiss franc , also flat .|The dollar was at 116.78 yen JPY = , virtually flat on the session , and at 1.2871 against the Swiss franc CHF = , down 0.1 percent .|0|25
 The AFL-CIO is waiting until October to decide if it will endorse a candidate .|The AFL-CIO announced Wednesday that it will decide in October whether to endorse a candidate before the primaries .|1|32
 No dates have been set for the civil or the criminal trial .|No dates have been set for the criminal or civil cases , but Shanley has pleaded not guilty .|0|33
@@ -115,6 +88,8 @@ While dioxin levels in the environment were up last year , they have dropped by 
 This integrates with Rational PurifyPlus and allows developers to work in supported versions of Java , Visual C # and Visual Basic .NET.|IBM said the Rational products were also integrated with Rational PurifyPlus , which allows developers to work in Java , Visual C # and VisualBasic .Net.|1|55
 The top rate will go to 4.45 percent for all residents with taxable incomes above $ 500,000 .|For residents with incomes above $ 500,000 , the income-tax rate will increase to 4.45 percent .|1|73
 The results appear in the January issue of Cancer , an American Cancer Society journal , being published online today .|The results appear in the January issue of Cancer , an American Cancer Society ( news - web sites ) journal , being published online Monday .|1|77
+The delegates said raising and distributing funds has been complicated by the U.S. crackdown on jihadi charitable foundations , bank accounts of terror-related organizations and money transfers .|Bin Laden ’ s men pointed out that raising and distributing funds has been complicated by the U.S. crackdown on jihadi charitable foundations , bank accounts of terror-related organizations and money transfers .|1|79
+ Sanitation is poor ... there could be typhoid and cholera ,  he said .| Sanitation is poor , drinking water is generally left behind . . . there could be typhoid and cholera . |0|83
 --- GENERATED (10 rows) ---
 sentence1|sentence2|label|idx
 He said the foodservice pie business doesn 't fit the company 's long-term growth strategy .|" The foodservice pie business does not fit our long-term growth strategy .|1|9
@@ -130,7 +105,6 @@ The results appear in the January issue of Cancer , an American Cancer Society j
 
 === DATASET: glue-rte ===
 --- ORIGINAL (10 rows) ---
-sentence1|sentence2|label|idx
 Dana Reeve, the widow of the actor Christopher Reeve, has died of lung cancer at age 44, according to the Christopher Reeve Foundation.|Christopher Reeve had an accident.|1|0
 Yet, we now are discovering that antibiotics are losing their effectiveness against illness. Disease-causing bacteria are mutating faster than we can come up with new antibiotics to fight the new variations.|Bacteria is winning the war against antibiotics.|0|1
 Cairo is now home to some 15 million people - a burgeoning population that produces approximately 10,000 tonnes of rubbish per day, putting an enormous strain on public services. In the past 10 years, the government has tried hard to encourage private investment in the refuse sector, but some estimate 4,000 tonnes of waste is left behind every day, festering in the heat as it waits for someone to clear it up. It is often the people in the poorest neighbourhoods that are worst affected. But in some areas they are fighting back. In Shubra, one of the northern districts of the city, the residents have taken to the streets armed with dustpans and brushes to clean up public areas which have been used as public dumps.|15 million tonnes of rubbish are produced daily in Cairo.|1|2
@@ -141,6 +115,7 @@ singer and actress Britney Spears, 24, has filled papers in Los Angeles County S
 Following the successful bid to bring the 2010 Ryder Cup to Wales, the Wales Tourist Board has wasted little time in commissioning work to ensure that the benefits accruing from the event are felt throughout the country.|Wales to host 2010 Ryder Cup.|0|7
 Steve Jobs was attacked by Sculley and other Apple executives for not delivering enough hot new products and resigned from the company a few weeks later.|Steve Jobs worked for Apple.|0|8
 Traditionally, the Brahui of the Raisani tribe are in charge of the law and order situation through the Pass area. This tribe is still living in present day Balochistan in Pakistan.|The Raisani tribe resides in Pakistan.|0|9
+The international humanitarian aid organization, Doctors Without Borders/Medecins Sans Frontieres (MSF), continues to treat victims of violence in all locations where it is present in Darfur.|Doctors Without Borders is an international aid organization.|0|10
 --- GENERATED (10 rows) ---
 sentence1|sentence2|label|idx
 Dana Reeve, the widow of the actor Christopher Reeve, has died of lung cancer at age 44, according to the Christopher Reeve Foundation.|Christopher Reeve had an accident.|1|0
@@ -182,7 +157,6 @@ T5|2019|Transformer|SST-2|97.5
 
 === DATASET: glue-sst2 ===
 --- ORIGINAL (10 rows) ---
-sentence|label|idx
 it 's a charming and often affecting journey . |1|0
 unflinchingly bleak and desperate |0|1
 allows us to hope that nolan is poised to embark a major career as a commercial yet inventive filmmaker . |1|2
@@ -193,6 +167,7 @@ a sometimes tedious film . |0|6
 or doing last year 's taxes with your ex-wife . |0|7
 you do n't have to know about music to appreciate the film 's easygoing blend of comedy and romance . |1|8
 in exactly 89 minutes , most of which passed as slowly as if i 'd been sitting naked on an igloo , formula 51 sank from quirky to jerky to utter turkey . |0|9
+the mesmerizing performances of the leads keep the film grounded and keep the audience riveted . |1|10
 --- GENERATED (10 rows) ---
 sentence|label|idx
 it 's a charming and often affecting journey . |1|0
@@ -208,17 +183,17 @@ in exactly 89 minutes , most of which passed as slowly as if i 'd been sitting n
 
 === DATASET: glue-stsb ===
 --- ORIGINAL (10 rows) ---
-sentence1|sentence2|label|idx
 A man with a hard hat is dancing.|A man wearing a hard hat is dancing.|5.0|0
 A young child is riding a horse.|A child is riding a horse.|4.75|1
 A man is feeding a mouse to a snake.|The man is feeding a mouse to the snake.|5.0|2
-A woman is playing the guitar.|A man is playing guitar.|2.4000000953674316|3
+A woman is playing the guitar.|A man is playing guitar.|2.4|3
 A woman is playing the flute.|A man is playing a flute.|2.75|4
-A woman is cutting an onion.|A man is cutting onions.|2.615000009536743|5
+A woman is cutting an onion.|A man is cutting onions.|2.615|5
 A man is erasing a chalk board.|The man is erasing the chalk board.|5.0|6
-A woman is carrying a boy.|A woman is carrying her baby.|2.3329999446868896|7
+A woman is carrying a boy.|A woman is carrying her baby.|2.333|7
 Three men are playing guitars.|Three men are on stage playing guitars.|3.75|8
 A woman peels a potato.|A woman is peeling a potato.|5.0|9
+People are playing cricket.|Men are playing cricket.|3.2|10
 --- GENERATED (10 rows) ---
 sentence1|sentence2|label|idx
 A man with a hard hat is dancing.|A man wearing a hard hat is dancing.|5.0|0
@@ -234,17 +209,17 @@ A woman peels a potato.|A woman is peeling a potato.|5.0|9
 
 === DATASET: glue-wnli ===
 --- ORIGINAL (10 rows) ---
-sentence1|sentence2|label|idx
-The drain is clogged with hair. It has to be cleaned.|The hair has to be cleaned.|0|0
-Jane knocked on Susan's door but she did not answer.|Susan did not answer.|1|1
-Beth didn't get angry with Sally, who had cut her off, because she stopped and counted to ten.|Sally stopped and counted to ten.|0|2
-No one joins Facebook to be sad and lonely. But a new study from the University of Wisconsin psychologist George Lincoln argues that that's exactly how it makes us feel.|That's exactly how Facebook makes us feel.|1|3
-The man couldn't lift his son because he was so heavy.|The son was so heavy.|1|4
-Susan knew that Ann's son had been in a car accident, so she told her about it.|Ann told her about it.|0|5
-When Tommy dropped his ice cream, Timmy giggled, so father gave him a stern look.|Father gave Timmy a stern look.|1|6
-There is a pillar between me and the stage, and I can't see around it.|I can't see around the pillar.|1|7
-Look! There is a minnow swimming right below that duck! It had better get away to safety fast!|The duck had better get away to safety fast!|0|8
-Bernard, who had not told the government official that he was less than 21 when he filed for a homestead claim, did not consider that he had done anything dishonest. Still, anyone who knew that he was 19 years old could take his claim away from him.|Anyone who knew that he was 19 years old could take his claim away from anyone.|0|9
+The hair has to be cleaned.|The drain is clogged with hair. It has to be cleaned.|0|0
+Susan did not answer.|Jane knocked on Susan's door but she did not answer.|1|1
+Sally stopped and counted to ten.|Beth didn't get angry with Sally, who had cut her off, because she stopped and counted to ten.|0|2
+That's exactly how Facebook makes us feel.|No one joins Facebook to be sad and lonely. But a new study from the University of Wisconsin psychologist George Lincoln argues that that's exactly how it makes us feel.|1|3
+The son was so heavy.|The man couldn't lift his son because he was so heavy.|1|4
+Ann told her about it.|Susan knew that Ann's son had been in a car accident, so she told her about it.|0|5
+Father gave Timmy a stern look.|When Tommy dropped his ice cream, Timmy giggled, so father gave him a stern look.|1|6
+I can't see around the pillar.|There is a pillar between me and the stage, and I can't see around it.|1|7
+The duck had better get away to safety fast!|Look! There is a minnow swimming right below that duck! It had better get away to safety fast!|0|8
+Anyone who knew that he was 19 years old could take his claim away from anyone.|Bernard, who had not told the government official that he was less than 21 when he filed for a homestead claim, did not consider that he had done anything dishonest. Still, anyone who knew that he was 19 years old could take his claim away from him.|0|9
+The sponsors were very much in the majority.|When the sponsors of the bill got to the town hall, they were surprised to find that the room was full of opponents. They were very much in the majority.|0|10
 --- GENERATED (10 rows) ---
 sentence1|sentence2|label|idx
 The drain is clogged with hair. It has to be cleaned.|The hair has to be cleaned.|0|0
@@ -388,32 +363,6 @@ sepal_length|sepal_width|petal_length|petal_width|species
 5.4|3.7|1.5|0.2|setosa
 4.4|3.0|1.3|0.2|setosa
 
-=== DATASET: jaffle-shop ===
---- ORIGINAL (10 rows) ---
-id|first_name|last_name
-1|Michael|P.
-2|Shawn|M.
-3|Kathleen|P.
-4|Jimmy|C.
-5|Katherine|R.
-6|Sarah|R.
-7|Martin|M.
-8|Frank|R.
-9|Jennifer|F.
-10|Henry|W.
---- GENERATED (10 rows) ---
-id|first_name|last_name
-1|David|K.
-2|Henry|J.
-3|Todd|F.
-4|Paul|O.
-5|Kimberly|O.
-6|Edward|P.
-7|Edward|H.
-8|Shirley|W.
-9|Helen|W.
-10|Victor|W.
-
 === DATASET: la-riots ===
 --- ORIGINAL (10 rows) ---
 first_name|last_name|age|gender|race|death_date|address|neighborhood|type|longitude|latitude
@@ -466,3 +415,54 @@ Hammersmith and Fulham|-0.22312501860130696|51.49760349773975
 Bexley|0.14034521936844538|51.45881060129503
 Croydon|-0.08716546101532906|51.355317416374
 
+=== DATASET: marvel-characters ===
+--- ORIGINAL (10 rows) ---
+page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|Year
+1678|Spider-Man (Peter Parker)|\/Spider-Man_(Peter_Parker)|Secret Identity|Good Characters|Hazel Eyes|Brown Hair|Male Characters||Living Characters|4043|Aug-62|1962
+7139|Captain America (Steven Rogers)|\/Captain_America_(Steven_Rogers)|Public Identity|Good Characters|Blue Eyes|White Hair|Male Characters||Living Characters|3360|Mar-41|1941
+64786|Wolverine (James \"Logan\" Howlett)|\/Wolverine_(James_%22Logan%22_Howlett)|Public Identity|Neutral Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|3061|Oct-74|1974
+1868|Iron Man (Anthony \"Tony\" Stark)|\/Iron_Man_(Anthony_%22Tony%22_Stark)|Public Identity|Good Characters|Blue Eyes|Black Hair|Male Characters||Living Characters|2961|Mar-63|1963
+2460|Thor (Thor Odinson)|\/Thor_(Thor_Odinson)|No Dual Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|2258|Nov-50|1950
+2458|Benjamin Grimm (Earth-616)|\/Benjamin_Grimm_(Earth-616)|Public Identity|Good Characters|Blue Eyes|No Hair|Male Characters||Living Characters|2255|Nov-61|1961
+2166|Reed Richards (Earth-616)|\/Reed_Richards_(Earth-616)|Public Identity|Good Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|2072|Nov-61|1961
+1833|Hulk (Robert Bruce Banner)|\/Hulk_(Robert_Bruce_Banner)|Public Identity|Good Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|2017|May-62|1962
+29481|Scott Summers (Earth-616)|\/Scott_Summers_(Earth-616)|Public Identity|Neutral Characters|Brown Eyes|Brown Hair|Male Characters||Living Characters|1955|Sep-63|1963
+1837|Jonathan Storm (Earth-616)|\/Jonathan_Storm_(Earth-616)|Public Identity|Good Characters|Blue Eyes|Blond Hair|Male Characters||Living Characters|1934|Nov-61|1961
+--- GENERATED (10 rows) ---
+page_id|name|urlslug|ID|ALIGN|EYE|HAIR|SEX|GSM|ALIVE|APPEARANCES|FIRST APPEARANCE|Year
+2150|Marlo Chandler (Earth-616)|\/Marlo_Chandler_(Earth-616)||||Red Hair|Female Characters||Living Characters|4043||1958
+3220|Heather Douglas (Earth-616)|\/Heather_Douglas_(Earth-616)|Secret Identity|Good Characters||Bald|Female Characters||Living Characters|4043||1959
+3842|Elizabeth Braddock (Earth-616)|\/Elizabeth_Braddock_(Earth-616)|Secret Identity|Neutral Characters||Purple Hair|Female Characters||Living Characters|4043|Dec-76|1967
+553886|Jonathan Clay (Earth-616)|\/Jonathan_Clay_(Earth-616)|Secret Identity|Good Characters||Red Hair|Male Characters||Living Characters|4043|Aug-60|1931
+11113|Akihiro (Earth-616)|\/Akihiro_(Earth-616)|Secret Identity|Bad Characters|||Male Characters||Living Characters|4043|Oct-06|1982
+11550|Akihiro (Earth-616)|\/Akihiro_(Earth-616)|Secret Identity|Bad Characters||Black Hair|Male Characters||Living Characters|4043|Oct-06|1940
+2151|Elizabeth Braddock (Earth-616)|\/Elizabeth_Braddock_(Earth-616)|Secret Identity||Blue Eyes|Purple Hair|Female Characters||Living Characters|4043|Dec-76|1943
+23533|Akihiro (Earth-616)|\/Akihiro_(Earth-616)|Secret Identity|Bad Characters||Black Hair|Male Characters||Living Characters|4043|Oct-06|1975
+27921|Natalia Romanova (Earth-616)|\/Natalia_Romanova_(Earth-616)||||Red Hair|Female Characters||Living Characters|4043||1929
+7327|Marlo Chandler (Earth-616)|\/Marlo_Chandler_(Earth-616)|Public Identity|Good Characters|Blue Eyes|Red Hair|Female Characters||Living Characters|4043|Sep-88|1977
+
+=== DATASET: monarchs ===
+--- ORIGINAL (10 rows) ---
+name|start|end|index
+Elizabeth|1565|1603|0
+James I|1603|1625|1
+Charles I|1625|1649|2
+Cromwell|1649|1660|3
+Charles II|1660|1685|4
+James II|1685|1688|5
+W&M|1689|1702|6
+Anne|1702|1714|7
+George I|1714|1727|8
+George II|1727|1760|9
+--- GENERATED (10 rows) ---
+name|start|end|index|commonwealth
+Elizabeth|1565|1603|0|
+James I|1603|1625|1|
+Charles I|1625|1649|2|
+Cromwell|1649|1660|3|true
+Charles II|1660|1685|4|
+James II|1685|1688|5|
+W&M|1689|1702|6|
+Anne|1702|1714|7|
+George I|1714|1727|8|
+George II|1727|1760|9|
