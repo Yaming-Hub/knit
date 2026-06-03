@@ -302,6 +302,9 @@ pub struct ColumnState {
     /// Maximum decimal places observed (for numeric columns).
     #[serde(default)]
     pub max_decimal_places: u8,
+    /// Histogram of decimal places observed (buckets 0..15) for robust precision.
+    #[serde(default = "default_decimal_histogram")]
+    pub decimal_places_histogram: [u32; 16],
     /// Whether all observed numeric values are integers (no fractional part).
     #[serde(default = "default_true")]
     pub all_integer: bool,
@@ -328,6 +331,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_decimal_histogram() -> [u32; 16] {
+    [0; 16]
+}
+
 impl ColumnState {
     /// Create a new empty column state.
     pub fn new(name: String, data_type: ColumnDataType, seed: u64) -> Self {
@@ -343,6 +350,7 @@ impl ColumnState {
             data_type,
             arrow_type_hint: None,
             max_decimal_places: 0,
+            decimal_places_histogram: [0; 16],
             all_integer: true,
             numeric,
             hll: HyperLogLog::new(DEFAULT_HLL_PRECISION),
@@ -395,6 +403,10 @@ impl ColumnState {
             if let Some(dot_pos) = str_repr.find('.') {
                 let decimals = str_repr[dot_pos + 1..].trim_end_matches('0').len().min(255) as u8;
                 self.max_decimal_places = self.max_decimal_places.max(decimals);
+                // Track histogram for robust percentile-based precision
+                let bucket = (decimals as usize).min(15);
+                self.decimal_places_histogram[bucket] =
+                    self.decimal_places_histogram[bucket].saturating_add(1);
             }
         }
     }
@@ -454,6 +466,49 @@ impl ColumnState {
             .saturating_add(self.empty_string_count)
     }
 
+    /// Compute the effective decimal precision using a gap-aware heuristic on
+    /// the observed decimal-places histogram. Floating-point representation
+    /// noise (e.g., `1.8330000000000002` stored as 16 decimal places when the
+    /// true precision is 3) creates isolated high buckets separated by a gap
+    /// of empty buckets. This method finds the highest populated bucket that
+    /// is not separated from the main cluster by a gap of 3+ empty buckets.
+    pub fn effective_precision(&self) -> Option<u8> {
+        let total: u32 = self.decimal_places_histogram.iter().sum();
+        if total == 0 {
+            // No fractional values observed — fall back to max
+            if self.max_decimal_places > 0 {
+                return Some(self.max_decimal_places);
+            }
+            return None;
+        }
+
+        // Find the highest populated bucket that is reachable from the first
+        // populated bucket without crossing a gap of 3+ consecutive empty buckets.
+        // Only start counting gaps after the first populated bucket is found.
+        let mut last_populated: usize = 0;
+        let mut seen_any = false;
+        let mut gap_count: usize = 0;
+        for (bucket, &count) in self.decimal_places_histogram.iter().enumerate() {
+            if count > 0 {
+                if seen_any && gap_count >= 3 {
+                    // This bucket is beyond a large gap — it's likely FP noise.
+                    break;
+                }
+                last_populated = bucket;
+                gap_count = 0;
+                seen_any = true;
+            } else if seen_any {
+                gap_count += 1;
+            }
+        }
+
+        if seen_any {
+            Some(last_populated as u8)
+        } else {
+            None
+        }
+    }
+
     /// Merge another column state into this one.
     pub fn merge(&mut self, other: &ColumnState) {
         self.widen_type(other.data_type);
@@ -465,6 +520,10 @@ impl ColumnState {
         self.chunks_present = self.chunks_present.saturating_add(other.chunks_present);
         self.all_integer = self.all_integer && other.all_integer;
         self.max_decimal_places = self.max_decimal_places.max(other.max_decimal_places);
+        for i in 0..16 {
+            self.decimal_places_histogram[i] =
+                self.decimal_places_histogram[i].saturating_add(other.decimal_places_histogram[i]);
+        }
 
         // Merge sub-structures (only if precisions match to avoid panics)
         if self.hll.precision() == other.hll.precision() {

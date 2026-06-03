@@ -603,11 +603,7 @@ fn finalize_column(col: &ColumnState) -> ColumnAnalysis {
 
         ColumnDataType::Integer | ColumnDataType::Float => {
             ca.is_integer_valued = col.all_integer;
-            ca.max_decimal_places = if col.max_decimal_places > 0 {
-                Some(col.max_decimal_places)
-            } else {
-                None
-            };
+            ca.max_decimal_places = col.effective_precision();
 
             // Check if low-cardinality → categorical
             let estimated_distinct = col.hll.cardinality() as u64;
