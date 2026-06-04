@@ -1714,6 +1714,27 @@ fn select_key_store_kind(row_count: u64) -> KeyStoreKind {
 /// For Gaussian copula, the generator uses Iman-Conover rank reordering
 /// which doesn't require marginal info (it operates on existing values).
 /// For non-Gaussian families, marginals are needed for inverse-CDF.
+/// Check whether a field produces numeric output that Iman-Conover can reorder.
+fn is_numeric_generator(entity: &Entity, field_name: &str) -> bool {
+    let field = match entity.fields.iter().find(|f| f.name == field_name) {
+        Some(f) => f,
+        None => return false,
+    };
+    match &field.generator {
+        Some(GeneratorSpec::Distribution { .. }) => true,
+        Some(GeneratorSpec::OneOf { choices }) => {
+            // Numeric only if all non-null choices are actual numeric types.
+            // String values that happen to parse as numbers still emit Utf8 at
+            // runtime, which apply_iman_conover() will skip.
+            choices.iter().all(|c| {
+                matches!(&c.value, Value::Null | Value::Int(_) | Value::Float(_))
+            })
+        }
+        Some(GeneratorSpec::Sequence { values: None, prefix: None, .. }) => true,
+        _ => false,
+    }
+}
+
 fn compile_copula_plans(
     entity_name: &str,
     entity: &Entity,
@@ -1724,14 +1745,49 @@ fn compile_copula_plans(
         .filter(|c| c.entity == entity_name)
         .filter_map(|c| {
             let copula = c.copula.as_ref()?;
-            let n = c.fields.len();
+            if c.fields.len() < 2 {
+                return None;
+            }
+
+            // For Gaussian copula (Iman-Conover): filter to numeric fields only.
+            // Non-numeric fields (dictionary, tuple_lookup, faker, pattern) cannot
+            // be rank-reordered and make the correlation matrix singular.
+            let (fields, matrix) = if copula.family == crate::core::CopulaFamily::Gaussian {
+                let numeric_indices: Vec<usize> = c
+                    .fields
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, name)| is_numeric_generator(entity, name))
+                    .map(|(i, _)| i)
+                    .collect();
+
+                if numeric_indices.len() < 2 {
+                    return None;
+                }
+
+                let filtered_fields: Vec<String> = numeric_indices
+                    .iter()
+                    .map(|&i| c.fields[i].clone())
+                    .collect();
+                let n = numeric_indices.len();
+                let mut filtered_matrix = vec![vec![0.0f64; n]; n];
+                for (new_i, &orig_i) in numeric_indices.iter().enumerate() {
+                    for (new_j, &orig_j) in numeric_indices.iter().enumerate() {
+                        filtered_matrix[new_i][new_j] = c.matrix[orig_i][orig_j];
+                    }
+                }
+                (filtered_fields, filtered_matrix)
+            } else {
+                (c.fields.clone(), c.matrix.clone())
+            };
+
+            let n = fields.len();
             if n < 2 {
                 return None;
             }
 
             // Build marginal info from field distribution generators
-            let marginals: Vec<MarginalInfo> = c
-                .fields
+            let marginals: Vec<MarginalInfo> = fields
                 .iter()
                 .filter_map(|field_name| {
                     let field = entity.fields.iter().find(|f| &f.name == field_name)?;
@@ -1748,17 +1804,16 @@ fn compile_copula_plans(
 
             // For non-Gaussian families: skip if not all fields have
             // distribution generators (inverse-CDF requires marginals).
-            // For Gaussian: Iman-Conover works on any numeric column values.
             if copula.family != crate::core::CopulaFamily::Gaussian && marginals.len() != n {
                 return None;
             }
 
             let cholesky_l = if copula.family == crate::core::CopulaFamily::Gaussian {
-                let result = cholesky_decompose(&c.matrix);
+                let result = cholesky_decompose(&matrix);
                 if result.is_none() {
                     tracing::warn!(
                         entity = %entity.name,
-                        fields = ?c.fields,
+                        fields = ?fields,
                         "Cholesky decomposition failed for Gaussian copula — \
                          correlation matrix may be singular; copula will use \
                          identity (independent) fallback"
@@ -1772,7 +1827,7 @@ fn compile_copula_plans(
             let theta = copula.params.get("theta").copied();
 
             Some(CopulaPlan {
-                fields: c.fields.clone(),
+                fields,
                 family: copula.family,
                 cholesky_l,
                 theta,
