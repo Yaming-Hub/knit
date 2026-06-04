@@ -483,16 +483,27 @@ impl ColumnState {
         }
 
         // Find the highest populated bucket that is reachable from the first
-        // populated bucket without crossing a gap of 3+ consecutive empty buckets.
-        // Only start counting gaps after the first populated bucket is found.
+        // populated bucket without crossing a noise gap.
+        // A noise gap is either:
+        //   - 3+ consecutive empty buckets (definite FP noise), OR
+        //   - 2 consecutive empty buckets where the before-cluster has more
+        //     values than the after-cluster (ratio > 1.5).
         let mut last_populated: usize = 0;
         let mut seen_any = false;
         let mut gap_count: usize = 0;
         for (bucket, &count) in self.decimal_places_histogram.iter().enumerate() {
             if count > 0 {
                 if seen_any && gap_count >= 3 {
-                    // This bucket is beyond a large gap — it's likely FP noise.
                     break;
+                }
+                if seen_any && gap_count == 2 {
+                    let before: u32 = self.decimal_places_histogram[..last_populated + 1]
+                        .iter()
+                        .sum();
+                    let after: u32 = self.decimal_places_histogram[bucket..].iter().sum();
+                    if after > 0 && before as f64 / after as f64 > 1.5 {
+                        break;
+                    }
                 }
                 last_populated = bucket;
                 gap_count = 0;
