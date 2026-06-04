@@ -443,7 +443,11 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
         histogram[(p as usize).min(15)] += 1;
     }
 
-    // Find the highest populated bucket reachable without a gap of 3+ empty buckets.
+    // Find the highest populated bucket reachable without crossing a noise gap.
+    // A noise gap is either:
+    //   - 3+ consecutive empty buckets (definite FP noise), OR
+    //   - 2 consecutive empty buckets where the cluster before the gap has
+    //     more values than the cluster after (ratio > 1.5), indicating noise.
     // Only start counting gaps after the first populated bucket is found.
     let mut last_populated: usize = 0;
     let mut seen_any = false;
@@ -452,6 +456,15 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
         if count > 0 {
             if seen_any && gap_count >= 3 {
                 break;
+            }
+            if seen_any && gap_count == 2 {
+                // 2-bucket gap: only treat as noise if the cluster before the gap
+                // has significantly more values than what follows.
+                let before: u32 = histogram[..last_populated + 1].iter().sum();
+                let after: u32 = histogram[bucket..].iter().sum();
+                if after > 0 && before as f64 / after as f64 > 1.5 {
+                    break;
+                }
             }
             last_populated = bucket;
             gap_count = 0;
