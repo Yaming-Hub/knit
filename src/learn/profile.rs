@@ -435,9 +435,33 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
     let mut places: Vec<u8> = sample.iter().map(|v| count_decimal_places(**v)).collect();
     places.sort_unstable();
 
-    // Use p95 to be robust against floating-point noise
-    let idx = ((places.len() - 1) as f64 * 0.95).round() as usize;
-    places[idx.min(places.len() - 1)].min(15)
+    // Build a histogram and use gap-aware detection to filter FP noise.
+    // Floating-point artifacts (e.g., 1.8330000000000002) create isolated
+    // high-precision buckets separated from the main cluster by empty gaps.
+    let mut histogram = [0u32; 16];
+    for &p in &places {
+        histogram[(p as usize).min(15)] += 1;
+    }
+
+    // Find the highest populated bucket reachable without a gap of 3+ empty buckets.
+    // Only start counting gaps after the first populated bucket is found.
+    let mut last_populated: usize = 0;
+    let mut seen_any = false;
+    let mut gap_count: usize = 0;
+    for (bucket, &count) in histogram.iter().enumerate() {
+        if count > 0 {
+            if seen_any && gap_count >= 3 {
+                break;
+            }
+            last_populated = bucket;
+            gap_count = 0;
+            seen_any = true;
+        } else if seen_any {
+            gap_count += 1;
+        }
+    }
+
+    last_populated as u8
 }
 
 /// Count the number of meaningful decimal places in a float value.
