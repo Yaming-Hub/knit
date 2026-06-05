@@ -585,10 +585,27 @@ fn build_entity(
         }
     };
 
-    // Build conditional distribution correlations
+    // Build conditional distribution correlations.
+    // Skip conditionals for columns with discrete/categorical generators — continuous
+    // distributions produce invalid values for discrete fields (e.g., cylinders=7
+    // from a log_normal when valid values are {3,4,5,6,8}).
     let cond_corrs: Vec<crate::core::Correlation> = table
         .conditional_distributions
         .iter()
+        .filter(|cd| {
+            // Check if the dependent column has categorical weights (discrete)
+            let is_discrete = table.columns.iter().any(|col| {
+                col.name == cd.dependent && col.categorical_weights.is_some()
+            });
+            if is_discrete {
+                tracing::debug!(
+                    dependent = %cd.dependent,
+                    given = %cd.given,
+                    "skipping conditional distribution for discrete column"
+                );
+            }
+            !is_discrete
+        })
         .map(|cd| {
             let branches: Vec<crate::core::ConditionalDistributionBranch> = cd
                 .branches
