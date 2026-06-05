@@ -487,7 +487,9 @@ impl ColumnState {
         // A noise gap is either:
         //   - 3+ consecutive empty buckets (definite FP noise), OR
         //   - 2 consecutive empty buckets where the before-cluster has more
-        //     values than the after-cluster (ratio > 1.5).
+        //     values than the after-cluster (ratio > 1.5), OR
+        //   - 1 empty bucket at position 10+ where before/after ratio > 1.7
+        //     (FP arithmetic noise on high-precision values).
         let mut last_populated: usize = 0;
         let mut seen_any = false;
         let mut gap_count: usize = 0;
@@ -502,6 +504,15 @@ impl ColumnState {
                         .sum();
                     let after: u32 = self.decimal_places_histogram[bucket..].iter().sum();
                     if after > 0 && before as f64 / after as f64 > 1.5 {
+                        break;
+                    }
+                }
+                if seen_any && gap_count == 1 && bucket >= 10 {
+                    let before: u32 = self.decimal_places_histogram[..last_populated + 1]
+                        .iter()
+                        .sum();
+                    let after: u32 = self.decimal_places_histogram[bucket..].iter().sum();
+                    if after > 0 && before as f64 / after as f64 > 1.7 {
                         break;
                     }
                 }
