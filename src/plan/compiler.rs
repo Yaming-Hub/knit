@@ -1714,7 +1714,13 @@ fn select_key_store_kind(row_count: u64) -> KeyStoreKind {
 /// For Gaussian copula, the generator uses Iman-Conover rank reordering
 /// which doesn't require marginal info (it operates on existing values).
 /// For non-Gaussian families, marginals are needed for inverse-CDF.
-/// Check whether a field produces numeric output that Iman-Conover can reorder.
+/// Check whether a field produces continuous numeric output suitable for
+/// Iman-Conover rank reordering. Discrete generators like `one_of` are
+/// excluded because:
+/// 1. Conditional distributions may override them with continuous distributions
+///    that produce invalid discrete values (e.g., cylinders=7 from a log_normal).
+/// 2. Rank reordering of a small set of discrete values distorts the per-value
+///    frequency distribution.
 fn is_numeric_generator(entity: &Entity, field_name: &str) -> bool {
     let field = match entity.fields.iter().find(|f| f.name == field_name) {
         Some(f) => f,
@@ -1722,14 +1728,6 @@ fn is_numeric_generator(entity: &Entity, field_name: &str) -> bool {
     };
     match &field.generator {
         Some(GeneratorSpec::Distribution { .. }) => true,
-        Some(GeneratorSpec::OneOf { choices }) => {
-            // Numeric only if all non-null choices are actual numeric types.
-            // String values that happen to parse as numbers still emit Utf8 at
-            // runtime, which apply_iman_conover() will skip.
-            choices.iter().all(|c| {
-                matches!(&c.value, Value::Null | Value::Int(_) | Value::Float(_))
-            })
-        }
         Some(GeneratorSpec::Sequence { values: None, prefix: None, .. }) => true,
         _ => false,
     }
