@@ -42,11 +42,39 @@ pub fn apply_null_mask(
         NullPlan::Always => Ok(Arc::new(NullArray::new(count))),
         NullPlan::Probability(p) => {
             let p = *p;
+            // If the array already has nulls from its generator (e.g., row_lookup
+            // sampling from data that contains nulls), only apply additional nulls
+            // to non-null positions to reach the target rate. This prevents the
+            // "double null" problem where existing nulls + mask nulls > target.
+            let existing_nulls = array.null_count();
+            if existing_nulls as f64 >= count as f64 * p {
+                // Already at or above the target null rate — no additional nulls needed.
+                return Ok(array);
+            }
+
+            // Compute the conditional probability for non-null positions so that
+            // the total null rate reaches `p`. We need:
+            //   existing_nulls + p_cond * (count - existing_nulls) = p * count
+            //   p_cond = (p * count - existing_nulls) / (count - existing_nulls)
+            let non_null_count = count - existing_nulls;
+            let p_cond = if non_null_count > 0 {
+                ((p * count as f64) - existing_nulls as f64) / non_null_count as f64
+            } else {
+                0.0
+            };
+            let p_cond = p_cond.clamp(0.0, 1.0);
+
             // Build a boolean mask: true = keep, false = null.
+            // Only apply the conditional probability to positions that are non-null.
             let keep: BooleanArray = (0..count)
-                .map(|_| {
-                    let r = (rng.next_u64() as f64) / (u64::MAX as f64);
-                    Some(r >= p)
+                .map(|i| {
+                    if array.is_null(i) {
+                        // Already null — keep it null
+                        Some(false)
+                    } else {
+                        let r = (rng.next_u64() as f64) / (u64::MAX as f64);
+                        Some(r >= p_cond)
+                    }
                 })
                 .collect();
             // Create an all-null array of the same type for the "false" branch.
