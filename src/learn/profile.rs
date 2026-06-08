@@ -447,7 +447,10 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
     // A noise gap is either:
     //   - 3+ consecutive empty buckets (definite FP noise), OR
     //   - 2 consecutive empty buckets where the cluster before the gap has
-    //     more values than the cluster after (ratio > 1.5), indicating noise.
+    //     more values than the cluster after (ratio > 1.5), indicating noise, OR
+    //   - 1 empty bucket where the before-cluster has significantly more values
+    //     than the after-cluster (ratio > 1.7) AND the gap is at bucket 10+
+    //     (FP noise from arithmetic on 9-digit values).
     // Only start counting gaps after the first populated bucket is found.
     let mut last_populated: usize = 0;
     let mut seen_any = false;
@@ -458,11 +461,18 @@ fn detect_decimal_places(values: &[f64]) -> u8 {
                 break;
             }
             if seen_any && gap_count == 2 {
-                // 2-bucket gap: only treat as noise if the cluster before the gap
-                // has significantly more values than what follows.
                 let before: u32 = histogram[..last_populated + 1].iter().sum();
                 let after: u32 = histogram[bucket..].iter().sum();
                 if after > 0 && before as f64 / after as f64 > 1.5 {
+                    break;
+                }
+            }
+            if seen_any && gap_count == 1 && bucket >= 10 {
+                // 1-bucket gap at high precision: likely FP arithmetic noise.
+                // Use stricter ratio to avoid false positives.
+                let before: u32 = histogram[..last_populated + 1].iter().sum();
+                let after: u32 = histogram[bucket..].iter().sum();
+                if after > 0 && before as f64 / after as f64 > 1.7 {
                     break;
                 }
             }
