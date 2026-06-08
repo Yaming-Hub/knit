@@ -4431,7 +4431,7 @@ fn extract_full_row_dictionaries(
     use std::collections::HashSet;
     use std::io::Write;
 
-    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 6000;
+    const MAX_ROWS_FOR_FULL_ROW_DICT: usize = 7000;
     const MIN_STRING_COLUMN_RATIO: f64 = 0.5;
     // For small schemas (≤6 columns), relax the string ratio requirement
     // since they are often reference/lookup tables regardless of column types.
