@@ -4443,18 +4443,6 @@ fn extract_full_row_dictionaries(
     let mut count = 0;
 
     for entity in &mut model.entities {
-        // Skip if entity already has all columns covered by tuple dicts
-        let all_covered = entity.fields.iter().all(|f| {
-            matches!(
-                f.generator,
-                Some(crate::core::GeneratorSpec::Dictionary { .. })
-                    | Some(crate::core::GeneratorSpec::TupleLookup { .. })
-            )
-        });
-        if all_covered {
-            continue;
-        }
-
         // Skip entities with a primary key — these generate new rows, not lookups
         let has_pk = entity.fields.iter().any(|f| f.primary_key.unwrap_or(false));
         if has_pk {
