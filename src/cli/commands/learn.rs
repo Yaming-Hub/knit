@@ -4438,7 +4438,7 @@ fn extract_full_row_dictionaries(
     const SMALL_SCHEMA_THRESHOLD: usize = 6;
     // For very small tables (≤200 rows), always use full-row dict regardless
     // of string ratio — row coherence matters more than column type distribution.
-    const SMALL_TABLE_ALWAYS_THRESHOLD: usize = 200;
+    const SMALL_TABLE_ALWAYS_THRESHOLD: usize = 500;
 
     let mut count = 0;
 
