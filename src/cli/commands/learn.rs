@@ -4491,9 +4491,10 @@ fn extract_full_row_dictionaries(
         // Collect column names from entity fields (in field order)
         let field_names: Vec<String> = entity.fields.iter().map(|f| f.name.clone()).collect();
 
-        // Extract unique rows as string tuples
-        let mut unique_rows: Vec<Vec<String>> = Vec::new();
-        let mut seen: HashSet<Vec<String>> = HashSet::new();
+        // Extract ALL rows (including duplicates) so that row_count == total_rows,
+        // enabling sequential ordering in the row_lookup generator when count == row_count.
+        // This preserves the original row order in generated output.
+        let mut all_rows: Vec<Vec<String>> = Vec::new();
 
         for batch in &table.batches {
             for row_idx in 0..batch.num_rows() {
@@ -4516,14 +4517,12 @@ fn extract_full_row_dictionaries(
                 if !valid {
                     continue;
                 }
-                if seen.insert(row.clone()) {
-                    unique_rows.push(row);
-                }
+                all_rows.push(row);
             }
         }
 
-        // Only apply full-row dict if unique rows ≤ threshold
-        if unique_rows.is_empty() || unique_rows.len() > MAX_ROWS_FOR_FULL_ROW_DICT {
+        // Only apply full-row dict if rows ≤ threshold
+        if all_rows.is_empty() || all_rows.len() > MAX_ROWS_FOR_FULL_ROW_DICT {
             continue;
         }
 
@@ -4560,12 +4559,12 @@ fn extract_full_row_dictionaries(
         let file_path = output_dir.join(&file_name);
         let mut file = std::fs::File::create(&file_path)
             .with_context(|| format!("failed to create full-row dictionary {file_name}"))?;
-        for row in &unique_rows {
+        for row in &all_rows {
             let escaped: Vec<String> = row.iter().map(|v| escape_tsv_value(v)).collect();
             writeln!(file, "{}", escaped.join("\t"))?;
         }
 
-        let row_count = unique_rows.len();
+        let row_count = all_rows.len();
 
         // Set all columns to RowLookup — the engine picks a shared random row
         // index per output record for all RowLookup fields sharing the same file.
@@ -4611,13 +4610,13 @@ fn extract_full_row_dictionaries(
                 "  {} full-row dictionary: {} ({} unique rows, {} columns)",
                 "📦".dimmed(),
                 entity.name,
-                unique_rows.len(),
+                all_rows.len(),
                 field_names.len(),
             );
         }
         tracing::info!(
             entity = %entity.name,
-            unique_rows = unique_rows.len(),
+            all_rows = all_rows.len(),
             columns = field_names.len(),
             "extracted full-row dictionary"
         );
