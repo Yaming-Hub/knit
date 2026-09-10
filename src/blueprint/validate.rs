@@ -288,13 +288,11 @@ fn validate_generator_params(
         } => {
             validate_sequence_params(path, start, step, values, cycle, prefix, errors);
         }
-        GeneratorSpec::OneOf { choices } => {
-            if choices.is_empty() {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: "oneOf requires at least one choice".to_string(),
-                });
-            }
+        GeneratorSpec::OneOf { choices } if choices.is_empty() => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: "oneOf requires at least one choice".to_string(),
+            });
         }
         GeneratorSpec::Faker { method, .. } => {
             let bare = method
@@ -312,13 +310,11 @@ fn validate_generator_params(
                 });
             }
         }
-        GeneratorSpec::UuidGen { version } => {
-            if *version != 4 {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: format!("only UUID version 4 is supported, got {}", version),
-                });
-            }
+        GeneratorSpec::UuidGen { version } if *version != 4 => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: format!("only UUID version 4 is supported, got {}", version),
+            });
         }
         _ => {} // Other generator types are rejected by validate_nested_generator
     }
@@ -326,21 +322,17 @@ fn validate_generator_params(
 
 fn validate_null_spec(path: &str, spec: &NullSpec, errors: &mut Vec<BlueprintError>) {
     match spec {
-        NullSpec::Probability(p) => {
-            if !(*p >= 0.0 && *p <= 1.0) {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: format!("null probability must be in [0, 1], got {}", p),
-                });
-            }
+        NullSpec::Probability(p) if !(*p >= 0.0 && *p <= 1.0) => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: format!("null probability must be in [0, 1], got {}", p),
+            });
         }
-        NullSpec::Pattern { every_n } => {
-            if *every_n == 0 {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: "null pattern every_n must be > 0".to_string(),
-                });
-            }
+        NullSpec::Pattern { every_n } if *every_n == 0 => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: "null pattern every_n must be > 0".to_string(),
+            });
         }
         _ => {}
     }
@@ -354,13 +346,11 @@ fn validate_count_spec(path: &str, count: &CountSpec, errors: &mut Vec<Blueprint
                 message: "count must be > 0".to_string(),
             });
         }
-        CountSpec::Range { min, max } => {
-            if min > max {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: format!("range requires min <= max, got min={}, max={}", min, max),
-                });
-            }
+        CountSpec::Range { min, max } if min > max => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: format!("range requires min <= max, got min={}, max={}", min, max),
+            });
         }
         CountSpec::Expression { expr } => {
             if expr.trim().is_empty() {
@@ -1415,14 +1405,9 @@ fn check_generator_type_compat(r#gen: &GeneratorSpec, data_type: &DataType) -> O
             // and "datetime"/"timestamp" produce Timestamp values.
             // Normalize dotted names (e.g., "provider.date" → "date") to match
             // the same logic used in FakerGenerator::new and validate_generator.
-            let base_method = method
-                .split_once('.')
-                .map_or(method.as_str(), |(_, m)| m);
+            let base_method = method.split_once('.').map_or(method.as_str(), |(_, m)| m);
             let compatible = match base_method {
-                "date" => matches!(
-                    data_type,
-                    DataType::Date | DataType::String
-                ),
+                "date" => matches!(data_type, DataType::Date | DataType::String),
                 "datetime" | "timestamp" => matches!(
                     data_type,
                     DataType::Datetime
@@ -1654,13 +1639,11 @@ fn validate_generator(
         } => {
             validate_sequence_params(path, start, step, values, cycle, prefix, errors);
         }
-        GeneratorSpec::OneOf { choices } => {
-            if choices.is_empty() {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: "oneOf requires at least one choice".to_string(),
-                });
-            }
+        GeneratorSpec::OneOf { choices } if choices.is_empty() => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: "oneOf requires at least one choice".to_string(),
+            });
         }
         GeneratorSpec::Faker { method, .. } => {
             let bare = method
@@ -1678,13 +1661,11 @@ fn validate_generator(
                 });
             }
         }
-        GeneratorSpec::UuidGen { version } => {
-            if *version != 4 {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: format!("only UUID version 4 is supported, got {}", version),
-                });
-            }
+        GeneratorSpec::UuidGen { version } if *version != 4 => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: format!("only UUID version 4 is supported, got {}", version),
+            });
         }
         GeneratorSpec::BusinessHours {
             start_hour,
@@ -2174,13 +2155,11 @@ fn validate_generator(
                 }
             }
         }
-        GeneratorSpec::PersonaField { trait_name } => {
-            if trait_name.is_empty() {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: "persona_field requires a non-empty 'trait' name".to_string(),
-                });
-            }
+        GeneratorSpec::PersonaField { trait_name } if trait_name.is_empty() => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: "persona_field requires a non-empty 'trait' name".to_string(),
+            });
         }
         GeneratorSpec::ThreadRef {
             reply_probability,
@@ -2241,13 +2220,11 @@ fn validate_generator(
                 });
             }
         }
-        GeneratorSpec::Plugin { name, .. } => {
-            if name.is_empty() {
-                errors.push(BlueprintError::Validation {
-                    path: path.to_string(),
-                    message: "plugin generator requires a non-empty 'name'".to_string(),
-                });
-            }
+        GeneratorSpec::Plugin { name, .. } if name.is_empty() => {
+            errors.push(BlueprintError::Validation {
+                path: path.to_string(),
+                message: "plugin generator requires a non-empty 'name'".to_string(),
+            });
         }
         // ─── Derived expression validation ─────────────────────────────
         GeneratorSpec::Derived { expr: expr_str } => {
@@ -2743,16 +2720,11 @@ fn validate_relationships(model: &DataModel, errors: &mut Vec<BlueprintError>) {
             match sel {
                 crate::core::SelectionStrategy::Parameterized(
                     crate::core::ParameterizedSelection::Clustered { cluster_size },
-                ) => {
-                    if *cluster_size == 0 {
-                        errors.push(BlueprintError::Validation {
-                            path: sp.clone(),
-                            message: format!(
-                                "relationship '{}': cluster_size must be > 0",
-                                rel.name
-                            ),
-                        });
-                    }
+                ) if *cluster_size == 0 => {
+                    errors.push(BlueprintError::Validation {
+                        path: sp.clone(),
+                        message: format!("relationship '{}': cluster_size must be > 0", rel.name),
+                    });
                 }
                 crate::core::SelectionStrategy::Parameterized(
                     crate::core::ParameterizedSelection::Weighted { weight_field },

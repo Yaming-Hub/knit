@@ -268,9 +268,12 @@ fn to_f64_vec(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
 ///
 /// Returns `Err` if any non-null value cannot be parsed as a number.
 fn to_f64_from_str(arr: &ArrayRef) -> Result<Vec<Option<f64>>, EvalError> {
-    let sa = arr.as_any().downcast_ref::<StringArray>().ok_or(EvalError {
-        message: format!("expected Utf8 array, got {:?}", arr.data_type()),
-    })?;
+    let sa = arr
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .ok_or(EvalError {
+            message: format!("expected Utf8 array, got {:?}", arr.data_type()),
+        })?;
     let mut out = Vec::with_capacity(sa.len());
     for i in 0..sa.len() {
         if sa.is_null(i) {

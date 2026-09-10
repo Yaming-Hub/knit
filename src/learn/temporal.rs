@@ -422,9 +422,7 @@ mod tests {
 
     #[test]
     fn fixed_interval_generates_expression() {
-        let ts: Vec<f64> = (0..50)
-            .map(|i| 1_000_000.0 + i as f64 * 3600.0)
-            .collect();
+        let ts: Vec<f64> = (0..50).map(|i| 1_000_000.0 + i as f64 * 3600.0).collect();
         let result = detect_temporal_pattern(&ts).unwrap();
         assert!(
             result.generator_expr.contains("time_series"),
@@ -579,10 +577,7 @@ mod tests {
     fn classify_monthly_period() {
         let month = 2_592_000.0;
         assert_eq!(classify_schedule(month), Some(ScheduleKind::Monthly));
-        assert_eq!(
-            classify_schedule(month * 0.85),
-            Some(ScheduleKind::Monthly)
-        );
+        assert_eq!(classify_schedule(month * 0.85), Some(ScheduleKind::Monthly));
     }
 
     #[test]
@@ -629,11 +624,7 @@ mod tests {
         // Perfectly uniform rate → slope near zero
         let ts: Vec<f64> = (0..100).map(|i| i as f64 * 10.0).collect();
         let slope = detect_trend(&ts).unwrap();
-        assert!(
-            slope.abs() < 0.1,
-            "expected near-zero slope, got {}",
-            slope
-        );
+        assert!(slope.abs() < 0.1, "expected near-zero slope, got {}", slope);
     }
 
     // ─── day_of_week_distribution ───────────────────────────────────────
@@ -704,9 +695,7 @@ mod tests {
     fn hour_of_day_spread_across_hours() {
         // One event per hour across many days → uniform
         let base = 1_700_000_000.0;
-        let ts: Vec<f64> = (0..2400)
-            .map(|i| base + i as f64 * 3600.0)
-            .collect();
+        let ts: Vec<f64> = (0..2400).map(|i| base + i as f64 * 3600.0).collect();
         let hod = hour_of_day_distribution(&ts);
         let total: u64 = hod.counts.iter().sum();
         assert_eq!(total, 2400);
@@ -817,11 +806,7 @@ mod tests {
         let xs: Vec<f64> = (0..10).map(|i| i as f64).collect();
         let ys = vec![5.0; 10];
         let slope = linear_regression_slope(&xs, &ys);
-        assert!(
-            slope.abs() < 1e-10,
-            "expected slope ~0, got {}",
-            slope
-        );
+        assert!(slope.abs() < 1e-10, "expected slope ~0, got {}", slope);
     }
 
     #[test]

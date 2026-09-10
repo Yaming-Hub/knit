@@ -4161,24 +4161,22 @@ fn validate_data(
 
         // --- Row count ---
         match &entity.count {
-            crate::core::CountSpec::Fixed(expected) => {
-                if total_rows != *expected as usize {
-                    findings.push(Finding::warning(
-                        &entity.name,
-                        format!("row count: expected {}, got {}", expected, total_rows),
-                    ));
-                }
+            crate::core::CountSpec::Fixed(expected) if total_rows != *expected as usize => {
+                findings.push(Finding::warning(
+                    &entity.name,
+                    format!("row count: expected {}, got {}", expected, total_rows),
+                ));
             }
-            crate::core::CountSpec::Range { min, max } => {
-                if total_rows < *min as usize || total_rows > *max as usize {
-                    findings.push(Finding::warning(
-                        &entity.name,
-                        format!(
-                            "row count {} outside expected range [{}, {}]",
-                            total_rows, min, max
-                        ),
-                    ));
-                }
+            crate::core::CountSpec::Range { min, max }
+                if (total_rows < *min as usize || total_rows > *max as usize) =>
+            {
+                findings.push(Finding::warning(
+                    &entity.name,
+                    format!(
+                        "row count {} outside expected range [{}, {}]",
+                        total_rows, min, max
+                    ),
+                ));
             }
             _ => {} // Expression/Distribution — skip
         }

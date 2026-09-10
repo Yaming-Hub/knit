@@ -530,7 +530,10 @@ fn is_output_directory(path: &Path) -> bool {
         || name.starts_with("out_seed_")
         || name.starts_with("test_learn")
         || name.starts_with("test_output")
-        || matches!(name, "generated.csv" | "generated.tsv" | "generated.json" | "generated.parquet")
+        || matches!(
+            name,
+            "generated.csv" | "generated.tsv" | "generated.json" | "generated.parquet"
+        )
 }
 
 /// Check whether a file is a knit blueprint (metadata) rather than source data.

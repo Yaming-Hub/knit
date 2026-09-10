@@ -607,7 +607,10 @@ mod tests {
             None,
         );
 
-        assert_eq!(r#gen.output_type(), DataType::Timestamp(TimeUnit::Millisecond, None));
+        assert_eq!(
+            r#gen.output_type(),
+            DataType::Timestamp(TimeUnit::Millisecond, None)
+        );
     }
 
     #[test]
@@ -657,7 +660,8 @@ mod tests {
     fn non_midnight_causal_times_stay_within_span() {
         let (pool, rev) = make_pool_and_reverse_map();
         // Use a non-midnight lower bound: 2024-06-15 14:30 UTC
-        let non_midnight_ms = DEFAULT_START_MS + 167 * 24 * 3_600_000 + 14 * 3_600_000 + 30 * 60_000;
+        let non_midnight_ms =
+            DEFAULT_START_MS + 167 * 24 * 3_600_000 + 14 * 3_600_000 + 30 * 60_000;
         let causal_times = Arc::new(CausalTimes {
             pk_to_timestamp: HashMap::from([(10, non_midnight_ms)]),
             fk_field: "post_id".into(),

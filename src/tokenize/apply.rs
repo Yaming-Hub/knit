@@ -216,26 +216,24 @@ fn tokenize_json_value(
                 *s = token.to_string();
             }
         }
-        serde_json::Value::Number(n) => {
-            if should_tokenize && config.tokenize_numbers {
-                let s = n.to_string();
-                if let Some(token) = mapper.get(&s) {
-                    // Preserve integer vs float type with precision
-                    if let Ok(i) = token.parse::<i64>() {
-                        if !token.contains('.') {
-                            *value = serde_json::Value::Number(i.into());
-                        } else if let Some(num) = serde_json::Number::from_f64(i as f64) {
-                            *value = serde_json::Value::Number(num);
-                        }
-                    } else if let Ok(u) = token.parse::<u64>() {
-                        if !token.contains('.') {
-                            *value = serde_json::Value::Number(u.into());
-                        }
-                    } else if let Ok(f) = token.parse::<f64>()
-                        && let Some(num) = serde_json::Number::from_f64(f)
-                    {
+        serde_json::Value::Number(n) if should_tokenize && config.tokenize_numbers => {
+            let s = n.to_string();
+            if let Some(token) = mapper.get(&s) {
+                // Preserve integer vs float type with precision
+                if let Ok(i) = token.parse::<i64>() {
+                    if !token.contains('.') {
+                        *value = serde_json::Value::Number(i.into());
+                    } else if let Some(num) = serde_json::Number::from_f64(i as f64) {
                         *value = serde_json::Value::Number(num);
                     }
+                } else if let Ok(u) = token.parse::<u64>() {
+                    if !token.contains('.') {
+                        *value = serde_json::Value::Number(u.into());
+                    }
+                } else if let Ok(f) = token.parse::<f64>()
+                    && let Some(num) = serde_json::Number::from_f64(f)
+                {
+                    *value = serde_json::Value::Number(num);
                 }
             }
         }

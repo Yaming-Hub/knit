@@ -281,7 +281,11 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(42);
         let result = SwapInjector::new()
-            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default().with_probability(1.0),
+            )
             .unwrap();
 
         let col = result
@@ -310,7 +314,11 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(42);
         let result = SwapInjector::new()
-            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(0.0))
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default().with_probability(0.0),
+            )
             .unwrap();
 
         let col = result
@@ -318,7 +326,10 @@ mod tests {
             .as_any()
             .downcast_ref::<StringArray>()
             .unwrap();
-        assert_eq!((0..col.len()).map(|i| col.value(i)).collect::<Vec<_>>(), vec!["a", "b", "c", "d"]);
+        assert_eq!(
+            (0..col.len()).map(|i| col.value(i)).collect::<Vec<_>>(),
+            vec!["a", "b", "c", "d"]
+        );
     }
 
     #[test]
@@ -361,7 +372,15 @@ mod tests {
             .downcast_ref::<StringArray>()
             .unwrap();
 
-        assert_ne!((0..target.len()).map(|i| target.value(i)).collect::<Vec<_>>(), vec![10, 20, 30, 40]);
-        assert_eq!((0..other.len()).map(|i| other.value(i)).collect::<Vec<_>>(), vec!["w", "x", "y", "z"]);
+        assert_ne!(
+            (0..target.len())
+                .map(|i| target.value(i))
+                .collect::<Vec<_>>(),
+            vec![10, 20, 30, 40]
+        );
+        assert_eq!(
+            (0..other.len()).map(|i| other.value(i)).collect::<Vec<_>>(),
+            vec!["w", "x", "y", "z"]
+        );
     }
 }

@@ -486,8 +486,14 @@ mod tests {
 
         // Verify relationships.toml exists and contains v2 sections
         let rels_toml = std::fs::read_to_string(out.join("relationships.toml")).unwrap();
-        assert!(rels_toml.contains("grid_structures"), "should contain grid_structures section");
-        assert!(rels_toml.contains("tuple_dictionaries"), "should contain tuple_dictionaries section");
+        assert!(
+            rels_toml.contains("grid_structures"),
+            "should contain grid_structures section"
+        );
+        assert!(
+            rels_toml.contains("tuple_dictionaries"),
+            "should contain tuple_dictionaries section"
+        );
 
         // Roundtrip
         let loaded = crate::model::reader::load_model_directory(&out).unwrap();

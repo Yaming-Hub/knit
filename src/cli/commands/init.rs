@@ -59,18 +59,17 @@ pub fn run(output_path: &str, template: Option<&str>) -> Result<()> {
                 let file_name_str = file_name.to_string_lossy();
 
                 if entry.file_type()?.is_file() {
-                    let dest_file =
-                        if (file_name_str.ends_with(".knit.json")
-                            || file_name_str.ends_with(".knit.toml"))
-                            && !found_schema
-                        {
-                            // First blueprint file becomes the output schema
-                            found_schema = true;
-                            dest.to_path_buf()
-                        } else {
-                            sidecar_count += 1;
-                            dest_dir.join(&file_name)
-                        };
+                    let dest_file = if (file_name_str.ends_with(".knit.json")
+                        || file_name_str.ends_with(".knit.toml"))
+                        && !found_schema
+                    {
+                        // First blueprint file becomes the output schema
+                        found_schema = true;
+                        dest.to_path_buf()
+                    } else {
+                        sidecar_count += 1;
+                        dest_dir.join(&file_name)
+                    };
                     fs::copy(entry.path(), &dest_file)
                         .with_context(|| format!("failed to copy {}", entry.path().display()))?;
                 }

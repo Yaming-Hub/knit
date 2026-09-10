@@ -684,21 +684,21 @@ pub fn run_from_model(
 
     // ── Sort and flush buffered entities ─────────────────────────────
     for (entity_name, sort_order) in &sort_entities {
-        if let Some(buffers) = sort_buffers.remove(entity_name) {
-            if let Some(sink) = sinks.get_mut(entity_name) {
-                let sorted = sort_batches(&buffers, sort_order)
-                    .map_err(|e| anyhow::anyhow!("sort failed for '{}': {}", entity_name, e))?;
-                for batch in &sorted {
-                    sink.write_batch(batch)
-                        .map_err(|e| anyhow::anyhow!("sink write error after sort: {}", e))?;
-                }
-                tracing::info!(
-                    entity = %entity_name,
-                    column = %sort_order.column,
-                    direction = ?sort_order.direction,
-                    "applied post-generation sort"
-                );
+        if let Some(buffers) = sort_buffers.remove(entity_name)
+            && let Some(sink) = sinks.get_mut(entity_name)
+        {
+            let sorted = sort_batches(&buffers, sort_order)
+                .map_err(|e| anyhow::anyhow!("sort failed for '{}': {}", entity_name, e))?;
+            for batch in &sorted {
+                sink.write_batch(batch)
+                    .map_err(|e| anyhow::anyhow!("sink write error after sort: {}", e))?;
             }
+            tracing::info!(
+                entity = %entity_name,
+                column = %sort_order.column,
+                direction = ?sort_order.direction,
+                "applied post-generation sort"
+            );
         }
     }
 
@@ -866,13 +866,12 @@ fn enforce_constraints(
             }
             Constraint::Check { expr } => {
                 // Parse simple "A <= B" ordering expressions
-                if let Some((left, right)) = parse_ordering_expr(expr) {
-                    if let (Ok(li), Ok(ri)) = (schema.index_of(&left), schema.index_of(&right)) {
-                        let (new_left, new_right) =
-                            enforce_ordering(&columns[li], &columns[ri]);
-                        columns[li] = new_left;
-                        columns[ri] = new_right;
-                    }
+                if let Some((left, right)) = parse_ordering_expr(expr)
+                    && let (Ok(li), Ok(ri)) = (schema.index_of(&left), schema.index_of(&right))
+                {
+                    let (new_left, new_right) = enforce_ordering(&columns[li], &columns[ri]);
+                    columns[li] = new_left;
+                    columns[ri] = new_right;
                 }
             }
             _ => {} // Unique, NotNull — not enforced here
@@ -1069,8 +1068,8 @@ fn sort_batches(
     }
 
     let schema = batches[0].schema();
-    let combined = concat_batches(&schema, batches)
-        .context("failed to concatenate batches for sorting")?;
+    let combined =
+        concat_batches(&schema, batches).context("failed to concatenate batches for sorting")?;
 
     let col_idx = combined
         .schema()
@@ -1095,8 +1094,8 @@ fn sort_batches(
         .map(|col| take(col.as_ref(), &indices, None).map_err(|e| anyhow::anyhow!("{e}")))
         .collect::<Result<Vec<_>>>()?;
 
-    let sorted_batch = RecordBatch::try_new(schema, sorted_columns)
-        .context("failed to build sorted batch")?;
+    let sorted_batch =
+        RecordBatch::try_new(schema, sorted_columns).context("failed to build sorted batch")?;
 
     Ok(vec![sorted_batch])
 }
@@ -2433,47 +2432,47 @@ fn resolve_dict_in_generator(
             column,
         } => {
             // Only load if rows haven't been populated yet
-            if rows.is_empty() {
-                if let Some(file_path) = source_file.as_ref() {
-                    if Path::new(file_path).is_absolute() {
-                        bail!(
-                            "row lookup file path must be relative, got: '{}'",
-                            file_path
-                        );
-                    }
-                    if file_path.contains("..") {
-                        bail!(
-                            "row lookup file path must not contain '..': '{}'",
-                            file_path
-                        );
-                    }
-                    let full_path = schema_dir.join(file_path);
-                    let file = std::fs::File::open(&full_path).with_context(|| {
-                        format!(
-                            "failed to open row lookup file '{}' (resolved to '{}')",
-                            file_path,
-                            full_path.display()
-                        )
-                    })?;
-                    let reader = std::io::BufReader::new(file);
-                    let mut loaded_rows: Vec<Vec<String>> = Vec::new();
-                    for line in reader.lines() {
-                        let line = line?;
-                        let parts: Vec<String> = line
-                            .trim()
-                            .split('\t')
-                            .map(|p| crate::cli::commands::learn::unescape_tsv_value(p))
-                            .collect();
-                        loaded_rows.push(parts);
-                    }
-                    tracing::debug!(
-                        row_lookup_file = %full_path.display(),
-                        rows_loaded = loaded_rows.len(),
-                        column = *column,
-                        "loaded row lookup"
+            if rows.is_empty()
+                && let Some(file_path) = source_file.as_ref()
+            {
+                if Path::new(file_path).is_absolute() {
+                    bail!(
+                        "row lookup file path must be relative, got: '{}'",
+                        file_path
                     );
-                    *rows = std::sync::Arc::new(loaded_rows);
                 }
+                if file_path.contains("..") {
+                    bail!(
+                        "row lookup file path must not contain '..': '{}'",
+                        file_path
+                    );
+                }
+                let full_path = schema_dir.join(file_path);
+                let file = std::fs::File::open(&full_path).with_context(|| {
+                    format!(
+                        "failed to open row lookup file '{}' (resolved to '{}')",
+                        file_path,
+                        full_path.display()
+                    )
+                })?;
+                let reader = std::io::BufReader::new(file);
+                let mut loaded_rows: Vec<Vec<String>> = Vec::new();
+                for line in reader.lines() {
+                    let line = line?;
+                    let parts: Vec<String> = line
+                        .trim()
+                        .split('\t')
+                        .map(crate::cli::commands::learn::unescape_tsv_value)
+                        .collect();
+                    loaded_rows.push(parts);
+                }
+                tracing::debug!(
+                    row_lookup_file = %full_path.display(),
+                    rows_loaded = loaded_rows.len(),
+                    column = *column,
+                    "loaded row lookup"
+                );
+                *rows = std::sync::Arc::new(loaded_rows);
             }
         }
         _ => {}

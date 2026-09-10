@@ -300,7 +300,11 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(42);
         let result = FkViolateInjector::new()
-            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default().with_probability(1.0),
+            )
             .unwrap();
 
         let scores = result
@@ -316,7 +320,9 @@ mod tests {
 
         assert_eq!(scores.values(), &[1.5, 2.5, 3.5]);
         assert_eq!(
-            (0..active.len()).map(|i| active.value(i)).collect::<Vec<_>>(),
+            (0..active.len())
+                .map(|i| active.value(i))
+                .collect::<Vec<_>>(),
             vec![true, false, true]
         );
     }
@@ -341,7 +347,11 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(42);
         let result = FkViolateInjector::new()
-            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(0.0))
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default().with_probability(0.0),
+            )
             .unwrap();
 
         let ids = result
@@ -356,7 +366,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(ids.values(), &[1, 2, 3]);
-        assert_eq!((0..refs.len()).map(|i| refs.value(i)).collect::<Vec<_>>(), vec!["a", "b", "c"]);
+        assert_eq!(
+            (0..refs.len()).map(|i| refs.value(i)).collect::<Vec<_>>(),
+            vec!["a", "b", "c"]
+        );
     }
 
     #[test]
@@ -383,7 +396,11 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(42);
         let result = FkViolateInjector::new()
-            .perturb(batch, &mut rng, &PerturbConfig::default().with_probability(1.0))
+            .perturb(
+                batch,
+                &mut rng,
+                &PerturbConfig::default().with_probability(1.0),
+            )
             .unwrap();
 
         let user_ids = result

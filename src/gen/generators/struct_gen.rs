@@ -291,7 +291,11 @@ mod tests {
     #[test]
     fn int32_coercion_path_clamps_int64_values() {
         let r#gen = StructGenerator::new(
-            vec![Box::new(SequenceGenerator::new(i32::MAX as i64 - 1, 1, None))],
+            vec![Box::new(SequenceGenerator::new(
+                i32::MAX as i64 - 1,
+                1,
+                None,
+            ))],
             vec!["score".to_string()],
             vec![make_pp(None, crate::core::DataType::Int32)],
         );

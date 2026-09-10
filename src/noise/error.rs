@@ -47,8 +47,8 @@ mod tests {
 
     #[test]
     fn from_arrow_error() {
-        let expected = arrow::error::ArrowError::InvalidArgumentError("bad arrow".to_string())
-            .to_string();
+        let expected =
+            arrow::error::ArrowError::InvalidArgumentError("bad arrow".to_string()).to_string();
         let err = NoiseError::from(arrow::error::ArrowError::InvalidArgumentError(
             "bad arrow".to_string(),
         ));

@@ -39,16 +39,13 @@ pub fn example_schemas() -> Vec<PathBuf> {
 ///
 /// Uses `symlink_metadata` to avoid following symlinks into potential loops.
 fn collect_knit_toml_files(dir: &Path, paths: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir)
-        .unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
+    for entry in
+        std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
     {
         let path = entry
             .unwrap_or_else(|e| panic!("cannot read entry in {}: {e}", dir.display()))
             .path();
-        let is_dir = path
-            .symlink_metadata()
-            .map(|m| m.is_dir())
-            .unwrap_or(false);
+        let is_dir = path.symlink_metadata().map(|m| m.is_dir()).unwrap_or(false);
         if is_dir {
             collect_knit_toml_files(&path, paths);
         } else if path.extension().and_then(|s| s.to_str()) == Some("toml")

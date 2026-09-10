@@ -660,20 +660,19 @@ fn compile_field_plans(
                     min,
                     max,
                 } = c
+                    && cfield == &field.name
                 {
-                    if cfield == &field.name {
-                        lo = min.as_ref().and_then(|v| match v {
-                            crate::core::Value::Float(f) => Some(*f),
-                            crate::core::Value::Int(i) => Some(*i as f64),
-                            _ => None,
-                        });
-                        hi = max.as_ref().and_then(|v| match v {
-                            crate::core::Value::Float(f) => Some(*f),
-                            crate::core::Value::Int(i) => Some(*i as f64),
-                            _ => None,
-                        });
-                        break;
-                    }
+                    lo = min.as_ref().and_then(|v| match v {
+                        crate::core::Value::Float(f) => Some(*f),
+                        crate::core::Value::Int(i) => Some(*i as f64),
+                        _ => None,
+                    });
+                    hi = max.as_ref().and_then(|v| match v {
+                        crate::core::Value::Float(f) => Some(*f),
+                        crate::core::Value::Int(i) => Some(*i as f64),
+                        _ => None,
+                    });
+                    break;
                 }
             }
             GeneratorPlan::Distribution {
@@ -979,11 +978,7 @@ fn compile_generator(field: &Field, all_fields: &[Field]) -> GeneratorPlan {
                     column: *column,
                 }
             }
-            GeneratorSpec::RowLookup {
-                file,
-                column,
-                ..
-            } => {
+            GeneratorSpec::RowLookup { file, column, .. } => {
                 // Rows are loaded by the CLI layer after compilation.
                 GeneratorPlan::RowLookup {
                     rows: std::sync::Arc::new(Vec::new()),
@@ -1726,11 +1721,15 @@ fn is_numeric_generator(entity: &Entity, field_name: &str) -> bool {
         Some(f) => f,
         None => return false,
     };
-    match &field.generator {
-        Some(GeneratorSpec::Distribution { .. }) => true,
-        Some(GeneratorSpec::Sequence { values: None, prefix: None, .. }) => true,
-        _ => false,
-    }
+    matches!(
+        &field.generator,
+        Some(GeneratorSpec::Distribution { .. })
+            | Some(GeneratorSpec::Sequence {
+                values: None,
+                prefix: None,
+                ..
+            })
+    )
 }
 
 fn compile_copula_plans(
@@ -1899,17 +1898,15 @@ fn recompute_derived_order(field_plans: &mut [FieldPlan]) {
                 GeneratorPlan::Correlated { target_field, .. } => {
                     order_map.get(target_field).copied()
                 }
-                GeneratorPlan::Conditional { field, .. } => {
-                    order_map.get(field).copied()
-                }
+                GeneratorPlan::Conditional { field, .. } => order_map.get(field).copied(),
                 _ => None,
             };
 
-            if let Some(max_dep) = max_dep {
-                if max_dep >= fp.dependency_order {
-                    fp.dependency_order = max_dep + 1;
-                    changed = true;
-                }
+            if let Some(max_dep) = max_dep
+                && max_dep >= fp.dependency_order
+            {
+                fp.dependency_order = max_dep + 1;
+                changed = true;
             }
         }
 

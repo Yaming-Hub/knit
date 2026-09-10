@@ -5,7 +5,6 @@
 
 use assert_cmd::Command;
 use predicates::prelude::*;
-use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -2781,7 +2780,8 @@ fn incremental_parity_multi_chunk() {
     // Parse and compare structure
     let batch_model: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&batch_out).unwrap()).unwrap();
-    let incr_model: serde_json::Value = serde_json::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
+    let incr_model: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&incr_out).unwrap()).unwrap();
 
     let batch_e = &batch_model["entities"].as_array().unwrap()[0];
     let incr_e = &incr_model["entities"].as_array().unwrap()[0];
